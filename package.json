@@ -1,0 +1,17 @@
+{
+  "author": "Pryv <tech@pryv.com>",
+  "name": "browser-treemap-poc",
+  "description": "TreeMap Proof of concept ",
+  "version": "0.0.1",
+  "private": true,
+  "homepage": "http://w.pryv.com",
+  "engines": {
+    "node": "~0.8.8",
+    "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#dev"
+  },
+  "dependencies": {
+    "underscore": "*"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {}
+}

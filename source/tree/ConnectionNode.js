@@ -1,12 +1,21 @@
-
+var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 
 var ConnectionNode = module.exports = TreeNode.implement(
   function (parentnode, connection) {
     TreeNode.call(this, parentnode);
     this.connection = connection;
+    this.events = {};
+
+    this.streamNodes = {};
+
   }, {
     className: 'ConnectionNode',
+
+    getChildren: function () {
+      return _.values(this.streamNodes);
+    },
+
 
     /**
      * Add an Event to the Tree
@@ -18,6 +27,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
      */
     eventEnterScope: function (event, reason) {
       console.log('Connection: ' + this.connection.shortId + ' got event: ' + event.id);
+      this.events[event.id] = event;
     },
 
     /**
@@ -34,6 +44,18 @@ var ConnectionNode = module.exports = TreeNode.implement(
      */
     eventLeaveScope: function (removed, reason) {
       throw new Error('eventLeaveScope must be implemented');
+    },
+
+    //----------- debug ------------//
+    _debugTree : function () {
+      var me = {
+        name : this.connection.shortId,
+        eventsCount : _.keys(this.events).length
+      };
+
+      _.extend(me, TreeNode.prototype._debugTree.call(this));
+
+      return me;
     }
 
   });

@@ -24,17 +24,27 @@ var nullFilter = new Pryv.Filter({});
 
 var rootNode = new RootNode();
 
-_.each(connections, function (conn, connName) {
 
+var loading = 0;
+function loaded(/*connName*/) {
+  loading--;
+  if (loading > 0) { return 0;  }
+  console.log(JSON.stringify(rootNode._debugTree(), null, 4));
+}
+
+
+_.each(connections, function (conn, connName) {
+  loading++;
   conn.accessInfo(function (error, accessInfo) {
     console.log('connected to ' + connName + ' ' + JSON.stringify(accessInfo));
-
     conn.events.get(nullFilter, function (error, events) {
       _.each(events, function (event) {
         var e = new Pryv.Event(conn, event);
         rootNode.eventEnterScope(e);
       });
+      loaded(connName);
     });
   });
 });
+
 

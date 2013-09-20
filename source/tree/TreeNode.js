@@ -7,7 +7,7 @@ var _ = require('underscore');
  */
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
-  console.log('TreeNode ' + this.className + ' created');
+  console.log('TreeNode ' + this.className + ':  created');
 };
 
 
@@ -31,7 +31,7 @@ _.extend(TreeNode.prototype, {
    * @return A DOM Object, EventView..
    */
   renderView: function (h, w) {
-    throw new Error('renderView must be implemented');
+    throw new Error(this.className + ': renderView must be implemented');
   },
 
 
@@ -56,14 +56,14 @@ _.extend(TreeNode.prototype, {
    * @return TreeNode parent or null if leaf
    */
   getParent: function () {
-    throw new Error('getParent must be implemented');
+    throw new Error(this.className + ': getParent must be implemented');
   },
 
   /**
    * @return Array of TreeNode or null if leaf
    */
   getChildren: function () {
-    throw new Error('getChildren must be implemented');
+    throw new Error(this.className + ': getChildren must be implemented');
   },
 
 
@@ -73,7 +73,9 @@ _.extend(TreeNode.prototype, {
    * @return Number
    */
   getWeight: function () {
-    if (this.getChildren() === null) { throw new Error('Leafs must overwrite getWeight'); }
+    if (this.getChildren() === null) {
+      throw new Error(this.className + ': Leafs must overwrite getWeight');
+    }
     var weight = 0;
     this.getChildren().forEach(function (child) {
       weight += child.getWeight();
@@ -94,7 +96,7 @@ _.extend(TreeNode.prototype, {
    * call returnedNode.currentWarpingDOMObject()
    */
   eventEnterScope: function (event, reason) {
-    throw new Error('eventEnterScope must be implemented');
+    throw new Error(this.className + ': eventEnterScope must be implemented');
   },
 
   /**
@@ -102,7 +104,7 @@ _.extend(TreeNode.prototype, {
    * @param event Event or eventId .. to be discussed
    */
   eventChange: function (event, reason) {
-    throw new Error('eventChange must be implemented');
+    throw new Error(this.className + ': eventChange must be implemented');
   },
 
   /**
@@ -110,6 +112,19 @@ _.extend(TreeNode.prototype, {
    * @parma eventChange
    */
   eventLeaveScope: function (removed, reason) {
-    throw new Error('eventLeaveScope must be implemented');
+    throw new Error(this.className + ': eventLeaveScope must be implemented');
+  },
+
+
+  //----------- debug ------------//
+  _debugTree : function () {
+    var me = { className : this.className };
+    if (this.getChildren()) {
+      me.children = [];
+      _.each(this.getChildren(), function (child) {
+        me.children.push(child._debugTree());
+      });
+    }
+    return me;
   }
 });

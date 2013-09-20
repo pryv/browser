@@ -1,5 +1,6 @@
 var TreeNode = require('./TreeNode');
 var ConnectionNode = require('./ConnectionNode');
+var _ = require('underscore');
 
 /**
  * Holder for Connection Nodes.
@@ -12,6 +13,11 @@ var RootNode = TreeNode.implement(
   },
   {
     className: 'RootNode',
+
+
+    getChildren: function () {
+      return _.values(this.connectionNodes);
+    },
 
     eventEnterScope: function (event, reason) {
       var node = this.connectionNodes[event.connection.id];

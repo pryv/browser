@@ -1,11 +1,11 @@
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
+var StreamNode = require('./StreamNode');
 
 var ConnectionNode = module.exports = TreeNode.implement(
   function (parentnode, connection) {
     TreeNode.call(this, parentnode);
     this.connection = connection;
-    this.events = {};
 
     this.streamNodes = {};
 
@@ -13,44 +13,58 @@ var ConnectionNode = module.exports = TreeNode.implement(
     className: 'ConnectionNode',
 
     getChildren: function () {
-      return _.values(this.streamNodes);
+      var self = this;
+      var children = [];
+      _.each(this.streamNodes, function (node) {
+        if (node.getParent() === self) { children.push(node); }
+      });
+      return children;
     },
 
 
-    /**
-     * Add an Event to the Tree
-     * @param event Event
-     * @return TreeNode the node in charge of this event. To be handled directly,
-     * next event addition or renderView() call can modify structure, and change
-     * the owner of this Event. This is designed for animation. .. add event then
-     * call returnedNode.currentWarpingDOMObject()
-     */
     eventEnterScope: function (event, reason) {
-      console.log('Connection: ' + this.connection.shortId + ' got event: ' + event.id);
-      this.events[event.id] = event;
+      var self = this;
+      var node =  self.streamNodes[event.stream.id]; // do we already know self stream?
+      if (typeof node === 'undefined') {
+        var parentNode = self;
+
+
+        _.each(event.stream.parents, function (parent)  {  // find the parent of self stream
+          // eventually add parents to the tree
+          var testParentNode = self.streamNodes[parent.id];
+          if (typeof testParentNode  === 'undefined') {  // eventually create them ad hoc
+            testParentNode = new StreamNode(self, parentNode, parent);
+            self.streamNodes[parent.id] = testParentNode;
+          }
+          parentNode = testParentNode;
+        });
+
+        node = new StreamNode(self, parentNode, event.stream);
+        self.streamNodes[event.stream.id] = node;
+      }
+      node.eventEnterScope(event, reason);
     },
 
-    /**
-     * the Event changed from the Tree
-     * @param event Event or eventId .. to be discussed
-     */
+    eventLeaveScope: function (event, reason) {
+      var node = this.streamNodes[event.stream.id];
+      if (node === 'undefined') {
+        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
+      }
+      node.eventRemove(event, reason);
+    },
+
     eventChange: function (event, reason) {
-      throw new Error('eventChange must be implemented');
-    },
-
-    /**
-     * Event removed
-     * @parma eventChange
-     */
-    eventLeaveScope: function (removed, reason) {
-      throw new Error('eventLeaveScope must be implemented');
+      var node = this.streamNodes[event.stream.id];
+      if (node === 'undefined') {
+        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
+      }
+      node.eventChange(event, reason);
     },
 
     //----------- debug ------------//
     _debugTree : function () {
       var me = {
-        name : this.connection.shortId,
-        eventsCount : _.keys(this.events).length
+        name : this.connection.shortId
       };
 
       _.extend(me, TreeNode.prototype._debugTree.call(this));

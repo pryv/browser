@@ -53,10 +53,10 @@ _.extend(TreeNode.prototype, {
   //-------------- Tree Browsing -------------------//
 
   /**
-   * @return TreeNode parent or null if leaf
+   * @return TreeNode parent or null if root
    */
   getParent: function () {
-    throw new Error(this.className + ': getParent must be implemented');
+    return this.parent;
   },
 
   /**

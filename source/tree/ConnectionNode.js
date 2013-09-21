@@ -12,6 +12,32 @@ var ConnectionNode = module.exports = TreeNode.implement(
   }, {
     className: 'ConnectionNode',
 
+    // ---------------------------------- //
+
+    /**
+     * Advertise a structure change event
+     * @param callback
+     */
+    structureChange: function (callback) {
+      // - load streamTree from connection
+      // - create nodes
+      // - redistribute events (if needed)
+      // when implemented review "eventEnterScope" which creates the actual structure
+
+      // warnings
+      // - there is no list of events directly accessible.
+      // Maybe this could be asked to the rootNode
+
+      // possible optimization
+      // - calculate the changes and rebuild only what's needed :)
+      // - this would need cleverer StreamNodes
+
+      console.log('Warning: Implement ConnectionNode.structureChange');
+      callback();
+    },
+
+    // ---------- Node -------------  //
+
     getChildren: function () {
       var self = this;
       var children = [];
@@ -28,7 +54,12 @@ var ConnectionNode = module.exports = TreeNode.implement(
       if (typeof node === 'undefined') {
         var parentNode = self;
 
-
+        // TODO reimplement
+        // this is in fact a bad implementation..
+        // It's optimized, (it just create the needed nodes)
+        // but does not follow the discussion we had
+        // normally the struture should be created will all the StreamNode.. at start!!
+        // this will be done by structureChange
         _.each(event.stream.parents, function (parent)  {  // find the parent of self stream
           // eventually add parents to the tree
           var testParentNode = self.streamNodes[parent.id];

@@ -6,11 +6,11 @@
   "private": true,
   "homepage": "http://w.pryv.com",
   "engines": {
-    "node": "~0.8.8",
-    "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#dev"
+    "node": "~0.8.8"
   },
   "dependencies": {
-    "underscore": "*"
+    "underscore": "*" ,
+    "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#dev"
   },
   "devDependencies": {},
   "optionalDependencies": {}

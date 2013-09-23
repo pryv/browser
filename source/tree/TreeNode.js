@@ -13,6 +13,13 @@ var TreeNode = module.exports = function (parent) {
 
 TreeNode.implement = function (constructor, members) {
   var result = constructor;
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
   result.prototype = Object.create(this.prototype);
   _.extend(result.prototype, members);
   return result;

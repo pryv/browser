@@ -6,7 +6,7 @@ var _ = require('underscore');
  * Holder for Connection Nodes.
  * @type {*}
  */
-var RootNode = TreeNode.implement(
+var RootNode = module.exports = TreeNode.implement(
   function () {
     TreeNode.call(this, null);
     this.connectionNodes = {}; // Connections indexed by their token .. other index solution welcom
@@ -23,7 +23,7 @@ var RootNode = TreeNode.implement(
       var node = this.connectionNodes[event.connection.id];
       if (typeof node === 'undefined') {
         node = new ConnectionNode(this, event.connection);
-        this.connectionNodes[node.id] = node;
+        this.connectionNodes[event.connection.id] = node;
       }
       node.eventEnterScope(event, reason);
     },
@@ -45,4 +45,3 @@ var RootNode = TreeNode.implement(
     }
   });
 
-module.exports = RootNode;

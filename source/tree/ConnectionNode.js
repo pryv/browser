@@ -2,12 +2,16 @@
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 var StreamNode = require('./StreamNode');
+var Pryv = require('pryv');
 
+/**
+ * Always call intStructure after creating a new ConnectionNode
+ * @type {*}
+ */
 var ConnectionNode = module.exports = TreeNode.implement(
   function (parentnode, connection) {
     TreeNode.call(this, parentnode);
     this.connection = connection;
-
     this.streamNodes = {};
 
   }, {
@@ -15,11 +19,41 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
     // ---------------------------------- //
 
+
+    /**
+     * Build Structure
+     * @param callback
+     * @param options
+     */
+    initStructure: function (options, callback) {
+
+      options = options || {};
+      var self = this;
+      self.streamNodes = {};
+      self.connection.streams.get(function (error, result) {
+        if (error) {  return callback('Failed ConnectionNode.initStructure. - ' + error); }
+
+        self.connection.streams.Utils.walkDataTree(result, function (streamData) {
+          // walkDataTree insure that we pass by the parents before the childrens
+          var parentNode = self;
+          if (streamData.parentId) {   // if not parent, this connection node is the parent
+            parentNode = self.streamNodes[streamData.parentId];
+          }
+          var stream = new Pryv.Stream(self.connection, streamData);
+          self.streamNodes[streamData.id] = new StreamNode(self, parentNode, stream);
+        });
+
+        callback();
+      }, options);
+    },
+
     /**
      * Advertise a structure change event
+     * @param options {state : all, default}
      * @param callback
      */
-    structureChange: function (callback) {
+    structureChange: function (callback, options) {
+
       // - load streamTree from connection
       // - create nodes
       // - redistribute events (if needed)
@@ -49,48 +83,29 @@ var ConnectionNode = module.exports = TreeNode.implement(
     },
 
 
-    eventEnterScope: function (event, reason) {
+    eventEnterScope: function (event, reason, callback) {
       var self = this;
       var node =  self.streamNodes[event.stream.id]; // do we already know self stream?
       if (typeof node === 'undefined') {
-        var parentNode = self;
-
-        // TODO reimplement
-        // this is in fact a bad implementation..
-        // It's optimized, (it just create the needed nodes)
-        // but does not follow the discussion we had
-        // normally the struture should be created will all the StreamNode.. at start!!
-        // this will be done by structureChange
-        _.each(event.stream.parents, function (parent)  {  // find the parent of self stream
-          // eventually add parents to the tree
-          var testParentNode = self.streamNodes[parent.id];
-          if (typeof testParentNode  === 'undefined') {  // eventually create them ad hoc
-            testParentNode = new StreamNode(self, parentNode, parent);
-            self.streamNodes[parent.id] = testParentNode;
-          }
-          parentNode = testParentNode;
-        });
-
-        node = new StreamNode(self, parentNode, event.stream);
-        self.streamNodes[event.stream.id] = node;
+        throw new Error('Cannot find stream with id: ' + event.stream.id);
       }
-      node.eventEnterScope(event, reason);
+      node.eventEnterScope(event, reason, callback);
     },
 
-    eventLeaveScope: function (event, reason) {
+    eventLeaveScope: function (event, reason, callback) {
       var node = this.streamNodes[event.stream.id];
       if (node === 'undefined') {
         throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
       }
-      node.eventRemove(event, reason);
+      node.eventRemove(event, reason, callback);
     },
 
-    eventChange: function (event, reason) {
+    eventChange: function (event, reason, callback) {
       var node = this.streamNodes[event.stream.id];
       if (node === 'undefined') {
         throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
       }
-      node.eventChange(event, reason);
+      node.eventChange(event, reason, callback);
     },
 
     //----------- debug ------------//

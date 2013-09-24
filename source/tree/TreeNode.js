@@ -102,7 +102,7 @@ _.extend(TreeNode.prototype, {
    * the owner of this Event. This is designed for animation. .. add event then
    * call returnedNode.currentWarpingDOMObject()
    */
-  eventEnterScope: function (event, reason) {
+  eventEnterScope: function (event, reason, callback) {
     throw new Error(this.className + ': eventEnterScope must be implemented');
   },
 
@@ -110,7 +110,7 @@ _.extend(TreeNode.prototype, {
    * the Event changed from the Tree
    * @param event Event or eventId .. to be discussed
    */
-  eventChange: function (event, reason) {
+  eventChange: function (event, reason, callback) {
     throw new Error(this.className + ': eventChange must be implemented');
   },
 
@@ -118,14 +118,17 @@ _.extend(TreeNode.prototype, {
    * Event removed
    * @parma eventChange
    */
-  eventLeaveScope: function (removed, reason) {
+  eventLeaveScope: function (removed, reason, callback) {
     throw new Error(this.className + ': eventLeaveScope must be implemented');
   },
 
 
   //----------- debug ------------//
   _debugTree : function () {
-    var me = { className : this.className };
+    var me = {
+      className : this.className,
+      weight : this.getWeight()
+    };
     if (this.getChildren()) {
       me.children = [];
       _.each(this.getChildren(), function (child) {

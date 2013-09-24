@@ -46,13 +46,11 @@ var StreamNode = module.exports = TreeNode.implement(
 
       _.each(this.stream.children, function (child) {
         /* TODO
-        add events
+         add events
          */
         var childTemp =  self.connectionNode.streamNodes[child.id];
-        if (childTemp) {
-          // child may be unkown
-          children.push(childTemp);
-        }
+        children.push(childTemp);
+
       });
       return children;
     },

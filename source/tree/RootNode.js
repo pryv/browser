@@ -21,12 +21,14 @@ var RootNode = module.exports = TreeNode.implement(
 
     eventEnterScope: function (event, reason, callback) {
       var connectionNode = this.connectionNodes[event.connection.id];
+
       if (typeof connectionNode !== 'undefined') {
         return connectionNode.eventEnterScope(event, reason, callback);
       }
 
       // we create a new connection Node
       connectionNode = new ConnectionNode(this, event.connection);
+
       this.connectionNodes[event.connection.id] = connectionNode;
       connectionNode.initStructure(null, function (error) {
         if (error) {

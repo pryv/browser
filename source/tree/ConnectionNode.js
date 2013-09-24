@@ -33,7 +33,10 @@ var ConnectionNode = module.exports = TreeNode.implement(
       self.connection.streams.get(function (error, result) {
         if (error) {  return callback('Failed ConnectionNode.initStructure. - ' + error); }
 
+
         self.connection.streams.Utils.walkDataTree(result, function (streamData) {
+
+
           // walkDataTree insure that we pass by the parents before the childrens
           var parentNode = self;
           if (streamData.parentId) {   // if not parent, this connection node is the parent

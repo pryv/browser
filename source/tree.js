@@ -28,7 +28,7 @@ exports.main = function () {
 
   var waiting = 0;
   function doneOne(info) {
-    console.log(waiting + ' done ' + info);
+    //console.log(waiting + ' done ' + info);
     waiting--;
     if (waiting > 0) {
       return 0;

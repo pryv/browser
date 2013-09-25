@@ -1,6 +1,8 @@
 var _ = require('underscore'),
-NodeView = require('../view/NodeView.js'),
-  NodeModel = require('../model/NodeModel.js');
+// $ = require('node-jquery'),
+  NodeView = require('../view/NodeView.js'),
+  NodeModel = require('../model/NodeModel.js'),
+  TreemapUtil = require('../utility/treemap.js');
 
 /**
  * The model for all Nodes
@@ -10,7 +12,10 @@ NodeView = require('../view/NodeView.js'),
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
   this.uniqueId = _.uniqueId('node_');
-  console.log('Created note ' + this.className);
+  this.width = null;
+  this.height = null;
+  this.x = 0;
+  this.y = 0;
 };
 
 
@@ -127,25 +132,54 @@ _.extend(TreeNode.prototype, {
   },
 
   _createView: function () {
-    var width = null, height = null, containerId = null;
-    if (this.parent) {
-      containerId = this.parent.uniqueId;
-      width = this.getWeight() / this.parent.getWeight() * 100;
-      //height = this.getWeight() / this.parent.getWeight() * 100;
-    height = 75;
+    if (this.getWeight() === 0) {
+      return;
     }
+    this._generateChildrenPosition();
     var model = new NodeModel({
-      containerId: containerId,
+      containerId: this.parent ? this.parent.uniqueId : null,
       id: this.uniqueId,
       name: this.className,
-      width: width,
-      height: height
+      width: this.width,
+      height: this.height,
+      x: this.x,
+      y: this.y,
+      weight: this.getWeight()
     });
     new NodeView({model: model}).render();
     if (this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._createView();
       });
+    }
+  },
+  _generateChildrenPosition: function () {
+    // if width is not defined we are at the root node
+    // so we need to define a container dimension
+    if (this.width === null) {
+      this.width = $(document).width();
+      this.height = $(document).height();
+    }
+    if (this.getChildren()) {
+      // we need to normalize child weights by the parent weight
+      _.each(this.getChildren(), function (child) {
+        child.normalizedWeight = (child.getWeight() / this.getWeight());
+      }, this);
+
+      // we squarify all the children passing a container dimension and position
+      // no recursion needed
+      var squarified =  TreemapUtil.squarify({
+        x: 0,
+        y: 0,
+        width: this.width,
+        height: this.height
+      }, this.getChildren());
+      _.each(this.getChildren(), function (child) {
+        child.x = squarified[child.uniqueId].x;
+        child.y = squarified[child.uniqueId].y;
+        child.width = squarified[child.uniqueId].width;
+        child.height = squarified[child.uniqueId].height;
+      }, this);
     }
   },
   //----------- debug ------------//

@@ -31,7 +31,7 @@ exports.main = function () {
 
   var waiting = 0;
   function doneOne(info) {
-    console.log(waiting + ' done ' + info);
+    //console.log(waiting + ' done ' + info);
     waiting--;
     if (waiting > 0) {
       return 0;
@@ -1357,7 +1357,7 @@ module.exports = {
   Utility: require('./utility/Utility.js')
 };
 
-},{"./Access.js":10,"./Connection.js":4,"./Event.js":5,"./Filter.js":9,"./Stream.js":6,"./system/System.js":7,"./utility/Utility.js":8}],1:[function(require,module,exports){
+},{"./Access.js":8,"./Connection.js":4,"./Event.js":6,"./Filter.js":7,"./Stream.js":5,"./system/System.js":9,"./utility/Utility.js":10}],1:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var ConnectionNode = require('./ConnectionNode');
 var _ = require('underscore');
@@ -1417,7 +1417,7 @@ var RootNode = module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":11,"./TreeNode":12,"underscore":2}],10:[function(require,module,exports){
+},{"./ConnectionNode":12,"./TreeNode":11,"underscore":2}],8:[function(require,module,exports){
 var System = require('./system/System.js');
 
 
@@ -1475,7 +1475,7 @@ exports.getAccesses = function (pack) {
     error : pack.error
   });
 };
-},{"./system/System.js":7}],7:[function(require,module,exports){
+},{"./system/System.js":9}],9:[function(require,module,exports){
 //TODO: consider merging System into Utility
 
 function isBrowser() {
@@ -1484,7 +1484,7 @@ function isBrowser() {
 
 module.exports = isBrowser() ?  require('./System-browser.js') : require('./System-node.js');
 
-},{"./System-browser.js":14,"./System-node.js":13}],15:[function(require,module,exports){
+},{"./System-browser.js":13,"./System-node.js":14}],15:[function(require,module,exports){
 var Datastore = module.exports = function (connection) {
   this.connection = connection;
   this.streamsIndex = {}; // streams are linked to their object representation
@@ -1526,7 +1526,7 @@ Datastore.prototype.getStreamById = function (streamId) {
   return this.streamsIndex[streamId];
 };
 
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 //file: system browser
 
 
@@ -1692,6 +1692,207 @@ var _initXHR = function () {
 
 
 },{}],11:[function(require,module,exports){
+var _ = require('underscore'),
+// $ = require('node-jquery'),
+  NodeView = require('../view/NodeView.js'),
+  NodeModel = require('../model/NodeModel.js'),
+  TreemapUtil = require('../utility/treemap.js');
+
+/**
+ * The model for all Nodes
+ * @param parent
+ * @constructor
+ */
+var TreeNode = module.exports = function (parent) {
+  this.parent = parent;
+  this.uniqueId = _.uniqueId('node_');
+  this.width = null;
+  this.height = null;
+  this.x = 0;
+  this.y = 0;
+};
+
+
+TreeNode.implement = function (constructor, members) {
+  var newImplementation = constructor;
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+_.extend(TreeNode.prototype, {
+  className: 'TreeNode',
+  /** TreeNode parent or null if rootNode **/
+
+  //---------- visual rendering ------------//
+
+  /**
+   * render the View version A
+   * @param height height of the Node
+   * @param width width of the Node
+   * @return A DOM Object, EventView..
+   */
+  renderView: function (h, w) {
+    throw new Error(this.className + ': renderView must be implemented');
+  },
+
+
+  /**
+   *
+   * @return DOMNode the current Wrapping DOM object for this Node. If this TreeNode is not yet
+   * rendered, or does not have a representation in the DOM it will return
+   * getParent().currentWarpingDOMObject();
+   */
+  currentWrappingDOMObject: function () {
+    if (this.parent === null) { return null; }
+
+    // each node with a specific rendering should overwrite this
+
+    return this.parent;
+  },
+
+
+  //-------------- Tree Browsing -------------------//
+
+  /**
+   * @return TreeNode parent or null if root
+   */
+  getParent: function () {
+    return this.parent;
+  },
+
+  /**
+   * @return Array of TreeNode or null if leaf
+   */
+  getChildren: function () {
+    throw new Error(this.className + ': getChildren must be implemented');
+  },
+
+
+  /**
+   * Return the total weight (in TreeMap referential) of this node and it's children
+   * This should be overwritten by Leaf nodes
+   * @return Number
+   */
+  getWeight: function () {
+    if (this.getChildren() === null) {
+      throw new Error(this.className + ': Leafs must overwrite getWeight');
+    }
+    var weight = 0;
+    this.getChildren().forEach(function (child) {
+      weight += child.getWeight();
+    });
+    return weight;
+  },
+
+
+
+  //----------- event management ------------//
+
+  /**
+   * Add an Event to the Tree
+   * @param event Event
+   * @return TreeNode the node in charge of this event. To be handled directly,
+   * next event addition or renderView() call can modify structure, and change
+   * the owner of this Event. This is designed for animation. .. add event then
+   * call returnedNode.currentWarpingDOMObject()
+   */
+  eventEnterScope: function (event, reason, callback) {
+    throw new Error(this.className + ': eventEnterScope must be implemented');
+  },
+
+  /**
+   * the Event changed from the Tree
+   * @param event Event or eventId .. to be discussed
+   */
+  eventChange: function (event, reason, callback) {
+    throw new Error(this.className + ': eventChange must be implemented');
+  },
+
+  /**
+   * Event removed
+   * @parma eventChange
+   */
+  eventLeaveScope: function (removed, reason, callback) {
+    throw new Error(this.className + ': eventLeaveScope must be implemented');
+  },
+
+  _createView: function () {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    this._generateChildrenPosition();
+    var model = new NodeModel({
+      containerId: this.parent ? this.parent.uniqueId : null,
+      id: this.uniqueId,
+      name: this.className,
+      width: this.width,
+      height: this.height,
+      x: this.x,
+      y: this.y,
+      weight: this.getWeight()
+    });
+    new NodeView({model: model}).render();
+    if (this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    }
+  },
+  _generateChildrenPosition: function () {
+    // if width is not defined we are at the root node
+    // so we need to define a container dimension
+    if (this.width === null) {
+      this.width = $(document).width();
+      this.height = $(document).height();
+    }
+    if (this.getChildren()) {
+      // we need to normalize child weights by the parent weight
+      _.each(this.getChildren(), function (child) {
+        child.normalizedWeight = (child.getWeight() / this.getWeight());
+      }, this);
+
+      // we squarify all the children passing a container dimension and position
+      // no recursion needed
+      var squarified =  TreemapUtil.squarify({
+        x: 0,
+        y: 0,
+        width: this.width,
+        height: this.height
+      }, this.getChildren());
+      _.each(this.getChildren(), function (child) {
+        child.x = squarified[child.uniqueId].x;
+        child.y = squarified[child.uniqueId].y;
+        child.width = squarified[child.uniqueId].width;
+        child.height = squarified[child.uniqueId].height;
+      }, this);
+    }
+  },
+  //----------- debug ------------//
+  _debugTree : function () {
+    var me = {
+      className : this.className,
+      weight : this.getWeight()
+    };
+    if (this.getChildren()) {
+      me.children = [];
+      _.each(this.getChildren(), function (child) {
+        me.children.push(child._debugTree());
+      });
+    }
+    return me;
+  }
+});
+
+},{"../model/NodeModel.js":18,"../utility/treemap.js":16,"../view/NodeView.js":17,"underscore":2}],12:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -1822,174 +2023,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
 
-},{"./StreamNode":16,"./TreeNode":12,"pryv":3,"underscore":2}],12:[function(require,module,exports){
-var _ = require('underscore'),
-NodeView = require('../view/NodeView.js'),
-  NodeModel = require('../model/NodeModel.js');
-
-/**
- * The model for all Nodes
- * @param parent
- * @constructor
- */
-var TreeNode = module.exports = function (parent) {
-  this.parent = parent;
-  this.uniqueId = _.uniqueId('node_');
-  console.log('Created note ' + this.className);
-};
-
-
-TreeNode.implement = function (constructor, members) {
-  var newImplementation = constructor;
-  if (typeof Object.create === 'undefined') {
-    Object.create = function (prototype) {
-      function C() { }
-      C.prototype = prototype;
-      return new C();
-    };
-  }
-  newImplementation.prototype = Object.create(this.prototype);
-  _.extend(newImplementation.prototype, members);
-  newImplementation.implement = this.implement;
-  return newImplementation;
-};
-
-_.extend(TreeNode.prototype, {
-  className: 'TreeNode',
-  /** TreeNode parent or null if rootNode **/
-
-  //---------- visual rendering ------------//
-
-  /**
-   * render the View version A
-   * @param height height of the Node
-   * @param width width of the Node
-   * @return A DOM Object, EventView..
-   */
-  renderView: function (h, w) {
-    throw new Error(this.className + ': renderView must be implemented');
-  },
-
-
-  /**
-   *
-   * @return DOMNode the current Wrapping DOM object for this Node. If this TreeNode is not yet
-   * rendered, or does not have a representation in the DOM it will return
-   * getParent().currentWarpingDOMObject();
-   */
-  currentWrappingDOMObject: function () {
-    if (this.parent === null) { return null; }
-
-    // each node with a specific rendering should overwrite this
-
-    return this.parent;
-  },
-
-
-  //-------------- Tree Browsing -------------------//
-
-  /**
-   * @return TreeNode parent or null if root
-   */
-  getParent: function () {
-    return this.parent;
-  },
-
-  /**
-   * @return Array of TreeNode or null if leaf
-   */
-  getChildren: function () {
-    throw new Error(this.className + ': getChildren must be implemented');
-  },
-
-
-  /**
-   * Return the total weight (in TreeMap referential) of this node and it's children
-   * This should be overwritten by Leaf nodes
-   * @return Number
-   */
-  getWeight: function () {
-    if (this.getChildren() === null) {
-      throw new Error(this.className + ': Leafs must overwrite getWeight');
-    }
-    var weight = 0;
-    this.getChildren().forEach(function (child) {
-      weight += child.getWeight();
-    });
-    return weight;
-  },
-
-
-
-  //----------- event management ------------//
-
-  /**
-   * Add an Event to the Tree
-   * @param event Event
-   * @return TreeNode the node in charge of this event. To be handled directly,
-   * next event addition or renderView() call can modify structure, and change
-   * the owner of this Event. This is designed for animation. .. add event then
-   * call returnedNode.currentWarpingDOMObject()
-   */
-  eventEnterScope: function (event, reason, callback) {
-    throw new Error(this.className + ': eventEnterScope must be implemented');
-  },
-
-  /**
-   * the Event changed from the Tree
-   * @param event Event or eventId .. to be discussed
-   */
-  eventChange: function (event, reason, callback) {
-    throw new Error(this.className + ': eventChange must be implemented');
-  },
-
-  /**
-   * Event removed
-   * @parma eventChange
-   */
-  eventLeaveScope: function (removed, reason, callback) {
-    throw new Error(this.className + ': eventLeaveScope must be implemented');
-  },
-
-  _createView: function () {
-    var width = null, height = null, containerId = null;
-    if (this.parent) {
-      containerId = this.parent.uniqueId;
-      width = this.getWeight() / this.parent.getWeight() * 100;
-      //height = this.getWeight() / this.parent.getWeight() * 100;
-    height = 75;
-    }
-    var model = new NodeModel({
-      containerId: containerId,
-      id: this.uniqueId,
-      name: this.className,
-      width: width,
-      height: height
-    });
-    new NodeView({model: model}).render();
-    if (this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._createView();
-      });
-    }
-  },
-  //----------- debug ------------//
-  _debugTree : function () {
-    var me = {
-      className : this.className,
-      weight : this.getWeight()
-    };
-    if (this.getChildren()) {
-      me.children = [];
-      _.each(this.getChildren(), function (child) {
-        me.children.push(child._debugTree());
-      });
-    }
-    return me;
-  }
-});
-
-},{"../model/NodeModel.js":17,"../view/NodeView.js":18,"underscore":2}],19:[function(require,module,exports){
+},{"./StreamNode":19,"./TreeNode":11,"pryv":3,"underscore":2}],20:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -2018,105 +2052,7 @@ NotesEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../EventsNode":20}],21:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var GenericEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'GenericEventsNode',
-
-
-
-    getWeight: function () {
-      return 1;
-    }
-
-  });
-
-// we accept all kind of events
-GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
-  return true;
-};
-
-
-},{"../EventsNode":20}],6:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var Stream = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-};
-
-
-Object.defineProperty(Stream.prototype, 'parents', {
-  get: function () {
-    var self = this;
-
-    if (! self.parentId) { return []; }
-    var parent = self.connection.datastore.getStreamById(self.parentId);
-    var parents = parent.parents;
-    parents.push(parent);
-    return parents;
-  },
-  set: function () { throw new Error('Stream.parents property is read only'); }
-});
-
-Object.defineProperty(Stream.prototype, 'parentsIds', {
-  get: function () {
-    var self = this;
-
-    if (! self.parentId) { return []; }
-    var parent = self.connection.datastore.getStreamById(self.parentId);
-    var parents = parent.parentsIds;
-    parents.push(self.parentId);
-    return parents;
-  },
-  set: function () { throw new Error('Stream.parents property is read only'); }
-});
-
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    var self = this;
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      children.push(self.connection.datastore.getStreamById(childrenId));
-    });
-    return children;
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-
-},{"underscore":2}],5:[function(require,module,exports){
-
-var _ = require('underscore');
-/**
- *
- * @type {Function}
- * @constructor
- */
-var Event = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-};
-
-
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
-
-},{"underscore":2}],4:[function(require,module,exports){
+},{"../EventsNode":21}],4:[function(require,module,exports){
 /**
  * TODO
  * @type {*}
@@ -2298,7 +2234,84 @@ Object.defineProperty(Connection.prototype, 'shortId', {
   set: function () { throw new Error('Connection.shortId property is read only'); }
 });
 
-},{"./Datastore.js":15,"./connection/Events.js":22,"./connection/Streams.js":23,"./system/System.js":7,"underscore":2}],9:[function(require,module,exports){
+},{"./Datastore.js":15,"./connection/Events.js":23,"./connection/Streams.js":22,"./system/System.js":9,"underscore":2}],5:[function(require,module,exports){
+
+var _ = require('underscore');
+
+var Stream = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
+};
+
+
+Object.defineProperty(Stream.prototype, 'parents', {
+  get: function () {
+    var self = this;
+
+    if (! self.parentId) { return []; }
+    var parent = self.connection.datastore.getStreamById(self.parentId);
+    var parents = parent.parents;
+    parents.push(parent);
+    return parents;
+  },
+  set: function () { throw new Error('Stream.parents property is read only'); }
+});
+
+Object.defineProperty(Stream.prototype, 'parentsIds', {
+  get: function () {
+    var self = this;
+
+    if (! self.parentId) { return []; }
+    var parent = self.connection.datastore.getStreamById(self.parentId);
+    var parents = parent.parentsIds;
+    parents.push(self.parentId);
+    return parents;
+  },
+  set: function () { throw new Error('Stream.parents property is read only'); }
+});
+
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    var self = this;
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      children.push(self.connection.datastore.getStreamById(childrenId));
+    });
+    return children;
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+
+},{"underscore":2}],24:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var GenericEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'GenericEventsNode',
+
+
+
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
+  return true;
+};
+
+
+},{"../EventsNode":21}],7:[function(require,module,exports){
 var _ = require('underscore');
 
 var Filter = module.exports = function (settings) {
@@ -2326,7 +2339,224 @@ Filter.prototype.focusedOnSingleStream = function () {
   return null;
 };
 
+},{"underscore":2}],6:[function(require,module,exports){
+
+var _ = require('underscore');
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
+};
+
+
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
+
 },{"underscore":2}],18:[function(require,module,exports){
+var Backbone = require('backbone');
+
+var NodeModel = module.exports = Backbone.Model.extend({ });
+},{"backbone":25}],16:[function(require,module,exports){
+
+var _ = require('underscore');
+var TreemapUtils = module.exports = TreemapUtils || {};
+TreemapUtils.sumArray = function (nodes) {
+  // Use one adding function rather than create a new one each
+  // time sumArray is called.
+  return _.reduce(TreemapUtils._extractWeight(nodes), function (memo, num) {
+    return memo + num;
+  }, 0);
+
+};
+TreemapUtils._getMaxWeight = function (nodes) {
+  return Math.max.apply(null, TreemapUtils._extractWeight(nodes));
+};
+TreemapUtils._getMinWeight = function (nodes) {
+  return Math.min.apply(null, TreemapUtils._extractWeight(nodes));
+};
+TreemapUtils._extractWeight = function (nodes) {
+  var result = [];
+  _.each(nodes, function (node) {
+    result.push(node.normalizedWeight);
+  });
+  return result;
+};
+//
+// Treemap squarify layout function.
+//  rect - containing rectangle; an array of 4 values x, y, width, height
+//  vals - array of (normalized) float values each representing percent contribution to
+//  total area of containing rectangle
+//
+// Non-recursive implementation of the squarify treemap layout algorithm published in:
+// "Squarified Treemaps" by Mark Bruls, Kees Huizing and Jarke J. van Wijk
+// http://www.win.tue.nl/~vanwijk/stm.pdf
+//
+// Includes tips and tricks from:
+// http://ejohn.org/blog/fast-javascript-maxmin/#postcomment
+//
+TreemapUtils.squarify = function (rect, vals) {
+  // console.log('squrify begin');
+
+  var Subrectangle = function (rect) {
+    this.setX = function (x) {
+      rect.width -= x - rect.x;
+      rect.x = x;
+    };
+    this.setY = function (y) {
+      rect.height -= y - rect.y;
+      rect.y = y;
+    };
+    this.getX = function () {
+      return rect.x;
+    };
+    this.getY = function () {
+      return rect.y;
+    };
+    this.getW = function () {
+      return rect.width;
+    };
+    this.getH = function () {
+      return rect.height;
+    };
+    this.getWidth = function () {
+      return Math.min(rect.width, rect.height);
+    };
+  };
+  //
+  // The function worst() gives the highest aspect ratio of a list
+  // of rectangles, given the length of the side along which they are to
+  // be laid out.
+  // Let a list of areas R be given and let s be their total sum. Then the function worst is
+  // defined by:
+  // worst(R,w) = max(max(w^2r=s^2; s^2=(w^2r)))
+  //              for all r in R
+  // Since one term is increasing in r and the other is decreasing, this is equal to
+  //              max(w^2r+=(s^2); s^2=(w^2r-))
+  // where r+ and r- are the maximum and minimum of R.
+  // Hence, the current maximum and minimum of the row that is being laid out.
+  //
+  var worst = function (r, w) {
+    var rMax = TreemapUtils._getMaxWeight(r);
+    var rMin = TreemapUtils._getMinWeight(r);
+
+    var s = TreemapUtils.sumArray(r);
+    var sSqr = s * s;
+    var wSqr = w * w;
+    return Math.max((wSqr * rMax) / sSqr, sSqr / (wSqr * rMin));
+  };
+
+  // Take row of values and calculate the set of rectangles
+  // that will fit in the current subrectangle.
+  var layoutrow = function (row) {
+    var x = subrect.getX(),
+      y = subrect.getY(),
+      maxX = x + subrect.getW(),
+      maxY = y + subrect.getH(),
+      rowHeight,
+      i,
+      w;
+
+    if (subrect.getW() < subrect.getH()) {
+      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getW());
+      if (y + rowHeight >= maxY) { rowHeight = maxY - y; }
+      for (i = 0; i < row.length; i++) {
+        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
+        if (x + w > maxX || i + 1 === row.length) { w = maxX - x; }
+        layout[row[i].uniqueId] = {x: x, y: y, width: w, height: rowHeight};
+
+        x = (x + w);
+      }
+      subrect.setY(y + rowHeight);
+    } else {
+      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getH());
+      if (x + rowHeight >= maxX) { rowHeight = maxX - x; }
+      for (i = 0; i < row.length; i++) {
+        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
+        if (y + w > maxY || i + 1 === row.length) { w = maxY - y; }
+        // layout.push({x: x, y: y, width: rowHeight, height: w});
+        layout[row[i].uniqueId] = {x: x, y: y, width: rowHeight, height: w};
+
+        y = (y + w);
+      }
+      subrect.setX(x + rowHeight);
+    }
+  };
+
+  // Pull values from input array until the aspect ratio of rectangles in row
+  // under construction degrades.
+  var buildRow = function (children) {
+    var row = [];
+    row.push(children.shift()); // descending input
+    //row.push(children.pop()); // ascending input
+    if (children.length === 0) {
+      return row;
+    }
+    var newRow = row.slice();
+    var w = subrect.getWidth();
+    do {
+      newRow.push(children[0]); // descending input
+      //newRow.push(children[children.length-1]); // ascending input
+      //  console.log('worst');
+//      console.log(worst(row, w));
+      if (worst(row, w) > worst(newRow, w)) {
+        row = newRow.slice();
+        children.shift(); // descending input
+        //children.pop(); // ascending input
+      }
+      else {
+        break;
+      }
+    } while (children.length > 0);
+    return row;
+  };
+
+  // Non recursive version of Bruls, Huizing and van Wijk
+  // squarify layout algorithim.
+  // While values exist in input array, make a row with good aspect
+  // ratios for its values then caclulate the row's geometry, repeat.
+  var nrSquarify = function (children) {
+    do {
+      layoutrow(buildRow(children));
+    } while (children.length > 0);
+  };
+
+
+  var layout = {};
+  var newVals;
+
+  newVals =  _.clone(_.sortBy(vals, function (num) {
+    return num.normalizedWeight;
+  }).reverse());
+
+  var i;
+
+  // if either height or width of containing rect are <= 0
+  // simply copy containing rect to layout rects
+  if (rect.width <= 0 || rect.height <= 0) {
+    for (i = 0; i < vals.length; i++) {
+      layout[vals[i].uniqueId] = rect;
+    }
+  } else { // else compute squarified layout
+    _.each(newVals, function (val) {
+      val.normalizedWeight = Math.round(val.normalizedWeight * rect.width * rect.height);
+
+    });
+    // vals come in normalized. convert them here to make them relative to containing rect
+    // newVals = vals.map(function(item){return item*(rect.width*rect.height);});
+    var subrect = new Subrectangle(rect);
+    nrSquarify(newVals);
+  }
+  return layout;
+};
+},{"underscore":2}],17:[function(require,module,exports){
 var  Marionette = require('backbone.marionette');
 
 var NodeView = module.exports = Marionette.ItemView.extend({
@@ -2342,15 +2572,23 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     this.$el.css('background-color', this.getRandomColor());
     this.$el.addClass('node');
     this.$el.attr('id', this.model.get('id'));
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('name'));
+    if (this.model.get('name') === 'GenericEventsNode' ||
+        this.model.get('name') === 'NotesEventsNode') {
+      this.$el.html(this.model.get('name'));
+    }
    // this.$el.html(this.model.get('name'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+
     if (this.model.get('containerId')) {
-      this.$el.css('width', this.model.get('width') + '%');
-      this.$el.css('height', this.model.get('height') + '%');
       $('#' + this.model.get('containerId')).append(this.$el);
       this.$el.addClass('animated  bounceIn');
     } else {
-      this.$el.css('width', '100%');
-      this.$el.css('height', '100%');
+
       $('#tree').html(this.$el);
     }
   },
@@ -2363,11 +2601,7 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     return color;
   }
 });
-},{"backbone.marionette":24}],17:[function(require,module,exports){
-var Backbone = require('backbone');
-
-var NodeModel = module.exports = Backbone.Model.extend({ });
-},{"backbone":25}],16:[function(require,module,exports){
+},{"backbone.marionette":26}],19:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -2476,7 +2710,7 @@ StreamNode.registeredEventNodes = {
   'Notes' : require('./eventsNode/NotesEventsNode.js'),
   'Generic' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":12,"./eventsNode/GenericEventsNode.js":21,"./eventsNode/NotesEventsNode.js":19,"underscore":2}],8:[function(require,module,exports){
+},{"./TreeNode":11,"./eventsNode/GenericEventsNode.js":24,"./eventsNode/NotesEventsNode.js":20,"underscore":2}],10:[function(require,module,exports){
 var _ = require('underscore');
 
 exports.mergeAndClean = function (sourceA, sourceB) {
@@ -2507,7 +2741,7 @@ exports.getQueryParametersString = function (data) {
   }, this).join('&');
 };
 
-},{"underscore":2}],20:[function(require,module,exports){
+},{"underscore":2}],21:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 
 /**
@@ -2548,7 +2782,7 @@ EventsNode.acceptThisEventType = function (eventType) {
 };
 
 
-},{"./TreeNode":12}],13:[function(require,module,exports){
+},{"./TreeNode":11}],14:[function(require,module,exports){
 //file: system node
 
 var socketIO = require('socket.io-client');
@@ -2632,7 +2866,7 @@ exports.request = function (pack)  {
   req.end();
 };
 
-},{"socket.io-client":26}],26:[function(require,module,exports){
+},{"socket.io-client":27}],27:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -6509,88 +6743,6 @@ if (typeof define === "function" && define.amd) {
 })()
 },{}],22:[function(require,module,exports){
 
-var Utility = require('../utility/Utility.js'),
-  _ = require('underscore'),
-  Event = require('../Event');
-
-var Events = module.exports = function (conn) {
-  this.conn = conn;
-};
-
-Events.prototype.get = function (filter, deltaFilter, callback, context) {
-  //TODO handle caching
-  var result = [];
-  var self = this;
-  this._get(filter, deltaFilter, function (error, eventList) {
-    _.each(eventList, function (eventData) {
-      result.push(new Event(self.conn, eventData));
-    });
-    callback(error, result);
-  }, context);
-};
-
-Events.prototype._get = function (filter, deltaFilter, callback, context) {
-  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
-  var url = '/events?' + Utility.getQueryParametersString(tParams);
-  this.conn.request('GET', url, callback, null, context);
-};
-
-
-//TODO check that we can really override method "create()" of object
-/**
- *
- * @param {Array} events
- */
-Events.prototype.create = function (events, callback, context) {
-  var url = '/events/batch';
-  _.each(events, function (event, index) {
-    event.tempRefId = 'temp_ref_id_' + index;
-  });
-  this.conn.request('POST', url, function (err, result) {
-    _.each(events, function (event) {
-      event.id = result[event.tempRefId].id;
-    });
-    callback(err, result);
-  }, events, context);
-};
-
-Events.prototype.update = function (event, callback, context) {
-  var url = '/events/' + event.id;
-  this.conn.request('PUT', url, callback, null, context);
-};
-
-//TODO: rewrite once API for monitoring is sorted out
-Events.prototype.monitor = function (filter, callback) {
-  var that = this;
-  var lastSynchedST = -1;
-
-  this.conn.monitor(filter, function (signal, payload) {
-    switch (signal) {
-    case 'connect':
-      // set current serverTime as last update
-      lastSynchedST = that.conn.getServerTime();
-      callback(signal, payload);
-      break;
-    case 'event' :
-      that.conn.events.get(filter, function (error, result) {
-        _.each(result, function (e) {
-          if (e.modified > lastSynchedST)  {
-            lastSynchedST = e.modified;
-          }
-        });
-        callback('events', result);
-      }, { modifiedSince : lastSynchedST});
-      break;
-    case 'error' :
-      callback(signal, payload);
-      break;
-    }
-
-  });
-};
-
-},{"../Event":5,"../utility/Utility.js":8,"underscore":2}],23:[function(require,module,exports){
-
 var _ = require('underscore'),
   Utility = require('../utility/Utility.js'),
   Stream = require('../Stream.js');
@@ -6711,7 +6863,89 @@ Streams.prototype.Utils = {
 
 };
 
-},{"../Stream.js":6,"../utility/Utility.js":8,"underscore":2}],25:[function(require,module,exports){
+},{"../Stream.js":5,"../utility/Utility.js":10,"underscore":2}],23:[function(require,module,exports){
+
+var Utility = require('../utility/Utility.js'),
+  _ = require('underscore'),
+  Event = require('../Event');
+
+var Events = module.exports = function (conn) {
+  this.conn = conn;
+};
+
+Events.prototype.get = function (filter, deltaFilter, callback, context) {
+  //TODO handle caching
+  var result = [];
+  var self = this;
+  this._get(filter, deltaFilter, function (error, eventList) {
+    _.each(eventList, function (eventData) {
+      result.push(new Event(self.conn, eventData));
+    });
+    callback(error, result);
+  }, context);
+};
+
+Events.prototype._get = function (filter, deltaFilter, callback, context) {
+  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
+  var url = '/events?' + Utility.getQueryParametersString(tParams);
+  this.conn.request('GET', url, callback, null, context);
+};
+
+
+//TODO check that we can really override method "create()" of object
+/**
+ *
+ * @param {Array} events
+ */
+Events.prototype.create = function (events, callback, context) {
+  var url = '/events/batch';
+  _.each(events, function (event, index) {
+    event.tempRefId = 'temp_ref_id_' + index;
+  });
+  this.conn.request('POST', url, function (err, result) {
+    _.each(events, function (event) {
+      event.id = result[event.tempRefId].id;
+    });
+    callback(err, result);
+  }, events, context);
+};
+
+Events.prototype.update = function (event, callback, context) {
+  var url = '/events/' + event.id;
+  this.conn.request('PUT', url, callback, null, context);
+};
+
+//TODO: rewrite once API for monitoring is sorted out
+Events.prototype.monitor = function (filter, callback) {
+  var that = this;
+  var lastSynchedST = -1;
+
+  this.conn.monitor(filter, function (signal, payload) {
+    switch (signal) {
+    case 'connect':
+      // set current serverTime as last update
+      lastSynchedST = that.conn.getServerTime();
+      callback(signal, payload);
+      break;
+    case 'event' :
+      that.conn.events.get(filter, function (error, result) {
+        _.each(result, function (e) {
+          if (e.modified > lastSynchedST)  {
+            lastSynchedST = e.modified;
+          }
+        });
+        callback('events', result);
+      }, { modifiedSince : lastSynchedST});
+      break;
+    case 'error' :
+      callback(signal, payload);
+      break;
+    }
+
+  });
+};
+
+},{"../Event":6,"../utility/Utility.js":10,"underscore":2}],25:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -8285,7 +8519,7 @@ Streams.prototype.Utils = {
 }).call(this);
 
 })()
-},{"underscore":2}],24:[function(require,module,exports){
+},{"underscore":2}],26:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -10247,7 +10481,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":27,"backbone.babysitter":29,"backbone.wreqr":28,"underscore":2}],27:[function(require,module,exports){
+},{"backbone":28,"backbone.babysitter":29,"backbone.wreqr":30,"underscore":2}],28:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -11821,7 +12055,187 @@ _.extend(Marionette.Module, {
 }).call(this);
 
 })()
-},{"underscore":2}],28:[function(require,module,exports){
+},{"underscore":2}],29:[function(require,module,exports){
+// Backbone.BabySitter
+// -------------------
+// v0.0.6
+//
+// Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.
+// Distributed under MIT license
+//
+// http://github.com/babysitterjs/backbone.babysitter
+
+(function (root, factory) {
+  if (typeof exports === 'object') {
+
+    var underscore = require('underscore');
+    var backbone = require('backbone');
+
+    module.exports = factory(underscore, backbone);
+
+  } else if (typeof define === 'function' && define.amd) {
+
+    define(['underscore', 'backbone'], factory);
+
+  } 
+}(this, function (_, Backbone) {
+  "option strict";
+
+  // Backbone.ChildViewContainer
+// ---------------------------
+//
+// Provide a container to store, retrieve and
+// shut down child views.
+
+Backbone.ChildViewContainer = (function(Backbone, _){
+  
+  // Container Constructor
+  // ---------------------
+
+  var Container = function(views){
+    this._views = {};
+    this._indexByModel = {};
+    this._indexByCustom = {};
+    this._updateLength();
+
+    _.each(views, this.add, this);
+  };
+
+  // Container Methods
+  // -----------------
+
+  _.extend(Container.prototype, {
+
+    // Add a view to this container. Stores the view
+    // by `cid` and makes it searchable by the model
+    // cid (and model itself). Optionally specify
+    // a custom key to store an retrieve the view.
+    add: function(view, customIndex){
+      var viewCid = view.cid;
+
+      // store the view
+      this._views[viewCid] = view;
+
+      // index it by model
+      if (view.model){
+        this._indexByModel[view.model.cid] = viewCid;
+      }
+
+      // index by custom
+      if (customIndex){
+        this._indexByCustom[customIndex] = viewCid;
+      }
+
+      this._updateLength();
+    },
+
+    // Find a view by the model that was attached to
+    // it. Uses the model's `cid` to find it.
+    findByModel: function(model){
+      return this.findByModelCid(model.cid);
+    },
+
+    // Find a view by the `cid` of the model that was attached to
+    // it. Uses the model's `cid` to find the view `cid` and
+    // retrieve the view using it.
+    findByModelCid: function(modelCid){
+      var viewCid = this._indexByModel[modelCid];
+      return this.findByCid(viewCid);
+    },
+
+    // Find a view by a custom indexer.
+    findByCustom: function(index){
+      var viewCid = this._indexByCustom[index];
+      return this.findByCid(viewCid);
+    },
+
+    // Find by index. This is not guaranteed to be a
+    // stable index.
+    findByIndex: function(index){
+      return _.values(this._views)[index];
+    },
+
+    // retrieve a view by it's `cid` directly
+    findByCid: function(cid){
+      return this._views[cid];
+    },
+
+    // Remove a view
+    remove: function(view){
+      var viewCid = view.cid;
+
+      // delete model index
+      if (view.model){
+        delete this._indexByModel[view.model.cid];
+      }
+
+      // delete custom index
+      _.any(this._indexByCustom, function(cid, key) {
+        if (cid === viewCid) {
+          delete this._indexByCustom[key];
+          return true;
+        }
+      }, this);
+
+      // remove the view from the container
+      delete this._views[viewCid];
+
+      // update the length
+      this._updateLength();
+    },
+
+    // Call a method on every view in the container,
+    // passing parameters to the call method one at a
+    // time, like `function.call`.
+    call: function(method){
+      this.apply(method, _.tail(arguments));
+    },
+
+    // Apply a method on every view in the container,
+    // passing parameters to the call method one at a
+    // time, like `function.apply`.
+    apply: function(method, args){
+      _.each(this._views, function(view){
+        if (_.isFunction(view[method])){
+          view[method].apply(view, args || []);
+        }
+      });
+    },
+
+    // Update the `.length` attribute on this container
+    _updateLength: function(){
+      this.length = _.size(this._views);
+    }
+  });
+
+  // Borrowing this code from Backbone.Collection:
+  // http://backbonejs.org/docs/backbone.html#section-106
+  //
+  // Mix in methods from Underscore, for iteration, and other
+  // collection related features.
+  var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter', 
+    'select', 'reject', 'every', 'all', 'some', 'any', 'include', 
+    'contains', 'invoke', 'toArray', 'first', 'initial', 'rest', 
+    'last', 'without', 'isEmpty', 'pluck'];
+
+  _.each(methods, function(method) {
+    Container.prototype[method] = function() {
+      var views = _.values(this._views);
+      var args = [views].concat(_.toArray(arguments));
+      return _[method].apply(_, args);
+    };
+  });
+
+  // return the public API
+  return Container;
+})(Backbone, _);
+
+  return Backbone.ChildViewContainer; 
+
+}));
+
+
+},{"backbone":28,"underscore":2}],30:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -12101,185 +12515,5 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":27,"underscore":2}],29:[function(require,module,exports){
-// Backbone.BabySitter
-// -------------------
-// v0.0.6
-//
-// Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.
-// Distributed under MIT license
-//
-// http://github.com/babysitterjs/backbone.babysitter
-
-(function (root, factory) {
-  if (typeof exports === 'object') {
-
-    var underscore = require('underscore');
-    var backbone = require('backbone');
-
-    module.exports = factory(underscore, backbone);
-
-  } else if (typeof define === 'function' && define.amd) {
-
-    define(['underscore', 'backbone'], factory);
-
-  } 
-}(this, function (_, Backbone) {
-  "option strict";
-
-  // Backbone.ChildViewContainer
-// ---------------------------
-//
-// Provide a container to store, retrieve and
-// shut down child views.
-
-Backbone.ChildViewContainer = (function(Backbone, _){
-  
-  // Container Constructor
-  // ---------------------
-
-  var Container = function(views){
-    this._views = {};
-    this._indexByModel = {};
-    this._indexByCustom = {};
-    this._updateLength();
-
-    _.each(views, this.add, this);
-  };
-
-  // Container Methods
-  // -----------------
-
-  _.extend(Container.prototype, {
-
-    // Add a view to this container. Stores the view
-    // by `cid` and makes it searchable by the model
-    // cid (and model itself). Optionally specify
-    // a custom key to store an retrieve the view.
-    add: function(view, customIndex){
-      var viewCid = view.cid;
-
-      // store the view
-      this._views[viewCid] = view;
-
-      // index it by model
-      if (view.model){
-        this._indexByModel[view.model.cid] = viewCid;
-      }
-
-      // index by custom
-      if (customIndex){
-        this._indexByCustom[customIndex] = viewCid;
-      }
-
-      this._updateLength();
-    },
-
-    // Find a view by the model that was attached to
-    // it. Uses the model's `cid` to find it.
-    findByModel: function(model){
-      return this.findByModelCid(model.cid);
-    },
-
-    // Find a view by the `cid` of the model that was attached to
-    // it. Uses the model's `cid` to find the view `cid` and
-    // retrieve the view using it.
-    findByModelCid: function(modelCid){
-      var viewCid = this._indexByModel[modelCid];
-      return this.findByCid(viewCid);
-    },
-
-    // Find a view by a custom indexer.
-    findByCustom: function(index){
-      var viewCid = this._indexByCustom[index];
-      return this.findByCid(viewCid);
-    },
-
-    // Find by index. This is not guaranteed to be a
-    // stable index.
-    findByIndex: function(index){
-      return _.values(this._views)[index];
-    },
-
-    // retrieve a view by it's `cid` directly
-    findByCid: function(cid){
-      return this._views[cid];
-    },
-
-    // Remove a view
-    remove: function(view){
-      var viewCid = view.cid;
-
-      // delete model index
-      if (view.model){
-        delete this._indexByModel[view.model.cid];
-      }
-
-      // delete custom index
-      _.any(this._indexByCustom, function(cid, key) {
-        if (cid === viewCid) {
-          delete this._indexByCustom[key];
-          return true;
-        }
-      }, this);
-
-      // remove the view from the container
-      delete this._views[viewCid];
-
-      // update the length
-      this._updateLength();
-    },
-
-    // Call a method on every view in the container,
-    // passing parameters to the call method one at a
-    // time, like `function.call`.
-    call: function(method){
-      this.apply(method, _.tail(arguments));
-    },
-
-    // Apply a method on every view in the container,
-    // passing parameters to the call method one at a
-    // time, like `function.apply`.
-    apply: function(method, args){
-      _.each(this._views, function(view){
-        if (_.isFunction(view[method])){
-          view[method].apply(view, args || []);
-        }
-      });
-    },
-
-    // Update the `.length` attribute on this container
-    _updateLength: function(){
-      this.length = _.size(this._views);
-    }
-  });
-
-  // Borrowing this code from Backbone.Collection:
-  // http://backbonejs.org/docs/backbone.html#section-106
-  //
-  // Mix in methods from Underscore, for iteration, and other
-  // collection related features.
-  var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter', 
-    'select', 'reject', 'every', 'all', 'some', 'any', 'include', 
-    'contains', 'invoke', 'toArray', 'first', 'initial', 'rest', 
-    'last', 'without', 'isEmpty', 'pluck'];
-
-  _.each(methods, function(method) {
-    Container.prototype[method] = function() {
-      var views = _.values(this._views);
-      var args = [views].concat(_.toArray(arguments));
-      return _[method].apply(_, args);
-    };
-  });
-
-  // return the public API
-  return Container;
-})(Backbone, _);
-
-  return Backbone.ChildViewContainer; 
-
-}));
-
-
-},{"backbone":27,"underscore":2}]},{},["3XoGqR"])
+},{"backbone":28,"underscore":2}]},{},["3XoGqR"])
 ;

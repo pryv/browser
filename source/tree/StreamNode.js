@@ -10,21 +10,16 @@ var StreamNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
-    this.events = {};
+
+    /**
+     * eventsNodes are stored by their key
+     **/
+    this.eventsNodes = {};
+
   },
   {
     className: 'StreamNode',
 
-
-    // --- Specific to StreamNode
-
-    /**
-     * compute changes on the event
-     * @return a list of changes
-     */
-    update : function (streamData) {
-
-    },
 
     // ----
 
@@ -35,8 +30,6 @@ var StreamNode = module.exports = TreeNode.implement(
         weight += child.getWeight();
       });
 
-      // count 1 per event (to be changed :)
-      weight += _.keys(this.events).length;
       return weight;
     },
 
@@ -44,21 +37,45 @@ var StreamNode = module.exports = TreeNode.implement(
       var self = this;
       var children = [];
 
+      // Streams
       _.each(this.stream.children, function (child) {
-        /* TODO
-         add events
-         */
         var childTemp =  self.connectionNode.streamNodes[child.id];
         children.push(childTemp);
-
       });
+
+      // Events
+      _.each(this.eventsNodes, function (eventNode) {
+        children.push(eventNode);       
+      });
+
       return children;
     },
 
     eventEnterScope: function (event, reason, callback) {
-      this.events[event.id] = event;
-      callback(null, this);
+      var eventView = null;
+      // find the first matching eventView Type
+      var keys = _.keys(StreamNode.registeredEventNodes);
+      for (var i = 0; (i < keys.length && eventView === null); i++) {
+        var key = keys[i];
+        if (StreamNode.registeredEventNodes[key].acceptThisEventType(event.type)) {
+          // found a handler !! can we use an already active
+          if (_.has(this.eventsNodes, key)) {
+            eventView =  this.eventsNodes[key]; // found one
+          }  else { // create is
+            eventView = new StreamNode.registeredEventNodes[key](this);
+            this.eventsNodes[key] = eventView;
+          }
+        }
+      }
+
+      if (eventView === null) {
+        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+
+      eventView.eventEnterScope(event, reason, callback);
+
     },
+
 
     eventLeaveScope: function (event, reason, callback) {
       delete this.events[event.id];
@@ -74,22 +91,18 @@ var StreamNode = module.exports = TreeNode.implement(
     _debugTree : function () {
       var me = {
         name : this.stream.name,
-        events : _.keys(this.events).length,
         nullChildren : 0
       };
 
       _.extend(me, TreeNode.prototype._debugTree.call(this));
 
-      if (this.getChildren()) {
-        me.children = []; // overrride the default getChildren
-        _.each(this.getChildren(), function (child) {
-          if (child.getWeight() > 0) {
-            me.children.push(child._debugTree());
-          } else {
-            me.nullChildren++;
-          }
-        });
-      }
+
       return me;
     }
   });
+
+
+StreamNode.registeredEventNodes = {
+  'Notes' : require('./eventsNode/NotesEventsNode.js'),
+  'Generic' : require('./eventsNode/GenericEventsNode.js')
+};

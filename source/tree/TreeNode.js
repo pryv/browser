@@ -22,7 +22,7 @@ TreeNode.implement = function (constructor, members) {
   }
   newImplementation.prototype = Object.create(this.prototype);
   _.extend(newImplementation.prototype, members);
-
+  newImplementation.implement = this.implement;
   return newImplementation;
 };
 

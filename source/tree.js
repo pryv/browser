@@ -13,14 +13,14 @@ var RootNode = require('./tree/RootNode.js');
 
 
 var connections = {
-  //fredos : new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}),
-  //perki :  new Pryv.Connection('perkikiki', 'Ve-U8SCASM', {domain : 'pryv.in'}),
-  //jordane:  new Pryv.Connection('jordane', 'eTpAijAyD5', {domain : 'pryv.in'})
+  fredos : new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}),
+  perki1 :  new Pryv.Connection('perkikiki', 'Ve-U8SCASM', {domain : 'pryv.in'}),
+  //jordane:  new Pryv.Connection('jordane', 'eTpAijAyD5', {domain : 'pryv.in'}),
   perki : new Pryv.Connection('perkikiki', 'PVriN2MuJ9', {domain : 'pryv.in'})
 };
 
 
-var nullFilter = new Pryv.Filter({limit : 2});
+var nullFilter = new Pryv.Filter({limit : 200});
 
 var rootNode = new RootNode();
 

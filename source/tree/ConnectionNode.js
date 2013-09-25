@@ -30,24 +30,21 @@ var ConnectionNode = module.exports = TreeNode.implement(
       options = options || {};
       var self = this;
       self.streamNodes = {};
-      self.connection.streams.get(function (error, result) {
-        if (error) {  return callback('Failed ConnectionNode.initStructure. - ' + error); }
 
 
-        self.connection.streams.Utils.walkDataTree(result, function (streamData) {
-
-
-          // walkDataTree insure that we pass by the parents before the childrens
+      self.connection.streams.walkTree(options,
+        function (stream) {  // eachNode
           var parentNode = self;
-          if (streamData.parentId) {   // if not parent, this connection node is the parent
-            parentNode = self.streamNodes[streamData.parentId];
+          if (stream.parent) {   // if not parent, this connection node is the parent
+            parentNode = self.streamNodes[stream.parent.id];
           }
-          var stream = new Pryv.Stream(self.connection, streamData);
-          self.streamNodes[streamData.id] = new StreamNode(self, parentNode, stream);
+          self.streamNodes[stream.id] = new StreamNode(self, parentNode, stream);
+        },
+        function (error) {   // done
+          if (error) { error = 'ConnectionNode failed to init structure - ' + error }
+          callback(error);
         });
 
-        callback();
-      }, options);
     },
 
     /**
@@ -74,7 +71,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
       callback();
     },
 
-    // ---------- Node -------------  //
+// ---------- Node -------------  //
 
     getChildren: function () {
       var self = this;
@@ -111,7 +108,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
       node.eventChange(event, reason, callback);
     },
 
-    //----------- debug ------------//
+//----------- debug ------------//
     _debugTree : function () {
       var me = {
         name : this.connection.shortId

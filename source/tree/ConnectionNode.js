@@ -2,7 +2,6 @@
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 var StreamNode = require('./StreamNode');
-var Pryv = require('pryv');
 
 /**
  * Always call intStructure after creating a new ConnectionNode
@@ -41,7 +40,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
           self.streamNodes[stream.id] = new StreamNode(self, parentNode, stream);
         },
         function (error) {   // done
-          if (error) { error = 'ConnectionNode failed to init structure - ' + error }
+          if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
           callback(error);
         });
 

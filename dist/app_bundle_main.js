@@ -1821,7 +1821,6 @@ _.extend(TreeNode.prototype, {
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 var StreamNode = require('./StreamNode');
-var Pryv = require('pryv');
 
 /**
  * Always call intStructure after creating a new ConnectionNode
@@ -1860,7 +1859,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
           self.streamNodes[stream.id] = new StreamNode(self, parentNode, stream);
         },
         function (error) {   // done
-          if (error) { error = 'ConnectionNode failed to init structure - ' + error }
+          if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
           callback(error);
         });
 
@@ -1944,7 +1943,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
 
-},{"./StreamNode":17,"./TreeNode":11,"pryv":3,"underscore":2}],4:[function(require,module,exports){
+},{"./StreamNode":17,"./TreeNode":11,"underscore":2}],4:[function(require,module,exports){
 /**
  * TODO
  * @type {*}
@@ -3822,7 +3821,89 @@ Datastore.prototype.getStreamById = function (streamId, test) {
   return result;
 };
 
-},{"underscore":21}],19:[function(require,module,exports){
+},{"underscore":21}],18:[function(require,module,exports){
+
+var Utility = require('../utility/Utility.js'),
+  _ = require('underscore'),
+  Event = require('../Event');
+
+var Events = module.exports = function (conn) {
+  this.conn = conn;
+};
+
+Events.prototype.get = function (filter, deltaFilter, callback, context) {
+  //TODO handle caching
+  var result = [];
+  var self = this;
+  this._get(filter, deltaFilter, function (error, eventList) {
+    _.each(eventList, function (eventData) {
+      result.push(new Event(self.conn, eventData));
+    });
+    callback(error, result);
+  }, context);
+};
+
+Events.prototype._get = function (filter, deltaFilter, callback, context) {
+  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
+  var url = '/events?' + Utility.getQueryParametersString(tParams);
+  this.conn.request('GET', url, callback, null, context);
+};
+
+
+//TODO check that we can really override method "create()" of object
+/**
+ *
+ * @param {Array} events
+ */
+Events.prototype.create = function (events, callback, context) {
+  var url = '/events/batch';
+  _.each(events, function (event, index) {
+    event.tempRefId = 'temp_ref_id_' + index;
+  });
+  this.conn.request('POST', url, function (err, result) {
+    _.each(events, function (event) {
+      event.id = result[event.tempRefId].id;
+    });
+    callback(err, result);
+  }, events, context);
+};
+
+Events.prototype.update = function (event, callback, context) {
+  var url = '/events/' + event.id;
+  this.conn.request('PUT', url, callback, null, context);
+};
+
+//TODO: rewrite once API for monitoring is sorted out
+Events.prototype.monitor = function (filter, callback) {
+  var that = this;
+  var lastSynchedST = -1;
+
+  this.conn.monitor(filter, function (signal, payload) {
+    switch (signal) {
+    case 'connect':
+      // set current serverTime as last update
+      lastSynchedST = that.conn.getServerTime();
+      callback(signal, payload);
+      break;
+    case 'event' :
+      that.conn.events.get(filter, function (error, result) {
+        _.each(result, function (e) {
+          if (e.modified > lastSynchedST)  {
+            lastSynchedST = e.modified;
+          }
+        });
+        callback('events', result);
+      }, { modifiedSince : lastSynchedST});
+      break;
+    case 'error' :
+      callback(signal, payload);
+      break;
+    }
+
+  });
+};
+
+},{"../Event":5,"../utility/Utility.js":10,"underscore":21}],19:[function(require,module,exports){
 
 var _ = require('underscore'),
   Utility = require('../utility/Utility.js'),
@@ -4007,89 +4088,7 @@ Streams.Utils = {
 
 };
 
-},{"../Stream.js":6,"../utility/Utility.js":10,"underscore":21}],18:[function(require,module,exports){
-
-var Utility = require('../utility/Utility.js'),
-  _ = require('underscore'),
-  Event = require('../Event');
-
-var Events = module.exports = function (conn) {
-  this.conn = conn;
-};
-
-Events.prototype.get = function (filter, deltaFilter, callback, context) {
-  //TODO handle caching
-  var result = [];
-  var self = this;
-  this._get(filter, deltaFilter, function (error, eventList) {
-    _.each(eventList, function (eventData) {
-      result.push(new Event(self.conn, eventData));
-    });
-    callback(error, result);
-  }, context);
-};
-
-Events.prototype._get = function (filter, deltaFilter, callback, context) {
-  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
-  var url = '/events?' + Utility.getQueryParametersString(tParams);
-  this.conn.request('GET', url, callback, null, context);
-};
-
-
-//TODO check that we can really override method "create()" of object
-/**
- *
- * @param {Array} events
- */
-Events.prototype.create = function (events, callback, context) {
-  var url = '/events/batch';
-  _.each(events, function (event, index) {
-    event.tempRefId = 'temp_ref_id_' + index;
-  });
-  this.conn.request('POST', url, function (err, result) {
-    _.each(events, function (event) {
-      event.id = result[event.tempRefId].id;
-    });
-    callback(err, result);
-  }, events, context);
-};
-
-Events.prototype.update = function (event, callback, context) {
-  var url = '/events/' + event.id;
-  this.conn.request('PUT', url, callback, null, context);
-};
-
-//TODO: rewrite once API for monitoring is sorted out
-Events.prototype.monitor = function (filter, callback) {
-  var that = this;
-  var lastSynchedST = -1;
-
-  this.conn.monitor(filter, function (signal, payload) {
-    switch (signal) {
-    case 'connect':
-      // set current serverTime as last update
-      lastSynchedST = that.conn.getServerTime();
-      callback(signal, payload);
-      break;
-    case 'event' :
-      that.conn.events.get(filter, function (error, result) {
-        _.each(result, function (e) {
-          if (e.modified > lastSynchedST)  {
-            lastSynchedST = e.modified;
-          }
-        });
-        callback('events', result);
-      }, { modifiedSince : lastSynchedST});
-      break;
-    case 'error' :
-      callback(signal, payload);
-      break;
-    }
-
-  });
-};
-
-},{"../Event":5,"../utility/Utility.js":10,"underscore":21}],23:[function(require,module,exports){
+},{"../Stream.js":6,"../utility/Utility.js":10,"underscore":21}],23:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 
 /**

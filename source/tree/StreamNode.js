@@ -45,7 +45,7 @@ var StreamNode = module.exports = TreeNode.implement(
 
       // Events
       _.each(this.eventsNodes, function (eventNode) {
-        children.push(eventNode);       
+        children.push(eventNode);
       });
 
       return children;

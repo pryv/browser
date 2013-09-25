@@ -5,13 +5,17 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
     browserify: {
       main: {
-        /* TODO browserify configuration */
+        src: ['./source/tree.js'],
+        dest: 'dist/app_bundle_main.js',
+        options: {
+          alias: ['./source/tree.js:SampleApp']
+        }
       }
     },
     watch: {
       all: {
         files: ['source/**/*.*'],
-        tasks: ['default']
+        tasks: ['browserify']
       }
     },
     jshint: {

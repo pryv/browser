@@ -1,4 +1,6 @@
-var _ = require('underscore');
+var _ = require('underscore'),
+NodeView = require('../view/NodeView.js'),
+  NodeModel = require('../model/NodeModel.js');
 
 /**
  * The model for all Nodes
@@ -7,6 +9,7 @@ var _ = require('underscore');
  */
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
+  this.uniqueId = _.uniqueId('node_');
   console.log('Created note ' + this.className);
 };
 
@@ -50,7 +53,7 @@ _.extend(TreeNode.prototype, {
    * getParent().currentWarpingDOMObject();
    */
   currentWrappingDOMObject: function () {
-    if (this.parent === null) { return null; }
+    if (this.parent === null) { return null; }
 
     // each node with a specific rendering should overwrite this
 
@@ -123,7 +126,28 @@ _.extend(TreeNode.prototype, {
     throw new Error(this.className + ': eventLeaveScope must be implemented');
   },
 
-
+  _createView: function () {
+    var width = null, height = null, containerId = null;
+    if (this.parent) {
+      containerId = this.parent.uniqueId;
+      width = this.getWeight() / this.parent.getWeight() * 100;
+      //height = this.getWeight() / this.parent.getWeight() * 100;
+    height = 75;
+    }
+    var model = new NodeModel({
+      containerId: containerId,
+      id: this.uniqueId,
+      name: this.className,
+      width: width,
+      height: height
+    });
+    new NodeView({model: model}).render();
+    if (this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    }
+  },
   //----------- debug ------------//
   _debugTree : function () {
     var me = {

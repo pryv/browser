@@ -27,7 +27,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
      */
     initStructure: function (options, callback) {
 
-      options = options || {};
+      options = options || {};
       var self = this;
       self.streamNodes = {};
       self.connection.streams.get(function (error, result) {

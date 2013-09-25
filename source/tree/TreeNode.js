@@ -7,12 +7,12 @@ var _ = require('underscore');
  */
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
-  console.log('TreeNode ' + this.className + ':  created');
+  console.log('Created note ' + this.className);
 };
 
 
 TreeNode.implement = function (constructor, members) {
-  var result = constructor;
+  var newImplementation = constructor;
   if (typeof Object.create === 'undefined') {
     Object.create = function (prototype) {
       function C() { }
@@ -20,9 +20,10 @@ TreeNode.implement = function (constructor, members) {
       return new C();
     };
   }
-  result.prototype = Object.create(this.prototype);
-  _.extend(result.prototype, members);
-  return result;
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+
+  return newImplementation;
 };
 
 _.extend(TreeNode.prototype, {

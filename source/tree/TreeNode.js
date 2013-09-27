@@ -9,6 +9,9 @@ var _ = require('underscore'),
  * @param parent
  * @constructor
  */
+var MIN_WIDTH = 600;
+var MIN_HEIGHT = 600;
+var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
   this.uniqueId = _.uniqueId('node_');
@@ -16,6 +19,11 @@ var TreeNode = module.exports = function (parent) {
   this.height = null;
   this.x = 0;
   this.y = 0;
+  this.aggregated = false;
+  this.display = true;
+  this.view = null;
+  this.model = null;
+  this.depth = this.parent ? this.parent.depth + 1 : 0;
 };
 
 
@@ -46,10 +54,37 @@ _.extend(TreeNode.prototype, {
    * @param width width of the Node
    * @return A DOM Object, EventView..
    */
-  renderView: function (h, w) {
-    throw new Error(this.className + ': renderView must be implemented');
-  },
+  renderView: function () {
+    this.view.renderView(this.display);
 
+    this.view.on('click', function () {
+      if (!this.getChildren()) {
+        return;
+      }
+      console.log('Zoom In ' + this.uniqueId);
+      this._generateChildrenPosition(0, 0, $(document).width(), $(document).height(), true);
+      this.model.set('width', $(document).width());
+      this.model.set('height', $(document).height());
+      this.model.set('x', this.x - this.getOffsetX());
+      this.model.set('y', this.y - this.getOffsetY());
+      _.each(this.getChildren(), function (child) {
+        child._refreshModel(true);
+      });
+    }, this);
+
+  },
+  getOffsetX: function () {
+    if (this.parent) {
+      return this.model.get('x') + this.parent.getOffsetX();
+    }
+    return this.model.get('x');
+  },
+  getOffsetY: function () {
+    if (this.parent) {
+      return this.model.get('y') + this.parent.getOffsetY();
+    }
+    return this.model.get('y');
+  },
 
   /**
    *
@@ -130,35 +165,58 @@ _.extend(TreeNode.prototype, {
   eventLeaveScope: function (removed, reason, callback) {
     throw new Error(this.className + ': eventLeaveScope must be implemented');
   },
-
+  _refreshModel: function (recursive) {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
+    this.model.set('id', this.uniqueId);
+    this.model.set('name', this.className);
+    this.model.set('width', this.width);
+    this.model.set('height', this.height);
+    this.model.set('x', this.x);
+    this.model.set('y', this.y);
+    this.model.set('depth', this.depth);
+    this.model.set('weight', this.getWeight());
+    if (recursive && this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._refreshModel(true);
+      });
+    }
+  },
   _createView: function () {
     if (this.getWeight() === 0) {
       return;
     }
-    this._generateChildrenPosition();
-    var model = new NodeModel({
-      containerId: this.parent ? this.parent.uniqueId : null,
+    // if width is not defined we are at the root node
+    // so we need to define a container dimension
+    if (this.width === null) {
+      this.width = $(document).width();
+      this.height = $(document).height();
+    }
+    this._generateChildrenPosition(0, 0, this.width, this.height);
+    this.model = new NodeModel({
+      containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
       id: this.uniqueId,
       name: this.className,
       width: this.width,
       height: this.height,
       x: this.x,
       y: this.y,
+      depth: this.depth,
       weight: this.getWeight()
     });
-    new NodeView({model: model}).render();
+    this.view = new NodeView({model: this.model});
+    this.renderView();
     if (this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._createView();
       });
     }
   },
-  _generateChildrenPosition: function () {
-    // if width is not defined we are at the root node
-    // so we need to define a container dimension
-    if (this.width === null) {
-      this.width = $(document).width();
-      this.height = $(document).height();
+  _generateChildrenPosition: function (x, y, width, height, recursive) {
+    if (this.getWeight() === 0) {
+      return;
     }
     if (this.getChildren()) {
       // we need to normalize child weights by the parent weight
@@ -169,16 +227,27 @@ _.extend(TreeNode.prototype, {
       // we squarify all the children passing a container dimension and position
       // no recursion needed
       var squarified =  TreemapUtil.squarify({
-        x: 0,
-        y: 0,
-        width: this.width,
-        height: this.height
+        x: x,
+        y: x,
+        width: width,
+        height: height
       }, this.getChildren());
       _.each(this.getChildren(), function (child) {
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
         child.width = squarified[child.uniqueId].width;
         child.height = squarified[child.uniqueId].height;
+        // test if we need to aggregate the view by testing if a child is to small
+        // (child weight must be > 0)
+      }, this);
+      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
+        this.aggregated = true;
+      }
+      _.each(this.getChildren(), function (child) {
+        child.display = !this.aggregated;
+        if (recursive) {
+          child._generateChildrenPosition(0, 0, child.width, child.height, true);
+        }
       }, this);
     }
   },

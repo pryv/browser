@@ -1357,7 +1357,7 @@ module.exports = {
   Utility: require('./utility/Utility.js')
 };
 
-},{"./Access.js":7,"./Connection.js":4,"./Event.js":5,"./Filter.js":6,"./Stream.js":9,"./system/System.js":10,"./utility/Utility.js":8}],1:[function(require,module,exports){
+},{"./Access.js":10,"./Connection.js":4,"./Event.js":5,"./Filter.js":7,"./Stream.js":6,"./system/System.js":8,"./utility/Utility.js":9}],1:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var ConnectionNode = require('./ConnectionNode');
 var _ = require('underscore');
@@ -1417,7 +1417,7 @@ var RootNode = module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":12,"./TreeNode":11,"underscore":2}],7:[function(require,module,exports){
+},{"./ConnectionNode":12,"./TreeNode":11,"underscore":2}],10:[function(require,module,exports){
 var System = require('./system/System.js');
 
 
@@ -1475,7 +1475,7 @@ exports.getAccesses = function (pack) {
     error : pack.error
   });
 };
-},{"./system/System.js":10}],10:[function(require,module,exports){
+},{"./system/System.js":8}],8:[function(require,module,exports){
 //TODO: consider merging System into Utility
 
 function isBrowser() {
@@ -1484,49 +1484,7 @@ function isBrowser() {
 
 module.exports = isBrowser() ?  require('./System-browser.js') : require('./System-node.js');
 
-},{"./System-browser.js":14,"./System-node.js":13}],15:[function(require,module,exports){
-var Datastore = module.exports = function (connection) {
-  this.connection = connection;
-  this.streamsIndex = {}; // streams are linked to their object representation
-  this.streams = {};  // pure JSONObject received by the API
-  this.events = {};
-};
-
-Datastore.prototype.init = function (callback) {
-  var self = this;
-  this.connection.streams._get(function (error, result) {
-    if (result) {
-      self.streams = result;
-      self._rebuildStreamIndex(); // maybe done transparently
-    }
-    callback(error);
-  }, {state: 'all'});
-
-  // activate monitoring
-
-};
-
-Datastore.prototype._rebuildStreamIndex = function () {
-  var self = this;
-  this.streamsIndex = {};
-
-  this.connection.streams.Utils.walkDataTree(this.streams, function (stream) {
-    self.streamsIndex[stream.id] = stream;
-  }, true);
-};
-
-
-// TODO move this to connection
-/**
- *
- * @param streamId
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreamById = function (streamId) {
-  return this.streamsIndex[streamId];
-};
-
-},{}],14:[function(require,module,exports){
+},{"./System-browser.js":13,"./System-node.js":14}],13:[function(require,module,exports){
 //file: system browser
 
 
@@ -1691,208 +1649,7 @@ var _initXHR = function () {
 
 
 
-},{}],11:[function(require,module,exports){
-var _ = require('underscore'),
-// $ = require('node-jquery'),
-  NodeView = require('../view/NodeView.js'),
-  NodeModel = require('../model/NodeModel.js'),
-  TreemapUtil = require('../utility/treemap.js');
-
-/**
- * The model for all Nodes
- * @param parent
- * @constructor
- */
-var TreeNode = module.exports = function (parent) {
-  this.parent = parent;
-  this.uniqueId = _.uniqueId('node_');
-  this.width = null;
-  this.height = null;
-  this.x = 0;
-  this.y = 0;
-};
-
-
-TreeNode.implement = function (constructor, members) {
-  var newImplementation = constructor;
-  if (typeof Object.create === 'undefined') {
-    Object.create = function (prototype) {
-      function C() { }
-      C.prototype = prototype;
-      return new C();
-    };
-  }
-  newImplementation.prototype = Object.create(this.prototype);
-  _.extend(newImplementation.prototype, members);
-  newImplementation.implement = this.implement;
-  return newImplementation;
-};
-
-_.extend(TreeNode.prototype, {
-  className: 'TreeNode',
-  /** TreeNode parent or null if rootNode **/
-
-  //---------- visual rendering ------------//
-
-  /**
-   * render the View version A
-   * @param height height of the Node
-   * @param width width of the Node
-   * @return A DOM Object, EventView..
-   */
-  renderView: function (h, w) {
-    throw new Error(this.className + ': renderView must be implemented');
-  },
-
-
-  /**
-   *
-   * @return DOMNode the current Wrapping DOM object for this Node. If this TreeNode is not yet
-   * rendered, or does not have a representation in the DOM it will return
-   * getParent().currentWarpingDOMObject();
-   */
-  currentWrappingDOMObject: function () {
-    if (this.parent === null) { return null; }
-
-    // each node with a specific rendering should overwrite this
-
-    return this.parent;
-  },
-
-
-  //-------------- Tree Browsing -------------------//
-
-  /**
-   * @return TreeNode parent or null if root
-   */
-  getParent: function () {
-    return this.parent;
-  },
-
-  /**
-   * @return Array of TreeNode or null if leaf
-   */
-  getChildren: function () {
-    throw new Error(this.className + ': getChildren must be implemented');
-  },
-
-
-  /**
-   * Return the total weight (in TreeMap referential) of this node and it's children
-   * This should be overwritten by Leaf nodes
-   * @return Number
-   */
-  getWeight: function () {
-    if (this.getChildren() === null) {
-      throw new Error(this.className + ': Leafs must overwrite getWeight');
-    }
-    var weight = 0;
-    this.getChildren().forEach(function (child) {
-      weight += child.getWeight();
-    });
-    return weight;
-  },
-
-
-
-  //----------- event management ------------//
-
-  /**
-   * Add an Event to the Tree
-   * @param event Event
-   * @return TreeNode the node in charge of this event. To be handled directly,
-   * next event addition or renderView() call can modify structure, and change
-   * the owner of this Event. This is designed for animation. .. add event then
-   * call returnedNode.currentWarpingDOMObject()
-   */
-  eventEnterScope: function (event, reason, callback) {
-    throw new Error(this.className + ': eventEnterScope must be implemented');
-  },
-
-  /**
-   * the Event changed from the Tree
-   * @param event Event or eventId .. to be discussed
-   */
-  eventChange: function (event, reason, callback) {
-    throw new Error(this.className + ': eventChange must be implemented');
-  },
-
-  /**
-   * Event removed
-   * @parma eventChange
-   */
-  eventLeaveScope: function (removed, reason, callback) {
-    throw new Error(this.className + ': eventLeaveScope must be implemented');
-  },
-
-  _createView: function () {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    this._generateChildrenPosition();
-    var model = new NodeModel({
-      containerId: this.parent ? this.parent.uniqueId : null,
-      id: this.uniqueId,
-      name: this.className,
-      width: this.width,
-      height: this.height,
-      x: this.x,
-      y: this.y,
-      weight: this.getWeight()
-    });
-    new NodeView({model: model}).render();
-    if (this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._createView();
-      });
-    }
-  },
-  _generateChildrenPosition: function () {
-    // if width is not defined we are at the root node
-    // so we need to define a container dimension
-    if (this.width === null) {
-      this.width = $(document).width();
-      this.height = $(document).height();
-    }
-    if (this.getChildren()) {
-      // we need to normalize child weights by the parent weight
-      _.each(this.getChildren(), function (child) {
-        child.normalizedWeight = (child.getWeight() / this.getWeight());
-      }, this);
-
-      // we squarify all the children passing a container dimension and position
-      // no recursion needed
-      var squarified =  TreemapUtil.squarify({
-        x: 0,
-        y: 0,
-        width: this.width,
-        height: this.height
-      }, this.getChildren());
-      _.each(this.getChildren(), function (child) {
-        child.x = squarified[child.uniqueId].x;
-        child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width;
-        child.height = squarified[child.uniqueId].height;
-      }, this);
-    }
-  },
-  //----------- debug ------------//
-  _debugTree : function () {
-    var me = {
-      className : this.className,
-      weight : this.getWeight()
-    };
-    if (this.getChildren()) {
-      me.children = [];
-      _.each(this.getChildren(), function (child) {
-        me.children.push(child._debugTree());
-      });
-    }
-    return me;
-  }
-});
-
-},{"../model/NodeModel.js":16,"../utility/treemap.js":17,"../view/NodeView.js":18,"underscore":2}],12:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -2018,8 +1775,392 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
+},{"./StreamNode":15,"./TreeNode":11,"underscore":2}],11:[function(require,module,exports){
+var _ = require('underscore'),
+// $ = require('node-jquery'),
+  NodeView = require('../view/NodeView.js'),
+  NodeModel = require('../model/NodeModel.js'),
+  TreemapUtil = require('../utility/treemap.js');
 
-},{"./StreamNode":19,"./TreeNode":11,"underscore":2}],4:[function(require,module,exports){
+/**
+ * The model for all Nodes
+ * @param parent
+ * @constructor
+ */
+var MIN_WIDTH = 600;
+var MIN_HEIGHT = 600;
+var MAIN_CONTAINER_ID = 'tree';
+var TreeNode = module.exports = function (parent) {
+  this.parent = parent;
+  this.uniqueId = _.uniqueId('node_');
+  this.width = null;
+  this.height = null;
+  this.x = 0;
+  this.y = 0;
+  this.aggregated = false;
+  this.display = true;
+  this.view = null;
+  this.model = null;
+  this.depth = this.parent ? this.parent.depth + 1 : 0;
+};
+
+
+TreeNode.implement = function (constructor, members) {
+  var newImplementation = constructor;
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+_.extend(TreeNode.prototype, {
+  className: 'TreeNode',
+  /** TreeNode parent or null if rootNode **/
+
+  //---------- visual rendering ------------//
+
+  /**
+   * render the View version A
+   * @param height height of the Node
+   * @param width width of the Node
+   * @return A DOM Object, EventView..
+   */
+  renderView: function () {
+    this.view.renderView(this.display);
+
+    this.view.on('click', function () {
+      if (!this.getChildren()) {
+        return;
+      }
+      console.log('Zoom In ' + this.uniqueId);
+      this._generateChildrenPosition(0, 0, $(document).width(), $(document).height(), true);
+      this.model.set('width', $(document).width());
+      this.model.set('height', $(document).height());
+      this.model.set('x', this.x - this.getOffsetX());
+      this.model.set('y', this.y - this.getOffsetY());
+      _.each(this.getChildren(), function (child) {
+        child._refreshModel(true);
+      });
+    }, this);
+
+  },
+  getOffsetX: function () {
+    if (this.parent) {
+      return this.model.get('x') + this.parent.getOffsetX();
+    }
+    return this.model.get('x');
+  },
+  getOffsetY: function () {
+    if (this.parent) {
+      return this.model.get('y') + this.parent.getOffsetY();
+    }
+    return this.model.get('y');
+  },
+
+  /**
+   *
+   * @return DOMNode the current Wrapping DOM object for this Node. If this TreeNode is not yet
+   * rendered, or does not have a representation in the DOM it will return
+   * getParent().currentWarpingDOMObject();
+   */
+  currentWrappingDOMObject: function () {
+    if (this.parent === null) { return null; }
+
+    // each node with a specific rendering should overwrite this
+
+    return this.parent;
+  },
+
+
+  //-------------- Tree Browsing -------------------//
+
+  /**
+   * @return TreeNode parent or null if root
+   */
+  getParent: function () {
+    return this.parent;
+  },
+
+  /**
+   * @return Array of TreeNode or null if leaf
+   */
+  getChildren: function () {
+    throw new Error(this.className + ': getChildren must be implemented');
+  },
+
+
+  /**
+   * Return the total weight (in TreeMap referential) of this node and it's children
+   * This should be overwritten by Leaf nodes
+   * @return Number
+   */
+  getWeight: function () {
+    if (this.getChildren() === null) {
+      throw new Error(this.className + ': Leafs must overwrite getWeight');
+    }
+    var weight = 0;
+    this.getChildren().forEach(function (child) {
+      weight += child.getWeight();
+    });
+    return weight;
+  },
+
+
+
+  //----------- event management ------------//
+
+  /**
+   * Add an Event to the Tree
+   * @param event Event
+   * @return TreeNode the node in charge of this event. To be handled directly,
+   * next event addition or renderView() call can modify structure, and change
+   * the owner of this Event. This is designed for animation. .. add event then
+   * call returnedNode.currentWarpingDOMObject()
+   */
+  eventEnterScope: function (event, reason, callback) {
+    throw new Error(this.className + ': eventEnterScope must be implemented');
+  },
+
+  /**
+   * the Event changed from the Tree
+   * @param event Event or eventId .. to be discussed
+   */
+  eventChange: function (event, reason, callback) {
+    throw new Error(this.className + ': eventChange must be implemented');
+  },
+
+  /**
+   * Event removed
+   * @parma eventChange
+   */
+  eventLeaveScope: function (removed, reason, callback) {
+    throw new Error(this.className + ': eventLeaveScope must be implemented');
+  },
+  _refreshModel: function (recursive) {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
+    this.model.set('id', this.uniqueId);
+    this.model.set('name', this.className);
+    this.model.set('width', this.width);
+    this.model.set('height', this.height);
+    this.model.set('x', this.x);
+    this.model.set('y', this.y);
+    this.model.set('depth', this.depth);
+    this.model.set('weight', this.getWeight());
+    if (recursive && this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._refreshModel(true);
+      });
+    }
+  },
+  _createView: function () {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    // if width is not defined we are at the root node
+    // so we need to define a container dimension
+    if (this.width === null) {
+      this.width = $(document).width();
+      this.height = $(document).height();
+    }
+    this._generateChildrenPosition(0, 0, this.width, this.height);
+    this.model = new NodeModel({
+      containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
+      id: this.uniqueId,
+      name: this.className,
+      width: this.width,
+      height: this.height,
+      x: this.x,
+      y: this.y,
+      depth: this.depth,
+      weight: this.getWeight()
+    });
+    this.view = new NodeView({model: this.model});
+    this.renderView();
+    if (this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    }
+  },
+  _generateChildrenPosition: function (x, y, width, height, recursive) {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    if (this.getChildren()) {
+      // we need to normalize child weights by the parent weight
+      _.each(this.getChildren(), function (child) {
+        child.normalizedWeight = (child.getWeight() / this.getWeight());
+      }, this);
+
+      // we squarify all the children passing a container dimension and position
+      // no recursion needed
+      var squarified =  TreemapUtil.squarify({
+        x: x,
+        y: x,
+        width: width,
+        height: height
+      }, this.getChildren());
+      _.each(this.getChildren(), function (child) {
+        child.x = squarified[child.uniqueId].x;
+        child.y = squarified[child.uniqueId].y;
+        child.width = squarified[child.uniqueId].width;
+        child.height = squarified[child.uniqueId].height;
+        // test if we need to aggregate the view by testing if a child is to small
+        // (child weight must be > 0)
+      }, this);
+      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
+        this.aggregated = true;
+      }
+      _.each(this.getChildren(), function (child) {
+        child.display = !this.aggregated;
+        if (recursive) {
+          child._generateChildrenPosition(0, 0, child.width, child.height, true);
+        }
+      }, this);
+    }
+  },
+  //----------- debug ------------//
+  _debugTree : function () {
+    var me = {
+      className : this.className,
+      weight : this.getWeight()
+    };
+    if (this.getChildren()) {
+      me.children = [];
+      _.each(this.getChildren(), function (child) {
+        me.children.push(child._debugTree());
+      });
+    }
+    return me;
+  }
+});
+
+},{"../model/NodeModel.js":18,"../utility/treemap.js":17,"../view/NodeView.js":16,"underscore":2}],19:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var PositionsEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'PositionsEventsNode',
+
+
+
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+PositionsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'position/wgs84');
+};
+
+
+
+},{"../EventsNode":20}],21:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var PicturesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'PicturesEventsNode',
+
+
+
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+PicturesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'picture/attached');
+};
+
+
+
+},{"../EventsNode":20}],22:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var GenericEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'GenericEventsNode',
+
+
+
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
+  return true;
+};
+
+
+},{"../EventsNode":20}],23:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var NotesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'NotesEventsNode',
+
+
+
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+NotesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'note/txt');
+};
+
+
+
+},{"../EventsNode":20}],4:[function(require,module,exports){
 /**
  * TODO
  * @type {*}
@@ -2058,6 +2199,9 @@ var Connection = module.exports = function (username, auth, settings) {
   self.streams = new ConnectionStreams(self);
 
   self.datastore = null;
+
+  self._ioSocket = null;
+  self._ioSocketMonitors = {};
   return self;
 };
 
@@ -2075,6 +2219,8 @@ Connection.prototype.useLocalStorage = function (callback) {
     if (error) { return callback(error); }
     self.datastore.init(callback);
   });
+
+
 };
 
 
@@ -2111,7 +2257,17 @@ Connection.prototype.getServerTime = function (localTime) {
   return (localTime / 1000) - this.serverInfos.deltaTime;
 };
 
-Connection.prototype.monitor = function (filter, callback) {
+// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
+
+Connection.prototype._stopMonitoring = function (/*callback*/) {
+
+};
+
+Connection.prototype._startMonitoring = function (callback) {
+
+  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
+
+
   var settings = {
     host : this.username + '.' + this.settings.domain,
     port : this.settings.port,
@@ -2121,18 +2277,21 @@ Connection.prototype.monitor = function (filter, callback) {
     auth : this.auth
   };
 
-  var ioSocket = System.ioConnect(settings);
+  this.ioSocket = System.ioConnect(settings);
 
-  //TODO: rethink how we want to expose this to clients
-  ioSocket.on('connect', function () {
-    callback('connect');
+  this.ioSocket.on('connect', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onConnect(); });
   });
-  ioSocket.on('connect', function (error) {
-    callback('error', error);
+  this.ioSocket.on('error', function (error) {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onError(error); });
   });
-  ioSocket.on('eventsChanged', function () {
-    callback('event');
+  this.ioSocket.on('eventsChanged', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onEventsChanged(); });
   });
+  this.ioSocket.on('streamsChanged', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onStreamsChanged(); });
+  });
+
 };
 
 Connection.prototype.request = function (method, path, callback, jsonData, context) {
@@ -2201,28 +2360,7 @@ Object.defineProperty(Connection.prototype, 'shortId', {
   set: function () { throw new Error('Connection.shortId property is read only'); }
 });
 
-},{"./Datastore.js":15,"./connection/Events.js":21,"./connection/Streams.js":20,"./system/System.js":10,"underscore":2}],5:[function(require,module,exports){
-
-var _ = require('underscore');
-/**
- *
- * @type {Function}
- * @constructor
- */
-var Event = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-};
-
-
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
-
-},{"underscore":2}],6:[function(require,module,exports){
+},{"./Datastore.js":26,"./connection/Events.js":24,"./connection/Streams.js":25,"./system/System.js":8,"underscore":2}],7:[function(require,module,exports){
 var _ = require('underscore');
 
 var Filter = module.exports = function (settings) {
@@ -2250,117 +2388,142 @@ Filter.prototype.focusedOnSingleStream = function () {
   return null;
 };
 
-},{"underscore":2}],9:[function(require,module,exports){
+},{"underscore":2}],6:[function(require,module,exports){
 
 var _ = require('underscore');
 
 var Stream = module.exports = function (connection, data) {
   this.connection = connection;
   _.extend(this, data);
+
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this._children = [];
+
 };
 
 
-Object.defineProperty(Stream.prototype, 'parents', {
-  get: function () {
-    var self = this;
 
-    if (! self.parentId) { return []; }
-    var parent = self.connection.datastore.getStreamById(self.parentId);
-    var parents = parent.parents;
-    parents.push(parent);
-    return parents;
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (! this.parentId) { return null; }
+
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
   },
-  set: function () { throw new Error('Stream.parents property is read only'); }
+  set: function () { throw new Error('Stream.children property is read only'); }
 });
 
-Object.defineProperty(Stream.prototype, 'parentsIds', {
-  get: function () {
-    var self = this;
-
-    if (! self.parentId) { return []; }
-    var parent = self.connection.datastore.getStreamById(self.parentId);
-    var parents = parent.parentsIds;
-    parents.push(self.parentId);
-    return parents;
-  },
-  set: function () { throw new Error('Stream.parents property is read only'); }
-});
 
 Object.defineProperty(Stream.prototype, 'children', {
   get: function () {
     var self = this;
+
+    if (! self.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
     var children = [];
     _.each(this.childrenIds, function (childrenId) {
-      children.push(self.connection.datastore.getStreamById(childrenId));
+      var child = self.connection.datastore.getStreamById(childrenId);
+      children.push(child);
     });
     return children;
   },
   set: function () { throw new Error('Stream.children property is read only'); }
 });
 
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    var self = this;
 
-},{"underscore":2}],22:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
+    if (! self.parentId) { return []; }
 
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var NotesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
+    var result = [this.parent];
+    result.push(this.parent.ancestors);
+    return result;
   },
-  {
-    className: 'NotesEventsNode',
+  set: function () { throw new Error('Stream.ancestors property is read only'); }
+});
 
+},{"underscore":2}],5:[function(require,module,exports){
 
-
-    getWeight: function () {
-      return 1;
-    }
-
-  });
-
-// we accept all kind of events
-NotesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'note/txt');
+var _ = require('underscore');
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
 };
 
 
-
-},{"../EventsNode":23}],24:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var GenericEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    return this.connection.datastore.getStreamById(this.streamId);
   },
-  {
-    className: 'GenericEventsNode',
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
 
+},{"underscore":2}],16:[function(require,module,exports){
+var  Marionette = require('backbone.marionette');
 
-
-    getWeight: function () {
-      return 1;
+var NodeView = module.exports = Marionette.ItemView.extend({
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('background-color', this.getRandomColor());
+    this.$el.addClass('node');
+    this.$el.attr('id', this.model.get('id'));
+  },
+  triggers: {
+    'click': 'click'
+  },
+  change: function () {
+    this.$el.css('z-index', '1000');
+    this.$el.css('display', 'block');
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('name'));
+   // this.$el.html(this.model.get('name'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+  },
+  renderView: function (display) {
+    if (!display) {
+      this.$el.css('display', 'none');
     }
+    this.render();
+  },
+  render: function () {
+    this.$el.css('z-index', this.model.get('depth'));
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('name'));
+    this.$el.html(this.model.get('name'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+    $('#' + this.model.get('containerId')).append(this.$el);
+    //this.$el.addClass('animated  fadeIn');
 
-  });
-
-// we accept all kind of events
-GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
-  return true;
-};
-
-
-},{"../EventsNode":23}],16:[function(require,module,exports){
-var Backbone = require('backbone');
-
-var NodeModel = module.exports = Backbone.Model.extend({ });
-},{"backbone":25}],17:[function(require,module,exports){
+  },
+  getRandomColor: function () {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.round(Math.random() * 15)];
+    }
+    return color;
+  }
+});
+},{"backbone.marionette":27}],17:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -2553,51 +2716,10 @@ TreemapUtils.squarify = function (rect, vals) {
   return layout;
 };
 },{"underscore":2}],18:[function(require,module,exports){
-var  Marionette = require('backbone.marionette');
+var Backbone = require('backbone');
 
-var NodeView = module.exports = Marionette.ItemView.extend({
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-  },
-  change: function () {
-    console.log('change');
-    this.render();
-  },
-  render: function () {
-
-    this.$el.css('background-color', this.getRandomColor());
-    this.$el.addClass('node');
-    this.$el.attr('id', this.model.get('id'));
-    this.$el.attr('weight', this.model.get('weight'));
-    this.$el.attr('className', this.model.get('name'));
-    if (this.model.get('name') === 'GenericEventsNode' ||
-        this.model.get('name') === 'NotesEventsNode') {
-      this.$el.html(this.model.get('name'));
-    }
-   // this.$el.html(this.model.get('name'));
-    this.$el.css('width', this.model.get('width'));
-    this.$el.css('height', this.model.get('height'));
-    this.$el.css('left', this.model.get('x'));
-    this.$el.css('top', this.model.get('y'));
-
-    if (this.model.get('containerId')) {
-      $('#' + this.model.get('containerId')).append(this.$el);
-      this.$el.addClass('animated  bounceIn');
-    } else {
-
-      $('#tree').html(this.$el);
-    }
-  },
-  getRandomColor: function () {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.round(Math.random() * 15)];
-    }
-    return color;
-  }
-});
-},{"backbone.marionette":26}],19:[function(require,module,exports){
+var NodeModel = module.exports = Backbone.Model.extend({ });
+},{"backbone":28}],15:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -2704,9 +2826,11 @@ var StreamNode = module.exports = TreeNode.implement(
 
 StreamNode.registeredEventNodes = {
   'Notes' : require('./eventsNode/NotesEventsNode.js'),
+  'Positions' : require('./eventsNode/PositionsEventsNode.js'),
+  'Pictures' : require('./eventsNode/PicturesEventsNode.js'),
   'Generic' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":11,"./eventsNode/GenericEventsNode.js":24,"./eventsNode/NotesEventsNode.js":22,"underscore":2}],8:[function(require,module,exports){
+},{"./TreeNode":11,"./eventsNode/GenericEventsNode.js":22,"./eventsNode/NotesEventsNode.js":23,"./eventsNode/PicturesEventsNode.js":21,"./eventsNode/PositionsEventsNode.js":19,"underscore":2}],9:[function(require,module,exports){
 var _ = require('underscore');
 
 exports.mergeAndClean = function (sourceA, sourceB) {
@@ -2737,91 +2861,75 @@ exports.getQueryParametersString = function (data) {
   }, this).join('&');
 };
 
-},{"underscore":2}],13:[function(require,module,exports){
-//file: system node
+},{"underscore":2}],26:[function(require,module,exports){
+var _ = require('underscore');
 
-var socketIO = require('socket.io-client');
+var Datastore = module.exports = function (connection) {
+  this.connection = connection;
+  this.streamsIndex = {}; // streams are linked to their object representation
+  this.rootStreams = [];
 
-exports.ioConnect = function (settings) {
-  var httpMode = settings.ssl ? 'https' : 'http';
-  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
-    settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
-
-  return socketIO.connect(url, {'force new connection': true});
 };
 
-//TODO: sort out the callback convention
+Datastore.prototype.init = function (callback) {
+  var self = this;
+  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
+    if (error) { return callback('Datastore faild to init - '  + error); }
+    if (result) {
+      self._rebuildStreamIndex(result); // maybe done transparently
+    }
+    callback(null);
+  });
+
+  // activate monitoring
+
+};
+
+Datastore.prototype._rebuildStreamIndex = function (streamArray) {
+  var self = this;
+  self.streamsIndex = {};
+  self.rootStreams = [];
+  self._indexStreamArray(streamArray);
+};
+
+Datastore.prototype._indexStreamArray = function (streamArray) {
+
+  var self = this;
+  _.each(streamArray, function (stream) {
+    self.streamsIndex[stream.id] = stream;
+    if (! stream._parent) { self.rootStreams.push(stream); }
+    self._indexStreamArray(stream._children);
+    delete stream._children; // cleanup when in datastore mode
+    delete stream._parent;
+  });
+};
+
 
 /**
  *
- * @param pack json with
- * method : 'GET/DELETE/POST/PUT'
- * host : fully qualified host name
- * port : port to use
- * path : the request PATH
- * headers : key / value map of headers
- * payload : the payload
- * success : function (result, requestInfos)
- * error : function (error, requestInfos)
- * info : a text
- * async : boolean : default (TRUE)
- * expectedStatus : code
- * ssl : boolean (default true)
+ * @param streamId
+ * @returns Stream or null if not found
  */
-exports.request = function (pack)  {
-  var httpOptions = {
-    host: pack.host,
-    port: pack.port,
-    path: pack.path,
-    method: pack.method,
-    rejectUnauthorized: false,
-    headers : pack.headers
-  };
-
-  var httpMode = pack.ssl ? 'https' : 'http';
-  var http = require(httpMode);
-
-
-
-  var detail = 'Request: ' + httpOptions.method + ' ' +
-    httpMode + '://' + httpOptions.host + ':' + httpOptions.port + '' + httpOptions.path;
-
-
-  var onError = function (reason) {
-    return pack.error(reason + '\n' + detail, null);
-  };
-
-
-  var req = http.request(httpOptions, function (res) {
-    var bodyarr = [];
-    res.on('data', function (chunk) {  bodyarr.push(chunk); });
-    res.on('end', function () {
-      var requestInfo = {
-        code : res.statusCode,
-        headers : res.headers
-      };
-      var resJson = JSON.parse(bodyarr.join(''));
-      return pack.success(resJson, requestInfo);
-    });
-
-  }).on('error', function (e) {
-      return onError('Error: ' + e.message);
-    });
-
-
-  req.on('socket', function (socket) {
-    socket.setTimeout(5000);
-    socket.on('timeout', function () {
-      req.abort();
-      return pack.error('Timeout');
-    });
-  });
-
-  if (pack.payload) { req.write(pack.payload); }
-  req.end();
+Datastore.prototype.getStreams = function () {
+  return this.rootStreams;
 };
 
-},{"socket.io-client":27}],23:[function(require,module,exports){
+
+/**
+ *
+ * @param streamId
+ * @param test (do no throw error if Stream is not found
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreamById = function (streamId, test) {
+  var result = this.streamsIndex[streamId];
+  if (! test && ! result) {
+    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
+  }
+  return result;
+};
+
+},{"underscore":2}],20:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 
 /**
@@ -2862,7 +2970,192 @@ EventsNode.acceptThisEventType = function (eventType) {
 };
 
 
-},{"./TreeNode":11}],21:[function(require,module,exports){
+},{"./TreeNode":11}],25:[function(require,module,exports){
+
+var _ = require('underscore'),
+  Utility = require('../utility/Utility.js'),
+  Stream = require('../Stream.js');
+
+var Streams = module.exports = function (connection) {
+  this.connection = connection;
+  this._streamsIndex = {};
+
+};
+
+
+/**
+ * @param options {parentId: <parentId | null> , state: <all | null>}
+ * @return Arrray of Pryv.Stream matching the options
+ */
+Streams.prototype.get = function (options, callback, context) {
+
+  if (this.connection.datastore) {
+    var resultTree = [];
+    if (options && _.has(options, 'parentId')) {
+      resultTree = this.connection.datastore.getStreamById(options.parentId).children;
+    } else {
+      resultTree = this.connection.datastore.getStreams();
+    }
+    callback(null, resultTree);
+  } else {
+    this._getObjects(options, callback, context);
+  }
+};
+
+Streams.prototype._getObjects = function (options, callback, context) {
+  options = options || {};
+  options.parentId = options.parentId || null;
+  var self = this;
+  var streamsIndex = {};
+  var resultTree = [];
+  this._getData(options, function (error, treeData) {
+    if (error) { return callback('Stream.get failed: ' + error); }
+    Streams.Utils.walkDataTree(treeData, function (streamData) {
+      var stream = new Stream(self.connection, streamData);
+      streamsIndex[streamData.id] = stream;
+      if (stream.parentId === options.parentId) { // attached to the rootNode or filter
+        resultTree.push(stream);
+        stream._parent = null;
+        stream._children = [];
+      } else {
+        // localStorage will cleanup  parent / children link if needed
+        stream._parent =  streamsIndex[stream.parentId];
+        stream._parent._children.push(stream);
+      }
+    });
+    callback(null, resultTree);
+  }, context);
+};
+
+Streams.prototype._getData = function (opts, callback, context) {
+  var url = opts ? '/streams?' + Utility.getQueryParametersString(opts) : '/streams';
+  this.connection.request('GET', url, callback, null, context);
+};
+
+
+
+Streams.prototype.create = function (stream, callback, context) {
+  var url = '/streams';
+  this.connection.request('POST', url, function (err, result) {
+    stream.id = result.id;
+    callback(err, result);
+  }, stream, context);
+};
+
+Streams.prototype.update = function (stream, callback, context) {
+  var url = '/streams/' + stream.id;
+  this.connection.request('PUT', url, callback, null, context);
+};
+
+/**
+ * Walk the tree structure..
+ * parents are always announced before childrens
+ * @param opts
+ * @param eachStream
+ * @param done
+ * @param context
+ */
+Streams.prototype.walkTree = function (options, eachStream, done, context) {
+  this.get(options, function (error, result) {
+    if (error) { return done('Stream.walkTree failed: ' + error); }
+    Streams.Utils.walkObjectTree(result, eachStream);
+    if (done) { done(null); }
+  }, context);
+};
+
+
+Streams.prototype.getFlatenedObjects = function (callback, opts, context) {
+  var self = this;
+  this.get(function (error, result) {
+    if (error) { return callback(error); }
+    callback(null, self.Utils.flatenTree(result, self.connection));
+  }, opts, context);
+};
+
+
+// TODO Validate that it's the good place for them .. Could have been in Stream or Utility
+Streams.Utils = {
+
+
+  /**
+   * Flaten a streamTree obtained from the API. Replaces the children[] by a childrenIds[]
+   * @param streamTree
+   * @param andGetStreamObjects if true return Stream object as in the model
+   * @returns {Array} of streamData
+   */
+  flatenTree : function (streamTree, andMakeObjectWithConnection) {
+    var streams = [];
+    this.walkDataTree(streamTree, function (stream) {
+      if (andMakeObjectWithConnection) {
+        streams.push(new Stream(andMakeObjectWithConnection, stream));
+      } else {
+        streams.push(stream);
+      }
+    });
+    return streams;
+  },
+
+  /**
+   * Walk thru a streamArray of objects
+   * @param streamTree
+   * @param callback function(stream)
+   */
+  walkObjectTree : function (streamArray, eachStream) {
+    _.each(streamArray, function (stream) {
+      eachStream(stream);
+      Streams.Utils.walkObjectTree(stream.children, eachStream);
+    });
+  },
+
+  /**
+   * Walk thru a streamTree obtained from the API. Replaces the children[] by childrenIds[].
+   * This is used to Flaten the Tree
+   * @param streamTree
+   * @param callback function(streamData, subTree)  subTree is the descendance tree
+   */
+  walkDataTree : function (streamTree, callback) {
+    var self = this;
+    _.each(streamTree, function (streamStruct) {
+      var stream = _.omit(streamStruct, 'children', 'clientData');
+      stream.childrenIds = [];
+      var subTree = {};
+      callback(stream, subTree);
+      if (_.has(streamStruct, 'children')) {
+        subTree = streamStruct.children;
+
+        _.each(streamStruct.children, function (childTree) {
+          stream.childrenIds.push(childTree.id);
+        });
+        self.walkDataTree(streamStruct.children, callback);
+      }
+    });
+  },
+
+  /**
+   * ShowTree
+   */
+  _debugTree : function (arrayOfStreams) {
+    var result = [];
+    if (! arrayOfStreams  || ! arrayOfStreams instanceof Array) {
+      throw new Error('expected an array for argument :' + arrayOfStreams);
+    }
+    _.each(arrayOfStreams, function (stream) {
+      if (! stream || ! stream instanceof Stream) {
+        throw new Error('expected a Streams array ' + stream);
+      }
+      result.push({
+        name : stream.name,
+        id : stream.id,
+        parentId : stream.parentId,
+        children : Streams.Utils._debugTree(stream.children)
+      });
+    });
+    return result;
+  }
+
+};
+
+},{"../Stream.js":6,"../utility/Utility.js":9,"underscore":2}],24:[function(require,module,exports){
 
 var Utility = require('../utility/Utility.js'),
   _ = require('underscore'),
@@ -2944,129 +3237,99 @@ Events.prototype.monitor = function (filter, callback) {
   });
 };
 
-},{"../Event":5,"../utility/Utility.js":8,"underscore":2}],20:[function(require,module,exports){
+},{"../Event":5,"../utility/Utility.js":9,"underscore":2}],14:[function(require,module,exports){
+//file: system node
 
-var _ = require('underscore'),
-  Utility = require('../utility/Utility.js'),
-  Stream = require('../Stream.js');
+var socketIO = require('socket.io-client');
 
-var Streams = module.exports = function (connection) {
-  this.connection = connection;
+exports.ioConnect = function (settings) {
+  var httpMode = settings.ssl ? 'https' : 'http';
+  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
+    settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
+
+  return socketIO.connect(url, {'force new connection': true});
 };
 
-Streams.prototype.get = function (callback, opts, context) {
-  opts = opts || {};
+//TODO: sort out the callback convention
 
-  if (this.connection.datastore) {
-    var result = null;
-    if (_.has(opts, 'parentId')) {
-      if (! _.has(this.connection.datastore.streamsIndex, opts.parentId)) { // ERROR
-        return callback('streams.get cannot find parent stream with id: ' + opts.parentId, null);
+/**
+ *
+ * @param pack json with
+ * method : 'GET/DELETE/POST/PUT'
+ * host : fully qualified host name
+ * port : port to use
+ * path : the request PATH
+ * headers : key / value map of headers
+ * payload : the payload
+ * success : function (result, requestInfos)
+ * error : function (error, requestInfos)
+ * info : a text
+ * async : boolean : default (TRUE)
+ * expectedStatus : code
+ * ssl : boolean (default true)
+ */
+exports.request = function (pack)  {
+  var httpOptions = {
+    host: pack.host,
+    port: pack.port,
+    path: pack.path,
+    method: pack.method,
+    rejectUnauthorized: false,
+    headers : pack.headers
+  };
+
+  var httpMode = pack.ssl ? 'https' : 'http';
+  var http = require(httpMode);
+
+
+
+  var detail = 'Request: ' + httpOptions.method + ' ' +
+    httpMode + '://' + httpOptions.host + ':' + httpOptions.port + '' + httpOptions.path;
+
+
+  var onError = function (reason) {
+    return pack.error(reason + '\n' + detail, null);
+  };
+
+
+  var req = http.request(httpOptions, function (res) {
+    var bodyarr = [];
+    res.on('data', function (chunk) {  bodyarr.push(chunk); });
+    res.on('end', function () {
+      var requestInfo = {
+        code : res.statusCode,
+        headers : res.headers
+      };
+      var resJson = {};
+      try {
+        resJson = JSON.parse(bodyarr.join(''));
+      } catch (error) {
+
+        return onError('System-node.request failed to parse JSON in response' +
+          bodyarr.join('')
+        );
       }
-
-      // TODO
-      throw new Error('localStorage does not implement caching correctly');
-      // result = this.connection.datastore.getStreamById(opts.parentId).getSubTree(state);
-    } else {
-      result = this.connection.datastore.streams;
-    }
-
-
-    if (_.has(opts, 'state') && opts.state !== 'all') {
-      //TODO  implement structure filtering for local storage
-      throw new Error('localStorage does not implement structure filtering yet');
-    }
-
-    return callback(null, result);
-  }
-  this._get(callback, opts, context);
-};
-
-
-Streams.prototype._get = function (callback, opts, context) {
-  var url = opts ? '/streams?' + Utility.getQueryParametersString(opts) : '/streams';
-  this.connection.request('GET', url, callback, null, context);
-};
-
-Streams.prototype.getFlatenedData = function (callback, opts, context) {
-  var self = this;
-  this.get(function (error, result) {
-    if (error) { return callback(error); }
-    callback(null, self.Utils.flatenTree(result));
-  }, opts, context);
-};
-
-Streams.prototype.getFlatenedObjects = function (callback, opts, context) {
-  var self = this;
-  this.get(function (error, result) {
-    if (error) { return callback(error); }
-    callback(null, self.Utils.flatenTree(result, self.connection));
-  }, opts, context);
-};
-
-Streams.prototype.create = function (stream, callback, context) {
-  var url = '/streams';
-  this.connection.request('POST', url, function (err, result) {
-    stream.id = result.id;
-    callback(err, result);
-  }, stream, context);
-};
-
-Streams.prototype.update = function (stream, callback, context) {
-  var url = '/streams/' + stream.id;
-  this.connection.request('PUT', url, callback, null, context);
-};
-
-
-// TODO Validate that it's the good place for them .. Could have been in Stream or Utility
-Streams.prototype.Utils = {
-
-
-  /**
-   * Flaten a streamTree obtained from the API. Replaces the children[] by a childrenIds[]
-   * @param streamTree
-   * @param andGetStreamObjects if true return Stream object as in the model
-   * @returns {Array} of streamData
-   */
-  flatenTree : function (streamTree, andMakeObjectWithConnection) {
-    var streams = [];
-    this.walkDataTree(streamTree, function (stream) {
-      if (andMakeObjectWithConnection) {
-        streams.push(new Stream(andMakeObjectWithConnection, stream));
-      } else {
-        streams.push(stream);
-      }
+      return pack.success(resJson, requestInfo);
     });
-    return streams;
-  },
 
-  /**
-   * Walk thru a streamTree obtained from the API. Replaces the children[] by childrenIds[].
-   * This is used to Flaten the Tree
-   * @param streamTree
-   * @param callback function(streamData, subTree)  subTree is the descendance tree
-   */
-  walkDataTree : function (streamTree, callback) {
-    var self = this;
-    _.each(streamTree, function (streamStruct) {
-      var stream = _.omit(streamStruct, 'children', 'clientData');
-      stream.childrenIds = [];
-      var subTree = {};
-      callback(stream, subTree);
-      if (_.has(streamStruct, 'children')) {
-        subTree = streamStruct.children;
-        _.each(streamStruct.children, function (childTree) {
-          stream.childrenIds.push(childTree.id);
-        });
-        self.walkDataTree(streamStruct.children, callback);
-      }
-
+  }).on('error', function (e) {
+      return onError('Error: ' + e.message);
     });
-  }
 
+
+  req.on('socket', function (socket) {
+    socket.setTimeout(5000);
+    socket.on('timeout', function () {
+      req.abort();
+      return pack.error('Timeout');
+    });
+  });
+
+  if (pack.payload) { req.write(pack.payload); }
+  req.end();
 };
 
-},{"../Stream.js":9,"../utility/Utility.js":8,"underscore":2}],27:[function(require,module,exports){
+},{"socket.io-client":29}],29:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -6941,7 +7204,7 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 })()
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -8515,7 +8778,7 @@ if (typeof define === "function" && define.amd) {
 }).call(this);
 
 })()
-},{"underscore":2}],26:[function(require,module,exports){
+},{"underscore":2}],27:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -10477,7 +10740,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":29,"backbone.babysitter":28,"backbone.wreqr":30,"underscore":2}],29:[function(require,module,exports){
+},{"backbone":30,"backbone.babysitter":32,"backbone.wreqr":31,"underscore":2}],30:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -12051,7 +12314,7 @@ _.extend(Marionette.Module, {
 }).call(this);
 
 })()
-},{"underscore":2}],30:[function(require,module,exports){
+},{"underscore":2}],31:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -12331,7 +12594,7 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":29,"underscore":2}],28:[function(require,module,exports){
+},{"backbone":30,"underscore":2}],32:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -12511,5 +12774,5 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":29,"underscore":2}]},{},["3XoGqR"])
+},{"backbone":30,"underscore":2}]},{},["3XoGqR"])
 ;

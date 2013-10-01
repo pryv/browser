@@ -4,24 +4,14 @@
 var _ = require('underscore');
 var Backbone = require('backbone');
 
-var Pryv = require('pryv');
-
-var RootNode = require('./tree/RootNode.js');
 
 
 
 //----- test -------//
 exports.main = function () {
 
-  var connections = {
-    fredos : new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}),
-    perki1 :  new Pryv.Connection('perkikiki', 'Ve-U8SCASM', {domain : 'pryv.in'}),
-    //jordane:  new Pryv.Connection('jordane', 'eTpAijAyD5', {domain : 'pryv.in'}),
-    perki : new Pryv.Connection('perkikiki', 'PVriN2MuJ9', {domain : 'pryv.in'})
-  };
 
 
-  var nullFilter = new Pryv.Filter({limit : 200});
 
   var rootNode = new RootNode();
   var eventsArr = [];

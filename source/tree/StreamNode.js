@@ -78,8 +78,13 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     eventLeaveScope: function (event, reason, callback) {
-      delete this.events[event.id];
-      callback(null, this);
+      if (this.eventsNodes['Generic']) {
+        this.eventsNodes['Generic'].view.close();
+      }
+      delete this.eventsNodes['Generic'];
+      if (callback) {
+        callback(null, this);
+      }
     },
 
     eventChange: function (event, reason, callback) {

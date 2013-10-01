@@ -9,8 +9,8 @@ var _ = require('underscore'),
  * @param parent
  * @constructor
  */
-var MIN_WIDTH = 600;
-var MIN_HEIGHT = 600;
+var MIN_WIDTH = 30;
+var MIN_HEIGHT = 30;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
@@ -46,8 +46,78 @@ _.extend(TreeNode.prototype, {
   className: 'TreeNode',
   /** TreeNode parent or null if rootNode **/
 
-  //---------- visual rendering ------------//
+  //---------- view management ------------//
 
+  _createView: function () {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    // if width is not defined we are at the root node
+    // so we need to define a container dimension
+
+    if (this.width === null || this.height === null) {
+      this.width = $(document).width();
+      this.height = $(document).height();
+    }
+    this._generateChildrenTreemap(0, 0, this.width, this.height);
+    this.model = new NodeModel({
+      containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
+      id: this.uniqueId,
+      name: this.className,
+      width: this.width,
+      height: this.height,
+      x: this.x,
+      y: this.y,
+      depth: this.depth,
+      weight: this.getWeight(),
+      display: this.display
+    });
+    this.view = new NodeView({model: this.model});
+    this.renderView();
+    if (this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    }
+  },
+
+  _generateChildrenTreemap: function (x, y, width, height, recursive) {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    if (this.getChildren()) {
+      // we need to normalize child weights by the parent weight
+      _.each(this.getChildren(), function (child) {
+        child.normalizedWeight = (child.getWeight() / this.getWeight());
+      }, this);
+
+      // we squarify all the children passing a container dimension and position
+      // no recursion needed
+      var squarified =  TreemapUtil.squarify({
+        x: x,
+        y: x,
+        width: width,
+        height: height
+      }, this.getChildren());
+      _.each(this.getChildren(), function (child) {
+        child.x = squarified[child.uniqueId].x;
+        child.y = squarified[child.uniqueId].y;
+        child.width = squarified[child.uniqueId].width;
+        child.height = squarified[child.uniqueId].height;
+        // test if we need to aggregate the view by testing if a child is to small
+        // (child weight must be > 0)
+      }, this);
+      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
+        this.aggregated = true;
+      }
+      _.each(this.getChildren(), function (child) {
+        child.display = !this.aggregated;
+        if (recursive) {
+          child._generateChildrenTreemap(0, 0, child.width, child.height, true);
+        }
+      }, this);
+    }
+  },
   /**
    * render the View version A
    * @param height height of the Node
@@ -55,20 +125,20 @@ _.extend(TreeNode.prototype, {
    * @return A DOM Object, EventView..
    */
   renderView: function () {
-    this.view.renderView(this.display);
+    this.view.renderView();
 
     this.view.on('click', function () {
       if (!this.getChildren()) {
         return;
       }
       console.log('Zoom In ' + this.uniqueId);
-      this._generateChildrenPosition(0, 0, $(document).width(), $(document).height(), true);
+      this._generateChildrenTreemap(0, 0, $(document).width(), $(document).height(), true);
       this.model.set('width', $(document).width());
       this.model.set('height', $(document).height());
       this.model.set('x', this.x - this.getOffsetX());
       this.model.set('y', this.y - this.getOffsetY());
       _.each(this.getChildren(), function (child) {
-        child._refreshModel(true);
+        child._refreshViewModel(true);
       });
     }, this);
 
@@ -86,6 +156,30 @@ _.extend(TreeNode.prototype, {
     return this.model.get('y');
   },
 
+  _refreshViewModel: function (recursive) {
+    if (this.getWeight() === 0) {
+      if (this.model) {
+        this.model.set('width', 0);
+        this.model.set('height', 0);
+      }
+      return;
+    }
+    this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
+    this.model.set('id', this.uniqueId);
+    this.model.set('name', this.className);
+    this.model.set('width', this.width);
+    this.model.set('height', this.height);
+    this.model.set('x', this.x);
+    this.model.set('y', this.y);
+    this.model.set('depth', this.depth);
+    this.model.set('weight', this.getWeight());
+    this.model.set('display', this.display);
+    if (recursive && this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._refreshViewModel(true);
+      });
+    }
+  },
   /**
    *
    * @return DOMNode the current Wrapping DOM object for this Node. If this TreeNode is not yet
@@ -164,92 +258,6 @@ _.extend(TreeNode.prototype, {
    */
   eventLeaveScope: function (removed, reason, callback) {
     throw new Error(this.className + ': eventLeaveScope must be implemented');
-  },
-  _refreshModel: function (recursive) {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
-    this.model.set('id', this.uniqueId);
-    this.model.set('name', this.className);
-    this.model.set('width', this.width);
-    this.model.set('height', this.height);
-    this.model.set('x', this.x);
-    this.model.set('y', this.y);
-    this.model.set('depth', this.depth);
-    this.model.set('weight', this.getWeight());
-    if (recursive && this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._refreshModel(true);
-      });
-    }
-  },
-  _createView: function () {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    // if width is not defined we are at the root node
-    // so we need to define a container dimension
-    if (this.width === null) {
-      this.width = $(document).width();
-      this.height = $(document).height();
-    }
-    this._generateChildrenPosition(0, 0, this.width, this.height);
-    this.model = new NodeModel({
-      containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
-      id: this.uniqueId,
-      name: this.className,
-      width: this.width,
-      height: this.height,
-      x: this.x,
-      y: this.y,
-      depth: this.depth,
-      weight: this.getWeight()
-    });
-    this.view = new NodeView({model: this.model});
-    this.renderView();
-    if (this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._createView();
-      });
-    }
-  },
-  _generateChildrenPosition: function (x, y, width, height, recursive) {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    if (this.getChildren()) {
-      // we need to normalize child weights by the parent weight
-      _.each(this.getChildren(), function (child) {
-        child.normalizedWeight = (child.getWeight() / this.getWeight());
-      }, this);
-
-      // we squarify all the children passing a container dimension and position
-      // no recursion needed
-      var squarified =  TreemapUtil.squarify({
-        x: x,
-        y: x,
-        width: width,
-        height: height
-      }, this.getChildren());
-      _.each(this.getChildren(), function (child) {
-        child.x = squarified[child.uniqueId].x;
-        child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width;
-        child.height = squarified[child.uniqueId].height;
-        // test if we need to aggregate the view by testing if a child is to small
-        // (child weight must be > 0)
-      }, this);
-      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
-        this.aggregated = true;
-      }
-      _.each(this.getChildren(), function (child) {
-        child.display = !this.aggregated;
-        if (recursive) {
-          child._generateChildrenPosition(0, 0, child.width, child.height, true);
-        }
-      }, this);
-    }
   },
   //----------- debug ------------//
   _debugTree : function () {

@@ -2,6 +2,7 @@
 // ---------- helpers that should be  adapted to BackBone fashion ----------- //
 
 var _ = require('underscore');
+var Backbone = require('backbone');
 
 var Pryv = require('pryv');
 
@@ -23,9 +24,12 @@ exports.main = function () {
   var nullFilter = new Pryv.Filter({limit : 200});
 
   var rootNode = new RootNode();
+  var eventsArr = [];
 
-
-
+  var eventsListener = {};
+  // Mixin
+  _.extend(eventsListener, Backbone.Events);
+  eventsListener.on('eventLeave', rootNode.eventLeaveScope);
   var waiting = 0;
   function doneOne(info) {
     //console.log(waiting + ' done ' + info);
@@ -34,6 +38,16 @@ exports.main = function () {
       return 0;
     }
     rootNode._createView();
+
+    setTimeout(function () {
+      var start = new Date().getTime();
+
+      eventsListener.trigger('eventLeave', eventsArr);
+      console.log('done');
+      var end = new Date().getTime();
+      var time = end - start;
+      console.log('Execution time: ' + time);
+    }, 5000);
    // console.log(JSON.stringify(rootNode._debugTree(), null, 4));
   }
 
@@ -46,9 +60,9 @@ exports.main = function () {
 
       waiting += 1;
       conn.events.get(nullFilter, null, function (error, events) {
-
         waiting += events.length;
         _.each(events, function (event) {
+          eventsArr.push(event);
           rootNode.eventEnterScope(event, null, function (error, result) {
             if (error) {  throw new Error(error); }
             doneOne('event' + event.id);

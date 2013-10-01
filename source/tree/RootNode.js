@@ -1,6 +1,7 @@
 var TreeNode = require('./TreeNode');
 var ConnectionNode = require('./ConnectionNode');
 var _ = require('underscore');
+var Backbone = require('backbone');
 
 /**
  * Holder for Connection Nodes.
@@ -13,7 +14,7 @@ var RootNode = module.exports = TreeNode.implement(
   },
   {
     className: 'RootNode',
-
+    eventLeaveCount: 0,
 
     getChildren: function () {
       return _.values(this.connectionNodes);
@@ -32,19 +33,29 @@ var RootNode = module.exports = TreeNode.implement(
       this.connectionNodes[event.connection.id] = connectionNode;
       connectionNode.initStructure(null, function (error) {
         if (error) {
-          return callback('RootNode.eventEnterScope Failed to init ConnectioNode - ' + error);
+          return callback('RootNode.eventEnterScope Failed to init ConnectionNode - ' + error);
         }
         connectionNode.eventEnterScope(event, reason, callback);
       });
 
     },
 
-    eventLeaveScope: function (event, reason, callback) {
-      var node = this.connectionNodes[event.connection.id];
-      if (node === 'undefined') {
-        throw new Error('RootNode: can\'t find path to remove event' + event.id);
+    eventLeaveScope: function (events, reason, callback) {
+      console.log(events);
+      if (!events) {
+        return;
       }
-      node.eventRemove(event, reason, callback);
+      console.log(events.length);
+      for (var i = 0; i < events.length ; ++i) {
+        var event = events[i];
+        var node = this.connectionNodes[event.connection.id];
+        if (node === 'undefined') {
+          throw new Error('RootNode: can\'t find path to remove event' + event.id);
+        }
+        node.eventLeaveScope(event, reason, callback);
+      }
+      this._generateChildrenTreemap(this.x, this.y, this.width, this.height, true);
+      this._refreshViewModel(true);
     },
 
     eventChange: function (event, reason, callback) {

@@ -5,11 +5,11 @@ var Filter = require('pryv').Filter;
 
 var BrowserFilter = module.exports = function (browser) {
   this.browser = browser;
+  this.connections = this.browser.connections.connections; // TODO change this
   this.showOnlyStreams = null; // object that contains streams to display (from multiple connections)
   this.hiddenStreams = {};
   this.eventListeners = {};
   this._initEventListeners();
-  this.connections = {};
 
 
 };
@@ -50,7 +50,10 @@ BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
 BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
 BrowserFilter.SIGNAL.EVENT.CHANGE = 'eventChange';
 
-BrowserFilter.REASON = { EVENT : {} };
+BrowserFilter.REASON = { EVENT : {
+  SCOPE_ENTER : {},
+  SCOPE_LEAVE : {}
+} };
 
 BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
 
@@ -62,8 +65,8 @@ BrowserFilter.prototype._initEventListeners = function () {
   _.each(_.keys(BrowserFilter.SIGNAL), function (namespace) {
     _.each(_.keys(BrowserFilter.SIGNAL[namespace]), function (key) {
       this.eventListeners[BrowserFilter.SIGNAL[namespace][key]] = [];
-    });
-  });
+    }, this);
+  }, this);
 };
 
 
@@ -111,11 +114,11 @@ BrowserFilter.prototype.fireEvent = function (signal, content, thisArg) {
  * @return an object where you have to call stop when done
  */
 BrowserFilter.prototype.startBatch = function () {
-  var batch = { 
-    id : (new Date()).Time() + 'M',
+  var batch = {
+    id : (new Date()).getTime() + 'M',
     filter : this,
     done : function () {
-      this.filter.fireEvent (BrowserFilter.SIGNAL.BATCH.DONE, this.id);
+      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id);
     }
   };
   this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id);
@@ -165,15 +168,19 @@ BrowserFilter.prototype.hideStreams = function (streams) {
  * get all events that match this filter
  */
 BrowserFilter.prototype.showConnection = function (connectionKey) {
-  if (_.has(this.connections, connectionKey)) { return; }
-  this.connections[connectionKey] = this.browser.connections.connections[connectionKey];
+  if (! _.has(this.connections, connectionKey)) {
+    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
+    return;
+  }
+
+  var self = this;
   this.connections[connectionKey].events.get(this._getFilterFor(connectionKey), null,
     function (error, result) {
       if (error) { console.log(error); } // TODO handle
-      this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+      self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
         {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
          events: result});
-    }, this);
+    });
 };
 
 // ----------------------------- EVENTS -------------------------- //

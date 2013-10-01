@@ -29,6 +29,7 @@ var TreeNode = module.exports = function (parent) {
 
 TreeNode.implement = function (constructor, members) {
   var newImplementation = constructor;
+
   if (typeof Object.create === 'undefined') {
     Object.create = function (prototype) {
       function C() { }

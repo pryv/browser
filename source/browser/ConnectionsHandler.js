@@ -5,7 +5,7 @@ var Pryv = require('pryv');
 
 //TODO write all add / remove connection logic
 
-var ConnectionsHandler = module.exports = function(browser) {
+var ConnectionsHandler = module.exports = function (browser) {
   this.browser = browser;
 
   this.connections = {
@@ -22,12 +22,12 @@ var ConnectionsHandler = module.exports = function(browser) {
  * Inititalize connection (can be called several time without risks..
  * @param done
  */
-ConnectionsHandler.prototype.initConnections = function( done) {
+ConnectionsHandler.prototype.initConnections = function (done) {
 
   var toDo = _.keys(this.connections).length;
   function doneOne() {
     toDo--;
-    if (toDo < 0) { done(); }
+    if (toDo <= 0) { done(); }
   }
 
   _.each(this.connections, function (conn, connName) { // loop thru connections..

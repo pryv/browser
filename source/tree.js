@@ -12,6 +12,4 @@ exports.main = function () {
 
   var browser = new Browser();
 
-
-
 };

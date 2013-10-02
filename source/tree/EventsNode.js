@@ -1,4 +1,5 @@
-var TreeNode = require('./TreeNode');
+var TreeNode = require('./TreeNode'),
+    _ = require('underscore');
 
 /**
  * Holder for EventsNode
@@ -20,11 +21,19 @@ var EventsNode = module.exports = TreeNode.implement(
 
     eventEnterScope: function (event, reason, callback) {
       this.events[event.id] = event;
-      callback(null);
+      if (callback) {
+        callback(null);
+      }
     },
 
     eventLeaveScope: function (event, reason, callback) {
       delete this.events[event.id];
+      if (_.size(this.events) === 0) {
+        this.view.close();
+      }
+      if (callback) {
+        callback(null, this);
+      }
     },
 
     eventChange: function (event, reason, callback) {

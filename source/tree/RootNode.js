@@ -20,40 +20,41 @@ var RootNode = module.exports = TreeNode.implement(
       return _.values(this.connectionNodes);
     },
 
-    eventEnterScope: function (event, reason, callback) {
-      var connectionNode = this.connectionNodes[event.connection.id];
+    eventEnterScope: function (events, reason, callback) {
+      _.each(events, function (event) {
+        var connectionNode = this.connectionNodes[event.connection.id];
 
-      if (typeof connectionNode !== 'undefined') {
-        return connectionNode.eventEnterScope(event, reason, callback);
-      }
-
-      // we create a new connection Node
-      connectionNode = new ConnectionNode(this, event.connection);
-
-      this.connectionNodes[event.connection.id] = connectionNode;
-      connectionNode.initStructure(null, function (error) {
-        if (error) {
-          return callback('RootNode.eventEnterScope Failed to init ConnectionNode - ' + error);
+        if (typeof connectionNode !== 'undefined') {
+          return connectionNode.eventEnterScope(event, reason, callback);
         }
-        connectionNode.eventEnterScope(event, reason, callback);
-      });
 
+        // we create a new connection Node
+        connectionNode = new ConnectionNode(this, event.connection);
+
+        this.connectionNodes[event.connection.id] = connectionNode;
+        connectionNode.initStructure(null, function (error) {
+          if (error) {
+            return callback('RootNode.eventEnterScope Failed to init ConnectionNode - ' + error);
+          }
+          connectionNode.eventEnterScope(event, reason, callback);
+        });
+      }, this);
+      this._createView();
+      this._generateChildrenTreemap(this.x, this.y, this.width, this.height, true);
+      this._refreshViewModel(true);
     },
 
     eventLeaveScope: function (events, reason, callback) {
-      console.log(events);
       if (!events) {
         return;
       }
-      console.log(events.length);
-      for (var i = 0; i < events.length ; ++i) {
-        var event = events[i];
+      _.each(events, function (event) {
         var node = this.connectionNodes[event.connection.id];
         if (node === 'undefined') {
           throw new Error('RootNode: can\'t find path to remove event' + event.id);
         }
         node.eventLeaveScope(event, reason, callback);
-      }
+      }, this);
       this._generateChildrenTreemap(this.x, this.y, this.width, this.height, true);
       this._refreshViewModel(true);
     },

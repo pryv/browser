@@ -12,8 +12,11 @@ var NodeView = module.exports = Marionette.ItemView.extend({
   },
   change: function () {
     this.refreshView();
+    //console.log('change ' + this.model.get('containerId'));
   },
   renderView: function () {
+
+    //console.log('render ' + this.model.get('containerId'));
     this.render();
   },
   render: function () {
@@ -26,7 +29,7 @@ var NodeView = module.exports = Marionette.ItemView.extend({
   },
   refreshView: function () {
     if (this.model.get('height') === 0 || this.model.get('width') === 0) {
-      this.remove();
+      this.close();
       return;
     }
     if (this.model.get('display')) {
@@ -41,6 +44,9 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     this.$el.css('left', this.model.get('x'));
     this.$el.css('top', this.model.get('y'));
 
+  },
+  close: function () {
+    this.remove();
   },
   getRandomColor: function () {
     var letters = '0123456789ABCDEF'.split('');

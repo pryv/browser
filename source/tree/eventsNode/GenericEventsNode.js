@@ -10,11 +10,14 @@ var GenericEventsNode = module.exports = EventsNode.implement(
   },
   {
     className: 'GenericEventsNode',
+    weight: 1,
 
 
-
+    incrementWeight: function() {
+      this.weight++;
+    },
     getWeight: function () {
-      return 1;
+      return this.weight;
     }
 
   });

@@ -53,28 +53,39 @@ _.extend(TreeNode.prototype, {
     if (this.getWeight() === 0) {
       return;
     }
-    // if width is not defined we are at the root node
-    // so we need to define a container dimension
-
-    if (this.width === null || this.height === null) {
-      this.width = $(document).width();
-      this.height = $(document).height();
+    if (!this.view) {
+      // if width is not defined we are at the root node
+      // so we need to define a container dimension
+      //TODO pass a container id at the creation of the root node
+      if (this.width === null || this.height === null) {
+        this.width = $(document).width();
+        this.height = $(document).height();
+      }
+      this._generateChildrenTreemap(0, 0, this.width, this.height);
+      this.model = new NodeModel({
+        containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
+        id: this.uniqueId,
+        name: this.className,
+        width: this.width,
+        height: this.height,
+        x: this.x,
+        y: this.y,
+        depth: this.depth,
+        weight: this.getWeight(),
+        display: this.display
+      });
+      this.view = new NodeView({model: this.model});
     }
-    this._generateChildrenTreemap(0, 0, this.width, this.height);
-    this.model = new NodeModel({
-      containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
-      id: this.uniqueId,
-      name: this.className,
-      width: this.width,
-      height: this.height,
-      x: this.x,
-      y: this.y,
-      depth: this.depth,
-      weight: this.getWeight(),
-      display: this.display
-    });
-    this.view = new NodeView({model: this.model});
-    this.renderView();
+    /* TODO review this part
+    problem: when we remove some events and re-add them they don't render
+    why? because the view is still present, only the oldest parent is automaticly removed by
+    the refresh view model (see NodeView when width or height = 0)
+    Solution: when parent is removed, must removed all this child to (i.e make a boolean ....)
+
+     */
+    if ($('#' + this.uniqueId).length === 0) {
+      this.renderView();
+    }
     if (this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._createView();
@@ -110,6 +121,8 @@ _.extend(TreeNode.prototype, {
       }, this);
       if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
         this.aggregated = true;
+      } else {
+        this.aggregated = false;
       }
       _.each(this.getChildren(), function (child) {
         child.display = !this.aggregated;
@@ -129,32 +142,9 @@ _.extend(TreeNode.prototype, {
     this.view.renderView();
 
     this.view.on('click', function () {
-      if (!this.getChildren()) {
-        return;
-      }
-      console.log('Zoom In ' + this.uniqueId);
-      this._generateChildrenTreemap(0, 0, $(document).width(), $(document).height(), true);
-      this.model.set('width', $(document).width());
-      this.model.set('height', $(document).height());
-      this.model.set('x', this.x - this.getOffsetX());
-      this.model.set('y', this.y - this.getOffsetY());
-      _.each(this.getChildren(), function (child) {
-        child._refreshViewModel(true);
-      });
+
     }, this);
 
-  },
-  getOffsetX: function () {
-    if (this.parent) {
-      return this.model.get('x') + this.parent.getOffsetX();
-    }
-    return this.model.get('x');
-  },
-  getOffsetY: function () {
-    if (this.parent) {
-      return this.model.get('y') + this.parent.getOffsetY();
-    }
-    return this.model.get('y');
   },
 
   _refreshViewModel: function (recursive) {

@@ -53,21 +53,13 @@ var StreamNode = module.exports = TreeNode.implement(
 
     eventEnterScope: function (event, reason, callback) {
       var eventView = null;
-      // find the first matching eventView Type
-      var keys = _.keys(StreamNode.registeredEventNodes);
-      for (var i = 0; (i < keys.length && eventView === null); i++) {
-        var key = keys[i];
-        if (StreamNode.registeredEventNodes[key].acceptThisEventType(event.type)) {
-          // found a handler !! can we use an already active
-          if (_.has(this.eventsNodes, key)) {
-            eventView =  this.eventsNodes[key]; // found one
-          }  else { // create is
-            eventView = new StreamNode.registeredEventNodes[key](this);
-            this.eventsNodes[key] = eventView;
-          }
-        }
+      var key = this.findEventNodeType(event);
+      if (key && _.has(this.eventsNodes, key)) {
+        eventView =  this.eventsNodes[key]; // found one
+      }  else { // create is
+        eventView = new StreamNode.registeredEventNodeTypes[key](this);
+        this.eventsNodes[key] = eventView;
       }
-
       if (eventView === null) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
@@ -78,19 +70,37 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     eventLeaveScope: function (event, reason, callback) {
-      if (this.eventsNodes['Generic']) {
-        this.eventsNodes['Generic'].view.close();
+      var key = this.findEventNodeType(event);
+      if (!this.eventsNodes[key]) {
+        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
-      delete this.eventsNodes['Generic'];
+      var self = this;
+      this.eventsNodes[key].eventLeaveScope(event, reason, function () {
+        if (_.size(self.eventsNodes[key].events) === 0) {
+          delete self.eventsNodes[key];
+        }
+        if (callback) {
+          callback(null, self);
+        }
+      }.bind(this));
+    },
+
+    eventChange: function (event, reason, callback) {
       if (callback) {
         callback(null, this);
       }
     },
 
-    eventChange: function (event, reason, callback) {
-      callback(null, this);
+    findEventNodeType: function (event) {
+      var keys = _.keys(StreamNode.registeredEventNodeTypes);
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (StreamNode.registeredEventNodeTypes[key].acceptThisEventType(event.type)) {
+          return key;
+        }
+      }
+      return;
     },
-
 
     //----------- debug ------------//
     _debugTree : function () {
@@ -107,7 +117,7 @@ var StreamNode = module.exports = TreeNode.implement(
   });
 
 
-StreamNode.registeredEventNodes = {
+StreamNode.registeredEventNodeTypes = {
   'Notes' : require('./eventsNode/NotesEventsNode.js'),
   'Positions' : require('./eventsNode/PositionsEventsNode.js'),
   'Pictures' : require('./eventsNode/PicturesEventsNode.js'),

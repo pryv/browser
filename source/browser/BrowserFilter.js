@@ -2,15 +2,25 @@
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
 
+var Pryv = require('pryv');
+
+Object.defineProperty(Pryv.Stream.prototype, 'serialID', {
+  get: function () { return this.connection.serialId + '>>' + this.id; }
+});
+Object.defineProperty(Pryv.Event.prototype, 'serialID', {
+  get: function () { return this.stream.serialId + '>>' + this.id; }
+});
+
 
 var BrowserFilter = module.exports = function (browser) {
   this.browser = browser;
-  this.showOnlyStreams = null; // object that contains streams to display (from multiple connections)
+  this._showOnlyStreams = null; // object that contains streams to display (from multiple connections)
   this.hiddenStreams = {};
   this.eventListeners = {};
   this._initEventListeners();
-
   this.showConnections = {}; // serialIDs / connection
+
+  this.currentEvents = {};
 };
 
 /**
@@ -18,6 +28,7 @@ var BrowserFilter = module.exports = function (browser) {
  * @private
  */
 BrowserFilter.prototype._getFilterFor = function (connectionKey) {
+
   return nullFilter;
 };
 var nullFilter = new Filter({limit : 200});
@@ -44,6 +55,7 @@ BrowserFilter.SIGNAL.BATCH.DONE = 'doneBatch';
 
 /** called when some streams are hidden, content: Array of Stream**/
 BrowserFilter.SIGNAL.STREAM.HIDE = 'hideStream';
+BrowserFilter.SIGNAL.STREAM.SHOW = 'hideShow';
 /** called when some eventsEnterScope, content: {reason: one of .., content: array of Event }**/
 BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
 BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
@@ -55,6 +67,7 @@ BrowserFilter.REASON = { EVENT : {
 } };
 
 BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
+BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM = 'focusOnStream';
 
 /**
  * Init all event listeners array
@@ -126,37 +139,52 @@ BrowserFilter.prototype.startBatch = function () {
 
 // ----------------------------- STREAMS -------------------------- //
 
+
+
+
 /**
  * Return true if this stream matches the filter
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.showStream = function (stream) {
-  if (_.has(this.hiddenStreams, stream.id)) { return false; }
-  if (! this.showOnlyStreams) { return true; }
-  return _.has(this.showOnlyStreams, stream.id);
+BrowserFilter.prototype.streamIsShown = function (stream) {
+  if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
+  if (! this._showOnlyStreams) { return true; }
+  return _.has(this._showOnlyStreams, stream.serialId);
 };
 
-
 /**
- * Add this stream to the hidden (ignored ones) and eventually remove
- * the streams from the showOnlyList
- * @param stream object or array of Streams
+ * The the streams to display
+ * @param stream object or array of Streams (null) to show all
  * @returns Boolean
  */
-BrowserFilter.prototype.hideStreams = function (streams) {
-  if (!_.isArray(streams)) { streams = [streams]; }
+BrowserFilter.prototype.showOnlyStreams = function (streams) {
+  if (! streams) {
+    this._showOnlyStreams = null;
+  } else {
+    if (!_.isArray(streams)) { streams = [streams]; }
 
-  var changes = [];
+    _.each(streams, function (stream) {
+      if (_.has(this.hiddenStreams, stream.serialId)) {delete this.hiddenStreams[stream.serialId]; }
+      if (this._showOnlyStreams === null) {  this._showOnlyStreams = {}; }
+      if (! _.has(this._showOnlyStreams, stream.serialId)) {
+        this._showOnlyStreams[stream.serialId] = stream;
+      }
+    }, this);
+  }
 
-  _.each(streams, function (stream) {
-    if (this.showStream(stream)) { changes.push(stream); }
-    if (! _.has(this.hiddenStreams)) { this.hiddenStreams[stream.id] = stream; }
-    if (! _.has(this.showOnlyStreams)) { delete this.showOnlyStreams[stream.id]; }
-  }, this);
+  var eventsLeavingScope = [];
+  // pass thru all current events and remove the one not matching current Streams
+  _.each(_.values(this.currentEvents), function (event) {
+    if (! this.isShown(event.stream)) {
+      eventsLeavingScope.push(event);
+    }
+  }.bind(this));
 
-  if (changes.length > 0) { this.dispatchChanges(BrowserFilter.SIGNAL.STREAM.HIDE, changes); }
-  return changes;
+  this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+    {reason: BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
+      events: eventsLeavingScope});
+
 };
 
 
@@ -169,7 +197,7 @@ BrowserFilter.prototype.hideStreams = function (streams) {
 BrowserFilter.prototype.showConnection = function (connectionKey) {
   if (_.has(this.showConnection, connectionKey)) {
     console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
-    return ;
+    return;
   }
   if (! this.browser.connections.get(connectionKey)) { // TODO error management
     console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
@@ -181,6 +209,15 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
   this._getEventsForConnection(connectionKey,
     function (error, result) {
       if (error) { console.log(error); } // TODO handle
+
+      var eventThatEnter = [];
+      _.each(result, function (event) {
+        if (! _.has(self.currentEvents, event.serialID)) {
+          eventThatEnter.push(event);
+          self.currentEvents[event.serialID] = event;
+        }
+      });
+
       self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
         {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
           events: result});
@@ -195,17 +232,9 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
  * get all events actually matching this filter
  */
 BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
-  var self = this;
-  _.each(_.keys(self.showConnection), function (connectionKey) {
-    self._getEventsForConnection(connectionKey,
-      function (error, result) {
-        if (error) { console.log(error); } // TODO handle
-        eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-          {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-            events: result});
-      }
-    );
-  });
+  eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+    {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+      events: _.values(this.currentEvents)});
 };
 
 BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {

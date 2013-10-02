@@ -35,6 +35,15 @@ var Browser = module.exports = function () {
   this.activeFilter.showConnection(perki2Serial);
   batch.done();
 
+
+  var streams = [];
+  var perki2 =  this.connections.get(perki2Serial);
+  perki2.useLocalStorage(function () {
+    streams.push(perki2.streams.getById('diary'));
+  });
+
+  this.activeFilter.showOnlyStreams(streams);
+
 };
 
 

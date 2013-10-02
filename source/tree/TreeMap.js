@@ -25,16 +25,21 @@ var TreeMap = module.exports = function (browser) {
       this.root.renderView();
 
     }.bind(this));
-
+  this.eventEnterScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventEnterScope(event, content.reason, function () {});
+    }, this);
+    this.root._createView();
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+  }.bind(this);
   //--------- register the TreeMap event Listener ----------//
-  var self = this;
   this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    function (content) {
-      _.each(content.events, function (event) {
-        console.log('add ' + event.id);
-        self.root.eventEnterScope(event, content.reason, function () {});
-      });
-    }
+   this.eventEnterScope
   );
   this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
     this.root.eventLeaveScope);

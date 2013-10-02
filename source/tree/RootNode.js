@@ -20,28 +20,23 @@ var RootNode = module.exports = TreeNode.implement(
       return _.values(this.connectionNodes);
     },
 
-    eventEnterScope: function (events, reason, callback) {
-      _.each(events, function (event) {
-        var connectionNode = this.connectionNodes[event.connection.id];
+    eventEnterScope: function (event, reason, callback) {
+      var connectionNode = this.connectionNodes[event.connection.id];
 
-        if (typeof connectionNode !== 'undefined') {
-          return connectionNode.eventEnterScope(event, reason, callback);
+      if (typeof connectionNode !== 'undefined') {
+        return connectionNode.eventEnterScope(event, reason, callback);
+      }
+
+      // we create a new connection Node
+      connectionNode = new ConnectionNode(this, event.connection);
+
+      this.connectionNodes[event.connection.id] = connectionNode;
+      connectionNode.initStructure(null, function (error) {
+        if (error) {
+          return callback('RootNode.eventEnterScope Failed to init ConnectionNode - ' + error);
         }
-
-        // we create a new connection Node
-        connectionNode = new ConnectionNode(this, event.connection);
-
-        this.connectionNodes[event.connection.id] = connectionNode;
-        connectionNode.initStructure(null, function (error) {
-          if (error) {
-            return callback('RootNode.eventEnterScope Failed to init ConnectionNode - ' + error);
-          }
-          connectionNode.eventEnterScope(event, reason, callback);
-        });
-      }, this);
-      this._createView();
-      this._generateChildrenTreemap(this.x, this.y, this.width, this.height, true);
-      this._refreshViewModel(true);
+        connectionNode.eventEnterScope(event, reason, callback);
+      });
     },
 
     eventLeaveScope: function (events, reason, callback) {

@@ -7,15 +7,16 @@ var Pryv = require('pryv');
 
 var ConnectionsHandler = module.exports = function (browser) {
   this.browser = browser;
-
-  this.connections = {
-    fredos : new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}),
-    perki1 :  new Pryv.Connection('perkikiki', 'Ve-U8SCASM', {domain : 'pryv.in'}),
-    //jordane:  new Pryv.Connection('jordane', 'eTpAijAyD5', {domain : 'pryv.in'}),
-    perki : new Pryv.Connection('perkikiki', 'PVriN2MuJ9', {domain : 'pryv.in'})
-  };
+  this.connections = {};
+  this.serialCounter = 0;
 };
 
+
+ConnectionsHandler.prototype.add = function (connection) {
+  var serialId = 'N' + this.serialCounter++;
+  this.connections[serialId] = connection;
+  return serialId;
+};
 
 
 /**
@@ -30,7 +31,7 @@ ConnectionsHandler.prototype.initConnections = function (done) {
     if (toDo <= 0) { done(); }
   }
 
-  _.each(this.connections, function (conn, connName) { // loop thru connections..
+  _.each(this.connections, function (conn, serialId) { // loop thru connections..
     conn.useLocalStorage(function (error, accessInfo) {
       // TODO correctly deal with this error
       if (error) { console.log(error); }

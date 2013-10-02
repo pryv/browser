@@ -186,10 +186,8 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
 // ----------------------------- EVENTS -------------------------- //
 
 /**
- * get all events that match this filter
+ * get all events actually matching this filter
  */
-BrowserFilter.prototype.getAllEvents = function (callOnEachEventBatch, done) {
-   // -- get all connection
-   // foreach connection requesr events applied on filter
+BrowserFilter.prototype.triggerForAllCurrentEvents = function (callback) {
 
 };

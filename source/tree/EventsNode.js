@@ -9,6 +9,8 @@ var EventsNode = module.exports = TreeNode.implement(
   function (parentStreamNode) {
     TreeNode.call(this, parentStreamNode);
     this.events = {};
+    this.eventDisplayed = null;
+    this.eventsNbr = 0;
   },
   {
     className: 'EventsNode',
@@ -21,6 +23,8 @@ var EventsNode = module.exports = TreeNode.implement(
 
     eventEnterScope: function (event, reason, callback) {
       this.events[event.id] = event;
+      this.eventsNbr++;
+      this.eventDisplayed = event;
       if (callback) {
         callback(null);
       }
@@ -28,6 +32,9 @@ var EventsNode = module.exports = TreeNode.implement(
 
     eventLeaveScope: function (event, reason, callback) {
       delete this.events[event.id];
+      this.eventsNbr--;
+      if ()
+      this.eventDisplayed = event;
       if (_.size(this.events) === 0) {
         this.view.close();
       }

@@ -65,14 +65,15 @@ _.extend(TreeNode.prototype, {
       this.model = new NodeModel({
         containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
         id: this.uniqueId,
-        name: this.className,
+        className: this.className,
         width: this.width,
         height: this.height,
         x: this.x,
         y: this.y,
         depth: this.depth,
         weight: this.getWeight(),
-        display: this.display
+        display: this.display,
+        content: this.events || this.stream || this.connection
       });
       this.view = new NodeView({model: this.model});
     }
@@ -102,14 +103,17 @@ _.extend(TreeNode.prototype, {
       _.each(this.getChildren(), function (child) {
         child.normalizedWeight = (child.getWeight() / this.getWeight());
       }, this);
-
+      var offset = 30;
+      if (this.className === 'RootNode') {
+        offset = 0;
+      }
       // we squarify all the children passing a container dimension and position
       // no recursion needed
       var squarified =  TreemapUtil.squarify({
         x: x,
-        y: x,
+        y: y + offset,
         width: width,
-        height: height
+        height: height - offset
       }, this.getChildren());
       _.each(this.getChildren(), function (child) {
         child.x = squarified[child.uniqueId].x;

@@ -17,7 +17,7 @@ exports.main = function () {
 
 };
 })()
-},{"./Browser.js":1,"backbone":3,"underscore":2}],2:[function(require,module,exports){
+},{"./Browser.js":1,"backbone":2,"underscore":3}],3:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -1340,7 +1340,7 @@ var Browser = module.exports = function () {
 
 
 
-},{"./browser/BrowserFilter.js":4,"./browser/ConnectionsHandler.js":5,"./tree/TreeMap.js":6,"pryv":7}],3:[function(require,module,exports){
+},{"./browser/BrowserFilter.js":6,"./browser/ConnectionsHandler.js":4,"./tree/TreeMap.js":5,"pryv":7}],2:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -2914,7 +2914,7 @@ var Browser = module.exports = function () {
 }).call(this);
 
 })()
-},{"underscore":2}],7:[function(require,module,exports){
+},{"underscore":3}],7:[function(require,module,exports){
 /**
  * The main file.
  */
@@ -2928,7 +2928,112 @@ module.exports = {
   Utility: require('./utility/Utility.js')
 };
 
-},{"./Access.js":14,"./Connection.js":8,"./Event.js":9,"./Filter.js":11,"./Stream.js":10,"./system/System.js":13,"./utility/Utility.js":12}],4:[function(require,module,exports){
+},{"./Access.js":13,"./Connection.js":8,"./Event.js":9,"./Filter.js":11,"./Stream.js":10,"./system/System.js":12,"./utility/Utility.js":14}],4:[function(require,module,exports){
+
+var _ = require('underscore');
+var Pryv = require('pryv');
+
+
+//TODO write all add / remove connection logic
+
+var ConnectionsHandler = module.exports = function (browser) {
+  this.browser = browser;
+  this._connections = {};
+  this.serialCounter = 0;
+};
+
+/**
+ * @param connection
+ * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
+ * the handler will try to initialize the connection
+ * @returns {string} serialNumber to access this connection
+ */
+ConnectionsHandler.prototype.add = function (connection, andInitializeCallBack) {
+  var serialId = 'N' + this.serialCounter++;
+  this._connections[serialId] = connection;
+  if (andInitializeCallBack) {
+    connection.useLocalStorage(function (error/*, accessInfo*/) {
+      // TODO correctly deal with this error
+      if (error) { console.log(error); }
+      andInitializeCallBack(error, connection);
+    });
+  }
+  return serialId;
+};
+
+/**
+ * get the connection form it's ID
+ * @param connectionSerialID
+ * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
+ * the handler will try to initialize the connection
+ * @returns {Pryv.Connection} the connection that matches this serial
+ */
+ConnectionsHandler.prototype.get = function (connectionSerialID, andInitializeCallBack) {
+  var connection = this._connections[connectionSerialID];
+  if (andInitializeCallBack) {
+    if (! connection) {
+      andInitializeCallBack('Cannot find connection with serialID: ' + connectionSerialID, null);
+      return null;
+    }
+    connection.useLocalStorage(function (error/*, accessInfo*/) {
+      // TODO correctly deal with this error
+      if (error) { console.log(error); }
+      andInitializeCallBack(error, connection);
+    });
+  }
+  return connection;
+};
+
+
+
+},{"pryv":7,"underscore":3}],5:[function(require,module,exports){
+
+
+var RootNode = require('./RootNode.js');
+var BrowserFilter = require('../browser/BrowserFilter.js');
+
+var _ = require('underscore');
+
+var TreeMap = module.exports = function (browser) {
+  this.browser = browser;
+  this.root = new RootNode();
+
+
+
+  //----------- init the browser with all events --------//
+  this.eventEnterScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventEnterScope(event, content.reason, function () {});
+    }, this);
+    this.root._createView();
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+  }.bind(this);
+
+  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
+  //--------- register the TreeMap event Listener ----------//
+  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+   this.eventEnterScope
+  );
+  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+    this.root.eventLeaveScope);
+  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.CHANGE,
+    this.root.eventChange);
+};
+
+
+TreeMap.prototype.destroy = function () {
+  this.browser.activeFilter.removeEventListener('eventEnterScope', this.root.eventEnterScope);
+  this.browser.activeFilter.removeEventListener('eventLeaveScope', this.root.eventLeaveScope);
+  this.browser.activeFilter.removeEventListener('eventChange', this.root.eventChange);
+};
+
+
+},{"../browser/BrowserFilter.js":6,"./RootNode.js":15,"underscore":3}],6:[function(require,module,exports){
 (function(){
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
@@ -3148,112 +3253,7 @@ BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callb
 };
 
 })()
-},{"pryv":7,"underscore":2}],5:[function(require,module,exports){
-
-var _ = require('underscore');
-var Pryv = require('pryv');
-
-
-//TODO write all add / remove connection logic
-
-var ConnectionsHandler = module.exports = function (browser) {
-  this.browser = browser;
-  this._connections = {};
-  this.serialCounter = 0;
-};
-
-/**
- * @param connection
- * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
- * the handler will try to initialize the connection
- * @returns {string} serialNumber to access this connection
- */
-ConnectionsHandler.prototype.add = function (connection, andInitializeCallBack) {
-  var serialId = 'N' + this.serialCounter++;
-  this._connections[serialId] = connection;
-  if (andInitializeCallBack) {
-    connection.useLocalStorage(function (error/*, accessInfo*/) {
-      // TODO correctly deal with this error
-      if (error) { console.log(error); }
-      andInitializeCallBack(error, connection);
-    });
-  }
-  return serialId;
-};
-
-/**
- * get the connection form it's ID
- * @param connectionSerialID
- * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
- * the handler will try to initialize the connection
- * @returns {Pryv.Connection} the connection that matches this serial
- */
-ConnectionsHandler.prototype.get = function (connectionSerialID, andInitializeCallBack) {
-  var connection = this._connections[connectionSerialID];
-  if (andInitializeCallBack) {
-    if (! connection) {
-      andInitializeCallBack('Cannot find connection with serialID: ' + connectionSerialID, null);
-      return null;
-    }
-    connection.useLocalStorage(function (error/*, accessInfo*/) {
-      // TODO correctly deal with this error
-      if (error) { console.log(error); }
-      andInitializeCallBack(error, connection);
-    });
-  }
-  return connection;
-};
-
-
-
-},{"pryv":7,"underscore":2}],6:[function(require,module,exports){
-
-
-var RootNode = require('./RootNode.js');
-var BrowserFilter = require('../browser/BrowserFilter.js');
-
-var _ = require('underscore');
-
-var TreeMap = module.exports = function (browser) {
-  this.browser = browser;
-  this.root = new RootNode();
-
-
-
-  //----------- init the browser with all events --------//
-  this.eventEnterScope = function (content) {
-    _.each(content.events, function (event) {
-      this.root.eventEnterScope(event, content.reason, function () {});
-    }, this);
-    this.root._createView();
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-  }.bind(this);
-
-  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
-  //--------- register the TreeMap event Listener ----------//
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-   this.eventEnterScope
-  );
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    this.root.eventLeaveScope);
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.CHANGE,
-    this.root.eventChange);
-};
-
-
-TreeMap.prototype.destroy = function () {
-  this.browser.activeFilter.removeEventListener('eventEnterScope', this.root.eventEnterScope);
-  this.browser.activeFilter.removeEventListener('eventLeaveScope', this.root.eventLeaveScope);
-  this.browser.activeFilter.removeEventListener('eventChange', this.root.eventChange);
-};
-
-
-},{"../browser/BrowserFilter.js":4,"./RootNode.js":15,"underscore":2}],14:[function(require,module,exports){
+},{"pryv":7,"underscore":3}],13:[function(require,module,exports){
 var System = require('./system/System.js');
 
 
@@ -3311,7 +3311,7 @@ exports.getAccesses = function (pack) {
     error : pack.error
   });
 };
-},{"./system/System.js":13}],13:[function(require,module,exports){
+},{"./system/System.js":12}],12:[function(require,module,exports){
 //TODO: consider merging System into Utility
 
 function isBrowser() {
@@ -3552,7 +3552,438 @@ var RootNode = module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":19,"./TreeNode":18,"backbone":3,"underscore":2}],18:[function(require,module,exports){
+},{"./ConnectionNode":19,"./TreeNode":18,"backbone":2,"underscore":3}],9:[function(require,module,exports){
+
+var _ = require('underscore');
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
+};
+
+
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    if (! this.connection.datastore) {
+      throw new Error('Activate Datastore to get automatic stream mapping. Or use StreamId');
+    }
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
+
+},{"underscore":3}],8:[function(require,module,exports){
+var _ = require('underscore'),
+  System = require('./system/System.js'),
+  ConnectionEvents = require('./connection/Events.js'),
+  ConnectionStreams = require('./connection/Streams.js'),
+  Datastore = require('./Datastore.js');
+
+/**
+ * TODO
+ *
+ * @constructor
+ */
+var Connection = module.exports = function (username, auth, settings) {
+  // protect against calls without `new`
+  if (! (this instanceof Connection)) {
+    return new Connection(username, auth, settings);
+  }
+
+  this.username = username;
+  this.auth = auth;
+
+  this.settings = _.extend({
+    port: 443,
+    ssl: true,
+    domain: 'pryv.io'
+  }, settings);
+
+  this.serverInfos = {
+    // nowLocalTime - nowServerTime
+    deltaTime: null,
+    apiVersion: null,
+    lastSeenLT: null
+  };
+
+  this._accessInfo = null;
+
+  this.events = new ConnectionEvents(this);
+  this.streams = new ConnectionStreams(this);
+
+  this.datastore = null;
+
+  this._ioSocket = null;
+  this._ioSocketMonitors = {};
+};
+
+/**
+ * Use localStorage for caching.
+ * The Library will activate Structure Monitoring and
+ * @param callback
+ * @returns {*}
+ */
+Connection.prototype.useLocalStorage = function (callback) {
+  if (this.datastore) { return this.datastore.init(callback); }
+  this.datastore = new Datastore(this);
+  this.accessInfo(function (error) {
+    if (error) { return callback(error); }
+    this.datastore.init(callback);
+  }.bind(this));
+};
+
+Connection.prototype.accessInfo = function (callback) {
+  if (this._accessInfo) { return this._accessInfo; }
+  var url = '/access-info';
+  this.request('GET', url, function (error, result) {
+    if (! error) {
+      this._accessInfo = result;
+    }
+    return callback(error, result);
+  }.bind(this));
+};
+
+/**
+ * Translate this timestamp (server dimension) to local system dimension
+ * This could have been named to "translate2LocalTime"
+ * @param serverTime timestamp  (server dimension)
+ * @returns {number} timestamp (local dimension)
+ */
+Connection.prototype.getLocalTime = function (serverTime) {
+  return (serverTime + this.serverInfos.deltaTime) * 1000;
+};
+
+/**
+ * Translate this timestamp (local system dimension) to server dimension
+ * This could have been named to "translate2ServerTime"
+ * @param localTime timestamp  (local dimension)
+ * @returns {number} timestamp (server dimension)
+ */
+Connection.prototype.getServerTime = function (localTime) {
+  localTime = localTime || new Date().getTime();
+  return (localTime / 1000) - this.serverInfos.deltaTime;
+};
+
+// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
+
+Connection.prototype._stopMonitoring = function (/*callback*/) {
+
+};
+
+Connection.prototype._startMonitoring = function (callback) {
+
+  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
+
+
+  var settings = {
+    host : this.username + '.' + this.settings.domain,
+    port : this.settings.port,
+    ssl : this.settings.ssl,
+    path : '/' + this.username,
+    namespace : '/' + this.username,
+    auth : this.auth
+  };
+
+  this.ioSocket = System.ioConnect(settings);
+
+  this.ioSocket.on('connect', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onConnect(); });
+  });
+  this.ioSocket.on('error', function (error) {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onError(error); });
+  });
+  this.ioSocket.on('eventsChanged', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onEventsChanged(); });
+  });
+  this.ioSocket.on('streamsChanged', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onStreamsChanged(); });
+  });
+
+};
+
+Connection.prototype.request = function (method, path, callback, jsonData, context) {
+  var headers =  { 'authorization': this.auth };
+  context = context ? context : this;
+  var payload = null;
+  if (jsonData) {
+    payload = JSON.stringify(jsonData);
+    headers['Content-Type'] = 'application/json; charset=utf-8';
+    headers['Content-Length'] = payload.length;
+  }
+
+  System.request({
+    method : method,
+    host : this.username + '.' + this.settings.domain,
+    port : this.settings.port,
+    ssl : this.settings.ssl,
+    path : path,
+    headers : headers,
+    payload : payload,
+    //TODO: decide what callback convention to use (Node or jQuery)
+    success : onSuccess.bind(this),
+    error : onError.bind(this)
+  });
+
+  /**
+   * @this {Connection}
+   */
+  function onSuccess(result, requestInfos) {
+    this.serverInfos.lastSeenLT = (new Date()).getTime();
+    this.serverInfos.apiVersion = requestInfos.headers['api-version'] ||
+      this.serverInfos.apiVersion;
+    if (_.has(requestInfos.headers, 'server-time')) {
+      this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
+        requestInfos.headers['server-time'];
+    }
+    callback.call(context, null, result);
+  }
+
+  function onError(error /*, requestInfo*/) {
+    callback.call(context, error, null);
+  }
+};
+
+
+Object.defineProperty(Connection.prototype, 'id', {
+  get: function () {
+    var id = this.settings.ssl ? 'https://' : 'http://';
+    id += this.username + '.' + this.settings.domain + ':' +
+      this.settings.port + '/?auth=' + this.auth;
+    return id;
+  },
+  set: function () { throw new Error('ConnectionNode.id property is read only'); }
+});
+
+Object.defineProperty(Connection.prototype, 'shortId', {
+  get: function () {
+    if (! this._accessInfo) {
+      throw new Error('connection must have been initialized to use shortId. ' +
+        ' You can call accessInfo() for this');
+    }
+    var id = this.username + ':' + this._accessInfo.name;
+    return id;
+  },
+  set: function () { throw new Error('Connection.shortId property is read only'); }
+});
+
+},{"./Datastore.js":22,"./connection/Events.js":20,"./connection/Streams.js":21,"./system/System.js":12,"underscore":3}],10:[function(require,module,exports){
+
+var _ = require('underscore');
+
+var Stream = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
+
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this._children = [];
+
+};
+
+
+
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (! this.parentId) { return null; }
+
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      var child = this.connection.datastore.getStreamById(childrenId);
+      children.push(child);
+    }.bind(this));
+    return children;
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    if (! this.parentId) { return []; }
+
+    var result = [this.parent];
+    result.push(this.parent.ancestors);
+    return result;
+  },
+  set: function () { throw new Error('Stream.ancestors property is read only'); }
+});
+
+},{"underscore":3}],11:[function(require,module,exports){
+var _ = require('underscore');
+
+var Filter = module.exports = function (settings) {
+  // protect against calls without `new`
+  if (! (this instanceof Filter)) {
+    return new Filter(settings);
+  }
+
+  this.settings = _.extend({
+    //TODO: set default values
+    streams: null,
+    tags: null,
+    from: null,
+    to: null,
+    limit: null,
+    skip: null,
+    modifiedSince: null,
+    state: null
+  }, settings);
+};
+
+//TODO: remove or rewrite (name & functionality unclear)
+Filter.prototype.focusedOnSingleStream = function () {
+  if (_.isArray(this.settings.streams) && this.settings.streams.length === 1) {
+    return this.settings.streams[0];
+  }
+  return null;
+};
+
+},{"underscore":3}],19:[function(require,module,exports){
+
+var _ = require('underscore');
+var TreeNode = require('./TreeNode');
+var StreamNode = require('./StreamNode');
+
+/**
+ * Always call intStructure after creating a new ConnectionNode
+ * @type {*}
+ */
+var ConnectionNode = module.exports = TreeNode.implement(
+  function (parentnode, connection) {
+    TreeNode.call(this, parentnode);
+    this.connection = connection;
+    this.streamNodes = {};
+
+  }, {
+    className: 'ConnectionNode',
+
+    // ---------------------------------- //
+
+
+    /**
+     * Build Structure
+     * @param callback
+     * @param options
+     */
+    initStructure: function (options, callback) {
+
+      options = options || {};
+      var self = this;
+      self.streamNodes = {};
+
+
+      self.connection.streams.walkTree(options,
+        function (stream) {  // eachNode
+          var parentNode = self;
+          if (stream.parent) {   // if not parent, this connection node is the parent
+            parentNode = self.streamNodes[stream.parent.id];
+          }
+          self.streamNodes[stream.id] = new StreamNode(self, parentNode, stream);
+        },
+        function (error) {   // done
+          if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
+          callback(error);
+        });
+
+    },
+
+    /**
+     * Advertise a structure change event
+     * @param options {state : all, default}
+     * @param callback
+     */
+    structureChange: function (callback, options) {
+
+      // - load streamTree from connection
+      // - create nodes
+      // - redistribute events (if needed)
+      // when implemented review "eventEnterScope" which creates the actual structure
+
+      // warnings
+      // - there is no list of events directly accessible.
+      // Maybe this could be asked to the rootNode
+
+      // possible optimization
+      // - calculate the changes and rebuild only what's needed :)
+      // - this would need cleverer StreamNodes
+
+      console.log('Warning: Implement ConnectionNode.structureChange');
+      callback();
+    },
+
+// ---------- Node -------------  //
+
+    getChildren: function () {
+      var self = this;
+      var children = [];
+      _.each(this.streamNodes, function (node) {
+        if (node.getParent() === self) { children.push(node); }
+      });
+      return children;
+    },
+
+
+    eventEnterScope: function (event, reason, callback) {
+      var node =  this.streamNodes[event.stream.id]; // do we already know this stream?
+      if (typeof node === 'undefined') {
+        throw new Error('Cannot find stream with id: ' + event.stream.id);
+      }
+      node.eventEnterScope(event, reason, callback);
+    },
+
+    eventLeaveScope: function (event, reason, callback) {
+      var node = this.streamNodes[event.stream.id];
+      if (node === 'undefined') {
+        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
+      }
+      node.eventLeaveScope(event, reason, callback);
+    },
+
+    eventChange: function (event, reason, callback) {
+      var node = this.streamNodes[event.stream.id];
+      if (node === 'undefined') {
+        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
+      }
+      node.eventChange(event, reason, callback);
+    },
+
+//----------- debug ------------//
+    _debugTree : function () {
+      var me = {
+        name : this.connection.shortId
+      };
+
+      _.extend(me, TreeNode.prototype._debugTree.call(this));
+
+      return me;
+    }
+
+  });
+Object.defineProperty(ConnectionNode.prototype, 'id', {
+  get: function () { return this.connection.id; },
+  set: function () { throw new Error('ConnectionNode.id property is read only'); }
+});
+},{"./StreamNode":23,"./TreeNode":18,"underscore":3}],18:[function(require,module,exports){
 var _ = require('underscore'),
 // $ = require('node-jquery'),
   NodeView = require('../view/NodeView.js'),
@@ -3825,438 +4256,7 @@ _.extend(TreeNode.prototype, {
   }
 });
 
-},{"../model/NodeModel.js":22,"../utility/treemap.js":20,"../view/NodeView.js":21,"underscore":2}],19:[function(require,module,exports){
-
-var _ = require('underscore');
-var TreeNode = require('./TreeNode');
-var StreamNode = require('./StreamNode');
-
-/**
- * Always call intStructure after creating a new ConnectionNode
- * @type {*}
- */
-var ConnectionNode = module.exports = TreeNode.implement(
-  function (parentnode, connection) {
-    TreeNode.call(this, parentnode);
-    this.connection = connection;
-    this.streamNodes = {};
-
-  }, {
-    className: 'ConnectionNode',
-
-    // ---------------------------------- //
-
-
-    /**
-     * Build Structure
-     * @param callback
-     * @param options
-     */
-    initStructure: function (options, callback) {
-
-      options = options || {};
-      var self = this;
-      self.streamNodes = {};
-
-
-      self.connection.streams.walkTree(options,
-        function (stream) {  // eachNode
-          var parentNode = self;
-          if (stream.parent) {   // if not parent, this connection node is the parent
-            parentNode = self.streamNodes[stream.parent.id];
-          }
-          self.streamNodes[stream.id] = new StreamNode(self, parentNode, stream);
-        },
-        function (error) {   // done
-          if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
-          callback(error);
-        });
-
-    },
-
-    /**
-     * Advertise a structure change event
-     * @param options {state : all, default}
-     * @param callback
-     */
-    structureChange: function (callback, options) {
-
-      // - load streamTree from connection
-      // - create nodes
-      // - redistribute events (if needed)
-      // when implemented review "eventEnterScope" which creates the actual structure
-
-      // warnings
-      // - there is no list of events directly accessible.
-      // Maybe this could be asked to the rootNode
-
-      // possible optimization
-      // - calculate the changes and rebuild only what's needed :)
-      // - this would need cleverer StreamNodes
-
-      console.log('Warning: Implement ConnectionNode.structureChange');
-      callback();
-    },
-
-// ---------- Node -------------  //
-
-    getChildren: function () {
-      var self = this;
-      var children = [];
-      _.each(this.streamNodes, function (node) {
-        if (node.getParent() === self) { children.push(node); }
-      });
-      return children;
-    },
-
-
-    eventEnterScope: function (event, reason, callback) {
-      var node =  this.streamNodes[event.stream.id]; // do we already know this stream?
-      if (typeof node === 'undefined') {
-        throw new Error('Cannot find stream with id: ' + event.stream.id);
-      }
-      node.eventEnterScope(event, reason, callback);
-    },
-
-    eventLeaveScope: function (event, reason, callback) {
-      var node = this.streamNodes[event.stream.id];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
-      }
-      node.eventLeaveScope(event, reason, callback);
-    },
-
-    eventChange: function (event, reason, callback) {
-      var node = this.streamNodes[event.stream.id];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
-      }
-      node.eventChange(event, reason, callback);
-    },
-
-//----------- debug ------------//
-    _debugTree : function () {
-      var me = {
-        name : this.connection.shortId
-      };
-
-      _.extend(me, TreeNode.prototype._debugTree.call(this));
-
-      return me;
-    }
-
-  });
-Object.defineProperty(ConnectionNode.prototype, 'id', {
-  get: function () { return this.connection.id; },
-  set: function () { throw new Error('ConnectionNode.id property is read only'); }
-});
-},{"./StreamNode":23,"./TreeNode":18,"underscore":2}],9:[function(require,module,exports){
-
-var _ = require('underscore');
-/**
- *
- * @type {Function}
- * @constructor
- */
-var Event = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-};
-
-
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    if (! this.connection.datastore) {
-      throw new Error('Activate Datastore to get automatic stream mapping. Or use StreamId');
-    }
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
-
-},{"underscore":2}],8:[function(require,module,exports){
-var _ = require('underscore'),
-  System = require('./system/System.js'),
-  ConnectionEvents = require('./connection/Events.js'),
-  ConnectionStreams = require('./connection/Streams.js'),
-  Datastore = require('./Datastore.js');
-
-/**
- * TODO
- *
- * @constructor
- */
-var Connection = module.exports = function (username, auth, settings) {
-  // protect against calls without `new`
-  if (! (this instanceof Connection)) {
-    return new Connection(username, auth, settings);
-  }
-
-  this.username = username;
-  this.auth = auth;
-
-  this.settings = _.extend({
-    port: 443,
-    ssl: true,
-    domain: 'pryv.io'
-  }, settings);
-
-  this.serverInfos = {
-    // nowLocalTime - nowServerTime
-    deltaTime: null,
-    apiVersion: null,
-    lastSeenLT: null
-  };
-
-  this._accessInfo = null;
-
-  this.events = new ConnectionEvents(this);
-  this.streams = new ConnectionStreams(this);
-
-  this.datastore = null;
-
-  this._ioSocket = null;
-  this._ioSocketMonitors = {};
-};
-
-/**
- * Use localStorage for caching.
- * The Library will activate Structure Monitoring and
- * @param callback
- * @returns {*}
- */
-Connection.prototype.useLocalStorage = function (callback) {
-  if (this.datastore) { return this.datastore.init(callback); }
-  this.datastore = new Datastore(this);
-  this.accessInfo(function (error) {
-    if (error) { return callback(error); }
-    this.datastore.init(callback);
-  }.bind(this));
-};
-
-Connection.prototype.accessInfo = function (callback) {
-  if (this._accessInfo) { return this._accessInfo; }
-  var url = '/access-info';
-  this.request('GET', url, function (error, result) {
-    if (! error) {
-      this._accessInfo = result;
-    }
-    return callback(error, result);
-  }.bind(this));
-};
-
-/**
- * Translate this timestamp (server dimension) to local system dimension
- * This could have been named to "translate2LocalTime"
- * @param serverTime timestamp  (server dimension)
- * @returns {number} timestamp (local dimension)
- */
-Connection.prototype.getLocalTime = function (serverTime) {
-  return (serverTime + this.serverInfos.deltaTime) * 1000;
-};
-
-/**
- * Translate this timestamp (local system dimension) to server dimension
- * This could have been named to "translate2ServerTime"
- * @param localTime timestamp  (local dimension)
- * @returns {number} timestamp (server dimension)
- */
-Connection.prototype.getServerTime = function (localTime) {
-  localTime = localTime || new Date().getTime();
-  return (localTime / 1000) - this.serverInfos.deltaTime;
-};
-
-// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
-
-Connection.prototype._stopMonitoring = function (/*callback*/) {
-
-};
-
-Connection.prototype._startMonitoring = function (callback) {
-
-  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
-
-
-  var settings = {
-    host : this.username + '.' + this.settings.domain,
-    port : this.settings.port,
-    ssl : this.settings.ssl,
-    path : '/' + this.username,
-    namespace : '/' + this.username,
-    auth : this.auth
-  };
-
-  this.ioSocket = System.ioConnect(settings);
-
-  this.ioSocket.on('connect', function () {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onConnect(); });
-  });
-  this.ioSocket.on('error', function (error) {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onError(error); });
-  });
-  this.ioSocket.on('eventsChanged', function () {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onEventsChanged(); });
-  });
-  this.ioSocket.on('streamsChanged', function () {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onStreamsChanged(); });
-  });
-
-};
-
-Connection.prototype.request = function (method, path, callback, jsonData, context) {
-  var headers =  { 'authorization': this.auth };
-  context = context ? context : this;
-  var payload = null;
-  if (jsonData) {
-    payload = JSON.stringify(jsonData);
-    headers['Content-Type'] = 'application/json; charset=utf-8';
-    headers['Content-Length'] = payload.length;
-  }
-
-  System.request({
-    method : method,
-    host : this.username + '.' + this.settings.domain,
-    port : this.settings.port,
-    ssl : this.settings.ssl,
-    path : path,
-    headers : headers,
-    payload : payload,
-    //TODO: decide what callback convention to use (Node or jQuery)
-    success : onSuccess.bind(this),
-    error : onError.bind(this)
-  });
-
-  /**
-   * @this {Connection}
-   */
-  function onSuccess(result, requestInfos) {
-    this.serverInfos.lastSeenLT = (new Date()).getTime();
-    this.serverInfos.apiVersion = requestInfos.headers['api-version'] ||
-      this.serverInfos.apiVersion;
-    if (_.has(requestInfos.headers, 'server-time')) {
-      this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
-        requestInfos.headers['server-time'];
-    }
-    callback.call(context, null, result);
-  }
-
-  function onError(error /*, requestInfo*/) {
-    callback.call(context, error, null);
-  }
-};
-
-
-Object.defineProperty(Connection.prototype, 'id', {
-  get: function () {
-    var id = this.settings.ssl ? 'https://' : 'http://';
-    id += this.username + '.' + this.settings.domain + ':' +
-      this.settings.port + '/?auth=' + this.auth;
-    return id;
-  },
-  set: function () { throw new Error('ConnectionNode.id property is read only'); }
-});
-
-Object.defineProperty(Connection.prototype, 'shortId', {
-  get: function () {
-    if (! this._accessInfo) {
-      throw new Error('connection must have been initialized to use shortId. ' +
-        ' You can call accessInfo() for this');
-    }
-    var id = this.username + ':' + this._accessInfo.name;
-    return id;
-  },
-  set: function () { throw new Error('Connection.shortId property is read only'); }
-});
-
-},{"./Datastore.js":26,"./connection/Events.js":24,"./connection/Streams.js":25,"./system/System.js":13,"underscore":2}],10:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var Stream = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-
-  /** those are only used when no datastore **/
-  this._parent = null;
-  this._children = [];
-
-};
-
-
-
-Object.defineProperty(Stream.prototype, 'parent', {
-  get: function () {
-
-    if (! this.parentId) { return null; }
-
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._parent;
-    }
-
-    return this.connection.datastore.getStreamById(this.parentId);
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._children;
-    }
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      var child = this.connection.datastore.getStreamById(childrenId);
-      children.push(child);
-    }.bind(this));
-    return children;
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-// TODO write test
-Object.defineProperty(Stream.prototype, 'ancestors', {
-  get: function () {
-    if (! this.parentId) { return []; }
-
-    var result = [this.parent];
-    result.push(this.parent.ancestors);
-    return result;
-  },
-  set: function () { throw new Error('Stream.ancestors property is read only'); }
-});
-
-},{"underscore":2}],11:[function(require,module,exports){
-var _ = require('underscore');
-
-var Filter = module.exports = function (settings) {
-  // protect against calls without `new`
-  if (! (this instanceof Filter)) {
-    return new Filter(settings);
-  }
-
-  this.settings = _.extend({
-    //TODO: set default values
-    streams: null,
-    tags: null,
-    from: null,
-    to: null,
-    limit: null,
-    skip: null,
-    modifiedSince: null,
-    state: null
-  }, settings);
-};
-
-//TODO: remove or rewrite (name & functionality unclear)
-Filter.prototype.focusedOnSingleStream = function () {
-  if (_.isArray(this.settings.streams) && this.settings.streams.length === 1) {
-    return this.settings.streams[0];
-  }
-  return null;
-};
-
-},{"underscore":2}],12:[function(require,module,exports){
+},{"../model/NodeModel.js":26,"../utility/treemap.js":25,"../view/NodeView.js":24,"underscore":3}],14:[function(require,module,exports){
 var _ = require('underscore');
 
 exports.mergeAndClean = function (sourceA, sourceB) {
@@ -4287,59 +4287,7 @@ exports.getQueryParametersString = function (data) {
   }, this).join('&');
 };
 
-},{"underscore":2}],27:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var NotesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'NotesEventsNode',
-    getWeight: function () {
-      return 1;
-    }
-
-  });
-
-// we accept all kind of events
-NotesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'note/txt');
-};
-
-
-
-},{"../EventsNode":28}],29:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var PicturesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'PicturesEventsNode',
-    getWeight: function () {
-      return 1;
-    }
-
-  });
-
-// we accept all kind of events
-PicturesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'picture/attached');
-};
-
-
-
-},{"../EventsNode":28}],30:[function(require,module,exports){
+},{"underscore":3}],27:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4365,7 +4313,33 @@ PositionsEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../EventsNode":28}],31:[function(require,module,exports){
+},{"../EventsNode":28}],29:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var NotesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'NotesEventsNode',
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+NotesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'note/txt');
+};
+
+
+
+},{"../EventsNode":28}],30:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4391,7 +4365,33 @@ GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
 };
 
 
-},{"../EventsNode":28}],26:[function(require,module,exports){
+},{"../EventsNode":28}],31:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var PicturesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'PicturesEventsNode',
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+PicturesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'picture/attached');
+};
+
+
+
+},{"../EventsNode":28}],22:[function(require,module,exports){
 var _ = require('underscore');
 
 var Datastore = module.exports = function (connection) {
@@ -4455,7 +4455,11 @@ Datastore.prototype.getStreamById = function (streamId, test) {
   return result;
 };
 
-},{"underscore":2}],20:[function(require,module,exports){
+},{"underscore":3}],26:[function(require,module,exports){
+var Backbone = require('backbone');
+
+var NodeModel = module.exports = Backbone.Model.extend({ });
+},{"backbone":2}],25:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -4647,7 +4651,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":2}],21:[function(require,module,exports){
+},{"underscore":3}],24:[function(require,module,exports){
 var  Marionette = require('backbone.marionette');
  /* TODO This a the view for each node, with dynamic animation
  we can't re-render on change because animation would no be done
@@ -4734,11 +4738,7 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":32}],22:[function(require,module,exports){
-var Backbone = require('backbone');
-
-var NodeModel = module.exports = Backbone.Model.extend({ });
-},{"backbone":3}],23:[function(require,module,exports){
+},{"backbone.marionette":32}],23:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -4864,7 +4864,88 @@ StreamNode.registeredEventNodeTypes = {
   'Pictures' : require('./eventsNode/PicturesEventsNode.js'),
   'Generic' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":18,"./eventsNode/GenericEventsNode.js":31,"./eventsNode/NotesEventsNode.js":27,"./eventsNode/PicturesEventsNode.js":29,"./eventsNode/PositionsEventsNode.js":30,"underscore":2}],25:[function(require,module,exports){
+},{"./TreeNode":18,"./eventsNode/GenericEventsNode.js":30,"./eventsNode/NotesEventsNode.js":29,"./eventsNode/PicturesEventsNode.js":31,"./eventsNode/PositionsEventsNode.js":27,"underscore":3}],20:[function(require,module,exports){
+
+var Utility = require('../utility/Utility.js'),
+  _ = require('underscore'),
+  Event = require('../Event');
+
+var Events = module.exports = function (conn) {
+  this.conn = conn;
+};
+
+Events.prototype.get = function (filter, deltaFilter, callback) {
+  //TODO handle caching
+  var result = [];
+  this._get(filter, deltaFilter, function (error, eventList) {
+    _.each(eventList, function (eventData) {
+      result.push(new Event(this.conn, eventData));
+    }.bind(this));
+    callback(error, result);
+  }.bind(this));
+};
+
+Events.prototype._get = function (filter, deltaFilter, callback, context) {
+  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
+  var url = '/events?' + Utility.getQueryParametersString(tParams);
+  this.conn.request('GET', url, callback, null, context);
+};
+
+
+//TODO check that we can really override method "create()" of object
+/**
+ *
+ * @param {Array} events
+ */
+Events.prototype.create = function (events, callback, context) {
+  var url = '/events/batch';
+  _.each(events, function (event, index) {
+    event.tempRefId = 'temp_ref_id_' + index;
+  });
+  this.conn.request('POST', url, function (err, result) {
+    _.each(events, function (event) {
+      event.id = result[event.tempRefId].id;
+    });
+    callback(err, result);
+  }, events, context);
+};
+
+Events.prototype.update = function (event, callback, context) {
+  var url = '/events/' + event.id;
+  this.conn.request('PUT', url, callback, null, context);
+};
+
+//TODO: rewrite once API for monitoring is sorted out
+Events.prototype.monitor = function (filter, callback) {
+  var that = this;
+  var lastSynchedST = -1;
+
+  this.conn.monitor(filter, function (signal, payload) {
+    switch (signal) {
+    case 'connect':
+      // set current serverTime as last update
+      lastSynchedST = that.conn.getServerTime();
+      callback(signal, payload);
+      break;
+    case 'event' :
+      that.conn.events.get(filter, function (error, result) {
+        _.each(result, function (e) {
+          if (e.modified > lastSynchedST)  {
+            lastSynchedST = e.modified;
+          }
+        });
+        callback('events', result);
+      }, { modifiedSince : lastSynchedST});
+      break;
+    case 'error' :
+      callback(signal, payload);
+      break;
+    }
+
+  });
+};
+
+},{"../Event":9,"../utility/Utility.js":14,"underscore":3}],21:[function(require,module,exports){
 var _ = require('underscore'),
     Utility = require('../utility/Utility.js'),
     Stream = require('../Stream.js');
@@ -5037,88 +5118,7 @@ Streams.Utils = {
 
 };
 
-},{"../Stream.js":10,"../utility/Utility.js":12,"underscore":2}],24:[function(require,module,exports){
-
-var Utility = require('../utility/Utility.js'),
-  _ = require('underscore'),
-  Event = require('../Event');
-
-var Events = module.exports = function (conn) {
-  this.conn = conn;
-};
-
-Events.prototype.get = function (filter, deltaFilter, callback) {
-  //TODO handle caching
-  var result = [];
-  this._get(filter, deltaFilter, function (error, eventList) {
-    _.each(eventList, function (eventData) {
-      result.push(new Event(this.conn, eventData));
-    }.bind(this));
-    callback(error, result);
-  }.bind(this));
-};
-
-Events.prototype._get = function (filter, deltaFilter, callback, context) {
-  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
-  var url = '/events?' + Utility.getQueryParametersString(tParams);
-  this.conn.request('GET', url, callback, null, context);
-};
-
-
-//TODO check that we can really override method "create()" of object
-/**
- *
- * @param {Array} events
- */
-Events.prototype.create = function (events, callback, context) {
-  var url = '/events/batch';
-  _.each(events, function (event, index) {
-    event.tempRefId = 'temp_ref_id_' + index;
-  });
-  this.conn.request('POST', url, function (err, result) {
-    _.each(events, function (event) {
-      event.id = result[event.tempRefId].id;
-    });
-    callback(err, result);
-  }, events, context);
-};
-
-Events.prototype.update = function (event, callback, context) {
-  var url = '/events/' + event.id;
-  this.conn.request('PUT', url, callback, null, context);
-};
-
-//TODO: rewrite once API for monitoring is sorted out
-Events.prototype.monitor = function (filter, callback) {
-  var that = this;
-  var lastSynchedST = -1;
-
-  this.conn.monitor(filter, function (signal, payload) {
-    switch (signal) {
-    case 'connect':
-      // set current serverTime as last update
-      lastSynchedST = that.conn.getServerTime();
-      callback(signal, payload);
-      break;
-    case 'event' :
-      that.conn.events.get(filter, function (error, result) {
-        _.each(result, function (e) {
-          if (e.modified > lastSynchedST)  {
-            lastSynchedST = e.modified;
-          }
-        });
-        callback('events', result);
-      }, { modifiedSince : lastSynchedST});
-      break;
-    case 'error' :
-      callback(signal, payload);
-      break;
-    }
-
-  });
-};
-
-},{"../Event":9,"../utility/Utility.js":12,"underscore":2}],17:[function(require,module,exports){
+},{"../Stream.js":10,"../utility/Utility.js":14,"underscore":3}],17:[function(require,module,exports){
 //file: system node
 
 var socketIO = require('socket.io-client');
@@ -9141,7 +9141,7 @@ EventsNode.acceptThisEventType = function (eventType) {
 };
 
 
-},{"./TreeNode":18,"underscore":2}],32:[function(require,module,exports){
+},{"./TreeNode":18,"underscore":3}],32:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -11103,7 +11103,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":34,"backbone.babysitter":36,"backbone.wreqr":35,"underscore":2}],34:[function(require,module,exports){
+},{"backbone":34,"backbone.babysitter":35,"backbone.wreqr":36,"underscore":3}],34:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -12677,7 +12677,7 @@ _.extend(Marionette.Module, {
 }).call(this);
 
 })()
-},{"underscore":2}],36:[function(require,module,exports){
+},{"underscore":3}],35:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -12857,7 +12857,7 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":34,"underscore":2}],35:[function(require,module,exports){
+},{"backbone":34,"underscore":3}],36:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -13137,5 +13137,5 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":34,"underscore":2}]},{},["3XoGqR"])
+},{"backbone":34,"underscore":3}]},{},["3XoGqR"])
 ;

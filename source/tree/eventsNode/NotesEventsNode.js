@@ -10,9 +10,6 @@ var NotesEventsNode = module.exports = EventsNode.implement(
   },
   {
     className: 'NotesEventsNode',
-
-
-
     getWeight: function () {
       return 1;
     }

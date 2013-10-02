@@ -29,25 +29,37 @@ exports.main = function () {
   var eventsListener = {};
   // Mixin
   _.extend(eventsListener, Backbone.Events);
-  eventsListener.on('eventLeave', rootNode.eventLeaveScope);
+  eventsListener.on('eventLeave', rootNode.eventLeaveScope, rootNode);
   var waiting = 0;
   function doneOne(info) {
-    //console.log(waiting + ' done ' + info);
+    console.log(waiting + ' done ' + info);
     waiting--;
     if (waiting > 0) {
       return 0;
     }
-    rootNode._createView();
+   // rootNode._createView();
 
     setTimeout(function () {
       var start = new Date().getTime();
 
-      eventsListener.trigger('eventLeave', eventsArr);
-      console.log('done');
+      eventsListener.trigger('eventLeave', _.initial(eventsArr, 300));
+      //rootNode.eventLeaveScope(eventsArr);
+
+      console.log(rootNode._debugTree());
       var end = new Date().getTime();
       var time = end - start;
-      console.log('Execution time: ' + time);
-    }, 5000);
+      console.log('Delete Execution time: ' + time);
+    }, 2000);
+    setTimeout(function () {
+      var start = new Date().getTime();
+      rootNode.eventEnterScope(_.initial(eventsArr, 300));
+      //rootNode.eventEnterScope(eventsArr);
+
+      console.log(rootNode._debugTree());
+      var end = new Date().getTime();
+      var time = end - start;
+      console.log('Add Execution time: ' + time);
+    }, 4000);
    // console.log(JSON.stringify(rootNode._debugTree(), null, 4));
   }
 
@@ -58,19 +70,22 @@ exports.main = function () {
 
       if (error) { console.log(error); }
 
-      waiting += 1;
+      //waiting += 1;
       conn.events.get(nullFilter, null, function (error, events) {
-        waiting += events.length;
-        _.each(events, function (event) {
-          eventsArr.push(event);
+       // waiting += 1;
+        rootNode.eventEnterScope(events);
+        eventsArr = _.union(eventsArr, events);
+        doneOne('Connection ' + conn.shortId);
+      /*  _.each(events, function (event) {
+
           rootNode.eventEnterScope(event, null, function (error, result) {
             if (error) {  throw new Error(error); }
             doneOne('event' + event.id);
           });
-        });
-        doneOne('allevents');
+        });    */
+       // doneOne('allevents');
       });
-      doneOne('Connection ' + conn.shortId);
+
     });
   });
 };

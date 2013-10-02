@@ -33,7 +33,6 @@ var EventsNode = module.exports = TreeNode.implement(
     eventLeaveScope: function (event, reason, callback) {
       delete this.events[event.id];
       this.eventsNbr--;
-      if ()
       this.eventDisplayed = event;
       if (_.size(this.events) === 0) {
         this.view.close();

@@ -5,13 +5,12 @@ var Filter = require('pryv').Filter;
 
 var BrowserFilter = module.exports = function (browser) {
   this.browser = browser;
-  this.connections = this.browser.connections.connections; // TODO change this
   this.showOnlyStreams = null; // object that contains streams to display (from multiple connections)
   this.hiddenStreams = {};
   this.eventListeners = {};
   this._initEventListeners();
 
-
+  this.showConnections = {}; // serialIDs / connection
 };
 
 /**
@@ -168,26 +167,51 @@ BrowserFilter.prototype.hideStreams = function (streams) {
  * get all events that match this filter
  */
 BrowserFilter.prototype.showConnection = function (connectionKey) {
-  if (! _.has(this.connections, connectionKey)) {
+  if (_.has(this.showConnection, connectionKey)) {
+    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
+    return ;
+  }
+  if (! this.browser.connections.get(connectionKey)) { // TODO error management
     console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
     return;
   }
+  this.showConnection[connectionKey] = true;
 
   var self = this;
-  this.connections[connectionKey].events.get(this._getFilterFor(connectionKey), null,
+  this._getEventsForConnection(connectionKey,
     function (error, result) {
       if (error) { console.log(error); } // TODO handle
       self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
         {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-         events: result});
-    });
+          events: result});
+    }
+  );
+
 };
 
-// ----------------------------- EVENTS -------------------------- //
+
 
 /**
  * get all events actually matching this filter
  */
-BrowserFilter.prototype.triggerForAllCurrentEvents = function (callback) {
+BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
+  var self = this;
+  _.each(_.keys(self.showConnection), function (connectionKey) {
+    self._getEventsForConnection(connectionKey,
+      function (error, result) {
+        if (error) { console.log(error); } // TODO handle
+        eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+          {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+            events: result});
+      }
+    );
+  });
+};
 
+BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {
+  var self = this;
+  self.browser.connections.get(connectionKey, function (error, connection) { // when ready
+    if (error) { console.log(error); } // TODO handle
+    connection.events.get(self._getFilterFor(connectionKey), null,   callback); // get events
+  });
 };

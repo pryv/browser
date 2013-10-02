@@ -12,19 +12,6 @@ var TreeMap = module.exports = function (browser) {
 
 
   //----------- init the browser with all events --------//
-  this.browser.activeFilter.getAllEvents(
-    function (events) { // we receive events by batches
-      _.each(events, function (event) {
-        this.root.eventEnterScope(event, null, function (error) {
-          if (error) {  throw new Error(error); }
-        });
-
-      }, this);
-    }.bind(this),
-    function () { // called when done
-      this.root.renderView();
-
-    }.bind(this));
   this.eventEnterScope = function (content) {
     _.each(content.events, function (event) {
       this.root.eventEnterScope(event, content.reason, function () {});
@@ -37,6 +24,8 @@ var TreeMap = module.exports = function (browser) {
       true);
     this.root._refreshViewModel(true);
   }.bind(this);
+
+  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
   //--------- register the TreeMap event Listener ----------//
   this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
    this.eventEnterScope

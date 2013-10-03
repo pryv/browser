@@ -18,7 +18,7 @@ var BrowserFilter = module.exports = function (browser) {
   this.hiddenStreams = {};
   this.eventListeners = {};
   this._initEventListeners();
-  this._showConnections = {}; // serialIds / connection
+  this._connections = {}; // serialIds / connection
 
   this.currentEvents = {};
 
@@ -35,7 +35,7 @@ BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
 
   return nullFilter;
 };
-var nullFilter = new Filter({limit : 2000});
+var nullFilter = new Filter({limit : 2000000});
 
 
 
@@ -115,8 +115,12 @@ BrowserFilter.prototype.removeEventListener = function (signal, callback) {
 
 /**
  * A changes occurred on the filter
+ * @param signal
+ * @param content
+ * @param batch
+ * @private
  */
-BrowserFilter.prototype.fireEvent = function (signal, content, batch) {
+BrowserFilter.prototype._fireEvent = function (signal, content, batch) {
   var batchId = batch ? batch.id : null;
   console.log('BrowserFilter.FireEvent : ' + signal + ' batch: ' + batchId);
   _.each(this.eventListeners[signal], function (callback) {
@@ -128,19 +132,36 @@ BrowserFilter.prototype.fireEvent = function (signal, content, batch) {
 };
 
 
+var batchSerial = 0;
 /**
  * start a batch process
  * @return an object where you have to call stop when done
  */
 BrowserFilter.prototype.startBatch = function () {
   var batch = {
-    id : (new Date()).getTime() + 'M',
+    id : 'C' + batchSerial++,
     filter : this,
-    done : function () {
-      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id, this);
+    waitFor : 1,
+    waitForMeToFinish : function (name) {
+      var batch = this;
+      batch.waitFor++;
+      return {
+        done : function () {
+          batch.done(name);
+        }
+      };
+    },
+    done : function (name) {
+      this.waitFor--;
+      if (this.waitFor === 0) {
+        this.filter._fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id, this);
+      }
+      if (this.waitFor < 0) {
+        console.error('This batch has been done() to much :' + name);
+      }
     }
   };
-  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id, batch);
+  this._fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id, batch);
   return batch;
 };
 
@@ -152,9 +173,9 @@ BrowserFilter.prototype.startBatch = function () {
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.eventMatchesFilter = function (event) {
+BrowserFilter.prototype.matchesEvent = function (event) {
   return (
-    this.streamMatchesFilter(event.stream)
+    this.matchesStream(event.stream)
     // TODO && TIME
     );
 };
@@ -166,8 +187,8 @@ BrowserFilter.prototype.eventMatchesFilter = function (event) {
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.streamMatchesFilter = function (stream) {
-  if (! this.connectionMatchesFilter(stream.connection)) { return false; }
+BrowserFilter.prototype.matchesStream = function (stream) {
+  if (! this.matchesConnection(stream.connection)) { return false; }
 
   if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
   if (! this._showOnlyStreams) { return true; }
@@ -193,7 +214,7 @@ BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
 
     _.each(streams, function (stream) {
 
-      if (! this.streamMatchesFilter(stream)) {
+      if (! this.matchesStream(stream)) {
         streamsToLoad.push(stream);
       }
 
@@ -236,7 +257,7 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 
   // done function can be called any time to exit
 
-  function finishedRefresh () {
+  function finishedRefresh() {
     batch.done();
     // --- ################   ending
     // should we go for another loop?
@@ -259,14 +280,14 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
   var eventsLeavingScope = [];
   // pass through all current events and remove the one not matching current Streams
   _.each(_.values(this.currentEvents), function (event) {
-    if (! this.eventMatchesFilter(event)) {
+    if (! this.matchesEvent(event)) {
       eventsLeavingScope.push(event);
       delete this.currentEvents[event.serialId];
     }
   }.bind(this));
 
 
-  this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+  this._fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
     {reason: reason, events: eventsLeavingScope}, batch);
 
 
@@ -282,8 +303,8 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 
 
   var connectionsTodo = [];
-  _.each(_.values(this._showConnections), function (connection) { // for each connection
-    if (this.connectionMatchesFilter(connection)) {
+  _.each(_.values(this._connections), function (connection) { // for each connection
+    if (this.matchesConnection(connection)) {
       connectionsTodo.push(connection.serialId);
     }
   }.bind(this));
@@ -304,7 +325,7 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 
     _.each(events, function (event) { // for each event
 
-      if (! that.eventMatchesFilter(event)) {
+      if (! that.matchesEvent(event)) {
         console.error('!! Error !! BrowserFilter.refreshContent, ' +
           ' got an event not matching the filter): ' + event.serialId);
       } else {
@@ -343,17 +364,19 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 /**
  * get all events that match this filter
  */
-BrowserFilter.prototype.showConnection = function (connectionSerialId, batch) {
-  if (_.has(this._showConnections, connectionSerialId)) {
-    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionSerialId);
+BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
+  var batchWaitForMe = batch ?
+    batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
+  if (_.has(this._connections, connectionSerialId)) {
+    console.log('Warning BrowserFilter.addConnection, already activated: ' + connectionSerialId);
     return;
   }
   var connection = this.browser.connections.get(connectionSerialId);
   if (! connection) { // TODO error management
-    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionSerialId);
+    console.log('BrowserFilter.addConnection cannot find connection: ' + connectionSerialId);
     return;
   }
-  this._showConnections[connectionSerialId] = connection;
+  this._connections[connectionSerialId] = connection;
 
   var self = this;
   this._getEventsForConnectionSerialId(connectionSerialId,
@@ -368,9 +391,10 @@ BrowserFilter.prototype.showConnection = function (connectionSerialId, batch) {
         }
       });
 
-      self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+      self._fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
         {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
           events: result}, batch);
+      if (batchWaitForMe) { batchWaitForMe.done(); }
     }
   );
 };
@@ -379,7 +403,7 @@ BrowserFilter.prototype.showConnection = function (connectionSerialId, batch) {
  * return true if connection matches filter
  * @param eventListener
  */
-BrowserFilter.prototype.connectionMatchesFilter = function (connection) {
+BrowserFilter.prototype.matchesConnection = function (connection) {
   // if _showOnly is defined, only consider matching connection
   if (this._showOnlyStreams !== null) {
     var inStreams = false;
@@ -389,7 +413,7 @@ BrowserFilter.prototype.connectionMatchesFilter = function (connection) {
     }
     if (! inStreams) { return false; }
   }
-  return _.has(this._showConnections, connection.serialId);
+  return _.has(this._connections, connection.serialId);
 };
 
 

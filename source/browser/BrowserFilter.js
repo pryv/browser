@@ -1,8 +1,8 @@
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
-
 var Pryv = require('pryv');
+var MSGs = require('./Messages').BrowserFilter;
 
 Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
   get: function () { return this.connection.serialId + '>>' + this.id; }
@@ -43,54 +43,24 @@ var nullFilter = new Filter({limit : 2000000});
 
 //----------------------- event management ----------------------//
 
-BrowserFilter.SIGNAL = {
-  STREAM : {},
-  EVENT : {},
-  BATCH : {}
-};
-
 
 BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
 
-/** called when a batch of changes is expected, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.BEGIN = 'beginBatch';
-/** called when a batch of changes is done, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.DONE = 'doneBatch';
-
-/** called when some streams are hidden, content: Array of Stream**/
-BrowserFilter.SIGNAL.STREAM.HIDE = 'hideStream';
-BrowserFilter.SIGNAL.STREAM.SHOW = 'hideShow';
-/** called when some eventsEnterScope, content: {reason: one of .., content: array of Event }**/
-BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
-BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
-BrowserFilter.SIGNAL.EVENT.CHANGE = 'eventChange';
-
-BrowserFilter.REASON = { EVENT : {
-  SCOPE_ENTER : {},
-  SCOPE_LEAVE : {}
-} };
-
-BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
-BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM = 'focusOnStream';
-// may happend when several refresh requests overlaps
-BrowserFilter.REASON.FORCE = 'forced';
 /**
  * Init all event listeners array
  * @private
  */
 BrowserFilter.prototype._initEventListeners = function () {
-  _.each(_.keys(BrowserFilter.SIGNAL), function (namespace) {
-    _.each(_.keys(BrowserFilter.SIGNAL[namespace]), function (key) {
-      this.eventListeners[BrowserFilter.SIGNAL[namespace][key]] = [];
-    }, this);
-  }, this);
+  _.each(_.values(MSGs.SIGNAL), function (value) {
+    this.eventListeners[value] = [];
+  }.bind(this));
 };
 
 
 
 /**
  * Add an event listener
- * @param signal one of  BrowserFilter.SIGNAL.*.*
+ * @param signal one of  MSGs.SIGNAL.*.*
  * @param callback function(content) .. content vary on each signal.
  * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
  * @return the callback function for further reference
@@ -154,14 +124,14 @@ BrowserFilter.prototype.startBatch = function () {
     done : function (name) {
       this.waitFor--;
       if (this.waitFor === 0) {
-        this.filter._fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id, this);
+        this.filter._fireEvent(MSGs.SIGNAL.BATCH_DONE, this.id, this);
       }
       if (this.waitFor < 0) {
         console.error('This batch has been done() to much :' + name);
       }
     }
   };
-  this._fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id, batch);
+  this._fireEvent(MSGs.SIGNAL.BATCH_BEGIN, batch.id, batch);
   return batch;
 };
 
@@ -231,7 +201,7 @@ BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
     }, this);
   }
 
-  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
+  this.refreshContent(MSGs.REASON.EVENT_SCOPE_LEAVE_FOCUS_ON_STREAM,
     {noEnter : true}, batch);
 
 };
@@ -287,7 +257,7 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
   }.bind(this));
 
 
-  this._fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+  this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_LEAVE,
     {reason: reason, events: eventsLeavingScope}, batch);
 
 
@@ -391,8 +361,8 @@ BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
         }
       });
 
-      self._fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-        {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+      self._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+        {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
           events: result}, batch);
       if (batchWaitForMe) { batchWaitForMe.done(); }
     }
@@ -417,14 +387,12 @@ BrowserFilter.prototype.matchesConnection = function (connection) {
 };
 
 
-
-
 /**
  * get all events actually matching this filter
  */
 BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
-  eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+  eventListener(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+    {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
       events: _.values(this.currentEvents)});
 };
 

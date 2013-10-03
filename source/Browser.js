@@ -37,12 +37,17 @@ var Browser = module.exports = function () {
 
 
   var streams = [];
-  var perki2 =  this.connections.get(perki2Serial);
-  perki2.useLocalStorage(function () {
-    streams.push(perki2.streams.getById('diary'));
+  var perki1 =  this.connections.get(perki1Serial);
+  perki1.useLocalStorage(function () {
+    var stream =  perki1.streams.getById('00e9ee8505063cef39b9c6642cd52da21739ac24');
+    streams.push(stream);
   });
 
-  this.activeFilter.showOnlyStreams(streams);
+  var that = this;
+  setTimeout(function () {
+    that.activeFilter.showOnlyStreams(streams);
+  }, 8000);
+
 
 };
 

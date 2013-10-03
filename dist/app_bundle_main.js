@@ -17,60 +17,7 @@ exports.main = function () {
 
 };
 })()
-},{"./Browser.js":1,"backbone":2,"underscore":3}],1:[function(require,module,exports){
-
-var BrowserFilter = require('./browser/BrowserFilter.js');
-
-var ConnectionsHandler = require('./browser/ConnectionsHandler.js');
-
-var TreeMap = require('./tree/TreeMap.js');
-var Pryv = require('pryv');
-
-
-var Browser = module.exports = function () {
-  // create connection handler and filter
-  this.connections = new ConnectionsHandler(this);
-  this.activeFilter = new BrowserFilter(this);
-
-  // add fredos to Connections
-  var fredosSerial =
-    this.connections.add(new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}));
-
-  // tell the filter we want to show this connection
-  this.activeFilter.showConnection(fredosSerial);
-
-  // create the TreeMap
-  this.treemap = new TreeMap(this);
-
-  // create streams and add them to filter
-  //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5', {domain : 'pryv.in'}));
-  var perki1Serial =
-    this.connections.add(new Pryv.Connection('perkikiki', 'Ve-U8SCASM', {domain : 'pryv.in'}));
-  var perki2Serial =
-    this.connections.add(new Pryv.Connection('perkikiki', 'PVriN2MuJ9', {domain : 'pryv.in'}));
-
-  // activate them in batch in the filter
-  var batch = this.activeFilter.startBatch();
-  this.activeFilter.showConnection(perki1Serial);
-  this.activeFilter.showConnection(perki2Serial);
-  batch.done();
-
-
-  var streams = [];
-  var perki2 =  this.connections.get(perki2Serial);
-  perki2.useLocalStorage(function () {
-    streams.push(perki2.streams.getById('diary'));
-  });
-
-  this.activeFilter.showOnlyStreams(streams);
-
-};
-
-
-
-
-
-},{"./browser/BrowserFilter.js":4,"./browser/ConnectionsHandler.js":5,"./tree/TreeMap.js":6,"pryv":7}],3:[function(require,module,exports){
+},{"./Browser.js":1,"backbone":2,"underscore":3}],3:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -1349,378 +1296,65 @@ var Browser = module.exports = function () {
 }).call(this);
 
 })()
-},{}],5:[function(require,module,exports){
+},{}],1:[function(require,module,exports){
 
-var _ = require('underscore');
+var BrowserFilter = require('./browser/BrowserFilter.js');
+
+var ConnectionsHandler = require('./browser/ConnectionsHandler.js');
+
+var TreeMap = require('./tree/TreeMap.js');
 var Pryv = require('pryv');
 
 
-//TODO write all add / remove connection logic
-
-var ConnectionsHandler = module.exports = function (browser) {
-  this.browser = browser;
-  this._connections = {};
-  this.serialCounter = 0;
-};
-
-/**
- * @param connection
- * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
- * the handler will try to initialize the connection
- * @returns {string} serialNumber to access this connection
- */
-ConnectionsHandler.prototype.add = function (connection, andInitializeCallBack) {
-  if (! _.has(connection, 'serialId')) { // allready known
-
-    connection.serialId = 'N' + this.serialCounter++;
-    this._connections[connection.serialId] = connection;
-
-    if (andInitializeCallBack) {
-      connection.useLocalStorage(function (error/*, accessInfo*/) {
-        // TODO correctly deal with this error
-        if (error) { console.log(error); }
-        andInitializeCallBack(error, connection);
-      });
-    }
-  }
-  return connection.serialId;
-};
-
-/**
- * get the connection form it's ID
- * @param connectionSerialID
- * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
- * the handler will try to initialize the connection
- * @returns {Pryv.Connection} the connection that matches this serial
- */
-ConnectionsHandler.prototype.get = function (connectionSerialID, andInitializeCallBack) {
-  var connection = this._connections[connectionSerialID];
-  if (andInitializeCallBack) {
-    if (! connection) {
-      andInitializeCallBack('Cannot find connection with serialID: ' + connectionSerialID, null);
-      return null;
-    }
-    connection.useLocalStorage(function (error/*, accessInfo*/) {
-      // TODO correctly deal with this error
-      if (error) { console.log(error); }
-      andInitializeCallBack(error, connection);
-    });
-  }
-  return connection;
-};
-
-
-
-},{"pryv":7,"underscore":3}],6:[function(require,module,exports){
-
-
-var RootNode = require('./RootNode.js');
-var BrowserFilter = require('../browser/BrowserFilter.js');
-
-var _ = require('underscore');
-
-var TreeMap = module.exports = function (browser) {
-  this.browser = browser;
-  this.root = new RootNode();
-
-
-
-  //----------- init the browser with all events --------//
-  this.eventEnterScope = function (content) {
-    _.each(content.events, function (event) {
-      this.root.eventEnterScope(event, content.reason, function () {});
-    }, this);
-    this.root._createView();
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-  }.bind(this);
-
-  this.eventLeaveScope = function (content) {
-    _.each(content.events, function (event) {
-      this.root.eventLeaveScope(event, content.reason, function () {});
-    }, this);
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-  }.bind(this);
-
-
-  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
-//--------- register the TreeMap event Listener ----------//
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    this.eventEnterScope
-  );
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    this.eventLeaveScope);
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.CHANGE,
-    this.root.eventChange);
-};
-
-
-TreeMap.prototype.destroy = function () {
-  this.browser.activeFilter.removeEventListener('eventEnterScope', this.root.eventEnterScope);
-  this.browser.activeFilter.removeEventListener('eventLeaveScope', this.root.eventLeaveScope);
-  this.browser.activeFilter.removeEventListener('eventChange', this.root.eventChange);
-};
-
-
-},{"../browser/BrowserFilter.js":4,"./RootNode.js":8,"underscore":3}],4:[function(require,module,exports){
-(function(){
-var _ = require('underscore');
-var Filter = require('pryv').Filter;
-
-var Pryv = require('pryv');
-
-Object.defineProperty(Pryv.Stream.prototype, 'serialID', {
-  get: function () { return this.connection.serialId + '>>' + this.id; }
-});
-Object.defineProperty(Pryv.Event.prototype, 'serialID', {
-  get: function () { return this.stream.serialId + '>>' + this.id; }
-});
-
-
-var BrowserFilter = module.exports = function (browser) {
-  this.browser = browser;
-  this._showOnlyStreams = null; // object that contains streams to display (from multiple connections)
-  this.hiddenStreams = {};
-  this.eventListeners = {};
-  this._initEventListeners();
-  this.showConnections = {}; // serialIDs / connection
-
-  this.currentEvents = {};
-};
-
-/**
- * Create ah-hoc filter for this connection
- * @private
- */
-BrowserFilter.prototype._getFilterFor = function (connectionKey) {
-
-  return nullFilter;
-};
-var nullFilter = new Filter({limit : 200});
-
-
-
-
-
-//----------------------- event management ----------------------//
-
-BrowserFilter.SIGNAL = {
-  STREAM : {},
-  EVENT : {},
-  BATCH : {}
-};
-
-
-BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
-
-/** called when a batch of changes is expected, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.BEGIN = 'beginBatch';
-/** called when a batch of changes is done, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.DONE = 'doneBatch';
-
-/** called when some streams are hidden, content: Array of Stream**/
-BrowserFilter.SIGNAL.STREAM.HIDE = 'hideStream';
-BrowserFilter.SIGNAL.STREAM.SHOW = 'hideShow';
-/** called when some eventsEnterScope, content: {reason: one of .., content: array of Event }**/
-BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
-BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
-BrowserFilter.SIGNAL.EVENT.CHANGE = 'eventChange';
-
-BrowserFilter.REASON = { EVENT : {
-  SCOPE_ENTER : {},
-  SCOPE_LEAVE : {}
-} };
-
-BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
-BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM = 'focusOnStream';
-
-/**
- * Init all event listeners array
- * @private
- */
-BrowserFilter.prototype._initEventListeners = function () {
-  _.each(_.keys(BrowserFilter.SIGNAL), function (namespace) {
-    _.each(_.keys(BrowserFilter.SIGNAL[namespace]), function (key) {
-      this.eventListeners[BrowserFilter.SIGNAL[namespace][key]] = [];
-    }, this);
-  }, this);
-};
-
-
-
-/**
- * Add an event listener
- * @param signal one of  BrowserFilter.SIGNAL.*.*
- * @param callback function(content) .. content vary on each signal.
- * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
- * @return the callback function for further reference
- */
-BrowserFilter.prototype.addEventListener = function (signal, callback) {
-  this.eventListeners[signal].push(callback);
-  return callback;
-};
-
-
-/**
- * remove the callback matching this signal
- */
-BrowserFilter.prototype.removeEventListener = function (signal, callback, thisArg) {
-  for (var i = 0; i < this.eventListeners[signal].length; i++) {
-    if (this.eventListeners[signal][i] === callback) {
-      this.eventListeners[signal][i] = null;
-    }
-  }
-};
-
-
-/**
- * A changes occurred on the filter
- */
-BrowserFilter.prototype.fireEvent = function (signal, content, thisArg) {
-  _.each(this.eventListeners[signal], function (callback) {
-    if (callback !== null &&
-      BrowserFilter.UNREGISTER_LISTENER === callback.call(thisArg, content)) {
-      this.removeEventListener(signal, callback);
-    }
-  }, this);
-};
-
-
-/**
- * start a batch process
- * @return an object where you have to call stop when done
- */
-BrowserFilter.prototype.startBatch = function () {
-  var batch = {
-    id : (new Date()).getTime() + 'M',
-    filter : this,
-    done : function () {
-      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id);
-    }
-  };
-  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id);
-  return batch;
-};
-
-// ----------------------------- STREAMS -------------------------- //
-
-
-
-
-/**
- * Return true if this stream matches the filter
- * @param stream object
- * @returns Boolean
- */
-BrowserFilter.prototype.streamIsShown = function (stream) {
-  if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
-  if (! this._showOnlyStreams) { return true; }
-  return _.has(this._showOnlyStreams, stream.serialId);
-};
-
-/**
- * The the streams to display
- * @param stream object or array of Streams (null) to show all
- * @returns Boolean
- */
-BrowserFilter.prototype.showOnlyStreams = function (streams) {
-  if (! streams) {
-    this._showOnlyStreams = null;
-  } else {
-    if (!_.isArray(streams)) { streams = [streams]; }
-
-    _.each(streams, function (stream) {
-      if (_.has(this.hiddenStreams, stream.serialId)) {delete this.hiddenStreams[stream.serialId]; }
-      if (this._showOnlyStreams === null) {  this._showOnlyStreams = {}; }
-      if (! _.has(this._showOnlyStreams, stream.serialId)) {
-        this._showOnlyStreams[stream.serialId] = stream;
-      }
-    }, this);
-  }
-
-  var eventsLeavingScope = [];
-  // pass thru all current events and remove the one not matching current Streams
-  _.each(_.values(this.currentEvents), function (event) {
-    if (! this.isShown(event.stream)) {
-      eventsLeavingScope.push(event);
-    }
-  }.bind(this));
-
-  this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
-      events: eventsLeavingScope});
-
-};
-
-
-// ----------------------------- CONNECTIONS -------------------------- //
-
-
-/**
- * get all events that match this filter
- */
-BrowserFilter.prototype.showConnection = function (connectionKey) {
-  if (_.has(this.showConnection, connectionKey)) {
-    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
-    return;
-  }
-  if (! this.browser.connections.get(connectionKey)) { // TODO error management
-    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
-    return;
-  }
-  this.showConnection[connectionKey] = true;
-
-  var self = this;
-  this._getEventsForConnection(connectionKey,
-    function (error, result) {
-      if (error) { console.log(error); } // TODO handle
-
-      var eventThatEnter = [];
-      _.each(result, function (event) {
-        if (! _.has(self.currentEvents, event.serialID)) {
-          eventThatEnter.push(event);
-          self.currentEvents[event.serialID] = event;
-        }
-      });
-
-      self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-        {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-          events: result});
-    }
-  );
-
-};
-
-
-
-/**
- * get all events actually matching this filter
- */
-BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
-  eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-      events: _.values(this.currentEvents)});
-};
-
-BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {
-  var self = this;
-  self.browser.connections.get(connectionKey, function (error, connection) { // when ready
-    if (error) { console.log(error); } // TODO handle
-    connection.events.get(self._getFilterFor(connectionKey), null,   callback); // get events
+var Browser = module.exports = function () {
+  // create connection handler and filter
+  this.connections = new ConnectionsHandler(this);
+  this.activeFilter = new BrowserFilter(this);
+
+  // add fredos to Connections
+  var fredosSerial =
+    this.connections.add(new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}));
+
+  // tell the filter we want to show this connection
+  this.activeFilter.showConnection(fredosSerial);
+
+  // create the TreeMap
+  this.treemap = new TreeMap(this);
+
+  // create streams and add them to filter
+  //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5', {domain : 'pryv.in'}));
+  var perki1Serial =
+    this.connections.add(new Pryv.Connection('perkikiki', 'Ve-U8SCASM', {domain : 'pryv.in'}));
+  var perki2Serial =
+    this.connections.add(new Pryv.Connection('perkikiki', 'PVriN2MuJ9', {domain : 'pryv.in'}));
+
+  // activate them in batch in the filter
+  var batch = this.activeFilter.startBatch();
+  this.activeFilter.showConnection(perki1Serial);
+  this.activeFilter.showConnection(perki2Serial);
+  batch.done();
+
+
+  var streams = [];
+  var perki1 =  this.connections.get(perki1Serial);
+  perki1.useLocalStorage(function () {
+    var stream =  perki1.streams.getById('00e9ee8505063cef39b9c6642cd52da21739ac24');
+    streams.push(stream);
   });
+
+  var that = this;
+  setTimeout(function () {
+    that.activeFilter.showOnlyStreams(streams);
+  }, 8000);
+
+
 };
 
-})()
-},{"pryv":7,"underscore":3}],7:[function(require,module,exports){
+
+
+
+
+},{"./browser/BrowserFilter.js":4,"./browser/ConnectionsHandler.js":6,"./tree/TreeMap.js":5,"pryv":7}],7:[function(require,module,exports){
 /**
  * The main file.
  */
@@ -1734,7 +1368,7 @@ module.exports = {
   Utility: require('./utility/Utility.js')
 };
 
-},{"./Access.js":14,"./Connection.js":13,"./Event.js":15,"./Filter.js":10,"./Stream.js":11,"./system/System.js":9,"./utility/Utility.js":12}],2:[function(require,module,exports){
+},{"./Access.js":13,"./Connection.js":8,"./Event.js":10,"./Filter.js":11,"./Stream.js":9,"./system/System.js":14,"./utility/Utility.js":12}],2:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -3308,7 +2942,730 @@ module.exports = {
 }).call(this);
 
 })()
-},{"underscore":3}],8:[function(require,module,exports){
+},{"underscore":3}],4:[function(require,module,exports){
+(function(){
+var _ = require('underscore');
+var Filter = require('pryv').Filter;
+
+var Pryv = require('pryv');
+
+Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
+  get: function () { return this.connection.serialId + '>>' + this.id; }
+});
+Object.defineProperty(Pryv.Event.prototype, 'serialId', {
+  get: function () { return this.stream.serialId + '>>' + this.id; }
+});
+
+
+var BrowserFilter = module.exports = function (browser) {
+  this.browser = browser;
+  this._showOnlyStreams = null; // object that contains streams to display (from multiple connections)
+  this.hiddenStreams = {};
+  this.eventListeners = {};
+  this._initEventListeners();
+  this._showConnections = {}; // serialIds / connection
+
+  this.currentEvents = {};
+
+  this.tags = null;
+  this._fromST = null;
+  this._toST = null;
+};
+
+/**
+ * Create ah-hoc filter for this connection
+ * @private
+ */
+BrowserFilter.prototype._getFilterFor = function (/*connectionKey*/) {
+
+  return nullFilter;
+};
+var nullFilter = new Filter({limit : 2000});
+
+
+
+
+
+//----------------------- event management ----------------------//
+
+BrowserFilter.SIGNAL = {
+  STREAM : {},
+  EVENT : {},
+  BATCH : {}
+};
+
+
+BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
+
+/** called when a batch of changes is expected, content: <batchId> unique**/
+BrowserFilter.SIGNAL.BATCH.BEGIN = 'beginBatch';
+/** called when a batch of changes is done, content: <batchId> unique**/
+BrowserFilter.SIGNAL.BATCH.DONE = 'doneBatch';
+
+/** called when some streams are hidden, content: Array of Stream**/
+BrowserFilter.SIGNAL.STREAM.HIDE = 'hideStream';
+BrowserFilter.SIGNAL.STREAM.SHOW = 'hideShow';
+/** called when some eventsEnterScope, content: {reason: one of .., content: array of Event }**/
+BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
+BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
+BrowserFilter.SIGNAL.EVENT.CHANGE = 'eventChange';
+
+BrowserFilter.REASON = { EVENT : {
+  SCOPE_ENTER : {},
+  SCOPE_LEAVE : {}
+} };
+
+BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
+BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM = 'focusOnStream';
+// may happend when several refresh requests overlaps
+BrowserFilter.REASON.FORCE = 'forced';
+/**
+ * Init all event listeners array
+ * @private
+ */
+BrowserFilter.prototype._initEventListeners = function () {
+  _.each(_.keys(BrowserFilter.SIGNAL), function (namespace) {
+    _.each(_.keys(BrowserFilter.SIGNAL[namespace]), function (key) {
+      this.eventListeners[BrowserFilter.SIGNAL[namespace][key]] = [];
+    }, this);
+  }, this);
+};
+
+
+
+/**
+ * Add an event listener
+ * @param signal one of  BrowserFilter.SIGNAL.*.*
+ * @param callback function(content) .. content vary on each signal.
+ * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
+ * @return the callback function for further reference
+ */
+BrowserFilter.prototype.addEventListener = function (signal, callback) {
+  this.eventListeners[signal].push(callback);
+  return callback;
+};
+
+
+/**
+ * remove the callback matching this signal
+ */
+BrowserFilter.prototype.removeEventListener = function (signal, callback) {
+  for (var i = 0; i < this.eventListeners[signal].length; i++) {
+    if (this.eventListeners[signal][i] === callback) {
+      this.eventListeners[signal][i] = null;
+    }
+  }
+};
+
+
+/**
+ * A changes occurred on the filter
+ */
+BrowserFilter.prototype.fireEvent = function (signal, content, thisArg) {
+  console.log('BrowserFilter.FireEvent : ' + signal);
+  _.each(this.eventListeners[signal], function (callback) {
+    if (callback !== null &&
+      BrowserFilter.UNREGISTER_LISTENER === callback.call(thisArg, content)) {
+      this.removeEventListener(signal, callback);
+    }
+  }, this);
+};
+
+
+/**
+ * start a batch process
+ * @return an object where you have to call stop when done
+ */
+BrowserFilter.prototype.startBatch = function () {
+  var batch = {
+    id : (new Date()).getTime() + 'M',
+    filter : this,
+    done : function () {
+      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id);
+    }
+  };
+  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id);
+  return batch;
+};
+
+
+// ----------------------------- EVENTS --------------------------- //
+
+/**
+ * Return true if this event matches the filter
+ * @param stream object
+ * @returns Boolean
+ */
+BrowserFilter.prototype.eventMatchesFilter = function (event) {
+  return (
+    this.streamMatchesFilter(event.stream)
+    // TODO && TIME
+    );
+};
+
+// ----------------------------- STREAMS -------------------------- //
+
+/**
+ * Return true if this stream matches the filter
+ * @param stream object
+ * @returns Boolean
+ */
+BrowserFilter.prototype.streamMatchesFilter = function (stream) {
+  if (! this.connectionMatchesFilter(stream.connection)) { return false; }
+
+  if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
+  if (! this._showOnlyStreams) { return true; }
+  return _.has(this._showOnlyStreams, stream.serialId);
+};
+
+/**
+ * The the streams to display
+ * @param stream object or array of Streams (null) to show all
+ * @returns Boolean
+ */
+BrowserFilter.prototype.showOnlyStreams = function (streams) {
+  if (streams === null) {
+    if (this._showOnlyStreams === null) { return; } // nothing to do
+  }
+
+  var streamsToLoad = []; // for streams that was not in before
+
+  if (! streams) {
+    this._showOnlyStreams = null;
+  } else {
+    if (!_.isArray(streams)) { streams = [streams]; }
+
+    _.each(streams, function (stream) {
+
+      if (! this.streamMatchesFilter(stream)) {
+        streamsToLoad.push(stream);
+      }
+
+      if (_.has(this.hiddenStreams, stream.serialId)) {
+        delete this.hiddenStreams[stream.serialId];
+      }
+      if (this._showOnlyStreams === null) {
+        this._showOnlyStreams = {};
+      }
+      if (! _.has(this._showOnlyStreams, stream.serialId)) {
+        this._showOnlyStreams[stream.serialId] = stream;
+      }
+
+    }, this);
+  }
+
+
+  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM);
+
+};
+
+BrowserFilter.prototype._refreshContentACTUAL = 0;
+/**
+ *
+ * @param reason  one of BrowserFilter.REASON.*
+ * @param focusOn  .. info for further optimization
+ */
+BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
+  if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
+    BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
+    console.log('Skiping refresh request because already one on course ' + reason);
+  }
+  BrowserFilter.prototype._refreshContentACTUAL = 1;
+
+
+  // we can process leaving events locally
+
+  var eventsLeavingScope = [];
+  // pass through all current events and remove the one not matching current Streams
+  _.each(_.values(this.currentEvents), function (event) {
+    if (! this.eventMatchesFilter(event)) {
+      eventsLeavingScope.push(event);
+      delete this.currentEvents[event.serialId];
+    }
+  }.bind(this));
+
+
+  this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+    {reason: BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
+      events: eventsLeavingScope});
+
+
+  var connectionsTodo = _.keys(this._showConnections).length;
+  var that = this;
+  function doneOneConnection(events) {
+    var eventsMatchedFromModel = []; // used to check if events left form model
+    var eventsEnteringScope = [];
+
+
+    _.each(events, function (event) { // for each event
+
+      if (! that.eventMatchesFilter(event)) {
+        console.error('!! Error !! BrowserFilter.refreshContent, ' +
+          ' got an event not matching the filter): ' + event.serialId);
+      }
+
+      if (_.has(that.currentEvents, event)) {
+        eventsMatchedFromModel.push(event);
+      } else {
+        eventsEnteringScope.push(event);
+        that.currentEvents[event.serialId] = event; // add to currently displayed events
+      }
+
+    });
+
+
+    // ---------- OK DONE
+    connectionsTodo--;
+    if (connectionsTodo <= 0) {  // finished processing all connections
+      // --- ################   ending
+      // should we go for another loop?
+      if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
+        console.log('Refreshing with force reason');
+        BrowserFilter.prototype._refreshContentACTUAL = 0;
+        that.refreshContent(BrowserFilter.REASON.FORCE);
+      }
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+    }
+  }
+
+  // do we have new events ?
+  _.each(_.keys(this._showConnections), function (connectionKey) { // for each connection
+    this._getEventsForConnection(connectionKey, function (error, events) {  // get events
+
+
+      doneOneConnection(events);
+
+    }.bind(this));
+  }.bind(this));
+
+
+
+
+
+
+};
+
+// ----------------------------- CONNECTIONS -------------------------- //
+
+
+/**
+ * get all events that match this filter
+ */
+BrowserFilter.prototype.showConnection = function (connectionKey) {
+  if (_.has(this._showConnections, connectionKey)) {
+    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
+    return;
+  }
+  if (! this.browser.connections.get(connectionKey)) { // TODO error management
+    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
+    return;
+  }
+  this._showConnections[connectionKey] = true;
+
+  var self = this;
+  this._getEventsForConnection(connectionKey,
+    function (error, result) {
+      if (error) { console.log(error); } // TODO handle
+
+      var eventThatEnter = [];
+      _.each(result, function (event) {
+        if (! _.has(self.currentEvents, event.serialId)) {
+          eventThatEnter.push(event);
+          self.currentEvents[event.serialId] = event;
+        }
+      });
+
+      self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+        {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+          events: result});
+    }
+  );
+};
+
+/**
+ * return true if connection matches filter
+ * @param eventListener
+ */
+BrowserFilter.prototype.connectionMatchesFilter = function (connection) {
+   return _.has(this._showConnections, connection.serialId);
+};
+
+
+
+
+/**
+ * get all events actually matching this filter
+ */
+BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
+  eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+    {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+      events: _.values(this.currentEvents)});
+};
+
+BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {
+  var self = this;
+  self.browser.connections.get(connectionKey, function (error, connection) { // when ready
+    if (error) { console.log(error); } // TODO handle
+    connection.events.get(self._getFilterFor(connectionKey), null,   callback); // get events
+  });
+};
+
+})()
+},{"pryv":7,"underscore":3}],6:[function(require,module,exports){
+
+var _ = require('underscore');
+var Pryv = require('pryv');
+
+
+//TODO write all add / remove connection logic
+
+var ConnectionsHandler = module.exports = function (browser) {
+  this.browser = browser;
+  this._connections = {};
+  this.serialCounter = 0;
+};
+
+/**
+ * @param connection
+ * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
+ * the handler will try to initialize the connection
+ * @returns {string} serialNumber to access this connection
+ */
+ConnectionsHandler.prototype.add = function (connection, andInitializeCallBack) {
+  if (! _.has(connection, 'serialId')) { // allready known
+
+    connection.serialId = 'N' + this.serialCounter++;
+    this._connections[connection.serialId] = connection;
+
+    if (andInitializeCallBack) {
+      connection.useLocalStorage(function (error/*, accessInfo*/) {
+        // TODO correctly deal with this error
+        if (error) { console.log(error); }
+        andInitializeCallBack(error, connection);
+      });
+    }
+  }
+  return connection.serialId;
+};
+
+/**
+ * get the connection form it's ID
+ * @param connectionSerialId
+ * @param andInitializeCallBack (optional) if function(error, connection) { } is defined,
+ * the handler will try to initialize the connection
+ * @returns {Pryv.Connection} the connection that matches this serial
+ */
+ConnectionsHandler.prototype.get = function (connectionSerialId, andInitializeCallBack) {
+  var connection = this._connections[connectionSerialId];
+  if (andInitializeCallBack) {
+    if (! connection) {
+      andInitializeCallBack('Cannot find connection with serialId: ' + connectionSerialId, null);
+      return null;
+    }
+    connection.useLocalStorage(function (error/*, accessInfo*/) {
+      // TODO correctly deal with this error
+      if (error) { console.log(error); }
+      andInitializeCallBack(error, connection);
+    });
+  }
+  return connection;
+};
+
+
+
+},{"pryv":7,"underscore":3}],5:[function(require,module,exports){
+
+
+var RootNode = require('./RootNode.js');
+var BrowserFilter = require('../browser/BrowserFilter.js');
+
+var _ = require('underscore');
+
+var TreeMap = module.exports = function (browser) {
+  this.browser = browser;
+  this.root = new RootNode();
+
+
+
+  //----------- init the browser with all events --------//
+  this.eventEnterScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventEnterScope(event, content.reason, function () {});
+    }, this);
+    this.root._createView();
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+  }.bind(this);
+
+  this.eventLeaveScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventLeaveScope(event, content.reason, function () {});
+    }, this);
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+  }.bind(this);
+
+
+  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
+//--------- register the TreeMap event Listener ----------//
+  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+    this.eventEnterScope
+  );
+  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+    this.eventLeaveScope);
+  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.CHANGE,
+    this.root.eventChange);
+};
+
+
+TreeMap.prototype.destroy = function () {
+  this.browser.activeFilter.removeEventListener('eventEnterScope', this.root.eventEnterScope);
+  this.browser.activeFilter.removeEventListener('eventLeaveScope', this.root.eventLeaveScope);
+  this.browser.activeFilter.removeEventListener('eventChange', this.root.eventChange);
+};
+
+
+},{"../browser/BrowserFilter.js":4,"./RootNode.js":15,"underscore":3}],13:[function(require,module,exports){
+var System = require('./system/System.js');
+
+
+/**
+ *
+ * @param params
+ * host:
+ * username:
+ * password:
+ * appId:
+ * success:
+ * error:
+ */
+exports.getSessionId = function (pack) {
+  var payload,
+  headers = {},
+  params = {
+    username: pack.username,
+    password: pack.password,
+    appId: pack.appId
+  };
+
+  payload = JSON.stringify(params);
+  headers['Content-Type'] = 'application/json; charset=utf-8';
+  headers['Content-Length'] = payload.length;
+
+  System.request({
+    method : 'POST',
+    host : pack.username + '.' + pack.host,
+    port : 443,
+    ssl : true,
+    path : '/admin/login',
+    headers : headers,
+    payload : payload,
+    //TODO: decide what callback convention to use (Node or jQuery)
+    success : pack.success,
+    error : pack.error
+  });
+};
+/**
+ *
+ * @param pack
+ */
+exports.getAccesses = function (pack) {
+  var headers =  { 'authorization': pack.sessionId };
+  System.request({
+    method : 'GET',
+    host : pack.host,
+    port : 443,
+    ssl : true,
+    path : '/admin/accesses',
+    headers : headers,
+    //TODO: decide what callback convention to use (Node or jQuery)
+    success : pack.success,
+    error : pack.error
+  });
+};
+},{"./system/System.js":14}],14:[function(require,module,exports){
+//TODO: consider merging System into Utility
+
+function isBrowser() {
+  return typeof(window) !== 'undefined';
+}
+
+module.exports = isBrowser() ?  require('./System-browser.js') : require('./System-node.js');
+
+},{"./System-browser.js":17,"./System-node.js":16}],17:[function(require,module,exports){
+//file: system browser
+
+
+
+/**
+ *
+ * @param pack json with
+ * type : 'GET/DELETE/POST/PUT'
+ * host : fully qualified host name
+ * port : port to use
+ * path : the request PATH
+ * headers : key / value map of headers
+ * payload : the payload
+ * success : function (result, requestInfos)
+ * error : function (error, requestInfos)
+ * info : a text
+ * async : boolean : default (TRUE)
+ * expectedStatus : code
+ * ssl : boolean (default true)
+ */
+exports.request = function (pack)  {
+
+  pack.info = pack.info || '';
+
+  if (!pack.hasOwnProperty('async')) {
+    pack.async = true;
+  }
+
+  // ------------ request TYPE
+  pack.method = pack.method || 'POST';
+  // method override test
+  if (false && pack.method === 'DELETE') {
+    pack.method = 'POST';
+    pack.params =  pack.params || {};
+    pack.params._method = 'DELETE';
+  }
+
+  // ------------- request HEADERS
+
+
+  pack.headers = pack.headers || {};
+
+  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
+    pack.headers['Content-Type'] =
+      pack.headers['Content-Type'] || 'application/json; charset=utf-8';
+  }
+
+  if (pack.method === 'POST') {
+    if (pack.params) {
+      pack.params = JSON.stringify(pack.params);
+    } else {
+      pack.params = pack.payload || {};
+    }
+  }
+
+
+
+  // -------------- error
+  pack.error = pack.error || function (error) {
+    throw new Error(JSON.stringify(error, function (key, value) {
+      if (value === null) { return; }
+      if (value === '') { return; }
+      return value;
+    }, 2));
+  };
+
+  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
+
+  // --------------- request
+  var xhr = _initXHR(),
+    httpMode = pack.ssl ? 'https://' : 'http://',
+    url = pack.url || (httpMode + pack.host + pack.path);
+  xhr.open(pack.method, url, pack.async);
+  xhr.withCredentials = true;
+
+
+  xhr.onreadystatechange = function () {
+    detail += ' xhrstatus:' + xhr.statusText;
+    if (xhr.readyState === 0) {
+      pack.error({
+        message: 'pryvXHRCall unsent',
+        detail: detail,
+        id: 'INTERNAL_ERROR',
+        xhr: xhr
+      }, pack.context);
+    } else if (xhr.readyState === 4) {
+      var result = null;
+
+      try { result = JSON.parse(xhr.responseText); } catch (e) {
+        return pack.error({
+          message: 'Data is not JSON',
+          detail: xhr.responseText + '\n' + detail,
+          id: 'RESULT_NOT_JSON',
+          xhr: xhr
+        }, pack.context);
+      }
+      var requestInfo = {
+        code : xhr.status,
+        headers : xhr.getAllResponseHeaders()
+      };
+      pack.success(result, requestInfo);
+    }
+  };
+
+  for (var key in pack.headers) {
+    if (pack.headers.hasOwnProperty(key)) {
+      xhr.setRequestHeader(key, pack.headers[key]);
+    }
+  }
+  //--- prepare the params
+  /*var sentParams = null;
+  if (pack.params)  {
+    try {
+      sentParams = JSON.stringify(pack.params);
+    } catch (e) {
+      return pack.error({message: 'Parameters are not JSON', detail: 'params: '+pack.params+'\n
+      '+detail, id: 'INTERNAL_ERROR', error: e}, pack.context);
+    }
+  }
+      */
+  //--- sending the request
+  try {
+    xhr.send(pack.params);
+  } catch (e) {
+    return pack.error({
+      message: 'pryvXHRCall unsent',
+      detail: detail,
+      id: 'INTERNAL_ERROR',
+      error: e
+    }, pack.context);
+  }
+  return xhr;
+};
+
+/**
+ * Method to initialize XMLHttpRequest.
+ * @method _initXHR
+ * @access private
+ * @return object
+ */
+/* jshint -W117 */
+var _initXHR = function () {
+  var XHR = null;
+
+  try { XHR = new XMLHttpRequest(); }
+  catch (e) {
+    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
+    catch (e2) {
+      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
+      catch (e3) {
+        console.log('XMLHttpRequest implementation not found.');
+      }
+      console.log('XMLHttpRequest implementation not found.');
+    }
+    console.log('XMLHttpRequest implementation not found.');
+  }
+  return XHR;
+};
+
+
+
+
+
+
+},{}],15:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var ConnectionNode = require('./ConnectionNode');
 var _ = require('underscore');
@@ -3368,74 +3725,289 @@ var RootNode = module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":17,"./TreeNode":16,"backbone":2,"underscore":3}],14:[function(require,module,exports){
-var System = require('./system/System.js');
+},{"./ConnectionNode":19,"./TreeNode":18,"backbone":2,"underscore":3}],9:[function(require,module,exports){
 
+var _ = require('underscore');
+
+var Stream = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
+
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this._children = [];
+
+};
+
+
+
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (! this.parentId) { return null; }
+
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      var child = this.connection.datastore.getStreamById(childrenId);
+      children.push(child);
+    }.bind(this));
+    return children;
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    if (! this.parentId) { return []; }
+
+    var result = [this.parent];
+    result.push(this.parent.ancestors);
+    return result;
+  },
+  set: function () { throw new Error('Stream.ancestors property is read only'); }
+});
+
+},{"underscore":3}],11:[function(require,module,exports){
+var _ = require('underscore');
+
+var Filter = module.exports = function (settings) {
+  // protect against calls without `new`
+  if (! (this instanceof Filter)) {
+    return new Filter(settings);
+  }
+
+  this.settings = _.extend({
+    //TODO: set default values
+    streams: null,
+    tags: null,
+    from: null,
+    to: null,
+    limit: null,
+    skip: null,
+    modifiedSince: null,
+    state: null
+  }, settings);
+};
+
+//TODO: remove or rewrite (name & functionality unclear)
+Filter.prototype.focusedOnSingleStream = function () {
+  if (_.isArray(this.settings.streams) && this.settings.streams.length === 1) {
+    return this.settings.streams[0];
+  }
+  return null;
+};
+
+},{"underscore":3}],8:[function(require,module,exports){
+var _ = require('underscore'),
+  System = require('./system/System.js'),
+  ConnectionEvents = require('./connection/Events.js'),
+  ConnectionStreams = require('./connection/Streams.js'),
+  Datastore = require('./Datastore.js');
 
 /**
+ * TODO
  *
- * @param params
- * host:
- * username:
- * password:
- * appId:
- * success:
- * error:
+ * @constructor
  */
-exports.getSessionId = function (pack) {
-  var payload,
-  headers = {},
-  params = {
-    username: pack.username,
-    password: pack.password,
-    appId: pack.appId
+var Connection = module.exports = function (username, auth, settings) {
+  // protect against calls without `new`
+  if (! (this instanceof Connection)) {
+    return new Connection(username, auth, settings);
+  }
+
+  this.username = username;
+  this.auth = auth;
+
+  this.settings = _.extend({
+    port: 443,
+    ssl: true,
+    domain: 'pryv.io'
+  }, settings);
+
+  this.serverInfos = {
+    // nowLocalTime - nowServerTime
+    deltaTime: null,
+    apiVersion: null,
+    lastSeenLT: null
   };
 
-  payload = JSON.stringify(params);
-  headers['Content-Type'] = 'application/json; charset=utf-8';
-  headers['Content-Length'] = payload.length;
+  this._accessInfo = null;
+
+  this.events = new ConnectionEvents(this);
+  this.streams = new ConnectionStreams(this);
+
+  this.datastore = null;
+
+  this._ioSocket = null;
+  this._ioSocketMonitors = {};
+};
+
+/**
+ * Use localStorage for caching.
+ * The Library will activate Structure Monitoring and
+ * @param callback
+ * @returns {*}
+ */
+Connection.prototype.useLocalStorage = function (callback) {
+  if (this.datastore) { return this.datastore.init(callback); }
+  this.datastore = new Datastore(this);
+  this.accessInfo(function (error) {
+    if (error) { return callback(error); }
+    this.datastore.init(callback);
+  }.bind(this));
+};
+
+Connection.prototype.accessInfo = function (callback) {
+  if (this._accessInfo) { return this._accessInfo; }
+  var url = '/access-info';
+  this.request('GET', url, function (error, result) {
+    if (! error) {
+      this._accessInfo = result;
+    }
+    return callback(error, result);
+  }.bind(this));
+};
+
+/**
+ * Translate this timestamp (server dimension) to local system dimension
+ * This could have been named to "translate2LocalTime"
+ * @param serverTime timestamp  (server dimension)
+ * @returns {number} timestamp (local dimension)
+ */
+Connection.prototype.getLocalTime = function (serverTime) {
+  return (serverTime + this.serverInfos.deltaTime) * 1000;
+};
+
+/**
+ * Translate this timestamp (local system dimension) to server dimension
+ * This could have been named to "translate2ServerTime"
+ * @param localTime timestamp  (local dimension)
+ * @returns {number} timestamp (server dimension)
+ */
+Connection.prototype.getServerTime = function (localTime) {
+  localTime = localTime || new Date().getTime();
+  return (localTime / 1000) - this.serverInfos.deltaTime;
+};
+
+// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
+
+Connection.prototype._stopMonitoring = function (/*callback*/) {
+
+};
+
+Connection.prototype._startMonitoring = function (callback) {
+
+  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
+
+
+  var settings = {
+    host : this.username + '.' + this.settings.domain,
+    port : this.settings.port,
+    ssl : this.settings.ssl,
+    path : '/' + this.username,
+    namespace : '/' + this.username,
+    auth : this.auth
+  };
+
+  this.ioSocket = System.ioConnect(settings);
+
+  this.ioSocket.on('connect', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onConnect(); });
+  });
+  this.ioSocket.on('error', function (error) {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onError(error); });
+  });
+  this.ioSocket.on('eventsChanged', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onEventsChanged(); });
+  });
+  this.ioSocket.on('streamsChanged', function () {
+    _.each(this._ioSocketMonitors, function (monitor) { monitor.onStreamsChanged(); });
+  });
+
+};
+
+Connection.prototype.request = function (method, path, callback, jsonData, context) {
+  var headers =  { 'authorization': this.auth };
+  context = context ? context : this;
+  var payload = null;
+  if (jsonData) {
+    payload = JSON.stringify(jsonData);
+    headers['Content-Type'] = 'application/json; charset=utf-8';
+    headers['Content-Length'] = payload.length;
+  }
 
   System.request({
-    method : 'POST',
-    host : pack.username + '.' + pack.host,
-    port : 443,
-    ssl : true,
-    path : '/admin/login',
+    method : method,
+    host : this.username + '.' + this.settings.domain,
+    port : this.settings.port,
+    ssl : this.settings.ssl,
+    path : path,
     headers : headers,
     payload : payload,
     //TODO: decide what callback convention to use (Node or jQuery)
-    success : pack.success,
-    error : pack.error
+    success : onSuccess.bind(this),
+    error : onError.bind(this)
   });
+
+  /**
+   * @this {Connection}
+   */
+  function onSuccess(result, requestInfos) {
+    this.serverInfos.lastSeenLT = (new Date()).getTime();
+    this.serverInfos.apiVersion = requestInfos.headers['api-version'] ||
+      this.serverInfos.apiVersion;
+    if (_.has(requestInfos.headers, 'server-time')) {
+      this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
+        requestInfos.headers['server-time'];
+    }
+    callback.call(context, null, result);
+  }
+
+  function onError(error /*, requestInfo*/) {
+    callback.call(context, error, null);
+  }
 };
-/**
- *
- * @param pack
- */
-exports.getAccesses = function (pack) {
-  var headers =  { 'authorization': pack.sessionId };
-  System.request({
-    method : 'GET',
-    host : pack.host,
-    port : 443,
-    ssl : true,
-    path : '/admin/accesses',
-    headers : headers,
-    //TODO: decide what callback convention to use (Node or jQuery)
-    success : pack.success,
-    error : pack.error
-  });
-};
-},{"./system/System.js":9}],9:[function(require,module,exports){
-//TODO: consider merging System into Utility
 
-function isBrowser() {
-  return typeof(window) !== 'undefined';
-}
 
-module.exports = isBrowser() ?  require('./System-browser.js') : require('./System-node.js');
+Object.defineProperty(Connection.prototype, 'id', {
+  get: function () {
+    var id = this.settings.ssl ? 'https://' : 'http://';
+    id += this.username + '.' + this.settings.domain + ':' +
+      this.settings.port + '/?auth=' + this.auth;
+    return id;
+  },
+  set: function () { throw new Error('ConnectionNode.id property is read only'); }
+});
 
-},{"./System-browser.js":19,"./System-node.js":18}],16:[function(require,module,exports){
+Object.defineProperty(Connection.prototype, 'shortId', {
+  get: function () {
+    if (! this._accessInfo) {
+      throw new Error('connection must have been initialized to use shortId. ' +
+        ' You can call accessInfo() for this');
+    }
+    var id = this.username + ':' + this._accessInfo.name;
+    return id;
+  },
+  set: function () { throw new Error('Connection.shortId property is read only'); }
+});
+
+},{"./Datastore.js":22,"./connection/Events.js":20,"./connection/Streams.js":21,"./system/System.js":14,"underscore":3}],18:[function(require,module,exports){
 var _ = require('underscore'),
 // $ = require('node-jquery'),
   NodeView = require('../view/NodeView.js'),
@@ -3709,172 +4281,7 @@ _.extend(TreeNode.prototype, {
   }
 });
 
-},{"../model/NodeModel.js":21,"../utility/treemap.js":22,"../view/NodeView.js":20,"underscore":3}],19:[function(require,module,exports){
-//file: system browser
-
-
-
-/**
- *
- * @param pack json with
- * type : 'GET/DELETE/POST/PUT'
- * host : fully qualified host name
- * port : port to use
- * path : the request PATH
- * headers : key / value map of headers
- * payload : the payload
- * success : function (result, requestInfos)
- * error : function (error, requestInfos)
- * info : a text
- * async : boolean : default (TRUE)
- * expectedStatus : code
- * ssl : boolean (default true)
- */
-exports.request = function (pack)  {
-
-  pack.info = pack.info || '';
-
-  if (!pack.hasOwnProperty('async')) {
-    pack.async = true;
-  }
-
-  // ------------ request TYPE
-  pack.method = pack.method || 'POST';
-  // method override test
-  if (false && pack.method === 'DELETE') {
-    pack.method = 'POST';
-    pack.params =  pack.params || {};
-    pack.params._method = 'DELETE';
-  }
-
-  // ------------- request HEADERS
-
-
-  pack.headers = pack.headers || {};
-
-  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
-    pack.headers['Content-Type'] =
-      pack.headers['Content-Type'] || 'application/json; charset=utf-8';
-  }
-
-  if (pack.method === 'POST') {
-    if (pack.params) {
-      pack.params = JSON.stringify(pack.params);
-    } else {
-      pack.params = pack.payload || {};
-    }
-  }
-
-
-
-  // -------------- error
-  pack.error = pack.error || function (error) {
-    throw new Error(JSON.stringify(error, function (key, value) {
-      if (value === null) { return; }
-      if (value === '') { return; }
-      return value;
-    }, 2));
-  };
-
-  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
-
-  // --------------- request
-  var xhr = _initXHR(),
-    httpMode = pack.ssl ? 'https://' : 'http://',
-    url = pack.url || (httpMode + pack.host + pack.path);
-  xhr.open(pack.method, url, pack.async);
-  xhr.withCredentials = true;
-
-
-  xhr.onreadystatechange = function () {
-    detail += ' xhrstatus:' + xhr.statusText;
-    if (xhr.readyState === 0) {
-      pack.error({
-        message: 'pryvXHRCall unsent',
-        detail: detail,
-        id: 'INTERNAL_ERROR',
-        xhr: xhr
-      }, pack.context);
-    } else if (xhr.readyState === 4) {
-      var result = null;
-
-      try { result = JSON.parse(xhr.responseText); } catch (e) {
-        return pack.error({
-          message: 'Data is not JSON',
-          detail: xhr.responseText + '\n' + detail,
-          id: 'RESULT_NOT_JSON',
-          xhr: xhr
-        }, pack.context);
-      }
-      var requestInfo = {
-        code : xhr.status,
-        headers : xhr.getAllResponseHeaders()
-      };
-      pack.success(result, requestInfo);
-    }
-  };
-
-  for (var key in pack.headers) {
-    if (pack.headers.hasOwnProperty(key)) {
-      xhr.setRequestHeader(key, pack.headers[key]);
-    }
-  }
-  //--- prepare the params
-  /*var sentParams = null;
-  if (pack.params)  {
-    try {
-      sentParams = JSON.stringify(pack.params);
-    } catch (e) {
-      return pack.error({message: 'Parameters are not JSON', detail: 'params: '+pack.params+'\n
-      '+detail, id: 'INTERNAL_ERROR', error: e}, pack.context);
-    }
-  }
-      */
-  //--- sending the request
-  try {
-    xhr.send(pack.params);
-  } catch (e) {
-    return pack.error({
-      message: 'pryvXHRCall unsent',
-      detail: detail,
-      id: 'INTERNAL_ERROR',
-      error: e
-    }, pack.context);
-  }
-  return xhr;
-};
-
-/**
- * Method to initialize XMLHttpRequest.
- * @method _initXHR
- * @access private
- * @return object
- */
-/* jshint -W117 */
-var _initXHR = function () {
-  var XHR = null;
-
-  try { XHR = new XMLHttpRequest(); }
-  catch (e) {
-    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
-    catch (e2) {
-      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
-      catch (e3) {
-        console.log('XMLHttpRequest implementation not found.');
-      }
-      console.log('XMLHttpRequest implementation not found.');
-    }
-    console.log('XMLHttpRequest implementation not found.');
-  }
-  return XHR;
-};
-
-
-
-
-
-
-},{}],17:[function(require,module,exports){
+},{"../model/NodeModel.js":23,"../utility/treemap.js":24,"../view/NodeView.js":25,"underscore":3}],19:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -3999,33 +4406,62 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
-},{"./StreamNode":23,"./TreeNode":16,"underscore":3}],24:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
+},{"./StreamNode":26,"./TreeNode":18,"underscore":3}],10:[function(require,module,exports){
 
+var _ = require('underscore');
 /**
- * Holder for EventsNode
- * @type {*}
+ *
+ * @type {Function}
+ * @constructor
  */
-var PicturesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'PicturesEventsNode',
-    getWeight: function () {
-      return 1;
-    }
-
-  });
-
-// we accept all kind of events
-PicturesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'picture/attached');
+var Event = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
 };
 
 
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    if (! this.connection.datastore) {
+      throw new Error('Activate Datastore to get automatic stream mapping. Or use StreamId');
+    }
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
 
-},{"../EventsNode":25}],26:[function(require,module,exports){
+},{"underscore":3}],12:[function(require,module,exports){
+var _ = require('underscore');
+
+exports.mergeAndClean = function (sourceA, sourceB) {
+  sourceA = sourceA || {};
+  sourceB = sourceB || {};
+  var result = _.clone(sourceA);
+  _.extend(result, sourceB);
+  _.each(_.keys(result), function (key) {
+    if (result[key] === null) { delete result[key]; }
+  });
+  return result;
+};
+
+exports.getQueryParametersString = function (data) {
+  data = this.mergeAndClean(data);
+  return Object.keys(data).map(function (key) {
+    if (data[key] !== null) {
+      if (_.isArray(data[key])) {
+        data[key] = this.mergeAndClean(data[key]);
+        var keyE = encodeURIComponent(key + '[]');
+        return data[key].map(function (subData) {
+          return keyE + '=' + encodeURIComponent(subData);
+        }).join('&');
+      } else {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+      }
+    }
+  }, this).join('&');
+};
+
+},{"underscore":3}],27:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4051,7 +4487,33 @@ NotesEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../EventsNode":25}],27:[function(require,module,exports){
+},{"../EventsNode":28}],29:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var PicturesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'PicturesEventsNode',
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+PicturesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'picture/attached');
+};
+
+
+
+},{"../EventsNode":28}],30:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4077,7 +4539,7 @@ PositionsEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../EventsNode":25}],28:[function(require,module,exports){
+},{"../EventsNode":28}],31:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4103,65 +4565,75 @@ GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
 };
 
 
-},{"../EventsNode":25}],10:[function(require,module,exports){
+},{"../EventsNode":28}],22:[function(require,module,exports){
 var _ = require('underscore');
 
-var Filter = module.exports = function (settings) {
-  // protect against calls without `new`
-  if (! (this instanceof Filter)) {
-    return new Filter(settings);
-  }
+var Datastore = module.exports = function (connection) {
+  this.connection = connection;
+  this.streamsIndex = {}; // streams are linked to their object representation
+  this.rootStreams = [];
 
-  this.settings = _.extend({
-    //TODO: set default values
-    streams: null,
-    tags: null,
-    from: null,
-    to: null,
-    limit: null,
-    skip: null,
-    modifiedSince: null,
-    state: null
-  }, settings);
 };
 
-//TODO: remove or rewrite (name & functionality unclear)
-Filter.prototype.focusedOnSingleStream = function () {
-  if (_.isArray(this.settings.streams) && this.settings.streams.length === 1) {
-    return this.settings.streams[0];
-  }
-  return null;
+Datastore.prototype.init = function (callback) {
+  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
+    if (error) { return callback('Datastore faild to init - '  + error); }
+    if (result) {
+      this._rebuildStreamIndex(result); // maybe done transparently
+    }
+    callback(null);
+  }.bind(this));
+
+  // activate monitoring
+
 };
 
-},{"underscore":3}],15:[function(require,module,exports){
+Datastore.prototype._rebuildStreamIndex = function (streamArray) {
+  this.streamsIndex = {};
+  this.rootStreams = [];
+  this._indexStreamArray(streamArray);
+};
 
-var _ = require('underscore');
+Datastore.prototype._indexStreamArray = function (streamArray) {
+  _.each(streamArray, function (stream) {
+    this.streamsIndex[stream.id] = stream;
+    if (! stream._parent) { this.rootStreams.push(stream); }
+    this._indexStreamArray(stream._children);
+    delete stream._children; // cleanup when in datastore mode
+    delete stream._parent;
+  }.bind(this));
+};
+
+
 /**
  *
- * @type {Function}
- * @constructor
+ * @param streamId
+ * @returns Stream or null if not found
  */
-var Event = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
+Datastore.prototype.getStreams = function () {
+  return this.rootStreams;
 };
 
 
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    if (! this.connection.datastore) {
-      throw new Error('Activate Datastore to get automatic stream mapping. Or use StreamId');
-    }
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
+/**
+ *
+ * @param streamId
+ * @param test (do no throw error if Stream is not found
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreamById = function (streamId, test) {
+  var result = this.streamsIndex[streamId];
+  if (! test && ! result) {
+    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
+  }
+  return result;
+};
 
-},{"underscore":3}],21:[function(require,module,exports){
+},{"underscore":3}],23:[function(require,module,exports){
 var Backbone = require('backbone');
 
 var NodeModel = module.exports = Backbone.Model.extend({ });
-},{"backbone":2}],22:[function(require,module,exports){
+},{"backbone":2}],24:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -4353,7 +4825,90 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":3}],23:[function(require,module,exports){
+},{"underscore":3}],25:[function(require,module,exports){
+var  Marionette = require('backbone.marionette');
+ /* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
+var NodeView = module.exports = Marionette.ItemView.extend({
+  template: '#nodeView',
+  initialize: function () {
+    className = this.model.get('className');
+
+    this.listenTo(this.model, 'change', this.change);
+    //this.$el.css('background-color', this.getRandomColor());
+    if (this.model.get('content')) {
+      if (this.model.get('content').clientData) {
+        this.$el.addClass(this.model.get('content').clientData.color);
+      }
+    }
+    this.$el.attr('id', this.model.get('id'));
+    this.$el.addClass('node animated  fadeIn');
+    this.$el.addClass(this.model.get('className'));
+
+  },
+  triggers: {
+    'click': 'click'
+  },
+  change: function () {
+
+    this._refreshStyle();
+  },
+  renderView: function () {
+
+    this.render();
+  },
+  render: function () {
+    if (this.beforeRender) { this.beforeRender(); }
+    this.trigger('before:render', this);
+    this.trigger('item:before:render', this);
+    this._refreshStyle();
+    var data = this.serializeData();
+    var template = this.getTemplate();
+    var html = Marionette.Renderer.render(template, data);
+    this.$el.html(html);
+    if (this.model.get('eventView')) {
+      this.$el.append(this.model.get('eventView').el);
+    }
+    $('#' + this.model.get('containerId')).append(this.$el);
+
+    this.bindUIElements();
+
+    if (this.onRender) { this.onRender(); }
+    this.trigger('render', this);
+    this.trigger('item:rendered', this);
+    return this;
+  //  this.$el.css('z-index', this.model.get('depth'));
+  /*  this._refreshStyle();
+    this.$el.html(this.model.get('className'));
+    $('#' + this.model.get('containerId')).append(this.$el);
+    this.$el.addClass('animated  fadeIn');    */
+
+  },
+  _refreshStyle: function () {
+    if (this.model.get('height') === 0 || this.model.get('width') === 0) {
+      this.close();
+      return;
+    }
+    if (this.model.get('display')) {
+      this.$el.css('display', 'block');
+    }  else {
+      this.$el.css('display', 'none');
+    }
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('className'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+
+  },
+  close: function () {
+    this.remove();
+  }
+});
+},{"backbone.marionette":32}],26:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -4479,437 +5034,88 @@ StreamNode.registeredEventNodeTypes = {
   'Pictures' : require('./eventsNode/PicturesEventsNode.js'),
   'Generic' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":16,"./eventsNode/GenericEventsNode.js":28,"./eventsNode/NotesEventsNode.js":26,"./eventsNode/PicturesEventsNode.js":24,"./eventsNode/PositionsEventsNode.js":27,"underscore":3}],13:[function(require,module,exports){
-var _ = require('underscore'),
-  System = require('./system/System.js'),
-  ConnectionEvents = require('./connection/Events.js'),
-  ConnectionStreams = require('./connection/Streams.js'),
-  Datastore = require('./Datastore.js');
+},{"./TreeNode":18,"./eventsNode/GenericEventsNode.js":31,"./eventsNode/NotesEventsNode.js":27,"./eventsNode/PicturesEventsNode.js":29,"./eventsNode/PositionsEventsNode.js":30,"underscore":3}],20:[function(require,module,exports){
 
-/**
- * TODO
- *
- * @constructor
- */
-var Connection = module.exports = function (username, auth, settings) {
-  // protect against calls without `new`
-  if (! (this instanceof Connection)) {
-    return new Connection(username, auth, settings);
-  }
+var Utility = require('../utility/Utility.js'),
+  _ = require('underscore'),
+  Event = require('../Event');
 
-  this.username = username;
-  this.auth = auth;
-
-  this.settings = _.extend({
-    port: 443,
-    ssl: true,
-    domain: 'pryv.io'
-  }, settings);
-
-  this.serverInfos = {
-    // nowLocalTime - nowServerTime
-    deltaTime: null,
-    apiVersion: null,
-    lastSeenLT: null
-  };
-
-  this._accessInfo = null;
-
-  this.events = new ConnectionEvents(this);
-  this.streams = new ConnectionStreams(this);
-
-  this.datastore = null;
-
-  this._ioSocket = null;
-  this._ioSocketMonitors = {};
+var Events = module.exports = function (conn) {
+  this.conn = conn;
 };
 
-/**
- * Use localStorage for caching.
- * The Library will activate Structure Monitoring and
- * @param callback
- * @returns {*}
- */
-Connection.prototype.useLocalStorage = function (callback) {
-  if (this.datastore) { return this.datastore.init(callback); }
-  this.datastore = new Datastore(this);
-  this.accessInfo(function (error) {
-    if (error) { return callback(error); }
-    this.datastore.init(callback);
-  }.bind(this));
-};
-
-Connection.prototype.accessInfo = function (callback) {
-  if (this._accessInfo) { return this._accessInfo; }
-  var url = '/access-info';
-  this.request('GET', url, function (error, result) {
-    if (! error) {
-      this._accessInfo = result;
-    }
-    return callback(error, result);
-  }.bind(this));
-};
-
-/**
- * Translate this timestamp (server dimension) to local system dimension
- * This could have been named to "translate2LocalTime"
- * @param serverTime timestamp  (server dimension)
- * @returns {number} timestamp (local dimension)
- */
-Connection.prototype.getLocalTime = function (serverTime) {
-  return (serverTime + this.serverInfos.deltaTime) * 1000;
-};
-
-/**
- * Translate this timestamp (local system dimension) to server dimension
- * This could have been named to "translate2ServerTime"
- * @param localTime timestamp  (local dimension)
- * @returns {number} timestamp (server dimension)
- */
-Connection.prototype.getServerTime = function (localTime) {
-  localTime = localTime || new Date().getTime();
-  return (localTime / 1000) - this.serverInfos.deltaTime;
-};
-
-// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
-
-Connection.prototype._stopMonitoring = function (/*callback*/) {
-
-};
-
-Connection.prototype._startMonitoring = function (callback) {
-
-  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
-
-
-  var settings = {
-    host : this.username + '.' + this.settings.domain,
-    port : this.settings.port,
-    ssl : this.settings.ssl,
-    path : '/' + this.username,
-    namespace : '/' + this.username,
-    auth : this.auth
-  };
-
-  this.ioSocket = System.ioConnect(settings);
-
-  this.ioSocket.on('connect', function () {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onConnect(); });
-  });
-  this.ioSocket.on('error', function (error) {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onError(error); });
-  });
-  this.ioSocket.on('eventsChanged', function () {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onEventsChanged(); });
-  });
-  this.ioSocket.on('streamsChanged', function () {
-    _.each(this._ioSocketMonitors, function (monitor) { monitor.onStreamsChanged(); });
-  });
-
-};
-
-Connection.prototype.request = function (method, path, callback, jsonData, context) {
-  var headers =  { 'authorization': this.auth };
-  context = context ? context : this;
-  var payload = null;
-  if (jsonData) {
-    payload = JSON.stringify(jsonData);
-    headers['Content-Type'] = 'application/json; charset=utf-8';
-    headers['Content-Length'] = payload.length;
-  }
-
-  System.request({
-    method : method,
-    host : this.username + '.' + this.settings.domain,
-    port : this.settings.port,
-    ssl : this.settings.ssl,
-    path : path,
-    headers : headers,
-    payload : payload,
-    //TODO: decide what callback convention to use (Node or jQuery)
-    success : onSuccess.bind(this),
-    error : onError.bind(this)
-  });
-
-  /**
-   * @this {Connection}
-   */
-  function onSuccess(result, requestInfos) {
-    this.serverInfos.lastSeenLT = (new Date()).getTime();
-    this.serverInfos.apiVersion = requestInfos.headers['api-version'] ||
-      this.serverInfos.apiVersion;
-    if (_.has(requestInfos.headers, 'server-time')) {
-      this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
-        requestInfos.headers['server-time'];
-    }
-    callback.call(context, null, result);
-  }
-
-  function onError(error /*, requestInfo*/) {
-    callback.call(context, error, null);
-  }
-};
-
-
-Object.defineProperty(Connection.prototype, 'id', {
-  get: function () {
-    var id = this.settings.ssl ? 'https://' : 'http://';
-    id += this.username + '.' + this.settings.domain + ':' +
-      this.settings.port + '/?auth=' + this.auth;
-    return id;
-  },
-  set: function () { throw new Error('ConnectionNode.id property is read only'); }
-});
-
-Object.defineProperty(Connection.prototype, 'shortId', {
-  get: function () {
-    if (! this._accessInfo) {
-      throw new Error('connection must have been initialized to use shortId. ' +
-        ' You can call accessInfo() for this');
-    }
-    var id = this.username + ':' + this._accessInfo.name;
-    return id;
-  },
-  set: function () { throw new Error('Connection.shortId property is read only'); }
-});
-
-},{"./Datastore.js":30,"./connection/Events.js":31,"./connection/Streams.js":29,"./system/System.js":9,"underscore":3}],11:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var Stream = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-
-  /** those are only used when no datastore **/
-  this._parent = null;
-  this._children = [];
-
-};
-
-
-
-Object.defineProperty(Stream.prototype, 'parent', {
-  get: function () {
-
-    if (! this.parentId) { return null; }
-
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._parent;
-    }
-
-    return this.connection.datastore.getStreamById(this.parentId);
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._children;
-    }
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      var child = this.connection.datastore.getStreamById(childrenId);
-      children.push(child);
+Events.prototype.get = function (filter, deltaFilter, callback) {
+  //TODO handle caching
+  var result = [];
+  this._get(filter, deltaFilter, function (error, eventList) {
+    _.each(eventList, function (eventData) {
+      result.push(new Event(this.conn, eventData));
     }.bind(this));
-    return children;
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
+    callback(error, result);
+  }.bind(this));
+};
 
-// TODO write test
-Object.defineProperty(Stream.prototype, 'ancestors', {
-  get: function () {
-    if (! this.parentId) { return []; }
+Events.prototype._get = function (filter, deltaFilter, callback, context) {
+  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
+  var url = '/events?' + Utility.getQueryParametersString(tParams);
+  this.conn.request('GET', url, callback, null, context);
+};
 
-    var result = [this.parent];
-    result.push(this.parent.ancestors);
-    return result;
-  },
-  set: function () { throw new Error('Stream.ancestors property is read only'); }
-});
 
-},{"underscore":3}],20:[function(require,module,exports){
-var  Marionette = require('backbone.marionette');
- /* TODO This a the view for each node, with dynamic animation
- we can't re-render on change because animation would no be done
- If the model is a event Node we must include a new typed view
+//TODO check that we can really override method "create()" of object
+/**
+ *
+ * @param {Array} events
  */
-var NodeView = module.exports = Marionette.ItemView.extend({
-  template: '#nodeView',
-  initialize: function () {
-    className = this.model.get('className');
-
-    this.listenTo(this.model, 'change', this.change);
-    //this.$el.css('background-color', this.getRandomColor());
-    if (this.model.get('content')) {
-      if (this.model.get('content').clientData) {
-        this.$el.addClass(this.model.get('content').clientData.color);
-      }
-    }
-    this.$el.attr('id', this.model.get('id'));
-    this.$el.addClass('node animated  fadeIn');
-    this.$el.addClass(this.model.get('className'));
-
-  },
-  triggers: {
-    'click': 'click'
-  },
-  change: function () {
-
-    this._refreshStyle();
-  },
-  renderView: function () {
-
-    this.render();
-  },
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    this._refreshStyle();
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.html(html);
-    if (this.model.get('eventView')) {
-      this.$el.append(this.model.get('eventView').el);
-    }
-    $('#' + this.model.get('containerId')).append(this.$el);
-
-    this.bindUIElements();
-
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
-  //  this.$el.css('z-index', this.model.get('depth'));
-  /*  this._refreshStyle();
-    this.$el.html(this.model.get('className'));
-    $('#' + this.model.get('containerId')).append(this.$el);
-    this.$el.addClass('animated  fadeIn');    */
-
-  },
-  _refreshStyle: function () {
-    if (this.model.get('height') === 0 || this.model.get('width') === 0) {
-      this.close();
-      return;
-    }
-    if (this.model.get('display')) {
-      this.$el.css('display', 'block');
-    }  else {
-      this.$el.css('display', 'none');
-    }
-    this.$el.attr('weight', this.model.get('weight'));
-    this.$el.attr('className', this.model.get('className'));
-    this.$el.css('width', this.model.get('width'));
-    this.$el.css('height', this.model.get('height'));
-    this.$el.css('left', this.model.get('x'));
-    this.$el.css('top', this.model.get('y'));
-
-  },
-  close: function () {
-    this.remove();
-  }
-});
-},{"backbone.marionette":32}],12:[function(require,module,exports){
-var _ = require('underscore');
-
-exports.mergeAndClean = function (sourceA, sourceB) {
-  sourceA = sourceA || {};
-  sourceB = sourceB || {};
-  var result = _.clone(sourceA);
-  _.extend(result, sourceB);
-  _.each(_.keys(result), function (key) {
-    if (result[key] === null) { delete result[key]; }
+Events.prototype.create = function (events, callback, context) {
+  var url = '/events/batch';
+  _.each(events, function (event, index) {
+    event.tempRefId = 'temp_ref_id_' + index;
   });
-  return result;
+  this.conn.request('POST', url, function (err, result) {
+    _.each(events, function (event) {
+      event.id = result[event.tempRefId].id;
+    });
+    callback(err, result);
+  }, events, context);
 };
 
-exports.getQueryParametersString = function (data) {
-  data = this.mergeAndClean(data);
-  return Object.keys(data).map(function (key) {
-    if (data[key] !== null) {
-      if (_.isArray(data[key])) {
-        data[key] = this.mergeAndClean(data[key]);
-        var keyE = encodeURIComponent(key + '[]');
-        return data[key].map(function (subData) {
-          return keyE + '=' + encodeURIComponent(subData);
-        }).join('&');
-      } else {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
-      }
+Events.prototype.update = function (event, callback, context) {
+  var url = '/events/' + event.id;
+  this.conn.request('PUT', url, callback, null, context);
+};
+
+//TODO: rewrite once API for monitoring is sorted out
+Events.prototype.monitor = function (filter, callback) {
+  var that = this;
+  var lastSynchedST = -1;
+
+  this.conn.monitor(filter, function (signal, payload) {
+    switch (signal) {
+    case 'connect':
+      // set current serverTime as last update
+      lastSynchedST = that.conn.getServerTime();
+      callback(signal, payload);
+      break;
+    case 'event' :
+      that.conn.events.get(filter, function (error, result) {
+        _.each(result, function (e) {
+          if (e.modified > lastSynchedST)  {
+            lastSynchedST = e.modified;
+          }
+        });
+        callback('events', result);
+      }, { modifiedSince : lastSynchedST});
+      break;
+    case 'error' :
+      callback(signal, payload);
+      break;
     }
-  }, this).join('&');
+
+  });
 };
 
-},{"underscore":3}],30:[function(require,module,exports){
-var _ = require('underscore');
-
-var Datastore = module.exports = function (connection) {
-  this.connection = connection;
-  this.streamsIndex = {}; // streams are linked to their object representation
-  this.rootStreams = [];
-
-};
-
-Datastore.prototype.init = function (callback) {
-  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
-    if (error) { return callback('Datastore faild to init - '  + error); }
-    if (result) {
-      this._rebuildStreamIndex(result); // maybe done transparently
-    }
-    callback(null);
-  }.bind(this));
-
-  // activate monitoring
-
-};
-
-Datastore.prototype._rebuildStreamIndex = function (streamArray) {
-  this.streamsIndex = {};
-  this.rootStreams = [];
-  this._indexStreamArray(streamArray);
-};
-
-Datastore.prototype._indexStreamArray = function (streamArray) {
-  _.each(streamArray, function (stream) {
-    this.streamsIndex[stream.id] = stream;
-    if (! stream._parent) { this.rootStreams.push(stream); }
-    this._indexStreamArray(stream._children);
-    delete stream._children; // cleanup when in datastore mode
-    delete stream._parent;
-  }.bind(this));
-};
-
-
-/**
- *
- * @param streamId
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreams = function () {
-  return this.rootStreams;
-};
-
-
-/**
- *
- * @param streamId
- * @param test (do no throw error if Stream is not found
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreamById = function (streamId, test) {
-  var result = this.streamsIndex[streamId];
-  if (! test && ! result) {
-    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
-  }
-  return result;
-};
-
-},{"underscore":3}],29:[function(require,module,exports){
+},{"../Event":10,"../utility/Utility.js":12,"underscore":3}],21:[function(require,module,exports){
 var _ = require('underscore'),
     Utility = require('../utility/Utility.js'),
     Stream = require('../Stream.js');
@@ -5082,179 +5288,7 @@ Streams.Utils = {
 
 };
 
-},{"../Stream.js":11,"../utility/Utility.js":12,"underscore":3}],31:[function(require,module,exports){
-
-var Utility = require('../utility/Utility.js'),
-  _ = require('underscore'),
-  Event = require('../Event');
-
-var Events = module.exports = function (conn) {
-  this.conn = conn;
-};
-
-Events.prototype.get = function (filter, deltaFilter, callback) {
-  //TODO handle caching
-  var result = [];
-  this._get(filter, deltaFilter, function (error, eventList) {
-    _.each(eventList, function (eventData) {
-      result.push(new Event(this.conn, eventData));
-    }.bind(this));
-    callback(error, result);
-  }.bind(this));
-};
-
-Events.prototype._get = function (filter, deltaFilter, callback, context) {
-  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
-  var url = '/events?' + Utility.getQueryParametersString(tParams);
-  this.conn.request('GET', url, callback, null, context);
-};
-
-
-//TODO check that we can really override method "create()" of object
-/**
- *
- * @param {Array} events
- */
-Events.prototype.create = function (events, callback, context) {
-  var url = '/events/batch';
-  _.each(events, function (event, index) {
-    event.tempRefId = 'temp_ref_id_' + index;
-  });
-  this.conn.request('POST', url, function (err, result) {
-    _.each(events, function (event) {
-      event.id = result[event.tempRefId].id;
-    });
-    callback(err, result);
-  }, events, context);
-};
-
-Events.prototype.update = function (event, callback, context) {
-  var url = '/events/' + event.id;
-  this.conn.request('PUT', url, callback, null, context);
-};
-
-//TODO: rewrite once API for monitoring is sorted out
-Events.prototype.monitor = function (filter, callback) {
-  var that = this;
-  var lastSynchedST = -1;
-
-  this.conn.monitor(filter, function (signal, payload) {
-    switch (signal) {
-    case 'connect':
-      // set current serverTime as last update
-      lastSynchedST = that.conn.getServerTime();
-      callback(signal, payload);
-      break;
-    case 'event' :
-      that.conn.events.get(filter, function (error, result) {
-        _.each(result, function (e) {
-          if (e.modified > lastSynchedST)  {
-            lastSynchedST = e.modified;
-          }
-        });
-        callback('events', result);
-      }, { modifiedSince : lastSynchedST});
-      break;
-    case 'error' :
-      callback(signal, payload);
-      break;
-    }
-
-  });
-};
-
-},{"../Event":15,"../utility/Utility.js":12,"underscore":3}],25:[function(require,module,exports){
-var TreeNode = require('./TreeNode'),
-    NodeModel = require('../model/NodeModel.js'),
-  NotesView = require('../view/NotesView.js'),
-    _ = require('underscore');
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var EventsNode = module.exports = TreeNode.implement(
-  function (parentStreamNode) {
-    TreeNode.call(this, parentStreamNode);
-    this.events = {};
-
-    this.eventDisplayed = null;
-    this.eventModel = null;
-    this.eventsNbr = 0;
-    this.eventView = null;
-
-  },
-  {
-    className: 'EventsNode',
-
-    getChildren: function () {
-      return null;
-    },
-
-    eventEnterScope: function (event, reason, callback) {
-      this.events[event.id] = event;
-      this.eventsNbr++;
-      this.eventDisplayed = event;
-      this._refreshEventModel();
-      if (callback) {
-        callback(null);
-      }
-    },
-
-    eventLeaveScope: function (event, reason, callback) {
-      delete this.events[event.id];
-      this.eventsNbr--;
-      if (this.eventDisplayed === event) {
-        this.eventDisplayed = _.first(_.values(this.events));
-      }
-      this._refreshEventModel();
-      if (_.size(this.events) === 0) {
-        this.view.close();
-      }
-      if (callback) {
-        callback(null, this);
-      }
-    },
-
-    eventChange: function (event, reason, callback) {
-      throw new Error('EventsNode.eventChange No yet implemented' + event.id);
-    },
-    _refreshEventModel: function () {
-      if (!this.eventModel) {
-        this.eventModel = new NodeModel({
-          content: this.eventDisplayed.content,
-          description: this.eventDisplayed.description,
-          id: this.eventDisplayed.id,
-          modified: this.eventDisplayed.modified,
-          streamId: this.eventDisplayed.streamId,
-          tags: this.eventDisplayed.tags,
-          time: this.eventDisplayed.time,
-          type: this.eventDisplayed.type,
-          eventsNbr: this.eventsNbr
-        });
-        if (this.className === 'NotesEventsNode')  {
-          this.eventView = new NotesView({model: this.eventModel});
-        }
-      }
-      this.eventModel.set('content', this.eventDisplayed.content);
-      this.eventModel.set('description', this.eventDisplayed.description);
-      this.eventModel.set('id', this.eventDisplayed.id);
-      this.eventModel.set('modified', this.eventDisplayed.modified);
-      this.eventModel.set('streamId', this.eventDisplayed.streamId);
-      this.eventModel.set('tags', this.eventDisplayed.tags);
-      this.eventModel.set('time', this.eventDisplayed.time);
-      this.eventModel.set('type', this.eventDisplayed.type);
-      this.eventModel.set('eventsNbr', this.eventsNbr);
-    }
-  });
-
-
-EventsNode.acceptThisEventType = function () {
-  throw new Error('EventsNode.acceptThisEventType nust be overriden');
-};
-
-
-},{"../model/NodeModel.js":21,"../view/NotesView.js":33,"./TreeNode":16,"underscore":3}],18:[function(require,module,exports){
+},{"../Stream.js":9,"../utility/Utility.js":12,"underscore":3}],16:[function(require,module,exports){
 //file: system node
 
 var socketIO = require('socket.io-client');
@@ -5346,49 +5380,7 @@ exports.request = function (pack)  {
   req.end();
 };
 
-},{"socket.io-client":34}],33:[function(require,module,exports){
-var  Marionette = require('backbone.marionette');
-
-var NodeView = module.exports = Marionette.ItemView.extend({
-  template: '#notesView',
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-    this.$el.css('height','100%');
-    this.$el.css('width','100%');
-  },
-
-  renderView: function () {
-
-    this.render();
-  },
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.addClass('animated  bounceIn');
-    this.$el.html(html);
-    this.bindUIElements();
-
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
-    //  this.$el.css('z-index', this.model.get('depth'));
-    /*  this._refreshStyle();
-     this.$el.html(this.model.get('className'));
-     $('#' + this.model.get('containerId')).append(this.$el);
-     this.$el.addClass('animated  fadeIn');    */
-
-  },
-
-  close: function () {
-    this.remove();
-  }
-});
-},{"backbone.marionette":32}],34:[function(require,module,exports){
+},{"socket.io-client":33}],33:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -9263,7 +9255,140 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 })()
-},{}],32:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
+var TreeNode = require('./TreeNode'),
+    NodeModel = require('../model/NodeModel.js'),
+  NotesView = require('../view/NotesView.js'),
+    _ = require('underscore');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var EventsNode = module.exports = TreeNode.implement(
+  function (parentStreamNode) {
+    TreeNode.call(this, parentStreamNode);
+    this.events = {};
+
+    this.eventDisplayed = null;
+    this.eventModel = null;
+    this.eventsNbr = 0;
+    this.eventView = null;
+
+  },
+  {
+    className: 'EventsNode',
+
+    getChildren: function () {
+      return null;
+    },
+
+    eventEnterScope: function (event, reason, callback) {
+      this.events[event.id] = event;
+      this.eventsNbr++;
+      this.eventDisplayed = event;
+      this._refreshEventModel();
+      if (callback) {
+        callback(null);
+      }
+    },
+
+    eventLeaveScope: function (event, reason, callback) {
+      delete this.events[event.id];
+      this.eventsNbr--;
+      if (this.eventDisplayed === event) {
+        this.eventDisplayed = _.first(_.values(this.events));
+      }
+      this._refreshEventModel();
+      if (_.size(this.events) === 0) {
+        this.view.close();
+      }
+      if (callback) {
+        callback(null, this);
+      }
+    },
+
+    eventChange: function (event, reason, callback) {
+      throw new Error('EventsNode.eventChange No yet implemented' + event.id);
+    },
+    _refreshEventModel: function () {
+      if (!this.eventModel) {
+        this.eventModel = new NodeModel({
+          content: this.eventDisplayed.content,
+          description: this.eventDisplayed.description,
+          id: this.eventDisplayed.id,
+          modified: this.eventDisplayed.modified,
+          streamId: this.eventDisplayed.streamId,
+          tags: this.eventDisplayed.tags,
+          time: this.eventDisplayed.time,
+          type: this.eventDisplayed.type,
+          eventsNbr: this.eventsNbr
+        });
+        if (this.className === 'NotesEventsNode')  {
+          this.eventView = new NotesView({model: this.eventModel});
+        }
+      }
+      this.eventModel.set('content', this.eventDisplayed.content);
+      this.eventModel.set('description', this.eventDisplayed.description);
+      this.eventModel.set('id', this.eventDisplayed.id);
+      this.eventModel.set('modified', this.eventDisplayed.modified);
+      this.eventModel.set('streamId', this.eventDisplayed.streamId);
+      this.eventModel.set('tags', this.eventDisplayed.tags);
+      this.eventModel.set('time', this.eventDisplayed.time);
+      this.eventModel.set('type', this.eventDisplayed.type);
+      this.eventModel.set('eventsNbr', this.eventsNbr);
+    }
+  });
+
+
+EventsNode.acceptThisEventType = function () {
+  throw new Error('EventsNode.acceptThisEventType nust be overriden');
+};
+
+
+},{"../model/NodeModel.js":23,"../view/NotesView.js":34,"./TreeNode":18,"underscore":3}],34:[function(require,module,exports){
+var  Marionette = require('backbone.marionette');
+
+var NodeView = module.exports = Marionette.ItemView.extend({
+  template: '#notesView',
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+    this.$el.css('height','100%');
+    this.$el.css('width','100%');
+  },
+
+  renderView: function () {
+
+    this.render();
+  },
+  render: function () {
+    if (this.beforeRender) { this.beforeRender(); }
+    this.trigger('before:render', this);
+    this.trigger('item:before:render', this);
+    var data = this.serializeData();
+    var template = this.getTemplate();
+    var html = Marionette.Renderer.render(template, data);
+    this.$el.addClass('animated  bounceIn');
+    this.$el.html(html);
+    this.bindUIElements();
+
+    if (this.onRender) { this.onRender(); }
+    this.trigger('render', this);
+    this.trigger('item:rendered', this);
+    return this;
+    //  this.$el.css('z-index', this.model.get('depth'));
+    /*  this._refreshStyle();
+     this.$el.html(this.model.get('className'));
+     $('#' + this.model.get('containerId')).append(this.$el);
+     this.$el.addClass('animated  fadeIn');    */
+
+  },
+
+  close: function () {
+    this.remove();
+  }
+});
+},{"backbone.marionette":32}],32:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -11225,7 +11350,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":35,"backbone.babysitter":36,"backbone.wreqr":37,"underscore":3}],35:[function(require,module,exports){
+},{"backbone":35,"backbone.babysitter":37,"backbone.wreqr":36,"underscore":3}],35:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -12799,7 +12924,7 @@ _.extend(Marionette.Module, {
 }).call(this);
 
 })()
-},{"underscore":3}],36:[function(require,module,exports){
+},{"underscore":3}],37:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -12979,7 +13104,7 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":35,"underscore":3}],37:[function(require,module,exports){
+},{"backbone":35,"underscore":3}],36:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 

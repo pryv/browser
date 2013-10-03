@@ -31,8 +31,8 @@ var Browser = module.exports = function () {
 
   // activate them in batch in the filter
   var batch = this.activeFilter.startBatch();
-  this.activeFilter.showConnection(perki1Serial);
-  this.activeFilter.showConnection(perki2Serial);
+  this.activeFilter.showConnection(perki1Serial, batch);
+  this.activeFilter.showConnection(perki2Serial, batch);
   batch.done();
 
 

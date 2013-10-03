@@ -14,7 +14,7 @@ Object.defineProperty(Pryv.Event.prototype, 'serialId', {
 
 var BrowserFilter = module.exports = function (browser) {
   this.browser = browser;
-  this._showOnlyStreams = null; // object that contains streams to display (from multiple connections)
+  this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
   this.hiddenStreams = {};
   this.eventListeners = {};
   this._initEventListeners();
@@ -31,7 +31,7 @@ var BrowserFilter = module.exports = function (browser) {
  * Create ah-hoc filter for this connection
  * @private
  */
-BrowserFilter.prototype._getFilterFor = function (/*connectionKey*/) {
+BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
 
   return nullFilter;
 };
@@ -116,11 +116,12 @@ BrowserFilter.prototype.removeEventListener = function (signal, callback) {
 /**
  * A changes occurred on the filter
  */
-BrowserFilter.prototype.fireEvent = function (signal, content, thisArg) {
-  console.log('BrowserFilter.FireEvent : ' + signal);
+BrowserFilter.prototype.fireEvent = function (signal, content, batch) {
+  var batchId = batch ? batch.id : null;
+  console.log('BrowserFilter.FireEvent : ' + signal + ' batch: ' + batchId);
   _.each(this.eventListeners[signal], function (callback) {
     if (callback !== null &&
-      BrowserFilter.UNREGISTER_LISTENER === callback.call(thisArg, content)) {
+      BrowserFilter.UNREGISTER_LISTENER === callback(content, batchId)) {
       this.removeEventListener(signal, callback);
     }
   }, this);
@@ -136,10 +137,10 @@ BrowserFilter.prototype.startBatch = function () {
     id : (new Date()).getTime() + 'M',
     filter : this,
     done : function () {
-      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id);
+      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id, this);
     }
   };
-  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id);
+  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id, batch);
   return batch;
 };
 
@@ -209,8 +210,7 @@ BrowserFilter.prototype.showOnlyStreams = function (streams) {
     }, this);
   }
 
-
-  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM);
+  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM, null);
 
 };
 
@@ -220,7 +220,9 @@ BrowserFilter.prototype._refreshContentACTUAL = 0;
  * @param reason  one of BrowserFilter.REASON.*
  * @param focusOn  .. info for further optimization
  */
-BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
+BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
+  batch = batch || this.startBatch();
+
   if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
     BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
     console.log('Skiping refresh request because already one on course ' + reason);
@@ -241,62 +243,77 @@ BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
 
 
   this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
-      events: eventsLeavingScope});
+    {reason: reason, events: eventsLeavingScope}, batch);
 
 
-  var connectionsTodo = _.keys(this._showConnections).length;
+
+  // ------- connections refresh
+
+
+  var connectionsTodo = [];
+  _.each(_.values(this._showConnections), function (connection) { // for each connection
+    if (this.connectionMatchesFilter(connection)) {
+      connectionsTodo.push(connection.serialId);
+    }
+  }.bind(this));
+
+
+  var connectionsTodoCounter = connectionsTodo.length;
+  // if no connection then EXIT
+  if (connectionsTodoCounter === 0) {
+    batch.done();
+    return;
+  }
+
+
   var that = this;
-  function doneOneConnection(events) {
+  function doneOneConnection(events) {  //  find events entering and leavings
     var eventsMatchedFromModel = []; // used to check if events left form model
-    var eventsEnteringScope = [];
-
+    var eventsEnteringScope = []; // events that enter
 
     _.each(events, function (event) { // for each event
 
       if (! that.eventMatchesFilter(event)) {
         console.error('!! Error !! BrowserFilter.refreshContent, ' +
           ' got an event not matching the filter): ' + event.serialId);
-      }
-
-      if (_.has(that.currentEvents, event)) {
-        eventsMatchedFromModel.push(event);
       } else {
-        eventsEnteringScope.push(event);
-        that.currentEvents[event.serialId] = event; // add to currently displayed events
+
+        if (_.has(that.currentEvents, event)) {
+          eventsMatchedFromModel.push(event);
+        } else {
+          eventsEnteringScope.push(event);
+          that.currentEvents[event.serialId] = event; // add to currently displayed events
+        }
+
       }
 
     });
 
 
     // ---------- OK DONE
-    connectionsTodo--;
-    if (connectionsTodo <= 0) {  // finished processing all connections
+    connectionsTodoCounter--;
+    if (connectionsTodoCounter <= 0) {  // finished processing all connections
+      batch.done();
       // --- ################   ending
       // should we go for another loop?
+
+
       if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
         console.log('Refreshing with force reason');
         BrowserFilter.prototype._refreshContentACTUAL = 0;
         that.refreshContent(BrowserFilter.REASON.FORCE);
+      } else {
+        BrowserFilter.prototype._refreshContentACTUAL = 0;
       }
-      BrowserFilter.prototype._refreshContentACTUAL = 0;
     }
   }
 
   // do we have new events ?
-  _.each(_.keys(this._showConnections), function (connectionKey) { // for each connection
-    this._getEventsForConnection(connectionKey, function (error, events) {  // get events
-
-
+  _.each(connectionsTodo, function (connectionSerialId) { // for each connection
+    this._getEventsForConnectionSerialId(connectionSerialId, function (error, events) { //get events
       doneOneConnection(events);
-
     }.bind(this));
   }.bind(this));
-
-
-
-
-
 
 };
 
@@ -306,19 +323,20 @@ BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
 /**
  * get all events that match this filter
  */
-BrowserFilter.prototype.showConnection = function (connectionKey) {
-  if (_.has(this._showConnections, connectionKey)) {
-    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
+BrowserFilter.prototype.showConnection = function (connectionSerialId, batch) {
+  if (_.has(this._showConnections, connectionSerialId)) {
+    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionSerialId);
     return;
   }
-  if (! this.browser.connections.get(connectionKey)) { // TODO error management
-    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
+  var connection = this.browser.connections.get(connectionSerialId);
+  if (! connection) { // TODO error management
+    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionSerialId);
     return;
   }
-  this._showConnections[connectionKey] = true;
+  this._showConnections[connectionSerialId] = connection;
 
   var self = this;
-  this._getEventsForConnection(connectionKey,
+  this._getEventsForConnectionSerialId(connectionSerialId,
     function (error, result) {
       if (error) { console.log(error); } // TODO handle
 
@@ -332,7 +350,7 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
 
       self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
         {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-          events: result});
+          events: result}, batch);
     }
   );
 };
@@ -342,7 +360,16 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
  * @param eventListener
  */
 BrowserFilter.prototype.connectionMatchesFilter = function (connection) {
-   return _.has(this._showConnections, connection.serialId);
+  // if _showOnly is defined, only consider matching connection
+  if (this._showOnlyStreams !== null) {
+    var inStreams = false;
+    for (var i = 0, streams = _.values(this._showOnlyStreams);
+         i < streams.length && ! inStreams; i++) {
+      inStreams = streams[i].connection.serialId === connection.serialId;
+    }
+    if (! inStreams) { return false; }
+  }
+  return _.has(this._showConnections, connection.serialId);
 };
 
 
@@ -357,10 +384,10 @@ BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
       events: _.values(this.currentEvents)});
 };
 
-BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {
+BrowserFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
   var self = this;
-  self.browser.connections.get(connectionKey, function (error, connection) { // when ready
+  self.browser.connections.get(connectionSerialId, function (error, connection) { // when ready
     if (error) { console.log(error); } // TODO handle
-    connection.events.get(self._getFilterFor(connectionKey), null,   callback); // get events
+    connection.events.get(self._getFilterFor(connectionSerialId), null,   callback); // get events
   });
 };

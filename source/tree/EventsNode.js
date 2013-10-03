@@ -29,7 +29,7 @@ var EventsNode = module.exports = TreeNode.implement(
       this.events[event.id] = event;
       this.eventsNbr++;
       this.eventDisplayed = event;
-      this._refreshEventModel();
+     // this._refreshEventModel();
       if (callback) {
         callback(null);
       }
@@ -41,7 +41,7 @@ var EventsNode = module.exports = TreeNode.implement(
       if (this.eventDisplayed === event) {
         this.eventDisplayed = _.first(_.values(this.events));
       }
-      this._refreshEventModel();
+    //  this._refreshEventModel();
       if (_.size(this.events) === 0) {
         this.view.close();
       }

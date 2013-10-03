@@ -40,12 +40,11 @@ var RootNode = module.exports = TreeNode.implement(
     },
 
     eventLeaveScope: function (event, reason, callback) {
-        var node = this.connectionNodes[event.connection.id];
-        if (node === 'undefined') {
-          throw new Error('RootNode: can\'t find path to remove event' + event.id);
-        }
-        node.eventLeaveScope(event, reason, callback);
-
+      var node = this.connectionNodes[event.connection.id];
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to remove event' + event.id);
+      }
+      node.eventLeaveScope(event, reason, callback);
     },
 
     eventChange: function (event, reason, callback) {

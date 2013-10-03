@@ -6,16 +6,8 @@ var  Marionette = require('backbone.marionette');
 var NodeView = module.exports = Marionette.ItemView.extend({
   template: '#nodeView',
   initialize: function () {
-    var eventView, className = this.model.get('className');
-    if (className === 'NotesEventsNode') {
-      console.log('create Notes view');
-    } else if (className === 'PicturesEventsNode') {
-      console.log('create Pictures view');
-    } else if (className === 'PositionsEventsNode') {
-      console.log('create Position view');
-    } else if (className === 'GenericEventsNode') {
-      console.log('create Generic view');
-    }
+    className = this.model.get('className');
+
     this.listenTo(this.model, 'change', this.change);
     //this.$el.css('background-color', this.getRandomColor());
     if (this.model.get('content')) {
@@ -48,7 +40,11 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     var template = this.getTemplate();
     var html = Marionette.Renderer.render(template, data);
     this.$el.html(html);
+    if (this.model.get('eventView')) {
+      this.$el.append(this.model.get('eventView').el);
+    }
     $('#' + this.model.get('containerId')).append(this.$el);
+
     this.bindUIElements();
 
     if (this.onRender) { this.onRender(); }

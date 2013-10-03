@@ -73,7 +73,8 @@ _.extend(TreeNode.prototype, {
         depth: this.depth,
         weight: this.getWeight(),
         display: this.display,
-        content: this.events || this.stream || this.connection
+        content: this.events || this.stream || this.connection,
+        eventView: this.eventView
       });
       this.view = new NodeView({model: this.model});
     }
@@ -118,8 +119,8 @@ _.extend(TreeNode.prototype, {
       _.each(this.getChildren(), function (child) {
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width;
-        child.height = squarified[child.uniqueId].height;
+        child.width = squarified[child.uniqueId].width - 2;
+        child.height = squarified[child.uniqueId].height - 2;
         // test if we need to aggregate the view by testing if a child is to small
         // (child weight must be > 0)
       }, this);

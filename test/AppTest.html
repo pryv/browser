@@ -14,15 +14,24 @@
       sampleApp.main();
     });
   </script>
+  <script id="notesView" type="template">
+  <div class="aggregated-icon Notes"></div>
+  <span class="aggregated-nbr-events">+<%= eventsNbr%> Notes</span>
+  <div class="aggregated-icon-page"></div>
+  <div class="">
+    <%= content %>
+  </div>
+  </script>
   <script id="nodeView" type="template">
+
     <%
     if (typeof(content) != "undefined") {
     if (typeof(content.name) != "undefined") { %>
-      <div><%= content.name %></div>
+      <div class='nodeHeader'><%= content.name %></div>
     <% } else  if (typeof(content.username) != "undefined") { %>
-    <div><%= content.username %> / <%= content._accessInfo.name %></div>
+    <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
     <% } else  { %>
-    <div><%= name %></div>
+    <div ><%= name %></div>
     <% } }  %>
 
   </script>

@@ -179,7 +179,7 @@ BrowserFilter.prototype.streamMatchesFilter = function (stream) {
  * @param stream object or array of Streams (null) to show all
  * @returns Boolean
  */
-BrowserFilter.prototype.showOnlyStreams = function (streams) {
+BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
   if (streams === null) {
     if (this._showOnlyStreams === null) { return; } // nothing to do
   }
@@ -210,7 +210,8 @@ BrowserFilter.prototype.showOnlyStreams = function (streams) {
     }, this);
   }
 
-  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM, null);
+  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
+    {noEnter : true}, batch);
 
 };
 
@@ -222,12 +223,35 @@ BrowserFilter.prototype._refreshContentACTUAL = 0;
  */
 BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
   batch = batch || this.startBatch();
+  focusOn = focusOn || {};
+
+  var that = this;
 
   if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
     BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
     console.log('Skiping refresh request because already one on course ' + reason);
   }
   BrowserFilter.prototype._refreshContentACTUAL = 1;
+
+
+  // done function can be called any time to exit
+
+  function finishedRefresh () {
+    batch.done();
+    // --- ################   ending
+    // should we go for another loop?
+
+
+    if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
+      console.log('Refreshing with force reason');
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+      that.refreshContent(BrowserFilter.REASON.FORCE);
+    } else {
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+    }
+  }
+
+
 
 
   // we can process leaving events locally
@@ -245,6 +269,13 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
   this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
     {reason: reason, events: eventsLeavingScope}, batch);
 
+
+
+  // ------- can some event enter scope?
+
+  if (_.has(focusOn, 'noEnter')) {  // done
+    return finishedRefresh();
+  }
 
 
   // ------- connections refresh
@@ -266,7 +297,7 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
   }
 
 
-  var that = this;
+
   function doneOneConnection(events) {  //  find events entering and leavings
     var eventsMatchedFromModel = []; // used to check if events left form model
     var eventsEnteringScope = []; // events that enter
@@ -293,18 +324,7 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
     // ---------- OK DONE
     connectionsTodoCounter--;
     if (connectionsTodoCounter <= 0) {  // finished processing all connections
-      batch.done();
-      // --- ################   ending
-      // should we go for another loop?
-
-
-      if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
-        console.log('Refreshing with force reason');
-        BrowserFilter.prototype._refreshContentACTUAL = 0;
-        that.refreshContent(BrowserFilter.REASON.FORCE);
-      } else {
-        BrowserFilter.prototype._refreshContentACTUAL = 0;
-      }
+      return finishedRefresh();
     }
   }
 

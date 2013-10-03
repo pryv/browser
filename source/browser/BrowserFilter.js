@@ -3,6 +3,7 @@ var _ = require('underscore');
 var Filter = require('pryv').Filter;
 var Pryv = require('pryv');
 var MSGs = require('./Messages').BrowserFilter;
+var SignalEmitter = require('../utility/SignalEmitter.js');
 
 Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
   get: function () { return this.connection.serialId + '>>' + this.id; }
@@ -13,11 +14,11 @@ Object.defineProperty(Pryv.Event.prototype, 'serialId', {
 
 
 var BrowserFilter = module.exports = function (browser) {
+  SignalEmitter.extend(this, MSGs.SIGNAL);
+
   this.browser = browser;
   this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
   this.hiddenStreams = {};
-  this.eventListeners = {};
-  this._initEventListeners();
   this._connections = {}; // serialIds / connection
 
   this.currentEvents = {};
@@ -25,6 +26,7 @@ var BrowserFilter = module.exports = function (browser) {
   this.tags = null;
   this._fromST = null;
   this._toST = null;
+
 };
 
 /**
@@ -38,102 +40,6 @@ BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
 var nullFilter = new Filter({limit : 2000000});
 
 
-
-
-
-//----------------------- event management ----------------------//
-
-
-BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
-
-/**
- * Init all event listeners array
- * @private
- */
-BrowserFilter.prototype._initEventListeners = function () {
-  _.each(_.values(MSGs.SIGNAL), function (value) {
-    this.eventListeners[value] = [];
-  }.bind(this));
-};
-
-
-
-/**
- * Add an event listener
- * @param signal one of  MSGs.SIGNAL.*.*
- * @param callback function(content) .. content vary on each signal.
- * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
- * @return the callback function for further reference
- */
-BrowserFilter.prototype.addEventListener = function (signal, callback) {
-  this.eventListeners[signal].push(callback);
-  return callback;
-};
-
-
-/**
- * remove the callback matching this signal
- */
-BrowserFilter.prototype.removeEventListener = function (signal, callback) {
-  for (var i = 0; i < this.eventListeners[signal].length; i++) {
-    if (this.eventListeners[signal][i] === callback) {
-      this.eventListeners[signal][i] = null;
-    }
-  }
-};
-
-
-/**
- * A changes occurred on the filter
- * @param signal
- * @param content
- * @param batch
- * @private
- */
-BrowserFilter.prototype._fireEvent = function (signal, content, batch) {
-  var batchId = batch ? batch.id : null;
-  console.log('BrowserFilter.FireEvent : ' + signal + ' batch: ' + batchId);
-  _.each(this.eventListeners[signal], function (callback) {
-    if (callback !== null &&
-      BrowserFilter.UNREGISTER_LISTENER === callback(content, batchId)) {
-      this.removeEventListener(signal, callback);
-    }
-  }, this);
-};
-
-
-var batchSerial = 0;
-/**
- * start a batch process
- * @return an object where you have to call stop when done
- */
-BrowserFilter.prototype.startBatch = function () {
-  var batch = {
-    id : 'C' + batchSerial++,
-    filter : this,
-    waitFor : 1,
-    waitForMeToFinish : function (name) {
-      var batch = this;
-      batch.waitFor++;
-      return {
-        done : function () {
-          batch.done(name);
-        }
-      };
-    },
-    done : function (name) {
-      this.waitFor--;
-      if (this.waitFor === 0) {
-        this.filter._fireEvent(MSGs.SIGNAL.BATCH_DONE, this.id, this);
-      }
-      if (this.waitFor < 0) {
-        console.error('This batch has been done() to much :' + name);
-      }
-    }
-  };
-  this._fireEvent(MSGs.SIGNAL.BATCH_BEGIN, batch.id, batch);
-  return batch;
-};
 
 
 // ----------------------------- EVENTS --------------------------- //

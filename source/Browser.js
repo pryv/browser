@@ -45,7 +45,7 @@ var Browser = module.exports = function () {
 
   var that = this;
   setTimeout(function () {
-    that.activeFilter.showOnlyStreams(streams);
+    //that.activeFilter.showOnlyStreams(streams);
   }, 8000);
 
 

@@ -22,6 +22,7 @@ var TreeMap = module.exports = function (browser) {
       this.root.height,
       true);
     this.root._refreshViewModel(true);
+    this.root.renderView(true);
   }.bind(this);
 
   this.eventLeaveScope = function (content) {
@@ -34,6 +35,7 @@ var TreeMap = module.exports = function (browser) {
       this.root.height,
       true);
     this.root._refreshViewModel(true);
+    this.root.renderView(true);
   }.bind(this);
 
   this.eventChange = function (/*context*/) {

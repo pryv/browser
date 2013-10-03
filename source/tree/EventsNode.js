@@ -42,7 +42,7 @@ var EventsNode = module.exports = TreeNode.implement(
         this.eventDisplayed = _.first(_.values(this.events));
       }
     //  this._refreshEventModel();
-      if (_.size(this.events) === 0) {
+      if (_.size(this.events) === 0 && this.view) {
         this.view.close();
       }
       if (callback) {

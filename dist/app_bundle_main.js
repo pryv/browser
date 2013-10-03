@@ -1316,7 +1316,7 @@ var Browser = module.exports = function () {
     this.connections.add(new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}));
 
   // tell the filter we want to show this connection
-  this.activeFilter.showConnection(fredosSerial);
+  this.activeFilter.addConnection(fredosSerial);
 
   // create the TreeMap
   this.treemap = new TreeMap(this);
@@ -1330,8 +1330,8 @@ var Browser = module.exports = function () {
 
   // activate them in batch in the filter
   var batch = this.activeFilter.startBatch();
-  this.activeFilter.showConnection(perki1Serial);
-  this.activeFilter.showConnection(perki2Serial);
+  this.activeFilter.addConnection(perki1Serial, batch);
+  this.activeFilter.addConnection(perki2Serial, batch);
   batch.done();
 
 
@@ -1354,21 +1354,33 @@ var Browser = module.exports = function () {
 
 
 
-},{"./browser/BrowserFilter.js":4,"./browser/ConnectionsHandler.js":6,"./tree/TreeMap.js":5,"pryv":7}],7:[function(require,module,exports){
-/**
- * The main file.
- */
-module.exports = {
-  Connection : require('./Connection.js'),
-  Event : require('./Event.js'),
-  Stream : require('./Stream.js'),
-  Filter : require('./Filter.js'),
-  System : require('./system/System.js'),
-  Access: require('./Access.js'),
-  Utility: require('./utility/Utility.js')
-};
+},{"./browser/BrowserFilter.js":4,"./browser/ConnectionsHandler.js":5,"./tree/TreeMap.js":6,"pryv":7}],8:[function(require,module,exports){
 
-},{"./Access.js":14,"./Connection.js":11,"./Event.js":8,"./Filter.js":10,"./Stream.js":9,"./system/System.js":13,"./utility/Utility.js":12}],3:[function(require,module,exports){
+module.exports = {
+  BrowserFilter : {
+    SIGNAL : {
+      /** called when a batch of changes is expected, content: <batchId> unique**/
+      BATCH_BEGIN : 'beginBatch',
+      /** called when a batch of changes is done, content: <batchId> unique**/
+      BATCH_DONE : 'doneBatch',
+
+      /** called when some streams are hidden, content: Array of Stream**/
+      STREAM_HIDE : 'hideStream',
+      STREAM_SHOW : 'hideShow',
+      /** called when events Enter Scope, content: {reason: one of .., content: array of Event }**/
+      EVENT_SCOPE_ENTER : 'eventEnterScope',
+      EVENT_SCOPE_LEAVE : 'eventLeaveScope',
+      EVENT_CHANGE : 'eventChange'
+    },
+    REASON : {
+      EVENT_SCOPE_ENTER_ADD_CONNECTION : 'connectionAdded',
+      EVENT_SCOPE_LEAVE_FOCUS_ON_STREAM : 'focusOnStream',
+      // may happend when several refresh requests overlaps
+      FORCE : 'forced'
+    }
+  }
+};
+},{}],3:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -2942,436 +2954,21 @@ module.exports = {
 }).call(this);
 
 })()
-},{"underscore":2}],4:[function(require,module,exports){
-(function(){
-var _ = require('underscore');
-var Filter = require('pryv').Filter;
-
-var Pryv = require('pryv');
-
-Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
-  get: function () { return this.connection.serialId + '>>' + this.id; }
-});
-Object.defineProperty(Pryv.Event.prototype, 'serialId', {
-  get: function () { return this.stream.serialId + '>>' + this.id; }
-});
-
-
-var BrowserFilter = module.exports = function (browser) {
-  this.browser = browser;
-  this._showOnlyStreams = null; // object that contains streams to display (from multiple connections)
-  this.hiddenStreams = {};
-  this.eventListeners = {};
-  this._initEventListeners();
-  this._showConnections = {}; // serialIds / connection
-
-  this.currentEvents = {};
-
-  this.tags = null;
-  this._fromST = null;
-  this._toST = null;
-};
-
+},{"underscore":2}],7:[function(require,module,exports){
 /**
- * Create ah-hoc filter for this connection
- * @private
+ * The main file.
  */
-BrowserFilter.prototype._getFilterFor = function (/*connectionKey*/) {
-
-  return nullFilter;
-};
-var nullFilter = new Filter({limit : 2000});
-
-
-
-
-
-//----------------------- event management ----------------------//
-
-BrowserFilter.SIGNAL = {
-  STREAM : {},
-  EVENT : {},
-  BATCH : {}
+module.exports = {
+  Connection : require('./Connection.js'),
+  Event : require('./Event.js'),
+  Stream : require('./Stream.js'),
+  Filter : require('./Filter.js'),
+  System : require('./system/System.js'),
+  Access: require('./Access.js'),
+  Utility: require('./utility/Utility.js')
 };
 
-
-BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
-
-/** called when a batch of changes is expected, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.BEGIN = 'beginBatch';
-/** called when a batch of changes is done, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.DONE = 'doneBatch';
-
-/** called when some streams are hidden, content: Array of Stream**/
-BrowserFilter.SIGNAL.STREAM.HIDE = 'hideStream';
-BrowserFilter.SIGNAL.STREAM.SHOW = 'hideShow';
-/** called when some eventsEnterScope, content: {reason: one of .., content: array of Event }**/
-BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
-BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
-BrowserFilter.SIGNAL.EVENT.CHANGE = 'eventChange';
-
-BrowserFilter.REASON = { EVENT : {
-  SCOPE_ENTER : {},
-  SCOPE_LEAVE : {}
-} };
-
-BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
-BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM = 'focusOnStream';
-// may happend when several refresh requests overlaps
-BrowserFilter.REASON.FORCE = 'forced';
-/**
- * Init all event listeners array
- * @private
- */
-BrowserFilter.prototype._initEventListeners = function () {
-  _.each(_.keys(BrowserFilter.SIGNAL), function (namespace) {
-    _.each(_.keys(BrowserFilter.SIGNAL[namespace]), function (key) {
-      this.eventListeners[BrowserFilter.SIGNAL[namespace][key]] = [];
-    }, this);
-  }, this);
-};
-
-
-
-/**
- * Add an event listener
- * @param signal one of  BrowserFilter.SIGNAL.*.*
- * @param callback function(content) .. content vary on each signal.
- * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
- * @return the callback function for further reference
- */
-BrowserFilter.prototype.addEventListener = function (signal, callback) {
-  this.eventListeners[signal].push(callback);
-  return callback;
-};
-
-
-/**
- * remove the callback matching this signal
- */
-BrowserFilter.prototype.removeEventListener = function (signal, callback) {
-  for (var i = 0; i < this.eventListeners[signal].length; i++) {
-    if (this.eventListeners[signal][i] === callback) {
-      this.eventListeners[signal][i] = null;
-    }
-  }
-};
-
-
-/**
- * A changes occurred on the filter
- */
-BrowserFilter.prototype.fireEvent = function (signal, content, thisArg) {
-  console.log('BrowserFilter.FireEvent : ' + signal);
-  _.each(this.eventListeners[signal], function (callback) {
-    if (callback !== null &&
-      BrowserFilter.UNREGISTER_LISTENER === callback.call(thisArg, content)) {
-      this.removeEventListener(signal, callback);
-    }
-  }, this);
-};
-
-
-/**
- * start a batch process
- * @return an object where you have to call stop when done
- */
-BrowserFilter.prototype.startBatch = function () {
-  var batch = {
-    id : (new Date()).getTime() + 'M',
-    filter : this,
-    done : function () {
-      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id);
-    }
-  };
-  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id);
-  return batch;
-};
-
-
-// ----------------------------- EVENTS --------------------------- //
-
-/**
- * Return true if this event matches the filter
- * @param stream object
- * @returns Boolean
- */
-BrowserFilter.prototype.eventMatchesFilter = function (event) {
-  return (
-    this.streamMatchesFilter(event.stream)
-    // TODO && TIME
-    );
-};
-
-// ----------------------------- STREAMS -------------------------- //
-
-/**
- * Return true if this stream matches the filter
- * @param stream object
- * @returns Boolean
- */
-BrowserFilter.prototype.streamMatchesFilter = function (stream) {
-  if (! this.connectionMatchesFilter(stream.connection)) { return false; }
-
-  if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
-  if (! this._showOnlyStreams) { return true; }
-  return _.has(this._showOnlyStreams, stream.serialId);
-};
-
-/**
- * The the streams to display
- * @param stream object or array of Streams (null) to show all
- * @returns Boolean
- */
-BrowserFilter.prototype.showOnlyStreams = function (streams) {
-  if (streams === null) {
-    if (this._showOnlyStreams === null) { return; } // nothing to do
-  }
-
-  var streamsToLoad = []; // for streams that was not in before
-
-  if (! streams) {
-    this._showOnlyStreams = null;
-  } else {
-    if (!_.isArray(streams)) { streams = [streams]; }
-
-    _.each(streams, function (stream) {
-
-      if (! this.streamMatchesFilter(stream)) {
-        streamsToLoad.push(stream);
-      }
-
-      if (_.has(this.hiddenStreams, stream.serialId)) {
-        delete this.hiddenStreams[stream.serialId];
-      }
-      if (this._showOnlyStreams === null) {
-        this._showOnlyStreams = {};
-      }
-      if (! _.has(this._showOnlyStreams, stream.serialId)) {
-        this._showOnlyStreams[stream.serialId] = stream;
-      }
-
-    }, this);
-  }
-
-
-  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM);
-
-};
-
-BrowserFilter.prototype._refreshContentACTUAL = 0;
-/**
- *
- * @param reason  one of BrowserFilter.REASON.*
- * @param focusOn  .. info for further optimization
- */
-BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
-  if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
-    BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
-    console.log('Skiping refresh request because already one on course ' + reason);
-  }
-  BrowserFilter.prototype._refreshContentACTUAL = 1;
-
-
-  // we can process leaving events locally
-
-  var eventsLeavingScope = [];
-  // pass through all current events and remove the one not matching current Streams
-  _.each(_.values(this.currentEvents), function (event) {
-    if (! this.eventMatchesFilter(event)) {
-      eventsLeavingScope.push(event);
-      delete this.currentEvents[event.serialId];
-    }
-  }.bind(this));
-
-
-  this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
-      events: eventsLeavingScope});
-
-
-  var connectionsTodo = _.keys(this._showConnections).length;
-  var that = this;
-  function doneOneConnection(events) {
-    var eventsMatchedFromModel = []; // used to check if events left form model
-    var eventsEnteringScope = [];
-
-
-    _.each(events, function (event) { // for each event
-
-      if (! that.eventMatchesFilter(event)) {
-        console.error('!! Error !! BrowserFilter.refreshContent, ' +
-          ' got an event not matching the filter): ' + event.serialId);
-      }
-
-      if (_.has(that.currentEvents, event)) {
-        eventsMatchedFromModel.push(event);
-      } else {
-        eventsEnteringScope.push(event);
-        that.currentEvents[event.serialId] = event; // add to currently displayed events
-      }
-
-    });
-
-
-    // ---------- OK DONE
-    connectionsTodo--;
-    if (connectionsTodo <= 0) {  // finished processing all connections
-      // --- ################   ending
-      // should we go for another loop?
-      if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
-        console.log('Refreshing with force reason');
-        BrowserFilter.prototype._refreshContentACTUAL = 0;
-        that.refreshContent(BrowserFilter.REASON.FORCE);
-      }
-      BrowserFilter.prototype._refreshContentACTUAL = 0;
-    }
-  }
-
-  // do we have new events ?
-  _.each(_.keys(this._showConnections), function (connectionKey) { // for each connection
-    this._getEventsForConnection(connectionKey, function (error, events) {  // get events
-
-
-      doneOneConnection(events);
-
-    }.bind(this));
-  }.bind(this));
-
-
-
-
-
-
-};
-
-// ----------------------------- CONNECTIONS -------------------------- //
-
-
-/**
- * get all events that match this filter
- */
-BrowserFilter.prototype.showConnection = function (connectionKey) {
-  if (_.has(this._showConnections, connectionKey)) {
-    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
-    return;
-  }
-  if (! this.browser.connections.get(connectionKey)) { // TODO error management
-    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
-    return;
-  }
-  this._showConnections[connectionKey] = true;
-
-  var self = this;
-  this._getEventsForConnection(connectionKey,
-    function (error, result) {
-      if (error) { console.log(error); } // TODO handle
-
-      var eventThatEnter = [];
-      _.each(result, function (event) {
-        if (! _.has(self.currentEvents, event.serialId)) {
-          eventThatEnter.push(event);
-          self.currentEvents[event.serialId] = event;
-        }
-      });
-
-      self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-        {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-          events: result});
-    }
-  );
-};
-
-/**
- * return true if connection matches filter
- * @param eventListener
- */
-BrowserFilter.prototype.connectionMatchesFilter = function (connection) {
-   return _.has(this._showConnections, connection.serialId);
-};
-
-
-
-
-/**
- * get all events actually matching this filter
- */
-BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
-  eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-      events: _.values(this.currentEvents)});
-};
-
-BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {
-  var self = this;
-  self.browser.connections.get(connectionKey, function (error, connection) { // when ready
-    if (error) { console.log(error); } // TODO handle
-    connection.events.get(self._getFilterFor(connectionKey), null,   callback); // get events
-  });
-};
-
-})()
-},{"pryv":7,"underscore":2}],5:[function(require,module,exports){
-
-
-var RootNode = require('./RootNode.js');
-var BrowserFilter = require('../browser/BrowserFilter.js');
-
-var _ = require('underscore');
-
-var TreeMap = module.exports = function (browser) {
-  this.browser = browser;
-  this.root = new RootNode();
-
-
-
-  //----------- init the browser with all events --------//
-  this.eventEnterScope = function (content) {
-    _.each(content.events, function (event) {
-      this.root.eventEnterScope(event, content.reason, function () {});
-    }, this);
-    this.root._createView();
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-  }.bind(this);
-
-  this.eventLeaveScope = function (content) {
-    _.each(content.events, function (event) {
-      this.root.eventLeaveScope(event, content.reason, function () {});
-    }, this);
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-  }.bind(this);
-
-
-  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
-//--------- register the TreeMap event Listener ----------//
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    this.eventEnterScope
-  );
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    this.eventLeaveScope);
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.CHANGE,
-    this.root.eventChange);
-};
-
-
-TreeMap.prototype.destroy = function () {
-  this.browser.activeFilter.removeEventListener('eventEnterScope', this.root.eventEnterScope);
-  this.browser.activeFilter.removeEventListener('eventLeaveScope', this.root.eventLeaveScope);
-  this.browser.activeFilter.removeEventListener('eventChange', this.root.eventChange);
-};
-
-
-},{"../browser/BrowserFilter.js":4,"./RootNode.js":15,"underscore":2}],6:[function(require,module,exports){
+},{"./Access.js":14,"./Connection.js":9,"./Event.js":10,"./Filter.js":12,"./Stream.js":11,"./system/System.js":13,"./utility/Utility.js":15}],5:[function(require,module,exports){
 
 var _ = require('underscore');
 var Pryv = require('pryv');
@@ -3433,7 +3030,480 @@ ConnectionsHandler.prototype.get = function (connectionSerialId, andInitializeCa
 
 
 
-},{"pryv":7,"underscore":2}],14:[function(require,module,exports){
+},{"pryv":7,"underscore":2}],6:[function(require,module,exports){
+
+
+var RootNode = require('./RootNode.js');
+var SIGNAL = require('../browser/Messages').BrowserFilter.SIGNAL;
+var _ = require('underscore');
+
+var TreeMap = module.exports = function (browser) {
+  this.browser = browser;
+  this.root = new RootNode();
+
+
+
+  //----------- init the browser with all events --------//
+  this.eventEnterScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventEnterScope(event, content.reason, function () {});
+    }, this);
+    this.root._createView();
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+  }.bind(this);
+
+  this.eventLeaveScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventLeaveScope(event, content.reason, function () {});
+    }, this);
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+  }.bind(this);
+
+  this.eventChange = function (/*context*/) {
+
+  }.bind(this);
+
+  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
+//--------- register the TreeMap event Listener ----------//
+  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+    this.eventEnterScope
+  );
+  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+    this.eventLeaveScope);
+  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
+    this.eventChange);
+};
+
+
+TreeMap.prototype.destroy = function () {
+  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+    this.eventEnterScope);
+  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+    this.eventLeaveScope);
+  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
+    this.eventChange);
+};
+
+
+},{"../browser/Messages":8,"./RootNode.js":16,"underscore":2}],4:[function(require,module,exports){
+(function(){
+var _ = require('underscore');
+var Filter = require('pryv').Filter;
+var Pryv = require('pryv');
+var MSGs = require('./Messages').BrowserFilter;
+
+Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
+  get: function () { return this.connection.serialId + '>>' + this.id; }
+});
+Object.defineProperty(Pryv.Event.prototype, 'serialId', {
+  get: function () { return this.stream.serialId + '>>' + this.id; }
+});
+
+
+var BrowserFilter = module.exports = function (browser) {
+  this.browser = browser;
+  this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
+  this.hiddenStreams = {};
+  this.eventListeners = {};
+  this._initEventListeners();
+  this._connections = {}; // serialIds / connection
+
+  this.currentEvents = {};
+
+  this.tags = null;
+  this._fromST = null;
+  this._toST = null;
+};
+
+/**
+ * Create ah-hoc filter for this connection
+ * @private
+ */
+BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
+
+  return nullFilter;
+};
+var nullFilter = new Filter({limit : 2000000});
+
+
+
+
+
+//----------------------- event management ----------------------//
+
+
+BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
+
+/**
+ * Init all event listeners array
+ * @private
+ */
+BrowserFilter.prototype._initEventListeners = function () {
+  _.each(_.values(MSGs.SIGNAL), function (value) {
+    this.eventListeners[value] = [];
+  }.bind(this));
+};
+
+
+
+/**
+ * Add an event listener
+ * @param signal one of  MSGs.SIGNAL.*.*
+ * @param callback function(content) .. content vary on each signal.
+ * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
+ * @return the callback function for further reference
+ */
+BrowserFilter.prototype.addEventListener = function (signal, callback) {
+  this.eventListeners[signal].push(callback);
+  return callback;
+};
+
+
+/**
+ * remove the callback matching this signal
+ */
+BrowserFilter.prototype.removeEventListener = function (signal, callback) {
+  for (var i = 0; i < this.eventListeners[signal].length; i++) {
+    if (this.eventListeners[signal][i] === callback) {
+      this.eventListeners[signal][i] = null;
+    }
+  }
+};
+
+
+/**
+ * A changes occurred on the filter
+ * @param signal
+ * @param content
+ * @param batch
+ * @private
+ */
+BrowserFilter.prototype._fireEvent = function (signal, content, batch) {
+  var batchId = batch ? batch.id : null;
+  console.log('BrowserFilter.FireEvent : ' + signal + ' batch: ' + batchId);
+  _.each(this.eventListeners[signal], function (callback) {
+    if (callback !== null &&
+      BrowserFilter.UNREGISTER_LISTENER === callback(content, batchId)) {
+      this.removeEventListener(signal, callback);
+    }
+  }, this);
+};
+
+
+var batchSerial = 0;
+/**
+ * start a batch process
+ * @return an object where you have to call stop when done
+ */
+BrowserFilter.prototype.startBatch = function () {
+  var batch = {
+    id : 'C' + batchSerial++,
+    filter : this,
+    waitFor : 1,
+    waitForMeToFinish : function (name) {
+      var batch = this;
+      batch.waitFor++;
+      return {
+        done : function () {
+          batch.done(name);
+        }
+      };
+    },
+    done : function (name) {
+      this.waitFor--;
+      if (this.waitFor === 0) {
+        this.filter._fireEvent(MSGs.SIGNAL.BATCH_DONE, this.id, this);
+      }
+      if (this.waitFor < 0) {
+        console.error('This batch has been done() to much :' + name);
+      }
+    }
+  };
+  this._fireEvent(MSGs.SIGNAL.BATCH_BEGIN, batch.id, batch);
+  return batch;
+};
+
+
+// ----------------------------- EVENTS --------------------------- //
+
+/**
+ * Return true if this event matches the filter
+ * @param stream object
+ * @returns Boolean
+ */
+BrowserFilter.prototype.matchesEvent = function (event) {
+  return (
+    this.matchesStream(event.stream)
+    // TODO && TIME
+    );
+};
+
+// ----------------------------- STREAMS -------------------------- //
+
+/**
+ * Return true if this stream matches the filter
+ * @param stream object
+ * @returns Boolean
+ */
+BrowserFilter.prototype.matchesStream = function (stream) {
+  if (! this.matchesConnection(stream.connection)) { return false; }
+
+  if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
+  if (! this._showOnlyStreams) { return true; }
+  return _.has(this._showOnlyStreams, stream.serialId);
+};
+
+/**
+ * The the streams to display
+ * @param stream object or array of Streams (null) to show all
+ * @returns Boolean
+ */
+BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
+  if (streams === null) {
+    if (this._showOnlyStreams === null) { return; } // nothing to do
+  }
+
+  var streamsToLoad = []; // for streams that was not in before
+
+  if (! streams) {
+    this._showOnlyStreams = null;
+  } else {
+    if (!_.isArray(streams)) { streams = [streams]; }
+
+    _.each(streams, function (stream) {
+
+      if (! this.matchesStream(stream)) {
+        streamsToLoad.push(stream);
+      }
+
+      if (_.has(this.hiddenStreams, stream.serialId)) {
+        delete this.hiddenStreams[stream.serialId];
+      }
+      if (this._showOnlyStreams === null) {
+        this._showOnlyStreams = {};
+      }
+      if (! _.has(this._showOnlyStreams, stream.serialId)) {
+        this._showOnlyStreams[stream.serialId] = stream;
+      }
+
+    }, this);
+  }
+
+  this.refreshContent(MSGs.REASON.EVENT_SCOPE_LEAVE_FOCUS_ON_STREAM,
+    {noEnter : true}, batch);
+
+};
+
+BrowserFilter.prototype._refreshContentACTUAL = 0;
+/**
+ *
+ * @param reason  one of BrowserFilter.REASON.*
+ * @param focusOn  .. info for further optimization
+ */
+BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
+  batch = batch || this.startBatch();
+  focusOn = focusOn || {};
+
+  var that = this;
+
+  if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
+    BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
+    console.log('Skiping refresh request because already one on course ' + reason);
+  }
+  BrowserFilter.prototype._refreshContentACTUAL = 1;
+
+
+  // done function can be called any time to exit
+
+  function finishedRefresh() {
+    batch.done();
+    // --- ################   ending
+    // should we go for another loop?
+
+
+    if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
+      console.log('Refreshing with force reason');
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+      that.refreshContent(BrowserFilter.REASON.FORCE);
+    } else {
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+    }
+  }
+
+
+
+
+  // we can process leaving events locally
+
+  var eventsLeavingScope = [];
+  // pass through all current events and remove the one not matching current Streams
+  _.each(_.values(this.currentEvents), function (event) {
+    if (! this.matchesEvent(event)) {
+      eventsLeavingScope.push(event);
+      delete this.currentEvents[event.serialId];
+    }
+  }.bind(this));
+
+
+  this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_LEAVE,
+    {reason: reason, events: eventsLeavingScope}, batch);
+
+
+
+  // ------- can some event enter scope?
+
+  if (_.has(focusOn, 'noEnter')) {  // done
+    return finishedRefresh();
+  }
+
+
+  // ------- connections refresh
+
+
+  var connectionsTodo = [];
+  _.each(_.values(this._connections), function (connection) { // for each connection
+    if (this.matchesConnection(connection)) {
+      connectionsTodo.push(connection.serialId);
+    }
+  }.bind(this));
+
+
+  var connectionsTodoCounter = connectionsTodo.length;
+  // if no connection then EXIT
+  if (connectionsTodoCounter === 0) {
+    batch.done();
+    return;
+  }
+
+
+
+  function doneOneConnection(events) {  //  find events entering and leavings
+    var eventsMatchedFromModel = []; // used to check if events left form model
+    var eventsEnteringScope = []; // events that enter
+
+    _.each(events, function (event) { // for each event
+
+      if (! that.matchesEvent(event)) {
+        console.error('!! Error !! BrowserFilter.refreshContent, ' +
+          ' got an event not matching the filter): ' + event.serialId);
+      } else {
+
+        if (_.has(that.currentEvents, event)) {
+          eventsMatchedFromModel.push(event);
+        } else {
+          eventsEnteringScope.push(event);
+          that.currentEvents[event.serialId] = event; // add to currently displayed events
+        }
+
+      }
+
+    });
+
+
+    // ---------- OK DONE
+    connectionsTodoCounter--;
+    if (connectionsTodoCounter <= 0) {  // finished processing all connections
+      return finishedRefresh();
+    }
+  }
+
+  // do we have new events ?
+  _.each(connectionsTodo, function (connectionSerialId) { // for each connection
+    this._getEventsForConnectionSerialId(connectionSerialId, function (error, events) { //get events
+      doneOneConnection(events);
+    }.bind(this));
+  }.bind(this));
+
+};
+
+// ----------------------------- CONNECTIONS -------------------------- //
+
+
+/**
+ * get all events that match this filter
+ */
+BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
+  var batchWaitForMe = batch ?
+    batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
+  if (_.has(this._connections, connectionSerialId)) {
+    console.log('Warning BrowserFilter.addConnection, already activated: ' + connectionSerialId);
+    return;
+  }
+  var connection = this.browser.connections.get(connectionSerialId);
+  if (! connection) { // TODO error management
+    console.log('BrowserFilter.addConnection cannot find connection: ' + connectionSerialId);
+    return;
+  }
+  this._connections[connectionSerialId] = connection;
+
+  var self = this;
+  this._getEventsForConnectionSerialId(connectionSerialId,
+    function (error, result) {
+      if (error) { console.log(error); } // TODO handle
+
+      var eventThatEnter = [];
+      _.each(result, function (event) {
+        if (! _.has(self.currentEvents, event.serialId)) {
+          eventThatEnter.push(event);
+          self.currentEvents[event.serialId] = event;
+        }
+      });
+
+      self._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+        {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
+          events: result}, batch);
+      if (batchWaitForMe) { batchWaitForMe.done(); }
+    }
+  );
+};
+
+/**
+ * return true if connection matches filter
+ * @param eventListener
+ */
+BrowserFilter.prototype.matchesConnection = function (connection) {
+  // if _showOnly is defined, only consider matching connection
+  if (this._showOnlyStreams !== null) {
+    var inStreams = false;
+    for (var i = 0, streams = _.values(this._showOnlyStreams);
+         i < streams.length && ! inStreams; i++) {
+      inStreams = streams[i].connection.serialId === connection.serialId;
+    }
+    if (! inStreams) { return false; }
+  }
+  return _.has(this._connections, connection.serialId);
+};
+
+
+/**
+ * get all events actually matching this filter
+ */
+BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
+  eventListener(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+    {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
+      events: _.values(this.currentEvents)});
+};
+
+BrowserFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
+  var self = this;
+  self.browser.connections.get(connectionSerialId, function (error, connection) { // when ready
+    if (error) { console.log(error); } // TODO handle
+    connection.events.get(self._getFilterFor(connectionSerialId), null,   callback); // get events
+  });
+};
+
+})()
+},{"./Messages":8,"pryv":7,"underscore":2}],14:[function(require,module,exports){
 var System = require('./system/System.js');
 
 
@@ -3500,7 +3570,7 @@ function isBrowser() {
 
 module.exports = isBrowser() ?  require('./System-browser.js') : require('./System-node.js');
 
-},{"./System-browser.js":17,"./System-node.js":16}],17:[function(require,module,exports){
+},{"./System-browser.js":17,"./System-node.js":18}],17:[function(require,module,exports){
 //file: system browser
 
 
@@ -3665,7 +3735,7 @@ var _initXHR = function () {
 
 
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var ConnectionNode = require('./ConnectionNode');
 var _ = require('underscore');
@@ -3725,31 +3795,7 @@ var RootNode = module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":19,"./TreeNode":18,"backbone":3,"underscore":2}],8:[function(require,module,exports){
-
-var _ = require('underscore');
-/**
- *
- * @type {Function}
- * @constructor
- */
-var Event = module.exports = function (connection, data) {
-  this.connection = connection;
-  _.extend(this, data);
-};
-
-
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    if (! this.connection.datastore) {
-      throw new Error('Activate localStorage to get automatic stream mapping. Or use StreamId');
-    }
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
-
-},{"underscore":2}],9:[function(require,module,exports){
+},{"./ConnectionNode":20,"./TreeNode":19,"backbone":3,"underscore":2}],11:[function(require,module,exports){
 
 var _ = require('underscore');
 
@@ -3807,7 +3853,7 @@ Object.defineProperty(Stream.prototype, 'ancestors', {
   set: function () { throw new Error('Stream.ancestors property is read only'); }
 });
 
-},{"underscore":2}],11:[function(require,module,exports){
+},{"underscore":2}],9:[function(require,module,exports){
 var _ = require('underscore'),
   System = require('./system/System.js'),
   ConnectionEvents = require('./connection/Events.js'),
@@ -4001,7 +4047,31 @@ Object.defineProperty(Connection.prototype, 'shortId', {
   set: function () { throw new Error('Connection.shortId property is read only'); }
 });
 
-},{"./Datastore.js":21,"./connection/Events.js":20,"./connection/Streams.js":22,"./system/System.js":13,"underscore":2}],10:[function(require,module,exports){
+},{"./Datastore.js":22,"./connection/Events.js":23,"./connection/Streams.js":21,"./system/System.js":13,"underscore":2}],10:[function(require,module,exports){
+
+var _ = require('underscore');
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function (connection, data) {
+  this.connection = connection;
+  _.extend(this, data);
+};
+
+
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    if (! this.connection.datastore) {
+      throw new Error('Activate localStorage to get automatic stream mapping. Or use StreamId');
+    }
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
+
+},{"underscore":2}],12:[function(require,module,exports){
 var _ = require('underscore');
 
 var Filter = module.exports = function (settings) {
@@ -4031,7 +4101,7 @@ Filter.prototype.focusedOnSingleStream = function () {
   return null;
 };
 
-},{"underscore":2}],19:[function(require,module,exports){
+},{"underscore":2}],20:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -4156,7 +4226,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
-},{"./StreamNode":23,"./TreeNode":18,"underscore":2}],18:[function(require,module,exports){
+},{"./StreamNode":24,"./TreeNode":19,"underscore":2}],19:[function(require,module,exports){
 var _ = require('underscore'),
 // $ = require('node-jquery'),
   NodeView = require('../view/NodeView.js'),
@@ -4442,7 +4512,7 @@ _.extend(TreeNode.prototype, {
   }
 });
 
-},{"../model/NodeModel.js":24,"../utility/treemap.js":25,"../view/NodeView.js":26,"underscore":2}],12:[function(require,module,exports){
+},{"../model/NodeModel.js":25,"../utility/treemap.js":26,"../view/NodeView.js":27,"underscore":2}],15:[function(require,module,exports){
 var _ = require('underscore');
 
 exports.mergeAndClean = function (sourceA, sourceB) {
@@ -4473,7 +4543,7 @@ exports.getQueryParametersString = function (data) {
   }, this).join('&');
 };
 
-},{"underscore":2}],27:[function(require,module,exports){
+},{"underscore":2}],28:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4499,33 +4569,7 @@ PositionsEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../EventsNode":28}],29:[function(require,module,exports){
-var EventsNode = require('../EventsNode');
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var NotesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'NotesEventsNode',
-    getWeight: function () {
-      return 1;
-    }
-
-  });
-
-// we accept all kind of events
-NotesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'note/txt');
-};
-
-
-
-},{"../EventsNode":28}],30:[function(require,module,exports){
+},{"../EventsNode":29}],30:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4551,7 +4595,7 @@ PicturesEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../EventsNode":28}],31:[function(require,module,exports){
+},{"../EventsNode":29}],31:[function(require,module,exports){
 var EventsNode = require('../EventsNode');
 
 /**
@@ -4577,7 +4621,33 @@ GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
 };
 
 
-},{"../EventsNode":28}],21:[function(require,module,exports){
+},{"../EventsNode":29}],32:[function(require,module,exports){
+var EventsNode = require('../EventsNode');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var NotesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'NotesEventsNode',
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+NotesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'note/txt');
+};
+
+
+
+},{"../EventsNode":29}],22:[function(require,module,exports){
 var _ = require('underscore');
 
 var Datastore = module.exports = function (connection) {
@@ -4641,11 +4711,11 @@ Datastore.prototype.getStreamById = function (streamId, test) {
   return result;
 };
 
-},{"underscore":2}],24:[function(require,module,exports){
+},{"underscore":2}],25:[function(require,module,exports){
 var Backbone = require('backbone');
 
 var NodeModel = module.exports = Backbone.Model.extend({ });
-},{"backbone":3}],25:[function(require,module,exports){
+},{"backbone":3}],26:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -4837,7 +4907,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":2}],26:[function(require,module,exports){
+},{"underscore":2}],27:[function(require,module,exports){
 var  Marionette = require('backbone.marionette');
  /* TODO This a the view for each node, with dynamic animation
  we can't re-render on change because animation would no be done
@@ -4920,7 +4990,7 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":32}],23:[function(require,module,exports){
+},{"backbone.marionette":33}],24:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -5106,88 +5176,7 @@ StreamNode.registeredEventNodeTypes = {
   'Pictures' : require('./eventsNode/PicturesEventsNode.js'),
   'Generic' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":18,"./eventsNode/GenericEventsNode.js":31,"./eventsNode/NotesEventsNode.js":29,"./eventsNode/PicturesEventsNode.js":30,"./eventsNode/PositionsEventsNode.js":27,"underscore":2}],20:[function(require,module,exports){
-
-var Utility = require('../utility/Utility.js'),
-  _ = require('underscore'),
-  Event = require('../Event');
-
-var Events = module.exports = function (conn) {
-  this.conn = conn;
-};
-
-Events.prototype.get = function (filter, deltaFilter, callback) {
-  //TODO handle caching
-  var result = [];
-  this._get(filter, deltaFilter, function (error, eventList) {
-    _.each(eventList, function (eventData) {
-      result.push(new Event(this.conn, eventData));
-    }.bind(this));
-    callback(error, result);
-  }.bind(this));
-};
-
-Events.prototype._get = function (filter, deltaFilter, callback, context) {
-  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
-  var url = '/events?' + Utility.getQueryParametersString(tParams);
-  this.conn.request('GET', url, callback, null, context);
-};
-
-
-//TODO check that we can really override method "create()" of object
-/**
- *
- * @param {Array} events
- */
-Events.prototype.create = function (events, callback, context) {
-  var url = '/events/batch';
-  _.each(events, function (event, index) {
-    event.tempRefId = 'temp_ref_id_' + index;
-  });
-  this.conn.request('POST', url, function (err, result) {
-    _.each(events, function (event) {
-      event.id = result[event.tempRefId].id;
-    });
-    callback(err, result);
-  }, events, context);
-};
-
-Events.prototype.update = function (event, callback, context) {
-  var url = '/events/' + event.id;
-  this.conn.request('PUT', url, callback, null, context);
-};
-
-//TODO: rewrite once API for monitoring is sorted out
-Events.prototype.monitor = function (filter, callback) {
-  var that = this;
-  var lastSynchedST = -1;
-
-  this.conn.monitor(filter, function (signal, payload) {
-    switch (signal) {
-    case 'connect':
-      // set current serverTime as last update
-      lastSynchedST = that.conn.getServerTime();
-      callback(signal, payload);
-      break;
-    case 'event' :
-      that.conn.events.get(filter, function (error, result) {
-        _.each(result, function (e) {
-          if (e.modified > lastSynchedST)  {
-            lastSynchedST = e.modified;
-          }
-        });
-        callback('events', result);
-      }, { modifiedSince : lastSynchedST});
-      break;
-    case 'error' :
-      callback(signal, payload);
-      break;
-    }
-
-  });
-};
-
-},{"../Event":8,"../utility/Utility.js":12,"underscore":2}],22:[function(require,module,exports){
+},{"./TreeNode":19,"./eventsNode/GenericEventsNode.js":31,"./eventsNode/NotesEventsNode.js":32,"./eventsNode/PicturesEventsNode.js":30,"./eventsNode/PositionsEventsNode.js":28,"underscore":2}],21:[function(require,module,exports){
 var _ = require('underscore'),
     Utility = require('../utility/Utility.js'),
     Stream = require('../Stream.js');
@@ -5375,7 +5364,88 @@ Streams.Utils = {
 
 };
 
-},{"../Stream.js":9,"../utility/Utility.js":12,"underscore":2}],16:[function(require,module,exports){
+},{"../Stream.js":11,"../utility/Utility.js":15,"underscore":2}],23:[function(require,module,exports){
+
+var Utility = require('../utility/Utility.js'),
+  _ = require('underscore'),
+  Event = require('../Event');
+
+var Events = module.exports = function (conn) {
+  this.conn = conn;
+};
+
+Events.prototype.get = function (filter, deltaFilter, callback) {
+  //TODO handle caching
+  var result = [];
+  this._get(filter, deltaFilter, function (error, eventList) {
+    _.each(eventList, function (eventData) {
+      result.push(new Event(this.conn, eventData));
+    }.bind(this));
+    callback(error, result);
+  }.bind(this));
+};
+
+Events.prototype._get = function (filter, deltaFilter, callback, context) {
+  var tParams = Utility.mergeAndClean(filter.settings, deltaFilter);
+  var url = '/events?' + Utility.getQueryParametersString(tParams);
+  this.conn.request('GET', url, callback, null, context);
+};
+
+
+//TODO check that we can really override method "create()" of object
+/**
+ *
+ * @param {Array} events
+ */
+Events.prototype.create = function (events, callback, context) {
+  var url = '/events/batch';
+  _.each(events, function (event, index) {
+    event.tempRefId = 'temp_ref_id_' + index;
+  });
+  this.conn.request('POST', url, function (err, result) {
+    _.each(events, function (event) {
+      event.id = result[event.tempRefId].id;
+    });
+    callback(err, result);
+  }, events, context);
+};
+
+Events.prototype.update = function (event, callback, context) {
+  var url = '/events/' + event.id;
+  this.conn.request('PUT', url, callback, null, context);
+};
+
+//TODO: rewrite once API for monitoring is sorted out
+Events.prototype.monitor = function (filter, callback) {
+  var that = this;
+  var lastSynchedST = -1;
+
+  this.conn.monitor(filter, function (signal, payload) {
+    switch (signal) {
+    case 'connect':
+      // set current serverTime as last update
+      lastSynchedST = that.conn.getServerTime();
+      callback(signal, payload);
+      break;
+    case 'event' :
+      that.conn.events.get(filter, function (error, result) {
+        _.each(result, function (e) {
+          if (e.modified > lastSynchedST)  {
+            lastSynchedST = e.modified;
+          }
+        });
+        callback('events', result);
+      }, { modifiedSince : lastSynchedST});
+      break;
+    case 'error' :
+      callback(signal, payload);
+      break;
+    }
+
+  });
+};
+
+},{"../Event":10,"../utility/Utility.js":15,"underscore":2}],18:[function(require,module,exports){
 //file: system node
 
 var socketIO = require('socket.io-client');
@@ -5467,7 +5537,7 @@ exports.request = function (pack)  {
   req.end();
 };
 
-},{"socket.io-client":33}],33:[function(require,module,exports){
+},{"socket.io-client":34}],34:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -9342,7 +9412,7 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 })()
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     NodeModel = require('../model/NodeModel.js'),
   NotesView = require('../view/NotesView.js'),
@@ -9374,7 +9444,7 @@ var EventsNode = module.exports = TreeNode.implement(
       this.events[event.id] = event;
       this.eventsNbr++;
       this.eventDisplayed = event;
-      this._refreshEventModel();
+     // this._refreshEventModel();
       if (callback) {
         callback(null);
       }
@@ -9386,7 +9456,7 @@ var EventsNode = module.exports = TreeNode.implement(
       if (this.eventDisplayed === event) {
         this.eventDisplayed = _.first(_.values(this.events));
       }
-      this._refreshEventModel();
+    //  this._refreshEventModel();
       if (_.size(this.events) === 0) {
         this.view.close();
       }
@@ -9433,7 +9503,7 @@ EventsNode.acceptThisEventType = function () {
 };
 
 
-},{"../model/NodeModel.js":24,"../view/NotesView.js":34,"./TreeNode":18,"underscore":2}],34:[function(require,module,exports){
+},{"../model/NodeModel.js":25,"../view/NotesView.js":35,"./TreeNode":19,"underscore":2}],35:[function(require,module,exports){
 var  Marionette = require('backbone.marionette');
 
 var NodeView = module.exports = Marionette.ItemView.extend({
@@ -9475,7 +9545,7 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":32}],32:[function(require,module,exports){
+},{"backbone.marionette":33}],33:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -11437,7 +11507,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":35,"backbone.babysitter":36,"backbone.wreqr":37,"underscore":2}],35:[function(require,module,exports){
+},{"backbone":36,"backbone.babysitter":38,"backbone.wreqr":37,"underscore":2}],36:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -13011,187 +13081,7 @@ _.extend(Marionette.Module, {
 }).call(this);
 
 })()
-},{"underscore":2}],36:[function(require,module,exports){
-// Backbone.BabySitter
-// -------------------
-// v0.0.6
-//
-// Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.
-// Distributed under MIT license
-//
-// http://github.com/babysitterjs/backbone.babysitter
-
-(function (root, factory) {
-  if (typeof exports === 'object') {
-
-    var underscore = require('underscore');
-    var backbone = require('backbone');
-
-    module.exports = factory(underscore, backbone);
-
-  } else if (typeof define === 'function' && define.amd) {
-
-    define(['underscore', 'backbone'], factory);
-
-  } 
-}(this, function (_, Backbone) {
-  "option strict";
-
-  // Backbone.ChildViewContainer
-// ---------------------------
-//
-// Provide a container to store, retrieve and
-// shut down child views.
-
-Backbone.ChildViewContainer = (function(Backbone, _){
-  
-  // Container Constructor
-  // ---------------------
-
-  var Container = function(views){
-    this._views = {};
-    this._indexByModel = {};
-    this._indexByCustom = {};
-    this._updateLength();
-
-    _.each(views, this.add, this);
-  };
-
-  // Container Methods
-  // -----------------
-
-  _.extend(Container.prototype, {
-
-    // Add a view to this container. Stores the view
-    // by `cid` and makes it searchable by the model
-    // cid (and model itself). Optionally specify
-    // a custom key to store an retrieve the view.
-    add: function(view, customIndex){
-      var viewCid = view.cid;
-
-      // store the view
-      this._views[viewCid] = view;
-
-      // index it by model
-      if (view.model){
-        this._indexByModel[view.model.cid] = viewCid;
-      }
-
-      // index by custom
-      if (customIndex){
-        this._indexByCustom[customIndex] = viewCid;
-      }
-
-      this._updateLength();
-    },
-
-    // Find a view by the model that was attached to
-    // it. Uses the model's `cid` to find it.
-    findByModel: function(model){
-      return this.findByModelCid(model.cid);
-    },
-
-    // Find a view by the `cid` of the model that was attached to
-    // it. Uses the model's `cid` to find the view `cid` and
-    // retrieve the view using it.
-    findByModelCid: function(modelCid){
-      var viewCid = this._indexByModel[modelCid];
-      return this.findByCid(viewCid);
-    },
-
-    // Find a view by a custom indexer.
-    findByCustom: function(index){
-      var viewCid = this._indexByCustom[index];
-      return this.findByCid(viewCid);
-    },
-
-    // Find by index. This is not guaranteed to be a
-    // stable index.
-    findByIndex: function(index){
-      return _.values(this._views)[index];
-    },
-
-    // retrieve a view by it's `cid` directly
-    findByCid: function(cid){
-      return this._views[cid];
-    },
-
-    // Remove a view
-    remove: function(view){
-      var viewCid = view.cid;
-
-      // delete model index
-      if (view.model){
-        delete this._indexByModel[view.model.cid];
-      }
-
-      // delete custom index
-      _.any(this._indexByCustom, function(cid, key) {
-        if (cid === viewCid) {
-          delete this._indexByCustom[key];
-          return true;
-        }
-      }, this);
-
-      // remove the view from the container
-      delete this._views[viewCid];
-
-      // update the length
-      this._updateLength();
-    },
-
-    // Call a method on every view in the container,
-    // passing parameters to the call method one at a
-    // time, like `function.call`.
-    call: function(method){
-      this.apply(method, _.tail(arguments));
-    },
-
-    // Apply a method on every view in the container,
-    // passing parameters to the call method one at a
-    // time, like `function.apply`.
-    apply: function(method, args){
-      _.each(this._views, function(view){
-        if (_.isFunction(view[method])){
-          view[method].apply(view, args || []);
-        }
-      });
-    },
-
-    // Update the `.length` attribute on this container
-    _updateLength: function(){
-      this.length = _.size(this._views);
-    }
-  });
-
-  // Borrowing this code from Backbone.Collection:
-  // http://backbonejs.org/docs/backbone.html#section-106
-  //
-  // Mix in methods from Underscore, for iteration, and other
-  // collection related features.
-  var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter', 
-    'select', 'reject', 'every', 'all', 'some', 'any', 'include', 
-    'contains', 'invoke', 'toArray', 'first', 'initial', 'rest', 
-    'last', 'without', 'isEmpty', 'pluck'];
-
-  _.each(methods, function(method) {
-    Container.prototype[method] = function() {
-      var views = _.values(this._views);
-      var args = [views].concat(_.toArray(arguments));
-      return _[method].apply(_, args);
-    };
-  });
-
-  // return the public API
-  return Container;
-})(Backbone, _);
-
-  return Backbone.ChildViewContainer; 
-
-}));
-
-
-},{"backbone":35,"underscore":2}],37:[function(require,module,exports){
+},{"underscore":2}],37:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -13471,5 +13361,185 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":35,"underscore":2}]},{},["3XoGqR"])
+},{"backbone":36,"underscore":2}],38:[function(require,module,exports){
+// Backbone.BabySitter
+// -------------------
+// v0.0.6
+//
+// Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.
+// Distributed under MIT license
+//
+// http://github.com/babysitterjs/backbone.babysitter
+
+(function (root, factory) {
+  if (typeof exports === 'object') {
+
+    var underscore = require('underscore');
+    var backbone = require('backbone');
+
+    module.exports = factory(underscore, backbone);
+
+  } else if (typeof define === 'function' && define.amd) {
+
+    define(['underscore', 'backbone'], factory);
+
+  } 
+}(this, function (_, Backbone) {
+  "option strict";
+
+  // Backbone.ChildViewContainer
+// ---------------------------
+//
+// Provide a container to store, retrieve and
+// shut down child views.
+
+Backbone.ChildViewContainer = (function(Backbone, _){
+  
+  // Container Constructor
+  // ---------------------
+
+  var Container = function(views){
+    this._views = {};
+    this._indexByModel = {};
+    this._indexByCustom = {};
+    this._updateLength();
+
+    _.each(views, this.add, this);
+  };
+
+  // Container Methods
+  // -----------------
+
+  _.extend(Container.prototype, {
+
+    // Add a view to this container. Stores the view
+    // by `cid` and makes it searchable by the model
+    // cid (and model itself). Optionally specify
+    // a custom key to store an retrieve the view.
+    add: function(view, customIndex){
+      var viewCid = view.cid;
+
+      // store the view
+      this._views[viewCid] = view;
+
+      // index it by model
+      if (view.model){
+        this._indexByModel[view.model.cid] = viewCid;
+      }
+
+      // index by custom
+      if (customIndex){
+        this._indexByCustom[customIndex] = viewCid;
+      }
+
+      this._updateLength();
+    },
+
+    // Find a view by the model that was attached to
+    // it. Uses the model's `cid` to find it.
+    findByModel: function(model){
+      return this.findByModelCid(model.cid);
+    },
+
+    // Find a view by the `cid` of the model that was attached to
+    // it. Uses the model's `cid` to find the view `cid` and
+    // retrieve the view using it.
+    findByModelCid: function(modelCid){
+      var viewCid = this._indexByModel[modelCid];
+      return this.findByCid(viewCid);
+    },
+
+    // Find a view by a custom indexer.
+    findByCustom: function(index){
+      var viewCid = this._indexByCustom[index];
+      return this.findByCid(viewCid);
+    },
+
+    // Find by index. This is not guaranteed to be a
+    // stable index.
+    findByIndex: function(index){
+      return _.values(this._views)[index];
+    },
+
+    // retrieve a view by it's `cid` directly
+    findByCid: function(cid){
+      return this._views[cid];
+    },
+
+    // Remove a view
+    remove: function(view){
+      var viewCid = view.cid;
+
+      // delete model index
+      if (view.model){
+        delete this._indexByModel[view.model.cid];
+      }
+
+      // delete custom index
+      _.any(this._indexByCustom, function(cid, key) {
+        if (cid === viewCid) {
+          delete this._indexByCustom[key];
+          return true;
+        }
+      }, this);
+
+      // remove the view from the container
+      delete this._views[viewCid];
+
+      // update the length
+      this._updateLength();
+    },
+
+    // Call a method on every view in the container,
+    // passing parameters to the call method one at a
+    // time, like `function.call`.
+    call: function(method){
+      this.apply(method, _.tail(arguments));
+    },
+
+    // Apply a method on every view in the container,
+    // passing parameters to the call method one at a
+    // time, like `function.apply`.
+    apply: function(method, args){
+      _.each(this._views, function(view){
+        if (_.isFunction(view[method])){
+          view[method].apply(view, args || []);
+        }
+      });
+    },
+
+    // Update the `.length` attribute on this container
+    _updateLength: function(){
+      this.length = _.size(this._views);
+    }
+  });
+
+  // Borrowing this code from Backbone.Collection:
+  // http://backbonejs.org/docs/backbone.html#section-106
+  //
+  // Mix in methods from Underscore, for iteration, and other
+  // collection related features.
+  var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter', 
+    'select', 'reject', 'every', 'all', 'some', 'any', 'include', 
+    'contains', 'invoke', 'toArray', 'first', 'initial', 'rest', 
+    'last', 'without', 'isEmpty', 'pluck'];
+
+  _.each(methods, function(method) {
+    Container.prototype[method] = function() {
+      var views = _.values(this._views);
+      var args = [views].concat(_.toArray(arguments));
+      return _[method].apply(_, args);
+    };
+  });
+
+  // return the public API
+  return Container;
+})(Backbone, _);
+
+  return Backbone.ChildViewContainer; 
+
+}));
+
+
+},{"backbone":36,"underscore":2}]},{},["3XoGqR"])
 ;

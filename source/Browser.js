@@ -17,7 +17,7 @@ var Browser = module.exports = function () {
     this.connections.add(new Pryv.Connection('fredos71', 'VVTi1NMWDM', {domain : 'pryv.in'}));
 
   // tell the filter we want to show this connection
-  this.activeFilter.showConnection(fredosSerial);
+  this.activeFilter.addConnection(fredosSerial);
 
   // create the TreeMap
   this.treemap = new TreeMap(this);
@@ -31,8 +31,8 @@ var Browser = module.exports = function () {
 
   // activate them in batch in the filter
   var batch = this.activeFilter.startBatch();
-  this.activeFilter.showConnection(perki1Serial);
-  this.activeFilter.showConnection(perki2Serial);
+  this.activeFilter.addConnection(perki1Serial, batch);
+  this.activeFilter.addConnection(perki2Serial, batch);
   batch.done();
 
 

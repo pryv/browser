@@ -1,8 +1,8 @@
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
-
 var Pryv = require('pryv');
+var MSGs = require('./Messages').BrowserFilter;
 
 Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
   get: function () { return this.connection.serialId + '>>' + this.id; }
@@ -14,11 +14,11 @@ Object.defineProperty(Pryv.Event.prototype, 'serialId', {
 
 var BrowserFilter = module.exports = function (browser) {
   this.browser = browser;
-  this._showOnlyStreams = null; // object that contains streams to display (from multiple connections)
+  this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
   this.hiddenStreams = {};
   this.eventListeners = {};
   this._initEventListeners();
-  this._showConnections = {}; // serialIds / connection
+  this._connections = {}; // serialIds / connection
 
   this.currentEvents = {};
 
@@ -31,11 +31,11 @@ var BrowserFilter = module.exports = function (browser) {
  * Create ah-hoc filter for this connection
  * @private
  */
-BrowserFilter.prototype._getFilterFor = function (/*connectionKey*/) {
+BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
 
   return nullFilter;
 };
-var nullFilter = new Filter({limit : 2000});
+var nullFilter = new Filter({limit : 2000000});
 
 
 
@@ -43,54 +43,24 @@ var nullFilter = new Filter({limit : 2000});
 
 //----------------------- event management ----------------------//
 
-BrowserFilter.SIGNAL = {
-  STREAM : {},
-  EVENT : {},
-  BATCH : {}
-};
-
 
 BrowserFilter.UNREGISTER_LISTENER = 'unregisterMePlease';
 
-/** called when a batch of changes is expected, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.BEGIN = 'beginBatch';
-/** called when a batch of changes is done, content: <batchId> unique**/
-BrowserFilter.SIGNAL.BATCH.DONE = 'doneBatch';
-
-/** called when some streams are hidden, content: Array of Stream**/
-BrowserFilter.SIGNAL.STREAM.HIDE = 'hideStream';
-BrowserFilter.SIGNAL.STREAM.SHOW = 'hideShow';
-/** called when some eventsEnterScope, content: {reason: one of .., content: array of Event }**/
-BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER = 'eventEnterScope';
-BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE = 'eventLeaveScope';
-BrowserFilter.SIGNAL.EVENT.CHANGE = 'eventChange';
-
-BrowserFilter.REASON = { EVENT : {
-  SCOPE_ENTER : {},
-  SCOPE_LEAVE : {}
-} };
-
-BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION = 'connectionAdded';
-BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM = 'focusOnStream';
-// may happend when several refresh requests overlaps
-BrowserFilter.REASON.FORCE = 'forced';
 /**
  * Init all event listeners array
  * @private
  */
 BrowserFilter.prototype._initEventListeners = function () {
-  _.each(_.keys(BrowserFilter.SIGNAL), function (namespace) {
-    _.each(_.keys(BrowserFilter.SIGNAL[namespace]), function (key) {
-      this.eventListeners[BrowserFilter.SIGNAL[namespace][key]] = [];
-    }, this);
-  }, this);
+  _.each(_.values(MSGs.SIGNAL), function (value) {
+    this.eventListeners[value] = [];
+  }.bind(this));
 };
 
 
 
 /**
  * Add an event listener
- * @param signal one of  BrowserFilter.SIGNAL.*.*
+ * @param signal one of  MSGs.SIGNAL.*.*
  * @param callback function(content) .. content vary on each signal.
  * If the callback returns BrowserFilter.UNREGISTER_LISTENER it will be removed from the listner
  * @return the callback function for further reference
@@ -115,31 +85,53 @@ BrowserFilter.prototype.removeEventListener = function (signal, callback) {
 
 /**
  * A changes occurred on the filter
+ * @param signal
+ * @param content
+ * @param batch
+ * @private
  */
-BrowserFilter.prototype.fireEvent = function (signal, content, thisArg) {
-  console.log('BrowserFilter.FireEvent : ' + signal);
+BrowserFilter.prototype._fireEvent = function (signal, content, batch) {
+  var batchId = batch ? batch.id : null;
+  console.log('BrowserFilter.FireEvent : ' + signal + ' batch: ' + batchId);
   _.each(this.eventListeners[signal], function (callback) {
     if (callback !== null &&
-      BrowserFilter.UNREGISTER_LISTENER === callback.call(thisArg, content)) {
+      BrowserFilter.UNREGISTER_LISTENER === callback(content, batchId)) {
       this.removeEventListener(signal, callback);
     }
   }, this);
 };
 
 
+var batchSerial = 0;
 /**
  * start a batch process
  * @return an object where you have to call stop when done
  */
 BrowserFilter.prototype.startBatch = function () {
   var batch = {
-    id : (new Date()).getTime() + 'M',
+    id : 'C' + batchSerial++,
     filter : this,
-    done : function () {
-      this.filter.fireEvent(BrowserFilter.SIGNAL.BATCH.DONE, this.id);
+    waitFor : 1,
+    waitForMeToFinish : function (name) {
+      var batch = this;
+      batch.waitFor++;
+      return {
+        done : function () {
+          batch.done(name);
+        }
+      };
+    },
+    done : function (name) {
+      this.waitFor--;
+      if (this.waitFor === 0) {
+        this.filter._fireEvent(MSGs.SIGNAL.BATCH_DONE, this.id, this);
+      }
+      if (this.waitFor < 0) {
+        console.error('This batch has been done() to much :' + name);
+      }
     }
   };
-  this.fireEvent(BrowserFilter.SIGNAL.BATCH.BEGIN, batch.id);
+  this._fireEvent(MSGs.SIGNAL.BATCH_BEGIN, batch.id, batch);
   return batch;
 };
 
@@ -151,9 +143,9 @@ BrowserFilter.prototype.startBatch = function () {
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.eventMatchesFilter = function (event) {
+BrowserFilter.prototype.matchesEvent = function (event) {
   return (
-    this.streamMatchesFilter(event.stream)
+    this.matchesStream(event.stream)
     // TODO && TIME
     );
 };
@@ -165,8 +157,8 @@ BrowserFilter.prototype.eventMatchesFilter = function (event) {
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.streamMatchesFilter = function (stream) {
-  if (! this.connectionMatchesFilter(stream.connection)) { return false; }
+BrowserFilter.prototype.matchesStream = function (stream) {
+  if (! this.matchesConnection(stream.connection)) { return false; }
 
   if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
   if (! this._showOnlyStreams) { return true; }
@@ -178,7 +170,7 @@ BrowserFilter.prototype.streamMatchesFilter = function (stream) {
  * @param stream object or array of Streams (null) to show all
  * @returns Boolean
  */
-BrowserFilter.prototype.showOnlyStreams = function (streams) {
+BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
   if (streams === null) {
     if (this._showOnlyStreams === null) { return; } // nothing to do
   }
@@ -192,7 +184,7 @@ BrowserFilter.prototype.showOnlyStreams = function (streams) {
 
     _.each(streams, function (stream) {
 
-      if (! this.streamMatchesFilter(stream)) {
+      if (! this.matchesStream(stream)) {
         streamsToLoad.push(stream);
       }
 
@@ -209,8 +201,8 @@ BrowserFilter.prototype.showOnlyStreams = function (streams) {
     }, this);
   }
 
-
-  this.refreshContent(BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM);
+  this.refreshContent(MSGs.REASON.EVENT_SCOPE_LEAVE_FOCUS_ON_STREAM,
+    {noEnter : true}, batch);
 
 };
 
@@ -220,7 +212,12 @@ BrowserFilter.prototype._refreshContentACTUAL = 0;
  * @param reason  one of BrowserFilter.REASON.*
  * @param focusOn  .. info for further optimization
  */
-BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
+BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
+  batch = batch || this.startBatch();
+  focusOn = focusOn || {};
+
+  var that = this;
+
   if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
     BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
     console.log('Skiping refresh request because already one on course ' + reason);
@@ -228,75 +225,106 @@ BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
   BrowserFilter.prototype._refreshContentACTUAL = 1;
 
 
+  // done function can be called any time to exit
+
+  function finishedRefresh() {
+    batch.done();
+    // --- ################   ending
+    // should we go for another loop?
+
+
+    if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
+      console.log('Refreshing with force reason');
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+      that.refreshContent(BrowserFilter.REASON.FORCE);
+    } else {
+      BrowserFilter.prototype._refreshContentACTUAL = 0;
+    }
+  }
+
+
+
+
   // we can process leaving events locally
 
   var eventsLeavingScope = [];
   // pass through all current events and remove the one not matching current Streams
   _.each(_.values(this.currentEvents), function (event) {
-    if (! this.eventMatchesFilter(event)) {
+    if (! this.matchesEvent(event)) {
       eventsLeavingScope.push(event);
       delete this.currentEvents[event.serialId];
     }
   }.bind(this));
 
 
-  this.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_LEAVE.FOCUS_ON_STREAM,
-      events: eventsLeavingScope});
+  this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_LEAVE,
+    {reason: reason, events: eventsLeavingScope}, batch);
 
 
-  var connectionsTodo = _.keys(this._showConnections).length;
-  var that = this;
-  function doneOneConnection(events) {
+
+  // ------- can some event enter scope?
+
+  if (_.has(focusOn, 'noEnter')) {  // done
+    return finishedRefresh();
+  }
+
+
+  // ------- connections refresh
+
+
+  var connectionsTodo = [];
+  _.each(_.values(this._connections), function (connection) { // for each connection
+    if (this.matchesConnection(connection)) {
+      connectionsTodo.push(connection.serialId);
+    }
+  }.bind(this));
+
+
+  var connectionsTodoCounter = connectionsTodo.length;
+  // if no connection then EXIT
+  if (connectionsTodoCounter === 0) {
+    batch.done();
+    return;
+  }
+
+
+
+  function doneOneConnection(events) {  //  find events entering and leavings
     var eventsMatchedFromModel = []; // used to check if events left form model
-    var eventsEnteringScope = [];
-
+    var eventsEnteringScope = []; // events that enter
 
     _.each(events, function (event) { // for each event
 
-      if (! that.eventMatchesFilter(event)) {
+      if (! that.matchesEvent(event)) {
         console.error('!! Error !! BrowserFilter.refreshContent, ' +
           ' got an event not matching the filter): ' + event.serialId);
-      }
-
-      if (_.has(that.currentEvents, event)) {
-        eventsMatchedFromModel.push(event);
       } else {
-        eventsEnteringScope.push(event);
-        that.currentEvents[event.serialId] = event; // add to currently displayed events
+
+        if (_.has(that.currentEvents, event)) {
+          eventsMatchedFromModel.push(event);
+        } else {
+          eventsEnteringScope.push(event);
+          that.currentEvents[event.serialId] = event; // add to currently displayed events
+        }
+
       }
 
     });
 
 
     // ---------- OK DONE
-    connectionsTodo--;
-    if (connectionsTodo <= 0) {  // finished processing all connections
-      // --- ################   ending
-      // should we go for another loop?
-      if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
-        console.log('Refreshing with force reason');
-        BrowserFilter.prototype._refreshContentACTUAL = 0;
-        that.refreshContent(BrowserFilter.REASON.FORCE);
-      }
-      BrowserFilter.prototype._refreshContentACTUAL = 0;
+    connectionsTodoCounter--;
+    if (connectionsTodoCounter <= 0) {  // finished processing all connections
+      return finishedRefresh();
     }
   }
 
   // do we have new events ?
-  _.each(_.keys(this._showConnections), function (connectionKey) { // for each connection
-    this._getEventsForConnection(connectionKey, function (error, events) {  // get events
-
-
+  _.each(connectionsTodo, function (connectionSerialId) { // for each connection
+    this._getEventsForConnectionSerialId(connectionSerialId, function (error, events) { //get events
       doneOneConnection(events);
-
     }.bind(this));
   }.bind(this));
-
-
-
-
-
 
 };
 
@@ -306,19 +334,22 @@ BrowserFilter.prototype.refreshContent = function (reason/*, focusOn*/) {
 /**
  * get all events that match this filter
  */
-BrowserFilter.prototype.showConnection = function (connectionKey) {
-  if (_.has(this._showConnections, connectionKey)) {
-    console.log('Warning BrowserFilter.showConnection, already activated: ' + connectionKey);
+BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
+  var batchWaitForMe = batch ?
+    batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
+  if (_.has(this._connections, connectionSerialId)) {
+    console.log('Warning BrowserFilter.addConnection, already activated: ' + connectionSerialId);
     return;
   }
-  if (! this.browser.connections.get(connectionKey)) { // TODO error management
-    console.log('BrowserFilter.showConnection cannot find connection: ' + connectionKey)
+  var connection = this.browser.connections.get(connectionSerialId);
+  if (! connection) { // TODO error management
+    console.log('BrowserFilter.addConnection cannot find connection: ' + connectionSerialId);
     return;
   }
-  this._showConnections[connectionKey] = true;
+  this._connections[connectionSerialId] = connection;
 
   var self = this;
-  this._getEventsForConnection(connectionKey,
+  this._getEventsForConnectionSerialId(connectionSerialId,
     function (error, result) {
       if (error) { console.log(error); } // TODO handle
 
@@ -330,9 +361,10 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
         }
       });
 
-      self.fireEvent(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-        {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
-          events: result});
+      self._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+        {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
+          events: result}, batch);
+      if (batchWaitForMe) { batchWaitForMe.done(); }
     }
   );
 };
@@ -341,26 +373,33 @@ BrowserFilter.prototype.showConnection = function (connectionKey) {
  * return true if connection matches filter
  * @param eventListener
  */
-BrowserFilter.prototype.connectionMatchesFilter = function (connection) {
-   return _.has(this._showConnections, connection.serialId);
+BrowserFilter.prototype.matchesConnection = function (connection) {
+  // if _showOnly is defined, only consider matching connection
+  if (this._showOnlyStreams !== null) {
+    var inStreams = false;
+    for (var i = 0, streams = _.values(this._showOnlyStreams);
+         i < streams.length && ! inStreams; i++) {
+      inStreams = streams[i].connection.serialId === connection.serialId;
+    }
+    if (! inStreams) { return false; }
+  }
+  return _.has(this._connections, connection.serialId);
 };
-
-
 
 
 /**
  * get all events actually matching this filter
  */
 BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
-  eventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
-    {reason: BrowserFilter.REASON.EVENT.SCOPE_ENTER.ADD_CONNECTION,
+  eventListener(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+    {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
       events: _.values(this.currentEvents)});
 };
 
-BrowserFilter.prototype._getEventsForConnection = function (connectionKey, callback) {
+BrowserFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
   var self = this;
-  self.browser.connections.get(connectionKey, function (error, connection) { // when ready
+  self.browser.connections.get(connectionSerialId, function (error, connection) { // when ready
     if (error) { console.log(error); } // TODO handle
-    connection.events.get(self._getFilterFor(connectionKey), null,   callback); // get events
+    connection.events.get(self._getFilterFor(connectionSerialId), null,   callback); // get events
   });
 };

@@ -1,8 +1,7 @@
 
 
 var RootNode = require('./RootNode.js');
-var BrowserFilter = require('../browser/BrowserFilter.js');
-
+var SIGNAL = require('../browser/Messages').BrowserFilter.SIGNAL;
 var _ = require('underscore');
 
 var TreeMap = module.exports = function (browser) {
@@ -37,22 +36,28 @@ var TreeMap = module.exports = function (browser) {
     this.root._refreshViewModel(true);
   }.bind(this);
 
+  this.eventChange = function (/*context*/) {
+
+  }.bind(this);
 
   this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
 //--------- register the TreeMap event Listener ----------//
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_ENTER,
+  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope
   );
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.SCOPE_LEAVE,
+  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
     this.eventLeaveScope);
-  this.browser.activeFilter.addEventListener(BrowserFilter.SIGNAL.EVENT.CHANGE,
-    this.root.eventChange);
+  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
+    this.eventChange);
 };
 
 
 TreeMap.prototype.destroy = function () {
-  this.browser.activeFilter.removeEventListener('eventEnterScope', this.root.eventEnterScope);
-  this.browser.activeFilter.removeEventListener('eventLeaveScope', this.root.eventLeaveScope);
-  this.browser.activeFilter.removeEventListener('eventChange', this.root.eventChange);
+  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+    this.eventEnterScope);
+  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+    this.eventLeaveScope);
+  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
+    this.eventChange);
 };
 

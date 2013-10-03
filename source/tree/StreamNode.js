@@ -5,6 +5,8 @@ var _ = require('underscore');
  * Holder for Connection Nodes.
  * @type {*}
  */
+var MIN_WIDTH = 600;
+var MIN_HEIGHT = 600;
 var StreamNode = module.exports = TreeNode.implement(
   function (connectionNode, parentNode, stream) {
     TreeNode.call(this, parentNode);
@@ -15,6 +17,7 @@ var StreamNode = module.exports = TreeNode.implement(
      * eventsNodes are stored by their key
      **/
     this.eventsNodes = {};
+    this.displayedEventsNodes = {};
 
   },
   {
@@ -24,6 +27,26 @@ var StreamNode = module.exports = TreeNode.implement(
     // ----
 
 
+
+    needToAggregate: function () {
+      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
+        // Close all the view we need to aggregate
+        _.each(this.getChildren(), function (child) {
+          if (child.view) {
+            child.view.close();
+          }
+        });
+        this.aggregated = true;
+        this.createEventsNodesFromAllEvents(this.getAllEvents());
+        // create the new aggregated views
+        _.each(this.displayedEventsNodes, function (node) {
+          node._createView();
+        });
+      } else {
+        this.aggregated = false;
+      }
+      return this.aggregated;
+    },
     getWeight: function () {
       var weight = 0;
       this.getChildren().forEach(function (child) {
@@ -37,20 +60,57 @@ var StreamNode = module.exports = TreeNode.implement(
       var self = this;
       var children = [];
 
-      // Streams
-      _.each(this.stream.children, function (child) {
-        var childTemp =  self.connectionNode.streamNodes[child.id];
-        children.push(childTemp);
-      });
+      if (this.aggregated) {
 
-      // Events
-      _.each(this.eventsNodes, function (eventNode) {
-        children.push(eventNode);
-      });
+        _.each(this.displayedEventsNodes, function (node) {
+          children.push(node);
+        });
+      } else {
+        // Streams
+        _.each(this.stream.children, function (child) {
+          var childTemp =  self.connectionNode.streamNodes[child.id];
+          children.push(childTemp);
+        }, this);
 
+        // Events
+        _.each(this.eventsNodes, function (eventNode) {
+          children.push(eventNode);
+        });
+      }
       return children;
     },
+    getAllEvents: function () {
+      var allEvents = [];
+      _.each(this.stream.children, function (streamChild) {
+        var streamChildNode = this.connectionNode.streamNodes[streamChild.id];
+        allEvents = _.union(allEvents, streamChildNode.getAllEvents());
+      }, this);
 
+      _.each(this.eventsNodes, function (eventNodeChild) {
+        _.each(eventNodeChild.events, function (event) {
+          allEvents.push(event);
+        });
+      });
+      return allEvents;
+    },
+    createEventsNodesFromAllEvents: function (events) {
+      this.displayedEventsNodes = {};
+      _.each(events, function (event) {
+        var eventView = null;
+        var key = this.findEventNodeType(event);
+        if (key && _.has(this.displayedEventsNodes, key)) {
+          eventView =  this.displayedEventsNodes[key]; // found one
+        }  else { // create is
+          eventView = new StreamNode.registeredEventNodeTypes[key](this);
+          this.displayedEventsNodes[key] = eventView;
+        }
+        if (eventView === null) {
+          throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+        }
+        eventView.eventEnterScope(event);
+      }, this);
+
+    },
     eventEnterScope: function (event, reason, callback) {
       var eventView = null;
       var key = this.findEventNodeType(event);

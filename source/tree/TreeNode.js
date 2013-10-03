@@ -9,8 +9,9 @@ var _ = require('underscore'),
  * @param parent
  * @constructor
  */
-var MIN_WIDTH = 30;
-var MIN_HEIGHT = 30;
+var OFFSET = 30;
+var MARGIN = 2;
+
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
@@ -62,6 +63,93 @@ _.extend(TreeNode.prototype, {
         this.height = $(document).height();
       }
       this._generateChildrenTreemap(0, 0, this.width, this.height);
+      this._refreshViewModel();
+      this.view = new NodeView({model: this.model});
+    }
+    /* TODO review this part
+    problem: when we remove some events and re-add them they don't render
+    why? because the view is still present, only the oldest parent is automaticly removed by
+    the refresh view model (see NodeView when width or height = 0)
+    Solution: when parent is removed, must removed all this child to (i.e make a boolean ....)
+
+     */
+
+    if (this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    }
+  },
+
+  _generateChildrenTreemap: function (x, y, width, height, recursive) {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    this.needToAggregate();
+    var childrens = this.getChildren();
+    console.log(childrens);
+    if (childrens) {
+      // we need to normalize child weights by the parent weight
+      _.each(childrens, function (child) {
+        child.normalizedWeight = (child.getWeight() / this.getWeight());
+      }, this);
+      var offset = OFFSET;
+      if (this.className === 'RootNode') {
+        offset = 0;
+      }
+      // we squarify all the children passing a container dimension and position
+      // no recursion needed
+      var squarified =  TreemapUtil.squarify({
+        x: x,
+        y: y + offset,
+        width: width,
+        height: height - offset
+      }, childrens);
+      _.each(childrens, function (child) {
+        child.x = squarified[child.uniqueId].x;
+        child.y = squarified[child.uniqueId].y;
+        child.width = squarified[child.uniqueId].width - MARGIN;
+        child.height = squarified[child.uniqueId].height - MARGIN;
+        // test if we need to aggregate the view by testing if a child is to small
+        // (child weight must be > 0)
+      }, this);
+
+      _.each(childrens, function (child) {
+       // child.display = !this.aggregated;
+        if (recursive) {
+          child._generateChildrenTreemap(0, 0, child.width, child.height, true);
+        }
+      }, this);
+    }
+  },
+  needToAggregate: function () {
+    this.aggregated = false;
+    return this.aggregated;
+  },
+  /**
+   * render the View version A
+   * @param height height of the Node
+   * @param width width of the Node
+   * @return A DOM Object, EventView..
+   */
+  renderView: function (recurcive) {
+    if ($('#' + this.uniqueId).length === 0 && this.view) {
+      this.view.renderView();
+
+      this.view.on('click', function () {
+
+      }, this);
+    }
+    if (recurcive) {
+      _.each(this.getChildren(), function (child) {
+        child.renderView(true);
+      });
+    }
+
+  },
+
+  _refreshViewModel: function (recursive) {
+    if (!this.model) {
       this.model = new NodeModel({
         containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
         id: this.uniqueId,
@@ -76,83 +164,7 @@ _.extend(TreeNode.prototype, {
         content: this.events || this.stream || this.connection,
         eventView: this.eventView
       });
-      this.view = new NodeView({model: this.model});
     }
-    /* TODO review this part
-    problem: when we remove some events and re-add them they don't render
-    why? because the view is still present, only the oldest parent is automaticly removed by
-    the refresh view model (see NodeView when width or height = 0)
-    Solution: when parent is removed, must removed all this child to (i.e make a boolean ....)
-
-     */
-    if ($('#' + this.uniqueId).length === 0) {
-      this.renderView();
-    }
-    if (this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._createView();
-      });
-    }
-  },
-
-  _generateChildrenTreemap: function (x, y, width, height, recursive) {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    if (this.getChildren()) {
-      // we need to normalize child weights by the parent weight
-      _.each(this.getChildren(), function (child) {
-        child.normalizedWeight = (child.getWeight() / this.getWeight());
-      }, this);
-      var offset = 30;
-      if (this.className === 'RootNode') {
-        offset = 0;
-      }
-      // we squarify all the children passing a container dimension and position
-      // no recursion needed
-      var squarified =  TreemapUtil.squarify({
-        x: x,
-        y: y + offset,
-        width: width,
-        height: height - offset
-      }, this.getChildren());
-      _.each(this.getChildren(), function (child) {
-        child.x = squarified[child.uniqueId].x;
-        child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width - 2;
-        child.height = squarified[child.uniqueId].height - 2;
-        // test if we need to aggregate the view by testing if a child is to small
-        // (child weight must be > 0)
-      }, this);
-      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
-        this.aggregated = true;
-      } else {
-        this.aggregated = false;
-      }
-      _.each(this.getChildren(), function (child) {
-        child.display = !this.aggregated;
-        if (recursive) {
-          child._generateChildrenTreemap(0, 0, child.width, child.height, true);
-        }
-      }, this);
-    }
-  },
-  /**
-   * render the View version A
-   * @param height height of the Node
-   * @param width width of the Node
-   * @return A DOM Object, EventView..
-   */
-  renderView: function () {
-    this.view.renderView();
-
-    this.view.on('click', function () {
-
-    }, this);
-
-  },
-
-  _refreshViewModel: function (recursive) {
     if (this.getWeight() === 0) {
       if (this.model) {
         this.model.set('width', 0);

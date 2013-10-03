@@ -25,6 +25,19 @@ html, body, #tree {
   -webkit-box-sizing:border-box;  */
   overflow: hidden;
 }
+/*Some random color for each events type */
+.GenericEventsNode {
+  background-color: #009f80;
+}
+.NotesEventsNode {
+  background-color: #f8a800;
+}
+.PositionsEventsNode {
+  background-color: #df0040;
+}
+.PicturesEventsNode {
+  background-color: #b8ed00;
+}
 .ConnectionNode {
   background-color: #9c1a0f;
  /* border: 10px solid white;  */

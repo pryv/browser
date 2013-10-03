@@ -37,7 +37,7 @@ BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
 
   return nullFilter;
 };
-var nullFilter = new Filter({limit : 2000000});
+var nullFilter = new Filter({limit : 2000});
 
 
 

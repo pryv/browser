@@ -62,7 +62,8 @@ SignalEmitter.prototype.removeEventListener = function (signal, callback) {
  */
 SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
   var batchId = batch ? batch.id : null;
-  console.log('BrowserFilter.FireEvent : ' + signal + ' batch: ' + batchId);
+  if (! signal) throw new Error();
+  console.log('FireEvent : ' + signal + ' batch: ' + batchId);
   _.each(this._signalEmitterEvents[signal], function (callback) {
     if (callback !== null &&
       SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batchId)) {
@@ -72,14 +73,14 @@ SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
 };
 
 
-var batchSerial = 0;
+SignalEmitter.batchSerial = 0;
 /**
  * start a batch process
  * @return an object where you have to call stop when done
  */
 SignalEmitter.prototype.startBatch = function () {
   var batch = {
-    id : 'C' + batchSerial++,
+    id : 'C' + SignalEmitter.batchSerial++,
     filter : this,
     waitFor : 1,
     waitForMeToFinish : function (name) {
@@ -94,7 +95,7 @@ SignalEmitter.prototype.startBatch = function () {
     done : function (name) {
       this.waitFor--;
       if (this.waitFor === 0) {
-        this.filter._fireEvent(SignalEmitter.BATCH_DONE, this.id, this);
+        this.filter._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
       }
       if (this.waitFor < 0) {
         console.error('This batch has been done() to much :' + name);

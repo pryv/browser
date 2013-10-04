@@ -29,7 +29,7 @@ var EventsNode = module.exports = TreeNode.implement(
       this.events[event.id] = event;
       this.eventsNbr++;
       this.eventDisplayed = event;
-     // this._refreshEventModel();
+      this._refreshEventModel();
       if (callback) {
         callback(null);
       }
@@ -66,7 +66,7 @@ var EventsNode = module.exports = TreeNode.implement(
           type: this.eventDisplayed.type,
           eventsNbr: this.eventsNbr
         });
-        if (this.className === 'NotesEventsNode')  {
+        if (this.className === 'NotesEventsNode' && typeof(document) !== 'undefined')  {
           this.eventView = new NotesView({model: this.eventModel});
         }
       }

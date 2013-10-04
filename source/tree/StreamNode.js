@@ -5,8 +5,7 @@ var _ = require('underscore');
  * Holder for Connection Nodes.
  * @type {*}
  */
-var MIN_WIDTH = 600;
-var MIN_HEIGHT = 600;
+
 var StreamNode = module.exports = TreeNode.implement(
   function (connectionNode, parentNode, stream) {
     TreeNode.call(this, parentNode);
@@ -18,7 +17,6 @@ var StreamNode = module.exports = TreeNode.implement(
      **/
     this.eventsNodes = {};
     this.displayedEventsNodes = {};
-
   },
   {
     className: 'StreamNode',
@@ -29,7 +27,7 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     needToAggregate: function () {
-      if (this.getWeight() > 0  && (this.width <= MIN_WIDTH || this.height <= MIN_HEIGHT)) {
+      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
         // Close all the view we need to aggregate
         _.each(this.getChildren(), function (child) {
           if (child.view) {

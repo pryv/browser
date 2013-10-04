@@ -9,9 +9,10 @@ var _ = require('underscore'),
  * @param parent
  * @constructor
  */
-var OFFSET = 30;
-var MARGIN = 2;
-
+var DEFAULT_OFFSET = 30;
+var DEFAULT_MARGIN = 2;
+var DEFAULT_MIN_WIDTH = 600;
+var DEFAULT_MIN_HEIGHT = 600;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
@@ -25,6 +26,11 @@ var TreeNode = module.exports = function (parent) {
   this.view = null;
   this.model = null;
   this.depth = this.parent ? this.parent.depth + 1 : 0;
+
+  this.offset = this.parent ? this.parent.offset : DEFAULT_OFFSET;
+  this.margin = this.parent ? this.parent.margin : DEFAULT_MARGIN;
+  this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
+  this.minHeight = this.parent ? this.parent.minHeight : DEFAULT_MIN_HEIGHT;
 };
 
 
@@ -54,7 +60,7 @@ _.extend(TreeNode.prototype, {
     if (this.getWeight() === 0) {
       return;
     }
-    if (!this.view) {
+    if (!this.view && typeof(document) !== 'undefined') {
       // if width is not defined we are at the root node
       // so we need to define a container dimension
       //TODO pass a container id at the creation of the root node
@@ -62,7 +68,7 @@ _.extend(TreeNode.prototype, {
         this.width = $(document).width();
         this.height = $(document).height();
       }
-      this._generateChildrenTreemap(0, 0, this.width, this.height);
+     // this._generateChildrenTreemap(0, 0, this.width, this.height);
       this._refreshViewModel();
       this.view = new NodeView({model: this.model});
     }
@@ -87,13 +93,12 @@ _.extend(TreeNode.prototype, {
     }
     this.needToAggregate();
     var childrens = this.getChildren();
-    console.log(childrens);
     if (childrens) {
       // we need to normalize child weights by the parent weight
       _.each(childrens, function (child) {
         child.normalizedWeight = (child.getWeight() / this.getWeight());
       }, this);
-      var offset = OFFSET;
+      var offset = this.offset;
       if (this.className === 'RootNode') {
         offset = 0;
       }
@@ -108,8 +113,8 @@ _.extend(TreeNode.prototype, {
       _.each(childrens, function (child) {
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width - MARGIN;
-        child.height = squarified[child.uniqueId].height - MARGIN;
+        child.width = squarified[child.uniqueId].width - this.margin;
+        child.height = squarified[child.uniqueId].height - this.margin;
         // test if we need to aggregate the view by testing if a child is to small
         // (child weight must be > 0)
       }, this);

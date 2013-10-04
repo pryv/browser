@@ -93,6 +93,7 @@ _.extend(TreeNode.prototype, {
     }
     this.needToAggregate();
     var childrens = this.getChildren();
+    //console.log(childrens);
     if (childrens) {
       // we need to normalize child weights by the parent weight
       _.each(childrens, function (child) {

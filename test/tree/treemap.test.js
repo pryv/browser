@@ -20,7 +20,7 @@ describe('Treemap', function () {
         .reply(200, '{"type":"personal","name":"pryv-explorer"}')
         .get('/streams?state=all')
         .reply(200, dataStream)
-        .get('/events?limit=2000000')
+        .get('/events?limit=2000')
         .reply(200, dataEvent);
 
       var connections = new ConnectionsHandler();
@@ -106,7 +106,7 @@ describe('Treemap', function () {
         .reply(200, '{"type":"personal","name":"pryv-explorer"}')
         .get('/streams?state=all')
         .reply(200, dataStream)
-        .get('/events?limit=2000000')
+        .get('/events?limit=2000')
         .reply(200, dataEvent);
 
       var connections = new ConnectionsHandler();

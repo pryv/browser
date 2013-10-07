@@ -79,11 +79,11 @@ describe('Treemap', function () {
           stream2.height.should.eql(50);
           stream2.x.should.eql(0);
           stream2.y.should.eql(0);
-          var event01 =  stream0.eventsNodes['Notes'];
-          var event02 =  stream0.eventsNodes['Positions'];
-          var event11 =  stream1.eventsNodes['Generic'];
-          var event101 =  stream2.eventsNodes['Pictures'];
-          var event102 =  stream2.eventsNodes['Generic'];
+          var event01 =  stream0.eventsNodes['NotesEventsNode'];
+          var event02 =  stream0.eventsNodes['PositionsEventsNode'];
+          var event11 =  stream1.eventsNodes['GenericEventsNode'];
+          var event101 =  stream2.eventsNodes['PicturesEventsNode'];
+          var event102 =  stream2.eventsNodes['GenericEventsNode'];
           _.size(event01.events).should.eql(4);
           _.size(event02.events).should.eql(6);
           _.size(event11.events).should.eql(3);
@@ -167,11 +167,11 @@ describe('Treemap', function () {
           should.not.exist(stream2.height);
           stream2.x.should.eql(0);
           stream2.y.should.eql(0);
-          var event01 =  stream0.eventsNodes['Notes'];
-          var event02 =  stream0.eventsNodes['Positions'];
-          var event11 =  stream1.eventsNodes['Generic'];
-          var event101 =  stream2.eventsNodes['Pictures'];
-          var event102 =  stream2.eventsNodes['Generic'];
+          var event01 =  stream0.eventsNodes['NotesEventsNode'];
+          var event02 =  stream0.eventsNodes['PositionsEventsNode'];
+          var event11 =  stream1.eventsNodes['GenericEventsNode'];
+          var event101 =  stream2.eventsNodes['PicturesEventsNode'];
+          var event102 =  stream2.eventsNodes['GenericEventsNode'];
           _.size(event01.events).should.eql(4);
           _.size(event02.events).should.eql(6);
           _.size(event11.events).should.eql(3);
@@ -184,12 +184,12 @@ describe('Treemap', function () {
           event102.eventsNbr.should.eql(5);
 
           //aggregation
-          event01 =  stream0.displayedEventsNodes['Notes'];
-          event02 =  stream0.displayedEventsNodes['Positions'];
-          event11 =  stream1.displayedEventsNodes['Generic'];
-          event12 =  stream1.displayedEventsNodes['Pictures'];
-          event101 =  stream2.displayedEventsNodes['Pictures'];
-          event102 =  stream2.displayedEventsNodes['Generic'];
+          event01 =  stream0.displayedEventsNodes['NotesEventsNode'];
+          event02 =  stream0.displayedEventsNodes['PositionsEventsNode'];
+          event11 =  stream1.displayedEventsNodes['GenericEventsNode'];
+          var event12 =  stream1.displayedEventsNodes['PicturesEventsNode'];
+          event101 =  stream2.displayedEventsNodes['PicturesEventsNode'];
+          event102 =  stream2.displayedEventsNodes['GenericEventsNode'];
           should.not.exist(event101);
           should.not.exist(event102);
           should.exists(event12);

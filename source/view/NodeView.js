@@ -6,10 +6,7 @@ var  Marionette = require('backbone.marionette');
 var NodeView = module.exports = Marionette.ItemView.extend({
   template: '#nodeView',
   initialize: function () {
-    className = this.model.get('className');
-
     this.listenTo(this.model, 'change', this.change);
-    //this.$el.css('background-color', this.getRandomColor());
     if (this.model.get('content')) {
       if (this.model.get('content').clientData) {
         this.$el.addClass(this.model.get('content').clientData.color);
@@ -51,11 +48,6 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     this.trigger('render', this);
     this.trigger('item:rendered', this);
     return this;
-  //  this.$el.css('z-index', this.model.get('depth'));
-  /*  this._refreshStyle();
-    this.$el.html(this.model.get('className'));
-    $('#' + this.model.get('containerId')).append(this.$el);
-    this.$el.addClass('animated  fadeIn');    */
 
   },
   _refreshStyle: function () {

@@ -28,6 +28,11 @@ var EventsNode = module.exports = TreeNode.implement(
     eventEnterScope: function (event, reason, callback) {
       this.events[event.id] = event;
       this.eventsNbr++;
+      var parent = this.parent;
+      while (parent) {
+        parent.eventsNbr++;
+        parent = parent.parent;
+      }
       this.eventDisplayed = event;
       this._refreshEventModel();
       if (callback) {
@@ -38,12 +43,32 @@ var EventsNode = module.exports = TreeNode.implement(
     eventLeaveScope: function (event, reason, callback) {
       delete this.events[event.id];
       this.eventsNbr--;
-      if (this.eventDisplayed === event) {
-        this.eventDisplayed = _.first(_.values(this.events));
+      var parent = this.parent;
+      while (parent) {
+        parent.eventsNbr--;
+        parent = parent.parent;
       }
-    //  this._refreshEventModel();
-      if (_.size(this.events) === 0 && this.view) {
+      if (this.eventsNbr === 0 && this.view) {
         this.view.close();
+        this.view = null;
+        parent = this.parent;
+        if (parent.aggregated) {
+          delete parent.displayedEventsNodes[this.className];
+        } else {
+          delete parent.eventsNodes[this.className];
+        }
+        while (parent) {
+          if (parent.eventsNbr === 0 && parent.view) {
+            parent.view.close();
+            parent.view = null;
+          }
+          parent = parent.parent;
+        }
+      } else {
+        if (this.eventDisplayed === event) {
+          this.eventDisplayed = _.first(_.values(this.events));
+        }
+        this._refreshEventModel();
       }
       if (callback) {
         callback(null, this);

@@ -11,8 +11,8 @@ var _ = require('underscore'),
  */
 var DEFAULT_OFFSET = 30;
 var DEFAULT_MARGIN = 2;
-var DEFAULT_MIN_WIDTH = 600;
-var DEFAULT_MIN_HEIGHT = 600;
+var DEFAULT_MIN_WIDTH = 30;
+var DEFAULT_MIN_HEIGHT = 30;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
@@ -25,8 +25,7 @@ var TreeNode = module.exports = function (parent) {
   this.display = true;
   this.view = null;
   this.model = null;
-  this.depth = this.parent ? this.parent.depth + 1 : 0;
-
+  this.eventsNbr = 0;
   this.offset = this.parent ? this.parent.offset : DEFAULT_OFFSET;
   this.margin = this.parent ? this.parent.margin : DEFAULT_MARGIN;
   this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
@@ -139,6 +138,7 @@ _.extend(TreeNode.prototype, {
    * @return A DOM Object, EventView..
    */
   renderView: function (recurcive) {
+
     if ($('#' + this.uniqueId).length === 0 && this.view) {
       this.view.renderView();
 
@@ -155,6 +155,7 @@ _.extend(TreeNode.prototype, {
   },
 
   _refreshViewModel: function (recursive) {
+
     if (!this.model) {
       this.model = new NodeModel({
         containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,

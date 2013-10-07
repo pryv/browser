@@ -32,6 +32,7 @@ var StreamNode = module.exports = TreeNode.implement(
         _.each(this.getChildren(), function (child) {
           if (child.view) {
             child.view.close();
+            child.view = null;
           }
         });
         this.aggregated = true;
@@ -128,19 +129,14 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     eventLeaveScope: function (event, reason, callback) {
+
       var key = this.findEventNodeType(event);
       if (!this.eventsNodes[key]) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
-      var self = this;
-      this.eventsNodes[key].eventLeaveScope(event, reason, function () {
-        if (_.size(self.eventsNodes[key].events) === 0) {
-          delete self.eventsNodes[key];
-        }
-        if (callback) {
-          callback(null, self);
-        }
-      }.bind(this));
+      this.eventsNodes[key].eventLeaveScope(event, reason, callback);
+
+
     },
 
     eventChange: function (event, reason, callback) {
@@ -176,8 +172,8 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
 StreamNode.registeredEventNodeTypes = {
-  'Notes' : require('./eventsNode/NotesEventsNode.js'),
-  'Positions' : require('./eventsNode/PositionsEventsNode.js'),
-  'Pictures' : require('./eventsNode/PicturesEventsNode.js'),
-  'Generic' : require('./eventsNode/GenericEventsNode.js')
+  'NotesEventsNode' : require('./eventsNode/NotesEventsNode.js'),
+  'PositionsEventsNode' : require('./eventsNode/PositionsEventsNode.js'),
+  'PicturesEventsNode' : require('./eventsNode/PicturesEventsNode.js'),
+  'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };

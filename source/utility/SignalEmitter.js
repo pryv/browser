@@ -62,7 +62,9 @@ SignalEmitter.prototype.removeEventListener = function (signal, callback) {
  */
 SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
   var batchId = batch ? batch.id : null;
-  if (! signal) throw new Error();
+  if (! signal) {
+    throw new Error();
+  }
   console.log('FireEvent : ' + signal + ' batch: ' + batchId);
   _.each(this._signalEmitterEvents[signal], function (callback) {
     if (callback !== null &&

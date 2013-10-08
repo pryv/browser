@@ -1,16 +1,17 @@
-var TreeNode = require('./TreeNode');
-var ConnectionNode = require('./ConnectionNode');
-var _ = require('underscore');
-var Backbone = require('backbone');
+var TreeNode = require('./TreeNode'),
+    ConnectionNode = require('./ConnectionNode'),
+    _ = require('underscore');
 
 /**
  * Holder for Connection Nodes.
  * @type {*}
  */
-var RootNode = module.exports = TreeNode.implement(
-  function () {
+module.exports = TreeNode.implement(
+  function (w, h) {
     TreeNode.call(this, null);
     this.connectionNodes = {}; // Connections indexed by their token .. other index solution welcome
+    this.width = w;
+    this.height = h;
   },
   {
     className: 'RootNode',
@@ -22,14 +23,11 @@ var RootNode = module.exports = TreeNode.implement(
 
     eventEnterScope: function (event, reason, callback) {
       var connectionNode = this.connectionNodes[event.connection.id];
-
       if (typeof connectionNode !== 'undefined') {
         return connectionNode.eventEnterScope(event, reason, callback);
       }
-
       // we create a new connection Node
       connectionNode = new ConnectionNode(this, event.connection);
-
       this.connectionNodes[event.connection.id] = connectionNode;
       connectionNode.initStructure(null, function (error) {
         if (error) {

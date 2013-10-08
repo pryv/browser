@@ -1,6 +1,6 @@
 var TreeNode = require('./TreeNode'),
-    NodeModel = require('../model/NodeModel.js'),
-  NotesView = require('../view/NotesView.js'),
+    Backbone = require('backbone'),
+    NotesView = require('../view/NotesView.js'),
     _ = require('underscore');
 
 /**
@@ -53,7 +53,7 @@ var EventsNode = module.exports = TreeNode.implement(
         this.view = null;
         parent = this.parent;
         if (parent.aggregated) {
-          delete parent.displayedEventsNodes[this.className];
+          delete parent.eventsNodesAggregated[this.className];
         } else {
           delete parent.eventsNodes[this.className];
         }
@@ -74,13 +74,14 @@ var EventsNode = module.exports = TreeNode.implement(
         callback(null, this);
       }
     },
-
+    /*jshint -W098 */
     eventChange: function (event, reason, callback) {
       throw new Error('EventsNode.eventChange No yet implemented' + event.id);
     },
     _refreshEventModel: function () {
       if (!this.eventModel) {
-        this.eventModel = new NodeModel({
+        var BasicModel = Backbone.Model.extend({ });
+        this.eventModel = new BasicModel({
           content: this.eventDisplayed.content,
           description: this.eventDisplayed.description,
           id: this.eventDisplayed.id,
@@ -93,6 +94,16 @@ var EventsNode = module.exports = TreeNode.implement(
         });
         if (this.className === 'NotesEventsNode' && typeof(document) !== 'undefined')  {
           this.eventView = new NotesView({model: this.eventModel});
+        }
+      }
+      if (!this.eventDisplayed) {
+        var parent = this.parent;
+        console.log(this.view);
+        console.log(this.eventsNbr);
+
+        while (parent) {
+          console.log(parent.eventsNbr);
+          parent = parent.parent;
         }
       }
       this.eventModel.set('content', this.eventDisplayed.content);

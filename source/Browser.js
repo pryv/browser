@@ -7,7 +7,7 @@ var TreeMap = require('./tree/TreeMap.js');
 var Pryv = require('pryv');
 
 
-var Browser = module.exports = function () {
+module.exports = function () {
   // create connection handler and filter
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new BrowserFilter(this);
@@ -43,9 +43,8 @@ var Browser = module.exports = function () {
     streams.push(stream);
   });
 
-  var that = this;
   setTimeout(function () {
-    //that.activeFilter.showOnlyStreams(streams);
+    //this.activeFilter.showOnlyStreams(streams);
   }, 8000);
 
 

@@ -1,9 +1,10 @@
+/* global $ */
 var  Marionette = require('backbone.marionette');
  /* TODO This a the view for each node, with dynamic animation
  we can't re-render on change because animation would no be done
  If the model is a event Node we must include a new typed view
  */
-var NodeView = module.exports = Marionette.ItemView.extend({
+module.exports = Marionette.ItemView.extend({
   template: '#nodeView',
   initialize: function () {
     this.listenTo(this.model, 'change', this.change);
@@ -54,11 +55,6 @@ var NodeView = module.exports = Marionette.ItemView.extend({
     if (this.model.get('height') === 0 || this.model.get('width') === 0) {
       this.close();
       return;
-    }
-    if (this.model.get('display')) {
-      this.$el.css('display', 'block');
-    }  else {
-      this.$el.css('display', 'none');
     }
     this.$el.attr('weight', this.model.get('weight'));
     this.$el.attr('className', this.model.get('className'));

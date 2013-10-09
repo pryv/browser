@@ -1,6 +1,4 @@
 
-var _ = require('underscore');
-
 //TODO write all add / remove connection logic
 
 var ConnectionsHandler = module.exports = function (browser) {

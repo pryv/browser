@@ -8,7 +8,6 @@ var Pryv = require('pryv');
 var ConnectionsHandler = module.exports = function (browser) {
   this.browser = browser;
   this._connections = {};
-  this.serialCounter = 0;
 };
 
 /**
@@ -18,19 +17,17 @@ var ConnectionsHandler = module.exports = function (browser) {
  * @returns {string} serialNumber to access this connection
  */
 ConnectionsHandler.prototype.add = function (connection, andInitializeCallBack) {
-  if (! _.has(connection, 'serialId')) { // allready known
 
-    connection.serialId = 'N' + this.serialCounter++;
-    this._connections[connection.serialId] = connection;
+  this._connections[connection.serialId] = connection;
 
-    if (andInitializeCallBack) {
-      connection.useLocalStorage(function (error/*, accessInfo*/) {
-        // TODO correctly deal with this error
-        if (error) { console.log(error); }
-        andInitializeCallBack(error, connection);
-      });
-    }
+  if (andInitializeCallBack) {
+    connection.useLocalStorage(function (error/*, accessInfo*/) {
+      // TODO correctly deal with this error
+      if (error) { console.log(error); }
+      andInitializeCallBack(error, connection);
+    });
   }
+
   return connection.serialId;
 };
 

@@ -25,30 +25,32 @@ var StreamNode = module.exports = TreeNode.implement(
     // ----
 
 
-    
+
     needToAggregate: function () {
       if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
         // Close all the non aggregated view
-        _.each(this.getChildren(), function (child) {
-          if (child.view) {
-            child.view.close();
-            child.view = null;
+        if (!this.aggregated) {
+          _.each(this.getChildren(), function (child) {
+            if (child.view) {
+              child.view.close();
+              child.view = null;
+            }
+          });
+          this.aggregated = true;
+          var parent = this.parent;
+          // reset the event count
+          // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
+          while (parent) {
+            parent.eventsNbr -= this.eventsNbr;
+            parent = parent.parent;
           }
-        });
-        this.aggregated = true;
-        var parent = this.parent;
-        // reset the event count 
-        // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
-        while (parent) {
-          parent.eventsNbr -= this.eventsNbr;
-          parent = parent.parent;
+          this.eventsNbr = 0;
+          this.createEventsNodesFromAllEvents(this.getAllEvents());
+          // create the new aggregated views
+          _.each(this.eventsNodesAggregated, function (node) {
+            node._createView();
+          });
         }
-        this.eventsNbr = 0;
-        this.createEventsNodesFromAllEvents(this.getAllEvents());
-        // create the new aggregated views
-        _.each(this.eventsNodesAggregated, function (node) {
-          node._createView();
-        });
       } else {
         // we don't need to aggregate the view
         // close the aggregated views if there were some

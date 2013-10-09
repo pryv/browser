@@ -8,11 +8,7 @@ module.exports = Marionette.ItemView.extend({
   template: '#nodeView',
   initialize: function () {
     this.listenTo(this.model, 'change', this.change);
-    if (this.model.get('content')) {
-      if (this.model.get('content').clientData) {
-        this.$el.addClass(this.model.get('content').clientData.color);
-      }
-    }
+
     this.$el.attr('id', this.model.get('id'));
     this.$el.addClass('node animated  fadeIn');
     this.$el.addClass(this.model.get('className'));
@@ -25,6 +21,7 @@ module.exports = Marionette.ItemView.extend({
 
     this._refreshStyle();
   },
+
   renderView: function () {
 
     this.render();
@@ -39,7 +36,7 @@ module.exports = Marionette.ItemView.extend({
     var html = Marionette.Renderer.render(template, data);
     this.$el.html(html);
     if (this.model.get('eventView')) {
-      this.$el.append(this.model.get('eventView').el);
+      this.$el.append(this.model.get('eventView').getHtml());
     }
     $('#' + this.model.get('containerId')).append(this.$el);
 

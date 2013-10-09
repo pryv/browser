@@ -64,9 +64,9 @@ describe('Treemap', function () {
           _.size(stream0.eventsNodes).should.eql(2);
           _.size(stream1.eventsNodes).should.eql(1);
           _.size(stream2.eventsNodes).should.eql(2);
-          _.size(stream0.displayedEventsNodes ).should.eql(0);
-          _.size(stream1.displayedEventsNodes ).should.eql(0);
-          _.size(stream2.displayedEventsNodes ).should.eql(0);
+          _.size(stream0.eventsNodesAggregated ).should.eql(0);
+          _.size(stream1.eventsNodesAggregated ).should.eql(0);
+          _.size(stream2.eventsNodesAggregated ).should.eql(0);
           stream0.width.should.eql(40);
           stream0.height.should.eql(50);
           stream0.x.should.eql(60);
@@ -151,9 +151,9 @@ describe('Treemap', function () {
           _.size(stream1.eventsNodes).should.eql(1);
           _.size(stream2.eventsNodes).should.eql(2);
           //stream2 is aggregated with stream1
-          _.size(stream0.displayedEventsNodes).should.eql(2);
-          _.size(stream1.displayedEventsNodes).should.eql(2);
-          _.size(stream2.displayedEventsNodes).should.eql(0);
+          _.size(stream0.eventsNodesAggregated).should.eql(2);
+          _.size(stream1.eventsNodesAggregated).should.eql(2);
+          _.size(stream2.eventsNodesAggregated).should.eql(0);
           stream0.width.should.eql(40);
           stream0.height.should.eql(50);
           stream0.x.should.eql(60);
@@ -184,12 +184,12 @@ describe('Treemap', function () {
           event102.eventsNbr.should.eql(5);
 
           //aggregation
-          event01 =  stream0.displayedEventsNodes['NotesEventsNode'];
-          event02 =  stream0.displayedEventsNodes['PositionsEventsNode'];
-          event11 =  stream1.displayedEventsNodes['GenericEventsNode'];
-          var event12 =  stream1.displayedEventsNodes['PicturesEventsNode'];
-          event101 =  stream2.displayedEventsNodes['PicturesEventsNode'];
-          event102 =  stream2.displayedEventsNodes['GenericEventsNode'];
+          event01 =  stream0.eventsNodesAggregated['NotesEventsNode'];
+          event02 =  stream0.eventsNodesAggregated['PositionsEventsNode'];
+          event11 =  stream1.eventsNodesAggregated['GenericEventsNode'];
+          var event12 =  stream1.eventsNodesAggregated['PicturesEventsNode'];
+          event101 =  stream2.eventsNodesAggregated['PicturesEventsNode'];
+          event102 =  stream2.eventsNodesAggregated['GenericEventsNode'];
           should.not.exist(event101);
           should.not.exist(event102);
           should.exists(event12);

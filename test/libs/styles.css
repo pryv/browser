@@ -15,12 +15,13 @@ html, body, #tree {
   -webkit-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
 }
 .nodeHeader {
-  padding: 5px;
+  padding: 7px;
+  background-color: #9c1a0f;
 }
 .ConnectionNode, .StreamNode,.GenericEventsNode, .NotesEventsNode,.PositionsEventsNode, .PicturesEventsNode{
-  border-right: 2px solid white;
+ /* border-right: 2px solid white;      */
   border-top: 2px solid white;
-  border-bottom: 2px solid white;
+  /* border-bottom: 2px solid white;  */
   /*box-sizing:border-box;
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;  */
@@ -40,7 +41,7 @@ html, body, #tree {
   background-color: #b8ed00;
 }
 .ConnectionNode {
-  background-color: #9c1a0f;
+  /*background-color: #9c1a0f;     */
  /* border: 10px solid white;  */
   box-sizing:border-box;
   -moz-box-sizing:border-box;
@@ -63,10 +64,14 @@ html, body, #tree {
 .aggregated-icon.Notes {
   background-position: -50px top;
 }
+.aggregated-icon.Pictures {
+  position: absolute;
+}
+
 .aggregated-icon-page {
   position: absolute;
-  bottom: 1px;
-  right: 1px;
+  bottom: 0px;
+  right: 0px;
   background: transparent url('../img/icon-page-bottom.png') no-repeat right top;
   width: 20px;
   height: 20px;

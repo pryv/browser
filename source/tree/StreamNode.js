@@ -37,7 +37,9 @@ var StreamNode = module.exports = TreeNode.implement(
             }
           });
           this.aggregated = true;
+
           var parent = this.parent;
+          parent.needToSquarify = true;
           // reset the event count
           // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
           while (parent) {

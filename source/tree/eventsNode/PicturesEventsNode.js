@@ -10,6 +10,8 @@ var PicturesEventsNode = module.exports = EventsNode.implement(
   },
   {
     className: 'PicturesEventsNode',
+    pluginViewName: 'Pictures',
+
     getWeight: function () {
       return 1;
     }

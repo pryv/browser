@@ -13,7 +13,7 @@ var DEFAULT_OFFSET = 30;
 // TODO see css right border
 // need to set color background only on .nodeHeader
 var DEFAULT_MARGIN = 2;
-var DEFAULT_MIN_WIDTH = 500;
+var DEFAULT_MIN_WIDTH = 550;
 var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
@@ -82,8 +82,9 @@ _.extend(TreeNode.prototype, {
     var children = this.getChildren();
     if (children) {
       // we need to normalize child weights by the parent weight
+      var weight = this.getWeight();
       _.each(children, function (child) {
-        child.normalizedWeight = (child.getWeight() / this.getWeight());
+        child.normalizedWeight = (child.getWeight() / weight);
       }, this);
       var offset = this.offset;
       if (this.className === 'RootNode') {
@@ -123,6 +124,15 @@ _.extend(TreeNode.prototype, {
    * @return A DOM Object, EventView..
    */
   renderView: function (recurcive) {
+    if (this.needToSquarify) {
+      this.needToSquarify = false;
+      this._generateChildrenTreemap(0,
+       0,
+        this.width,
+        this.height,
+        true);
+      this._refreshViewModel(true);
+    }
     if ($('#' + this.uniqueId).length === 0 && this.view) {
       this.view.renderView();
       this.view.on('click', function () {

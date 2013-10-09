@@ -3,6 +3,13 @@ var TreeNode = require('./TreeNode'),
     EventsView = require('../view/events-view/EventsView.js'),
     _ = require('underscore');
 
+/*
+   If you want to bypass the plugin detection system (i.e not use EventsView.js)
+   just remove EventsView = require... above and add to all the Events typed node:
+   var EventsView = require( {path to the plugin view} );  as a global var
+   pluginView: EventsView, as an instance var
+   to create the view just do: new this.pluginView(params);
+ */
 /**
  * Holder for EventsNode
  * @type {*}
@@ -37,7 +44,11 @@ var EventsNode = module.exports = TreeNode.implement(
       if (this.className === 'PicturesEventsNode' || this.className === 'NotesEventsNode') {
         if (!this.eventView) {
          // console.log(this.uniqueId + ' create');
-          this.eventView = new EventsView(this.events, this.width, this.height);
+          this.eventView = new EventsView(this.events, {
+            width: this.width,
+            height: this.height,
+            pluginViewName: this.pluginViewName
+          });
         } else {
           //console.log(this.uniqueId + ' modif');
           this.eventView.eventEnter(event);

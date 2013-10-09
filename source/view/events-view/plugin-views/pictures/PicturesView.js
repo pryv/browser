@@ -26,6 +26,12 @@ module.exports = Marionette.ItemView.extend({
     var html = Marionette.Renderer.render(template, data);
     this.$el.addClass('animated  bounceIn');
     this.$el.html(html);
+    this.$image = this.$('img');
+    this.$image.load(function () {
+      this.imageWidth = this.$image.width();
+      this.imageHeight = this.$image.height();
+      this.adjustImage();
+    }.bind(this));
     this.bindUIElements();
     this.adjustImage();
     if (this.onRender) { this.onRender(); }
@@ -37,15 +43,10 @@ module.exports = Marionette.ItemView.extend({
 
 
     var that = this;
-    this.$image = this.$('img');
     if (this.imageWidth > 0 ||  this.imageHeight > 0) {
       _adjustCss();
     }
-    this.$image.load(function () {
-      this.imageWidth = this.$image.width();
-      this.imageHeight = this.$image.height();
-      _adjustCss();
-    }.bind(this));
+
 
     function _adjustCss() {
       var cssAdjust = _computeCss(

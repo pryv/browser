@@ -1,5 +1,6 @@
 var EventsNode = require('../EventsNode');
 
+
 /**
  * Holder for EventsNode
  * @type {*}
@@ -9,6 +10,7 @@ var NotesEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
+    pluginViewName: 'Notes',
     className: 'NotesEventsNode',
     getWeight: function () {
       return 1;

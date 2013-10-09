@@ -76,7 +76,7 @@ NotesPlugin.prototype.close = function () {
 };
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
-  if (!this.modelView || !this.view) {
+  if (!this.modelView || this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
       content: this.eventDisplayed.content,

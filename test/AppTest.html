@@ -14,6 +14,16 @@
       sampleApp.main();
     });
   </script>
+
+  <script id="picturesView" type="template">
+    <div class="aggregated-icon Pictures"></div>
+    <span class="aggregated-nbr-events">+<%=eventsNbr%> Pictures</span>
+    <div class="aggregated-icon-page"></div>
+    <div class="image-container">
+      <img <% print('src="'+picUrl+'" style="max-width:1980px; height:auto;"'); %> />
+    </div>
+  </script>
+
   <script id="notesView" type="template">
   <div class="aggregated-icon Notes"></div>
   <span class="aggregated-nbr-events">+<%= eventsNbr%> Notes</span>
@@ -26,10 +36,12 @@
 
     <%
     if (typeof(content) != "undefined") {
-    if (typeof(content.name) != "undefined") { %>
-      <div class='nodeHeader'><%= content.name %></div>
+    if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
+    <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
+    <% } else   if (typeof(content.name) != "undefined" ) { %>
+      <div class='nodeHeader '><%= content.name %></div>
     <% } else  if (typeof(content.username) != "undefined") { %>
-    <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <div class='nodeHeader'  ><%= content.username %> / <%= content._accessInfo.name %></div>
     <% }  }  %>
 
   </script>

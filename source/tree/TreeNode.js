@@ -10,9 +10,11 @@ var _ = require('underscore'),
  * @constructor
  */
 var DEFAULT_OFFSET = 30;
+// TODO see css right border
+// need to set color background only on .nodeHeader
 var DEFAULT_MARGIN = 2;
-var DEFAULT_MIN_WIDTH = 300;
-var DEFAULT_MIN_HEIGHT = 300;
+var DEFAULT_MIN_WIDTH = 500;
+var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
@@ -98,7 +100,8 @@ _.extend(TreeNode.prototype, {
       _.each(children, function (child) {
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width - this.margin;
+        child.width = squarified[child.uniqueId].width;
+        child.width -= child.width + child.x === this.width ? 0 : this.margin;
         child.height = squarified[child.uniqueId].height - this.margin;
       }, this);
 
@@ -170,6 +173,12 @@ _.extend(TreeNode.prototype, {
     this.model.set('y', this.y);
     this.model.set('depth', this.depth);
     this.model.set('weight', this.getWeight());
+    if (this.eventView) {
+      this.eventView.refresh({
+        width: this.width,
+        height: this.height
+      });
+    }
     if (recursive && this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._refreshViewModel(true);

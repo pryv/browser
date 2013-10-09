@@ -1,9 +1,9 @@
 /* global describe, it */
-var BrowserFilter = require('../../source/model/BrowserFilter.js'),
+var ModelFilter = require('../../source/model/ModelFilter.js'),
     ConnectionsHandler = require('../../source/model/ConnectionsHandler.js'),
     Pryv = require('pryv'),
     RootNode = require('../../source/tree/RootNode.js'),
-    SIGNAL = require('../../source/model/Messages').BrowserFilter.SIGNAL,
+    SIGNAL = require('../../source/model/Messages').ModelFilter.SIGNAL,
     _ = require('underscore'),
     should = require('should'),
     nock = require('nock');
@@ -24,7 +24,7 @@ describe('Treemap', function () {
         .reply(200, dataEvent);
 
       var connections = new ConnectionsHandler();
-      var activeFilter = new BrowserFilter({connections: connections});
+      var activeFilter = new ModelFilter({connections: connections});
       var conn = connections.add(new Pryv.Connection('user-test', 'token', {domain : 'pryv.in'}));
       activeFilter.addConnection(conn);
       var root = new RootNode();
@@ -110,7 +110,7 @@ describe('Treemap', function () {
         .reply(200, dataEvent);
 
       var connections = new ConnectionsHandler();
-      var activeFilter = new BrowserFilter({connections: connections});
+      var activeFilter = new ModelFilter({connections: connections});
       var conn = connections.add(new Pryv.Connection('user-test', 'token', {domain : 'pryv.in'}));
       activeFilter.addConnection(conn);
       var root = new RootNode();

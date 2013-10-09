@@ -1,5 +1,5 @@
 
-var BrowserFilter = require('./model/BrowserFilter.js');
+var ModelFilter = require('./model/ModelFilter.js');
 
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
@@ -10,7 +10,7 @@ var Pryv = require('pryv');
 module.exports = function () {
   // create connection handler and filter
   this.connections = new ConnectionsHandler(this);
-  this.activeFilter = new BrowserFilter(this);
+  this.activeFilter = new ModelFilter(this);
 
   // add fredos to Connections
   var fredosSerial =

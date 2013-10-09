@@ -1,7 +1,7 @@
 
  /* global $, window */
 var RootNode = require('./RootNode.js');
-var SIGNAL = require('../model/Messages').BrowserFilter.SIGNAL;
+var SIGNAL = require('../model/Messages').ModelFilter.SIGNAL;
 var _ = require('underscore');
 
 var TreeMap = module.exports = function (model) {

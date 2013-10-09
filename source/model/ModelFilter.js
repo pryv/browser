@@ -2,10 +2,10 @@
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
 var Pryv = require('pryv');
-var MSGs = require('./Messages').BrowserFilter;
+var MSGs = require('./Messages').ModelFilter;
 
 
-var BrowserFilter = module.exports = function (model) {
+var ModelFilter = module.exports = function (model) {
   Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL);
 
   this.model = model;
@@ -25,7 +25,7 @@ var BrowserFilter = module.exports = function (model) {
  * Create ah-hoc filter for this connection
  * @private
  */
-BrowserFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
+ModelFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
 
   return nullFilter;
 };
@@ -41,7 +41,7 @@ var nullFilter = new Filter({limit : 2000});
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.matchesEvent = function (event) {
+ModelFilter.prototype.matchesEvent = function (event) {
   return (
     this.matchesStream(event.stream)
     // TODO && TIME
@@ -55,7 +55,7 @@ BrowserFilter.prototype.matchesEvent = function (event) {
  * @param stream object
  * @returns Boolean
  */
-BrowserFilter.prototype.matchesStream = function (stream) {
+ModelFilter.prototype.matchesStream = function (stream) {
   if (! this.matchesConnection(stream.connection)) { return false; }
 
   if (_.has(this.hiddenStreams, stream.serialId)) { return false; }
@@ -68,7 +68,7 @@ BrowserFilter.prototype.matchesStream = function (stream) {
  * @param stream object or array of Streams (null) to show all
  * @returns Boolean
  */
-BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
+ModelFilter.prototype.showOnlyStreams = function (streams, batch) {
   if (streams === null) {
     if (this._showOnlyStreams === null) { return; } // nothing to do
   }
@@ -104,23 +104,23 @@ BrowserFilter.prototype.showOnlyStreams = function (streams, batch) {
 
 };
 
-BrowserFilter.prototype._refreshContentACTUAL = 0;
+ModelFilter.prototype._refreshContentACTUAL = 0;
 /**
  *
- * @param reason  one of BrowserFilter.REASON.*
+ * @param reason  one of ModelFilter.REASON.*
  * @param focusOn  .. info for further optimization
  */
-BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
+ModelFilter.prototype.refreshContent = function (reason, focusOn, batch) {
   batch = batch || this.startBatch();
   focusOn = focusOn || {};
 
   var that = this;
 
-  if (BrowserFilter.prototype._refreshContentACTUAL > 0) {
-    BrowserFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
+  if (ModelFilter.prototype._refreshContentACTUAL > 0) {
+    ModelFilter.prototype._refreshContentACTUAL = 2; // will trigger a refresh an the end
     console.log('Skiping refresh request because already one on course ' + reason);
   }
-  BrowserFilter.prototype._refreshContentACTUAL = 1;
+  ModelFilter.prototype._refreshContentACTUAL = 1;
 
 
   // done function can be called any time to exit
@@ -131,12 +131,12 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
     // should we go for another loop?
 
 
-    if (BrowserFilter.prototype._refreshContentACTUAL > 1) {
+    if (ModelFilter.prototype._refreshContentACTUAL > 1) {
       console.log('Refreshing with force reason');
-      BrowserFilter.prototype._refreshContentACTUAL = 0;
-      that.refreshContent(BrowserFilter.REASON.FORCE);
+      ModelFilter.prototype._refreshContentACTUAL = 0;
+      that.refreshContent(ModelFilter.REASON.FORCE);
     } else {
-      BrowserFilter.prototype._refreshContentACTUAL = 0;
+      ModelFilter.prototype._refreshContentACTUAL = 0;
     }
   }
 
@@ -194,7 +194,7 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
     _.each(events, function (event) { // for each event
 
       if (! that.matchesEvent(event)) {
-        console.error('!! Error !! BrowserFilter.refreshContent, ' +
+        console.error('!! Error !! ModelFilter.refreshContent, ' +
           ' got an event not matching the filter): ' + event.serialId);
       } else {
 
@@ -232,16 +232,16 @@ BrowserFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 /**
  * get all events that match this filter
  */
-BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
+ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
   var batchWaitForMe = batch ?
     batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
   if (_.has(this._connections, connectionSerialId)) {
-    console.log('Warning BrowserFilter.addConnection, already activated: ' + connectionSerialId);
+    console.log('Warning ModelFilter.addConnection, already activated: ' + connectionSerialId);
     return;
   }
   var connection = this.model.connections.get(connectionSerialId);
   if (! connection) { // TODO error management
-    console.log('BrowserFilter.addConnection cannot find connection: ' + connectionSerialId);
+    console.log('ModelFilter.addConnection cannot find connection: ' + connectionSerialId);
     return;
   }
   this._connections[connectionSerialId] = connection;
@@ -274,7 +274,7 @@ BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
  * return true if connection matches filter
  * @param eventListener
  */
-BrowserFilter.prototype.matchesConnection = function (connection) {
+ModelFilter.prototype.matchesConnection = function (connection) {
   // if _showOnly is defined, only consider matching connection
   if (this._showOnlyStreams !== null) {
     var inStreams = false;
@@ -291,13 +291,13 @@ BrowserFilter.prototype.matchesConnection = function (connection) {
 /**
  * get all events actually matching this filter
  */
-BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
+ModelFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
   eventListener(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
     {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
       events: _.values(this.currentEvents)});
 };
 
-BrowserFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
+ModelFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
   var self = this;
   self.model.connections.get(connectionSerialId, function (error, connection) { // when ready
     if (error) { console.log(error); } // TODO handle

@@ -4,7 +4,7 @@ var Messages = module.exports = { };
 var SignalEmitter = require('pryv').Utility.SignalEmitter;
 
 
-Messages.BrowserFilter = {
+Messages.ModelFilter = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
   SIGNAL : {
     /** called when a batch of changes is expected, content: <batchId> unique**/

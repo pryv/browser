@@ -4,8 +4,8 @@ var RootNode = require('./RootNode.js');
 var SIGNAL = require('../model/Messages').BrowserFilter.SIGNAL;
 var _ = require('underscore');
 
-var TreeMap = module.exports = function (browser) {
-  this.browser = browser;
+var TreeMap = module.exports = function (model) {
+  this.model = model;
   this.root = new RootNode($('#tree').width(), $('#tree').height());
 
   var refreshTree = _.throttle(function () {
@@ -32,7 +32,7 @@ var TreeMap = module.exports = function (browser) {
   }.bind(this), 100));
 
 
-  //----------- init the browser with all events --------//
+  //----------- init the model with all events --------//
   this.eventEnterScope = function (content) {
     _.each(content.events, function (event) {
       this.root.eventEnterScope(event, content.reason, function () {});
@@ -52,24 +52,24 @@ var TreeMap = module.exports = function (browser) {
 
   }.bind(this);
 
-  this.browser.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
+  this.model.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
 //--------- register the TreeMap event Listener ----------//
-  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+  this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope
   );
-  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+  this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
     this.eventLeaveScope);
-  this.browser.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
+  this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
 };
 
 
 TreeMap.prototype.destroy = function () {
-  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope);
-  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
     this.eventLeaveScope);
-  this.browser.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
+  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
 };
 

@@ -5,10 +5,10 @@ var Pryv = require('pryv');
 var MSGs = require('./Messages').BrowserFilter;
 
 
-var BrowserFilter = module.exports = function (browser) {
+var BrowserFilter = module.exports = function (model) {
   Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL);
 
-  this.browser = browser;
+  this.model = model;
   this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
   this.hiddenStreams = {};
   this._connections = {}; // serialIds / connection
@@ -239,7 +239,7 @@ BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
     console.log('Warning BrowserFilter.addConnection, already activated: ' + connectionSerialId);
     return;
   }
-  var connection = this.browser.connections.get(connectionSerialId);
+  var connection = this.model.connections.get(connectionSerialId);
   if (! connection) { // TODO error management
     console.log('BrowserFilter.addConnection cannot find connection: ' + connectionSerialId);
     return;
@@ -299,7 +299,7 @@ BrowserFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
 
 BrowserFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
   var self = this;
-  self.browser.connections.get(connectionSerialId, function (error, connection) { // when ready
+  self.model.connections.get(connectionSerialId, function (error, connection) { // when ready
     if (error) { console.log(error); } // TODO handle
     connection.events.get(self._getFilterFor(connectionSerialId), null,   callback); // get events
   });

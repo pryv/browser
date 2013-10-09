@@ -1,8 +1,8 @@
 
 //TODO write all add / remove connection logic
 
-var ConnectionsHandler = module.exports = function (browser) {
-  this.browser = browser;
+var ConnectionsHandler = module.exports = function (model) {
+  this.model = model;
   this._connections = {};
 };
 

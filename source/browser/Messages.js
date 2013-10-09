@@ -1,7 +1,7 @@
 
 var Messages = module.exports = { };
 
-var SignalEmitter = require('../utility/SignalEmitter.js');
+var SignalEmitter = require('pryv').Utility.SignalEmitter;
 
 
 Messages.BrowserFilter = {

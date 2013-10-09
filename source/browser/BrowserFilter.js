@@ -3,18 +3,10 @@ var _ = require('underscore');
 var Filter = require('pryv').Filter;
 var Pryv = require('pryv');
 var MSGs = require('./Messages').BrowserFilter;
-var SignalEmitter = require('../utility/SignalEmitter.js');
-
-Object.defineProperty(Pryv.Stream.prototype, 'serialId', {
-  get: function () { return this.connection.serialId + '>>' + this.id; }
-});
-Object.defineProperty(Pryv.Event.prototype, 'serialId', {
-  get: function () { return this.stream.serialId + '>>' + this.id; }
-});
 
 
 var BrowserFilter = module.exports = function (browser) {
-  SignalEmitter.extend(this, MSGs.SIGNAL);
+  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL);
 
   this.browser = browser;
   this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
@@ -253,6 +245,9 @@ BrowserFilter.prototype.addConnection = function (connectionSerialId, batch) {
     return;
   }
   this._connections[connectionSerialId] = connection;
+
+
+
 
   var self = this;
   this._getEventsForConnectionSerialId(connectionSerialId,

@@ -1,6 +1,6 @@
 var TreeNode = require('./TreeNode'),
-    NodeModel = require('../model/NodeModel.js'),
-  NotesView = require('../view/NotesView.js'),
+    Backbone = require('backbone'),
+    NotesView = require('../view/NotesView.js'),
     _ = require('underscore');
 
 /**
@@ -28,8 +28,13 @@ var EventsNode = module.exports = TreeNode.implement(
     eventEnterScope: function (event, reason, callback) {
       this.events[event.id] = event;
       this.eventsNbr++;
+      var parent = this.parent;
+      while (parent) {
+        parent.eventsNbr++;
+        parent = parent.parent;
+      }
       this.eventDisplayed = event;
-     // this._refreshEventModel();
+      this._refreshEventModel();
       if (callback) {
         callback(null);
       }
@@ -38,24 +43,45 @@ var EventsNode = module.exports = TreeNode.implement(
     eventLeaveScope: function (event, reason, callback) {
       delete this.events[event.id];
       this.eventsNbr--;
-      if (this.eventDisplayed === event) {
-        this.eventDisplayed = _.first(_.values(this.events));
+      var parent = this.parent;
+      while (parent) {
+        parent.eventsNbr--;
+        parent = parent.parent;
       }
-    //  this._refreshEventModel();
-      if (_.size(this.events) === 0 && this.view) {
+      if (this.eventsNbr === 0 && this.view) {
         this.view.close();
+        this.view = null;
+        parent = this.parent;
+        if (parent.aggregated) {
+          delete parent.eventsNodesAggregated[this.className];
+        } else {
+          delete parent.eventsNodes[this.className];
+        }
+        while (parent) {
+          if (parent.eventsNbr === 0 && parent.view) {
+            parent.view.close();
+            parent.view = null;
+          }
+          parent = parent.parent;
+        }
+      } else {
+        if (this.eventDisplayed === event) {
+          this.eventDisplayed = _.first(_.values(this.events));
+        }
+        this._refreshEventModel();
       }
       if (callback) {
         callback(null, this);
       }
     },
-
+    /*jshint -W098 */
     eventChange: function (event, reason, callback) {
       throw new Error('EventsNode.eventChange No yet implemented' + event.id);
     },
     _refreshEventModel: function () {
       if (!this.eventModel) {
-        this.eventModel = new NodeModel({
+        var BasicModel = Backbone.Model.extend({ });
+        this.eventModel = new BasicModel({
           content: this.eventDisplayed.content,
           description: this.eventDisplayed.description,
           id: this.eventDisplayed.id,
@@ -66,8 +92,18 @@ var EventsNode = module.exports = TreeNode.implement(
           type: this.eventDisplayed.type,
           eventsNbr: this.eventsNbr
         });
-        if (this.className === 'NotesEventsNode')  {
+        if (this.className === 'NotesEventsNode' && typeof(document) !== 'undefined')  {
           this.eventView = new NotesView({model: this.eventModel});
+        }
+      }
+      if (!this.eventDisplayed) {
+        var parent = this.parent;
+        console.log(this.view);
+        console.log(this.eventsNbr);
+
+        while (parent) {
+          console.log(parent.eventsNbr);
+          parent = parent.parent;
         }
       }
       this.eventModel.set('content', this.eventDisplayed.content);

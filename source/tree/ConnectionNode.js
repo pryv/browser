@@ -27,18 +27,17 @@ var ConnectionNode = module.exports = TreeNode.implement(
     initStructure: function (options, callback) {
 
       options = options || {};
-      var self = this;
-      self.streamNodes = {};
+      this.streamNodes = {};
 
 
-      self.connection.streams.walkTree(options,
+      this.connection.streams.walkTree(options,
         function (stream) {  // eachNode
-          var parentNode = self;
+          var parentNode = this;
           if (stream.parent) {   // if not parent, this connection node is the parent
-            parentNode = self.streamNodes[stream.parent.id];
+            parentNode = this.streamNodes[stream.parent.id];
           }
-          self.streamNodes[stream.id] = new StreamNode(self, parentNode, stream);
-        },
+          this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
+        }.bind(this),
         function (error) {   // done
           if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
           callback(error);
@@ -51,6 +50,8 @@ var ConnectionNode = module.exports = TreeNode.implement(
      * @param options {state : all, default}
      * @param callback
      */
+
+    /*jshint -W098 */
     structureChange: function (callback, options) {
 
       // - load streamTree from connection
@@ -73,11 +74,10 @@ var ConnectionNode = module.exports = TreeNode.implement(
 // ---------- Node -------------  //
 
     getChildren: function () {
-      var self = this;
       var children = [];
       _.each(this.streamNodes, function (node) {
-        if (node.getParent() === self) { children.push(node); }
-      });
+        if (node.getParent() === this) { children.push(node); }
+      }, this);
       return children;
     },
 

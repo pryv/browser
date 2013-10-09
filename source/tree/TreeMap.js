@@ -1,20 +1,26 @@
 
-
+ /* global $, window */
 var RootNode = require('./RootNode.js');
 var SIGNAL = require('../browser/Messages').BrowserFilter.SIGNAL;
 var _ = require('underscore');
 
 var TreeMap = module.exports = function (browser) {
   this.browser = browser;
-  this.root = new RootNode();
+  this.root = new RootNode($('#tree').width(), $('#tree').height());
 
+  var refreshTree = _.throttle(function () {
+    this.root._generateChildrenTreemap(this.root.x,
+      this.root.y,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+    this.root.renderView(true);
+  }.bind(this), 2000);
 
-
-  //----------- init the browser with all events --------//
-  this.eventEnterScope = function (content) {
-    _.each(content.events, function (event) {
-      this.root.eventEnterScope(event, content.reason, function () {});
-    }, this);
+  $(window).resize(_.debounce(function () {
+    this.root.width = $('#tree').width();
+    this.root.height = $('#tree').height();
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,
@@ -23,19 +29,23 @@ var TreeMap = module.exports = function (browser) {
       true);
     this.root._refreshViewModel(true);
     this.root.renderView(true);
+  }.bind(this), 100));
+
+
+  //----------- init the browser with all events --------//
+  this.eventEnterScope = function (content) {
+    _.each(content.events, function (event) {
+      this.root.eventEnterScope(event, content.reason, function () {});
+    }, this);
+    this.root._createView();
+    refreshTree();
   }.bind(this);
 
   this.eventLeaveScope = function (content) {
     _.each(content.events, function (event) {
       this.root.eventLeaveScope(event, content.reason, function () {});
     }, this);
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-    this.root.renderView(true);
+    refreshTree();
   }.bind(this);
 
   this.eventChange = function (/*context*/) {

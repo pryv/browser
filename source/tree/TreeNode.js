@@ -1,7 +1,7 @@
+/* global $ */
 var _ = require('underscore'),
-// $ = require('node-jquery'),
   NodeView = require('../view/NodeView.js'),
-  NodeModel = require('../model/NodeModel.js'),
+  Backbone = require('backbone'),
   TreemapUtil = require('../utility/treemap.js');
 
 /**
@@ -9,9 +9,10 @@ var _ = require('underscore'),
  * @param parent
  * @constructor
  */
-var OFFSET = 30;
-var MARGIN = 2;
-
+var DEFAULT_OFFSET = 30;
+var DEFAULT_MARGIN = 2;
+var DEFAULT_MIN_WIDTH = 300;
+var DEFAULT_MIN_HEIGHT = 300;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
   this.parent = parent;
@@ -21,10 +22,13 @@ var TreeNode = module.exports = function (parent) {
   this.x = 0;
   this.y = 0;
   this.aggregated = false;
-  this.display = true;
   this.view = null;
   this.model = null;
-  this.depth = this.parent ? this.parent.depth + 1 : 0;
+  this.eventsNbr = 0;
+  this.offset = this.parent ? this.parent.offset : DEFAULT_OFFSET;
+  this.margin = this.parent ? this.parent.margin : DEFAULT_MARGIN;
+  this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
+  this.minHeight = this.parent ? this.parent.minHeight : DEFAULT_MIN_HEIGHT;
 };
 
 
@@ -54,26 +58,13 @@ _.extend(TreeNode.prototype, {
     if (this.getWeight() === 0) {
       return;
     }
-    if (!this.view) {
-      // if width is not defined we are at the root node
-      // so we need to define a container dimension
-      //TODO pass a container id at the creation of the root node
-      if (this.width === null || this.height === null) {
-        this.width = $(document).width();
-        this.height = $(document).height();
+    if (!this.view && typeof(document) !== 'undefined') {
+      if (this.className === 'RootNode' && (this.width === null || this.height === null)) {
+        throw new Error('You must set width and height of the root node');
       }
-      this._generateChildrenTreemap(0, 0, this.width, this.height);
       this._refreshViewModel();
       this.view = new NodeView({model: this.model});
     }
-    /* TODO review this part
-    problem: when we remove some events and re-add them they don't render
-    why? because the view is still present, only the oldest parent is automaticly removed by
-    the refresh view model (see NodeView when width or height = 0)
-    Solution: when parent is removed, must removed all this child to (i.e make a boolean ....)
-
-     */
-
     if (this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._createView();
@@ -86,14 +77,13 @@ _.extend(TreeNode.prototype, {
       return;
     }
     this.needToAggregate();
-    var childrens = this.getChildren();
-    //console.log(childrens);
-    if (childrens) {
+    var children = this.getChildren();
+    if (children) {
       // we need to normalize child weights by the parent weight
-      _.each(childrens, function (child) {
+      _.each(children, function (child) {
         child.normalizedWeight = (child.getWeight() / this.getWeight());
       }, this);
-      var offset = OFFSET;
+      var offset = this.offset;
       if (this.className === 'RootNode') {
         offset = 0;
       }
@@ -104,18 +94,15 @@ _.extend(TreeNode.prototype, {
         y: y + offset,
         width: width,
         height: height - offset
-      }, childrens);
-      _.each(childrens, function (child) {
+      }, children);
+      _.each(children, function (child) {
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width - MARGIN;
-        child.height = squarified[child.uniqueId].height - MARGIN;
-        // test if we need to aggregate the view by testing if a child is to small
-        // (child weight must be > 0)
+        child.width = squarified[child.uniqueId].width - this.margin;
+        child.height = squarified[child.uniqueId].height - this.margin;
       }, this);
 
-      _.each(childrens, function (child) {
-       // child.display = !this.aggregated;
+      _.each(children, function (child) {
         if (recursive) {
           child._generateChildrenTreemap(0, 0, child.width, child.height, true);
         }
@@ -135,9 +122,8 @@ _.extend(TreeNode.prototype, {
   renderView: function (recurcive) {
     if ($('#' + this.uniqueId).length === 0 && this.view) {
       this.view.renderView();
-
       this.view.on('click', function () {
-
+        // TODO implement on click
       }, this);
     }
     if (recurcive) {
@@ -145,12 +131,14 @@ _.extend(TreeNode.prototype, {
         child.renderView(true);
       });
     }
-
   },
 
   _refreshViewModel: function (recursive) {
+
     if (!this.model) {
-      this.model = new NodeModel({
+
+      var BasicModel = Backbone.Model.extend({ });
+      this.model = new BasicModel({
         containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
         id: this.uniqueId,
         className: this.className,
@@ -160,11 +148,12 @@ _.extend(TreeNode.prototype, {
         y: this.y,
         depth: this.depth,
         weight: this.getWeight(),
-        display: this.display,
         content: this.events || this.stream || this.connection,
         eventView: this.eventView
       });
     }
+    // TODO For now empty nodes (i.e streams) are not displayed
+    // but we'll need to display them to create event, drag drop ...
     if (this.getWeight() === 0) {
       if (this.model) {
         this.model.set('width', 0);
@@ -181,7 +170,6 @@ _.extend(TreeNode.prototype, {
     this.model.set('y', this.y);
     this.model.set('depth', this.depth);
     this.model.set('weight', this.getWeight());
-    this.model.set('display', this.display);
     if (recursive && this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._refreshViewModel(true);
@@ -248,7 +236,7 @@ _.extend(TreeNode.prototype, {
    * the owner of this Event. This is designed for animation. .. add event then
    * call returnedNode.currentWarpingDOMObject()
    */
-  eventEnterScope: function (event, reason, callback) {
+  eventEnterScope: function () {
     throw new Error(this.className + ': eventEnterScope must be implemented');
   },
 
@@ -256,7 +244,7 @@ _.extend(TreeNode.prototype, {
    * the Event changed from the Tree
    * @param event Event or eventId .. to be discussed
    */
-  eventChange: function (event, reason, callback) {
+  eventChange: function () {
     throw new Error(this.className + ': eventChange must be implemented');
   },
 
@@ -264,7 +252,7 @@ _.extend(TreeNode.prototype, {
    * Event removed
    * @parma eventChange
    */
-  eventLeaveScope: function (removed, reason, callback) {
+  eventLeaveScope: function () {
     throw new Error(this.className + ': eventLeaveScope must be implemented');
   },
   //----------- debug ------------//

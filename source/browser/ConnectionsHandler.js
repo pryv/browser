@@ -1,7 +1,5 @@
 
 var _ = require('underscore');
-var Pryv = require('pryv');
-
 
 //TODO write all add / remove connection logic
 

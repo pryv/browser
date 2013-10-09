@@ -23,12 +23,30 @@ module.exports = function (grunt) {
       options: {
         jshintrc: '.jshintrc'
       }
+    },
+    mochaTest: {
+      test: {
+        src: ['test/**/*.test.js'],
+        options: {
+          require: [ './test/blanket' ],
+          reporter: 'spec'
+        }
+      },
+      coverage: {
+        src: ['test/**/*.test.js'],
+        options: {
+          quiet: true,
+          reporter: 'html-cov',
+          captureFile: 'test/coverage.html'
+        }
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-mocha-test');
 
   // Default task.
   grunt.registerTask('default', ['jshint', 'browserify']);

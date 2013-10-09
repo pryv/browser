@@ -1,7 +1,7 @@
 
-var BrowserFilter = require('./browser/BrowserFilter.js');
+var BrowserFilter = require('./model/BrowserFilter.js');
 
-var ConnectionsHandler = require('./browser/ConnectionsHandler.js');
+var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
 var TreeMap = require('./tree/TreeMap.js');
 var Pryv = require('pryv');

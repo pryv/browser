@@ -1,11 +1,11 @@
 /*global require*/
 // ---------- helpers that should be  adapted to BackBone fashion ----------- //
 
-var Browser = require('./Browser.js');
+var Model = require('./Model.js');
 
 
 //----- test -------//
 /*jshint -W098 */
 exports.main = function () {
-  var browser = new Browser();
+  var model = new Model();
 };

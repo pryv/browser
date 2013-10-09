@@ -1,9 +1,9 @@
 /* global describe, it */
-var BrowserFilter = require('../../source/browser/BrowserFilter.js'),
-    ConnectionsHandler = require('../../source/browser/ConnectionsHandler.js'),
+var BrowserFilter = require('../../source/model/BrowserFilter.js'),
+    ConnectionsHandler = require('../../source/model/ConnectionsHandler.js'),
     Pryv = require('pryv'),
     RootNode = require('../../source/tree/RootNode.js'),
-    SIGNAL = require('../../source/browser/Messages').BrowserFilter.SIGNAL,
+    SIGNAL = require('../../source/model/Messages').BrowserFilter.SIGNAL,
     _ = require('underscore'),
     should = require('should'),
     nock = require('nock');

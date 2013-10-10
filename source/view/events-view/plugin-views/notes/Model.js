@@ -1,18 +1,17 @@
 var _ = require('underscore'),
-   NotesView = require('./NotesView.js'),
+   NotesView = require('./View.js'),
    Backbone = require('backbone');
 var ACCEPTED_TYPE = 'note/txt';
-var NotesPlugin = module.exports = function (events, width, height) {
+var NotesPlugin = module.exports = function (events, params) {
   this.events = {};
   _.each(events, function (event) {
     this.events[event.id] = event;
   }, this);
-  this.width = width;
-  this.height = height;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
   this.eventDisplayed = null;
+  _.extend(this, params);
   this._refreshModelView();
 
 };

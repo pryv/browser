@@ -1,5 +1,5 @@
-var EventsNode = require('../EventsNode');
-
+var EventsNode = require('../EventsNode'),
+    EventsView = require('../../view/events-view/plugin-views/notes/Model.js');
 
 /**
  * Holder for EventsNode
@@ -10,8 +10,8 @@ var NotesEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
-    pluginViewName: 'Notes',
     className: 'NotesEventsNode',
+    pluginView: EventsView,
     getWeight: function () {
       return 1;
     }

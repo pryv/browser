@@ -2,8 +2,6 @@ var  Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
   template: '#picturesView',
-  imageWidth: 0,
-  imageHeight: 0,
   initialize: function () {
     this.listenTo(this.model, 'change:width', this.adjustImage);
     this.listenTo(this.model, 'change:height', this.adjustImage);
@@ -28,8 +26,10 @@ module.exports = Marionette.ItemView.extend({
     this.$el.html(html);
     this.$image = this.$('img');
     this.$image.load(function () {
-      this.imageWidth = this.$image.width();
-      this.imageHeight = this.$image.height();
+      if (typeof this.imageWidth === 'undefined' && typeof this.imageHeight === 'undefined') {
+        this.imageWidth = this.$image.width();
+        this.imageHeight = this.$image.height();
+      }
       this.adjustImage();
     }.bind(this));
     this.bindUIElements();
@@ -60,16 +60,16 @@ module.exports = Marionette.ItemView.extend({
       }
     }
     function _computeCss(imgW, imgH, divW, divH) {
+
       if (imgW <= 0 || imgH <= 0 || divW <= 0 || divH <= 0) {
         return;
       }
-      var maxW = imgW * 1.5,
-        maxH = imgH * 1.5,
+      var maxW = imgW * 2.5,
+        maxH = imgH * 2.5,
         width = imgW,
         height = imgH,
         marginTop = 0,
         marginLeft = 0;
-
 
       if (maxW < divW && maxH < divH) {
         /* Image, even if stretched, is shorter in width and height. */

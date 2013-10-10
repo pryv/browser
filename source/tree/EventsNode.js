@@ -1,6 +1,5 @@
 var TreeNode = require('./TreeNode'),
     Backbone = require('backbone'),
-    EventsView = require('../view/events-view/EventsView.js'),
     _ = require('underscore');
 
 /*
@@ -20,7 +19,6 @@ var EventsNode = module.exports = TreeNode.implement(
     this.events = {};
 
     this.eventDisplayed = null;
-    this.eventModel = null;
     this.eventsNbr = 0;
     this.eventView = null;
 
@@ -44,10 +42,9 @@ var EventsNode = module.exports = TreeNode.implement(
       if (this.className === 'PicturesEventsNode' || this.className === 'NotesEventsNode') {
         if (!this.eventView) {
          // console.log(this.uniqueId + ' create');
-          this.eventView = new EventsView(this.events, {
+          this.eventView = new this.pluginView(this.events, {
             width: this.width,
-            height: this.height,
-            pluginViewName: this.pluginViewName
+            height: this.height
           });
         } else {
           //console.log(this.uniqueId + ' modif');

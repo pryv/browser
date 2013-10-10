@@ -55,6 +55,7 @@ html, body, #tree {
   margin: 5px;
   opacity: .5;
   background: url("../img/sprite-icons-type.png") no-repeat;
+  z-index: 1;
 }
 
 .aggregated-wrapper {
@@ -63,6 +64,10 @@ html, body, #tree {
 }
 .aggregated-icon.Notes {
   background-position: -50px top;
+}
+.aggregated-icon.Positions {
+  background-position: 0px center;
+  position: absolute;
 }
 .aggregated-icon.Pictures {
   position: absolute;
@@ -75,6 +80,7 @@ html, body, #tree {
   background: transparent url('../img/icon-page-bottom.png') no-repeat right top;
   width: 20px;
   height: 20px;
+  z-index: 1;
 }
 .aggregated-nbr-events {
   position: absolute;
@@ -87,6 +93,11 @@ html, body, #tree {
   padding: 0px 6px;
   font-size: 9px;
   color: #FFF;
+  z-index: 1;
+}
+.mapView {
+  width: 100%;
+  height: 100%;
 }
 /* This are the only colors founded in the last browser template
    but client data color goes over */

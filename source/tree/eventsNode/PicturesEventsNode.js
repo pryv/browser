@@ -1,5 +1,5 @@
 var EventsNode = require('../EventsNode'),
-    EventsView = require('../../view/events-view/plugin-views/pictures/Model.js');
+    EventsView = require('../../view/events-views/pictures/Model.js');
 
 /**
  * Holder for EventsNode

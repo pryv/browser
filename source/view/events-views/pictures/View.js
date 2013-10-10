@@ -8,22 +8,16 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
   },
+
   change: function () {
     this.render();
   },
+
   renderView: function () {
     this.render();
   },
 
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.addClass('animated  bounceIn');
-    this.$el.html(html);
+  onRender: function () {
     this.$image = this.$('img');
     this.$image.load(function () {
       if (typeof this.imageWidth === 'undefined' && typeof this.imageHeight === 'undefined') {
@@ -32,22 +26,14 @@ module.exports = Marionette.ItemView.extend({
       }
       this.adjustImage();
     }.bind(this));
-    this.bindUIElements();
     this.adjustImage();
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
   },
+
   adjustImage: function () {
-
-
     var that = this;
     if (this.imageWidth > 0 ||  this.imageHeight > 0) {
       _adjustCss();
     }
-
-
     function _adjustCss() {
       var cssAdjust = _computeCss(
         that.imageWidth,

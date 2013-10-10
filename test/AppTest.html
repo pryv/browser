@@ -14,7 +14,11 @@
       sampleApp.main();
     });
   </script>
-
+  <script id="positionsView" type="template" >
+    <div class="aggregated-icon Positions"></div>
+    <span class="aggregated-nbr-events"><%=eventsNbr%> Positions</span>
+    <div id="map-canvas-<%=id%>" class="mapView"></div>
+  </script>
   <script id="picturesView" type="template">
     <div class="aggregated-icon Pictures"></div>
     <span class="aggregated-nbr-events">+<%=eventsNbr%> Pictures</span>

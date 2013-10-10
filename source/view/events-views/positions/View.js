@@ -1,7 +1,8 @@
 /* global document */
 var  Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
-  _ = require('underscore');
+  _ = require('underscore'),
+  MarkerClusterer = require('./utility/markerclusterer.js');
 
 module.exports = Marionette.ItemView.extend({
   template: '#positionsView',
@@ -9,6 +10,8 @@ module.exports = Marionette.ItemView.extend({
   mapOtions : {},
   bounds: null,
   paths: {},
+  map: null,
+  markers: null,
 
   initialize: function () {
     MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
@@ -46,6 +49,8 @@ module.exports = Marionette.ItemView.extend({
     }
     var positions = this.model.get('positions'),
       geopoint;
+    this.markers = [];
+    this.paths = {};
     this.mapOptions =  {
       zoom: 8,
       scrollwheel: true,
@@ -53,6 +58,10 @@ module.exports = Marionette.ItemView.extend({
     };
     _.each(positions, function (p) {
       geopoint = new this.gmaps.LatLng(p.content.latitude, p.content.longitude);
+      this.markers.push(new this.gmaps.Marker({
+        position: geopoint,
+        visible: false
+      }));
       if (!this.bounds) {
         this.bounds = new this.gmaps.LatLngBounds(geopoint, geopoint);
         this.mapOptions.center = geopoint;
@@ -87,6 +96,7 @@ module.exports = Marionette.ItemView.extend({
         gMarker.setMap(this.map);
       }
     }, this);
+    gMarker = new MarkerClusterer(this.map, this.markers);
   },
   _generateRandomColor: function () {
     var letters = '0123456789ABCDEF'.split('');

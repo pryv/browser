@@ -21,8 +21,10 @@
   </script>
   <script id="picturesView" type="template">
     <div class="aggregated-icon Pictures"></div>
-    <span class="aggregated-nbr-events">+<%=eventsNbr%> Pictures</span>
+    <% if (eventsNbr - 1 > 0 ) {   %>
+    <span class="aggregated-nbr-events">+<%=eventsNbr - 1%> Pictures</span>
     <div class="aggregated-icon-page"></div>
+    <% } %>
     <div class="image-container">
       <img <% print('src="'+picUrl+'" style="max-width:1980px; height:auto;"'); %> />
     </div>
@@ -30,8 +32,10 @@
 
   <script id="notesView" type="template">
   <div class="aggregated-icon Notes"></div>
-  <span class="aggregated-nbr-events">+<%= eventsNbr%> Notes</span>
-  <div class="aggregated-icon-page"></div>
+    <% if (eventsNbr - 1 > 0 ) {   %>
+    <span class="aggregated-nbr-events">+<%=eventsNbr - 1%> Notes</span>
+    <div class="aggregated-icon-page"></div>
+    <% } %>
   <div class="">
     <%= content %>
   </div>

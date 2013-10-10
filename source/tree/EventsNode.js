@@ -39,7 +39,8 @@ var EventsNode = module.exports = TreeNode.implement(
         parent = parent.parent;
       }
       //temp hack
-      if (this.className === 'PositionsEventsNode' || this.className === 'PicturesEventsNode' || this.className === 'NotesEventsNode') {
+      if (this.className === 'PositionsEventsNode' || this.className === 'PicturesEventsNode' ||
+        this.className === 'NotesEventsNode') {
         if (!this.eventView) {
          // console.log(this.uniqueId + ' create');
           this.eventView = new this.pluginView(this.events, {

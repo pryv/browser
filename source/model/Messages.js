@@ -3,6 +3,7 @@ var Messages = module.exports = { };
 
 var SignalEmitter = require('pryv').Utility.SignalEmitter;
 
+var PryvMSGs = require('pryv').Messages;
 
 Messages.ModelFilter = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
@@ -22,8 +23,10 @@ Messages.ModelFilter = {
   },
   REASON : {
     EVENT_SCOPE_ENTER_ADD_CONNECTION : 'connectionAdded',
-    EVENT_SCOPE_LEAVE_FOCUS_ON_STREAM : 'focusOnStream',
+    REMOTELY : 'remotely',
     // may happend when several refresh requests overlaps
-    FORCE : 'forced'
+    FORCE : 'forced',
+
+    FILTER_STREAMS_CHANGED : PryvMSGs.Filter.STREAMS_CHANGE
   }
 };

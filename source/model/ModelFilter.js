@@ -7,31 +7,172 @@ var MSGs = require('./Messages').ModelFilter;
 
 var ModelFilter = module.exports = function (model) {
   Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL);
-
   this.model = model;
-  this._showOnlyStreams = null; // object that contains streams to display (from multiple conns)
-  this.hiddenStreams = {};
-  this._connections = {}; // serialIds / connection
 
-  this.currentEvents = {};
+  this._monitors = {}; // serialIds / monitor
 
-  this.tags = null;
-  this._fromST = null;
-  this._toST = null;
+  this.rootFilter = new Filter({limit: 2000});
+};
 
+
+
+// ----------------------------- Generic Event fire ------------------ //
+
+ModelFilter.prototype._eventsEnterScope = function (reason, events, batch) {
+  this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_ENTER, {reason: reason, events: events}, batch);
+
+};
+
+ModelFilter.prototype._eventsLeaveScope = function (reason, events, batch) {
+  this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_LEAVE, {reason: reason, events: events}, batch);
+
+};
+
+ModelFilter.prototype._eventsChange = function (reason, events, batch) {
+  this._fireEvent(MSGs.SIGNAL.EVENT_CHANGE, {reason: reason, events: events}, batch);
+
+};
+
+// ----------------------------- Events from monitors ------------------ //
+
+ModelFilter.prototype._onMonitorEventChange = function (changes) {
+  var batch = this.startBatch();
+  this._eventsEnterScope(MSGs.REASON.REMOTELY, changes.created, batch);
+  this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, batch);
+  this._eventsChange(MSGs.REASON.REMOTELY, changes.modified, batch);
+  batch.done();
+};
+
+ModelFilter.prototype._onMonitorFilterChange = function (changes) {
+  var batch = this.startBatch();
+  this._eventsEnterScope(changes.filterInfos.signal, changes.enter, batch);
+  this._eventsLeaveScope(changes.filterInfos.signal, changes.leave, batch);
+  batch.done();
+};
+
+
+// ----------------------------- CONNECTIONS -------------------------- //
+
+
+/**
+ * get all events that match this filter
+ */
+ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
+  var batchWaitForMe = batch ?
+    batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
+  if (_.has(this._monitors, connectionSerialId)) {
+    console.log('Warning ModelFilter.addConnection, already activated: ' + connectionSerialId);
+    return;
+  }
+  var connection = this.model.connections.get(connectionSerialId);
+  if (! connection) { // TODO error management
+    console.log('ModelFilter.addConnection cannot find connection: ' + connectionSerialId);
+    return;
+  }
+
+  // be sure localstorage is activated
+  connection.useLocalStorage(function (useLocalStorageError) {
+    if (useLocalStorageError) {
+      throw new Error('failed activating localStorage for ' + connection.id);
+    }
+
+    var filterSettings = _.omit(this.rootFilter.getData(), 'streams'); //copy everything but Streams
+    var specificFilter = new Filter(filterSettings);
+
+    var monitor = connection.monitor(specificFilter);
+    this._monitors[connectionSerialId] = monitor;
+
+    // ----- add listeners
+    function onMonitorOnLoad(events) {
+      if (batchWaitForMe) { batchWaitForMe.done(); } // called only once at load
+      this._eventsEnterScope(MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION, events, batch);
+    }
+    monitor.addEventListener(
+      Pryv.Messages.Monitor.ON_LOAD, onMonitorOnLoad.bind(this));
+
+    monitor.addEventListener(
+      Pryv.Messages.Monitor.ON_EVENT_CHANGE, this._onMonitorEventChange.bind(this));
+    monitor.addEventListener(
+      Pryv.Messages.Monitor.ON_FILTER_CHANGE, this._onMonitorFilterChange.bind(this));
+
+    monitor.start(function (error) {
+      console.log('monitor started ' + error);
+    });
+  }.bind(this));
+};
+
+
+
+/**
+ * get all events actually matching this filter
+ */
+ModelFilter.prototype.triggerForAllCurrentEvents = function (trigger) {
+  this._eachMonitor(function (monitor) {
+    trigger(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
+      {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
+        events: monitor.getEvents()});
+  });
+};
+
+// --------- Utils -----
+
+/** execute for each filter **/
+ModelFilter.prototype._eachMonitor = function (callback) {
+  _.each(this._monitors, callback.bind(this));
+};
+
+// --------- Filter manipulations -----------------//
+
+/**
+ * get the actual streams in the filter;
+ * @returns {Array}
+ */
+ModelFilter.prototype.getStreams = function () {
+  var result = [];
+  this._eachMonitor(function (monitor) {
+    _.each(monitor.filter.streamsIds, function (streamId) {
+      result.push(monitor.connection.getStreamById(streamId));
+    });
+  });
+  return result;
 };
 
 /**
- * Create ah-hoc filter for this connection
- * @private
+ * focus on those streams;
  */
-ModelFilter.prototype._getFilterFor = function (/*connectionSerialId*/) {
+ModelFilter.prototype.focusOnStreams = function (streams) {
+  if (streams === null) {
+    this._eachMonitor(function (monitor) {  // clear all
+      monitor.filter.streamsIds = null;
+    });
+    return 1;
+  }
 
-  return nullFilter;
+  if (! _.isArray(streams)) { streams = [streams];  }
+
+  // --- order the streams by connection
+  // (note that streams not in current connection pool will be ignored without warning)
+  var streamsByConnection = {};
+  _.each(streams, function (stream) {
+    if (! _.has(streamsByConnection, stream.connection.serialId)) {
+      streamsByConnection[stream.connection.serialId] = [];
+    }
+    streamsByConnection[stream.connection.serialId].push(stream.id);
+  });
+
+  this._eachMonitor(function (monitor, key) {  // clear all
+    if (_.has(streamsByConnection, key)) {
+      monitor.filter.streamsIds = streamsByConnection[key]; // shush the connection
+    } else {
+      monitor.filter.streamsIds = []; // shush the connection
+    }
+  });
 };
-var nullFilter = new Filter({limit : 2000});
 
 
+
+
+// ............ CLEANUP OR REUSE ................................  //
 
 
 // ----------------------------- EVENTS --------------------------- //
@@ -44,7 +185,7 @@ var nullFilter = new Filter({limit : 2000});
 ModelFilter.prototype.matchesEvent = function (event) {
   return (
     this.matchesStream(event.stream)
-    // TODO && TIME
+    //TODO && TIME
     );
 };
 
@@ -171,7 +312,7 @@ ModelFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 
 
   var connectionsTodo = [];
-  _.each(_.values(this._connections), function (connection) { // for each connection
+  _.each(_.values(this._monitors), function (connection) { // for each connection
     if (this.matchesConnection(connection)) {
       connectionsTodo.push(connection.serialId);
     }
@@ -226,50 +367,6 @@ ModelFilter.prototype.refreshContent = function (reason, focusOn, batch) {
 
 };
 
-// ----------------------------- CONNECTIONS -------------------------- //
-
-
-/**
- * get all events that match this filter
- */
-ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
-  var batchWaitForMe = batch ?
-    batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
-  if (_.has(this._connections, connectionSerialId)) {
-    console.log('Warning ModelFilter.addConnection, already activated: ' + connectionSerialId);
-    return;
-  }
-  var connection = this.model.connections.get(connectionSerialId);
-  if (! connection) { // TODO error management
-    console.log('ModelFilter.addConnection cannot find connection: ' + connectionSerialId);
-    return;
-  }
-  this._connections[connectionSerialId] = connection;
-
-
-
-
-  var self = this;
-  this._getEventsForConnectionSerialId(connectionSerialId,
-    function (error, result) {
-      if (error) { console.log(error); } // TODO handle
-
-      var eventThatEnter = [];
-      _.each(result, function (event) {
-        if (! _.has(self.currentEvents, event.serialId)) {
-          eventThatEnter.push(event);
-          self.currentEvents[event.serialId] = event;
-        }
-      });
-
-      self._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
-        {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
-          events: result}, batch);
-      if (batchWaitForMe) { batchWaitForMe.done(); }
-    }
-  );
-};
-
 /**
  * return true if connection matches filter
  * @param eventListener
@@ -284,18 +381,11 @@ ModelFilter.prototype.matchesConnection = function (connection) {
     }
     if (! inStreams) { return false; }
   }
-  return _.has(this._connections, connection.serialId);
+  return _.has(this._monitors, connection.serialId);
 };
 
 
-/**
- * get all events actually matching this filter
- */
-ModelFilter.prototype.triggerForAllCurrentEvents = function (eventListener) {
-  eventListener(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
-    {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
-      events: _.values(this.currentEvents)});
-};
+
 
 ModelFilter.prototype._getEventsForConnectionSerialId = function (connectionSerialId, callback) {
   var self = this;

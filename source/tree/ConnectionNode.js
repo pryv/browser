@@ -109,7 +109,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
 //----------- debug ------------//
     _debugTree : function () {
       var me = {
-        name : this.connection.shortId
+        name : this.connection.displayId
       };
 
       _.extend(me, TreeNode.prototype._debugTree.call(this));

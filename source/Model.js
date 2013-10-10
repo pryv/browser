@@ -35,7 +35,6 @@ module.exports = function () {
   this.activeFilter.addConnection(perki2Serial, batch);
   batch.done();
 
-  /**
   var streams = [];
   var perki1 =  this.connections.get(perki1Serial);
   perki1.useLocalStorage(function () {
@@ -44,9 +43,8 @@ module.exports = function () {
   });
 
   setTimeout(function () {
-    //this.activeFilter.showOnlyStreams(streams);
-  }, 8000);
-      **/
+    this.activeFilter.focusOnStreams(streams);
+  }.bind(this), 8000);
 
 };
 

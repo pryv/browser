@@ -1,4 +1,5 @@
-var EventsNode = require('../EventsNode');
+var EventsNode = require('../EventsNode'),
+    EventsView = require('../../view/events-view/plugin-views/pictures/Model.js');
 
 /**
  * Holder for EventsNode
@@ -10,7 +11,7 @@ var PicturesEventsNode = module.exports = EventsNode.implement(
   },
   {
     className: 'PicturesEventsNode',
-    pluginViewName: 'Pictures',
+    pluginView: EventsView,
 
     getWeight: function () {
       return 1;

@@ -9,7 +9,7 @@ html, body, #tree {
   overflow: hidden;
 }
 
-.node {
+.node, .image-container img {
   position: absolute;
   transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
   -webkit-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;

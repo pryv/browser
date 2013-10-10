@@ -102,6 +102,7 @@ _.extend(TreeNode.prototype, {
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
         child.width = squarified[child.uniqueId].width;
+        //no right margin for rightest child
         child.width -= child.width + child.x === this.width ? 0 : this.margin;
         child.height = squarified[child.uniqueId].height - this.margin;
       }, this);
@@ -126,6 +127,7 @@ _.extend(TreeNode.prototype, {
   renderView: function (recurcive) {
     if (this.needToSquarify) {
       this.needToSquarify = false;
+      this._createView(true);
       this._generateChildrenTreemap(0,
        0,
         this.width,

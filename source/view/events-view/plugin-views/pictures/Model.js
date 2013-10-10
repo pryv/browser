@@ -1,18 +1,19 @@
 var _ = require('underscore'),
-  PicturesView = require('./PicturesView.js'),
+  PicturesView = require('./View.js'),
   Backbone = require('backbone');
 var ACCEPTED_TYPE = 'picture/attached';
-var PicturesPlugin = module.exports = function (events, width, height) {
+var PicturesPlugin = module.exports = function (events, params) {
   this.events = {};
   _.each(events, function (event) {
-    this.events[event.id] = event;
+    if (event.type === ACCEPTED_TYPE) {
+      this.events[event.id] = event;
+    }
   }, this);
-  this.width = width;
-  this.height = height;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
   this.eventDisplayed = null;
+  _.extend(this, params);
   this._refreshModelView();
 
 };

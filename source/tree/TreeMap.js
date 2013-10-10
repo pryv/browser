@@ -53,7 +53,7 @@ var TreeMap = module.exports = function (model) {
   }.bind(this);
 
   this.model.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
-//--------- register the TreeMap event Listener ----------//
+  //--------- register the TreeMap event Listener ----------//
   this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope
   );

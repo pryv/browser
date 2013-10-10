@@ -11,6 +11,9 @@ module.exports = function () {
   // create connection handler and filter
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new ModelFilter(this);
+  this.activeFilter.batchSet(
+    {timeFrameST : [null, null],
+      limit : 2000 });
 
   // add fredos to Connections
   var fredosSerial =
@@ -38,13 +41,14 @@ module.exports = function () {
   var streams = [];
   var perki1 =  this.connections.get(perki1Serial);
   perki1.useLocalStorage(function () {
-    var stream =  perki1.streams.getById('00e9ee8505063cef39b9c6642cd52da21739ac24');
+    var stream =  perki1.streams.getById('test');
     streams.push(stream);
-  });
+    setTimeout(function () {
+     // this.activeFilter.focusOnStreams(streams);
+    }.bind(this), 8000);
+  }.bind(this));
 
-  setTimeout(function () {
-    this.activeFilter.focusOnStreams(streams);
-  }.bind(this), 8000);
+
 
 };
 

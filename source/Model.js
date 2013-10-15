@@ -11,7 +11,7 @@ module.exports = function () {
   // create connection handler and filter
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new ModelFilter(this);
-  this.activeFilter.batchSet(
+  this.activeFilter.set(
     {timeFrameST : [null, null],
       limit : 2000 });
 

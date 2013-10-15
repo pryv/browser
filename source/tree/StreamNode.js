@@ -38,7 +38,7 @@ var StreamNode = module.exports = TreeNode.implement(
           });
           this.aggregated = true;
 
-          var parent = this.parent;
+         /* var parent = this.parent;
           parent.needToSquarify = true;
           // reset the event count
           // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
@@ -46,7 +46,7 @@ var StreamNode = module.exports = TreeNode.implement(
             parent.eventsNbr -= this.eventsNbr;
             parent = parent.parent;
           }
-          this.eventsNbr = 0;
+          this.eventsNbr = 0;    */
           this.createEventsNodesFromAllEvents(this.getAllEvents());
           // create the new aggregated views
           _.each(this.eventsNodesAggregated, function (node) {
@@ -71,8 +71,20 @@ var StreamNode = module.exports = TreeNode.implement(
       return this.aggregated;
     },
     getWeight: function () {
+      var children = [];
+      // Streams
+      _.each(this.stream.children, function (child) {
+        var childTemp =  this.connectionNode.streamNodes[child.id];
+        children.push(childTemp);
+      }, this);
+
+      // Events
+      _.each(this.eventsNodes, function (eventNode) {
+        children.push(eventNode);
+      });
+
       var weight = 0;
-      this.getChildren().forEach(function (child) {
+      children.forEach(function (child) {
         weight += child.getWeight();
       });
 
@@ -83,8 +95,12 @@ var StreamNode = module.exports = TreeNode.implement(
       var children = [];
 
       if (this.aggregated) {
-
+        var weight = this.getWeight();
+        var size = _.size(this.eventsNodesAggregated);
         _.each(this.eventsNodesAggregated, function (node) {
+          node.getWeight = function () {
+            return weight / size;
+          };
           children.push(node);
         });
       } else {
@@ -157,11 +173,8 @@ var StreamNode = module.exports = TreeNode.implement(
       if (!this.eventsNodes[key]) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
-      if (this.aggregated) {
-        this.eventsNodesAggregated[key].eventLeaveScope(event, reason, callback);
-      } else {
-        this.eventsNodes[key].eventLeaveScope(event, reason, callback);
-      }
+      this.eventsNodes[key].eventLeaveScope(event, reason, callback);
+
 
     },
 

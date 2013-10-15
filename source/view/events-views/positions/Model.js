@@ -3,6 +3,9 @@ var _ = require('underscore'),
    Backbone = require('backbone');
 var ACCEPTED_TYPE = 'position/wgs84';
 var PositionsPlugin = module.exports = function (events, params) {
+  this.debounceRefresh = _.debounce(function () {
+    this._refreshModelView();
+  }, 100);
   this.events = {};
   _.each(events, function (event) {
     this.events[event.id] = event;
@@ -11,16 +14,18 @@ var PositionsPlugin = module.exports = function (events, params) {
   this.modelView = null;
   this.view = null;
   this.eventDisplayed = null;
+  this.container = null;
+  this.needToRender = null;
   _.extend(this, params);
-  this._refreshModelView();
+  this.debounceRefresh();
 
 };
 PositionsPlugin.prototype.eventEnter = function (event) {
   if (this._validEvent(event)) {
     this.events[event.id] = event;
-    this._refreshModelView();
+    this.debounceRefresh();
   } else {
-    console.log('Position plugin: Invalid event:', event);
+   // console.log('Position plugin: Invalid event:', event);
   }
 };
 
@@ -30,9 +35,9 @@ PositionsPlugin.prototype.eventLeave = function (event) {
   } else {
     delete this.events[event.id];
     if (_.size(this.events) === 0) {
-      this.close();
+      //this.close();
     } else {
-      this._refreshModelView();
+      this.debounceRefresh();
     }
   }
 };
@@ -45,27 +50,35 @@ PositionsPlugin.prototype.eventChange = function (event) {
       'Type accepted is ' + ACCEPTED_TYPE);
   } else {
     this.events[event.id] = event;
-    this._refreshModelView();
+    this.debounceRefresh();
   }
 };
 
 PositionsPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.highlightedTime = time;
-  this._refreshModelView();
+  this.debounceRefresh();
 };
 
-PositionsPlugin.prototype.getHtml = function () {
+PositionsPlugin.prototype.render = function (container) {
+  this.container = container;
   if (this.view) {
-    return this.view.render().el;
+    this.view.renderView(this.container);
+  } else {
+    this.needToRender = true;
   }
 };
 PositionsPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
-  this._refreshModelView();
+  this.debounceRefresh();
 };
 PositionsPlugin.prototype.close = function () {
   this.view.close();
   this.view = null;
+  this.events = null;
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.eventDisplayed = null;
+
 };
 PositionsPlugin.prototype._validEvent = function (event) {
   if (event.type === ACCEPTED_TYPE) {
@@ -81,6 +94,7 @@ PositionsPlugin.prototype._validEvent = function (event) {
   }
 };
 PositionsPlugin.prototype._refreshModelView = function () {
+
   if (!this.positions) {
     this.positions = [];
   }
@@ -109,6 +123,10 @@ PositionsPlugin.prototype._refreshModelView = function () {
   this.modelView.set('positions', this.positions);
   this.modelView.set('id', this.id);
   this.modelView.set('eventsNbr', _.size(this.events));
+  if (this.needToRender) {
+    this.view.renderView(this.container);
+    this.needToRender = false;
+  }
 };
 
 

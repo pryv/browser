@@ -11,6 +11,7 @@ module.exports = Marionette.ItemView.extend({
   bounds: null,
   paths: {},
   map: null,
+  container: null,
   markers: null,
 
   initialize: function () {
@@ -32,14 +33,17 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('width', '100%');
   },
 
-  renderView: function () {
-
+  renderView: function (container) {
+    this.container = container;
     this.render();
   },
   onBeforeRender: function () {
     this._initMap();
   },
   onRender: function () {
+    if (this.container) {
+      $('#' + this.container + ' span').append(this.el);
+    }
     this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
   },
   _initMap: function () {

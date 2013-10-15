@@ -96,6 +96,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
         throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
       }
       node.eventLeaveScope(event, reason, callback);
+
     },
 
     eventChange: function (event, reason, callback) {

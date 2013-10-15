@@ -43,6 +43,7 @@ module.exports = TreeNode.implement(
         throw new Error('RootNode: can\'t find path to remove event' + event.id);
       }
       node.eventLeaveScope(event, reason, callback);
+
     },
 
     eventChange: function (event, reason, callback) {

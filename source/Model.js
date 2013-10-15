@@ -41,11 +41,11 @@ module.exports = function () {
   var streams = [];
   var perki1 =  this.connections.get(perki1Serial);
   perki1.useLocalStorage(function () {
-    var stream =  perki1.streams.getById('test');
+    var stream =  perki1.streams.getById('TVWwwYo-mJ');
     streams.push(stream);
     setTimeout(function () {
      // this.activeFilter.focusOnStreams(streams);
-    }.bind(this), 8000);
+    }.bind(this), 30000);
   }.bind(this));
 
 

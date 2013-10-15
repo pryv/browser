@@ -15,7 +15,9 @@ html, body, #tree {
   -webkit-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
 }
 .nodeHeader {
-  padding: 7px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 7px;
   background-color: #9c1a0f;
 }
 .ConnectionNode, .StreamNode,.GenericEventsNode, .NotesEventsNode,.PositionsEventsNode, .PicturesEventsNode{

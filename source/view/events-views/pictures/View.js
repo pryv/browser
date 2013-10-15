@@ -2,6 +2,7 @@ var  Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
   template: '#picturesView',
+  container: null,
   initialize: function () {
     this.listenTo(this.model, 'change:width', this.adjustImage);
     this.listenTo(this.model, 'change:height', this.adjustImage);
@@ -13,11 +14,13 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
 
-  renderView: function () {
+  renderView: function (container) {
+    this.container = container;
     this.render();
   },
 
   onRender: function () {
+
     this.$image = this.$('img');
     this.$image.load(function () {
       if (typeof this.imageWidth === 'undefined' && typeof this.imageHeight === 'undefined') {
@@ -27,6 +30,9 @@ module.exports = Marionette.ItemView.extend({
       this.adjustImage();
     }.bind(this));
     this.adjustImage();
+    if (this.container) {
+      $('#' + this.container + ' span').append(this.el);
+    }
   },
 
   adjustImage: function () {

@@ -15,7 +15,7 @@ module.exports = Marionette.ItemView.extend({
 
   },
   triggers: {
-    'click': 'click'
+    'click .nodeHeader': 'headerClicked'
   },
   change: function () {
 
@@ -35,11 +35,11 @@ module.exports = Marionette.ItemView.extend({
     var template = this.getTemplate();
     var html = Marionette.Renderer.render(template, data);
     this.$el.html(html);
-    if (this.model.get('eventView')) {
-      this.$el.append(this.model.get('eventView').getHtml());
-    }
-    $('#' + this.model.get('containerId')).append(this.$el);
 
+    $('#' + this.model.get('containerId')).append(this.$el);
+    if (this.model.get('eventView')) {
+      this.model.get('eventView').render(this.model.get('id'));
+    }
     this.bindUIElements();
 
     if (this.onRender) { this.onRender(); }
@@ -62,6 +62,9 @@ module.exports = Marionette.ItemView.extend({
 
   },
   close: function () {
+
+    this.$el.removeClass('animated  fadeIn');
+    this.$el.addClass('animated  fadeOut');
     this.remove();
   }
 });

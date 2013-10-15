@@ -9,7 +9,7 @@ var _ = require('underscore'),
  * @param parent
  * @constructor
  */
-var DEFAULT_OFFSET = 30;
+var DEFAULT_OFFSET = 18;
 // TODO see css right border
 // need to set color background only on .nodeHeader
 var DEFAULT_MARGIN = 2;
@@ -26,7 +26,6 @@ var TreeNode = module.exports = function (parent) {
   this.aggregated = false;
   this.view = null;
   this.model = null;
-  this.eventsNbr = 0;
   this.offset = this.parent ? this.parent.offset : DEFAULT_OFFSET;
   this.margin = this.parent ? this.parent.margin : DEFAULT_MARGIN;
   this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
@@ -125,21 +124,25 @@ _.extend(TreeNode.prototype, {
    * @return A DOM Object, EventView..
    */
   renderView: function (recurcive) {
-    if (this.needToSquarify) {
-      this.needToSquarify = false;
-      this._createView(true);
-      this._generateChildrenTreemap(0,
-       0,
-        this.width,
-        this.height,
-        true);
-      this._refreshViewModel(true);
-    }
-    if ($('#' + this.uniqueId).length === 0 && this.view) {
-      this.view.renderView();
-      this.view.on('click', function () {
-        // TODO implement on click
-      }, this);
+    if (this.getWeight() === 0) {
+      this.aggregated = false;
+      if (this.view) {
+        this.view.close();
+        this.view = null;
+      }
+    } else {
+      if ($('#' + this.uniqueId).length === 0 && this.view) {
+        this.view.renderView();
+        this.view.on('headerClicked', function () {
+          if (this.stream) {
+            var parent  = this.parent;
+            while (parent.parent) {
+              parent = parent.parent;
+            }
+            parent.focusOnStreams(this.stream);
+          }
+        }, this);
+      }
     }
     if (recurcive) {
       _.each(this.getChildren(), function (child) {

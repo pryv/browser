@@ -3,6 +3,9 @@ var _ = require('underscore'),
   Backbone = require('backbone');
 var ACCEPTED_TYPE = 'picture/attached';
 var PicturesPlugin = module.exports = function (events, params) {
+  this.debounceRefresh = _.debounce(function () {
+    this._refreshModelView();
+  }, 100);
   this.events = {};
   _.each(events, function (event) {
     if (event.type === ACCEPTED_TYPE) {
@@ -13,17 +16,19 @@ var PicturesPlugin = module.exports = function (events, params) {
   this.modelView = null;
   this.view = null;
   this.eventDisplayed = null;
+  this.container = null;
+  this.needToRender = null;
   _.extend(this, params);
-  this._refreshModelView();
+  this.debounceRefresh();
 
 };
 PicturesPlugin.prototype.eventEnter = function (event) {
   if (event.type === ACCEPTED_TYPE) {
     if (this.events[event.id]) {
-      console.log('eventEnter: event id ' + event.id + ' already exists');
+    //  console.log('eventEnter: event id ' + event.id + ' already exists');
     } else {
       this.events[event.id] = event;
-      this._refreshModelView();
+      this.debounceRefresh();
     }
   } else {
     console.log('eventEnter: This event type ' + event.type + ' is not accepted. ' +
@@ -38,9 +43,9 @@ PicturesPlugin.prototype.eventLeave = function (event) {
   } else {
     delete this.events[event.id];
     if (_.size(this.events) === 0) {
-      this.close();
+      //this.close();
     } else {
-      this._refreshModelView();
+    //  this.debounceRefresh();
     }
   }
 };
@@ -53,27 +58,35 @@ PicturesPlugin.prototype.eventChange = function (event) {
       'Type accepted is ' + ACCEPTED_TYPE);
   } else {
     this.events[event.id] = event;
-    this._refreshModelView();
+    this.debounceRefresh();
   }
 };
 
 PicturesPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.highlightedTime = time;
-  this._refreshModelView();
+  this.debounceRefresh();
 };
 
-PicturesPlugin.prototype.getHtml = function () {
+PicturesPlugin.prototype.render = function (container) {
+  this.container = container;
   if (this.view) {
-    return this.view.render().el;
+    this.view.renderView(this.container);
+  } else {
+    this.needToRender = true;
   }
 };
 PicturesPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
-  this._refreshModelView();
+  this.debounceRefresh();
 };
 PicturesPlugin.prototype.close = function () {
   this.view.close();
   this.view = null;
+  this.events = null;
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.eventDisplayed = null;
+
 };
 PicturesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
@@ -110,6 +123,10 @@ PicturesPlugin.prototype._refreshModelView = function () {
     this.modelView.set('eventsNbr', _.size(this.events));
     this.modelView.set('width', this.width);
     this.modelView.set('height', this.height);
+    if (this.needToRender) {
+      this.view.renderView(this.container);
+      this.needToRender = false;
+    }
   }
 };
 

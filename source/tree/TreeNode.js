@@ -271,7 +271,14 @@ _.extend(TreeNode.prototype, {
   eventChange: function () {
     throw new Error(this.className + ': eventChange must be implemented');
   },
-
+  onDateHighLighted: function (time) {
+    if (this.eventView) {
+      this.eventView.OnDateHighlightedChange(time);
+    }
+    _.each(this.getChildren(), function (child) {
+      child.onDateHighLighted(time);
+    });
+  },
   /**
    * Event removed
    * @parma eventChange

@@ -4,20 +4,23 @@ module.exports = Marionette.ItemView.extend({
   template: '#notesView',
   container: null,
   initialize: function () {
-    this.listenTo(this.model, 'change', this.render());
+    this.listenTo(this.model, 'change:id', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
+    this.$el.addClass('animated  bounceIn');
   },
-
+  change: function () {
+    this.$el.removeClass('animated bounceIn');
+    this.$el.addClass('animated  tada');
+    this.render();
+  },
   renderView: function (container) {
     this.container = container;
     this.render();
   },
   onRender: function () {
-    this.$el.addClass('animated  bounceIn');
-
     if (this.container) {
-      $('#' + this.container + ' span').append(this.el);
+      $('#' + this.container).html(this.el);
     }
   },
   close: function () {

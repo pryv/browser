@@ -78,7 +78,11 @@ var TreeMap = module.exports = function (model) {
     this.eventChange);
 };
 
-
+TreeMap.prototype.onDateHighLighted = function (time) {
+  if (this.root) {
+    this.root.onDateHighLighted(time);
+  }
+};
 TreeMap.prototype.destroy = function () {
   this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope);

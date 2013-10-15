@@ -6,11 +6,15 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     this.listenTo(this.model, 'change:width', this.adjustImage);
     this.listenTo(this.model, 'change:height', this.adjustImage);
+    this.listenTo(this.model, 'change:id', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
+    this.$el.addClass('animated bounceIn');
   },
 
   change: function () {
+    this.$el.removeClass('animated bounceIn');
+    this.$el.addClass('animated  tada');
     this.render();
   },
 
@@ -31,7 +35,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
     this.adjustImage();
     if (this.container) {
-      $('#' + this.container + ' span').append(this.el);
+      $('#' + this.container).html(this.el);
     }
   },
 

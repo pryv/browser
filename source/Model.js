@@ -1,6 +1,6 @@
 
 var ModelFilter = require('./model/ModelFilter.js');
-
+var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
 var TreeMap = require('./tree/TreeMap.js');
@@ -9,27 +9,32 @@ var TimeLine = require('browser-timeline');
 
 module.exports = function () {
   // create connection handler and filter
+  this.onFiltersChanged = function () {
+    console.log('onFiltersChanged', arguments);
+    this.activeFilter.timeFrameLT = [arguments[0].from, arguments[0].to];
+  };
+
+
+  this.onDateHighlighted = _.throttle(function () {
+    console.log('onDateHighlighted', arguments);
+    if (this.treemap) {
+      this.treemap.onDateHighLighted(arguments[0].getTime() / 1000);
+    }
+  }, 100);
+
+
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new ModelFilter(this);
   this.timeView = new TimeLine();
   this.timeView.render();
-  initTimeView(this.timeView);
+  initTimeAndFilter(this.timeView, this.activeFilter);
   this.timeView.on('filtersChanged', this.onFiltersChanged, this);
   this.timeView.on('dateHighlighted', this.onDateHighlighted, this);
   this.timeView.on('dateMasked', this.onDateMasked, this);
-  this.onFiltersChanged = function () {
-    console.log('onFiltersChanged', arguments);
-  };
-  this.onDateHighlighted = function () {
-    console.log('onDateHighlighted', arguments);
-  };
+
   this.onDateMasked = function () {
     console.log('onDateMasked', arguments);
   };
-  this.activeFilter.batchSet(
-    {timeFrameST : [null, null],
-      limit : 2000 });
-
   // add fredos to Connections
   var fredosSerial =
     this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM')).useStaging());
@@ -63,14 +68,19 @@ module.exports = function () {
     }.bind(this), 30000);
   }.bind(this));
 };
-var initTimeView = function (timeView) {
-  var spanName = 'day',
+var initTimeAndFilter = function (timeView, filter) {
+  var spanName = 'year',
     spanTime = 86400000,
     fromTime = new Date(),
     start = new Date(fromTime.getFullYear(), fromTime.getMonth(), fromTime.getDate());
 
-  fromTime = new Date(start.getTime());
+  fromTime = new Date(start.getTime() - (spanTime * 365));
   var toTime = new Date(start.getTime() + spanTime - 1);
+  filter.timeFrameLT = [fromTime, toTime];
+  filter.batchSet({
+    limit: 2000
+  });
+
   timeView.onFiltersChanged({
     from:     fromTime,
     to:       toTime,

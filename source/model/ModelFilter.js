@@ -175,6 +175,13 @@ ModelFilter.prototype.focusOnStreams = function (streams) {
 };
 
 // # Bind filter properties to rootFilter
+Object.defineProperty(ModelFilter.prototype, 'timeFrameLT', {
+  set: function (newValue) {
+    var to = newValue[0] ? newValue[0].getTime() / 1000 : null;
+    var from = newValue[1] ? newValue[1].getTime() / 1000 : null;
+    this.timeFrameST = [to, from];
+  }
+});
 
 _.each(['timeFrameST', 'limit'],  function (prop) {
   Object.defineProperty(ModelFilter.prototype, prop, {

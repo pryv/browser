@@ -88,7 +88,7 @@ NotesPlugin.prototype.close = function () {
 };
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
-  if (!this.modelView || this.view) {
+  if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
       content: this.eventDisplayed.content,
@@ -105,8 +105,8 @@ NotesPlugin.prototype._refreshModelView = function () {
       this.view = new NotesView({model: this.modelView});
     }
   }
-  this.modelView.set('id', this.eventDisplayed.id);
   this.modelView.set('content', this.eventDisplayed.content);
+  this.modelView.set('id', this.eventDisplayed.id);
   this.modelView.set('description', this.eventDisplayed.description);
   this.modelView.set('type', this.eventDisplayed.type);
   this.modelView.set('streamId', this.eventDisplayed.streamId);
@@ -121,7 +121,6 @@ NotesPlugin.prototype._refreshModelView = function () {
 };
 
 NotesPlugin.prototype._findEventToDisplay = function () {
-
   if (this.highlightedTime === Infinity) {
     var oldestTime = 0;
     _.each(this.events, function (event) {
@@ -141,6 +140,7 @@ NotesPlugin.prototype._findEventToDisplay = function () {
       }
     }, this);
   }
+
 };
 
 NotesPlugin.acceptTheseEvents = function (events) {

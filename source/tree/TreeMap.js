@@ -6,7 +6,7 @@ var _ = require('underscore');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
-  this.root = new RootNode($('#tree').width(), $('#tree').height());
+  this.root = new RootNode($('#tree').width(), $('#tree').height() - $('#timeframe').height());
 
   this.root.focusOnStreams = function (stream) {
     this.model.activeFilter.focusOnStreams(stream);
@@ -27,7 +27,7 @@ var TreeMap = module.exports = function (model) {
 
   $(window).resize(_.debounce(function () {
     this.root.width = $('#tree').width();
-    this.root.height = $('#tree').height();
+    this.root.height = $('#tree').height() - $('#timeframe').height();
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,

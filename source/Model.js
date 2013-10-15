@@ -5,13 +5,28 @@ var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
 var TreeMap = require('./tree/TreeMap.js');
 var Pryv = require('pryv');
-
+var TimeLine = require('browser-timeline');
 
 module.exports = function () {
   // create connection handler and filter
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new ModelFilter(this);
-  this.activeFilter.set(
+  this.timeView = new TimeLine();
+  this.timeView.render();
+  initTimeView(this.timeView);
+  this.timeView.on('filtersChanged', this.onFiltersChanged, this);
+  this.timeView.on('dateHighlighted', this.onDateHighlighted, this);
+  this.timeView.on('dateMasked', this.onDateMasked, this);
+  this.onFiltersChanged = function () {
+    console.log('onFiltersChanged', arguments);
+  };
+  this.onDateHighlighted = function () {
+    console.log('onDateHighlighted', arguments);
+  };
+  this.onDateMasked = function () {
+    console.log('onDateMasked', arguments);
+  };
+  this.activeFilter.batchSet(
     {timeFrameST : [null, null],
       limit : 2000 });
 
@@ -44,13 +59,23 @@ module.exports = function () {
     var stream =  perki1.streams.getById('TVWwwYo-mJ');
     streams.push(stream);
     setTimeout(function () {
-     // this.activeFilter.focusOnStreams(streams);
+      // this.activeFilter.focusOnStreams(streams);
     }.bind(this), 30000);
   }.bind(this));
-
-
-
 };
+var initTimeView = function (timeView) {
+  var spanName = 'day',
+    spanTime = 86400000,
+    fromTime = new Date(),
+    start = new Date(fromTime.getFullYear(), fromTime.getMonth(), fromTime.getDate());
 
-
+  fromTime = new Date(start.getTime());
+  var toTime = new Date(start.getTime() + spanTime - 1);
+  timeView.onFiltersChanged({
+    from:     fromTime,
+    to:       toTime,
+    span:     spanTime,
+    spanName: spanName
+  });
+};
 

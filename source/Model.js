@@ -5,7 +5,7 @@ var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
 var TreeMap = require('./tree/TreeMap.js');
 var Pryv = require('pryv');
-var TimeLine = require('browser-timeline');
+var TimeLine = require('timeframe-selector');
 
 module.exports = function () {
   // create connection handler and filter
@@ -77,7 +77,7 @@ var initTimeAndFilter = function (timeView, filter) {
   fromTime = new Date(start.getTime() - (spanTime * 365));
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
-  filter.batchSet({
+  filter.set({
     limit: 2000
   });
 

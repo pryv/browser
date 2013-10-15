@@ -11,7 +11,7 @@ var ModelFilter = module.exports = function (model, batchSetKeyValues) {
   this._monitors = {}; // serialIds / monitor
   this.rootFilter = new Filter();
   if (batchSetKeyValues) {
-    this.batchSet(batchSetKeyValues);
+    this.set(batchSetKeyValues);
   }
 };
 
@@ -198,7 +198,7 @@ _.each(['timeFrameST', 'limit'],  function (prop) {
 });
 
 // -- use this to bind function of filters
-_.each(['batchSet'],  function (func) {
+_.each(['set'],  function (func) {
   ModelFilter.prototype[func] = function () {
     var myargs = arguments;
     this._eachMonitor(function (monitor) {

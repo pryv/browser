@@ -214,5 +214,6 @@ StreamNode.registeredEventNodeTypes = {
   'NotesEventsNode' : require('./eventsNode/NotesEventsNode.js'),
   'PositionsEventsNode' : require('./eventsNode/PositionsEventsNode.js'),
   'PicturesEventsNode' : require('./eventsNode/PicturesEventsNode.js'),
+  'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };

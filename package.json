@@ -14,6 +14,7 @@
     "timeframe-selector": "git+ssh://git@github.com:pryv/browser-timeline.git#browser-treemap-poc",
     "backbone.marionette": "~1.1.0" ,
     "backbone": "~1.0.0",
+    "d3": "~3.3.8",
     "socket.io-client": "~0.9.16",
     "google-maps": "~1.0.0"
   },

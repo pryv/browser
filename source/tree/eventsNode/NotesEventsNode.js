@@ -20,7 +20,7 @@ var NotesEventsNode = module.exports = EventsNode.implement(
 
 // we accept all kind of events
 NotesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'note/txt');
+  return (eventType === 'note/txt' || eventType === 'note/text');
 };
 
 

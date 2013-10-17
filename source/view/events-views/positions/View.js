@@ -13,8 +13,14 @@ module.exports = Marionette.ItemView.extend({
   map: null,
   container: null,
   markers: null,
+  highlightedMarker: null,
+  highlightedTime: Infinity,
+  positions: null,
+  highlightedPosition: null,
 
   initialize: function () {
+
+    this.positions = this.model.get('positions');
     MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
     MapLoader.load().then(function (google) {
       this.gmaps = google.maps;
@@ -42,7 +48,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     if (this.container) {
-      $('#' + this.container + ' span').append(this.el);
+      $('#' + this.container).append(this.el);
     }
     this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
   },
@@ -51,8 +57,7 @@ module.exports = Marionette.ItemView.extend({
       this.waitingForInitMap = true;
       return;
     }
-    var positions = this.model.get('positions'),
-      geopoint;
+    var geopoint;
     this.markers = [];
     this.paths = {};
     this.mapOptions =  {
@@ -60,7 +65,7 @@ module.exports = Marionette.ItemView.extend({
       scrollwheel: true,
       mapTypeId: this.gmaps.MapTypeId.ROADMAP
     };
-    _.each(positions, function (p) {
+    _.each(this.positions, function (p) {
       geopoint = new this.gmaps.LatLng(p.content.latitude, p.content.longitude);
       this.markers.push(new this.gmaps.Marker({
         position: geopoint,
@@ -109,6 +114,31 @@ module.exports = Marionette.ItemView.extend({
       color += letters[Math.round(Math.random() * 15)];
     }
     return color;
+  },
+  onDateHighLighted : function (time) {
+    this.highlightedTime = time;
+    var positionToShow = null;
+
+    var timeDiff = Infinity, temp = 0, highlightTime = this.highlightedTime;
+    _.each(this.positions, function (position) {
+      temp = Math.abs(position.time - highlightTime);
+      if (temp <= timeDiff) {
+        timeDiff = temp;
+        positionToShow = position;
+      }
+    });
+    if (this.highlightedPosition !== positionToShow) {
+      this.highlightedMarker && this.map && this.highlightedMarker.setMap(null);
+      var geopoint =  new this.gmaps.LatLng(positionToShow.content.latitude,
+        positionToShow.content.longitude);
+      this.highlightedMarker = new this.gmaps.Marker({
+        position: geopoint
+      });
+      this.map && this.highlightedMarker.setMap(this.map);
+      this.map && this.map.panTo(geopoint);
+      this.highlightedPosition = positionToShow;
+    }
+    return positionToShow;
   },
   close: function () {
     this.remove();

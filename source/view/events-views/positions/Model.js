@@ -56,7 +56,9 @@ PositionsPlugin.prototype.eventChange = function (event) {
 
 PositionsPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.highlightedTime = time;
-  this.debounceRefresh();
+  if (this.view) {
+    this.view.onDateHighLighted(time);
+  }
 };
 
 PositionsPlugin.prototype.render = function (container) {
@@ -105,7 +107,7 @@ PositionsPlugin.prototype._refreshModelView = function () {
     }, this);
     this.positions = _.sortBy(this.positions, function (p) { return p.time; });
   }
-  if (!this.modelView || this.view) {
+  if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
       positions: this.positions,

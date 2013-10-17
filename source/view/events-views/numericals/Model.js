@@ -1,40 +1,54 @@
 var _ = require('underscore'),
-  NotesView = require('./View.js'),
+  NumericalsView = require('./View.js'),
+  SuperCondensedView = require('../super-condensed/View.js'),
   Backbone = require('backbone');
-var NotesPlugin = module.exports = function (events, params) {
+var NumericalsPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
   }, 100);
   this.events = {};
-  _.each(events, function (event) {
-    this.events[event.id] = event;
-  }, this);
+  this.superCondensed = false;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
+  this.datas = {};
+  this.streamIds = {};
   _.extend(this, params);
-  this.debounceRefresh();
+  _.each(events, function (event) {
+    this.eventEnter(event);
+  }, this);
 
 };
-NotesPlugin.prototype.eventEnter = function (event) {
+NumericalsPlugin.prototype.eventEnter = function (event) {
   if (this.events[event.id]) {
     //console.log('eventEnter: event id ' + event.id + ' already exists');
   } else {
+    this.streamIds[event.streamId] = event;
     this.events[event.id] = event;
+    if (!this.datas[event.type]) {
+      this.datas[event.type] = {};
+    }
+    this.datas[event.type][event.id] = event;
+    if (_.size(this.datas) === 1 && _.size(this.streamIds) === 1) {
+      this.view = this.superCondensed ? null : this.view;
+      this.superCondensed = false;
+    } else {
+      this.view = this.superCondensed ? this.view : null;
+      this.superCondensed = true;
+    }
     this.debounceRefresh();
   }
-
-
 };
 
-NotesPlugin.prototype.eventLeave = function (event) {
+NumericalsPlugin.prototype.eventLeave = function (event) {
   if (!this.events[event.id]) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
+    delete this.datas[event.type][event.id];
     if (_.size(this.events) === 0) {
       //this.close();
     } else {
@@ -43,21 +57,24 @@ NotesPlugin.prototype.eventLeave = function (event) {
   }
 };
 
-NotesPlugin.prototype.eventChange = function (event) {
+NumericalsPlugin.prototype.eventChange = function (event) {
   if (!this.events[event.id]) {
     console.log('eventChange: event id ' + event.id + ' dont exists');
   }  else {
     this.events[event.id] = event;
+    this.datas[event.streamId][event.type][event.id] = event;
     this.debounceRefresh();
   }
 };
 
-NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
+NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.highlightedTime = time;
-  this.debounceRefresh();
+  if (this.view) {
+    this.view.onDateHighLighted(time);
+  }
 };
 
-NotesPlugin.prototype.render = function (container) {
+NumericalsPlugin.prototype.render = function (container) {
   this.container = container;
   if (this.view) {
     this.view.renderView(this.container);
@@ -65,46 +82,40 @@ NotesPlugin.prototype.render = function (container) {
     this.needToRender = true;
   }
 };
-NotesPlugin.prototype.refresh = function () {
+NumericalsPlugin.prototype.refresh = function (object) {
+  _.extend(this, object);
   this.debounceRefresh();
 };
 
-NotesPlugin.prototype.close = function () {
+NumericalsPlugin.prototype.close = function () {
   this.view.close();
   this.view = null;
   this.events = null;
+  this.datas = null;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.eventDisplayed = null;
+  this.needToRender = false;
 
 };
-NotesPlugin.prototype._refreshModelView = function () {
-  this._findEventToDisplay();
+NumericalsPlugin.prototype._refreshModelView = function () {
+ // this._findEventToDisplay();
   if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
-      content: this.eventDisplayed.content,
-      description: this.eventDisplayed.description,
-      id: this.eventDisplayed.id,
-      modified: this.eventDisplayed.modified,
-      streamId: this.eventDisplayed.streamId,
-      tags: this.eventDisplayed.tags,
-      time: this.eventDisplayed.time,
-      type: this.eventDisplayed.type,
+      datas: this.datas,
+      width: this.width,
+      height: this.height,
       eventsNbr: _.size(this.events)
     });
     if (typeof(document) !== 'undefined')  {
-      this.view = new NotesView({model: this.modelView});
+      this.view = this.superCondensed ?
+        new SuperCondensedView({model: this.modelView}) : new NumericalsView({model: this.modelView});
     }
   }
-  this.modelView.set('content', this.eventDisplayed.content);
-  this.modelView.set('id', this.eventDisplayed.id);
-  this.modelView.set('description', this.eventDisplayed.description);
-  this.modelView.set('type', this.eventDisplayed.type);
-  this.modelView.set('streamId', this.eventDisplayed.streamId);
-  this.modelView.set('tags', this.eventDisplayed.tags);
-  this.modelView.set('time', this.eventDisplayed.time);
-  this.modelView.set('modified', this.eventDisplayed.modified);
+  this.modelView.set('datas', this.datas);
+  this.modelView.set('width', this.width);
+  this.modelView.set('height', this.height);
   this.modelView.set('eventsNbr', _.size(this.events));
   if (this.needToRender) {
     this.view.renderView(this.container);
@@ -112,7 +123,7 @@ NotesPlugin.prototype._refreshModelView = function () {
   }
 };
 
-NotesPlugin.prototype._findEventToDisplay = function () {
+NumericalsPlugin.prototype._findEventToDisplay = function () {
   if (this.highlightedTime === Infinity) {
     var oldestTime = 0;
     _.each(this.events, function (event) {
@@ -134,3 +145,4 @@ NotesPlugin.prototype._findEventToDisplay = function () {
   }
 
 };
+

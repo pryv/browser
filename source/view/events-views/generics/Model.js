@@ -1,7 +1,8 @@
 var _ = require('underscore'),
-  NotesView = require('./View.js'),
+  GenericsView = require('./View.js'),
   Backbone = require('backbone');
-var NotesPlugin = module.exports = function (events, params) {
+
+var GenericsPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
   }, 100);
@@ -19,7 +20,8 @@ var NotesPlugin = module.exports = function (events, params) {
   this.debounceRefresh();
 
 };
-NotesPlugin.prototype.eventEnter = function (event) {
+GenericsPlugin.prototype.eventEnter = function (event) {
+
   if (this.events[event.id]) {
     //console.log('eventEnter: event id ' + event.id + ' already exists');
   } else {
@@ -30,7 +32,7 @@ NotesPlugin.prototype.eventEnter = function (event) {
 
 };
 
-NotesPlugin.prototype.eventLeave = function (event) {
+GenericsPlugin.prototype.eventLeave = function (event) {
   if (!this.events[event.id]) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
@@ -43,7 +45,7 @@ NotesPlugin.prototype.eventLeave = function (event) {
   }
 };
 
-NotesPlugin.prototype.eventChange = function (event) {
+GenericsPlugin.prototype.eventChange = function (event) {
   if (!this.events[event.id]) {
     console.log('eventChange: event id ' + event.id + ' dont exists');
   }  else {
@@ -52,12 +54,12 @@ NotesPlugin.prototype.eventChange = function (event) {
   }
 };
 
-NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
+GenericsPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.highlightedTime = time;
   this.debounceRefresh();
 };
 
-NotesPlugin.prototype.render = function (container) {
+GenericsPlugin.prototype.render = function (container) {
   this.container = container;
   if (this.view) {
     this.view.renderView(this.container);
@@ -65,11 +67,11 @@ NotesPlugin.prototype.render = function (container) {
     this.needToRender = true;
   }
 };
-NotesPlugin.prototype.refresh = function () {
+GenericsPlugin.prototype.refresh = function () {
   this.debounceRefresh();
 };
 
-NotesPlugin.prototype.close = function () {
+GenericsPlugin.prototype.close = function () {
   this.view.close();
   this.view = null;
   this.events = null;
@@ -78,7 +80,7 @@ NotesPlugin.prototype.close = function () {
   this.eventDisplayed = null;
 
 };
-NotesPlugin.prototype._refreshModelView = function () {
+GenericsPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
   if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
@@ -94,7 +96,7 @@ NotesPlugin.prototype._refreshModelView = function () {
       eventsNbr: _.size(this.events)
     });
     if (typeof(document) !== 'undefined')  {
-      this.view = new NotesView({model: this.modelView});
+      this.view = new GenericsView({model: this.modelView});
     }
   }
   this.modelView.set('content', this.eventDisplayed.content);
@@ -112,7 +114,7 @@ NotesPlugin.prototype._refreshModelView = function () {
   }
 };
 
-NotesPlugin.prototype._findEventToDisplay = function () {
+GenericsPlugin.prototype._findEventToDisplay = function () {
   if (this.highlightedTime === Infinity) {
     var oldestTime = 0;
     _.each(this.events, function (event) {

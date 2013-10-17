@@ -1,4 +1,6 @@
-var EventsNode = require('../EventsNode');
+var EventsNode = require('../EventsNode'),
+  EventsView = require('../../view/events-views/generics/Model.js');
+
 
 /**
  * Holder for EventsNode
@@ -10,7 +12,7 @@ var GenericEventsNode = module.exports = EventsNode.implement(
   },
   {
     className: 'GenericEventsNode',
-
+    pluginView: EventsView,
     getWeight: function () {
       return 1;
     }

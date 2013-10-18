@@ -165,13 +165,18 @@ ModelFilter.prototype.focusOnStreams = function (streams) {
     streamsByConnection[stream.connection.serialId].push(stream.id);
   });
 
+
+  var batch = this.startBatch();
+
   this._eachMonitor(function (monitor, key) {  // clear all
     if (_.has(streamsByConnection, key)) {
-      monitor.filter.streamsIds = streamsByConnection[key]; // shush the connection
+
+      monitor.filter.set({'streamsIds': streamsByConnection[key]}, batch);
     } else {
-      monitor.filter.streamsIds = []; // shush the connection
+      monitor.filter.set({'streamsIds': []}, batch); // shush the connection
     }
   });
+  batch.done();
 };
 
 // # Bind filter properties to rootFilter

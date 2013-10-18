@@ -3,10 +3,16 @@ var  Marionette = require('backbone.marionette');
 module.exports = Marionette.ItemView.extend({
   template: '#picturesView',
   container: null,
+  imageWidth: null,
+  imageHeight: null,
+  width: null,
+  height: null,
   initialize: function () {
-    this.listenTo(this.model, 'change:width', this.adjustImage);
-    this.listenTo(this.model, 'change:height', this.adjustImage);
+   // this.listenTo(this.model, 'change:width', this.resizeImage);
+   // this.listenTo(this.model, 'change:height', this.resizeImage);
     this.listenTo(this.model, 'change:id', this.change);
+    this.width = this.model.get('width');
+    this.height = this.model.get('height');
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
     this.$el.addClass('animated bounceIn');
@@ -15,6 +21,8 @@ module.exports = Marionette.ItemView.extend({
   change: function () {
     this.$el.removeClass('animated bounceIn');
     this.$el.addClass('animated  tada');
+    this.imageWidth = null;
+    this.imageHeight = null;
     this.render();
   },
 
@@ -24,21 +32,52 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
+    $('#' + this.container).css(
+      {'background': 'url(' + this.model.get('picUrl') + ') no-repeat center center',
+        '-webkit-background-size': 'cover',
+        '-moz-background-size': 'cover',
+        '-o-background-size': 'cover',
+        'background-size': 'cover'
+      });
 
-    this.$image = this.$('img');
-    this.$image.load(function () {
-      if (typeof this.imageWidth === 'undefined' && typeof this.imageHeight === 'undefined') {
-        this.imageWidth = this.$image.width();
-        this.imageHeight = this.$image.height();
-      }
-      this.adjustImage();
-    }.bind(this));
-    this.adjustImage();
     if (this.container) {
       $('#' + this.container).html(this.el);
     }
+    /*  this.$image = this.$('img');
+      this.$image.load(function () {
+        if (!this.imageWidth && !this.imageHeight) {
+          this.imageWidth = this.$image.width();
+          this.imageHeight = this.$image.height();
+        }
+        this.resizeImage();
+      }.bind(this));
+      this.resizeImage();
+      if (this.container) {
+        $('#' + this.container).html(this.el);
+      }      */
   },
+  resizeImage: function () {
+    this.width = this.model.get('width');
+    this.height = this.model.get('height');
+    var aspectRatio = this.imageWidth / this.imageHeight;
+    console.log(this.container, this.width, this.height, this.imageWidth, this.imageHeight);
+    if ((this.width / this.height) < aspectRatio) {
+      this.$image
+        .removeClass()
+        .addClass('bgheight');
+    } else {
+      this.$image
+        .removeClass()
+        .addClass('bgwidth');
+    }
 
+    if (this.imageWidth >= this.width) {
+      this.$image.css('margin-left', -(this.imageWidth - this.width) / 2 + 'px');
+    }
+    if (this.imageHeight >= this.height) {
+      this.$image.css('margin-top', -(this.imageHeight - this.height) / 2 + 'px');
+    }
+  },
   adjustImage: function () {
     var that = this;
     if (this.imageWidth > 0 ||  this.imageHeight > 0) {

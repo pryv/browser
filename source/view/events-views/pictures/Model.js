@@ -72,6 +72,8 @@ PicturesPlugin.prototype.render = function (container) {
   if (this.view) {
     this.view.renderView(this.container);
   } else {
+    console.log('need to render', this.container, this.view, this.model, this.events);
+    this._refreshModelView();
     this.needToRender = true;
   }
 };

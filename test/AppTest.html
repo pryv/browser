@@ -23,10 +23,12 @@
     <div class="aggregated-icon Numericals"></div>
     <span class="aggregated-nbr-events"><%=eventsNbr%> Values</span>
     <div class="aggregated-icon-page"></div>
+    <div class="content">
     <% _.each(_.keys(datas), function (key) {
     %><p><%= _.size(datas[key])%> <%= key %></p> <%
     })
     %>
+    </div>
   </script>
   <script id="positionsView" type="template" >
     <div class="aggregated-icon Positions"></div>
@@ -51,6 +53,8 @@
   <div class="content">
     <%= content %>
   </div>
+    <div class="tags"><%= tags %></div>
+    <div class="date"><%= new Date(time * 1000).toLocaleDateString() %></div>
   </script>
   <script id="genericsView" type="template">
   <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>

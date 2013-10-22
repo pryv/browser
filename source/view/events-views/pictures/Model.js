@@ -72,7 +72,6 @@ PicturesPlugin.prototype.render = function (container) {
   if (this.view) {
     this.view.renderView(this.container);
   } else {
-    console.log('need to render', this.container, this.view, this.model, this.events);
     this._refreshModelView();
     this.needToRender = true;
   }
@@ -93,7 +92,6 @@ PicturesPlugin.prototype.close = function () {
 PicturesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
   if (!this.modelView || !this.view) {
-    // console.log('refresh create');
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
       description: this.eventDisplayed.description,
@@ -113,7 +111,6 @@ PicturesPlugin.prototype._refreshModelView = function () {
     }
   } else {
 
-    // console.log('refresh modif');
     this.modelView.set('id', this.eventDisplayed.id);
     this.modelView.set('picUrl', this.eventDisplayed.attachmentsUrl);
     this.modelView.set('description', this.eventDisplayed.description);

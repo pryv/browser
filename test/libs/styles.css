@@ -2,6 +2,11 @@
   height: 102px;
   margin-bottom: -35px;
 }
+@font-face {
+  font-family: MuseoSans-300;
+  src: url(MuseoSans-300.otf);
+}
+
 html, body, #tree {
   height: 100%;
   width: 100%;
@@ -12,12 +17,7 @@ html, body, #tree {
   font-size:14px;
   overflow: hidden;
 }
-a {
-  color: white !important;
-}
-a:hover {
-  color: #b71508 !important;
-}
+
 .node{
   position: absolute;
   transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
@@ -38,22 +38,48 @@ a:hover {
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;  */
   overflow: hidden;
-  word-break: break-all;}
-/*Some random color for each events type */
+  word-break: break-all;
+}
 .GenericEventsNode {
-  background-color: #009f80;
+  background-color: #527E8E;
+}
+.GenericEventsNode .content, .GenericEventsNode a {
+  color: #9FC9D9 !important;
+  text-align: center;
+  font-family: MuseoSans-300;
+  font-size: 21px;
+}
+.GenericEventsNode a:hover,.GenericEventsNode a:focus {
+  color: #D0E8F1 !important;
+  text-decoration: none !important;
 }
 .NotesEventsNode {
-  background-color: #f8a800;
+  background-color: #4F423C;
+}
+.NotesEventsNode .content {
+  color: #C7B0A4;
+  text-align: center;
+  font-family: MuseoSans-300;
+  font-size: 21px;
+}
+.NotesEventsNode .date {
+   position: absolute;
+   bottom: 5px;
+   right: 5px;
 }
 .PositionsEventsNode {
-  background-color: #df0040;
+  background-color: #3FA2F0;
 }
 .PicturesEventsNode {
-  background-color: #b8ed00;
+  background-color: #5B6F4D !important;
 }
 .NumericalsEventsNode {
-  background-color: #7d80dc;
+  background-color: #9F998F;
+}
+.NumericalsEventsNode .content {
+  color: white;
+  font-family: MuseoSans-300;
+  font-size: 21px;
 }
 .ConnectionNode {
   /*background-color: #9c1a0f;     */
@@ -64,7 +90,7 @@ a:hover {
 }
 
 .aggregated-icon {
-  float: left;
+  float: right;
   width: 25px;
   height: 25px;
   margin: 5px;
@@ -97,13 +123,13 @@ a:hover {
   background-position: -50px center;
 }
 .aggregated-icon-page {
-  position: absolute;
+/*  position: absolute;
   bottom: 0px;
   right: 0px;
   background: transparent url('../img/icon-page-bottom.png') no-repeat right top;
   width: 20px;
   height: 20px;
-  z-index: 1;
+  z-index: 1;     */
 }
 .aggregated-nbr-events {
   position: absolute;
@@ -179,15 +205,4 @@ a:hover {
   overflow: hidden;
   width:100%;
   height:100%;
-}
-
-.bgwidth {
-  width: 100% !important;
-  position: fixed !important;
-}
-
-.bgheight {
-  height: 100% !important;
-  max-width: none !important;
-  position: fixed !important;
 }

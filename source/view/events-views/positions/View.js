@@ -82,6 +82,9 @@ module.exports = Marionette.ItemView.extend({
     }, this);
   },
   _drawMap: function ($container) {
+    if (!$container) {
+      return;
+    }
     if (!this.gmaps) {
       this.waitingForDrawingMap = true;
       return;

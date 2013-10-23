@@ -55,9 +55,10 @@ module.exports = function () {
     this.connections.add((new Pryv.Connection('liveat', 'PVYDcS_oi9')).useStaging());
 
   // activate them in batch in the filter
-  var batch = this.activeFilter.startBatch('adding 3 connections');
+
+  var batch = this.activeFilter.startBatch('adding 2 connections');
   this.activeFilter.addConnection(liveat, batch);
-  this.activeFilter.addConnection(perki1Serial, batch);
+  //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
   batch.done();
 
@@ -81,7 +82,7 @@ var initTimeAndFilter = function (timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 20
+    limit: 200
   });
 
   timeView.onFiltersChanged({

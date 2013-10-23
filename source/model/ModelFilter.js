@@ -6,7 +6,7 @@ var MSGs = require('./Messages').ModelFilter;
 
 
 var ModelFilter = module.exports = function (model, batchSetKeyValues) {
-  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL);
+  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'ModelFilter');
   this.model = model;
   this._monitors = {}; // serialIds / monitor
   this.rootFilter = new Filter();
@@ -36,19 +36,19 @@ ModelFilter.prototype._eventsChange = function (reason, events, batch) {
 
 // ----------------------------- Events from monitors ------------------ //
 
-ModelFilter.prototype._onMonitorEventChange = function (changes) {
-  var batch = this.startBatch();
-  this._eventsEnterScope(MSGs.REASON.REMOTELY, changes.created, batch);
-  this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, batch);
-  this._eventsChange(MSGs.REASON.REMOTELY, changes.modified, batch);
-  batch.done();
+ModelFilter.prototype._onMonitorEventChange = function (changes, batchId, batch) {
+  var myBatch = this.startBatch('eventChange', batch);
+  this._eventsEnterScope(MSGs.REASON.REMOTELY, changes.created, myBatch);
+  this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, myBatch);
+  this._eventsChange(MSGs.REASON.REMOTELY, changes.modified, myBatch);
+  myBatch.done();
 };
 
-ModelFilter.prototype._onMonitorFilterChange = function (changes) {
-  var batch = this.startBatch();
-  this._eventsEnterScope(changes.filterInfos.signal, changes.enter, batch);
-  this._eventsLeaveScope(changes.filterInfos.signal, changes.leave, batch);
-  batch.done();
+ModelFilter.prototype._onMonitorFilterChange = function (changes, batchId, batch) {
+  var myBatch = this.startBatch('filterChange', batch);
+  this._eventsEnterScope(changes.filterInfos.signal, changes.enter, myBatch);
+  this._eventsLeaveScope(changes.filterInfos.signal, changes.leave, myBatch);
+  myBatch.done();
 };
 
 
@@ -86,8 +86,8 @@ ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
 
     // ----- add listeners
     function onMonitorOnLoad(events) {
-      if (batchWaitForMe) { batchWaitForMe.done(); } // called only once at load
       this._eventsEnterScope(MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION, events, batch);
+      if (batchWaitForMe) { batchWaitForMe.done(); } // called only once at load
     }
     monitor.addEventListener(
       Pryv.Messages.Monitor.ON_LOAD, onMonitorOnLoad.bind(this));
@@ -166,7 +166,7 @@ ModelFilter.prototype.focusOnStreams = function (streams) {
   });
 
 
-  var batch = this.startBatch();
+  var batch = this.startBatch('focusOnStream');
 
   this._eachMonitor(function (monitor, key) {  // clear all
     if (_.has(streamsByConnection, key)) {

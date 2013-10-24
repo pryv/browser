@@ -1,5 +1,6 @@
 var _ = require('underscore'),
   NotesView = require('./View.js'),
+  CountView = require('../common/CountView.js'),
   Backbone = require('backbone');
 var NotesPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
@@ -24,7 +25,9 @@ var NotesPlugin = module.exports = function (events, params) {
   /**  */
   this.highlightedTime = Infinity;
   this.modelView = null;
+  this.modelCountView = null;
   this.view = null;
+  this.countView = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
@@ -85,6 +88,9 @@ NotesPlugin.prototype.render = function (container) {
       this.needToRender = true;
     }
   }
+  if (this.countView) {
+    this.countView.renderView(this.container);
+  }
 
 };
 NotesPlugin.prototype.refresh = function (object) {
@@ -118,9 +124,34 @@ NotesPlugin.prototype.close = function () {
 };
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
+  var BasicModel = Backbone.Model.extend({ });
+  /** CountView */
+  if (!this.modelCountView || this.countView) {
+    this.modelCountView = new BasicModel({
+      eventsNbr: _.size(this.events)
+    });
+    if (typeof(document) !== 'undefined')  {
+      this.countView = new CountView({model: this.modelCountView});
+    }
+  } else {
+    this.modelCountView.set('eventsNbr', _.size(this.events));
+  }
+  if (this.needToRender) {
+    this.countView.renderView(this.container);
+  }
+  /**  end countView */
   for (var i = 0; i < this.eventsDisplayed.length; ++i) {
+    var denomW = i >= (this.nbrDisplayCurrentH - 1) * this.nbrDisplayCurrentW &&
+      this.eventsDisplayed.length % this.nbrDisplayCurrentW !== 0 ?
+      this.eventsDisplayed.length % this.nbrDisplayCurrentW:
+      this.nbrDisplayCurrentW;
+
+    var border = 0.5;
+    var width = (100 - (border * (denomW - 1))) / denomW;
+    var left = (Math.floor(i % this.nbrDisplayCurrentW)) * (width + border);
+    var height = (100 - (border * (this.nbrDisplayCurrentH - 1))) / this.nbrDisplayCurrentH;
+    var top = (Math.floor(i / this.nbrDisplayCurrentW)) * (height + border);
     if (!this.eventsDisplayed[i].modelView || !this.eventsDisplayed[i].view) {
-      var BasicModel = Backbone.Model.extend({ });
       this.eventsDisplayed[i].modelView = new BasicModel({
         content: this.eventsDisplayed[i].content,
         description: this.eventsDisplayed[i].description,
@@ -130,20 +161,17 @@ NotesPlugin.prototype._refreshModelView = function () {
         tags: this.eventsDisplayed[i].tags,
         time: this.eventsDisplayed[i].time,
         type: this.eventsDisplayed[i].type,
-        top: (100 / this.nbrDisplayCurrentH) * (Math.floor(i / this.nbrDisplayCurrentW)),
-        left: (100 / this.nbrDisplayCurrentW) * (Math.floor(i % this.nbrDisplayCurrentW)),
-        height: (100 / this.nbrDisplayCurrentH),
-        width: (100 / this.nbrDisplayCurrentW),
+        top: top,
+        left: left,
+        height: height,
+        width: width,
         eventsNbr: _.size(this.events)
       });
       if (typeof(document) !== 'undefined')  {
         this.eventsDisplayed[i].view = new NotesView({model: this.eventsDisplayed[i].modelView});
       }
     }
-    var denomW = i >= (this.nbrDisplayCurrentH - 1) * this.nbrDisplayCurrentW &&
-      this.eventsDisplayed.length % this.nbrDisplayCurrentW !== 0 ?
-      this.eventsDisplayed.length % this.nbrDisplayCurrentW:
-      this.nbrDisplayCurrentW;
+
     this.eventsDisplayed[i].modelView.set('content', this.eventsDisplayed[i].content);
     this.eventsDisplayed[i].modelView.set('id', this.eventsDisplayed[i].id);
     this.eventsDisplayed[i].modelView.set('description', this.eventsDisplayed[i].description);
@@ -152,10 +180,10 @@ NotesPlugin.prototype._refreshModelView = function () {
     this.eventsDisplayed[i].modelView.set('tags', this.eventsDisplayed[i].tags);
     this.eventsDisplayed[i].modelView.set('time', this.eventsDisplayed[i].time);
     this.eventsDisplayed[i].modelView.set('modified', this.eventsDisplayed[i].modified);
-    this.eventsDisplayed[i].modelView.set('top', (100 / this.nbrDisplayCurrentH) * (Math.floor(i / this.nbrDisplayCurrentW)));
-    this.eventsDisplayed[i].modelView.set('left', (100 / denomW) * (Math.floor(i % this.nbrDisplayCurrentW)));
-    this.eventsDisplayed[i].modelView.set('height', (100 / this.nbrDisplayCurrentH));
-    this.eventsDisplayed[i].modelView.set('width', (100 / denomW));
+    this.eventsDisplayed[i].modelView.set('top', top);
+    this.eventsDisplayed[i].modelView.set('left',  left);
+    this.eventsDisplayed[i].modelView.set('height', height);
+    this.eventsDisplayed[i].modelView.set('width',  width);
     this.eventsDisplayed[i].modelView.set('eventsNbr', _.size(this.events));
   }
   if (this.needToRender || this.rendered) {

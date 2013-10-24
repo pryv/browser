@@ -5,34 +5,59 @@ module.exports = Marionette.ItemView.extend({
   container: null,
   imageWidth: null,
   imageHeight: null,
+  $image: null,
   width: null,
   height: null,
+  rendered: false,
   initialize: function () {
    // this.listenTo(this.model, 'change:width', this.resizeImage);
    // this.listenTo(this.model, 'change:height', this.resizeImage);
-    this.listenTo(this.model, 'change:id', this.change);
-    this.width = this.model.get('width');
-    this.height = this.model.get('height');
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated bounceIn');
+    this.listenTo(this.model, 'change:top', this.change);
+    this.listenTo(this.model, 'change:left', this.change);
+    this.listenTo(this.model, 'change:width', this.change);
+    this.listenTo(this.model, 'change:height', this.change);
+    this.$el.css('position', 'absolute');
+    this.$el.addClass('animated  fadeInLeftBig node');
+
   },
 
   change: function () {
-    this.$el.removeClass('animated bounceIn');
+ /*   this.$el.removeClass('animated bounceIn');
     this.$el.addClass('animated  tada');
     this.imageWidth = null;
-    this.imageHeight = null;
-    this.render();
+    this.imageHeight = null;      */
+
+    this.$el.css({
+      top: this.model.get('top') + '%',
+      left: this.model.get('left') + '%',
+      width: this.model.get('width') + '%',
+      height: this.model.get('height') + '%'
+    });
+   // this.adjustImage();
+    if (this.container && !this.rendered) {
+      this.render();
+    }
   },
 
   renderView: function (container) {
+    if (container !== this.container) {
+      this.rendered = false;
+    }
     this.container = container;
-    this.render();
+    this.$el.css({
+      top: this.model.get('top') + '%',
+      left: this.model.get('left') + '%',
+      width: this.model.get('width') + '%',
+      height: this.model.get('height') + '%'
+    });
+    if (this.container && !this.rendered) {
+      this.render();
+    }
+
   },
 
   onRender: function () {
-    $('#' + this.container).css(
+    this.$el.css(
       {'background': 'url(' + this.model.get('picUrl') + ') no-repeat center center',
         '-webkit-background-size': 'cover',
         '-moz-background-size': 'cover',
@@ -40,8 +65,10 @@ module.exports = Marionette.ItemView.extend({
         'background-size': 'cover'
       });
 
-    if (this.container) {
-      $('#' + this.container).html(this.el);
+
+    if (this.container && !this.rendered) {
+      $('#' + this.container).append(this.el);
+      this.rendered = true;
     }
     /*  this.$image = this.$('img');
       this.$image.load(function () {
@@ -57,8 +84,11 @@ module.exports = Marionette.ItemView.extend({
       }      */
   },
   resizeImage: function () {
-    this.width = this.model.get('width');
-    this.height = this.model.get('height');
+    if (!this.$image) {
+      return;
+    }
+    this.width = $('#' + this.container).width() * this.model.get('width') / 100;
+    this.height = $('#' + this.container).height() * this.model.get('height') / 100;
     var aspectRatio = this.imageWidth / this.imageHeight;
     console.log(this.container, this.width, this.height, this.imageWidth, this.imageHeight);
     if ((this.width / this.height) < aspectRatio) {
@@ -70,12 +100,13 @@ module.exports = Marionette.ItemView.extend({
         .removeClass()
         .addClass('bgwidth');
     }
-
-    if (this.imageWidth >= this.width) {
-      this.$image.css('margin-left', -(this.imageWidth - this.width) / 2 + 'px');
+    var currentWidth = this.$image.width();
+    var currentHeight = this.$image.height();
+    if (currentWidth >= this.width) {
+      this.$image.css('margin-left', -(currentWidth - this.width) / 2 + 'px');
     }
-    if (this.imageHeight >= this.height) {
-      this.$image.css('margin-top', -(this.imageHeight - this.height) / 2 + 'px');
+    if (currentHeight >= this.height) {
+      this.$image.css('margin-top', -(currentHeight - this.height) / 2 + 'px');
     }
   },
   adjustImage: function () {
@@ -87,8 +118,8 @@ module.exports = Marionette.ItemView.extend({
       var cssAdjust = _computeCss(
         that.imageWidth,
         that.imageHeight,
-        that.model.get('width'),
-        that.model.get('height')
+        $('#' + that.container).width() * that.model.get('width') / 100,
+        $('#' + this.container).height() * this.model.get('height') / 100
       );
       if (cssAdjust) {
         that.$image.css(cssAdjust);
@@ -154,6 +185,9 @@ module.exports = Marionette.ItemView.extend({
     }
   },
   close: function () {
-    this.remove();
+    this.$el.removeClass('animated fadeInLeftBig');
+    this.$el.addClass('animated fadeOutRightBig');
+    this.rendered = false;
+    setTimeout(function () {this.remove(); }.bind(this), 1000);
   }
 });

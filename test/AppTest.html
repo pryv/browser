@@ -36,20 +36,13 @@
     <div id="map-canvas-<%=id%>" class="mapView"></div>
   </script>
   <script id="picturesView" type="template">
-    <div class="aggregated-icon Pictures"></div>
-    <% if (eventsNbr - 1 > 0 ) {   %>
-    <span class="aggregated-nbr-events">+<%=eventsNbr - 1%> Pictures</span>
-    <div class="aggregated-icon-page"></div>
-    <% } %>
+
 
   </script>
 
   <script id="notesView" type="template">
   <div class="aggregated-icon Notes"></div>
-    <% if (eventsNbr - 1 > 0 ) {   %>
-    <span class="aggregated-nbr-events">+<%=eventsNbr - 1%> Notes</span>
-    <div class="aggregated-icon-page"></div>
-    <% } %>
+
   <div class="content">
     <%= content %>
   </div>
@@ -82,6 +75,9 @@
     <div class='nodeHeader'  ><%= content.username %> / <%= content._accessInfo.name %></div>
     <% }  }  %>
      <span></span>
+  </script>
+  <script type="template" id="countView">
+     <div><span><%= eventsNbr %></span></div>
   </script>
 </head>
 

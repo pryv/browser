@@ -10,7 +10,7 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:width', this.change);
     this.listenTo(this.model, 'change:height', this.change);
     this.$el.css('position', 'absolute');
-    this.$el.addClass('animated  fadeInLeftBig node');
+    this.$el.addClass('animated  fadeInLeftBig node singleNote');
   },
   change: function () {
     this.render();

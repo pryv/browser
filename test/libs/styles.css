@@ -31,7 +31,7 @@ html, body, #tree {
   cursor: pointer;
 }
 .ConnectionNode, .StreamNode,.GenericEventsNode, .NotesEventsNode,.PositionsEventsNode, .PicturesEventsNode, .NumericalsEventsNode{
- /* border-right: 2px solid white;      */
+  /* border-right: 2px solid white;      */
   border-top: 2px solid white;
   /* border-bottom: 2px solid white;  */
   /*box-sizing:border-box;
@@ -54,6 +54,9 @@ html, body, #tree {
   text-decoration: none !important;
 }
 .NotesEventsNode {
+  /*background-color: #4F423C;   */
+}
+.singleNote {
   background-color: #4F423C;
 }
 .NotesEventsNode .content {
@@ -61,18 +64,24 @@ html, body, #tree {
   text-align: center;
   font-family: MuseoSans-300;
   font-size: 21px;
+  margin-top: 30px;
+  margin-left: 5px;
+  margin-right: 5px;
+  margin-bottom: 10px;
+  word-break: break-word;
 }
 .NotesEventsNode .date {
-   position: absolute;
-   bottom: 5px;
-   right: 5px;
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
 }
 .PositionsEventsNode {
   background-color: #3FA2F0;
 }
 .PicturesEventsNode {
-  background-color: #5B6F4D !important;
+ /* background-color: #5B6F4D !important;     */
 }
+
 .NumericalsEventsNode {
   background-color: #9F998F;
 }
@@ -83,7 +92,7 @@ html, body, #tree {
 }
 .ConnectionNode {
   /*background-color: #9c1a0f;     */
- /* border: 10px solid white;  */
+  /* border: 10px solid white;  */
   box-sizing:border-box;
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;
@@ -123,13 +132,13 @@ html, body, #tree {
   background-position: -50px center;
 }
 .aggregated-icon-page {
-/*  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  background: transparent url('../img/icon-page-bottom.png') no-repeat right top;
-  width: 20px;
-  height: 20px;
-  z-index: 1;     */
+  /*  position: absolute;
+    bottom: 0px;
+    right: 0px;
+    background: transparent url('../img/icon-page-bottom.png') no-repeat right top;
+    width: 20px;
+    height: 20px;
+    z-index: 1;     */
 }
 .aggregated-nbr-events {
   position: absolute;
@@ -205,4 +214,33 @@ html, body, #tree {
   overflow: hidden;
   width:100%;
   height:100%;
+}
+.countView {
+  display: table;
+
+}
+.countView div:hover {
+  opacity: 0;
+
+}
+.countView div {
+position: relative;
+  z-index: 1000 !important;
+display: table-cell;
+vertical-align: middle;
+text-align: center;
+
+  opacity: 1;
+  transition: opacity .1s ease-out;
+  -moz-transition: opacity .1s ease-out;
+  -webkit-transition: opacity .1s ease-out;
+  -o-transition: opacity .1s ease-out;
+
+}
+.countView span {
+
+  border-radius: 70px;
+  background-color: rgba(60, 60, 60, 0.8);
+  padding: 0px 7px;
+  font-size: 45px;
 }

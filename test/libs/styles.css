@@ -58,7 +58,9 @@ html, body, #tree {
 }
 .singleNote {
   background-color: #4F423C;
+  pointer-events: all;
 }
+
 .NotesEventsNode .content {
   color: #C7B0A4;
   text-align: center;
@@ -219,18 +221,17 @@ html, body, #tree {
   display: table;
 
 }
-.countView div:hover {
+/*.countView div:hover {
   opacity: 0;
+} */
 
-}
 .countView div {
 position: relative;
-  z-index: 1000 !important;
 display: table-cell;
 vertical-align: middle;
 text-align: center;
-
-  opacity: 1;
+  z-index: 100 !important;
+  pointer-events:none;
   transition: opacity .1s ease-out;
   -moz-transition: opacity .1s ease-out;
   -webkit-transition: opacity .1s ease-out;

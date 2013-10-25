@@ -249,10 +249,10 @@ PicturesPlugin.prototype._findEventToDisplay = function () {
   // console.log(this.events, nearestEvents);
   this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW).reverse();
 
-  console.log('picture', notEnoughtEvent,
+ /* console.log('picture', notEnoughtEvent,
    'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,
    'calculated', this.nbrDisplayW, this.nbrDisplayH,
-   this.eventsDisplayed, this.width, this.height);
+   this.eventsDisplayed, this.width, this.height);   */
 };
 
 PicturesPlugin.acceptTheseEvents = function (events) {

@@ -69,6 +69,12 @@ module.exports = Marionette.ItemView.extend({
     if (this.container && !this.rendered) {
       $('#' + this.container).append(this.el);
       this.rendered = true;
+      this.$el.mouseover(function () {
+        $('#' + this.container + ' .countView div').css('opacity', '0');
+      }.bind(this));
+      this.$el.mouseout(function () {
+        $('#' + this.container + ' .countView div').css('opacity', '1');
+      }.bind(this));
     }
     /*  this.$image = this.$('img');
       this.$image.load(function () {

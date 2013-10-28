@@ -29,6 +29,7 @@ body{
   background-size: cover; /* version standardisée */
 }
 .logo{
+  z-index: 90000;
   position: absolute;
   top: 0;
   left: 0;
@@ -36,7 +37,10 @@ body{
   display: block;
   width: 40px;
   height: 40px;
-  background-image: url(../img/logo-pryv.png);
+  background:url(../img/logo-pryv.png) 0 0 no-repeat;
+}
+.logo:hover{
+  background-position: -40px 0px;
 }
 #tree {
   width: 100%;
@@ -125,7 +129,7 @@ body{
   background-color: #3FA2F0;
 }
 .PicturesEventsNode {
- /* background-color: #5B6F4D !important;     */
+ background: rgba(0, 0, 0, 0.27) !important; 
 }
 
 .NumericalsEventsNode {
@@ -208,6 +212,8 @@ body{
 .nodeHeader.color_0,.nodeHeader.color_1,.nodeHeader.color_2,.nodeHeader.color_3,.nodeHeader.color_4
 ,.nodeHeader.color_5,.nodeHeader.color_6,.nodeHeader.color_7,.nodeHeader.color_8,.nodeHeader.color_9
 ,.nodeHeader.color_10,.nodeHeader.color_11,.nodeHeader.color_12,.nodeHeader.color_13,.nodeHeader.color_14{background-color: transparent;}
+
+
 /* This are the only colors founded in the last browser template
    but client data color goes over */
 .color_0{background-color: #4d6791;}

@@ -7,11 +7,10 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:id', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
-    this.$el.addClass('animated  bounceIn');
   },
   change: function () {
-    this.$el.removeClass('animated bounceIn');
-    this.$el.addClass('animated  tada');
+    $('#' + this.container).removeClass('animated bounceIn');
+    $('#' + this.container).addClass('animated  tada');
     this.render();
   },
   renderView: function (container) {
@@ -20,6 +19,9 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     if (this.container) {
+
+      $('#' + this.container).removeClass('fadeIn');
+      $('#' + this.container).addClass('animated bounceIn');
       $('#' + this.container).html(this.el);
     }
   },

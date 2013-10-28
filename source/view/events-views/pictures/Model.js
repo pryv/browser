@@ -1,6 +1,5 @@
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
-  CountView = require('../common/CountView.js'),
   Backbone = require('backbone');
 var ACCEPTED_TYPE = 'picture/attached';
 var PicturesPlugin = module.exports = function (events, params) {
@@ -15,21 +14,19 @@ var PicturesPlugin = module.exports = function (events, params) {
   }, this);
 
   /** Addon multiple picture per view        */
-  this.nbrDisplayW = 0;
-  this.nbrDisplayH = 0;
-  this.nbrDisplayCurrentW = 0;
-  this.nbrDisplayCurrentH = 0;
+  this.nbrDisplayW = -1;
+  this.nbrDisplayH = -1;
+  this.nbrDisplayCurrentW = -1;
+  this.nbrDisplayCurrentH = -1;
   this.minWidth = 50;
   this.minHeight = 50;
-  this.maxWidth = 100;
-  this.maxHeight = 100;
+  this.maxWidth = 500;
+  this.maxHeight = 500;
   this.eventsDisplayed = [];
 
   /**  */
   this.highlightedTime = Infinity;
-  this.modelCountView = null;
   this.view = null;
-  this.countView = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
@@ -95,9 +92,7 @@ PicturesPlugin.prototype.render = function (container) {
       this.needToRender = true;
     }
   }
-  if (this.countView) {
-    this.countView.renderView(this.container);
-  }
+
 };
 PicturesPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
@@ -129,21 +124,6 @@ PicturesPlugin.prototype.close = function () {
 PicturesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
   var BasicModel = Backbone.Model.extend({ });
-  /** CountView */
-  if (!this.modelCountView || this.countView) {
-    this.modelCountView = new BasicModel({
-      eventsNbr: _.size(this.events)
-    });
-    if (typeof(document) !== 'undefined')  {
-      this.countView = new CountView({model: this.modelCountView});
-    }
-  } else {
-    this.modelCountView.set('eventsNbr', _.size(this.events));
-  }
-  if (this.needToRender) {
-    this.countView.renderView(this.container);
-  }
-  /**  end countView */
   for (var i = 0; i < this.eventsDisplayed.length; ++i) {
     var denomW = i >= (this.nbrDisplayCurrentH - 1) * this.nbrDisplayCurrentW &&
       this.eventsDisplayed.length % this.nbrDisplayCurrentW !== 0 ?

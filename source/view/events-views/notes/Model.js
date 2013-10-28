@@ -1,6 +1,5 @@
 var _ = require('underscore'),
   NotesView = require('./View.js'),
-  CountView = require('../common/CountView.js'),
   Backbone = require('backbone');
 var NotesPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
@@ -12,22 +11,20 @@ var NotesPlugin = module.exports = function (events, params) {
   }, this);
 
   /** Addon multiple note per view        */
-  this.nbrDisplayW = 0;
-  this.nbrDisplayH = 0;
-  this.nbrDisplayCurrentW = 0;
-  this.nbrDisplayCurrentH = 0;
+  this.nbrDisplayW = -1;
+  this.nbrDisplayH = -1;
+  this.nbrDisplayCurrentW = -1;
+  this.nbrDisplayCurrentH = -1;
   this.minWidth = 100;
   this.minHeight = 100;
-  this.maxWidth = 150;
-  this.maxHeight = 150;
+  this.maxWidth = 500;
+  this.maxHeight = 500;
   this.eventsDisplayed = [];
 
   /**  */
   this.highlightedTime = Infinity;
   this.modelView = null;
-  this.modelCountView = null;
   this.view = null;
-  this.countView = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
@@ -76,7 +73,6 @@ NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
 
 NotesPlugin.prototype.render = function (container) {
   this.container = container;
- // console.log('render', this.eventsDisplayed);
   if (this.eventsDisplayed.length === 0) {
     this.needToRender = true;
   }
@@ -87,9 +83,6 @@ NotesPlugin.prototype.render = function (container) {
     } else {
       this.needToRender = true;
     }
-  }
-  if (this.countView) {
-    this.countView.renderView(this.container);
   }
 
 };
@@ -118,31 +111,14 @@ NotesPlugin.prototype.close = function () {
   this.events = null;
   this.highlightedTime = Infinity;
   for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-      this.eventsDisplayed[j].view = null;
-      this.eventsDisplayed[j].modelView = null;
+    this.eventsDisplayed[j].view = null;
+    this.eventsDisplayed[j].modelView = null;
   }
   this.eventsDisplayed = null;
-  this.countView = null;
-  this.modelCountView = null;
 };
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
   var BasicModel = Backbone.Model.extend({ });
-  /** CountView */
-  if (!this.modelCountView || this.countView) {
-    this.modelCountView = new BasicModel({
-      eventsNbr: _.size(this.events)
-    });
-    if (typeof(document) !== 'undefined')  {
-      this.countView = new CountView({model: this.modelCountView});
-    }
-  } else {
-    this.modelCountView.set('eventsNbr', _.size(this.events));
-  }
-  if (this.needToRender) {
-    this.countView.renderView(this.container);
-  }
-  /**  end countView */
   for (var i = 0; i < this.eventsDisplayed.length; ++i) {
     var denomW = i >= (this.nbrDisplayCurrentH - 1) * this.nbrDisplayCurrentW &&
       this.eventsDisplayed.length % this.nbrDisplayCurrentW !== 0 ?
@@ -242,11 +218,11 @@ NotesPlugin.prototype._findEventToDisplay = function () {
       event.view = null;
     }
   });
- // console.log(this.events, nearestEvents);
+  // console.log(this.events, nearestEvents);
   this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW).reverse();
 
- /* console.log('note', notEnoughtEvent,
-    'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,
-    'calculated', this.nbrDisplayW, this.nbrDisplayH,
-    this.eventsDisplayed, this.width, this.height);  */
+  /* console.log('note', notEnoughtEvent,
+   'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,
+   'calculated', this.nbrDisplayW, this.nbrDisplayH,
+   this.eventsDisplayed, this.width, this.height);  */
 };

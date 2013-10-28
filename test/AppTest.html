@@ -22,11 +22,15 @@
     <div class="aggregated-icon Numericals"></div>
     <span class="aggregated-nbr-events">+ <%=eventsNbr%></span>
     <div class="aggregated-icon-page"></div>
-    <div class="content">
-    <% _.each(_.keys(datas), function (key) {
-    %><p><%= _.size(datas[key])%> <%= key %></p> <%
-    })
-    %>
+    <div class="content Center-Container is-Table">
+      <div class="Table-Cell">
+        <div class="Center-Block">
+          <% _.each(_.keys(datas), function (key) {
+          %><p><%= _.size(datas[key])%> <%= key %></p> <%
+          })
+          %>
+        </div>
+      </div>
     </div>
   </script>
   <script id="positionsView" type="template" >
@@ -42,8 +46,13 @@
   <script id="notesView" type="template">
   <div class="aggregated-icon Notes"></div>
     <span class="aggregated-nbr-events">+ <%=eventsNbr%></span>
-  <div class="content">
-    <%= content %>
+    <div class="content Center-Container is-Table">
+      <div class="Table-Cell">
+        <div class="Center-Block">
+          <%= content %>
+        </div>
+      </div>
+
   </div>
     <div class="tags"><%= tags %></div>
     <div class="date"><%= new Date(time * 1000).toLocaleDateString() %></div>
@@ -81,6 +90,7 @@
 </head>
 
 <body>
+<a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree"></div>
 <div id="timeframe"></div>
 </body>

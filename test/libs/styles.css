@@ -7,22 +7,29 @@
   src: url(MuseoSans-300.otf);
 }
 
-html, body, #tree {
+html, body{
   height: 100%;
   width: 100%;
   padding: 0;
   margin: 0;
-  color: white;
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:14px;
   overflow: hidden;
 }
+
 body{
   background: url(http://666a658c624a3c03a6b2-25cda059d975d2f318c03e90bcf17c40.r92.cf1.rackcdn.com/unsplash_5244808e6b835_1.JPG) no-repeat center fixed; 
   -webkit-background-size: cover; /* pour Chrome et Safari */
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
   background-size: cover; /* version standardisée */
+}
+
+#tree {
+  width: 100%;
+  height: 100%;
+  margin: 0 0 102px 0;
+  color: white;
 }
 
 .node{

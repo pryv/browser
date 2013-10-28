@@ -17,6 +17,13 @@ html, body, #tree {
   font-size:14px;
   overflow: hidden;
 }
+body{
+  background: url(http://666a658c624a3c03a6b2-25cda059d975d2f318c03e90bcf17c40.r92.cf1.rackcdn.com/unsplash_5244808e6b835_1.JPG) no-repeat center fixed; 
+  -webkit-background-size: cover; /* pour Chrome et Safari */
+  -moz-background-size: cover; /* pour Firefox */
+  -o-background-size: cover; /* pour Opera */
+  background-size: cover; /* version standardisée */
+}
 
 .node{
   position: absolute;
@@ -25,14 +32,13 @@ html, body, #tree {
 }
 .nodeHeader {
   padding-left: 7px;
-  background-color: #9c1a0f;
 }
 .nodeHeader:hover {
   cursor: pointer;
 }
 .ConnectionNode, .StreamNode,.GenericEventsNode, .NotesEventsNode,.PositionsEventsNode, .PicturesEventsNode, .NumericalsEventsNode{
   /* border-right: 2px solid white;      */
-  border-top: 2px solid white;
+  /*border-top: 2px solid white;*/
   /* border-bottom: 2px solid white;  */
   /*box-sizing:border-box;
   -moz-box-sizing:border-box;

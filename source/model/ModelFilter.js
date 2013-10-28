@@ -220,3 +220,22 @@ _.each(['set'],  function (func) {
 
 
 // ----------------------------- EVENTS --------------------------- //
+
+/**
+ * return informations on events
+ */
+ModelFilter.prototype.stats = function () {
+  var result = {
+    timeFrameLT : [null, null]
+  };
+  this._eachMonitor(function (monitor) {
+    var tf = monitor.stats().timeFrameLT;
+    if (! result.timeFrameLT[0] || tf[0] < result.timeFrameLT[0]) { 
+      result.timeFrameLT[0] = tf[0];
+    }
+    if (! result.timeFrameLT[1] || tf[1] > result.timeFrameLT[1]) {
+      result.timeFrameLT[1] = tf[1];
+    }
+  });
+  return result;
+};

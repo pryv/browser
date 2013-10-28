@@ -10,14 +10,13 @@ var _ = require('underscore'),
  * @constructor
  */
 var DEFAULT_OFFSET = 18;
-// TODO see css right border
-// need to set color background only on .nodeHeader
 var DEFAULT_MARGIN = 2;
 var CONNECTION_MARGIN = 20;
 var DEFAULT_MIN_WIDTH = 550;
 var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (parent) {
+  //Init all the instance variables
   this.parent = parent;
   this.uniqueId = _.uniqueId('node_');
   this.width = null;
@@ -73,7 +72,15 @@ _.extend(TreeNode.prototype, {
       });
     }
   },
-
+  /**
+   * Generate the size and position of each child of this node
+   * @param x
+   * @param y
+   * @param width
+   * @param height
+   * @param recursive
+   * @private
+   */
   _generateChildrenTreemap: function (x, y, width, height, recursive) {
     if (this.getWeight() === 0) {
       return;
@@ -118,23 +125,29 @@ _.extend(TreeNode.prototype, {
     this.aggregated = false;
     return this.aggregated;
   },
-  /**
-   * render the View version A
-   * @param height height of the Node
-   * @param width width of the Node
-   * @return A DOM Object, EventView..
+  /** Render or close the view if needed
+   For more performance we need to render or close views once all processing are done
+   i.e: when eventLeaveScope is trigged and a eventsNode becomes empty if we close it right away
+   it result with a unpleasant visual with div disappears randomly.
+   So we need to close all the view at the same time.
    */
   renderView: function (recurcive) {
+    /** If the node has no events to display (getWeight = 0) we close it **/
     if (this.getWeight() === 0) {
-      this.aggregated = false;
+      this.aggregated = false; // Reset the aggregation to false;
       if (this.view) {
         this.view.close();
         this.view = null;
       }
     } else {
+      // Test is the view is not already displayed and the view is not null
       if ($('#' + this.uniqueId).length === 0 && this.view) {
         this.view.renderView();
+        // event listenner for focus on stream when clicked on it
+        // i.e display only this stream when clicked on it
         this.view.on('headerClicked', function () {
+          // the root node is the only output node of the treemap
+          // so we walk the tree up to the root node and trigger the focusOnStreams
           if (this.stream) {
             var parent  = this.parent;
             while (parent.parent) {
@@ -151,11 +164,14 @@ _.extend(TreeNode.prototype, {
       });
     }
   },
-
+  /**
+   * Refresh the model of the view and create it if there is no
+   * If the model change this will automatically update the view thanks to backbone
+   * @param recursive
+   * @private
+   */
   _refreshViewModel: function (recursive) {
-
     if (!this.model) {
-
       var BasicModel = Backbone.Model.extend({ });
       this.model = new BasicModel({
         containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
@@ -170,30 +186,31 @@ _.extend(TreeNode.prototype, {
         content: this.events || this.stream || this.connection,
         eventView: this.eventView
       });
-    }
-    // TODO For now empty nodes (i.e streams) are not displayed
-    // but we'll need to display them to create event, drag drop ...
-    if (this.getWeight() === 0) {
-      if (this.model) {
-        this.model.set('width', 0);
-        this.model.set('height', 0);
+    } else {
+      // TODO For now empty nodes (i.e streams) are not displayed
+      // but we'll need to display them to create event, drag drop ...
+      /*if (this.getWeight() === 0) {
+        if (this.model) {
+          this.model.set('width', 0);
+          this.model.set('height', 0);
+        }
+        return;
+      } */
+      this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
+      this.model.set('id', this.uniqueId);
+      this.model.set('name', this.className);
+      this.model.set('width', this.width);
+      this.model.set('height', this.height);
+      this.model.set('x', this.x);
+      this.model.set('y', this.y);
+      this.model.set('depth', this.depth);
+      this.model.set('weight', this.getWeight());
+      if (this.eventView) {
+        this.eventView.refresh({
+          width: this.width,
+          height: this.height
+        });
       }
-      return;
-    }
-    this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
-    this.model.set('id', this.uniqueId);
-    this.model.set('name', this.className);
-    this.model.set('width', this.width);
-    this.model.set('height', this.height);
-    this.model.set('x', this.x);
-    this.model.set('y', this.y);
-    this.model.set('depth', this.depth);
-    this.model.set('weight', this.getWeight());
-    if (this.eventView) {
-      this.eventView.refresh({
-        width: this.width,
-        height: this.height
-      });
     }
     if (recursive && this.getChildren()) {
       _.each(this.getChildren(), function (child) {
@@ -201,19 +218,7 @@ _.extend(TreeNode.prototype, {
       });
     }
   },
-  /**
-   *
-   * @return DOMNode the current Wrapping DOM object for this Node. If this TreeNode is not yet
-   * rendered, or does not have a representation in the DOM it will return
-   * getParent().currentWarpingDOMObject();
-   */
-  currentWrappingDOMObject: function () {
-    if (this.parent === null) { return null; }
 
-    // each node with a specific rendering should overwrite this
-
-    return this.parent;
-  },
 
 
   //-------------- Tree Browsing -------------------//
@@ -252,7 +257,14 @@ _.extend(TreeNode.prototype, {
 
 
   //----------- event management ------------//
-
+  onDateHighLighted: function (time) {
+    if (this.eventView) {
+      this.eventView.OnDateHighlightedChange(time);
+    }
+    _.each(this.getChildren(), function (child) {
+      child.onDateHighLighted(time);
+    });
+  },
   /**
    * Add an Event to the Tree
    * @param event Event
@@ -272,14 +284,7 @@ _.extend(TreeNode.prototype, {
   eventChange: function () {
     throw new Error(this.className + ': eventChange must be implemented');
   },
-  onDateHighLighted: function (time) {
-    if (this.eventView) {
-      this.eventView.OnDateHighlightedChange(time);
-    }
-    _.each(this.getChildren(), function (child) {
-      child.onDateHighLighted(time);
-    });
-  },
+
   /**
    * Event removed
    * @parma eventChange

@@ -6,8 +6,15 @@
   font-family: MuseoSans-300;
   src: url(MuseoSans-300.otf);
 }
+html{
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 
-html, body{
+}
+body{
   height: 100%;
   width: 100%;
   padding: 0;
@@ -18,7 +25,7 @@ html, body{
 }
 
 body{
-  background: url(http://666a658c624a3c03a6b2-25cda059d975d2f318c03e90bcf17c40.r92.cf1.rackcdn.com/unsplash_5244808e6b835_1.JPG) no-repeat center fixed; 
+  background: url(../img/bg4.jpg) no-repeat center fixed; 
   -webkit-background-size: cover; /* pour Chrome et Safari */
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
@@ -78,15 +85,15 @@ body{
   /*background-color: #4F423C;   */
 }
 .singleNote {
-  background-color: #4F423C;
+  background-color: #40E0D0;
   pointer-events: all;
 }
 
 .NotesEventsNode .content {
-  color: #C7B0A4;
+  /*color: #C7B0A4;*/
   text-align: center;
   /*font-family: MuseoSans-300;*/
-  font-size: 21px;
+  /*font-size: 21px;*/
   margin-top: 30px;
   margin-left: 5px;
   margin-right: 5px;
@@ -97,6 +104,7 @@ body{
   position: absolute;
   bottom: 5px;
   right: 5px;
+  display:none;
 }
 .PositionsEventsNode {
   background-color: #3FA2F0;
@@ -106,7 +114,7 @@ body{
 }
 
 .NumericalsEventsNode {
-  background-color: #9F998F;
+  background-color: #F1C40F;
 }
 .NumericalsEventsNode .content {
   color: white;
@@ -129,6 +137,7 @@ body{
   opacity: .5;
   background: url("../img/sprite-icons-type.png") no-repeat;
   z-index: 1;
+  display:none;
 }
 
 .aggregated-wrapper {
@@ -180,6 +189,9 @@ body{
   width: 100%;
   height: 100%;
 }
+.nodeHeader.color_0,.nodeHeader.color_1,.nodeHeader.color_2,.nodeHeader.color_3,.nodeHeader.color_4
+,.nodeHeader.color_5,.nodeHeader.color_6,.nodeHeader.color_7,.nodeHeader.color_8,.nodeHeader.color_9
+,.nodeHeader.color_10,.nodeHeader.color_11,.nodeHeader.color_12,.nodeHeader.color_13,.nodeHeader.color_14{background-color: transparent;}
 /* This are the only colors founded in the last browser template
    but client data color goes over */
 .color_0{background-color: #4d6791;}
@@ -247,22 +259,23 @@ body{
 } */
 
 .countView div {
-position: relative;
-display: table-cell;
+position: absolute;
+/*display: table-cell;
 vertical-align: middle;
-text-align: center;
+text-align: center;*/
   z-index: 100 !important;
   pointer-events:none;
   transition: opacity .1s ease-out;
   -moz-transition: opacity .1s ease-out;
   -webkit-transition: opacity .1s ease-out;
   -o-transition: opacity .1s ease-out;
-
+  bottom: 1px;
+  right: 1px;
 }
 .countView span {
 
   border-radius: 70px;
   background-color: rgba(60, 60, 60, 0.8);
   padding: 0px 7px;
-  font-size: 45px;
+  font-size: 11px;
 }

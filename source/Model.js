@@ -35,18 +35,29 @@ module.exports = function () {
   this.onDateMasked = function () {
     console.log('onDateMasked', arguments);
   };
+
+
+
   // add fredos to Connections
   var fredosSerial =
     this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM')).useStaging());
 
+  var batch = this.activeFilter.startBatch('adding connections');
+
+  batch.addOnDoneListener('connloading', function () {
+    resetTimeFrameFromDisplayedEvents(this); // once all events are loaded display TF;
+  }.bind(this));
+
   // tell the filter we want to show this connection
-  this.activeFilter.addConnection(fredosSerial);
+  this.activeFilter.addConnection(fredosSerial, batch);
 
   // create the TreeMap
   this.treemap = new TreeMap(this);
 
+  /**
   // create streams and add them to filter
   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
+
   var perki1Serial =
     this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM')).useStaging());
   var perki2Serial =
@@ -56,25 +67,30 @@ module.exports = function () {
 
   // activate them in batch in the filter
 
-  var batch = this.activeFilter.startBatch('adding 2 connections');
+
   this.activeFilter.addConnection(liveat, batch);
   //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
+   **/
   batch.done();
 
-  var streams = [];
-  var perki1 =  this.connections.get(perki1Serial);
-  perki1.useLocalStorage(function () {
-    var stream =  perki1.streams.getById('TVWwwYo-mJ');
-    streams.push(stream);
-    setTimeout(function () {
-      // this.activeFilter.focusOnStreams(streams);
-    }.bind(this), 30000);
-  }.bind(this));
 };
+
+
+/**
+ * demo utility that set the timeFrame boundaries to the events displayed.
+ */
+function resetTimeFrameFromDisplayedEvents(model) {
+  var stats = model.activeFilter.stats();
+  model.timeView.onFiltersChanged({
+    from:     new Date(stats.timeFrameLT[0]),
+    to:       new Date(stats.timeFrameLT[1])
+  });
+}
+
+
 var initTimeAndFilter = function (timeView, filter) {
-  var spanName = 'year',
-    spanTime = 86400000,
+  var spanTime = 86400000,
     fromTime = new Date(),
     start = new Date(fromTime.getFullYear(), fromTime.getMonth(), fromTime.getDate());
 
@@ -82,14 +98,12 @@ var initTimeAndFilter = function (timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 200
+    limit: 2000
   });
 
   timeView.onFiltersChanged({
     from:     fromTime,
-    to:       toTime,
-    span:     spanTime,
-    spanName: spanName
+    to:       toTime
   });
 };
 

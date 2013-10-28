@@ -28,11 +28,20 @@ body{
   -o-background-size: cover; /* pour Opera */
   background-size: cover; /* version standardisée */
 }
-
+.logo{
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-indent: -9999em;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-image: url(../img/logo-pryv.png);
+}
 #tree {
   width: 100%;
   height: 100%;
-  margin: 20px 20px 50px 20px;
+  margin: 20px 40px 50px 20px;
   color: white;
 }
 .Center-Container.is-Table { display: table;height: 100%;width:100%; }
@@ -74,7 +83,7 @@ body{
   word-break: break-all;
 }
 .GenericEventsNode {
-  background-color: #527E8E;
+  background-color: #3598DC;
 }
 .GenericEventsNode .content, .GenericEventsNode a {
   color: #9FC9D9 !important;

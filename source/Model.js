@@ -54,6 +54,11 @@ module.exports = function () {
   // create the TreeMap
   this.treemap = new TreeMap(this);
 
+
+  var liveat =
+    this.connections.add((new Pryv.Connection('liveat', 'PVYDcS_oi9')).useStaging());
+  this.activeFilter.addConnection(liveat, batch);
+
   /**
   // create streams and add them to filter
   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
@@ -62,17 +67,15 @@ module.exports = function () {
     this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM')).useStaging());
   var perki2Serial =
     this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9')).useStaging());
-  var liveat =
-    this.connections.add((new Pryv.Connection('liveat', 'PVYDcS_oi9')).useStaging());
 
-  // activate them in batch in the filter
-
-
-  this.activeFilter.addConnection(liveat, batch);
   //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
    **/
   batch.done();
+
+  setTimeout(function () { 
+    this.activeFilter.removeConnections(liveat);
+  }.bind(this), 3000);
 
 };
 

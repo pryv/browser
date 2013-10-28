@@ -104,6 +104,40 @@ ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
 };
 
 
+/**
+ * remove a connection from the list
+ */
+ModelFilter.prototype.removeConnections = function (connections, batch) {
+  var myBatch = this.startBatch('removeConnections', batch);
+
+  if (! _.isArray(connections)) { connections = [connections];  }
+  _.each(connections, function (connection) {
+
+    var monitor = this._monitors[connection.serialId];
+    if (! monitor) {
+      throw new Error('cannot find monitor for connection: '+ connection.serialId);
+    }
+    this._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
+      monitor.getEvents(), myBatch);
+    delete this._monitors[connection.serialId];
+    monitor.destroy();
+  }.bind(this));
+
+  myBatch.done();
+};
+
+/**
+ * focus on this connection
+ */
+ModelFilter.prototype.focusOnConnections = function (connections, batch) {
+
+
+};
+
+
+
+
+
 
 /**
  * get all events actually matching this filter
@@ -140,6 +174,8 @@ ModelFilter.prototype.getStreams = function () {
   });
   return result;
 };
+
+
 
 
 /**
@@ -230,7 +266,7 @@ ModelFilter.prototype.stats = function () {
   };
   this._eachMonitor(function (monitor) {
     var tf = monitor.stats().timeFrameLT;
-    if (! result.timeFrameLT[0] || tf[0] < result.timeFrameLT[0]) { 
+    if (! result.timeFrameLT[0] || tf[0] < result.timeFrameLT[0]) {
       result.timeFrameLT[0] = tf[0];
     }
     if (! result.timeFrameLT[1] || tf[1] > result.timeFrameLT[1]) {

@@ -23,6 +23,7 @@ Messages.ModelFilter = {
   },
   REASON : {
     EVENT_SCOPE_ENTER_ADD_CONNECTION : 'connectionAdded',
+    EVENT_SCOPE_LEAVE_REMOVE_CONNECTION : 'connectionRemoved',
     REMOTELY : 'remotely',
     // may happend when several refresh requests overlaps
     FORCE : 'forced',

@@ -6,7 +6,12 @@ var _ = require('underscore');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
-  this.root = new RootNode($('#tree').width(), $('#tree').height() - $('#timeframe').height());
+  this.root = new RootNode($('#tree').width() -
+    parseInt($('#tree').css('margin-left').split('px')[0], null) -
+    parseInt($('#tree').css('margin-right').split('px')[0], null),
+    $('#tree').height() -
+    parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
+    parseInt($('#tree').css('margin-top').split('px')[0], null));
 
   this.root.focusOnStreams = function (stream) {
     this.model.activeFilter.focusOnStreams(stream);

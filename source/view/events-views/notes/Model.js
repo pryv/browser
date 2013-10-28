@@ -115,12 +115,15 @@ NotesPlugin.prototype.refresh = function (object) {
 NotesPlugin.prototype.close = function () {
   this.view.close();
   this.rendered = false;
-  this.view = null;
   this.events = null;
   this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.eventDisplayed = null;
-
+  for (var j = 0; j < this.eventsDisplayed.length; ++j) {
+      this.eventsDisplayed[j].view = null;
+      this.eventsDisplayed[j].modelView = null;
+  }
+  this.eventsDisplayed = null;
+  this.countView = null;
+  this.modelCountView = null;
 };
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();

@@ -13,6 +13,7 @@ var DEFAULT_OFFSET = 18;
 // TODO see css right border
 // need to set color background only on .nodeHeader
 var DEFAULT_MARGIN = 2;
+var CONNECTION_MARGIN = 20;
 var DEFAULT_MIN_WIDTH = 550;
 var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
@@ -27,7 +28,7 @@ var TreeNode = module.exports = function (parent) {
   this.view = null;
   this.model = null;
   this.offset = this.parent ? this.parent.offset : DEFAULT_OFFSET;
-  this.margin = this.parent ? this.parent.margin : DEFAULT_MARGIN;
+  this.margin = this.className === 'RootNode' ? CONNECTION_MARGIN : DEFAULT_MARGIN;
   this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
   this.minHeight = this.parent ? this.parent.minHeight : DEFAULT_MIN_HEIGHT;
 };

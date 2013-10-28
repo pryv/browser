@@ -1,4 +1,4 @@
-
+/* global $ */
 var ModelFilter = require('./model/ModelFilter.js');
 var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
@@ -25,6 +25,9 @@ module.exports = function () {
 
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new ModelFilter(this);
+  $('#logo-reload').click(function () {
+    this.activeFilter.focusOnStreams(null);
+  }.bind(this));
   this.timeView = new TimeLine();
   this.timeView.render();
   initTimeAndFilter(this.timeView, this.activeFilter);

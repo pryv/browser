@@ -12,6 +12,8 @@ var TreeMap = module.exports = function (model) {
     $('#tree').height() -
     parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
     parseInt($('#tree').css('margin-top').split('px')[0], null));
+  this.root.x =  parseInt($('#tree').css('margin-left').split('px')[0], null);
+  this.root.y =  parseInt($('#tree').css('margin-top').split('px')[0], null);
 
   this.root.focusOnStreams = function (stream) {
     this.model.activeFilter.focusOnStreams(stream);
@@ -31,8 +33,14 @@ var TreeMap = module.exports = function (model) {
   }.bind(this), 10);
 
   $(window).resize(_.debounce(function () {
-    this.root.width = $('#tree').width();
-    this.root.height = $('#tree').height() - $('#timeframe').height();
+    this.root.width = $('#tree').width() -
+      parseInt($('#tree').css('margin-left').split('px')[0], null) -
+      parseInt($('#tree').css('margin-right').split('px')[0], null);
+    this.root.height = $('#tree').height() -
+      parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
+      parseInt($('#tree').css('margin-top').split('px')[0], null);
+    this.root.x =  parseInt($('#tree').css('margin-left').split('px')[0], null);
+    this.root.y =  parseInt($('#tree').css('margin-top').split('px')[0], null);
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,

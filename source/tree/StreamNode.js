@@ -22,21 +22,45 @@ var StreamNode = module.exports = TreeNode.implement(
     className: 'StreamNode',
 
 
-    // ----
     _needToAggregate: function () {
+      console.log('needToAggregate', this.uniqueId);
       if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
-        return true;
+        console.log(this.uniqueId, 'size under min');
+        /* we don't need to aggregate if all the events are in the same stream
+           so we need to walk all the child of this stream with 3 stop condition:
+           - if a stream has more than one stream we aggregate it
+           - if a stream has one stream and one or more eventsNode we aggregate it
+           - if a stream has only eventsNode we don't aggregate it
+        */
+        var node = this, currentAggregated;
+        var numberOfStreamNode, numberOfEventsNode;
+        while (true) {
+          numberOfEventsNode = _.size(node.eventsNodes);
+          currentAggregated = node.aggregated;
+          // force aggregated to false for getChildren to return nonAggregated node
+          node.aggregated = false;
+          numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
+          node.aggregated = currentAggregated;
+          console.log(this.uniqueId, node.uniqueId, numberOfEventsNode, numberOfStreamNode);
+          if (numberOfStreamNode === 0) {
+            return false;
+          }
+          if (numberOfStreamNode > 1) {
+            return true;
+          }
+          if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
+            return true;
+          }
+          // at this point the node has only one stream as child
+          node = node.getChildren()[0];
+        }
       }  else {
         return false;
       }
     },
     _aggregate: function () {
       _.each(this.getChildren(), function (child) {
-
-        if (child.view) {
-          child.view.close();
-          child.view = null;
-        }
+        child._closeView(false);
       });
       this.aggregated = true;
       this.createEventsNodesFromAllEvents(this.getAllEvents());
@@ -46,60 +70,12 @@ var StreamNode = module.exports = TreeNode.implement(
     },
     _desaggregate: function () {
       _.each(this.eventsNodesAggregated, function (node) {
-
-        if (node.view) {
-          node.view.close();
-          node.view = null;
-        }
+        node._closeView(false);
       });
       this.aggregated = false;
       _.each(this.getChildren(), function (child) {
         child._createView();
       });
-    },
-    needToAggregate: function () {
-      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
-        // Close all the non aggregated view
-        if (!this.aggregated) {
-          _.each(this.getChildren(), function (child) {
-            if (child.view) {
-              child.view.close();
-              child.view = null;
-            }
-          });
-          this.aggregated = true;
-
-          /* var parent = this.parent;
-           parent.needToSquarify = true;
-           // reset the event count
-           // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
-           while (parent) {
-           parent.eventsNbr -= this.eventsNbr;
-           parent = parent.parent;
-           }
-           this.eventsNbr = 0;    */
-          this.createEventsNodesFromAllEvents(this.getAllEvents());
-          // create the new aggregated views
-          _.each(this.eventsNodesAggregated, function (node) {
-            node._createView();
-          });
-        }
-      } else {
-        // we don't need to aggregate the view
-        // close the aggregated views if there were some
-        _.each(this.eventsNodesAggregated, function (node) {
-          if (node.view) {
-            node.view.close();
-            node.view = null;
-          }
-        });
-        this.aggregated = false;
-        // create the new non aggregated view
-        _.each(this.getChildren(), function (child) {
-          child._createView();
-        });
-      }
-      return this.aggregated;
     },
     getWeight: function () {
       var children = [];
@@ -165,14 +141,8 @@ var StreamNode = module.exports = TreeNode.implement(
     createEventsNodesFromAllEvents: function (events) {
       this.eventsNodesAggregated = {};
       _.each(events, function (event) {
-        var eventView = null;
-        var key = this.findEventNodeType(event);
-        if (key && _.has(this.eventsNodesAggregated, key)) {
-          eventView =  this.eventsNodesAggregated[key]; // found one
-        }  else { // create is
-          eventView = new StreamNode.registeredEventNodeTypes[key](this);
-          this.eventsNodesAggregated[key] = eventView;
-        }
+        var key = this._findEventNodeType(event);
+        var eventView = this._findEventNode(key, this.eventsNodesAggregated);
         if (eventView === null) {
           throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
         }
@@ -181,31 +151,45 @@ var StreamNode = module.exports = TreeNode.implement(
 
     },
     eventEnterScope: function (event, reason, callback) {
-      var eventView = null;
-      var key = this.findEventNodeType(event);
-      if (key && _.has(this.eventsNodes, key)) {
-        eventView =  this.eventsNodes[key]; // found one
-      }  else { // create is
-        eventView = new StreamNode.registeredEventNodeTypes[key](this);
-        this.eventsNodes[key] = eventView;
-      }
-      if (eventView === null) {
+      var key = this._findEventNodeType(event);
+      var eventNode = this._findEventNode(key, this.eventsNodes);
+      if (eventNode === null) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
-
-      eventView.eventEnterScope(event, reason, callback);
-
+      eventNode.eventEnterScope(event, reason, callback);
+      var aggregatedParent = this._findAggregatedParent();
+      if (aggregatedParent) {
+        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
+        if (eventNode === null) {
+          throw new Error('EventEnterScore: did not find an eventView for the aggregated stream');
+        }
+        eventNode.eventEnterScope(event, reason, callback);
+      }
     },
 
 
     eventLeaveScope: function (event, reason, callback) {
-
-      var key = this.findEventNodeType(event);
-      if (!this.eventsNodes[key]) {
+      var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
+      if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
-      this.eventsNodes[key].eventLeaveScope(event, reason, callback);
-
+      eventNode.eventLeaveScope(event, reason, callback);
+      if (_.size(eventNode.events) === 0) {
+        eventNode._closeView();
+        delete this.eventsNodes[key];
+      }
+      var aggregatedParent = this._findAggregatedParent();
+      if (aggregatedParent) {
+        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
+        if (eventNode === null) {
+          throw new Error('EventLeaveScore: did not find an eventView for the aggregated stream');
+        }
+        eventNode.eventLeaveScope(event, reason, callback);
+        if (_.size(eventNode.events) === 0) {
+          eventNode._closeView();
+          delete aggregatedParent.eventsNodesAggregated[key];
+        }
+      }
 
     },
 
@@ -214,8 +198,17 @@ var StreamNode = module.exports = TreeNode.implement(
         callback(null, this);
       }
     },
-
-    findEventNodeType: function (event) {
+    _findAggregatedParent: function () {
+      var parent = this;
+      while (parent) {
+        if (parent.aggregated) {
+          return parent;
+        }
+        parent = parent.parent;
+      }
+      return null;
+    },
+    _findEventNodeType: function (event) {
       var keys = _.keys(StreamNode.registeredEventNodeTypes);
       for (var i = 0; i < keys.length; i++) {
         var key = keys[i];
@@ -224,6 +217,16 @@ var StreamNode = module.exports = TreeNode.implement(
         }
       }
       return;
+    },
+    _findEventNode: function (key, eventsNodeList) {
+      var eventNode = null;
+      if (key && _.has(eventsNodeList, key)) {
+        eventNode =  eventsNodeList[key]; // found one
+      }  else { // create is
+        eventNode = new StreamNode.registeredEventNodeTypes[key](this);
+        eventsNodeList[key] = eventNode;
+      }
+      return eventNode;
     },
 
     //----------- debug ------------//

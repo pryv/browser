@@ -167,8 +167,10 @@ NotesPlugin.prototype._refreshModelView = function () {
   }
   if (this.needToRender || this.rendered) {
     for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-      this.eventsDisplayed[j].view.renderView(this.container);
-      this.rendered = true;
+      if ($('#' + this.eventsDisplayed[j].id).length === 0) {
+        this.eventsDisplayed[j].view.renderView(this.container);
+        this.rendered = true;
+      }
     }
     this.needToRender = false;
   }

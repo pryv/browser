@@ -11,15 +11,13 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:height', this.change);
     this.$el.css('position', 'absolute');
     this.$el.addClass('animated  fadeInLeftBig node singleNote');
+    this.$el.attr('id', this.model.get('id'));
   },
   change: function () {
     this.render();
   },
   renderView: function (container) {
-   // this.rendered = false;
-    if (container !== this.container) {
-      this.rendered = false;
-    }
+    this.rendered = false;
     this.container = container;
 
     this.render();
@@ -41,6 +39,7 @@ module.exports = Marionette.ItemView.extend({
     this.$el.removeClass('animated fadeInLeftBig');
     this.$el.addClass('animated fadeOutRightBig');
     this.rendered = false;
+    this.container = null;
     setTimeout(function () {this.remove(); }.bind(this), 1000);
   }
 });

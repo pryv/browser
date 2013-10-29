@@ -18,6 +18,7 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:height', this.change);
     this.$el.css('position', 'absolute');
     this.$el.addClass('animated  fadeInLeftBig node');
+    this.$el.attr('id', this.model.get('id'));
 
   },
 
@@ -41,9 +42,6 @@ module.exports = Marionette.ItemView.extend({
 
   renderView: function (container) {
     this.rendered = false;
-    if (container !== this.container) {
-      this.rendered = false;
-    }
     this.container = container;
     this.$el.css({
       top: this.model.get('top') + '%',
@@ -189,6 +187,7 @@ module.exports = Marionette.ItemView.extend({
     this.$el.removeClass('animated fadeInLeftBig');
     this.$el.addClass('animated fadeOutRightBig');
     this.rendered = false;
+    this.container = null;
     setTimeout(function () {this.remove(); }.bind(this), 1000);
   }
 });

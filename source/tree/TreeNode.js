@@ -59,13 +59,24 @@ _.extend(TreeNode.prototype, {
       return;
     }
     if (!this.view && typeof(document) !== 'undefined') {
-      this._refreshViewModel();
+      this._refreshViewModel(false);
       this.view = new NodeView({model: this.model});
     }
     if (this.getChildren()) {
       _.each(this.getChildren(), function (child) {
         child._createView();
       });
+    }
+  },
+  _closeView: function (recursive) {
+    if (recursive) {
+      _.each(this.getChildren(), function (child) {
+        child._closeView(recursive);
+      });
+    }
+    if (this.view) {
+      this.view.close();
+      this.view = null;
     }
   },
   /**
@@ -310,5 +321,5 @@ _.extend(TreeNode.prototype, {
       });
     }
     return me;
-  }
+  },
 });

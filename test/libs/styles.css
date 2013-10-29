@@ -69,7 +69,10 @@ body{
   border-left: 2px solid #FFF;
   line-height:18px;
 }
-.nodeHeader:hover {
+.nodeHeader.color_0:hover,.nodeHeader.color_1:hover,.nodeHeader.color_2:hover,.nodeHeader.color_3:hover,.nodeHeader.color_4:hover,.nodeHeader.color_5:hover
+,.nodeHeader.color_6:hover,.nodeHeader.color_7:hover,.nodeHeader.color_8:hover,.nodeHeader.color_9:hover,.nodeHeader.color_10:hover,.nodeHeader.color_11:hover
+,.nodeHeader.color_12:hover,.nodeHeader.color_13:hover,.nodeHeader.color_14:hover
+ {
   cursor: pointer;
   background-color: rgba(0, 0, 0, 0.12);
 }

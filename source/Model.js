@@ -57,7 +57,7 @@ module.exports = function () {
   // create the TreeMap
   this.treemap = new TreeMap(this);
 
-  /**
+
   // create streams and add them to filter
   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
 
@@ -74,7 +74,7 @@ module.exports = function () {
   this.activeFilter.addConnection(liveat, batch);
   //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
-   **/
+
   batch.done();
 
 };

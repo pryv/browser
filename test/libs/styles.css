@@ -69,6 +69,26 @@ body{
   border-left: 2px solid #FFF;
   line-height:18px;
 }
+/*-----------------theme Connection*/
+#node_connection_0 .NotesEventsNode{background-color: #1BBC9D;}
+#node_connection_0 .GenericEventsNode{background-color: #16A086;}
+#node_connection_0 .PositionsEventsNode{background-color: #00896E;}
+#node_connection_0 .NumericalsEventsNode{background-color: #00896E;}
+#node_connection_0 > .nodeHeader {border-left:20px solid #1BBC9D;}
+
+#node_connection_1 .NotesEventsNode{background-color: #3598DC;}
+#node_connection_1 .GenericEventsNode{background-color: #2A80B9;}
+#node_connection_1 .PositionsEventsNode{background-color: #266A9C;}
+#node_connection_1 .NumericalsEventsNode{background-color: #266A9C;}
+#node_connection_1 > .nodeHeader {border-left:20px solid #3598DC;}
+
+#node_connection_2 .NotesEventsNode{background-color: #F1C40F;}
+#node_connection_2 .GenericEventsNode{background-color: #F49C14;}
+#node_connection_2 .PositionsEventsNode{background-color: #D68912;}
+#node_connection_2 .NumericalsEventsNode{background-color: #D68912;}
+#node_connection_2 > .nodeHeader {border-left:20px solid #F1C40F;}
+
+
 .nodeHeader.color_0:hover,.nodeHeader.color_1:hover,.nodeHeader.color_2:hover,.nodeHeader.color_3:hover,.nodeHeader.color_4:hover,.nodeHeader.color_5:hover
 ,.nodeHeader.color_6:hover,.nodeHeader.color_7:hover,.nodeHeader.color_8:hover,.nodeHeader.color_9:hover,.nodeHeader.color_10:hover,.nodeHeader.color_11:hover
 ,.nodeHeader.color_12:hover,.nodeHeader.color_13:hover,.nodeHeader.color_14:hover
@@ -90,13 +110,12 @@ body{
   word-break: break-all;
 }
 .GenericEventsNode {
-  background-color: #3598DC;
+ /* background-color: #3598DC;*/
 }
 .GenericEventsNode .content, .GenericEventsNode a {
-  color: #9FC9D9 !important;
+  color: #FFFFFF !important;
   text-align: center;
-  /*font-family: MuseoSans-300;*/
-  font-size: 21px;
+  /*font-size: 21px;*/
 }
 .GenericEventsNode a:hover,.GenericEventsNode a:focus {
   color: #D0E8F1 !important;
@@ -106,7 +125,7 @@ body{
   /*background-color: #4F423C;   */
 }
 .singleNote {
-  background-color: #40E0D0;
+  /*background-color: #40E0D0;*/
   pointer-events: all;
 }
 
@@ -129,20 +148,21 @@ body{
   display:none;
 }
 .PositionsEventsNode {
-  background-color: #3FA2F0;
+  /*background-color: #3FA2F0;*/
 }
 .PicturesEventsNode {
  background: rgba(0, 0, 0, 0.27) !important; 
 }
 
 .NumericalsEventsNode {
-  background-color: #F1C40F;
+ /* background-color: #F1C40F;*/
 }
 .NumericalsEventsNode .content {
   color: white;
   font-size: 30px;
   text-align: center;
   font-size: 21px;
+  line-height: 18px;
 }
 .ConnectionNode {
   /*background-color: #9c1a0f;     */
@@ -255,17 +275,17 @@ body{
 .axis path,
 .axis line {
   fill: none;
-  stroke: #000;
+  stroke: rgba(255, 255, 255, 0.34);
   shape-rendering: crispEdges;
 }
 
 .circle {
-  fill: red;
+  fill: #FFF;
 }
-
+text{font-size:10px;}
 .line
 {
-  stroke: blue;
+  stroke: #FFF;
   fill: none;
 }
 

@@ -2,6 +2,7 @@ var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
 
+var CONNECTION_MARGIN = 20;
 /**
  * Holder for Connection Nodes.
  * @type {*}
@@ -9,9 +10,14 @@ var TreeNode = require('./TreeNode'),
 module.exports = TreeNode.implement(
   function (w, h) {
     TreeNode.call(this, null);
+    if (w === null || h === null) {
+      throw new Error('You must set width and height of the root node');
+    }
     this.connectionNodes = {}; // Connections indexed by their token .. other index solution welcome
     this.width = w;
     this.height = h;
+    this.margin = CONNECTION_MARGIN;
+    this.offset = 0;
   },
   {
     className: 'RootNode',

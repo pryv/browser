@@ -112,13 +112,15 @@ PicturesPlugin.prototype.refresh = function (object) {
   /** */
 };
 PicturesPlugin.prototype.close = function () {
-  this.view.close();
   this.rendered = false;
-  this.view = null;
   this.events = null;
   this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.eventDisplayed = null;
+  for (var j = 0; j < this.eventsDisplayed.length; ++j) {
+    this.eventsDisplayed[j].view.close();
+    this.eventsDisplayed[j].view = null;
+    this.eventsDisplayed[j].modelView = null;
+  }
+  this.eventsDisplayed = [];
 
 };
 PicturesPlugin.prototype._refreshModelView = function () {

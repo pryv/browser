@@ -72,7 +72,9 @@ GenericsPlugin.prototype.refresh = function () {
 };
 
 GenericsPlugin.prototype.close = function () {
-  this.view.close();
+  if (this.view) {
+    this.view.close();
+  }
   this.view = null;
   this.events = null;
   this.highlightedTime = Infinity;

@@ -88,7 +88,9 @@ NumericalsPlugin.prototype.refresh = function (object) {
 };
 
 NumericalsPlugin.prototype.close = function () {
-  this.view.close();
+  if (this.view) {
+    this.view.close();
+  }
   this.view = null;
   this.events = null;
   this.datas = null;

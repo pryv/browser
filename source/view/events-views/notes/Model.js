@@ -106,15 +106,15 @@ NotesPlugin.prototype.refresh = function (object) {
 };
 
 NotesPlugin.prototype.close = function () {
-  this.view.close();
   this.rendered = false;
   this.events = null;
   this.highlightedTime = Infinity;
   for (var j = 0; j < this.eventsDisplayed.length; ++j) {
+    this.eventsDisplayed[j].view.close();
     this.eventsDisplayed[j].view = null;
     this.eventsDisplayed[j].modelView = null;
   }
-  this.eventsDisplayed = null;
+  this.eventsDisplayed = [];
 };
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();

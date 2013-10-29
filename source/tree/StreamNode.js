@@ -23,9 +23,40 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     // ----
+    _needToAggregate: function () {
+      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
+        return true;
+      }  else {
+        return false;
+      }
+    },
+    _aggregate: function () {
+      _.each(this.getChildren(), function (child) {
 
+        if (child.view) {
+          child.view.close();
+          child.view = null;
+        }
+      });
+      this.aggregated = true;
+      this.createEventsNodesFromAllEvents(this.getAllEvents());
+      _.each(this.eventsNodesAggregated, function (node) {
+        node._createView();
+      });
+    },
+    _desaggregate: function () {
+      _.each(this.eventsNodesAggregated, function (node) {
 
-
+        if (node.view) {
+          node.view.close();
+          node.view = null;
+        }
+      });
+      this.aggregated = false;
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    },
     needToAggregate: function () {
       if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
         // Close all the non aggregated view
@@ -38,15 +69,15 @@ var StreamNode = module.exports = TreeNode.implement(
           });
           this.aggregated = true;
 
-         /* var parent = this.parent;
-          parent.needToSquarify = true;
-          // reset the event count
-          // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
-          while (parent) {
-            parent.eventsNbr -= this.eventsNbr;
-            parent = parent.parent;
-          }
-          this.eventsNbr = 0;    */
+          /* var parent = this.parent;
+           parent.needToSquarify = true;
+           // reset the event count
+           // that will be correctly re-incremented by createEventsNodesFrommAlEvents method
+           while (parent) {
+           parent.eventsNbr -= this.eventsNbr;
+           parent = parent.parent;
+           }
+           this.eventsNbr = 0;    */
           this.createEventsNodesFromAllEvents(this.getAllEvents());
           // create the new aggregated views
           _.each(this.eventsNodesAggregated, function (node) {

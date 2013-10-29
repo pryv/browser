@@ -88,42 +88,11 @@ var EventsNode = module.exports = TreeNode.implement(
         }
       }
     },
-    /* eventLeaveScope: function (event, reason, callback) {
-     delete this.events[event.id];
-     this.eventsNbr--;
-     var parent = this.parent;
-     while (parent) {
-     parent.eventsNbr--;
-     parent = parent.parent;
-     }
-     if (this.eventsNbr === 0) {
-     if (this.eventView) {
-     this.eventView.close();
-     this.eventView = null;
-     }
-     if (this.view) {
-     this.view.close();
-     this.view = null;
-     }
-     parent = this.parent;
-     if (parent.aggregated) {
-     delete parent.eventsNodesAggregated[this.className];
-     } else {
-     delete parent.eventsNodes[this.className];
-     }
-     while (parent) {
-     if (parent.eventsNbr === 0 && parent.view) {
-     parent.view.close();
-     parent.view = null;
-     }
-     parent = parent.parent;
-     }
-     }
-     if (callback) {
-     callback(null, this);
-     }
-     }, */
-
+    onDateHighLighted: function (time) {
+      if (this.eventView) {
+        this.eventView.OnDateHighlightedChange(time);
+      }
+    },
     /*jshint -W098 */
     eventChange: function (event, reason, callback) {
       throw new Error('EventsNode.eventChange No yet implemented' + event.id);

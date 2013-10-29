@@ -11,7 +11,6 @@ var _ = require('underscore'),
  */
 var DEFAULT_OFFSET = 18;
 var DEFAULT_MARGIN = 2;
-var CONNECTION_MARGIN = 20;
 var DEFAULT_MIN_WIDTH = 550;
 var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
@@ -26,8 +25,8 @@ var TreeNode = module.exports = function (parent) {
   this.aggregated = false;
   this.view = null;
   this.model = null;
-  this.offset = this.parent ? this.parent.offset : DEFAULT_OFFSET;
-  this.margin = this.className === 'RootNode' ? CONNECTION_MARGIN : DEFAULT_MARGIN;
+  this.offset = DEFAULT_OFFSET;
+  this.margin = DEFAULT_MARGIN;
   this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
   this.minHeight = this.parent ? this.parent.minHeight : DEFAULT_MIN_HEIGHT;
 };
@@ -60,9 +59,6 @@ _.extend(TreeNode.prototype, {
       return;
     }
     if (!this.view && typeof(document) !== 'undefined') {
-      if (this.className === 'RootNode' && (this.width === null || this.height === null)) {
-        throw new Error('You must set width and height of the root node');
-      }
       this._refreshViewModel();
       this.view = new NodeView({model: this.model});
     }
@@ -85,7 +81,12 @@ _.extend(TreeNode.prototype, {
     if (this.getWeight() === 0) {
       return;
     }
-    this.needToAggregate();
+    if (this._needToAggregate() && !this.aggregated) {
+      this._aggregate();
+    }
+    if (!this._needToAggregate() && this.aggregated) {
+      this._desaggregate();
+    }
     var children = this.getChildren();
     if (children) {
       // we need to normalize child weights by the parent weight
@@ -93,17 +94,14 @@ _.extend(TreeNode.prototype, {
       _.each(children, function (child) {
         child.normalizedWeight = (child.getWeight() / weight);
       }, this);
-      var offset = this.offset;
-      if (this.className === 'RootNode') {
-        offset = 0;
-      }
+
       // we squarify all the children passing a container dimension and position
       // no recursion needed
       var squarified =  TreemapUtil.squarify({
         x: x,
-        y: y + offset,
+        y: y + this.offset,
         width: width,
-        height: height - offset
+        height: height - this.offset
       }, children);
       _.each(children, function (child) {
         child.x = squarified[child.uniqueId].x;
@@ -121,9 +119,15 @@ _.extend(TreeNode.prototype, {
       }, this);
     }
   },
-  needToAggregate: function () {
+  _needToAggregate: function () {
     this.aggregated = false;
     return this.aggregated;
+  },
+  _aggregate: function () {
+    return;
+  },
+  _desaggregate: function () {
+    return;
   },
   /** Render or close the view if needed
    For more performance we need to render or close views once all processing are done
@@ -135,6 +139,10 @@ _.extend(TreeNode.prototype, {
     /** If the node has no events to display (getWeight = 0) we close it **/
     if (this.getWeight() === 0) {
       this.aggregated = false; // Reset the aggregation to false;
+      if (this.eventView) {
+        this.eventView.close();
+        this.eventView = null;
+      }
       if (this.view) {
         this.view.close();
         this.view = null;
@@ -258,9 +266,6 @@ _.extend(TreeNode.prototype, {
 
   //----------- event management ------------//
   onDateHighLighted: function (time) {
-    if (this.eventView) {
-      this.eventView.OnDateHighlightedChange(time);
-    }
     _.each(this.getChildren(), function (child) {
       child.onDateHighLighted(time);
     });

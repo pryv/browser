@@ -23,9 +23,7 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     _needToAggregate: function () {
-      console.log('needToAggregate', this.uniqueId);
       if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
-        console.log(this.uniqueId, 'size under min');
         /* we don't need to aggregate if all the events are in the same stream
            so we need to walk all the child of this stream with 3 stop condition:
            - if a stream has more than one stream we aggregate it
@@ -41,7 +39,6 @@ var StreamNode = module.exports = TreeNode.implement(
           node.aggregated = false;
           numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
           node.aggregated = currentAggregated;
-          console.log(this.uniqueId, node.uniqueId, numberOfEventsNode, numberOfStreamNode);
           if (numberOfStreamNode === 0) {
             return false;
           }

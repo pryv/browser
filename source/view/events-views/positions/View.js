@@ -34,11 +34,17 @@ module.exports = Marionette.ItemView.extend({
       }
     }.bind(this));
 
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'change:positions', this.render);
+    this.listenTo(this.model, 'change:posWidth', this.resize);
+    this.listenTo(this.model, 'change:posHeight', this.resize);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
   },
-
+  resize: function () {
+    if (this.map && this.bounds) {
+      this.map.fitBounds(this.bounds);
+    }
+  },
   renderView: function (container) {
     this.container = container;
     this.render();

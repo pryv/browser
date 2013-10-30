@@ -73,7 +73,7 @@ module.exports = function () {
 
   //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
-   **/
+
   batch.done();
 
   setTimeout(function () { 

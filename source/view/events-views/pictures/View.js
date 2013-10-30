@@ -18,6 +18,7 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:height', this.change);
     this.$el.css('position', 'absolute');
     this.$el.addClass('animated  fadeInLeftBig node');
+    this.$el.attr('id', this.model.get('id'));
 
   },
 
@@ -40,9 +41,7 @@ module.exports = Marionette.ItemView.extend({
   },
 
   renderView: function (container) {
-    if (container !== this.container) {
-      this.rendered = false;
-    }
+    this.rendered = false;
     this.container = container;
     this.$el.css({
       top: this.model.get('top') + '%',
@@ -69,12 +68,6 @@ module.exports = Marionette.ItemView.extend({
     if (this.container && !this.rendered) {
       $('#' + this.container).append(this.el);
       this.rendered = true;
-      this.$el.mouseover(function () {
-        $('#' + this.container + ' .countView div').css('opacity', '0');
-      }.bind(this));
-      this.$el.mouseout(function () {
-        $('#' + this.container + ' .countView div').css('opacity', '1');
-      }.bind(this));
     }
     /*  this.$image = this.$('img');
       this.$image.load(function () {
@@ -194,6 +187,7 @@ module.exports = Marionette.ItemView.extend({
     this.$el.removeClass('animated fadeInLeftBig');
     this.$el.addClass('animated fadeOutRightBig');
     this.rendered = false;
+    this.container = null;
     setTimeout(function () {this.remove(); }.bind(this), 1000);
   }
 });

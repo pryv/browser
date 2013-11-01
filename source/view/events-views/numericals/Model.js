@@ -29,13 +29,6 @@ NumericalsPlugin.prototype.eventEnter = function (event) {
     this.datas[event.type] = {};
   }
   this.datas[event.type][event.id] = event;
-  if (_.size(this.datas) === 1 && _.size(this.streamIds) === 1) {
-    this.view = this.superCondensed ? null : this.view;
-    this.superCondensed = false;
-  } else {
-    this.view = this.superCondensed ? this.view : null;
-    this.superCondensed = true;
-  }
   this.debounceRefresh();
 
 };

@@ -24,8 +24,6 @@ PositionsPlugin.prototype.eventEnter = function (event) {
   if (this._validEvent(event)) {
     this.events[event.id] = event;
     this.debounceRefresh();
-  } else {
-   // console.log('Position plugin: Invalid event:', event);
   }
 };
 
@@ -34,9 +32,7 @@ PositionsPlugin.prototype.eventLeave = function (event) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
-    if (_.size(this.events) === 0) {
-      //this.close();
-    } else {
+    if (_.size(this.events) !== 0) {
       this.debounceRefresh();
     }
   }

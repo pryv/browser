@@ -22,14 +22,12 @@ var GenericsPlugin = module.exports = function (events, params) {
 };
 GenericsPlugin.prototype.eventEnter = function (event) {
 
-  if (this.events[event.id]) {
-    //console.log('eventEnter: event id ' + event.id + ' already exists');
-  } else {
-    this.events[event.id] = event;
-    this.debounceRefresh();
-  }
-
-
+  /* if (this.events[event.id]) {
+   console.log('eventEnter: event id ' + event.id + ' already exists');
+   } else {  */
+  this.events[event.id] = event;
+  this.debounceRefresh();
+  //}
 };
 
 GenericsPlugin.prototype.eventLeave = function (event) {
@@ -37,11 +35,6 @@ GenericsPlugin.prototype.eventLeave = function (event) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
-    if (_.size(this.events) === 0) {
-      //this.close();
-    } else {
-      //  this.debounceRefresh();
-    }
   }
 };
 

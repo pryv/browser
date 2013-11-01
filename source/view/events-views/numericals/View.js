@@ -1,4 +1,4 @@
-/* global document, $ */
+/* global $ */
 var  Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   d3 = require('d3');

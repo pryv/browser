@@ -1,3 +1,4 @@
+/* global $ */
 var _ = require('underscore'),
   NotesView = require('./View.js'),
   Backbone = require('backbone');
@@ -34,14 +35,8 @@ var NotesPlugin = module.exports = function (events, params) {
 
 };
 NotesPlugin.prototype.eventEnter = function (event) {
-  if (this.events[event.id]) {
-    //console.log('eventEnter: event id ' + event.id + ' already exists');
-  } else {
-    this.events[event.id] = event;
-    this.debounceRefresh();
-  }
-
-
+  this.events[event.id] = event;
+  this.debounceRefresh();
 };
 
 NotesPlugin.prototype.eventLeave = function (event) {
@@ -49,11 +44,6 @@ NotesPlugin.prototype.eventLeave = function (event) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
-    if (_.size(this.events) === 0) {
-      //this.close();
-    } else {
-      //  this.debounceRefresh();
-    }
   }
 };
 
@@ -211,7 +201,8 @@ NotesPlugin.prototype._findEventToDisplay = function () {
     this.nbrDisplayCurrentH = Math.floor(Math.sqrt(nearestEvents.length));
     this.nbrDisplayCurrentW = Math.ceil(nearestEvents.length / this.nbrDisplayCurrentH);
   }
-  for (var i = 0; i < this.nbrDisplayCurrentH * this.nbrDisplayCurrentW && i < nearestEvents.length; ++i) {
+  for (var i = 0; i < this.nbrDisplayCurrentH * this.nbrDisplayCurrentW &&
+    i < nearestEvents.length; ++i) {
     nearestEvents[i].toRemove = false;
   }
   _.each(this.eventsDisplayed, function (event) {
@@ -221,7 +212,8 @@ NotesPlugin.prototype._findEventToDisplay = function () {
     }
   });
   // console.log(this.events, nearestEvents);
-  this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW).reverse();
+  this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW)
+    .reverse();
 
   /* console.log('note', notEnoughtEvent,
    'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,

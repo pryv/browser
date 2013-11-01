@@ -23,24 +23,21 @@ var NumericalsPlugin = module.exports = function (events, params) {
 
 };
 NumericalsPlugin.prototype.eventEnter = function (event) {
-  if (this.events[event.id]) {
-    //console.log('eventEnter: event id ' + event.id + ' already exists');
-  } else {
-    this.streamIds[event.streamId] = event;
-    this.events[event.id] = event;
-    if (!this.datas[event.type]) {
-      this.datas[event.type] = {};
-    }
-    this.datas[event.type][event.id] = event;
-    if (_.size(this.datas) === 1 && _.size(this.streamIds) === 1) {
-      this.view = this.superCondensed ? null : this.view;
-      this.superCondensed = false;
-    } else {
-      this.view = this.superCondensed ? this.view : null;
-      this.superCondensed = true;
-    }
-    this.debounceRefresh();
+  this.streamIds[event.streamId] = event;
+  this.events[event.id] = event;
+  if (!this.datas[event.type]) {
+    this.datas[event.type] = {};
   }
+  this.datas[event.type][event.id] = event;
+  if (_.size(this.datas) === 1 && _.size(this.streamIds) === 1) {
+    this.view = this.superCondensed ? null : this.view;
+    this.superCondensed = false;
+  } else {
+    this.view = this.superCondensed ? this.view : null;
+    this.superCondensed = true;
+  }
+  this.debounceRefresh();
+
 };
 
 NumericalsPlugin.prototype.eventLeave = function (event) {
@@ -49,11 +46,7 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
   } else {
     delete this.events[event.id];
     delete this.datas[event.type][event.id];
-    if (_.size(this.events) === 0) {
-      //this.close();
-    } else {
-      //  this.debounceRefresh();
-    }
+
   }
 };
 
@@ -101,7 +94,7 @@ NumericalsPlugin.prototype.close = function () {
 
 };
 NumericalsPlugin.prototype._refreshModelView = function () {
- // this._findEventToDisplay();
+  // this._findEventToDisplay();
   if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
@@ -112,7 +105,8 @@ NumericalsPlugin.prototype._refreshModelView = function () {
     });
     if (typeof(document) !== 'undefined')  {
       this.view = this.superCondensed ?
-        new SuperCondensedView({model: this.modelView}) : new NumericalsView({model: this.modelView});
+        new SuperCondensedView({model: this.modelView}) :
+        new NumericalsView({model: this.modelView});
     }
   }
   this.modelView.set('datas', this.datas);

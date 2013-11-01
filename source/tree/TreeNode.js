@@ -321,5 +321,5 @@ _.extend(TreeNode.prototype, {
       });
     }
     return me;
-  },
+  }
 });

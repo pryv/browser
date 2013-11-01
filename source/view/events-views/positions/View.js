@@ -1,4 +1,4 @@
-/* global document */
+/* global document, $ */
 var  Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
   _ = require('underscore'),
@@ -137,14 +137,19 @@ module.exports = Marionette.ItemView.extend({
       }
     });
     if (this.highlightedPosition !== positionToShow) {
-      this.highlightedMarker && this.map && this.highlightedMarker.setMap(null);
+      if (this.highlightedMarker && this.map) {
+        this.highlightedMarker.setMap(null);
+      }
+
       var geopoint =  new this.gmaps.LatLng(positionToShow.content.latitude,
         positionToShow.content.longitude);
       this.highlightedMarker = new this.gmaps.Marker({
         position: geopoint
       });
-      this.map && this.highlightedMarker.setMap(this.map);
-      this.map && this.map.panTo(geopoint);
+      if (this.map) {
+        this.highlightedMarker.setMap(this.map);
+        this.map.panTo(geopoint);
+      }
       this.highlightedPosition = positionToShow;
     }
     return positionToShow;

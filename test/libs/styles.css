@@ -326,7 +326,7 @@ text-align: center;*/
 }
 
 .tooltip {
-  position: fixed;
+  position: absolute;
   display: none;
   border: 1px solid #fdd;
   padding: 2px;

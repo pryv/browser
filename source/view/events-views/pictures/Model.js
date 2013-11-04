@@ -1,3 +1,4 @@
+/* global $ */
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
   Backbone = require('backbone');
@@ -36,12 +37,10 @@ var PicturesPlugin = module.exports = function (events, params) {
 };
 PicturesPlugin.prototype.eventEnter = function (event) {
   if (event.type === ACCEPTED_TYPE) {
-    if (this.events[event.id]) {
-      //  console.log('eventEnter: event id ' + event.id + ' already exists');
-    } else {
-      this.events[event.id] = event;
-      this.debounceRefresh();
-    }
+
+    this.events[event.id] = event;
+    this.debounceRefresh();
+
   } else {
     console.log('eventEnter: This event type ' + event.type + ' is not accepted. ' +
       'Type accepted is ' + ACCEPTED_TYPE);
@@ -54,11 +53,7 @@ PicturesPlugin.prototype.eventLeave = function (event) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
-    if (_.size(this.events) === 0) {
-      //this.close();
-    } else {
-      //  this.debounceRefresh();
-    }
+
   }
 };
 
@@ -221,7 +216,8 @@ PicturesPlugin.prototype._findEventToDisplay = function () {
     this.nbrDisplayCurrentW = Math.floor(Math.sqrt(nearestEvents.length));
     this.nbrDisplayCurrentH = Math.ceil(nearestEvents.length / this.nbrDisplayCurrentW);
   }
-  for (var i = 0; i < this.nbrDisplayCurrentH * this.nbrDisplayCurrentW && i < nearestEvents.length; ++i) {
+  for (var i = 0; i < this.nbrDisplayCurrentH * this.nbrDisplayCurrentW &&
+    i < nearestEvents.length; ++i) {
     nearestEvents[i].toRemove = false;
   }
   _.each(this.eventsDisplayed, function (event) {
@@ -231,9 +227,10 @@ PicturesPlugin.prototype._findEventToDisplay = function () {
     }
   });
   // console.log(this.events, nearestEvents);
-  this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW).reverse();
+  this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW)
+    .reverse();
 
- /* console.log('picture', notEnoughtEvent,
+  /* console.log('picture', notEnoughtEvent,
    'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,
    'calculated', this.nbrDisplayW, this.nbrDisplayH,
    this.eventsDisplayed, this.width, this.height);   */

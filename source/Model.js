@@ -65,15 +65,20 @@ module.exports = function () {
   /**
   // create streams and add them to filter
   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
+    **/
 
-  var perki1Serial =
+ /* var perki1Serial =
     this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM')).useStaging());
   var perki2Serial =
     this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9')).useStaging());
 
+  // activate them in batch in the filter
+
   //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
-    **/
+  **/
+
+
   batch.done();
   /**
   setTimeout(function () { 

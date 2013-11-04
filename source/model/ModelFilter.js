@@ -107,19 +107,21 @@ ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
 /**
  * remove a connection from the list
  */
-ModelFilter.prototype.removeConnections = function (connections, batch) {
+ModelFilter.prototype.removeConnections = function (connectionSerialId, batch) {
   var myBatch = this.startBatch('removeConnections', batch);
 
-  if (! _.isArray(connections)) { connections = [connections];  }
-  _.each(connections, function (connection) {
+  if (! _.isArray(connectionSerialId)) { connectionSerialId = [connectionSerialId];  }
+  _.each(connectionSerialId, function (connectionId) {
 
-    var monitor = this._monitors[connection.serialId];
+    var monitor = this._monitors[connectionId];
     if (! monitor) {
-      throw new Error('cannot find monitor for connection: '+ connection.serialId);
+      throw new Error('cannot find monitor for connection: ' + connectionId);
     }
+
+    monitor.focusOnStreams([]);
     this._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
       monitor.getEvents(), myBatch);
-    delete this._monitors[connection.serialId];
+    delete this._monitors[connectionSerialId];
     monitor.destroy();
   }.bind(this));
 

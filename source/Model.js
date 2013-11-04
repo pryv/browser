@@ -59,7 +59,7 @@ module.exports = function () {
 
 
   var liveat =
-    this.connections.add((new Pryv.Connection('liveat', 'PVYDcS_oi9')).useStaging());
+    this.connections.add((new Pryv.Connection('liveat', 'VPMy6VFfU9')).useStaging());
   this.activeFilter.addConnection(liveat, batch);
 
   /**
@@ -73,13 +73,13 @@ module.exports = function () {
 
   //this.activeFilter.addConnection(perki1Serial, batch);
   this.activeFilter.addConnection(perki2Serial, batch);
-
+    **/
   batch.done();
-
+  /**
   setTimeout(function () { 
     this.activeFilter.removeConnections(liveat);
-  }.bind(this), 3000);
-
+  }.bind(this), 10000);
+   **/
 };
 
 

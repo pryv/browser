@@ -184,10 +184,15 @@ ModelFilter.prototype.getStreams = function () {
  * focus on those streams;
  */
 ModelFilter.prototype.focusOnStreams = function (streams) {
+
+
+  // un-focus
   if (streams === null) {
+    var batchU = this.startBatch('un-focusOnStream');
     this._eachMonitor(function (monitor) {  // clear all
-      monitor.filter.streamsIds = null;
+      monitor.filter.set({'streamsIds' : null});
     });
+    batchU.done();
     return 1;
   }
 
@@ -204,11 +209,10 @@ ModelFilter.prototype.focusOnStreams = function (streams) {
   });
 
 
-  var batch = this.startBatch('focusOnStream');
 
+  var batch = this.startBatch('focusOnStream');
   this._eachMonitor(function (monitor, key) {  // clear all
     if (_.has(streamsByConnection, key)) {
-
       monitor.filter.set({'streamsIds': streamsByConnection[key]}, batch);
     } else {
       monitor.filter.set({'streamsIds': []}, batch); // shush the connection

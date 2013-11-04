@@ -5,8 +5,10 @@ var  Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.ItemView.extend({
   container: null,
+  plotParent: null,
   animation: null,
-  datas: [],
+  datas: null,
+  currentDay: null,
   date: null,
   plot: null,
   options: null,
@@ -14,7 +16,9 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:datas', this.initDatas);
     this.listenTo(this.model, 'change:width', this.resize);
     this.listenTo(this.model, 'change:height', this.resize);
-
+    this.currentDay = [];
+    this.datas = [];
+    this.date = Infinity;
     this.options = {
       series: {
         lines: { show: true },
@@ -48,6 +52,7 @@ module.exports = Marionette.ItemView.extend({
   renderView: function (container) {
     this.container = container;
     this.animation = 'bounceIn';
+    //this.plotParent = '<div id="' + this.container + '-graph">' + '</div>';
     this.plot = $.plot($('#' + this.container), this.datas, this.options);
     $('#' + this.container).bind('plothover', function (event, pos, item) {
       if (item) {
@@ -68,6 +73,7 @@ module.exports = Marionette.ItemView.extend({
         $('#' + this.container + ' .tooltip.hover').remove();
       }
     }.bind(this));
+    this.onDateHighLighted(this.date);
   },
 
   showTooltip: function (id, clazz, data, top, left) {
@@ -79,13 +85,9 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onDateHighLighted: function (date) {
-    console.log('S---------------');
-    console.log('Showing date');
-    console.log(date);
     this.date = date;
-    $('#' + this.container + ' .tooltip.click').remove();
-    var series = this.plot.getData();
 
+    var series = this.plot.getData();
     for (var k = 0; k < series.length; k++) {
       var distance = null;
       var best = 0;
@@ -96,32 +98,32 @@ module.exports = Marionette.ItemView.extend({
         } else { break; }
       }
 
-      var id = this.container + '-tooltip' + k + '-' + best;
-      var coord = this.plot.p2c({ x: series[k].data[best][0], y: series[k].data[best][1]});
-      console.log(coord);
-      var offset = this.plot.offset();
-      console.log(offset);
+      if (this.currentDay[k] !== best) {
+        $('#' + this.container + ' .tooltip.click').remove();
 
-      this.showTooltip(id, 'click', series[k].data[best][1].toFixed(2), coord.top + 5,
-        coord.left + 5);
+        this.currentDay[k] = best;
+        var id = this.container + '-tooltip' + k + '-' + best;
+        var coord = this.plot.p2c({ x: series[k].data[best][0], y: series[k].data[best][1]});
 
-      this.plot.highlight(k, best);
+        this.showTooltip(id, 'click', series[k].data[best][1].toFixed(2), coord.top + 5,
+          coord.left + 5);
+
+        this.plot.highlight(k, best);
+      }
     }
   },
 
   resize: function () {
-    console.log(this.container, 'resize');
-    this.plot.resize();
+    this.plot.resize(this.model.get('width'), this.model.get('height'));
     this.plot.setupGrid();
     this.plot.draw();
-    $('#' + this.container + ' .tooltip').remove();
+    this.currentDay = [];
     this.onDateHighLighted(this.date);
-    //$('#' + this.container).text('');
-    //this.plot = $.plot($('#' + this.container), this.datas, this.options);
   },
 
   close: function () {
     $('#' + this.container + ' .tooltip').remove();
+    $('#' + this.container).text('');
     this.remove();
   }
 });

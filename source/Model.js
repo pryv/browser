@@ -58,9 +58,10 @@ module.exports = function () {
   this.treemap = new TreeMap(this);
 
 
-  var liveat =
-    this.connections.add((new Pryv.Connection('liveat', 'VPMy6VFfU9')).useStaging());
-  this.activeFilter.addConnection(liveat, batch);
+  var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9');
+  liveat.useStaging();
+  var liveatId = this.connections.add(liveat);
+  this.activeFilter.addConnection(liveatId, batch);
 
   /**
   // create streams and add them to filter
@@ -80,11 +81,11 @@ module.exports = function () {
 
 
   batch.done();
-  /**
+
   setTimeout(function () { 
-    this.activeFilter.removeConnections(liveat);
+    this.activeFilter.focusOnConnections(liveat);
   }.bind(this), 10000);
-   **/
+
 };
 
 

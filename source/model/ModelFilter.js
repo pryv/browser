@@ -129,11 +129,29 @@ ModelFilter.prototype.removeConnections = function (connectionSerialId, batch) {
 };
 
 /**
- * focus on this connection
+ * focus on those connections....
+ * Technically we set all monitors Filters to []
  */
-ModelFilter.prototype.focusOnConnections = function (connections, batch) {
+ModelFilter.prototype.focusOnConnections = function (connections) {
+
+  // un-focus
+  if (connections === null) {   // same than focusOnConnections
+    return this.focusOnStreams(null, batch);
+  }
+
+  if (! _.isArray(connections)) { connections = [connections];  }
+  // create an array of connectionsIds
+  var connectionsIds = [];
+  _.each(connections, function (connection) { connectionsIds.push(connection.id); });
 
 
+  var batch = this.startBatch('focusOnConnections');
+  this._eachMonitor(function (monitor) {
+    if (connectionsIds.indexOf(monitor.connection.id) < 0) {
+      monitor.filter.set({'streamsIds': []}, batch); // shush the connection
+    }
+  });
+  batch.done();
 };
 
 

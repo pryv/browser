@@ -31,7 +31,7 @@ module.exports = Marionette.ItemView.extend({
         minBorderMargin: 5
       },
       xaxes: [ { show: false } ],
-      yaxes: [ { show: false}, {show: false } ]
+      yaxes: []
     };
     this.initDatas();
   },
@@ -43,6 +43,7 @@ module.exports = Marionette.ItemView.extend({
       _.each(d, function (elem) {
         this.datas[i].push([elem.time, elem.content]);
       }, this);
+      ++i;
     }, this);
     if (this.container) {
       this.renderView(this.container);
@@ -52,11 +53,22 @@ module.exports = Marionette.ItemView.extend({
   renderView: function (container) {
     this.container = container;
     this.animation = 'bounceIn';
-    //this.plotParent = '<div id="' + this.container + '-graph">' + '</div>';
-    this.plot = $.plot($('#' + this.container), this.datas, this.options);
+
+    // Arranging data such that it can be used with multiple axes
+    var data = [];
+    for (var i = 0; i < this.datas.length; ++i) {
+      this.options.yaxes.push({ show: false});
+      data.push({ data: this.datas[i], label: 'label' + i, yaxis: (i + 1)  });
+    }
+
+
+    // Builds the plot
+    this.plot = $.plot($('#' + this.container), data, this.options);
+
+    // Hover signal
     $('#' + this.container).bind('plothover', function (event, pos, item) {
       if (item) {
-
+        //this.plot.highlight(item.series, item.datapoint);
         //var x = item.datapoint[0].toFixed(2),
         var y = item.datapoint[1].toFixed(2);
         var offset = this.plot.offset();
@@ -73,18 +85,41 @@ module.exports = Marionette.ItemView.extend({
         $('#' + this.container + ' .tooltip.hover').remove();
       }
     }.bind(this));
+
+    // Highlighting current date.
     this.onDateHighLighted(this.date);
   },
 
+  computeCoordinates: function (xAxis, yAxis, xPos, yPos) {
+    var series = this.plot.getData();
+    var yAxes = this.plot.getYAxes();
+    var xAxes = this.plot.getXAxes();
+    var coordY = yAxes[yAxis].p2c(series[xPos].data[yPos][1]);
+    var coordX = xAxes[xAxis].p2c(series[xPos].data[yPos][0]);
+    return { top: coordY, left: coordX};
+  },
+
   showTooltip: function (id, clazz, data, top, left) {
-    var tooltip = '<div id="' + id + '" class="tooltip ' + clazz + '">' + data + '</div>';
-    if ($('#' + id).length === 0) {
-      $('#' + this.container).append(tooltip);
-      $('#' + id).css({top: top, left: left}).fadeIn(200);
+    if ($('#' + id).length !== 0) {
+      return;
     }
+    /* TODO:
+    * Positioning such that the label doesn't go outside of its container
+    * with overflow: visible
+    * */
+    var tooltip = '<div id="' + id + '" class="tooltip ' + clazz + '">' + data + '</div>';
+    //var cHeight = $('#' + this.container).height();
+    //var cWidth = $('#' + this.container).width();
+
+    $('#' + this.container).append(tooltip);
+    $('#' + id).css({top: top, left: left}).fadeIn(200);
   },
 
   onDateHighLighted: function (date) {
+    /* TODO:
+     * Implement point search in log(n)
+     * */
+
     this.date = date;
 
     var series = this.plot.getData();
@@ -99,31 +134,38 @@ module.exports = Marionette.ItemView.extend({
       }
 
       if (this.currentDay[k] !== best) {
-        $('#' + this.container + ' .tooltip.click').remove();
 
-        this.currentDay[k] = best;
         var id = this.container + '-tooltip' + k + '-' + best;
-        var coord = this.plot.p2c({ x: series[k].data[best][0], y: series[k].data[best][1]});
+        var idOld = this.container + '-tooltip' + k + '-' + this.currentDay[k];
+        this.currentDay[k] = best;
+        var labelValue = series[k].data[best][1].toFixed(2);
+        var clazz = 'highlighted';
+        var coords = this.computeCoordinates(0, k, k, best);
 
-        this.showTooltip(id, 'click', series[k].data[best][1].toFixed(2), coord.top + 5,
-          coord.left + 5);
+        // remove the old label
+        $('#' + idOld).remove();
 
-        this.plot.highlight(k, best);
+
+        // insert the new label
+        this.showTooltip(id, clazz, labelValue, coords.top + 10, coords.left + 10);
       }
     }
   },
 
   resize: function () {
+    /*
+     * On resize, we have to resize the canvas and remove the static label and regenerate them.
+     */
     this.plot.resize(this.model.get('width'), this.model.get('height'));
     this.plot.setupGrid();
     this.plot.draw();
     this.currentDay = [];
+    $('#' + this.container + ' .highlighted').remove();
     this.onDateHighLighted(this.date);
   },
 
   close: function () {
     $('#' + this.container + ' .tooltip').remove();
     $('#' + this.container).text('');
-    this.remove();
   }
 });

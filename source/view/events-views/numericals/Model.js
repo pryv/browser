@@ -115,6 +115,7 @@ NumericalsPlugin.prototype._refreshModelView = function () {
   this.modelView.set('width', this.width);
   this.modelView.set('height', this.height);
   this.modelView.set('eventsNbr', _.size(this.events));
+  this.view.on('graphClicked', function () { this.view.changeGraph(); }.bind(this));
   if (this.needToRender) {
     this.view.renderView(this.container);
     this.needToRender = false;

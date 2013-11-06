@@ -15,6 +15,7 @@ module.exports = Marionette.ItemView.extend({
   series: null,
   width: null,
   height: null,
+  typeChanger: null,
 
   initialize: function () {
     this.listenTo(this.model, 'change:datas', this.initSeries);
@@ -23,11 +24,7 @@ module.exports = Marionette.ItemView.extend({
     //this.listenTo(this.model, 'change:height', this.resize);
     this.currentDay = [];
     this.date = Infinity;
-    this.options = { /*
-      series: {
-        lines: { show: true },
-        points: { show: true }
-      }, */
+    this.options = {
       grid: {
         hoverable: true,
         clickable: true,
@@ -38,17 +35,18 @@ module.exports = Marionette.ItemView.extend({
       yaxes: []
     };
     this.series = [];
+    this.typeChanger = 0;
     this.initSeries();
   },
 
   triggers: {
-    'click .graphContainer': 'graphClicked'
+    'click .graphContainer canvas': 'graphClicked'
   },
 
+  // type = ['lines' -> 0, 'bars' -> 1, 'pies' -> 2];
   initSeries: function () {
+    console.log(this.container, 'initSeries');
     var data = this.model.get('datas');
-    var type = ['lines', 'bars', 'pies'];
-    var mod = data.length === 1 ? 3 : 2;
 
     var dataMapper = function (d) {
       return _.map(d, function (e) {
@@ -66,23 +64,32 @@ module.exports = Marionette.ItemView.extend({
       this.series.push({
           data: dataMapper(data[i]),
           label: data[i][0].type,
-          type: type[i % mod]
+          type: 0
         });
     }
 
     if (this.container) {
+      console.log(this.container, 'initSeries - calling render');
+      $('#' + this.container).empty();
+      $('#' + this.container).unbind();
       this.renderView(this.container);
-      //this.resize();
     }
   },
 
   renderView: function (container) {
+    console.log(this.container, 'irenderView');
     this.container = container;
     this.animation = 'bounceIn';
     this.plotContainer = this.container + '-graph';
     var plotContainerDiv = '<div id="' + this.plotContainer + '" class="graphContainer"></div>';
     this.computeSize();
-    $('#' + this.container).html(plotContainerDiv);
+    $('#' + this.container).unbind();
+    if ($('#' + this.plotContainer).length === 0) {
+      $('#' + this.container).html(plotContainerDiv);
+    } else {
+      $('#' + this.plotContainer).empty();
+    }
+
     $('#' + this.plotContainer).css({
       top: 0,
       left: 0,
@@ -104,14 +111,14 @@ module.exports = Marionette.ItemView.extend({
 
       // Configuration of the series representation
       switch (this.series[i].type) {
-      case 'lines':
+      case 0:
         plotData[i].lines = { show: true };
         plotData[i].points = { show: true };
         break;
-      case 'bars':
+      case 1:
         plotData[i].bars = { show: true };
         break;
-      case 'pie':
+      case 2:
         plotData[i].pie = { show: true };
         break;
       default:
@@ -141,6 +148,10 @@ module.exports = Marionette.ItemView.extend({
       }
     }.bind(this));
 
+    $('#' + this.container).bind('plotclick', function () {
+      this.changeGraph();
+    }.bind(this));
+
 
     // Highlighting current date.
     this.onDateHighLighted(this.date);
@@ -166,8 +177,10 @@ module.exports = Marionette.ItemView.extend({
     //var cHeight = $('#' + this.container).height();
     //var cWidth = $('#' + this.container).width();
 
-    $('#' + this.container).append(tooltip);
-    $('#' + id).css({top: top, left: left}).fadeIn(200);
+    if ($('#' + id).length === 0) {
+      $('#' + this.container).append(tooltip);
+    }
+    $('#' + id).css({top: top, left: left}).fadeIn(1500);
   },
 
   onDateHighLighted: function (date) {
@@ -188,21 +201,23 @@ module.exports = Marionette.ItemView.extend({
         } else { break; }
       }
 
-      if (this.currentDay[k] !== best) {
-        var id = this.container + '-tooltip' + k + '-' + best;
-        var idOld = this.container + '-tooltip' + k + '-' + this.currentDay[k];
-        this.currentDay[k] = best;
-        var labelValue = this.series[k].data[best][1].toFixed(2);
-        var clazz = 'highlighted';
-        var coords = this.computeCoordinates(0, k, this.series[k].data[best][1],
-          this.series[k].data[best][0]);
 
-        // remove the old label
-        $('#' + idOld).remove();
+      var id = this.container + '-tooltip' + k + '-' + best;
+      var idOld = this.container + '-tooltip' + k + '-' + this.currentDay[k];
+      this.currentDay[k] = best;
+      var labelValue = this.series[k].data[best][1].toFixed(2);
+      var clazz = 'highlighted';
+      var coords = this.computeCoordinates(0, k, this.series[k].data[best][1],
+        this.series[k].data[best][0]);
 
-        // insert the new label
-        this.showTooltip(id, clazz, labelValue, coords.top + 10, coords.left + 10);
-      }
+      console.log(coords);
+
+      // remove the old label
+      $('#' + idOld).remove();
+
+      // insert the new label
+      this.showTooltip(id, clazz, labelValue, coords.top + 10, coords.left + 10);
+
     }
   },
 
@@ -213,18 +228,54 @@ module.exports = Marionette.ItemView.extend({
 
   resize: function () {
     if (this.container) {
-      this.computeSize();
+
+      $('#' + this.container + ' .tooltip').remove();
+
+      console.log(this.container, 'resize');
+      this.computeSize(); /*
       $('#' + this.plotContainer).css({
         width: this.width,
         height: this.height
-      });
-      this.plot.resize();
-      this.plot.setupGrid();
-      this.plot.draw();
+      });*/
+
+      this.renderView(this.container);
+      //this.plot.resize();
+     // this.plot.setupGrid();
+      //this.plot.draw();
+      //this.currentDay = [];
     }
   },
 
+  changeGraph: function () {
+    if (this.container) {
+
+
+      console.log(this.container, 'changeGraph');
+      $('#' + this.container).empty('');
+      $('#' + this.container).unbind();
+
+      var mod = this.series.length === 1 ? 3 : 2;
+      for (var i = 0; i < this.series.length; ++i) {
+        this.series[i].type++;
+        if (this.series[i].type !== mod) {
+          break;
+        } else {
+          this.series[i].type = 0;
+        }
+      }
+
+      for (var j = 0; j < this.series.length; ++j) {
+        console.log(this.container, this.series[j].type);
+      }
+
+      this.renderView(this.container);
+    }
+
+  },
+
   close: function () {
+    console.log(this.container, 'close');
     $('#' + this.container).empty('');
+    $('#' + this.container).unbind();
   }
 });

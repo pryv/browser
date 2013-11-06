@@ -4,26 +4,30 @@ var  Marionette = require('backbone.marionette'),
 
 
 module.exports = Marionette.ItemView.extend({
-  container: null,
-  plotParent: null,
+  nodeContainer: null,
+  plotContainer: null,
   animation: null,
-  datas: null,
+  //datas: null,
   currentDay: null,
   date: null,
   plot: null,
   options: null,
+  series: null,
+  width: null,
+  height: null,
+
   initialize: function () {
-    this.listenTo(this.model, 'change:datas', this.initDatas);
+    this.listenTo(this.model, 'change:datas', this.initSeries);
     this.listenTo(this.model, 'change:width', this.resize);
     this.listenTo(this.model, 'change:height', this.resize);
+    //this.listenTo(this.model, 'change:height', this.resize);
     this.currentDay = [];
-    this.datas = this.model.get('datas');
     this.date = Infinity;
-    this.options = {
+    this.options = { /*
       series: {
         lines: { show: true },
         points: { show: true }
-      },
+      }, */
       grid: {
         hoverable: true,
         clickable: true,
@@ -33,72 +37,120 @@ module.exports = Marionette.ItemView.extend({
       xaxes: [ { show: false } ],
       yaxes: []
     };
+    this.series = [];
+    this.initSeries();
   },
 
-  initDatas: function () {
-    console.log(this.container, 'Data changed');
-    //this.close();
-    this.datas = this.model.get('datas');
-    if (this.container) {
-      this.renderView(this.container);
-      this.resize();
-    }
+  triggers: {
+    'click .graphContainer': 'graphClicked'
   },
 
-  renderView: function (container) {
-    console.log(this.container, ' rendering');
-    this.container = container;
-    this.animation = 'bounceIn';
+  initSeries: function () {
+    var data = this.model.get('datas');
+    var type = ['lines', 'bars', 'pies'];
+    var mod = data.length === 1 ? 3 : 2;
 
-    // some function we need to transform the data set to an array on the fly.
     var dataMapper = function (d) {
       return _.map(d, function (e) {
         return [e.time, e.content];
       });
     };
 
+    //console.log(this.container, ' data ', data);
+
+    // We store the data as an object containing
+    // its type and the label and the preformated
+    // data for the graph
+    this.series = [];
+    for (var i = 0; i < data.length; ++i) {
+      this.series.push({
+          data: dataMapper(data[i]),
+          label: data[i][0].type,
+          type: type[i % mod]
+        });
+    }
+
+    if (this.container) {
+      this.renderView(this.container);
+      //this.resize();
+    }
+  },
+
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.plotContainer = this.container + '-graph';
+    var plotContainerDiv = '<div id="' + this.plotContainer + '" class="graphContainer"></div>';
+    this.computeSize();
+    $('#' + this.container).html(plotContainerDiv);
+    $('#' + this.plotContainer).css({
+      top: 0,
+      left: 0,
+      width: this.width,
+      height: this.height,
+      visible: 'hidden'
+    });
+
+
     // Arranging data such that it can be used with multiple axes
-    var data = [];
-    for (var i = 0; i < this.datas.length; ++i) {
+    var plotData = [];
+    for (var i = 0; i < this.series.length; ++i) {
       this.options.yaxes.push({ show: false});
-      data.push({ data: dataMapper(this.datas[i]), label: this.datas[i][0].type, yaxis: (i + 1)  });
+      plotData.push({
+        data: this.series[i].data,
+        label: this.series[i].label,
+        yaxis: (i + 1)
+      });
+
+      // Configuration of the series representation
+      switch (this.series[i].type) {
+      case 'lines':
+        plotData[i].lines = { show: true };
+        plotData[i].points = { show: true };
+        break;
+      case 'bars':
+        plotData[i].bars = { show: true };
+        break;
+      case 'pie':
+        plotData[i].pie = { show: true };
+        break;
+      default:
+        plotData[i].lines = { show: true };
+        plotData[i].points = { show: true };
+        break;
+      }
     }
 
     // Builds the plot
-    //$('#' + this.container).text('');
-    this.plot = $.plot($('#' + this.container), data, this.options);
+    this.plot = $.plot($('#' + this.plotContainer), plotData, this.options);
+
 
     // Hover signal
     $('#' + this.container).bind('plothover', function (event, pos, item) {
       if (item) {
-        //this.plot.highlight(item.series, item.datapoint);
-        //var x = item.datapoint[0].toFixed(2),
-        var y = item.datapoint[1].toFixed(2);
-        var offset = this.plot.offset();
         var id = this.container + '-tooltip' + item.seriesIndex + '-' + item.dataIndex;
-
-        this.showTooltip(id, 'hover', y, item.pageY - offset.top + 5, item.pageX - offset.left + 5);
-
-        _.map($('#' + this.container + ' .tooltip.hover'), function (elem) {
-          if ($(elem).attr('id') !== id) {
-            $(elem).remove();
-          }
-        });
+        if (!$('#' + id).length) {
+          var labelValue = item.datapoint[1].toFixed(2);
+          var clazz = 'hover';
+          var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
+            item.datapoint[0]);
+          this.showTooltip(id, clazz, labelValue, coords.top + 10, coords.left + 10);
+        }
       } else {
         $('#' + this.container + ' .tooltip.hover').remove();
       }
     }.bind(this));
 
+
     // Highlighting current date.
     this.onDateHighLighted(this.date);
   },
 
-  computeCoordinates: function (xAxis, yAxis, xPos, yPos) {
-    var series = this.plot.getData();
+  computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
     var yAxes = this.plot.getYAxes();
     var xAxes = this.plot.getXAxes();
-    var coordY = yAxes[yAxis].p2c(series[xPos].data[yPos][1]);
-    var coordX = xAxes[xAxis].p2c(series[xPos].data[yPos][0]);
+    var coordY = yAxes[yAxis].p2c(xPoint);
+    var coordX = xAxes[xAxis].p2c(yPoint);
     return { top: coordY, left: coordX};
   },
 
@@ -125,13 +177,13 @@ module.exports = Marionette.ItemView.extend({
 
     this.date = date;
 
-    var series = this.plot.getData();
-    for (var k = 0; k < series.length; k++) {
+    //var series = this.plot.getData();
+    for (var k = 0; k < this.series.length; k++) {
       var distance = null;
       var best = 0;
-      for (var m = 0; m < series[k].data.length; m++) {
-        if (distance === null || Math.abs(date - series[k].data[m][0]) < distance) {
-          distance = Math.abs(date - series[k].data[m][0]);
+      for (var m = 0; m < this.series[k].data.length; m++) {
+        if (distance === null || Math.abs(date - this.series[k].data[m][0]) < distance) {
+          distance = Math.abs(date - this.series[k].data[m][0]);
           best = m;
         } else { break; }
       }
@@ -140,9 +192,10 @@ module.exports = Marionette.ItemView.extend({
         var id = this.container + '-tooltip' + k + '-' + best;
         var idOld = this.container + '-tooltip' + k + '-' + this.currentDay[k];
         this.currentDay[k] = best;
-        var labelValue = series[k].data[best][1].toFixed(2);
+        var labelValue = this.series[k].data[best][1].toFixed(2);
         var clazz = 'highlighted';
-        var coords = this.computeCoordinates(0, k, k, best);
+        var coords = this.computeCoordinates(0, k, this.series[k].data[best][1],
+          this.series[k].data[best][0]);
 
         // remove the old label
         $('#' + idOld).remove();
@@ -153,21 +206,25 @@ module.exports = Marionette.ItemView.extend({
     }
   },
 
+  computeSize: function () {
+    this.width = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+    this.height = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+  },
+
   resize: function () {
-    //console.log(this.container, 'resize', this.model.get('width'), this.model.get('height'));
-    /*
-     * On resize, we have to resize the canvas and remove the static label and regenerate them.
-     */
-    console.log(this.container, 'resize');
-    this.plot.resize(this.model.get('width'), this.model.get('height'));
-    this.plot.setupGrid();
-    this.plot.draw();
-    this.currentDay = [];
-    $('#' + this.container + ' .highlighted').remove();
-    this.onDateHighLighted(this.date);
+    if (this.container) {
+      this.computeSize();
+      $('#' + this.plotContainer).css({
+        width: this.width,
+        height: this.height
+      });
+      this.plot.resize();
+      this.plot.setupGrid();
+      this.plot.draw();
+    }
   },
 
   close: function () {
-    $('#' + this.container).text('');
+    $('#' + this.container).empty('');
   }
 });

@@ -88,10 +88,19 @@ NumericalsPlugin.prototype.close = function () {
 };
 NumericalsPlugin.prototype._refreshModelView = function () {
   // this._findEventToDisplay();
+
+  var sortedData = [];
+  _.each(this.datas, function (item) {
+    sortedData.push(_.sortBy(item, function (e) {
+      return e.time;
+    }));
+  });
+
+
   if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
-      datas: this.datas,
+      datas: sortedData,
       width: this.width,
       height: this.height,
       eventsNbr: _.size(this.events)
@@ -102,7 +111,7 @@ NumericalsPlugin.prototype._refreshModelView = function () {
         new NumericalsView({model: this.modelView});
     }
   }
-  this.modelView.set('datas', this.datas);
+  this.modelView.set('datas', sortedData);
   this.modelView.set('width', this.width);
   this.modelView.set('height', this.height);
   this.modelView.set('eventsNbr', _.size(this.events));

@@ -17,7 +17,7 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:width', this.resize);
     this.listenTo(this.model, 'change:height', this.resize);
     this.currentDay = [];
-    this.datas = [];
+    this.datas = this.model.get('datas');
     this.date = Infinity;
     this.options = {
       series: {
@@ -33,36 +33,39 @@ module.exports = Marionette.ItemView.extend({
       xaxes: [ { show: false } ],
       yaxes: []
     };
-    this.initDatas();
   },
 
   initDatas: function () {
-    var i = 0;
-    _.each(this.model.get('datas'), function (d) {
-      this.datas[i] = [];
-      _.each(d, function (elem) {
-        this.datas[i].push([elem.time, elem.content]);
-      }, this);
-      ++i;
-    }, this);
+    console.log(this.container, 'Data changed');
+    //this.close();
+    this.datas = this.model.get('datas');
     if (this.container) {
       this.renderView(this.container);
+      this.resize();
     }
   },
 
   renderView: function (container) {
+    console.log(this.container, ' rendering');
     this.container = container;
     this.animation = 'bounceIn';
+
+    // some function we need to transform the data set to an array on the fly.
+    var dataMapper = function (d) {
+      return _.map(d, function (e) {
+        return [e.time, e.content];
+      });
+    };
 
     // Arranging data such that it can be used with multiple axes
     var data = [];
     for (var i = 0; i < this.datas.length; ++i) {
       this.options.yaxes.push({ show: false});
-      data.push({ data: this.datas[i], label: 'label' + i, yaxis: (i + 1)  });
+      data.push({ data: dataMapper(this.datas[i]), label: this.datas[i][0].type, yaxis: (i + 1)  });
     }
 
-
     // Builds the plot
+    //$('#' + this.container).text('');
     this.plot = $.plot($('#' + this.container), data, this.options);
 
     // Hover signal
@@ -134,7 +137,6 @@ module.exports = Marionette.ItemView.extend({
       }
 
       if (this.currentDay[k] !== best) {
-
         var id = this.container + '-tooltip' + k + '-' + best;
         var idOld = this.container + '-tooltip' + k + '-' + this.currentDay[k];
         this.currentDay[k] = best;
@@ -145,7 +147,6 @@ module.exports = Marionette.ItemView.extend({
         // remove the old label
         $('#' + idOld).remove();
 
-
         // insert the new label
         this.showTooltip(id, clazz, labelValue, coords.top + 10, coords.left + 10);
       }
@@ -153,9 +154,11 @@ module.exports = Marionette.ItemView.extend({
   },
 
   resize: function () {
+    //console.log(this.container, 'resize', this.model.get('width'), this.model.get('height'));
     /*
      * On resize, we have to resize the canvas and remove the static label and regenerate them.
      */
+    console.log(this.container, 'resize');
     this.plot.resize(this.model.get('width'), this.model.get('height'));
     this.plot.setupGrid();
     this.plot.draw();
@@ -165,7 +168,6 @@ module.exports = Marionette.ItemView.extend({
   },
 
   close: function () {
-    $('#' + this.container + ' .tooltip').remove();
     $('#' + this.container).text('');
   }
 });

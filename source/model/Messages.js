@@ -5,7 +5,7 @@ var SignalEmitter = require('pryv').Utility.SignalEmitter;
 
 var PryvMSGs = require('pryv').Messages;
 
-Messages.ModelFilter = {
+Messages.MonitorsHandler = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
   SIGNAL : {
     /** called when a batch of changes is expected, content: <batchId> unique**/

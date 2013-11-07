@@ -2,11 +2,15 @@
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
 var Pryv = require('pryv');
-var MSGs = require('./Messages').ModelFilter;
+var MSGs = require('./Messages').MonitorsHandler;
 
 
-var ModelFilter = module.exports = function (model, batchSetKeyValues) {
-  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'ModelFilter');
+/**
+ * Handle multiple monitors and map Pryv.Filter properties
+ * @type {Function}
+ */
+var MonitorsHandler = module.exports = function (model, batchSetKeyValues) {
+  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'MonitorsHandler');
   this.model = model;
   this._monitors = {}; // serialIds / monitor
   this.rootFilter = new Filter();
@@ -19,24 +23,24 @@ var ModelFilter = module.exports = function (model, batchSetKeyValues) {
 
 // ----------------------------- Generic Event fire ------------------ //
 
-ModelFilter.prototype._eventsEnterScope = function (reason, events, batch) {
+MonitorsHandler.prototype._eventsEnterScope = function (reason, events, batch) {
   if (events.length === 0) { return; }
   this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_ENTER, {reason: reason, events: events}, batch);
 };
 
-ModelFilter.prototype._eventsLeaveScope = function (reason, events, batch) {
+MonitorsHandler.prototype._eventsLeaveScope = function (reason, events, batch) {
   if (events.length === 0) { return; }
   this._fireEvent(MSGs.SIGNAL.EVENT_SCOPE_LEAVE, {reason: reason, events: events}, batch);
 };
 
-ModelFilter.prototype._eventsChange = function (reason, events, batch) {
+MonitorsHandler.prototype._eventsChange = function (reason, events, batch) {
   if (events.length === 0) { return; }
   this._fireEvent(MSGs.SIGNAL.EVENT_CHANGE, {reason: reason, events: events}, batch);
 };
 
 // ----------------------------- Events from monitors ------------------ //
 
-ModelFilter.prototype._onMonitorEventChange = function (changes, batchId, batch) {
+MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, batch) {
   var myBatch = this.startBatch('eventChange', batch);
   this._eventsEnterScope(MSGs.REASON.REMOTELY, changes.created, myBatch);
   this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, myBatch);
@@ -44,7 +48,7 @@ ModelFilter.prototype._onMonitorEventChange = function (changes, batchId, batch)
   myBatch.done();
 };
 
-ModelFilter.prototype._onMonitorFilterChange = function (changes, batchId, batch) {
+MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batchId, batch) {
   var myBatch = this.startBatch('filterChange', batch);
   this._eventsEnterScope(changes.filterInfos.signal, changes.enter, myBatch);
   this._eventsLeaveScope(changes.filterInfos.signal, changes.leave, myBatch);
@@ -58,16 +62,16 @@ ModelFilter.prototype._onMonitorFilterChange = function (changes, batchId, batch
 /**
  * get all events that match this filter
  */
-ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
+MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
   var batchWaitForMe = batch ?
     batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
   if (_.has(this._monitors, connectionSerialId)) {
-    console.log('Warning ModelFilter.addConnection, already activated: ' + connectionSerialId);
+    console.log('Warning MonitorsHandler.addConnection, already activated: ' + connectionSerialId);
     return;
   }
   var connection = this.model.connections.get(connectionSerialId);
   if (! connection) { // TODO error management
-    console.log('ModelFilter.addConnection cannot find connection: ' + connectionSerialId);
+    console.log('MonitorsHandler.addConnection cannot find connection: ' + connectionSerialId);
     return;
   }
 
@@ -107,7 +111,7 @@ ModelFilter.prototype.addConnection = function (connectionSerialId, batch) {
 /**
  * remove a connection from the list
  */
-ModelFilter.prototype.removeConnections = function (connectionSerialId, batch) {
+MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batch) {
   var myBatch = this.startBatch('removeConnections', batch);
 
   if (! _.isArray(connectionSerialId)) { connectionSerialId = [connectionSerialId];  }
@@ -132,7 +136,7 @@ ModelFilter.prototype.removeConnections = function (connectionSerialId, batch) {
  * focus on those connections....
  * Technically we set all monitors Filters to []
  */
-ModelFilter.prototype.focusOnConnections = function (connections) {
+MonitorsHandler.prototype.focusOnConnections = function (connections) {
 
   // un-focus
   if (connections === null) {   // same than focusOnConnections
@@ -162,7 +166,7 @@ ModelFilter.prototype.focusOnConnections = function (connections) {
 /**
  * get all events actually matching this filter
  */
-ModelFilter.prototype.triggerForAllCurrentEvents = function (trigger) {
+MonitorsHandler.prototype.triggerForAllCurrentEvents = function (trigger) {
   this._eachMonitor(function (monitor) {
     trigger(MSGs.SIGNAL.EVENT_SCOPE_ENTER,
       {reason: MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION,
@@ -173,7 +177,7 @@ ModelFilter.prototype.triggerForAllCurrentEvents = function (trigger) {
 // --------- Utils -----
 
 /** execute for each filter **/
-ModelFilter.prototype._eachMonitor = function (callback) {
+MonitorsHandler.prototype._eachMonitor = function (callback) {
   _.each(this._monitors, callback.bind(this));
 };
 
@@ -185,7 +189,7 @@ ModelFilter.prototype._eachMonitor = function (callback) {
  * get the actual streams in the filter;
  * @returns {Array}
  */
-ModelFilter.prototype.getStreams = function () {
+MonitorsHandler.prototype.getStreams = function () {
   var result = [];
   this._eachMonitor(function (monitor) {
     _.each(monitor.filter.streamsIds, function (streamId) {
@@ -201,7 +205,7 @@ ModelFilter.prototype.getStreams = function () {
 /**
  * focus on those streams;
  */
-ModelFilter.prototype.focusOnStreams = function (streams) {
+MonitorsHandler.prototype.focusOnStreams = function (streams) {
 
   // un-focus
   if (streams === null) {
@@ -240,7 +244,7 @@ ModelFilter.prototype.focusOnStreams = function (streams) {
 };
 
 // # Bind filter properties to rootFilter
-Object.defineProperty(ModelFilter.prototype, 'timeFrameLT', {
+Object.defineProperty(MonitorsHandler.prototype, 'timeFrameLT', {
   set: function (newValue) {
     var to = newValue[0] ? newValue[0].getTime() / 1000 : null;
     var from = newValue[1] ? newValue[1].getTime() / 1000 : null;
@@ -249,7 +253,7 @@ Object.defineProperty(ModelFilter.prototype, 'timeFrameLT', {
 });
 
 _.each(['timeFrameST', 'limit'],  function (prop) {
-  Object.defineProperty(ModelFilter.prototype, prop, {
+  Object.defineProperty(MonitorsHandler.prototype, prop, {
     get: function () {
       return this.rootFilter[prop];
     },
@@ -264,7 +268,7 @@ _.each(['timeFrameST', 'limit'],  function (prop) {
 
 // -- use this to bind function of filters
 _.each(['set'],  function (func) {
-  ModelFilter.prototype[func] = function () {
+  MonitorsHandler.prototype[func] = function () {
     var myargs = arguments;
     this._eachMonitor(function (monitor) {
       monitor.filter[func].apply(monitor.filter, myargs);
@@ -284,7 +288,7 @@ _.each(['set'],  function (func) {
 /**
  * return informations on events
  */
-ModelFilter.prototype.stats = function () {
+MonitorsHandler.prototype.stats = function () {
   var result = {
     timeFrameLT : [null, null]
   };

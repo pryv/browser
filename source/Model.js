@@ -1,5 +1,5 @@
 /* global $ */
-var ModelFilter = require('./model/ModelFilter.js');
+var MonitorsHandler = require('./model/MonitorsHandler.js');
 var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
@@ -24,7 +24,7 @@ module.exports = function () {
 
 
   this.connections = new ConnectionsHandler(this);
-  this.activeFilter = new ModelFilter(this);
+  this.activeFilter = new MonitorsHandler(this);
   $('#logo-reload').click(function () {
     this.activeFilter.focusOnStreams(null);
   }.bind(this));

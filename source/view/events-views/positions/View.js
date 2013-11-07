@@ -10,6 +10,7 @@ module.exports = Marionette.ItemView.extend({
   mapOtions : {},
   bounds: null,
   paths: {},
+  gmaps: null,
   map: null,
   container: null,
   markers: null,
@@ -41,8 +42,12 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('width', '100%');
   },
   resize: function () {
+    console.log(this.container, 'resize');
     if (this.map && this.bounds) {
-      this.map.fitBounds(this.bounds);
+      setTimeout(function () {
+        this.gmaps.event.trigger(this.map, 'resize');
+        this.map.fitBounds(this.bounds);
+      }.bind(this), 1000);
     }
   },
   renderView: function (container) {
@@ -96,6 +101,7 @@ module.exports = Marionette.ItemView.extend({
       return;
     }
     this.map = new this.gmaps.Map($container, this.mapOptions);
+    this.gmaps.event.trigger(this.map, 'resize');
     this.map.fitBounds(this.bounds);
     var gPath, gMarker;
     _.each(this.paths, function (path) {

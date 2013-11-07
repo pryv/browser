@@ -25,10 +25,13 @@ var NumericalsPlugin = module.exports = function (events, params) {
 NumericalsPlugin.prototype.eventEnter = function (event) {
   this.streamIds[event.streamId] = event;
   this.events[event.id] = event;
-  if (!this.datas[event.type]) {
-    this.datas[event.type] = {};
+  if (!this.datas[event.streamId]) {
+    this.datas[event.streamId] = {};
   }
-  this.datas[event.type][event.id] = event;
+  if (!this.datas[event.streamId][event.type]) {
+    this.datas[event.streamId][event.type] = {};
+  }
+  this.datas[event.streamId][event.type][event.id] = event;
   this.debounceRefresh();
 
 };
@@ -38,7 +41,7 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
-    delete this.datas[event.type][event.id];
+    delete this.datas[event.streamId][event.type][event.id];
 
   }
 };
@@ -90,10 +93,12 @@ NumericalsPlugin.prototype._refreshModelView = function () {
   // this._findEventToDisplay();
 
   var sortedData = [];
-  _.each(this.datas, function (item) {
-    sortedData.push(_.sortBy(item, function (e) {
-      return e.time;
-    }));
+  _.each(this.datas, function (stream) {
+    _.each(stream, function (item) {
+      sortedData.push(_.sortBy(item, function (e) {
+        return e.time;
+      }));
+    });
   });
 
 

@@ -203,19 +203,18 @@ ModelFilter.prototype.getStreams = function () {
  */
 ModelFilter.prototype.focusOnStreams = function (streams) {
 
-
   // un-focus
   if (streams === null) {
     var batchU = this.startBatch('un-focusOnStream');
     this._eachMonitor(function (monitor) {  // clear all
-      monitor.filter.set({'streamsIds' : null});
+      monitor.filter.set({'streamsIds' : null}, batchU);
     });
     batchU.done();
     return 1;
   }
 
-  if (! _.isArray(streams)) { streams = [streams];  }
 
+  if (! _.isArray(streams)) { streams = [streams];  }
   // --- order the streams by connection
   // (note that streams not in current connection pool will be ignored without warning)
   var streamsByConnection = {};
@@ -225,6 +224,7 @@ ModelFilter.prototype.focusOnStreams = function (streams) {
     }
     streamsByConnection[stream.connection.serialId].push(stream.id);
   });
+
 
 
 

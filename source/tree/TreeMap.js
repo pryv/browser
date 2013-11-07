@@ -54,6 +54,7 @@ var TreeMap = module.exports = function (model) {
 
   //----------- init the model with all events --------//
   this.eventEnterScope = function (content) {
+    console.log('eventEnter', content);
     var start = new Date().getTime();
     _.each(content.events, function (event) {
       this.root.eventEnterScope(event, content.reason, function () {});

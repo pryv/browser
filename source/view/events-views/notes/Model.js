@@ -21,6 +21,8 @@ var NotesPlugin = module.exports = function (events, params) {
   this.maxWidth = 500;
   this.maxHeight = 500;
   this.eventsDisplayed = [];
+  this.animationIn = null;
+  this.animationOut = null;
 
   /**  */
   this.highlightedTime = Infinity;
@@ -57,6 +59,8 @@ NotesPlugin.prototype.eventChange = function (event) {
 };
 
 NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
+  this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
+  this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
   this.highlightedTime = time;
   this.debounceRefresh();
 };
@@ -68,7 +72,7 @@ NotesPlugin.prototype.render = function (container) {
   }
   for (var j = 0; j < this.eventsDisplayed.length; ++j) {
     if (this.eventsDisplayed[j].view) {
-      this.eventsDisplayed[j].view.renderView(this.container);
+      this.eventsDisplayed[j].view.renderView(this.container, this.animationIn);
       this.rendered = true;
     } else {
       this.needToRender = true;
@@ -100,7 +104,7 @@ NotesPlugin.prototype.close = function () {
   this.events = null;
   this.highlightedTime = Infinity;
   for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-    this.eventsDisplayed[j].view.close();
+    this.eventsDisplayed[j].view.close(this.animationOut);
     this.eventsDisplayed[j].view = null;
     this.eventsDisplayed[j].modelView = null;
   }
@@ -158,7 +162,7 @@ NotesPlugin.prototype._refreshModelView = function () {
   if (this.needToRender || this.rendered) {
     for (var j = 0; j < this.eventsDisplayed.length; ++j) {
       if ($('#' + this.eventsDisplayed[j].id).length === 0) {
-        this.eventsDisplayed[j].view.renderView(this.container);
+        this.eventsDisplayed[j].view.renderView(this.container, this.animationIn);
         this.rendered = true;
       }
     }
@@ -207,10 +211,10 @@ NotesPlugin.prototype._findEventToDisplay = function () {
   }
   _.each(this.eventsDisplayed, function (event) {
     if (event.toRemove && event.view) {
-      event.view.close();
+      event.view.close(this.animationOut);
       event.view = null;
     }
-  });
+  }, this);
   // console.log(this.events, nearestEvents);
   this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW)
     .reverse();

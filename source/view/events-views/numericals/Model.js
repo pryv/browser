@@ -25,10 +25,13 @@ var NumericalsPlugin = module.exports = function (events, params) {
 NumericalsPlugin.prototype.eventEnter = function (event) {
   this.streamIds[event.streamId] = event;
   this.events[event.id] = event;
-  if (!this.datas[event.type]) {
-    this.datas[event.type] = {};
+  if (!this.datas[event.streamId]) {
+    this.datas[event.streamId] = {};
   }
-  this.datas[event.type][event.id] = event;
+  if (!this.datas[event.streamId][event.type]) {
+    this.datas[event.streamId][event.type] = {};
+  }
+  this.datas[event.streamId][event.type][event.id] = event;
   this.debounceRefresh();
 
 };
@@ -38,7 +41,7 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
     delete this.events[event.id];
-    delete this.datas[event.type][event.id];
+    delete this.datas[event.streamId][event.type][event.id];
 
   }
 };
@@ -88,10 +91,21 @@ NumericalsPlugin.prototype.close = function () {
 };
 NumericalsPlugin.prototype._refreshModelView = function () {
   // this._findEventToDisplay();
+
+  var sortedData = [];
+  _.each(this.datas, function (stream) {
+    _.each(stream, function (item) {
+      sortedData.push(_.sortBy(item, function (e) {
+        return e.time;
+      }));
+    });
+  });
+
+
   if (!this.modelView || !this.view) {
     var BasicModel = Backbone.Model.extend({ });
     this.modelView = new BasicModel({
-      datas: this.datas,
+      datas: sortedData,
       width: this.width,
       height: this.height,
       eventsNbr: _.size(this.events)
@@ -102,10 +116,11 @@ NumericalsPlugin.prototype._refreshModelView = function () {
         new NumericalsView({model: this.modelView});
     }
   }
-  this.modelView.set('datas', this.datas);
+  this.modelView.set('datas', sortedData);
   this.modelView.set('width', this.width);
   this.modelView.set('height', this.height);
   this.modelView.set('eventsNbr', _.size(this.events));
+  this.view.on('graphClicked', function () { this.view.changeGraph(); }.bind(this));
   if (this.needToRender) {
     this.view.renderView(this.container);
     this.needToRender = false;

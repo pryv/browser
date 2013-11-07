@@ -70,19 +70,19 @@ body{
   line-height:18px;
 }
 /*-----------------theme Connection*/
-#node_connection_0 .NotesEventsNode{background-color: #1BBC9D;}
+#node_connection_0 .NotesEventsNode .node{background-color: #1BBC9D;}
 #node_connection_0 .GenericEventsNode{background-color: #16A086;}
 #node_connection_0 .PositionsEventsNode{background-color: #00896E;}
 #node_connection_0 .NumericalsEventsNode{background-color: #00896E;}
 #node_connection_0 > .nodeHeader {border-left:20px solid #1BBC9D;}
 
-#node_connection_1 .NotesEventsNode{background-color: #3598DC;}
+#node_connection_1 .NotesEventsNode .node{background-color: #3598DC;}
 #node_connection_1 .GenericEventsNode{background-color: #2A80B9;}
 #node_connection_1 .PositionsEventsNode{background-color: #266A9C;}
 #node_connection_1 .NumericalsEventsNode{background-color: #266A9C;}
 #node_connection_1 > .nodeHeader {border-left:20px solid #3598DC;}
 
-#node_connection_2 .NotesEventsNode{background-color: #F1C40F;}
+#node_connection_2 .NotesEventsNode .node{background-color: #F1C40F;}
 #node_connection_2 .GenericEventsNode{background-color: #F49C14;}
 #node_connection_2 .PositionsEventsNode{background-color: #D68912;}
 #node_connection_2 .NumericalsEventsNode{background-color: #D68912;}
@@ -151,7 +151,7 @@ body{
   /*background-color: #3FA2F0;*/
 }
 .PicturesEventsNode {
- background: rgba(0, 0, 0, 0.27) !important; 
+ background: rgba(0, 0, 0, 0.27) !important;
 }
 
 .NumericalsEventsNode {

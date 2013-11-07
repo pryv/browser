@@ -17,7 +17,7 @@ ConnectionsHandler.prototype.add = function (connection, andInitializeCallBack) 
   this._connections[connection.serialId] = connection;
 
   if (andInitializeCallBack) {
-    connection.useLocalStorage(function (error/*, accessInfo*/) {
+    connection.fetchStructure(function (error/*, accessInfo*/) {
       // TODO correctly deal with this error
       if (error) { console.log(error); }
       andInitializeCallBack(error, connection);

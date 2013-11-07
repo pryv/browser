@@ -43,7 +43,7 @@ module.exports = function () {
 
   // add fredos to Connections
   var fredosSerial =
-    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM')).useStaging());
+    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: true})));
 
   var batch = this.activeFilter.startBatch('adding connections');
 
@@ -58,8 +58,7 @@ module.exports = function () {
   this.treemap = new TreeMap(this);
 
 
-  var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9');
-  liveat.useStaging();
+  var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
   var liveatId = this.connections.add(liveat);
   this.activeFilter.addConnection(liveatId, batch);
 
@@ -69,9 +68,9 @@ module.exports = function () {
     **/
 
  /* var perki1Serial =
-    this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM')).useStaging());
+    this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM',  {staging: true}));
   var perki2Serial =
-    this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9')).useStaging());
+    this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9',  {staging: true}));
 
   // activate them in batch in the filter
 

@@ -5,22 +5,25 @@ module.exports = Marionette.ItemView.extend({
   template: '#notesView',
   container: null,
   rendered: false,
+  currentAnimation: 'bounceIn',
   initialize: function () {
     this.listenTo(this.model, 'change:top', this.change);
     this.listenTo(this.model, 'change:left', this.change);
     this.listenTo(this.model, 'change:width', this.change);
     this.listenTo(this.model, 'change:height', this.change);
     this.$el.css('position', 'absolute');
-    this.$el.addClass('animated  fadeInLeftBig node singleNote');
+    this.$el.addClass('animated node singleNote ' + this.currentAnimation);
     this.$el.attr('id', this.model.get('id'));
   },
   change: function () {
     this.render();
   },
-  renderView: function (container) {
+  renderView: function (container, animation) {
     this.rendered = false;
     this.container = container;
-
+    this.$el.removeClass('animated ' + this.currentAnimation);
+    this.currentAnimation = animation ? animation : this.currentAnimation;
+    this.$el.addClass('animated ' + this.currentAnimation);
     this.render();
   },
   onRender: function () {
@@ -36,9 +39,10 @@ module.exports = Marionette.ItemView.extend({
 
     }
   },
-  close: function () {
-    this.$el.removeClass('animated fadeInLeftBig');
-    this.$el.addClass('animated fadeOutRightBig');
+  close: function (animation) {
+    this.$el.removeClass('animated ' + this.currentAnimation);
+    this.currentAnimation = animation ? animation : this.currentAnimation;
+    this.$el.addClass('animated ' + this.currentAnimation);
     this.rendered = false;
     this.container = null;
     setTimeout(function () {this.remove(); }.bind(this), 1000);

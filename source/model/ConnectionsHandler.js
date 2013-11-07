@@ -41,7 +41,7 @@ ConnectionsHandler.prototype.get = function (connectionSerialId, andInitializeCa
       andInitializeCallBack('Cannot find connection with serialId: ' + connectionSerialId, null);
       return null;
     }
-    connection.useLocalStorage(function (error/*, accessInfo*/) {
+    connection.fetchStructure(function (error/*, accessInfo*/) {
       // TODO correctly deal with this error
       if (error) { console.log(error); }
       andInitializeCallBack(error, connection);

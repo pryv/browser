@@ -76,7 +76,7 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
   }
 
   // be sure localstorage is activated
-  connection.useLocalStorage(function (useLocalStorageError) {
+  connection.fetchStructure(function (useLocalStorageError) {
     if (useLocalStorageError) {
       throw new Error('failed activating localStorage for ' + connection.id);
     }

@@ -42,10 +42,12 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('width', '100%');
   },
   resize: function () {
-    console.log(this.container, 'resize');
     if (this.map && this.bounds) {
-      setTimeout(function () {
+      var timer = setInterval(function () {
         this.gmaps.event.trigger(this.map, 'resize');
+      }.bind(this), 100);
+      setTimeout(function () {
+        clearInterval(timer);
         this.map.fitBounds(this.bounds);
       }.bind(this), 1000);
     }

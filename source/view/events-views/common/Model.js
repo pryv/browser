@@ -1,5 +1,6 @@
 var _ = require('underscore'),
-   Backbone = require('backbone');
+   Backbone = require('backbone'),
+  DetailView = require('../detailed/Controller.js');
 var Model = module.exports = function (events, params) {
   this.verbose = true;
   this.events = {};
@@ -10,6 +11,7 @@ var Model = module.exports = function (events, params) {
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
+  this.detailedView = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
@@ -43,6 +45,9 @@ _.extend(Model.prototype, {
         'current:', this.events[event.id], 'new:', event);
     }
     this.events[event.id] = event;
+    if (this.detailedView) {
+      this.detailedView.addEvent(event);
+    }
     this.debounceRefresh();
   },
   eventLeave: function (event) {
@@ -51,6 +56,9 @@ _.extend(Model.prototype, {
         'event:', event);
     }
     delete this.events[event.id];
+    if (this.detailedView) {
+      this.detailedView.deleteEvent(event);
+    }
     if (_.size(this.events) !== 0) {
       this.debounceRefresh();
     }
@@ -61,10 +69,16 @@ _.extend(Model.prototype, {
         'event:', event);
     }
     this.events[event.id] = event;
+    if (this.detailedView) {
+      this.detailedView.updatedEvent(event);
+    }
     this.debounceRefresh();
   },
   OnDateHighlightedChange: function (time) {
     this.highlightedTime = time;
+    if (this.detailedView) {
+      this.detailedView.addEvent(event);
+    }
     this.debounceRefresh();
   },
   render: function (container) {
@@ -106,6 +120,10 @@ _.extend(Model.prototype, {
     if (!this.view) {
       if (typeof(document) !== 'undefined')  {
         this.view = new this.typeView({model: this.modelView});
+        this.view.on('nodeClicked', function () {
+          this.detailedView = new DetailView(this.events);
+          this.detailedView.show();
+        }.bind(this));
       }
     }
     if (this.needToRender) {

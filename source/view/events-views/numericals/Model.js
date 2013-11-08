@@ -42,7 +42,7 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
   } else {
     delete this.events[event.id];
     delete this.datas[event.streamId][event.type][event.id];
-
+    this.debounceRefresh();
   }
 };
 

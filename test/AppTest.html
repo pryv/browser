@@ -11,6 +11,7 @@
   <script type="text/javascript" src="libs/jquery-1.9.1.js"></script>
   <script type="text/javascript" src="libs/jquery.flot.js"></script>
   <script type="text/javascript" src="libs/jquery-ui-1.10.3.custom.min.js"></script>
+  <script type="text/javascript" src="libs/bootstrap.min.js"></script>
   <script type="text/javascript" src="libs/require.js"></script>
   <script type="text/javascript" charset="utf-8" src="../dist/app_bundle_main.js"></script>
   <script type="text/javascript">
@@ -21,7 +22,7 @@
   </script>
   <script id="super-condensed-view" type="template" >
     <div class="aggregated-icon Numericals"></div>
-    <span class="aggregated-nbr-events">+ <%=eventsNbr%></span>
+    <span class="aggregated-nbr-events"><%=eventsNbr%></span>
     <div class="aggregated-icon-page"></div>
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
@@ -40,13 +41,13 @@
     <div id="map-canvas-<%=id%>" class="mapView"></div>
   </script>
   <script id="picturesView" type="template">
-    <span class="aggregated-nbr-events">+ <%=eventsNbr%></span>
+    <span class="aggregated-nbr-events"><%=eventsNbr%></span>
 
   </script>
 
   <script id="notesView" type="template">
   <div class="aggregated-icon Notes"></div>
-    <span class="aggregated-nbr-events">+ <%=eventsNbr%></span>
+    <span class="aggregated-nbr-events"><%=eventsNbr%></span>
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
@@ -60,7 +61,7 @@
   <script id="genericsView" type="template">
   <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
 
-    <span class="aggregated-nbr-events">+ <%=eventsNbr%></span>
+    <span class="aggregated-nbr-events"><%=eventsNbr%></span>
     <div class="aggregated-icon-page"></div>
 
   
@@ -90,8 +91,13 @@
     <% }  }  %>
      <span></span>
   </script>
-  <script type="template" id="countView">
-     <div><span><%= eventsNbr %></span></div>
+  <script type="text/html" id="template-detailListCompositeView">
+    <ul id="detail-list"></ul>
+  </script>
+  <script type="text/html" id="template-detailItemView">
+    <div class="view">
+      <%= time %>
+    </div>
   </script>
 </head>
 
@@ -99,5 +105,25 @@
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree"></div>
 <div id="timeframe"></div>
+<div class="modal fade" id="detailViewModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="modal-panel-left">
+          <div id="modal-left-content">
+          </div>
+        </div>
+        <div class="modal-panel-right">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Detailed View</h4>
+          </div>
+          <div id="modal-right-content">
+          </div>
+        </div>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
 </body>
 </html>

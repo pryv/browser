@@ -333,3 +333,33 @@ text-align: center;*/
   background-color: #dfe400;
   opacity: 1;
 }
+/** detail view modal **/
+.modal, .modal-backdrop, .modal-dialog, .modal-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 54px;
+  overflow: hidden;
+  overflow-y: hidden;
+}
+.modal-content {
+  top: 20px;
+  bottom: 20px;
+  -webkit-box-shadow: 0 0px 0px rgba(0,0,0,0.5);
+  box-shadow: 0 0px 0px rgba(0,0,0,0.5);;
+  border-radius: 0px;
+}
+.modal-body {
+  padding: 0;
+}
+.modal-body, .modal-panel-left, .modal-panel-right {
+  height: 100%;
+}
+.modal-panel-left {
+  float: left;
+}
+.modal-panel-right {
+  overflow: hidden;
+}
+/** end detail view modal **/

@@ -5,7 +5,7 @@ var SignalEmitter = require('pryv').Utility.SignalEmitter;
 
 var PryvMSGs = require('pryv').Messages;
 
-Messages.ModelFilter = {
+Messages.MonitorsHandler = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
   SIGNAL : {
     /** called when a batch of changes is expected, content: <batchId> unique**/
@@ -23,6 +23,7 @@ Messages.ModelFilter = {
   },
   REASON : {
     EVENT_SCOPE_ENTER_ADD_CONNECTION : 'connectionAdded',
+    EVENT_SCOPE_LEAVE_REMOVE_CONNECTION : 'connectionRemoved',
     REMOTELY : 'remotely',
     // may happend when several refresh requests overlaps
     FORCE : 'forced',

@@ -1,5 +1,5 @@
 /* global $ */
-var ModelFilter = require('./model/ModelFilter.js');
+var MonitorsHandler = require('./model/MonitorsHandler.js');
 var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
@@ -24,7 +24,7 @@ module.exports = function () {
 
 
   this.connections = new ConnectionsHandler(this);
-  this.activeFilter = new ModelFilter(this);
+  this.activeFilter = new MonitorsHandler(this);
   $('#logo-reload').click(function () {
     this.activeFilter.focusOnStreams(null);
   }.bind(this));
@@ -43,7 +43,7 @@ module.exports = function () {
 
   // add fredos to Connections
   var fredosSerial =
-    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM')).useStaging());
+    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: true})));
 
   var batch = this.activeFilter.startBatch('adding connections');
 
@@ -58,24 +58,32 @@ module.exports = function () {
   this.treemap = new TreeMap(this);
 
 
+  var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
+  var liveatId = this.connections.add(liveat);
+  this.activeFilter.addConnection(liveatId, batch);
+
+  /**
   // create streams and add them to filter
   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
+    **/
 
  /* var perki1Serial =
-    this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM')).useStaging());
+    this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM',  {staging: true}));
   var perki2Serial =
-    this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9')).useStaging());      */
-  var liveat =
-    this.connections.add((new Pryv.Connection('liveat', 'VPMy6VFfU9')).useStaging());
+    this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9',  {staging: true}));
 
   // activate them in batch in the filter
 
-
-  this.activeFilter.addConnection(liveat, batch);
   //this.activeFilter.addConnection(perki1Serial, batch);
- // this.activeFilter.addConnection(perki2Serial, batch);
+  this.activeFilter.addConnection(perki2Serial, batch);
+  **/
+
 
   batch.done();
+
+  setTimeout(function () { 
+    //this.activeFilter.focusOnConnections(liveat);
+  }.bind(this), 10000);
 
 };
 

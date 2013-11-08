@@ -1,5 +1,5 @@
 /* global describe, it */
-var ModelFilter = require('../../source/model/ModelFilter.js'),
+var ModelFilter = require('../../source/model/MonitorsHandler.js'),
     ConnectionsHandler = require('../../source/model/ConnectionsHandler.js'),
     Pryv = require('pryv'),
     RootNode = require('../../source/tree/RootNode.js'),

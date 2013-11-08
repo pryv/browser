@@ -21,7 +21,6 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:datas', this.initSeries);
     this.listenTo(this.model, 'change:width', this.resize);
     this.listenTo(this.model, 'change:height', this.resize);
-    //this.listenTo(this.model, 'change:height', this.resize);
     this.currentDay = [];
     this.date = Infinity;
     this.options = {
@@ -39,13 +38,15 @@ module.exports = Marionette.ItemView.extend({
     this.initSeries();
   },
 
+  /*
   triggers: {
-    'click .graphContainer canvas': 'graphClicked'
-  },
+    'click .graphContainer canvas': 'graphClicked',
+    'dragstart .graphContainer': 'graphDragStart'
+  },*/
 
   // type = ['lines' -> 0, 'bars' -> 1, 'pies' -> 2];
   initSeries: function () {
-    console.log(this.container, 'initSeries');
+    //console.log(this.container, 'initSeries');
     var data = this.model.get('datas');
 
     var dataMapper = function (d) {
@@ -53,8 +54,6 @@ module.exports = Marionette.ItemView.extend({
         return [e.time, e.content];
       });
     };
-
-    //console.log(this.container, ' data ', data);
 
     // We store the data as an object containing
     // its type and the label and the preformated
@@ -69,7 +68,6 @@ module.exports = Marionette.ItemView.extend({
     }
 
     if (this.container) {
-      console.log(this.container, 'initSeries - calling render');
       $('#' + this.container).empty();
       $('#' + this.container).unbind();
       this.renderView(this.container);
@@ -77,11 +75,11 @@ module.exports = Marionette.ItemView.extend({
   },
 
   renderView: function (container) {
-    console.log(this.container, 'irenderView');
     this.container = container;
     this.animation = 'bounceIn';
     this.plotContainer = this.container + '-graph';
-    var plotContainerDiv = '<div id="' + this.plotContainer + '" class="graphContainer"></div>';
+    var plotContainerDiv = '<div id="' + this.plotContainer +
+      '" class="graphContainer" draggable="true"></div>';
     this.computeSize();
     $('#' + this.container).unbind();
     if ($('#' + this.plotContainer).length === 0) {
@@ -131,6 +129,13 @@ module.exports = Marionette.ItemView.extend({
     // Builds the plot
     this.plot = $.plot($('#' + this.plotContainer), plotData, this.options);
 
+    // Drang and Drop bindings
+    $('#' + this.plotContainer).bind('dragstart', this.onDragStart.bind(this));
+    $('#' + this.plotContainer).bind('dragenter', this.onDragEnter.bind(this));
+    $('#' + this.plotContainer).bind('dragover', this.onDragOver.bind(this));
+    $('#' + this.plotContainer).bind('dragleave', this.onDragLeave.bind(this));
+    $('#' + this.plotContainer).bind('drop', this.onDrop.bind(this));
+    $('#' + this.plotContainer).bind('dragend', this.onDragEnd.bind(this));
 
     // Hover signal
     $('#' + this.container).bind('plothover', function (event, pos, item) {
@@ -148,10 +153,7 @@ module.exports = Marionette.ItemView.extend({
       }
     }.bind(this));
 
-    $('#' + this.container).bind('plotclick', function () {
-      this.changeGraph();
-    }.bind(this));
-
+    $('#' + this.container).bind('plotclick', this.changeGraph.bind(this));
 
     // Highlighting current date.
     this.onDateHighLighted(this.date);
@@ -174,11 +176,9 @@ module.exports = Marionette.ItemView.extend({
     * with overflow: visible
     * */
     var tooltip = '<div id="' + id + '" class="tooltip ' + clazz + '">' + data + '</div>';
-    //var cHeight = $('#' + this.container).height();
-    //var cWidth = $('#' + this.container).width();
 
     if ($('#' + id).length === 0) {
-      $('#' + this.container).append(tooltip);
+      $('#' + this.plotContainer).append(tooltip);
     }
     $('#' + id).css({top: top, left: left}).fadeIn(1500);
   },
@@ -190,7 +190,6 @@ module.exports = Marionette.ItemView.extend({
 
     this.date = date;
 
-    //var series = this.plot.getData();
     for (var k = 0; k < this.series.length; k++) {
       var distance = null;
       var best = 0;
@@ -210,8 +209,6 @@ module.exports = Marionette.ItemView.extend({
       var coords = this.computeCoordinates(0, k, this.series[k].data[best][1],
         this.series[k].data[best][0]);
 
-      console.log(coords);
-
       // remove the old label
       $('#' + idOld).remove();
 
@@ -228,29 +225,14 @@ module.exports = Marionette.ItemView.extend({
 
   resize: function () {
     if (this.container) {
-
       $('#' + this.container + ' .tooltip').remove();
-
-      console.log(this.container, 'resize');
-      this.computeSize(); /*
-      $('#' + this.plotContainer).css({
-        width: this.width,
-        height: this.height
-      });*/
-
+      this.computeSize();
       this.renderView(this.container);
-      //this.plot.resize();
-     // this.plot.setupGrid();
-      //this.plot.draw();
-      //this.currentDay = [];
     }
   },
 
   changeGraph: function () {
     if (this.container) {
-
-
-      console.log(this.container, 'changeGraph');
       $('#' + this.container).empty('');
       $('#' + this.container).unbind();
 
@@ -264,17 +246,53 @@ module.exports = Marionette.ItemView.extend({
         }
       }
 
-      for (var j = 0; j < this.series.length; ++j) {
-        console.log(this.container, this.series[j].type);
-      }
-
       this.renderView(this.container);
     }
 
   },
 
+
+  /* ***********************
+   * Drag and Drop Functions
+   */
+
+  /* Called when this object is starts being dragged */
+  onDragStart: function (e) {
+    e.originalEvent.dataTransfer.setData('node_id', this.container);
+    $('.graphContainer').addClass('animated shake');
+  },
+
+  /* Fires when a dragged element enters this' scope */
+  onDragEnter: function () {
+  },
+
+  /* Fires when a dragged element is over this' scope */
+  onDragOver: function (e) {
+    e.preventDefault();
+  },
+
+  /* Fires when a dragged element leaves this' scope */
+  onDragLeave: function () {
+  },
+
+  /* Called when this object is stops being dragged */
+  onDragEnd: function () {
+    $('.graphContainer').removeClass('animated shake');
+  },
+
+  /* Called when an element is dropped on it */
+  onDrop: function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    var droppedID = e.originalEvent.dataTransfer.getData('node_id');
+    console.log(this.container, 'received', droppedID);
+  },
+
+
+
   close: function () {
-    console.log(this.container, 'close');
+    //console.log(this.container, 'close');
     $('#' + this.container).empty('');
     $('#' + this.container).unbind();
   }

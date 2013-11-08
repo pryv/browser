@@ -76,9 +76,6 @@ _.extend(Model.prototype, {
   },
   OnDateHighlightedChange: function (time) {
     this.highlightedTime = time;
-    if (this.detailedView) {
-      this.detailedView.addEvent(event);
-    }
     this.debounceRefresh();
   },
   render: function (container) {

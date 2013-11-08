@@ -60,11 +60,13 @@ module.exports = Marionette.ItemView.extend({
     // data for the graph
     this.series = [];
     for (var i = 0; i < data.length; ++i) {
-      this.series.push({
-          data: dataMapper(data[i]),
-          label: data[i][0].type,
-          type: 0
-        });
+      if (data[i].length > 0) {
+        this.series.push({
+            data: dataMapper(data[i]),
+            label: data[i][0].type,
+            type: 0
+          });
+      }
     }
 
     if (this.container) {
@@ -219,8 +221,19 @@ module.exports = Marionette.ItemView.extend({
   },
 
   computeSize: function () {
-    this.width = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
-    this.height = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+
+    if ($('#' + this.container).length)  {
+      this.width = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+    } else if (this.model.get('width') !== null) {
+      this.width = this.model.get('width');
+    }
+
+    if ($('#' + this.container).length)  {
+      this.height = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+    } else if (this.model.get('height') !== null) {
+      this.height = this.model.get('height');
+    }
+
   },
 
   resize: function () {

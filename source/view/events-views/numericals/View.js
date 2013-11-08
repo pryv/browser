@@ -38,10 +38,11 @@ module.exports = Marionette.ItemView.extend({
     this.initSeries();
   },
 
+  /*
   triggers: {
     'click .graphContainer canvas': 'graphClicked',
     'dragstart .graphContainer': 'graphDragStart'
-  },
+  },*/
 
   // type = ['lines' -> 0, 'bars' -> 1, 'pies' -> 2];
   initSeries: function () {
@@ -128,24 +129,13 @@ module.exports = Marionette.ItemView.extend({
     // Builds the plot
     this.plot = $.plot($('#' + this.plotContainer), plotData, this.options);
 
-    /* Drag function bindings */
-    var flotOverlay = $('#' + this.plotContainer + ' .flot-overlay');
-    flotOverlay.draggable({
-      drag: this.onDrag.bind(this),
-      start: this.onDragStart.bind(this),
-      stop: this.onDragStop.bind(this),
-      revert: true
-    });
-
-    flotOverlay.draggable().data('myself', this.container);
-
-    /* Drop function bindings */
-    flotOverlay.droppable({
-      drop: this.onDrop.bind(this),
-      activate: this.onDropActivate.bind(this),
-      deactivate: this.onDropDeactivate.bind(this),
-      accept: '.flot-overlay'
-    });
+    // Drang and Drop bindings
+    $('#' + this.plotContainer).bind('dragstart', this.onDragStart.bind(this));
+    $('#' + this.plotContainer).bind('dragenter', this.onDragEnter.bind(this));
+    $('#' + this.plotContainer).bind('dragover', this.onDragOver.bind(this));
+    $('#' + this.plotContainer).bind('dragleave', this.onDragLeave.bind(this));
+    $('#' + this.plotContainer).bind('drop', this.onDrop.bind(this));
+    $('#' + this.plotContainer).bind('dragend', this.onDragEnd.bind(this));
 
     // Hover signal
     $('#' + this.container).bind('plothover', function (event, pos, item) {
@@ -162,7 +152,6 @@ module.exports = Marionette.ItemView.extend({
         $('#' + this.container + ' .tooltip.hover').remove();
       }
     }.bind(this));
-
 
     $('#' + this.container).bind('plotclick', this.changeGraph.bind(this));
 
@@ -201,7 +190,6 @@ module.exports = Marionette.ItemView.extend({
 
     this.date = date;
 
-    //var series = this.plot.getData();
     for (var k = 0; k < this.series.length; k++) {
       var distance = null;
       var best = 0;
@@ -220,8 +208,6 @@ module.exports = Marionette.ItemView.extend({
       var clazz = 'highlighted';
       var coords = this.computeCoordinates(0, k, this.series[k].data[best][1],
         this.series[k].data[best][0]);
-
-      //console.log(coords);
 
       // remove the old label
       $('#' + idOld).remove();
@@ -270,38 +256,39 @@ module.exports = Marionette.ItemView.extend({
    * Drag and Drop Functions
    */
 
-  /* Called while the mouse moves whild dragging around */
-  onDrag: function () {
-    //console.log(this.container, 'I\'m dragged around');
+  /* Called when this object is starts being dragged */
+  onDragStart: function (e) {
+    e.originalEvent.dataTransfer.setData('node_id', this.container);
+    $('.graphContainer').addClass('animated shake');
   },
 
-  /* Called when this object is starts being dragged */
-  onDragStart: function () {
-    //console.log(this.container, 'I start getting dragged');
+  /* Fires when a dragged element enters this' scope */
+  onDragEnter: function () {
+  },
+
+  /* Fires when a dragged element is over this' scope */
+  onDragOver: function (e) {
+    e.preventDefault();
+  },
+
+  /* Fires when a dragged element leaves this' scope */
+  onDragLeave: function () {
   },
 
   /* Called when this object is stops being dragged */
-  onDragStop: function () {
-    //console.log(this.container, 'I stop getting dragged');
+  onDragEnd: function () {
+    $('.graphContainer').removeClass('animated shake');
   },
 
-  /* Called when an acceptable element is dropped on it */
-  onDrop: function (ev, ui) {
-    var draggedUID = $(ui.draggable).data('myself');
-    console.log(this.container, 'Received', draggedUID);
+  /* Called when an element is dropped on it */
+  onDrop: function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    var droppedID = e.originalEvent.dataTransfer.getData('node_id');
+    console.log(this.container, 'received', droppedID);
   },
 
-  /* Called when an acceptable element is starts being dragged */
-  onDropActivate: function () {
-    $('#' + this.plotContainer).addClass('animated shake');
-    //console.log(this.container, 'I can accept');
-  },
-
-  /* Called when an acceptable element is stops being dragged */
-  onDropDeactivate: function () {
-    $('#' + this.plotContainer).removeClass('animated shake');
-    //console.log(this.plotContainer, 'I could have accepted');
-  },
 
 
   close: function () {

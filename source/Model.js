@@ -82,7 +82,7 @@ module.exports = function () {
   batch.done();
 
   setTimeout(function () { 
-    this.activeFilter.focusOnConnections(liveat);
+    //this.activeFilter.focusOnConnections(liveat);
   }.bind(this), 10000);
 
 };

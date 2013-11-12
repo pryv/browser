@@ -10,6 +10,8 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change', this.change);
 
     this.$el.attr('id', this.model.get('id'));
+    this.$el.attr('data-streamId', this.model.get('streamId'));
+    this.$el.attr('data-connectionId', this.model.get('connectionId'));
     this.$el.addClass('node animated  fadeIn');
     this.$el.addClass(this.model.get('className'));
 

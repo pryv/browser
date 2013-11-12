@@ -271,7 +271,9 @@ module.exports = Marionette.ItemView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    e.originalEvent.dataTransfer.setData('node_id', this.container);
+    e.originalEvent.dataTransfer.setData('nodeId', this.container);
+    e.originalEvent.dataTransfer.setData('streamId', $('#' + this.container).attr('data-streamid'));
+    e.originalEvent.dataTransfer.setData('connectionId', $('#' + this.container).attr('data-connectionid'));
     $('.graphContainer').addClass('animated shake');
   },
 
@@ -298,8 +300,10 @@ module.exports = Marionette.ItemView.extend({
     e.stopPropagation();
     e.preventDefault();
 
-    var droppedID = e.originalEvent.dataTransfer.getData('node_id');
-    console.log(this.container, 'received', droppedID);
+    var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
+    var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
+    var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
+    this.trigger('mergeData', droppedNodeID, droppedStreamID, droppedConnectionID);
   },
 
 

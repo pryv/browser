@@ -1,4 +1,5 @@
 var TreeNode = require('./TreeNode'),
+  RootNode = require('./RootNode'),
   Backbone = require('backbone'),
   NodeView = require('../view/NodeView.js'),
   _ = require('underscore');
@@ -111,6 +112,18 @@ var EventsNode = module.exports = TreeNode.implement(
       }
     },
 
+    dragAndDrop: function (nodeId, streamId, connectionId) {
+      var rootNode = this.parent;
+      while (rootNode.className !== 'RootNode') {
+        rootNode = rootNode.parent;
+      }
+      var chlidren = rootNode.connectionNodes[connectionId].streamNodes[streamId].getChildren();
+      var that = _.find(chlidren, function (node) { return node.uniqueId === nodeId; });
+
+      //console.log('this: ', this);
+      //console.log('that: ', that);
+    },
+
 
     _createEventView: function () {
       this.eventView = new this.pluginView(this.events, {
@@ -126,4 +139,6 @@ var EventsNode = module.exports = TreeNode.implement(
 EventsNode.acceptThisEventType = function () {
   throw new Error('EventsNode.acceptThisEventType nust be overriden');
 };
+
+
 

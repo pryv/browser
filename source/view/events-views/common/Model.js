@@ -1,5 +1,6 @@
+/* global $*/
 var _ = require('underscore'),
-   Backbone = require('backbone'),
+  Backbone = require('backbone'),
   DetailView = require('../detailed/Controller.js');
 var Model = module.exports = function (events, params) {
   this.verbose = true;
@@ -16,6 +17,13 @@ var Model = module.exports = function (events, params) {
   this.container = null;
   this.needToRender = null;
   this.typeView = null;
+
+  this.$modal =  $('#detailViewModal').on('hidden.bs.modal', function () {
+    if (this.detailedView) {
+      this.detailedView.close();
+      this.detailedView = null;
+    }
+  }.bind(this));
   _.extend(this, params);
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
@@ -46,7 +54,7 @@ _.extend(Model.prototype, {
     }
     this.events[event.id] = event;
     if (this.detailedView) {
-      this.detailedView.addEvent(event);
+      this.detailedView.addEvents(event);
     }
     this.debounceRefresh();
   },
@@ -70,12 +78,15 @@ _.extend(Model.prototype, {
     }
     this.events[event.id] = event;
     if (this.detailedView) {
-      this.detailedView.updatedEvent(event);
+      this.detailedView.updateEvent(event);
     }
     this.debounceRefresh();
   },
   OnDateHighlightedChange: function (time) {
     this.highlightedTime = time;
+    if (this.detailedView) {
+      this.detailedView.highlightDate(this.highlightedTime);
+    }
     this.debounceRefresh();
   },
   render: function (container) {
@@ -109,6 +120,7 @@ _.extend(Model.prototype, {
       var BasicModel = Backbone.Model.extend({});
       this.modelView = new BasicModel({});
     }
+
     // Update the model
     _.each(_.keys(this.modelContent), function (key) {
       this.modelView.set(key, this.modelContent[key]);
@@ -118,11 +130,16 @@ _.extend(Model.prototype, {
       if (typeof(document) !== 'undefined')  {
         this.view = new this.typeView({model: this.modelView});
         this.view.on('nodeClicked', function () {
-          this.detailedView = new DetailView(this.events);
+          if (!this.detailedView) {
+            this.detailedView = new DetailView(this.$modal);
+          }
+          this.detailedView.addEvents(this.events);
           this.detailedView.show();
+          this.detailedView.highlightDate(this.highlightedTime);
         }.bind(this));
       }
     }
+
     if (this.needToRender) {
       this.view.renderView(this.container);
       this.needToRender = false;

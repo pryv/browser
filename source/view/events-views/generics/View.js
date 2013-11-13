@@ -10,14 +10,6 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
   },
-  triggers: {
-    'click a': {
-      event: '',
-      preventDefault: false,
-      stopPropagation: true
-    },
-    'click': 'nodeClicked'
-  },
   change: function () {
     $('#' + this.container).removeClass('animated ' + this.animation);
     this.animation = 'tada';
@@ -32,6 +24,9 @@ module.exports = Marionette.ItemView.extend({
     if (this.container) {
       $('#' + this.container).removeClass('animated fadeIn');
       $('#' + this.container).html(this.el);
+      this.$('.aggregated-nbr-events').bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
       $('#' + this.container).addClass('animated ' + this.animation);
       setTimeout(function () {
         $('#' + this.container).removeClass('animated ' + this.animation);

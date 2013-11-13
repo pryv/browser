@@ -6,6 +6,9 @@ module.exports = Marionette.ItemView.extend({
   container: null,
   rendered: false,
   currentAnimation: 'bounceIn',
+  triggers: {
+    'click .aggregated-nbr-events': 'nodeClicked'
+  },
   initialize: function () {
     this.listenTo(this.model, 'change:top', this.change);
     this.listenTo(this.model, 'change:left', this.change);

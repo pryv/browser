@@ -18,7 +18,9 @@ module.exports = Marionette.ItemView.extend({
   highlightedTime: Infinity,
   positions: null,
   highlightedPosition: null,
-
+  triggers: {
+    'click .aggregated-nbr-events': 'nodeClicked'
+  },
   initialize: function () {
 
     this.positions = this.model.get('positions');
@@ -35,7 +37,7 @@ module.exports = Marionette.ItemView.extend({
       }
     }.bind(this));
 
-    this.listenTo(this.model, 'change:positions', this.render);
+    this.listenTo(this.model, 'change:positions', this.changePos);
     this.listenTo(this.model, 'change:posWidth', this.resize);
     this.listenTo(this.model, 'change:posHeight', this.resize);
     this.$el.css('height', '100%');
@@ -51,6 +53,11 @@ module.exports = Marionette.ItemView.extend({
         this.map.fitBounds(this.bounds);
       }.bind(this), 1000);
     }
+  },
+  changePos: function () {
+    this.positions = this.model.get('positions');
+    this.model.set('eventsNbr', this.positions.length);
+    this.render();
   },
   renderView: function (container) {
     this.container = container;

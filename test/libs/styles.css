@@ -227,6 +227,7 @@ body{
   font-size: 9px;
   color: #FFF;
   z-index: 1;
+  cursor: pointer;
 }
 .mapView {
   width: 100%;
@@ -309,7 +310,6 @@ position: absolute;
 vertical-align: middle;
 text-align: center;*/
   z-index: 100 !important;
-  pointer-events:none;
   transition: opacity .1s ease-out;
   -moz-transition: opacity .1s ease-out;
   -webkit-transition: opacity .1s ease-out;
@@ -334,6 +334,10 @@ text-align: center;*/
   opacity: 1;
 }
 /** detail view modal **/
+.modal-dialog {
+  width: 80%;
+  min-width: 600px;
+}
 .modal, .modal-backdrop, .modal-dialog, .modal-content {
   position: fixed;
   top: 0;
@@ -361,5 +365,23 @@ text-align: center;*/
 }
 .modal-panel-right {
   overflow: hidden;
+  border-left: 1px solid #e5e5e5;
+  position: absolute;
+  width: 200px;
+  right: 0;
+}
+#detail-list {
+  position: absolute;
+  overflow-y: scroll;
+  float: right;
+  top: 56px;
+  right: 0;
+  bottom: 0px;
+}
+#detail-list .highlighted {
+  background-color: #F1C40F;
+}
+.view:hover {
+  background-color: #F51584;
 }
 /** end detail view modal **/

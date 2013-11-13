@@ -11,6 +11,9 @@ module.exports = Marionette.ItemView.extend({
   height: null,
   rendered: false,
   currentAnimation: 'bounceIn',
+  triggers: {
+    'click .aggregated-nbr-events': 'nodeClicked'
+  },
   initialize: function () {
    // this.listenTo(this.model, 'change:width', this.resizeImage);
    // this.listenTo(this.model, 'change:height', this.resizeImage);

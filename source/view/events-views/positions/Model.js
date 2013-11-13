@@ -16,6 +16,9 @@ module.exports = CommonModel.implement(
       if (this.view) {
         this.view.onDateHighLighted(time);
       }
+      if (this.detailedView) {
+        this.detailedView.highlightDate(this.highlightedTime);
+      }
     },
 
     _findEventToDisplay: function () {},
@@ -33,7 +36,7 @@ module.exports = CommonModel.implement(
         posWidth: this.width,
         posHeight: this.height,
         id: this.id,
-        eventsNbr: _.size(this.events)
+        eventsNbr: this.positions.length
       };
     }
   }

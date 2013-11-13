@@ -96,8 +96,22 @@
   </script>
   <script type="text/html" id="template-detailItemView">
     <div class="view">
-      <%= time %>
+      <%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %>
     </div>
+  </script>
+  <script type="template" id="template-detail-full">
+  <div id="detail-full">
+    <% if (event) {%>
+    <ul>
+  <li class="event-structure" id="full-streamId">streamId: <label><%= event.streamId %></label></li>
+  <li class="event-structure" id="full-date">date: <label><%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %></label></li>
+  <li class="event-structure" id="full-type">type: <label><%= event.type %></label></li>
+  <li class="event-structure" id="full-description">description: <label><%= event.description %></label></li>
+  <li class="event-structure" id="full-tags">tags: <label><%= event.tags.join(", ") %></label></li>
+  <li class="event-structure" id="full-content"><%= showContent() %></li>
+  </ul>
+  <% } %>
+  </div>
   </script>
 </head>
 
@@ -119,6 +133,7 @@
             <h4 class="modal-title" id="myModalLabel">Detailed View</h4>
           </div>
           <div id="modal-right-content">
+            <ul id="detail-list"></ul>
           </div>
         </div>
       </div>

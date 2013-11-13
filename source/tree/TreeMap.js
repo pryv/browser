@@ -4,8 +4,9 @@ var RootNode = require('./RootNode.js');
 var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
 var _ = require('underscore');
 
-var TreeMap = module.exports = function (model) {
+var TreeMap = module.exports = function (model, controller) {
   this.model = model;
+  this.controller = controller;
   this.root = new RootNode($('#tree').width() -
     parseInt($('#tree').css('margin-left').split('px')[0], null) -
     parseInt($('#tree').css('margin-right').split('px')[0], null),
@@ -97,6 +98,7 @@ TreeMap.prototype.onDateHighLighted = function (time) {
     this.root.onDateHighLighted(time);
   }
 };
+
 TreeMap.prototype.destroy = function () {
   this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope);
@@ -105,4 +107,26 @@ TreeMap.prototype.destroy = function () {
   this.model.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
 };
+
+
+
+TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
+  var node = this.root;
+  node = node.connectionNodes[connectionId];
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by connection' + connectionId);
+  }
+  node = node.streamNodes[streamId];
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by stream' + connectionId + streamId);
+  }
+  var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
+
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by nodeId' +
+      connectionId + ' ' + streamId + ' ' + nodeId);
+  }
+  return that;
+};
+
 

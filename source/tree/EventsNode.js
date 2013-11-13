@@ -117,8 +117,12 @@ var EventsNode = module.exports = TreeNode.implement(
       while (rootNode.className !== 'RootNode') {
         rootNode = rootNode.parent;
       }
-      var chlidren = rootNode.connectionNodes[connectionId].streamNodes[streamId].getChildren();
-      var that = _.find(chlidren, function (node) { return node.uniqueId === nodeId; });
+
+      var that = rootNode.getEventNode(nodeId, streamId, connectionId);
+      return that;
+
+      //var chlidren = rootNode.connectionNodes[connectionId].streamNodes[streamId].getChildren();
+      //var that = _.find(chlidren, function (node) { return node.uniqueId === nodeId; });
 
       //console.log('this: ', this);
       //console.log('that: ', that);

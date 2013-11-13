@@ -4,6 +4,7 @@ var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
 var TreeMap = require('./tree/TreeMap.js');
+var Controller = require('./controller/Controller.js');
 var Pryv = require('pryv');
 var TimeLine = require('timeframe-selector');
 
@@ -55,7 +56,9 @@ module.exports = function () {
   this.activeFilter.addConnection(fredosSerial, batch);
 
   // create the TreeMap
+  this.controller = new Controller();
   this.treemap = new TreeMap(this);
+  this.controller.setTreeMap(this.treemap);
 
 
   var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
@@ -109,7 +112,7 @@ var initTimeAndFilter = function (timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 2000
+    limit: 20000
   });
 
   timeView.onFiltersChanged({

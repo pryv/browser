@@ -58,6 +58,30 @@ module.exports = TreeNode.implement(
         throw new Error('RootNode: can\'t find path to change event' + event.id);
       }
       node.eventChange(event, reason, callback);
+    },
+
+    getEventNode: function (nodeId, streamId, connectionId) {
+      var node = null;
+      node = this.connectionNodes[connectionId];
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to requested event by connection' + connectionId);
+      }
+      node = node.streamNodes[streamId];
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to requested event by stream' + connectionId + streamId);
+      }
+      var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
+
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to requested event by nodeId' +
+          connectionId + ' ' + streamId + ' ' + nodeId);
+      }
+
+      return that;
+    },
+
+    showFusionDialog: function (node1, node2) {
+
     }
   });
 

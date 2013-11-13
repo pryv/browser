@@ -178,6 +178,8 @@ NumericalsPlugin.prototype.mergeData = function (nodeId, streamId, connectionId)
   var thatData = thatNode.eventView.datas;
   var thisData = this.datas;
 
+
+
 };
 
 /**

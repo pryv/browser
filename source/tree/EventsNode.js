@@ -112,29 +112,24 @@ var EventsNode = module.exports = TreeNode.implement(
       }
     },
 
-    dragAndDrop: function (nodeId, streamId, connectionId) {
-      var rootNode = this.parent;
-      while (rootNode.className !== 'RootNode') {
-        rootNode = rootNode.parent;
-      }
-
-      var that = rootNode.getEventNode(nodeId, streamId, connectionId);
-      return that;
-
-      //var chlidren = rootNode.connectionNodes[connectionId].streamNodes[streamId].getChildren();
-      //var that = _.find(chlidren, function (node) { return node.uniqueId === nodeId; });
-
-      //console.log('this: ', this);
-      //console.log('that: ', that);
-    },
-
-
     _createEventView: function () {
       this.eventView = new this.pluginView(this.events, {
         width: this.width,
         height: this.height,
         id: this.uniqueId
       }, this);
+    },
+
+    /**
+     * Called on drag and drop
+     * @param nodeId
+     * @param streamId
+     * @param connectionId
+     */
+    dragAndDrop: function (nodeId, streamId, connectionId) {
+      var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
+      var thisNode = this;
+      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
     }
 
   });

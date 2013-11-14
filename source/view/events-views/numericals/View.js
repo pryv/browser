@@ -258,7 +258,6 @@ module.exports = Marionette.ItemView.extend({
       }
       this.renderView(this.container);
     }
-
   },
 
 
@@ -304,9 +303,8 @@ module.exports = Marionette.ItemView.extend({
     var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
     var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
     var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
-    this.trigger('mergeData', droppedNodeID, droppedStreamID, droppedConnectionID);
+    this.trigger('dragAndDrop', droppedNodeID, droppedStreamID, droppedConnectionID);
   },
-
 
 
   close: function () {

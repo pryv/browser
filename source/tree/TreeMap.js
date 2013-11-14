@@ -143,7 +143,7 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   * @param node2 the seconde node
   */
 TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
-
+  console.log('Need to show aggr dialog for nodes', node1.uniqueId, node2.uniqueId);
 };
 
 

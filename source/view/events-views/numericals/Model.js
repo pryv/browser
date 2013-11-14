@@ -124,18 +124,10 @@ NumericalsPlugin.prototype._refreshModelView = function () {
   this.modelView.set('height', this.height);
   this.modelView.set('eventsNbr', _.size(this.events));
 
-  /*
-  this.modelView.set('uniqueID', this.uniqueID);
-  this.modelView.set('connectionID', this.treeNode.getParent().stream.id);
-  this.modelView.set('streamID', this.treeNode.getParent().connectionNode.token);
-  this.connectionID = null;
-  this.streamID = null;
-   */
-
   this.view.off();
   this.view.on('graphClicked', function () { this.view.changeGraph(); }.bind(this));
-  this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
-  this.view.on('mergeData', this.mergeData.bind(this));
+  //this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
+  this.view.on('dragAndDrop', this.onDragAndDrop.bind(this));
 
   if (this.needToRender) {
     this.view.renderView(this.container);
@@ -163,28 +155,17 @@ NumericalsPlugin.prototype._findEventToDisplay = function () {
       }
     }, this);
   }
-
 };
 
 
 /**
- *
- * @param id a string containing the id of the dragged node.
+ * Propagates the drag and drop event further up to the TreeMap controller
+ * @param nodeId
+ * @param streamId
+ * @param connectionId
  */
-NumericalsPlugin.prototype.mergeData = function (nodeId, streamId, connectionId) {
-  //console.log('merge called', nodeId);
-  var thatNode = this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
-
-  var thatData = thatNode.eventView.datas;
-  var thisData = this.datas;
-
+NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectionId) {
+  this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
 };
 
-/**
- *
- */
-NumericalsPlugin.prototype.splitData = function (remainsThis, remainsThat, aggregatedView) {
-
-
-};
 

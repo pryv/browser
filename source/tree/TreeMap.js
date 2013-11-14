@@ -3,6 +3,7 @@
 var RootNode = require('./RootNode.js');
 var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
 var _ = require('underscore');
+var FusionDialog = require('../view/events-views/fusion/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
@@ -140,10 +141,20 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
  /**
   * Sets up all the controlling to aggregate two nodes.
   * @param node1 the first node
-  * @param node2 the seconde node
+  * @param node2 the second node
   */
 TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   console.log('Need to show aggr dialog for nodes', node1.uniqueId, node2.uniqueId);
+  var events = { };
+  for (var attrname in node1.events) { events[attrname] = node1.events[attrname]; }
+  for (var attrname in node2.events) { events[attrname] = node2.events[attrname]; }
+
+  console.log('Events of node 1', node1.events);
+  console.log('Events of node 2', node2.events);
+  console.log('Events to merge', events);
+
+  var dialog = new FusionDialog(events);
+  dialog.show();
 };
 
 

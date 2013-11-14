@@ -18,8 +18,6 @@ module.exports = TreeNode.implement(
     this.height = h;
     this.margin = CONNECTION_MARGIN;
     this.offset = 0;
-
-    console.log('RootNode ctor with treemap', this.treeMap);
   },
 
   {

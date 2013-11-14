@@ -16,8 +16,8 @@ var TreeNode = require('./TreeNode'),
  * @type {*}
  */
 var EventsNode = module.exports = TreeNode.implement(
-  function (treemap, parentStreamNode) {
-    TreeNode.call(this, parentStreamNode, treemap);
+  function (parentStreamNode) {
+    TreeNode.call(this, parentStreamNode.treeMap, parentStreamNode);
     this.events = {};
     this.eventDisplayed = null;
     this.eventView = null;

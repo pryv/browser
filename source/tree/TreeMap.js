@@ -110,6 +110,13 @@ TreeMap.prototype.destroy = function () {
 
  /** The treemap's utility functions **/
 
+ /**
+  * Search for the node matching the arguments and returns it.
+  * @param nodeId the unique id in the DOM of the node
+  * @param streamId  the unique id of the stream associated with the node
+  * @param connectionId the unique id of the connection associated with the node
+  * @returns {find|*} returns the uniquely identifiable by the passed arguments
+  */
 TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   var node = this.root;
   node = node.connectionNodes[connectionId];
@@ -128,6 +135,18 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   }
   return that;
 };
+
+
+ /**
+  * Sets up all the controlling to aggregate two nodes.
+  * @param node1 the first node
+  * @param node2 the seconde node
+  */
+TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
+
+};
+
+
 
 
  /**

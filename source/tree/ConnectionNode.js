@@ -10,15 +10,11 @@ var SERIAL = 0;
  */
 var ConnectionNode = module.exports = TreeNode.implement(
   function (parentnode, connection) {
-
-   //console.log('treemap', treemap, 'parentn', parentnode, 'connection', connection);
-
     TreeNode.call(this, parentnode.treeMap, parentnode);
     this.connection = connection;
     this.streamNodes = {};
     this.uniqueId = 'node_connection_' + SERIAL;
     SERIAL++;
-    console.log('ConnectionNode ctor with treemap', this.treeMap);
   }, {
     className: 'ConnectionNode',
 
@@ -42,7 +38,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
           if (stream.parent) {   // if not parent, this connection node is the parent
             parentNode = this.streamNodes[stream.parent.id];
           }
-          this.streamNodes[stream.id] = new StreamNode(this.treeMap, this, parentNode, stream);
+          this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
         }.bind(this),
         function (error) {   // done
           if (error) { error = 'ConnectionNode failed to init structure - ' + error; }

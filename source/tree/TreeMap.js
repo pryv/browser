@@ -144,14 +144,14 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   * @param node2 the second node
   */
 TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
-  console.log('Need to show aggr dialog for nodes', node1.uniqueId, node2.uniqueId);
+  //console.log('Need to show aggr dialog for nodes', node1.uniqueId, node2.uniqueId);
   var events = { };
   for (var attrname in node1.events) { events[attrname] = node1.events[attrname]; }
   for (var attrname in node2.events) { events[attrname] = node2.events[attrname]; }
 
-  console.log('Events of node 1', node1.events);
-  console.log('Events of node 2', node2.events);
-  console.log('Events to merge', events);
+  //console.log('Events of node 1', node1.events);
+  //console.log('Events of node 2', node2.events);
+  //console.log('Events to merge', events);
 
   var dialog = new FusionDialog(events);
   dialog.show();

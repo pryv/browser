@@ -2,10 +2,11 @@ var _ = require('underscore'),
   NumericalsView = require('./View.js'),
   SuperCondensedView = require('../super-condensed/View.js'),
   Backbone = require('backbone');
-var NumericalsPlugin = module.exports = function (events, params) {
+var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
   }, 100);
+
   this.events = {};
   this.superCondensed = false;
   this.highlightedTime = Infinity;
@@ -16,6 +17,8 @@ var NumericalsPlugin = module.exports = function (events, params) {
   this.needToRender = null;
   this.datas = {};
   this.streamIds = {};
+  this.eventsNode = node;
+
   _.extend(this, params);
   _.each(events, function (event) {
     this.eventEnter(event);
@@ -120,8 +123,12 @@ NumericalsPlugin.prototype._refreshModelView = function () {
   this.modelView.set('width', this.width);
   this.modelView.set('height', this.height);
   this.modelView.set('eventsNbr', _.size(this.events));
+
+  this.view.off();
   this.view.on('graphClicked', function () { this.view.changeGraph(); }.bind(this));
-  this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
+  //this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
+  this.view.on('dragAndDrop', this.onDragAndDrop.bind(this));
+
   if (this.needToRender) {
     this.view.renderView(this.container);
     this.needToRender = false;
@@ -148,6 +155,17 @@ NumericalsPlugin.prototype._findEventToDisplay = function () {
       }
     }, this);
   }
-
 };
+
+
+/**
+ * Propagates the drag and drop event further up to the TreeMap controller
+ * @param nodeId
+ * @param streamId
+ * @param connectionId
+ */
+NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectionId) {
+  this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
+};
+
 

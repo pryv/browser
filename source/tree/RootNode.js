@@ -8,8 +8,8 @@ var CONNECTION_MARGIN = 20;
  * @type {*}
  */
 module.exports = TreeNode.implement(
-  function (w, h) {
-    TreeNode.call(this, null);
+  function (treemap, w, h) {
+    TreeNode.call(this, treemap, null);
     if (w === null || h === null) {
       throw new Error('You must set width and height of the root node');
     }
@@ -19,6 +19,7 @@ module.exports = TreeNode.implement(
     this.margin = CONNECTION_MARGIN;
     this.offset = 0;
   },
+
   {
     className: 'RootNode',
     eventLeaveCount: 0,
@@ -58,6 +59,26 @@ module.exports = TreeNode.implement(
         throw new Error('RootNode: can\'t find path to change event' + event.id);
       }
       node.eventChange(event, reason, callback);
+    },
+
+    getEventNode: function (nodeId, streamId, connectionId) {
+      var node = null;
+      node = this.connectionNodes[connectionId];
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to requested event by connection' + connectionId);
+      }
+      node = node.streamNodes[streamId];
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to requested event by stream' + connectionId + streamId);
+      }
+      var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
+
+      if (node === 'undefined') {
+        throw new Error('RootNode: can\'t find path to requested event by nodeId' +
+          connectionId + ' ' + streamId + ' ' + nodeId);
+      }
+
+      return that;
     }
   });
 

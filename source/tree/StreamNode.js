@@ -8,7 +8,7 @@ var _ = require('underscore');
 
 var StreamNode = module.exports = TreeNode.implement(
   function (connectionNode, parentNode, stream) {
-    TreeNode.call(this, parentNode);
+    TreeNode.call(this, parentNode.treeMap, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
 

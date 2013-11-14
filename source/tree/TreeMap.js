@@ -4,10 +4,9 @@ var RootNode = require('./RootNode.js');
 var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
 var _ = require('underscore');
 
-var TreeMap = module.exports = function (model, controller) {
+var TreeMap = module.exports = function (model) {
   this.model = model;
-  this.controller = controller;
-  this.root = new RootNode($('#tree').width() -
+  this.root = new RootNode(this, $('#tree').width() -
     parseInt($('#tree').css('margin-left').split('px')[0], null) -
     parseInt($('#tree').css('margin-right').split('px')[0], null),
     $('#tree').height() -
@@ -109,6 +108,7 @@ TreeMap.prototype.destroy = function () {
 };
 
 
+ /** The treemap's utility functions **/
 
 TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   var node = this.root;
@@ -129,4 +129,27 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   return that;
 };
 
+
+ /**
+  * Creates a virtual node from a certain number of events.
+  * @param events is an array of events you want to fuse, aka show in the same node.
+  */
+TreeMap.prototype.createVirtualNode = function (events) {
+  /* TODO:
+   * create the node, don't remove the already existing
+   * make sure the update follow at both places
+   */
+
+};
+
+
+ /**
+  * Remove a existing virtual node.
+  * @param node the virtual node you want to remove
+  */
+TreeMap.prototype.removeVirtualNode = function (node) {
+  /* TODO:
+   * just remove the node indicated
+   */
+};
 

@@ -7,8 +7,8 @@ var EventsNode = require('../EventsNode'),
  * @type {*}
  */
 var GenericEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
+  function (treemap, parentStreamNode) {
+    EventsNode.call(this, treemap, parentStreamNode);
   },
   {
     className: 'GenericEventsNode',

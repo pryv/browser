@@ -4,7 +4,7 @@ var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
 var TreeMap = require('./tree/TreeMap.js');
-var Controller = require('./controller/Controller.js');
+var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
 var TimeLine = require('timeframe-selector');
 

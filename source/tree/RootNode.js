@@ -8,8 +8,8 @@ var CONNECTION_MARGIN = 20;
  * @type {*}
  */
 module.exports = TreeNode.implement(
-  function (w, h) {
-    TreeNode.call(this, null);
+  function (treemap, w, h) {
+    TreeNode.call(this, treemap, null);
     if (w === null || h === null) {
       throw new Error('You must set width and height of the root node');
     }
@@ -18,7 +18,10 @@ module.exports = TreeNode.implement(
     this.height = h;
     this.margin = CONNECTION_MARGIN;
     this.offset = 0;
+
+    console.log('RootNode ctor with treemap', this.treeMap);
   },
+
   {
     className: 'RootNode',
     eventLeaveCount: 0,
@@ -78,10 +81,6 @@ module.exports = TreeNode.implement(
       }
 
       return that;
-    },
-
-    showFusionDialog: function (node1, node2) {
-
     }
   });
 

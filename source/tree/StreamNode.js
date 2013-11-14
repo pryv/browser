@@ -7,8 +7,8 @@ var _ = require('underscore');
  */
 
 var StreamNode = module.exports = TreeNode.implement(
-  function (connectionNode, parentNode, stream) {
-    TreeNode.call(this, parentNode);
+  function (treemap, connectionNode, parentNode, stream) {
+    TreeNode.call(this, parentNode, treemap);
     this.stream = stream;
     this.connectionNode = connectionNode;
 
@@ -220,7 +220,7 @@ var StreamNode = module.exports = TreeNode.implement(
       if (key && _.has(eventsNodeList, key)) {
         eventNode =  eventsNodeList[key]; // found one
       }  else { // create is
-        eventNode = new StreamNode.registeredEventNodeTypes[key](this);
+        eventNode = new StreamNode.registeredEventNodeTypes[key](this.treeMap, this);
         eventsNodeList[key] = eventNode;
       }
       return eventNode;

@@ -6,8 +6,8 @@ var EventsNode = require('../EventsNode'),
  * @type {*}
  */
 var PositionsEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
+  function (treemap, parentStreamNode) {
+    EventsNode.call(this, treemap, parentStreamNode);
   },
   {
     className: 'PositionsEventsNode',

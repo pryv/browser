@@ -14,8 +14,9 @@ var DEFAULT_MARGIN = 2;
 var DEFAULT_MIN_WIDTH = 550;
 var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
-var TreeNode = module.exports = function (parent) {
+var TreeNode = module.exports = function (treemap, parent) {
   //Init all the instance variables
+  this.treeMap = treemap;
   this.parent = parent;
   this.uniqueId = _.uniqueId('node_');
   this.width = null;

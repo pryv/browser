@@ -2,19 +2,16 @@ var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
   defaults: {
-    content: null,
-    description: null,
-    id: null,
-    streamId: null,
-    tags: null,
-    time: null,
-    type: null,
-    trashed: false
+    event: null,
+    highlighted: false
   },
   getTimeDifference: function (time) {
-    return Math.abs(time - this.get('time'));
+    return Math.abs(time - this.get('event').time);
   },
   isTrashed: function () {
-    return this.get('trashed');
+    return this.get('event').trashed;
+  },
+  setHighlighted: function (highlight) {
+    this.set('highlighted', highlight);
   }
 });

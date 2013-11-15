@@ -91,6 +91,7 @@
     <% }  }  %>
      <span></span>
   </script>
+
   <script type="text/html" id="template-detailListCompositeView">
     <ul id="detail-list"></ul>
   </script>
@@ -98,6 +99,18 @@
     <div class="view">
       <%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %>
     </div>
+  </script>
+
+  <script type="text/html" id="template-fusionListCompositeView">
+    <div id="detail-div"></div>
+  </script>
+  <script type="text/html" id="template-fusionItemView">
+        <div id="fusionItemView-checkbox" class="view">
+          <input type="checkbox" name="chartSelector" value="isSelected">
+        </div>
+        <div id="fusionItemView-text" class="view">
+          <%= event.streamName %>  <%= event.type %>
+        </div>
   </script>
   <script type="template" id="template-detail-full">
   <div id="detail-full">
@@ -113,6 +126,10 @@
   <% } %>
   </div>
   </script>
+    <script type="template" id="template-fusion-graph">
+        <div id="fusion-full">
+        </div>
+    </script>
 </head>
 
 <body>
@@ -134,6 +151,7 @@
           </div>
           <div id="modal-right-content">
             <ul id="detail-list"></ul>
+            <div id="detail-div"></div>
           </div>
         </div>
       </div>

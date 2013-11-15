@@ -5,7 +5,7 @@ var _ = require('underscore'),
   ListView = require('./ListView.js'),
   SingleView = require('./SingleView.js');
 var Controller = module.exports = function ($modal, events) {
-  console.log('lalal');
+  //console.log('lalal');
   this.events = {};
   this.eventsToAdd = [];
   this.collection = null;
@@ -20,7 +20,7 @@ var Controller = module.exports = function ($modal, events) {
     if (this.highlightedDate) {
       this.highlightDate(this.highlightedDate);
     }
-    console.log('debounce add', this.collection);
+    //console.log('debounce add', this.collection);
   }.bind(this), 100);
 
   var sorted = _.reduce(events, function (output, el) {
@@ -41,7 +41,7 @@ var Controller = module.exports = function ($modal, events) {
     return output;
   }, { });
 
-  console.log(sorted);
+  //console.log(sorted);
   this.addEvents(sorted);
   $(window).resize(this.resizeModal);
 };
@@ -56,8 +56,9 @@ _.extend(Controller.prototype, {
       });
       this.listView.on('itemview:date:clicked', function (evt) {
         console.log('jordane date:clicked');
-        console.log(evt);
+        //console.log(evt);
         this.collection.setCurrentElement(evt.model);
+        console.log(evt.model);
         this.updateSingleView(this.collection.getCurrentElement());
       }.bind(this));
     }
@@ -84,35 +85,38 @@ _.extend(Controller.prototype, {
     this.collection = null;
     this.events = {};
     $(this.$modal).unbind('keydown');
+    $('#detail-div').empty();
   },
   getEventById: function (event) {
     return this.collection.getEventById(event.id);
   },
   addEvents: function (event) {
-    console.log('addEvents', 'init');
+    //console.log('addEvents', 'init');
     if (!event) {
-      console.log('addEvents', 'no event');
+      //console.log('addEvents', 'no event');
       return;
     }
     if (event.id) {
-      console.log('addEvents', 'has id, is alone');
+      //console.log('addEvents', 'has id, is alone');
       //we have only one event so we put it on a each for the next each
       event = [event];
     }
     if (!this.collection) {
-      console.log('addEvents', 'now collection');
+      //console.log('addEvents', 'now collection');
       this.collection = new Collection();
     }
     _.each(event, function (e) {
-      console.log('addEvents', e);
+      //console.log('addEvents', e);
       var m = new Model({
-        event: e
+        event: e,
+        selected: true,
+        chartType: 0
       });
       this.events[e.id] = e;
       this.eventsToAdd.push(m);
     }, this);
 
-    console.log('addEvents - showing the collection', this.collection);
+    //console.log('addEvents - showing the collection', this.collection);
     this.debounceAdd();
   },
   deleteEvent: function (event) {
@@ -143,8 +147,8 @@ _.extend(Controller.prototype, {
   },
   resizeModal: _.debounce(function () {
 
-    var size = $('.modal-dialog').width() - $('.modal-panel-right').width();
-    console.log('resize modal', size);
+    //var size = $('.modal-dialog').width() - $('.modal-panel-right').width();
+    //console.log('resize modal', size);
     $('.modal-panel-left').css({
       width: $('.modal-dialog').width() - $('.modal-panel-right').width(),
       height: $('.modal-panel-left').height()

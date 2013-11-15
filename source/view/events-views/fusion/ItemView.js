@@ -1,4 +1,5 @@
 /* global $ */
+var _ = require('underscore');
 
 var Marionette = require('backbone.marionette');
 
@@ -15,6 +16,8 @@ module.exports = Marionette.ItemView.extend({
     //this.bindUIElements();
     this.listenTo(this.model, 'change', this.render);
 
+    //console.log('ItemView, the model', this.model);
+
   },
 
   onBeforeRender: function () {
@@ -23,38 +26,56 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
+    console.log('ItemView onRender');
     $(this.el).css({
       overflow: 'hidden'
     });
 
-    this.ui.checkbox.addClass('checked');
+    //this.ui.checkbox.addClass('checked');
+    //console.log('checked or not?', this.model.get('selected'));
+    this.ui.checkbox.attr('checked', this.model.get('selected'));
 
     this.ui.divCheckbox.css({
       float: 'left',
       width: '15px',
       position: 'relative',
-      'text-align': 'left',
-      'background-color': 'yellow'
+      'text-align': 'left'
+      //'background-color': 'yellow'
     });
 
     var textBoxWidth = $('.modal-panel-right').width() - 15 - 10 - 12;
     this.ui.divText.css({
       float: 'right',
       width: textBoxWidth,
-      position: 'relative',
+      position: 'relative'
       //'margin-right': '15px',
-      'background-color': 'red'
+      //'background-color': 'red'
     });
 
-    console.log(this.ui.checkbox);
-    console.log('ItemView onRender');
+    //console.log(this.ui.checkbox);
+    //console.log('ItemView onRender');
+    var children = this.$el.children();
+    //console.log(children);
     if (this.model.get('highlighted')) {
-      this.$el.addClass('highlighted');
+      children.css('background', 'green');
+      this.$el.css('background', 'green');
     } else {
-      this.$el.removeClass('highlighted');
+      children.css('background', 'yellow');
+      this.$el.css('background', 'yellow');
     }
     this.$('.view').bind('click', function () {
       this.trigger('date:clicked', this.model);
+      //console.log('FusionView: ItemView clicked');
+    }.bind(this));
+
+    this.ui.checkbox.bind('click', function () {
+      if (this.ui.checkbox.is(':checked')) {
+        this.model.set('selected', true);
+        //console.log('FusionView: ItemView checkbox checked');
+      } else {
+        this.model.set('selected', false);
+        //console.log('FusionView: ItemView checkbox un-checked');
+      }
     }.bind(this));
   },
 

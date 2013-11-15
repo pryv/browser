@@ -3,6 +3,8 @@ var Backbone = require('backbone');
 module.exports = Backbone.Model.extend({
   defaults: {
     event: null,
+    selected: null,
+    chartType: null,
     highlighted: false
   },
   getTimeDifference: function (time) {

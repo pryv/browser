@@ -7,6 +7,7 @@ var FusionDialog = require('../view/events-views/fusion/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
+  this.dialog = null;
   this.root = new RootNode(this, $('#tree').width() -
     parseInt($('#tree').css('margin-left').split('px')[0], null) -
     parseInt($('#tree').css('margin-right').split('px')[0], null),
@@ -164,8 +165,15 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   //console.log('Events of node 2', node2.events);
   //console.log('Events to merge', events);
 
-  var dialog = new FusionDialog(events);
-  dialog.show();
+  this.dialog = new FusionDialog($('#detailViewModal').on('hidden.bs.modal', function () {
+    if (this.dialog) {
+      this.dialog.close();
+      this.dialog = null;
+    }
+  }.bind(this)), events);
+
+
+  this.dialog.show();
 };
 
 

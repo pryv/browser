@@ -65,11 +65,13 @@ module.exports = TreeNode.implement(
       var node = null;
       node = this.connectionNodes[connectionId];
       if (node === 'undefined') {
-        throw new Error('RootNode: can\'t find path to requested event by connection' + connectionId);
+        throw new Error('RootNode: can\'t find path to requested event by connection' +
+          connectionId);
       }
       node = node.streamNodes[streamId];
       if (node === 'undefined') {
-        throw new Error('RootNode: can\'t find path to requested event by stream' + connectionId + streamId);
+        throw new Error('RootNode: can\'t find path to requested event by stream' +
+          connectionId + streamId);
       }
       var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
 

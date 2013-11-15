@@ -16,7 +16,7 @@ module.exports = Marionette.CompositeView.extend({
     $(this.container).append(itemView.el);
   },
   onRender: function () {
-    $(container).css({'overflow-y': 'scroll'});
+    $(this.container).css({'overflow-y': 'scroll'});
   },
   debounceRender: _.debounce(function () {
     this.render();

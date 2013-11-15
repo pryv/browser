@@ -1,6 +1,3 @@
-var _ = require('underscore');
-var TreeMap = require('../tree/TreeMap.js');
-
 
 var Controller = module.exports = function () {
   this.treeMap = null;

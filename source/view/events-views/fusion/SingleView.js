@@ -31,7 +31,7 @@ module.exports = Marionette.ItemView.extend({
     $('#modal-left-content').css({
       width: '100%',
       height: '100%'
-    })
+    });
 
     var res = myModel.type.split('/');
     var plotContainer = 'fusion' + myModel.streamId + res[0] + res[1];
@@ -74,11 +74,11 @@ module.exports = Marionette.ItemView.extend({
 
     var series = [];
     for (var i = 0; i < data.length; ++i) {
-        series.push({
-          data: dataMapper(data),
-          label: myModel.type,
-          type: 0
-        });
+      series.push({
+        data: dataMapper(data),
+        label: myModel.type,
+        type: 0
+      });
     }
 
     var options = {

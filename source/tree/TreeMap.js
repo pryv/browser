@@ -122,11 +122,13 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   var node = this.root;
   node = node.connectionNodes[connectionId];
   if (node === 'undefined') {
-    throw new Error('RootNode: can\'t find path to requested event by connection' + connectionId);
+    throw new Error('RootNode: can\'t find path to requested event by connection' +
+      connectionId);
   }
   node = node.streamNodes[streamId];
   if (node === 'undefined') {
-    throw new Error('RootNode: can\'t find path to requested event by stream' + connectionId + streamId);
+    throw new Error('RootNode: can\'t find path to requested event by stream' +
+      connectionId + streamId);
   }
   var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
 
@@ -146,8 +148,17 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
 TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   //console.log('Need to show aggr dialog for nodes', node1.uniqueId, node2.uniqueId);
   var events = { };
-  for (var attrname in node1.events) { events[attrname] = node1.events[attrname]; }
-  for (var attrname in node2.events) { events[attrname] = node2.events[attrname]; }
+  var attrname = null;
+  for (attrname in node1.events) {
+    if (node1.events.hasOwnProperty(attrname)) {
+      events[attrname] = node1.events[attrname];
+    }
+  }
+  for (attrname in node2.events) {
+    if (node2.events.hasOwnProperty(attrname)) {
+      events[attrname] = node2.events[attrname];
+    }
+  }
 
   //console.log('Events of node 1', node1.events);
   //console.log('Events of node 2', node2.events);
@@ -159,6 +170,7 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
 
 
 
+/* jshint -W098 */
 
  /**
   * Creates a virtual node from a certain number of events.

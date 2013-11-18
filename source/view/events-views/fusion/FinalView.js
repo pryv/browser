@@ -4,24 +4,20 @@ var Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.ItemView.extend({
   template: '#template-fusion-graph',
-  container: '#modal-left-content-single',
+  container: '#modal-left-content-final',
 
   initialize: function () {
-    //console.log('SingleView initialize');
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'change', this.onModelChange);
   },
 
   onRender: function () {
-    //console.log('SingleView onRender');
-    var myModel = this.model.get('event');
+    var myModel = this.model.get('events');
     if (!myModel) {
       return;
     }
 
-    var res = myModel.type.split('/');
-    var plotContainer = 'fusion' + myModel.streamId + res[0] + res[1];
-    var plotContainerDiv = '<div id="' + plotContainer +
-      '" class="graphContainer"></div>';
+    var plotContainer = 'fusion';
+    var plotContainerDiv = '<div id="' + plotContainer + '" class="graphContainer"></div>';
 
 
     $(this.container).html(plotContainerDiv);
@@ -35,7 +31,7 @@ module.exports = Marionette.ItemView.extend({
     });
 
     var data = myModel.elements;
-    //console.log('onreder - data', data);
+    //console.log('onredere - data', data);
     var dataMapper = function (d) {
       return _.map(d, function (e) {
         return [e.time, e.content];
@@ -44,11 +40,13 @@ module.exports = Marionette.ItemView.extend({
 
 
     var series = [];
-    series.push({
-      data: dataMapper(data),
-      label: myModel.type,
-      type: 0
-    });
+    for (var i = 0; i < myModel.length; ++i) {
+      series.push({
+        data: dataMapper(myModel[i].elements),
+        label: myModel.type,
+        type: 0
+      });
+    }
 
     var options = {
       grid: {
@@ -63,7 +61,7 @@ module.exports = Marionette.ItemView.extend({
 
     //console.log('series', series);
     var plotData = [];
-    for (var i = 0; i < series.length; ++i) {
+    for (i = 0; i < series.length; ++i) {
       options.yaxes.push({ show: false});
       plotData.push({
         data: series[i].data,
@@ -73,5 +71,11 @@ module.exports = Marionette.ItemView.extend({
       });
     }
     this.plot = $.plot($('#' + plotContainer), plotData, options);
+  },
+
+  onModelChange: function () {
+    //console.log('Finalview has now: ', this.model.get('events'));
+    this.render();
   }
+
 });

@@ -22,11 +22,11 @@ module.exports = Marionette.ItemView.extend({
 
   onBeforeRender: function () {
     // set up final bits just before rendering the view's `el`
-    console.log('ItemView onBeforeRender');
+    //console.log('ItemView onBeforeRender');
   },
 
   onRender: function () {
-    console.log('ItemView onRender');
+    //console.log('ItemView onRender');
     $(this.el).css({
       overflow: 'hidden'
     });
@@ -39,7 +39,8 @@ module.exports = Marionette.ItemView.extend({
       float: 'left',
       width: '15px',
       position: 'relative',
-      'text-align': 'left'
+      'text-align': 'left',
+      'margin-left': '3px'
       //'background-color': 'yellow'
     });
 
@@ -64,30 +65,32 @@ module.exports = Marionette.ItemView.extend({
       this.$el.css('background', 'yellow');
     }
     this.$('.view').bind('click', function () {
-      this.trigger('date:clicked', this.model);
+      this.trigger('chart:clicked', this.model);
       //console.log('FusionView: ItemView clicked');
     }.bind(this));
 
     this.ui.checkbox.bind('click', function () {
       if (this.ui.checkbox.is(':checked')) {
         this.model.set('selected', true);
+        this.trigger('chart:select', this.model);
         //console.log('FusionView: ItemView checkbox checked');
       } else {
         this.model.set('selected', false);
+        this.trigger('chart:unselect', this.model);
         //console.log('FusionView: ItemView checkbox un-checked');
       }
     }.bind(this));
   },
 
   onBeforeClose: function () {
-    console.log('ItemView onBeforeClose');
+    //console.log('ItemView onBeforeClose');
     // manipulate the `el` here. it's already
     // been rendered, and is full of the view's
     // HTML, ready to go.
   },
 
   onClose: function () {
-    console.log('ItemView onClose');
+    //console.log('ItemView onClose');
     // custom closing and cleanup goes here
   }
 });

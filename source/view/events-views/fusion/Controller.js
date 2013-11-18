@@ -51,7 +51,8 @@ var Controller = module.exports = function ($modal, events) {
         type: el.type,
         elements: [],
         trashed: false,
-        tags: el.tags
+        tags: el.tags,
+        style: 0
       };
     }
     output[graphName].elements.push({content: el.content, time: el.time});
@@ -92,8 +93,9 @@ _.extend(Controller.prototype, {
         //console.log('ItemView - Event: Chart unselected');
       }.bind(this));
 
-      this.listView.on('singleview:chart:clicked', function (evt) {
-        //this.removeEventFromFinalView(evt.model);
+      this.singleView.on('chart:clicked', function (evt) {
+        //console.log(evt);
+        this.updateEventOnFinalView(evt);
         //console.log('SingleView - Event: Chart clicked');
       }.bind(this));
     }
@@ -208,6 +210,7 @@ _.extend(Controller.prototype, {
       }
       events.push(model.get('event'));
       this.finalView.model.set('events', events);
+      //console.log('addEventToFinalView', events);
     }
   },
 
@@ -228,8 +231,39 @@ _.extend(Controller.prototype, {
             }
           }
         }
-        this.finalView.model.set('events', events);
       }
+      this.finalView.model.set('events', events);
+      //console.log('removeEventFromFinalView', events);
+    }
+  },
+
+  /**
+   * Update a serie on the Finalview if it exists
+   * @param model you want to update
+   */
+  updateEventOnFinalView: function (model) {
+    if (model) {
+      //console.log('updateEventOnFinalView', model.get('event'));
+      var updatedEvent = null;
+      var eventsFV = this.finalView.model.get('events');
+      var events = [];
+      if (eventsFV) {
+        for (var i = 0; i < eventsFV.length; ++i) {
+          if (eventsFV[i].id !== model.get('event').id) {
+            updatedEvent = this.getEventById(eventsFV[i]);
+            if (updatedEvent) {
+              //console.log('if adding', i, updatedEvent.get('event'));
+              events.push(updatedEvent.get('event'));
+            }
+          } else {
+            //console.log('else adding', i, model.get('event'));
+            events.push(model.get('event'));
+          }
+        }
+      }
+      this.finalView.model.set('events', events);
+      //console.log('updateEventOnFinalView', events);
+      this.finalView.render();
     }
   },
 

@@ -44,7 +44,7 @@ module.exports = Marionette.ItemView.extend({
       series.push({
         data: dataMapper(myModel[i].elements),
         label: myModel.type,
-        type: 0
+        type: myModel[i].style
       });
     }
 
@@ -65,10 +65,25 @@ module.exports = Marionette.ItemView.extend({
       options.yaxes.push({ show: false});
       plotData.push({
         data: series[i].data,
-        label: series[i].label,
-        points: { show: true },
-        lines: { show: true }
+        label: series[i].label
       });
+
+      switch (series[i].type) {
+        case 0:
+          plotData[i].lines = { show: true };
+          plotData[i].points = { show: true };
+          break;
+        case 1:
+          plotData[i].bars = { show: true };
+          break;
+        //case 2:
+        //plotData[i].pie = { show: true };
+        //break;
+        default:
+          plotData[i].lines = { show: true };
+          plotData[i].points = { show: true };
+          break;
+      }
     }
     this.plot = $.plot($('#' + plotContainer), plotData, options);
   },

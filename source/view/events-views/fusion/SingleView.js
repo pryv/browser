@@ -7,7 +7,6 @@ module.exports = Marionette.ItemView.extend({
   container: '#modal-left-content-single',
 
   initialize: function () {
-    //console.log('SingleView initialize');
     this.listenTo(this.model, 'change', this.render);
   },
 
@@ -47,7 +46,7 @@ module.exports = Marionette.ItemView.extend({
     series.push({
       data: dataMapper(data),
       label: myModel.type,
-      type: 0
+      type: myModel.style
     });
 
     var options = {
@@ -67,11 +66,54 @@ module.exports = Marionette.ItemView.extend({
       options.yaxes.push({ show: false});
       plotData.push({
         data: series[i].data,
-        label: series[i].label,
-        points: { show: true },
-        lines: { show: true }
+        label: series[i].label
       });
+      // Configuration of the series representation
+      switch (series[i].type) {
+        case 0:
+          plotData[i].lines = { show: true };
+          plotData[i].points = { show: true };
+          break;
+        case 1:
+          plotData[i].bars = { show: true };
+          break;
+        //case 2:
+          //plotData[i].pie = { show: true };
+          //break;
+        default:
+          plotData[i].lines = { show: true };
+          plotData[i].points = { show: true };
+          break;
+      }
     }
     this.plot = $.plot($('#' + plotContainer), plotData, options);
+
+
+    $(this.container).unbind();
+    $(this.container).bind('plotclick', function () {
+      //console.log('changeStyle');
+      var event = this.model.get('event');
+      var style = event.style;
+
+      //console.log('SingleView: Current style', style);
+      style++;
+      style %= 2;
+      event.style = style;
+      //console.log('SingleView: New style', style);
+
+      this.model.set('event', event);
+      //console.log('SingleView plotclick', this.model);
+      this.trigger('chart:clicked', this.model);
+
+      this.render();
+    }.bind(this));
+
+
+  },
+
+  // Changes the style of the graph
+  changeStyle: function () {
+
   }
+
 });

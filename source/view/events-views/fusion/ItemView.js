@@ -1,5 +1,4 @@
 /* global $ */
-var _ = require('underscore');
 
 var Marionette = require('backbone.marionette');
 
@@ -15,9 +14,6 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     //this.bindUIElements();
     this.listenTo(this.model, 'change', this.render);
-
-    //console.log('ItemView, the model', this.model);
-
   },
 
   onBeforeRender: function () {
@@ -31,8 +27,6 @@ module.exports = Marionette.ItemView.extend({
       overflow: 'hidden'
     });
 
-    //this.ui.checkbox.addClass('checked');
-    //console.log('checked or not?', this.model.get('selected'));
     this.ui.checkbox.attr('checked', this.model.get('selected'));
 
     this.ui.divCheckbox.css({
@@ -41,7 +35,6 @@ module.exports = Marionette.ItemView.extend({
       position: 'relative',
       'text-align': 'left',
       'margin-left': '3px'
-      //'background-color': 'yellow'
     });
 
     var textBoxWidth = $('.modal-panel-right').width() - 15 - 10 - 12;
@@ -49,14 +42,9 @@ module.exports = Marionette.ItemView.extend({
       float: 'right',
       width: textBoxWidth,
       position: 'relative'
-      //'margin-right': '15px',
-      //'background-color': 'red'
     });
 
-    //console.log(this.ui.checkbox);
-    //console.log('ItemView onRender');
     var children = this.$el.children();
-    //console.log(children);
     if (this.model.get('highlighted')) {
       children.css('background', 'green');
       this.$el.css('background', 'green');
@@ -66,18 +54,15 @@ module.exports = Marionette.ItemView.extend({
     }
     this.$('.view').bind('click', function () {
       this.trigger('chart:clicked', this.model);
-      //console.log('FusionView: ItemView clicked');
     }.bind(this));
 
     this.ui.checkbox.bind('click', function () {
       if (this.ui.checkbox.is(':checked')) {
         this.model.set('selected', true);
         this.trigger('chart:select', this.model);
-        //console.log('FusionView: ItemView checkbox checked');
       } else {
         this.model.set('selected', false);
         this.trigger('chart:unselect', this.model);
-        //console.log('FusionView: ItemView checkbox un-checked');
       }
     }.bind(this));
   },

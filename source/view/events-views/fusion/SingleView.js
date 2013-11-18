@@ -11,7 +11,6 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
-    //console.log('SingleView onRender');
     var myModel = this.model.get('event');
     if (!myModel) {
       return;
@@ -22,10 +21,8 @@ module.exports = Marionette.ItemView.extend({
     var plotContainerDiv = '<div id="' + plotContainer +
       '" class="graphContainer"></div>';
 
-
     $(this.container).html(plotContainerDiv);
 
-    //console.log($('#' + plotContainer));
     $('#' + plotContainer).css({
       top: 0,
       left: 0,
@@ -34,7 +31,6 @@ module.exports = Marionette.ItemView.extend({
     });
 
     var data = myModel.elements;
-    //console.log('onreder - data', data);
     var dataMapper = function (d) {
       return _.map(d, function (e) {
         return [e.time, e.content];
@@ -60,7 +56,6 @@ module.exports = Marionette.ItemView.extend({
       yaxes: []
     };
 
-    //console.log('series', series);
     var plotData = [];
     for (var i = 0; i < series.length; ++i) {
       options.yaxes.push({ show: false});
@@ -70,50 +65,39 @@ module.exports = Marionette.ItemView.extend({
       });
       // Configuration of the series representation
       switch (series[i].type) {
-        case 0:
-          plotData[i].lines = { show: true };
-          plotData[i].points = { show: true };
-          break;
-        case 1:
-          plotData[i].bars = { show: true };
-          break;
-        //case 2:
-          //plotData[i].pie = { show: true };
-          //break;
-        default:
-          plotData[i].lines = { show: true };
-          plotData[i].points = { show: true };
-          break;
+      case 0:
+        plotData[i].lines = { show: true };
+        plotData[i].points = { show: true };
+        break;
+      case 1:
+        plotData[i].bars = { show: true };
+        break;
+      default:
+        plotData[i].lines = { show: true };
+        plotData[i].points = { show: true };
+        break;
       }
     }
     this.plot = $.plot($('#' + plotContainer), plotData, options);
 
 
     $(this.container).unbind();
-    $(this.container).bind('plotclick', function () {
-      //console.log('changeStyle');
-      var event = this.model.get('event');
-      var style = event.style;
-
-      //console.log('SingleView: Current style', style);
-      style++;
-      style %= 2;
-      event.style = style;
-      //console.log('SingleView: New style', style);
-
-      this.model.set('event', event);
-      //console.log('SingleView plotclick', this.model);
-      this.trigger('chart:clicked', this.model);
-
-      this.render();
-    }.bind(this));
-
-
+    $(this.container).bind('plotclick', this.onStyleChange.bind(this));
   },
 
-  // Changes the style of the graph
-  changeStyle: function () {
+  onStyleChange: function () {
+    var event = this.model.get('event');
+    var style = event.style;
+    style++;
+    style %= 2;
+    event.style = style;
+    this.model.set('event', event);
+    this.trigger('chart:clicked', this.model);
+    this.render();
+  },
 
+  resize: function () {
+    this.render();
   }
 
 });

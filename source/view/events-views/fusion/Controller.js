@@ -7,7 +7,6 @@ var _ = require('underscore'),
   FinalView = require('./FinalView.js');
 
 var Controller = module.exports = function ($modal, events) {
-  //console.log('lalal');
   this.events = {};
   this.eventsToAdd = [];
   this.collection = null;
@@ -34,9 +33,7 @@ var Controller = module.exports = function ($modal, events) {
 
   this.testf = _.debounce(function () {
     var elem = this.collection.at(0);
-    //console.log('Debounce show first', this.collection);
     this.updateSingleView(elem);
-    //this.updateSingleView(this.collection.at(0));
   }.bind(this), 2000);
 
 
@@ -59,8 +56,6 @@ var Controller = module.exports = function ($modal, events) {
     return output;
   }, {});
 
-  //console.log(formatted);
-
   this.addEvents(formatted);
 
   $(window).resize(this.resizeModal);
@@ -78,29 +73,22 @@ _.extend(Controller.prototype, {
       });
 
       this.listView.on('itemview:chart:clicked', function (evt) {
-        //console.log('ItemView - Event: Chart clicked');
         this.collection.setCurrentElement(evt.model);
         this.updateSingleView(this.collection.getCurrentElement());
       }.bind(this));
 
       this.listView.on('itemview:chart:select', function (evt) {
         this.addEventToFinalView(evt.model);
-        //console.log('ItemView - Event: Chart selected');
       }.bind(this));
 
       this.listView.on('itemview:chart:unselect', function (evt) {
         this.removeEventFromFinalView(evt.model);
-        //console.log('ItemView - Event: Chart unselected');
       }.bind(this));
 
       this.singleView.on('chart:clicked', function (evt) {
-        //console.log(evt);
         this.updateEventOnFinalView(evt);
-        //console.log('SingleView - Event: Chart clicked');
       }.bind(this));
     }
-
-    //console.log('show - this collection', this.collection);
 
 
     this.testf();
@@ -135,9 +123,7 @@ _.extend(Controller.prototype, {
     return this.collection.getEventById(event.id);
   },
   addEvents: function (event) {
-    //console.log('addEvents', 'init');
     if (!event) {
-      //console.log('addEvents', 'no event');
       return;
     }
     if (event.id) {
@@ -146,11 +132,9 @@ _.extend(Controller.prototype, {
       event = [event];
     }
     if (!this.collection) {
-      //console.log('addEvents', 'now collection');
       this.collection = new Collection();
     }
     _.each(event, function (e) {
-      //console.log('addEvents', e);
       var m = new Model({
         event: e,
         selected: false,
@@ -159,8 +143,6 @@ _.extend(Controller.prototype, {
       this.events[e.id] = e;
       this.eventsToAdd.push(m);
     }, this);
-
-    //console.log('addEvents - showing the collection', this.collection);
     this.debounceAdd();
   },
   deleteEvent: function (event) {
@@ -210,7 +192,6 @@ _.extend(Controller.prototype, {
       }
       events.push(model.get('event'));
       this.finalView.model.set('events', events);
-      //console.log('addEventToFinalView', events);
     }
   },
 
@@ -233,7 +214,6 @@ _.extend(Controller.prototype, {
         }
       }
       this.finalView.model.set('events', events);
-      //console.log('removeEventFromFinalView', events);
     }
   },
 
@@ -243,26 +223,22 @@ _.extend(Controller.prototype, {
    */
   updateEventOnFinalView: function (model) {
     if (model) {
-      //console.log('updateEventOnFinalView', model.get('event'));
       var updatedEvent = null;
       var eventsFV = this.finalView.model.get('events');
       var events = [];
       if (eventsFV) {
         for (var i = 0; i < eventsFV.length; ++i) {
-          if (eventsFV[i].id !== model.get('event').id) {
-            updatedEvent = this.getEventById(eventsFV[i]);
-            if (updatedEvent) {
-              //console.log('if adding', i, updatedEvent.get('event'));
+          updatedEvent = this.getEventById(eventsFV[i]);
+          if (updatedEvent) {
+            if (eventsFV[i].id !== model.get('event').id) {
+              events.push(updatedEvent.get('event'));
+            } else {
               events.push(updatedEvent.get('event'));
             }
-          } else {
-            //console.log('else adding', i, model.get('event'));
-            events.push(model.get('event'));
           }
         }
       }
       this.finalView.model.set('events', events);
-      //console.log('updateEventOnFinalView', events);
       this.finalView.render();
     }
   },
@@ -293,6 +269,13 @@ _.extend(Controller.prototype, {
       'margin-top': '2%',
       'background-color': 'LightSeaGreen'
     });
+
+    if (this.finalView) {
+      this.finalView.resize();
+    }
+    if (this.singleView) {
+      this.singleView.resize();
+    }
 
 
   }.bind(this), 1000)

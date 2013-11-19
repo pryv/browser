@@ -1,10 +1,11 @@
 /* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
-  Model = require('./EventModel.js'),
+  Model = require('./SeriesModel.js'),
   ListView = require('./ListView.js'),
   SingleView = require('./SingleView.js'),
-  FinalView = require('./FinalView.js');
+  //FinalView = require('./FinalView.js'),
+  ChartView = require('./ChartView.js');
 
 var Controller = module.exports = function ($modal, events) {
   this.events = {};
@@ -67,7 +68,7 @@ _.extend(Controller.prototype, {
     this.$modal.modal();
     if (!this.listView) {
       this.singleView = new SingleView({model: new Model({})});
-      this.finalView = new FinalView({model: new Model({})});
+      this.finalView = new ChartView({model: new Model({})});
       this.listView = new ListView({
         collection: this.collection
       });

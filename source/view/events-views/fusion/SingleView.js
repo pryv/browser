@@ -3,7 +3,7 @@ var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
-  //template: '#template-fusion-graph',
+  template: '#template-fusion-graph',
   container: '#modal-left-content-single',
 
   initialize: function () {

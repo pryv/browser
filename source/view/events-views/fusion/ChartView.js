@@ -18,9 +18,6 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
-
-    console.log(this.container, this.model);
-
     var myModel = this.model.get('events');
     if (!myModel) {
       return;
@@ -35,8 +32,6 @@ module.exports = Marionette.ItemView.extend({
       width: '100%',
       height: '100%'
     });
-
-    //console.log('Chart container', this.chartContainer);
 
     var dataMapper = function (d) {
       return _.map(d, function (e) {

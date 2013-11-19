@@ -67,8 +67,10 @@ _.extend(Controller.prototype, {
   show: function () {
     this.$modal.modal();
     if (!this.listView) {
-      this.singleView = new ChartView({model: new Model({container: '#modal-left-content-single'})});
-      this.finalView = new ChartView({model: new Model({container: '#modal-left-content-final'})});
+      this.singleView = new ChartView({model:
+        new Model({container: '#modal-left-content-single'})});
+      this.finalView = new ChartView({model:
+        new Model({container: '#modal-left-content-final'})});
       this.listView = new ListView({
         collection: this.collection
       });
@@ -132,7 +134,6 @@ _.extend(Controller.prototype, {
       return;
     }
     if (event.id) {
-      //console.log('addEvents', 'has id, is alone');
       //we have only one event so we put it on a each for the next each
       event = [event];
     }
@@ -140,16 +141,18 @@ _.extend(Controller.prototype, {
       this.collection = new Collection();
     }
     _.each(event, function (e) {
-      //console.log('addEvents', e);
       var m = new Model({
         selected: false
       });
-      m.get('events').push(e);
+      var table = [e];
+      m.set('events', table);
       this.events[e.id] = e;
       this.eventsToAdd.push(m);
     }, this);
     this.debounceAdd();
   },
+
+  /* jshint -W098 */
   deleteEvent: function (event) {
     console.log('TODO: deleteEvent');
     /*
@@ -179,9 +182,11 @@ _.extend(Controller.prototype, {
     this.updateSingleView(model);
     */
   },
+
+
   updateSingleView: function (model) {
     if (model) {
-      this.singleView.model.set('events', [model.get('events')]);
+      this.singleView.model.set('events', model.get('events'));
     }
   },
 
@@ -193,20 +198,11 @@ _.extend(Controller.prototype, {
     // events of the finalView model is an array
     // of the real events (containing the points)
     if (model) {
-      var eventsFV = this.finalView.model.get('events'); // should be an array
-      console.log('addSeriesToFinalView', eventsFV);
-      var events = [];
-      if (eventsFV) {
-        for (var i = 0; i < eventsFV.length; i++) {
-          var updatedEvent = this.getEventById(eventsFV[i]);
-          if (updatedEvent) {
-            events.push(updatedEvent.get('event'));
-          }
-        }
-      }
-      //console.log('toAdd', model.get('events'));
-      events.push(model.get('events'));
-      this.finalView.model.set('events', events);
+      var eventToAdd = model.get('events')[0];
+      var eventsFinalView = this.finalView.model.get('events'); // should be an array
+      eventsFinalView.push(eventToAdd);
+      this.finalView.model.set('events', eventsFinalView);
+      this.finalView.render();
     }
   },
 
@@ -216,19 +212,18 @@ _.extend(Controller.prototype, {
    */
   removeSeriesFromFinalView: function (model) {
     if (model) {
-      var eventsFV = this.finalView.model.get('events');
+      var eventToRemove = model.get('events')[0];
+      var eventsFinalView = this.finalView.model.get('events');
       var events = [];
-      if (eventsFV) {
-        for (var i = 0; i < eventsFV.length; ++i) {
-          if (eventsFV[i].id !== model.get('events').id) {
-            var updatedEvent = this.getEventById(eventsFV[i]);
-            if (updatedEvent) {
-              events.push(updatedEvent.get('events'));
-            }
+      if (eventsFinalView) {
+        for (var i = 0; i < eventsFinalView.length; ++i) {
+          if (eventsFinalView[i].id !== eventToRemove.id) {
+            events.push(eventsFinalView[i]);
           }
         }
       }
       this.finalView.model.set('events', events);
+      this.finalView.render();
     }
   },
 
@@ -238,18 +233,15 @@ _.extend(Controller.prototype, {
    */
   updateSeriesOnFinalView: function (model) {
     if (model) {
-      var updatedEvent = null;
-      var eventsFV = this.finalView.model.get('events');
+      var eventToUpdate = model.get('events')[0];
+      var eventsFinalView = this.finalView.model.get('events');
       var events = [];
-      if (eventsFV) {
-        for (var i = 0; i < eventsFV.length; ++i) {
-          updatedEvent = this.getEventById(eventsFV[i]);
-          if (updatedEvent) {
-            if (eventsFV[i].id !== model.get('events').id) {
-              events.push(updatedEvent.get('events'));
-            } else {
-              events.push(updatedEvent.get('events'));
-            }
+      if (eventsFinalView) {
+        for (var i = 0; i < eventsFinalView.length; ++i) {
+          if (eventsFinalView[i].id !== eventToUpdate.id) {
+            events.push(eventsFinalView[i]);
+          } else {
+            events.push(eventToUpdate);
           }
         }
       }

@@ -11,10 +11,19 @@ module.exports = Marionette.ItemView.extend({
     divText: '#fusionItemView-text'
   },
   template: '#template-fusionItemView',
+
+  templateHelpers: function () {
+    return {
+      showContent: function () {
+        var event = this.model.get('events');
+        return event[0].streamName;
+      }.bind(this)
+    };
+  },
+
   initialize: function () {
     //this.bindUIElements();
     this.listenTo(this.model, 'change', this.render);
-    console.log('ItemView', this.model);
   },
 
   onBeforeRender: function () {
@@ -79,4 +88,7 @@ module.exports = Marionette.ItemView.extend({
     //console.log('ItemView onClose');
     // custom closing and cleanup goes here
   }
+
+
+
 });

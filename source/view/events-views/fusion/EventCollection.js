@@ -1,5 +1,5 @@
 var Backbone = require('backbone'),
-  Model = require('./EventModel.js');
+  Model = require('./SeriesModel.js');
 
 module.exports = Backbone.Collection.extend({
   url: '#',
@@ -13,24 +13,34 @@ module.exports = Backbone.Collection.extend({
       : a < b ? 1
       : 0;
   },
+
+  /* jshint -W098 */
+
   highlightEvent: function (time) {
+    console.log('EventCollection', 'highlightEvent');
+    /*
     var next =  this.getEventhighlighted(time);
     if (!next || next === Infinity) {
       return;
     }
     this.setCurrentElement(next);
     return next;
+    */
   },
   getEventhighlighted: function (time) {
+    console.log('EventCollection', 'highlightEvent');
+    /*
     this.highlightedDate = time === Infinity ? 99999999999 : time;
-    return this.min(this._getTimeDifference.bind(this));
+    return this.min(this._getTimeDifference.bind(this));*/
   },
   getTrashed: function () {
-    return this.filter(this._getTrashed);
+    console.log('EventCollection', 'highlightEvent');
+    /*
+    return this.filter(this._getTrashed);*/
   },
   getEventById: function (id) {
     return this.find(function (e) {
-      return e.get('events').id === id;
+      return e.get('events')[0].id === id;
     });
   },
   getActive: function () {
@@ -49,7 +59,8 @@ module.exports = Backbone.Collection.extend({
     if (!model) {
       return;
     }
-    if (!this.currentElement || this.currentElement.get('events').id !== model.get('events').id) {
+    if (!this.currentElement ||
+      this.currentElement.get('events')[0].id !== model.get('events')[0].id) {
       if (this.currentElement) {
         this.currentElement.setHighlighted(false);
       }

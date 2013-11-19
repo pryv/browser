@@ -14,6 +14,7 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     //this.bindUIElements();
     this.listenTo(this.model, 'change', this.render);
+    console.log('ItemView', this.model);
   },
 
   onBeforeRender: function () {

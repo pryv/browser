@@ -13,12 +13,14 @@ module.exports = Marionette.ItemView.extend({
   },*/
 
   initialize: function () {
-    this.listenTo(this.model, 'change:events', this.render);
     this.listenTo(this.model, 'change', this.render);
     this.container = this.model.get('container');
   },
 
   onRender: function () {
+
+    console.log(this.container, this.model);
+
     var myModel = this.model.get('events');
     if (!myModel) {
       return;
@@ -33,6 +35,8 @@ module.exports = Marionette.ItemView.extend({
       width: '100%',
       height: '100%'
     });
+
+    //console.log('Chart container', this.chartContainer);
 
     var dataMapper = function (d) {
       return _.map(d, function (e) {

@@ -7,8 +7,8 @@ module.exports = Backbone.Collection.extend({
   highlightedDate: null,
   currentElement: null,
   comparator: function (a, b) {
-    a = a.get('event').time;
-    b = b.get('event').time;
+    a = a.get('events').time;
+    b = b.get('events').time;
     return a > b ? -1
       : a < b ? 1
       : 0;
@@ -30,7 +30,7 @@ module.exports = Backbone.Collection.extend({
   },
   getEventById: function (id) {
     return this.find(function (e) {
-      return e.get('event').id === id;
+      return e.get('events').id === id;
     });
   },
   getActive: function () {
@@ -49,7 +49,7 @@ module.exports = Backbone.Collection.extend({
     if (!model) {
       return;
     }
-    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
+    if (!this.currentElement || this.currentElement.get('events').id !== model.get('events').id) {
       if (this.currentElement) {
         this.currentElement.setHighlighted(false);
       }

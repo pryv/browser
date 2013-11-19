@@ -3,7 +3,7 @@ var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
   Model = require('./SeriesModel.js'),
   ListView = require('./ListView.js'),
-  SingleView = require('./SingleView.js'),
+  //SingleView = require('./SingleView.js'),
   //FinalView = require('./FinalView.js'),
   ChartView = require('./ChartView.js');
 
@@ -67,26 +67,30 @@ _.extend(Controller.prototype, {
   show: function () {
     this.$modal.modal();
     if (!this.listView) {
-      this.singleView = new SingleView({model: new Model({})});
-      this.finalView = new ChartView({model: new Model({})});
+      this.singleView = new ChartView({model: new Model({container: '#modal-left-content-single'})});
+      this.finalView = new ChartView({model: new Model({container: '#modal-left-content-final'})});
       this.listView = new ListView({
         collection: this.collection
       });
 
       this.listView.on('itemview:chart:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
-        this.updateSingleView(this.collection.getCurrentElement());
+        console.log('itemview:chart:clicked', evt.model);
+        this.updateSingleView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:select', function (evt) {
+        console.log('itemview:chart:select', evt);
         this.addSeriesToFinalView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:unselect', function (evt) {
+        console.log('itemview:chart:unselect', evt);
         this.removeSeriesFromFinalView(evt.model);
       }.bind(this));
 
       this.singleView.on('chart:clicked', function (evt) {
+        console.log('chart:clicked', evt);
         this.updateSeriesOnFinalView(evt);
       }.bind(this));
     }
@@ -136,40 +140,48 @@ _.extend(Controller.prototype, {
       this.collection = new Collection();
     }
     _.each(event, function (e) {
+      //console.log('addEvents', e);
       var m = new Model({
-        event: e,
-        selected: false,
-        chartType: 0
+        selected: false
       });
+      m.get('events').push(e);
       this.events[e.id] = e;
       this.eventsToAdd.push(m);
     }, this);
     this.debounceAdd();
   },
   deleteEvent: function (event) {
+    console.log('TODO: deleteEvent');
+    /*
     delete this.events[event.id];
     var toDelete = this.getEventById(event);
     if (toDelete) {
       toDelete.destroy();
     }
+    */
   },
   updateEvent: function (event) {
+    console.log('TODO: updateEvent');
+    /*
     this.events[event.id] = event;
     var toUpdate = this.getEventById(event);
     if (toUpdate) {
       toUpdate.set('event', event);
       this.collection.sort();
     }
+    */
   },
   highlightDate: function (time) {
+    console.log('TODO: highlight date');
+    /*
     this.highlightedDate = time;
     var model = this.collection.highlightEvent(time);
     this.updateSingleView(model);
-
+    */
   },
   updateSingleView: function (model) {
     if (model) {
-      this.singleView.model.set('event', model.get('event'));
+      this.singleView.model.set('events', [model.get('events')]);
     }
   },
 
@@ -182,6 +194,7 @@ _.extend(Controller.prototype, {
     // of the real events (containing the points)
     if (model) {
       var eventsFV = this.finalView.model.get('events'); // should be an array
+      console.log('addSeriesToFinalView', eventsFV);
       var events = [];
       if (eventsFV) {
         for (var i = 0; i < eventsFV.length; i++) {
@@ -191,7 +204,8 @@ _.extend(Controller.prototype, {
           }
         }
       }
-      events.push(model.get('event'));
+      //console.log('toAdd', model.get('events'));
+      events.push(model.get('events'));
       this.finalView.model.set('events', events);
     }
   },
@@ -206,10 +220,10 @@ _.extend(Controller.prototype, {
       var events = [];
       if (eventsFV) {
         for (var i = 0; i < eventsFV.length; ++i) {
-          if (eventsFV[i].id !== model.get('event').id) {
+          if (eventsFV[i].id !== model.get('events').id) {
             var updatedEvent = this.getEventById(eventsFV[i]);
             if (updatedEvent) {
-              events.push(updatedEvent.get('event'));
+              events.push(updatedEvent.get('events'));
             }
           }
         }
@@ -231,10 +245,10 @@ _.extend(Controller.prototype, {
         for (var i = 0; i < eventsFV.length; ++i) {
           updatedEvent = this.getEventById(eventsFV[i]);
           if (updatedEvent) {
-            if (eventsFV[i].id !== model.get('event').id) {
-              events.push(updatedEvent.get('event'));
+            if (eventsFV[i].id !== model.get('events').id) {
+              events.push(updatedEvent.get('events'));
             } else {
-              events.push(updatedEvent.get('event'));
+              events.push(updatedEvent.get('events'));
             }
           }
         }

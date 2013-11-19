@@ -2,11 +2,12 @@ var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
   defaults: {
-    events: null,
+    events: [],
     highlightedTime: null,
     container: null,
     allowPieChart: false,
-    view: null
+    view: null,
+    highlighted: false
   },
 
 
@@ -16,10 +17,10 @@ module.exports = Backbone.Model.extend({
   },
   isTrashed: function () {
     return this.get('event').trashed;
-  },
+  }, */
   setHighlighted: function (highlight) {
     this.set('highlighted', highlight);
-  },*/
+  },
 
   onChartClicked: function () {
     var events = this.get('events');
@@ -28,4 +29,5 @@ module.exports = Backbone.Model.extend({
       //this.view.render();
     }
   }
+
 });

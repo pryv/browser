@@ -3,7 +3,7 @@ var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
-  template: '#template-fusion-graph',
+  //template: '#template-fusion-graph',
   container: '#modal-left-content-final',
 
   initialize: function () {
@@ -79,6 +79,8 @@ module.exports = Marionette.ItemView.extend({
       }
     }
     this.plot = $.plot($('#' + plotContainer), plotData, options);
+
+    console.log(this.model);
   },
 
   resize: function () {

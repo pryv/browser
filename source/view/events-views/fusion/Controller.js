@@ -78,15 +78,15 @@ _.extend(Controller.prototype, {
       }.bind(this));
 
       this.listView.on('itemview:chart:select', function (evt) {
-        this.addEventToFinalView(evt.model);
+        this.addSeriesToFinalView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:unselect', function (evt) {
-        this.removeEventFromFinalView(evt.model);
+        this.removeSeriesFromFinalView(evt.model);
       }.bind(this));
 
       this.singleView.on('chart:clicked', function (evt) {
-        this.updateEventOnFinalView(evt);
+        this.updateSeriesOnFinalView(evt);
       }.bind(this));
     }
 
@@ -173,10 +173,10 @@ _.extend(Controller.prototype, {
   },
 
   /**
-   * Adds a serie from the final view
-   * @param model the model of the serie to add
+   * Adds a series from the final view
+   * @param model the model of the series to add
    */
-  addEventToFinalView: function (model) {
+  addSeriesToFinalView: function (model) {
     // events of the finalView model is an array
     // of the real events (containing the points)
     if (model) {
@@ -196,10 +196,10 @@ _.extend(Controller.prototype, {
   },
 
   /**
-   * Removes a serie from the final view
-   * @param model the model of the serie to remove
+   * Removes a series from the final view
+   * @param model the model of the series to remove
    */
-  removeEventFromFinalView: function (model) {
+  removeSeriesFromFinalView: function (model) {
     if (model) {
       var eventsFV = this.finalView.model.get('events');
       var events = [];
@@ -218,10 +218,10 @@ _.extend(Controller.prototype, {
   },
 
   /**
-   * Update a serie on the Finalview if it exists
+   * Update a series on the Finalview if it exists
    * @param model you want to update
    */
-  updateEventOnFinalView: function (model) {
+  updateSeriesOnFinalView: function (model) {
     if (model) {
       var updatedEvent = null;
       var eventsFV = this.finalView.model.get('events');
@@ -258,14 +258,14 @@ _.extend(Controller.prototype, {
 
     $('#modal-left-content-single').css({
       width: $('.modal-panel-content').width(),
-      height: '47%',
+      height: '48%',
       'margin-top': '2%',
       'background-color': 'Khaki'
     });
 
     $('#modal-left-content-final').css({
       width: $('.modal-panel-content').width(),
-      height: '47%',
+      height: '48%',
       'margin-top': '2%',
       'background-color': 'LightSeaGreen'
     });

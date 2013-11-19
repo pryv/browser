@@ -147,7 +147,6 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   * @param node2 the second node
   */
 TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
-  //console.log('Need to show aggr dialog for nodes', node1.uniqueId, node2.uniqueId);
   var events = { };
   var attrname = null;
   for (attrname in node1.events) {
@@ -160,19 +159,12 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
       events[attrname] = node2.events[attrname];
     }
   }
-
-  //console.log('Events of node 1', node1.events);
-  //console.log('Events of node 2', node2.events);
-  //console.log('Events to merge', events);
-
   this.dialog = new FusionDialog($('#detailViewModal').on('hidden.bs.modal', function () {
     if (this.dialog) {
       this.dialog.close();
       this.dialog = null;
     }
   }.bind(this)), events);
-
-
   this.dialog.show();
 };
 
@@ -187,7 +179,7 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
 TreeMap.prototype.createVirtualNode = function (events) {
   /* TODO:
    * create the node, don't remove the already existing
-   * make sure the update follow at both places
+   * make sure the update follows at both places
    */
 
 };
@@ -199,7 +191,7 @@ TreeMap.prototype.createVirtualNode = function (events) {
   */
 TreeMap.prototype.removeVirtualNode = function (node) {
   /* TODO:
-   * just remove the node indicated
+   * just remove the indicated node
    */
 };
 

@@ -24,13 +24,15 @@ module.exports = CommonModel.implement(
     _findEventToDisplay: function () {},
 
     beforeRefreshModelView: function () {
-      if (this.positions.length !== _.size(this.events)) {
-        this.positions = [];
-        _.each(this.events, function (event) {
-          this.positions.push(event);
-        }, this);
-        this.positions = _.sortBy(this.positions, function (p) { return p.time; });
-      }
+      // if (this.positions.length !== _.size(this.events)) {
+      this.positions = [];
+      _.each(this.events, function (event) {
+        this.positions.push(event);
+      }, this);
+      this.positions = this.positions.sort(function (a, b) {
+        return a.time <= b.time ? -1 : 1;
+      });
+      //  }
       this.modelContent = {
         positions: this.positions,
         posWidth: this.width,

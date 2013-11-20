@@ -103,12 +103,20 @@
   <div id="detail-full">
     <% if (event) {%>
     <ul>
-  <li class="event-structure" id="full-streamId">streamId: <label><%= event.streamId %></label></li>
-  <li class="event-structure" id="full-date">date: <label><%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %></label></li>
-  <li class="event-structure" id="full-type">type: <label><%= event.type %></label></li>
-  <li class="event-structure" id="full-description">description: <label><%= event.description %></label></li>
-  <li class="event-structure" id="full-tags">tags: <label><%= event.tags.join(", ") %></label></li>
-  <li class="event-structure" id="full-content"><%= showContent() %></li>
+  <li class="event-structure" id="current-streamId">streamId: <label><%= event.streamId %></label>
+    <input class="edit" id="edit-streamId" value="<%= event.streamId %>">
+  </li>
+  <li class="event-structure" id="current-time">time: <label><%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %></label>
+    <input class="edit" id="edit-time" value="<%= event.time %>">
+  </li>
+  <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
+    <input class="edit" id="edit-type" value="<%= event.type %>">
+  </li>
+  <li class="event-structure" id="current-description">description: <label><%= event.description %></label>
+    <input class="edit" id="edit-description" value="<%= event.description %>"></li>
+  <li class="event-structure" id="current-tags">tags: <label><%= event.tags.join(', ') %></label>
+    <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
+  <div class="event-structure" id="full-content"><%= showContent() %></div>
   </ul>
   <% } %>
   </div>

@@ -54,7 +54,15 @@ var EventsNode = module.exports = TreeNode.implement(
     },
     /*jshint -W098 */
     eventChange: function (event, reason, callback) {
-      throw new Error('EventsNode.eventChange No yet implemented' + event.id);
+      this.events[event.id] = event;
+      console.log('eventChange', event);
+      if (this.eventView) {
+        this.eventView.eventChange(event);
+      }
+
+      if (callback) {
+        callback(null);
+      }
     },
     _createEventView: function () {
       this.eventView = new this.pluginView(this.events, {

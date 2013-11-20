@@ -77,8 +77,15 @@ var TreeMap = module.exports = function (model) {
     refreshTree();
   }.bind(this);
 
-  this.eventChange = function (/*context*/) {
-
+  this.eventChange = function (content) {
+    var start = new Date().getTime();
+    _.each(content.events, function (event) {
+      this.root.eventChange(event, content.reason, function () {});
+    }, this);
+    var end = new Date().getTime();
+    var time = end - start;
+    console.log('eventChange execution:', time);
+    refreshTree();
   }.bind(this);
 
   this.model.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);

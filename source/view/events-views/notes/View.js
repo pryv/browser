@@ -10,10 +10,10 @@ module.exports = Marionette.ItemView.extend({
     'click .aggregated-nbr-events': 'nodeClicked'
   },
   initialize: function () {
-    this.listenTo(this.model, 'change:top', this.change);
-    this.listenTo(this.model, 'change:left', this.change);
-    this.listenTo(this.model, 'change:width', this.change);
-    this.listenTo(this.model, 'change:height', this.change);
+    this.listenTo(this.model, 'change', this.change);
+    /* this.listenTo(this.model, 'change:left', this.change);
+     this.listenTo(this.model, 'change:width', this.change);
+     this.listenTo(this.model, 'change:height', this.change);    */
     this.$el.css('position', 'absolute');
     this.$el.addClass('animated node singleNote ' + this.currentAnimation);
     this.$el.attr('id', this.model.get('id'));
@@ -30,11 +30,19 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
   onRender: function () {
+    /*  Mosaic code
+     this.$el.css({
+     top: this.model.get('top') + '%',
+     left: this.model.get('left') + '%',
+     width: this.model.get('width') + '%',
+     height: this.model.get('height') + '%'
+     });  */
+    /* hack no mosaic */
     this.$el.css({
-      top: this.model.get('top') + '%',
-      left: this.model.get('left') + '%',
-      width: this.model.get('width') + '%',
-      height: this.model.get('height') + '%'
+      top: '0%',
+      left: '0%',
+      width: '100%',
+      height: '100%'
     });
     if (this.container && !this.rendered) {
       $('#' + this.container).append(this.el);
@@ -43,6 +51,7 @@ module.exports = Marionette.ItemView.extend({
     }
   },
   close: function (animation) {
+    this.$el.attr('id', '');
     this.$el.removeClass('animated ' + this.currentAnimation);
     this.currentAnimation = animation ? animation : this.currentAnimation;
     this.$el.addClass('animated ' + this.currentAnimation);

@@ -17,7 +17,8 @@ var Model = module.exports = function (events, params) {
   this.container = null;
   this.needToRender = null;
   this.typeView = null;
-
+  this.animationIn = null;
+  this.animationOut = null;
   this.$modal =  $('#detailViewModal').on('hidden.bs.modal', function () {
     if (this.detailedView) {
       this.detailedView.close();
@@ -83,6 +84,8 @@ _.extend(Model.prototype, {
     this.debounceRefresh();
   },
   OnDateHighlightedChange: function (time) {
+    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
+    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
     this.highlightedTime = time;
     if (this.detailedView) {
       this.detailedView.highlightDate(this.highlightedTime);
@@ -92,7 +95,7 @@ _.extend(Model.prototype, {
   render: function (container) {
     this.container = container;
     if (this.view) {
-      this.view.renderView(this.container);
+      this.view.renderView(this.container, this.animationIn);
     } else {
       this.needToRender = true;
     }
@@ -103,7 +106,7 @@ _.extend(Model.prototype, {
   },
   close: function () {
     if (this.view) {
-      this.view.close();
+      this.view.close(this.animationOut);
     }
     this.view = null;
     this.events = null;
@@ -141,11 +144,12 @@ _.extend(Model.prototype, {
     }
 
     if (this.needToRender) {
-      this.view.renderView(this.container);
+      this.view.renderView(this.container, this.animationIn);
       this.needToRender = false;
     }
     this.afterRefreshModelView();
   },
+
   _findEventToDisplay: function () {
     if (this.highlightedTime === Infinity) {
       var oldestTime = 0;

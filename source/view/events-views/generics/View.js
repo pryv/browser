@@ -6,7 +6,7 @@ module.exports = Marionette.ItemView.extend({
   container: null,
   animation: null,
   initialize: function () {
-    this.listenTo(this.model, 'change:id', this.change);
+    this.listenTo(this.model, 'change', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
   },

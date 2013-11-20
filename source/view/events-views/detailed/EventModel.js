@@ -13,5 +13,11 @@ module.exports = Backbone.Model.extend({
   },
   setHighlighted: function (highlight) {
     this.set('highlighted', highlight);
+  },
+  save: function () {
+    var event = this.get('event');
+    event.connection.events.update(event, function () {
+      console.log(arguments);
+    });
   }
 });

@@ -191,8 +191,18 @@ var StreamNode = module.exports = TreeNode.implement(
     },
 
     eventChange: function (event, reason, callback) {
-      if (callback) {
-        callback(null, this);
+      var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
+      if (!eventNode) {
+        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      eventNode.eventChange(event, reason, callback);
+      var aggregatedParent = this._findAggregatedParent();
+      if (aggregatedParent) {
+        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
+        if (eventNode === null) {
+          throw new Error('eventChange: did not find an eventView for the aggregated stream');
+        }
+        eventNode.eventChange(event, reason, callback);
       }
     },
     _findAggregatedParent: function () {

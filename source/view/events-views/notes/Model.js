@@ -1,7 +1,8 @@
 /* global $ */
 var _ = require('underscore'),
   NotesView = require('./View.js'),
-  Backbone = require('backbone');
+  Backbone = require('backbone'),
+  DetailView = require('../detailed/Controller.js');
 var NotesPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
@@ -24,6 +25,13 @@ var NotesPlugin = module.exports = function (events, params) {
   this.animationIn = null;
   this.animationOut = null;
 
+  this.detailedView = null;
+  this.$modal =  $('#detailViewModal').on('hidden.bs.modal', function () {
+    if (this.detailedView) {
+      this.detailedView.close();
+      this.detailedView = null;
+    }
+  }.bind(this));
   /**  */
   this.highlightedTime = Infinity;
   this.modelView = null;
@@ -38,6 +46,9 @@ var NotesPlugin = module.exports = function (events, params) {
 };
 NotesPlugin.prototype.eventEnter = function (event) {
   this.events[event.id] = event;
+  if (this.detailedView) {
+    this.detailedView.addEvents(event);
+  }
   this.debounceRefresh();
 };
 
@@ -45,6 +56,9 @@ NotesPlugin.prototype.eventLeave = function (event) {
   if (!this.events[event.id]) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
+    if (this.detailedView) {
+      this.detailedView.deleteEvent(event);
+    }
     delete this.events[event.id];
   }
 };
@@ -54,6 +68,9 @@ NotesPlugin.prototype.eventChange = function (event) {
     console.log('eventChange: event id ' + event.id + ' dont exists');
   }  else {
     this.events[event.id] = event;
+    if (this.detailedView) {
+      this.detailedView.updateEvent(event);
+    }
     this.debounceRefresh();
   }
 };
@@ -62,6 +79,9 @@ NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
   this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
   this.highlightedTime = time;
+  if (this.detailedView) {
+    this.detailedView.highlightDate(this.highlightedTime);
+  }
   this.debounceRefresh();
 };
 
@@ -142,6 +162,15 @@ NotesPlugin.prototype._refreshModelView = function () {
       });
       if (typeof(document) !== 'undefined')  {
         this.eventsDisplayed[i].view = new NotesView({model: this.eventsDisplayed[i].modelView});
+        /* jshint -W083 */
+        this.eventsDisplayed[i].view.on('nodeClicked', function () {
+          if (!this.detailedView) {
+            this.detailedView = new DetailView(this.$modal);
+          }
+          this.detailedView.addEvents(this.events);
+          this.detailedView.show();
+          this.detailedView.highlightDate(this.highlightedTime);
+        }.bind(this));
       }
     }
 

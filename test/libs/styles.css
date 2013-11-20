@@ -378,10 +378,26 @@ text-align: center;*/
   right: 0;
   bottom: 0px;
 }
-#detail-list .highlighted {
-  background-color: #F1C40F;
+#detail-list li.highlighted {
+  background-color: #F1C40F !important;
 }
-.view:hover {
+#detail-list li:hover {
   background-color: #F51584;
+}
+#detail-full li.editing {
+  border-bottom: none;
+  padding: 0;
+}
+
+#detail-full li.editing .edit {
+  display: inline;
+  padding: 0 6px 0 6px;
+}
+
+#detail-full li.editing label {
+  display: none;
+}
+#detail-full li .edit {
+  display: none;
 }
 /** end detail view modal **/

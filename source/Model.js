@@ -6,7 +6,7 @@ var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 var TreeMap = require('./tree/TreeMap.js');
 var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
-var TimeLine = require('timeframe-selector');
+var TimeLine = require('./timeframe-selector/timeframe-selector.js');
 
 module.exports = function () {
   // create connection handler and filter

@@ -1,7 +1,11 @@
+/* global $ */
+
 var _ = require('underscore'),
   NumericalsView = require('./View.js'),
   SuperCondensedView = require('../super-condensed/View.js'),
-  Backbone = require('backbone');
+  Backbone = require('backbone'),
+  ChartView = require('../fusion/ChartView.js'),
+  SeriesModel = require('../fusion/SeriesModel.js');
 var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
@@ -18,6 +22,7 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.datas = {};
   this.streamIds = {};
   this.eventsNode = node;
+  this.sortedData = null;
 
   _.extend(this, params);
   _.each(events, function (event) {
@@ -69,7 +74,10 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
 NumericalsPlugin.prototype.render = function (container) {
   this.container = container;
   if (this.view) {
-    this.view.renderView(this.container);
+    console.log('renderer call from render', 'need to render', this.computeDimensions());
+    this.modelView.set('dimensions', this.computeDimensions());
+    this.modelView.set('container', this.container);
+    this.view.render();
   } else {
     this.needToRender = true;
   }
@@ -95,42 +103,73 @@ NumericalsPlugin.prototype.close = function () {
 NumericalsPlugin.prototype._refreshModelView = function () {
   // this._findEventToDisplay();
 
-  var sortedData = [];
+  var asdf = [];
   _.each(this.datas, function (stream) {
     _.each(stream, function (item) {
-      sortedData.push(_.sortBy(item, function (e) {
+      asdf.push(_.sortBy(item, function (e) {
         return e.time;
       }));
     });
   });
 
-
-  if (!this.modelView || !this.view) {
-    var BasicModel = Backbone.Model.extend({ });
-    this.modelView = new BasicModel({
-      datas: sortedData,
-      width: this.width,
-      height: this.height,
-      eventsNbr: _.size(this.events)
+  this.sortedData = [];
+  for (var i = 0; i < asdf.length; ++i) {
+    var el = asdf[i][0];
+    this.sortedData.push({
+      connectionId: el.stream.connection.id,
+      elements: [],
+      id: el.connection.id + '/' + el.streamId + '/' + el.type,
+      streamId: el.streamId,
+      streamName: el.stream.name,
+      style: 0,
+      tags: el.tags,
+      trashed: false,
+      type: el.type
     });
-    if (typeof(document) !== 'undefined')  {
-      this.view = this.superCondensed ?
-        new SuperCondensedView({model: this.modelView}) :
-        new NumericalsView({model: this.modelView});
+    for (var j = 0; j < asdf[i].length; ++j) {
+      this.sortedData[i].elements.push({content: asdf[i][j].content, time: asdf[i][j].time});
     }
   }
-  this.modelView.set('datas', sortedData);
-  this.modelView.set('width', this.width);
-  this.modelView.set('height', this.height);
-  this.modelView.set('eventsNbr', _.size(this.events));
+
+  //console.log('data after sort', asdf);
+  //console.log('data after mysorted', this.sortedData);
+
+
+  if (!this.modelView || !this.view) {
+    //var BasicModel = Backbone.Model.extend({ });
+    this.modelView = new SeriesModel({
+      events: this.sortedData,
+      dimensions: null,
+      container: null,
+      onClick: true,
+      onHover: false,
+      onDnD: true
+    });
+    if (typeof(document) !== 'undefined')  {
+      this.view =
+        new ChartView({model: this.modelView});
+    }
+  }
+
+  //console.log('the Data', this.sortedData);
+
+  //this.modelView.set('datas', sortedData);
+  //this.modelView.set('dimensions', this.computeDimensions());
+  //this.modelView.set('height', this.height);
+  //this.modelView.set('eventsNbr', _.size(this.events));
 
   this.view.off();
-  this.view.on('graphClicked', function () { this.view.changeGraph(); }.bind(this));
+  this.view.on('chart:clicked', function () { console.log('NumericalsModel has chart clicked'); });
   //this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
-  this.view.on('dragAndDrop', this.onDragAndDrop.bind(this));
+  this.view.on('chart:droppped', this.onDragAndDrop.bind(this));
 
   if (this.needToRender) {
-    this.view.renderView(this.container);
+    console.log('renderer call from refreshmodel', 'need to render', this.computeDimensions());
+
+    this.modelView.set('dimensions', this.computeDimensions());
+    this.modelView.set('container', this.container);
+    this.view.render();
+    //this.view.renderView(this.container);
     this.needToRender = false;
   }
 };
@@ -168,4 +207,21 @@ NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectio
   this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
 };
 
+NumericalsPlugin.prototype.computeDimensions = function () {
+  var chartSizeWidth = null;
+  var chartSizeHeight = null;
 
+  if ($('#' + this.container).length)  {
+    chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+  } else if (this.model.get('width') !== null) {
+    chartSizeWidth = this.model.get('width');
+  }
+
+  if ($('#' + this.container).length)  {
+    chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+  } else if (this.model.get('height') !== null) {
+    chartSizeHeight = this.model.get('height');
+  }
+
+  return {width: chartSizeWidth, height: chartSizeHeight};
+};

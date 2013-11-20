@@ -18,18 +18,27 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
-
   },
 
   onRender: function () {
     var myModel = this.model.get('events');
     if (!myModel) {
+      //console.log('there s no model');
       return;
     }
 
     if (!this.model.get('dimensions')) {
+      //console.log('there re no dimensions');
       return;
     }
+
+    if (!this.model.get('container')) {
+      //console.log('there s no container');
+      return;
+    }
+
+    this.container = '#' + this.model.get('container');
+    console.log(this.container, 'model', this.model);
 
     this.options = {};
     this.data = [];
@@ -130,14 +139,15 @@ module.exports = Marionette.ItemView.extend({
   },
 
   setUpContainer: function () {
+    console.log('the container', $(this.container));
     // Setting up the chart container
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
     $(this.chartContainer).css({
       top: 0,
       left: 0,
-      width: this.model.get('dimensions').width,
-      height: this.model.get('dimensions').height
+      width: this.model.get('dimensions').width + 'px',
+      height: this.model.get('dimensions').height + 'px'
     });
   },
 
@@ -170,6 +180,7 @@ module.exports = Marionette.ItemView.extend({
 
   onHover: function (event, pos, item) {
     console.log('onHover', event, pos, item);
+    this.trigger('chart:hover', this.model);
   /*
       if (item) {
         var id = this.container + '-tooltip' + item.seriesIndex + '-' + item.dataIndex;

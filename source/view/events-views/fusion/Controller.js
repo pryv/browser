@@ -17,6 +17,8 @@ var Controller = module.exports = function ($modal, events) {
   this.finalView = null;
   this.$modal = $modal;
 
+
+
   // Create the two div for the single and final view
   $('#modal-left-content')
     .html('<div id="modal-left-content-single"></div><div id="modal-left-content-final"></div>');
@@ -59,7 +61,7 @@ var Controller = module.exports = function ($modal, events) {
 
   this.addEvents(formatted);
 
-  $(window).resize(this.resizeModal);
+  $(window).resize(this.resizeModal.bind(this));
 };
 
 _.extend(Controller.prototype, {
@@ -68,9 +70,21 @@ _.extend(Controller.prototype, {
     this.$modal.modal();
     if (!this.listView) {
       this.singleView = new ChartView({model:
-        new Model({container: '#modal-left-content-single'})});
+        new Model({
+          container: '#modal-left-content-single',
+          onClick: true,
+          onHover: false,
+          onDnD: false
+        })});
       this.finalView = new ChartView({model:
-        new Model({container: '#modal-left-content-final'})});
+        new Model({
+          container: '#modal-left-content-final',
+          onClick: false,
+          onHover: false,
+          onDnD: false
+        })});
+      this.singleView.model.set('dimensions', null);
+      this.finalView.model.set('dimensions', null);
       this.listView = new ListView({
         collection: this.collection
       });
@@ -104,7 +118,7 @@ _.extend(Controller.prototype, {
     this.listView.render();
     this.singleView.render();
     this.finalView.render();
-    this.resizeModal();
+    this.resizeModal();//.bind(this);
     $(this.$modal).keydown(function (e) {
       var LEFT_KEY = 37;
       var UP_KEY = 38;
@@ -265,39 +279,41 @@ _.extend(Controller.prototype, {
   },
 
   resizeModal: _.debounce(function () {
+
     $('.modal-panel-left').css({
       width: $('.modal-body').width() - $('.modal-panel-right').width(),
       height: $('.modal-body').height()
     });
 
     $('#modal-left-content').css({
-      width: '98%',
-      height: $('.modal-panel-left').height(),
-      'margin-left': '1%',
-      'margin-right': '1%'
+      width: '100%',
+      height: $('.modal-panel-left').height()
     });
 
+    var chartSizeWidth = $('.modal-panel-left').width() - 20;
+    var chartSizeHeight = ($('.modal-panel-left').height() - 30) / 2;
+
     $('#modal-left-content-single').css({
-      width: $('.modal-panel-content').width(),
-      height: '48%',
-      'margin-top': '2%',
+      width: chartSizeWidth,
+      height: chartSizeHeight,
+      'margin-top': '10px',
+      'margin-left': '10px',
       'background-color': 'Khaki'
     });
 
     $('#modal-left-content-final').css({
-      width: $('.modal-panel-content').width(),
-      height: '48%',
-      'margin-top': '2%',
+      width: chartSizeWidth,
+      height: chartSizeHeight,
+      'margin-top': '10px',
+      'margin-left': '10px',
       'background-color': 'LightSeaGreen'
     });
 
     if (this.finalView) {
-      this.finalView.resize();
+      this.finalView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
     }
     if (this.singleView) {
-      this.singleView.resize();
+      this.singleView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
     }
-
-
-  }.bind(this), 1000)
+  }, 500)
 });

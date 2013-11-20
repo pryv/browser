@@ -7,7 +7,13 @@ module.exports = Backbone.Model.extend({
     container: null,
     allowPieChart: false,
     view: null,
-    highlighted: false
+    highlighted: false,
+    dimensions: null,
+
+    /* Events control */
+    onClick: null,
+    onHover: null,
+    onDnD: null
   },
 
 

@@ -124,6 +124,8 @@ module.exports = Backbone.View.extend({
   developmentMode: false,
   frameFrom: null,
   frameTo: null,
+  limitFrom: 0,
+  limitTo: Infinity,
   arrowPressLongspeed: 3,
   arrowPressDuration: 1500,
   proportionTimeFrame: 0.6666,
@@ -216,6 +218,21 @@ module.exports = Backbone.View.extend({
     });
 
   },
+  setLimit: function (from, to) {
+    this.limitFrom = !from ? 0 :
+      from > this.limitFrom && this.limitFrom !== 0 ? this.limitFrom : from;
+    this.limitTo = !to ? Infinity :
+      to < this.limitTo && this.limitTo !== Infinity ? this.limitTo : to;
+  },
+  _checkLimitDates: function (dateFrom, dateTo) {
+    console.log('From:', this.limitFrom, dateFrom, 'To:', this.limitTo, dateTo);
+    dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
+    dateFrom = dateFrom >= this.limitTo ? this.frameFrom : dateFrom;
+    dateTo = dateTo > this.limitTo ? this.limitTo : dateTo;
+    dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo;
+    console.log('After', dateFrom, dateTo);
+    return {from: dateFrom, to: dateTo};
+  },
   setTimelineDates: function (changes) {
     this.frameFrom = changes.from.getTime();
     this.frameTo = changes.to.getTime();
@@ -231,9 +248,9 @@ module.exports = Backbone.View.extend({
     this.fillTimeline();
   },
   triggerFilter: function (dateFrom, dateTo, windowResized) {
-    var self = {};
-    self.frameFrom = dateFrom;
-    self.frameTo = dateTo;
+    var dates = this._checkLimitDates(dateFrom, dateTo);
+    dateFrom = dates.from;
+    dateTo = dates.to;
     if (this.developmentMode || windowResized) {
       var devDateFrom = new Date(dateFrom);
       var devDateTo = new Date(dateTo);
@@ -814,9 +831,12 @@ module.exports = Backbone.View.extend({
           var gap = gapSpeed * (self.frameTo - self.frameFrom);
           var dateFrom = isPrevArrow ? self.frameFrom - gap : self.frameFrom + gap;
           var dateTo = isPrevArrow ? self.frameTo - gap : self.frameTo + gap;
+          var dates = self._checkLimitDates(dateFrom, dateTo);
+          dateTo = dates.to;
+          dateFrom = dates.from;
           self.timeframeChanged = true;
           self.triggerFilter(dateFrom, dateTo);
-          var dates = {'from': new Date(dateFrom), 'to': new Date(dateTo)};
+          dates = {'from': new Date(dateFrom), 'to': new Date(dateTo)};
           self.setTimelineDates(dates, self.graduation);
           self.setMarkers();
           var initialLeftPosition = self.$timeline.data('initialLeftPosition');

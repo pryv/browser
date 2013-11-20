@@ -29,6 +29,7 @@ var TreeMap = module.exports = function (model) {
       true);
     this.root._refreshViewModel(true);
     this.root.renderView(true);
+    this.model.updateTimeFrameLimits();
     var end = new Date().getTime();
     var time = end - start;
     console.log('refreshTree execution:', time);

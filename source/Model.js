@@ -8,7 +8,7 @@ var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
 var TimeLine = require('./timeframe-selector/timeframe-selector.js');
 
-module.exports = function () {
+var Model = module.exports = function () {
   // create connection handler and filter
   this.onFiltersChanged = function () {
     console.log('onFiltersChanged', arguments);
@@ -17,7 +17,6 @@ module.exports = function () {
 
 
   this.onDateHighlighted = _.throttle(function () {
-    console.log('onDateHighlighted', arguments);
     if (this.treemap) {
       this.treemap.onDateHighLighted(arguments[0].getTime() / 1000);
     }
@@ -49,7 +48,7 @@ module.exports = function () {
   var batch = this.activeFilter.startBatch('adding connections');
 
   batch.addOnDoneListener('connloading', function () {
-    resetTimeFrameFromDisplayedEvents(this); // once all events are loaded display TF;
+
   }.bind(this));
 
   // tell the filter we want to show this connection
@@ -66,25 +65,25 @@ module.exports = function () {
   this.activeFilter.addConnection(liveatId, batch);
 
   /**
-  // create streams and add them to filter
-  //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
-    **/
+   // create streams and add them to filter
+   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
+   **/
 
- /* var perki1Serial =
-    this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM',  {staging: true}));
-  var perki2Serial =
-    this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9',  {staging: true}));
+  /* var perki1Serial =
+   this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM',  {staging: true}));
+   var perki2Serial =
+   this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9',  {staging: true}));
 
-  // activate them in batch in the filter
+   // activate them in batch in the filter
 
-  //this.activeFilter.addConnection(perki1Serial, batch);
-  this.activeFilter.addConnection(perki2Serial, batch);
-  **/
+   //this.activeFilter.addConnection(perki1Serial, batch);
+   this.activeFilter.addConnection(perki2Serial, batch);
+   **/
 
 
   batch.done();
 
-  setTimeout(function () { 
+  setTimeout(function () {
     //this.activeFilter.focusOnConnections(liveat);
   }.bind(this), 10000);
 
@@ -94,16 +93,17 @@ module.exports = function () {
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.
  */
-function resetTimeFrameFromDisplayedEvents(model) {
-  var stats = model.activeFilter.stats();
-  model.timeView.onFiltersChanged({
-    from:     new Date(stats.timeFrameLT[0]),
-    to:       new Date(stats.timeFrameLT[1])
-  });
-}
+Model.prototype.updateTimeFrameLimits = function () {
+  (_.debounce(function () {
+    var stats = this.activeFilter.stats(),
+      currentLimit = {from: this.timeView.limitFrom, to: this.timeView.limitTo};
+    console.log('updateLimits', stats, currentLimit);
+    this.timeView.setLimit(stats.timeFrameLT[0], stats.timeFrameLT[1]);
+  }.bind(this), 100))();
+};
 
 
-var initTimeAndFilter = function (timeView, filter) {
+function initTimeAndFilter(timeView, filter) {
   var spanTime = 86400000,
     fromTime = new Date(),
     start = new Date(fromTime.getFullYear(), fromTime.getMonth(), fromTime.getDate());
@@ -119,5 +119,5 @@ var initTimeAndFilter = function (timeView, filter) {
     from:     fromTime,
     to:       toTime
   });
-};
+}
 

@@ -31,7 +31,18 @@ module.exports = Marionette.ItemView.extend({
         minBorderMargin: 5
       },
       xaxes: [ { show: false } ],
-      yaxes: []
+      yaxes: [],
+      legend: {
+        show: false,
+        //labelFormatter: null or (fn: string, series object -> string)
+        //labelBoxBorderColor: color
+        //noColumns: number
+        //position: "ne" or "nw" or "se" or "sw"
+        //margin: number of pixels or [x margin, y margin]
+        //backgroundColor: null or color
+        backgroundOpacity: 0.3
+        //container: null or jQuery object/DOM element/jQuery expression
+      }
     };
     this.series = [];
     this.typeChanger = 0;
@@ -130,6 +141,10 @@ module.exports = Marionette.ItemView.extend({
       }
     }
 
+    // Decide if we have to show the legend or not.
+    this.options.legend.show = (this.model.get('width') >= 80 &&
+      this.model.get('height') >= (19 * this.series.length) + 15);
+
     // Builds the plot
     this.plot = $.plot($('#' + this.plotContainer), plotData, this.options);
 
@@ -157,10 +172,10 @@ module.exports = Marionette.ItemView.extend({
       }
     }.bind(this));
 
-    $('#' + this.container).bind('plotclick', this.changeGraph.bind(this));
+    $('#' + this.container).bind('plotclick', this.onClick.bind(this));
 
     // Highlighting current date.
-    this.onDateHighLighted(this.date);
+    //this.onDateHighLighted(this.date);
   },
 
   computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
@@ -304,6 +319,10 @@ module.exports = Marionette.ItemView.extend({
     var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
     var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
     this.trigger('dragAndDrop', droppedNodeID, droppedStreamID, droppedConnectionID);
+  },
+
+  onClick: function () {
+    this.trigger('chart:clicked', this.model);
   },
 
 

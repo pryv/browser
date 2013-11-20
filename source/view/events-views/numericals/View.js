@@ -70,8 +70,6 @@ module.exports = Marionette.ItemView.extend({
     }
 
     if (this.container) {
-      $('#' + this.container).empty();
-      $('#' + this.container).unbind();
       this.renderView(this.container);
     }
   },
@@ -80,13 +78,17 @@ module.exports = Marionette.ItemView.extend({
     this.container = container;
     this.animation = 'bounceIn';
     this.plotContainer = this.container + '-graph';
+
     var plotContainerDiv = '<div id="' + this.plotContainer +
       '" class="graphContainer" draggable="true"></div>';
+
     this.computeSize();
     $('#' + this.container).unbind();
     if ($('#' + this.plotContainer).length === 0) {
+      $('#' + this.container).empty();
       $('#' + this.container).html(plotContainerDiv);
     } else {
+      $('#' + this.plotContainer).unbind();
       $('#' + this.plotContainer).empty();
     }
 
@@ -239,16 +241,12 @@ module.exports = Marionette.ItemView.extend({
   resize: function () {
     if (this.container) {
       $('#' + this.container + ' .tooltip').remove();
-      this.computeSize();
       this.renderView(this.container);
     }
   },
 
   changeGraph: function () {
     if (this.container) {
-      $('#' + this.container).empty('');
-      $('#' + this.container).unbind();
-
       var mod = this.series.length === 1 ? 3 : 2;
       for (var i = 0; i < this.series.length; ++i) {
         this.series[i].type++;
@@ -258,10 +256,8 @@ module.exports = Marionette.ItemView.extend({
           this.series[i].type = 0;
         }
       }
-
       this.renderView(this.container);
     }
-
   },
 
 
@@ -271,7 +267,12 @@ module.exports = Marionette.ItemView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    e.originalEvent.dataTransfer.setData('node_id', this.container);
+    e.originalEvent.dataTransfer.setData('nodeId', this.container);
+    e.originalEvent.dataTransfer.setData('streamId', $('#' + this.container).attr('data-streamid'));
+    e.originalEvent.dataTransfer.setData('connectionId',
+      $('#' + this.container).attr('data-connectionid'));
+
+    //$('#' + this.container).addClass('animated shake');
     $('.graphContainer').addClass('animated shake');
   },
 
@@ -290,6 +291,7 @@ module.exports = Marionette.ItemView.extend({
 
   /* Called when this object is stops being dragged */
   onDragEnd: function () {
+    //$('#' + this.container).removeClass('animated shake');
     $('.graphContainer').removeClass('animated shake');
   },
 
@@ -298,15 +300,16 @@ module.exports = Marionette.ItemView.extend({
     e.stopPropagation();
     e.preventDefault();
 
-    var droppedID = e.originalEvent.dataTransfer.getData('node_id');
-    console.log(this.container, 'received', droppedID);
+    var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
+    var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
+    var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
+    this.trigger('dragAndDrop', droppedNodeID, droppedStreamID, droppedConnectionID);
   },
 
 
-
   close: function () {
-    //console.log(this.container, 'close');
-    $('#' + this.container).empty('');
+    $('#' + this.plotContainer).unbind();
     $('#' + this.container).unbind();
+    $('#' + this.container).empty('');
   }
 });

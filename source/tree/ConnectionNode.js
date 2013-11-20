@@ -10,7 +10,7 @@ var SERIAL = 0;
  */
 var ConnectionNode = module.exports = TreeNode.implement(
   function (parentnode, connection) {
-    TreeNode.call(this, parentnode);
+    TreeNode.call(this, parentnode.treeMap, parentnode);
     this.connection = connection;
     this.streamNodes = {};
     this.uniqueId = 'node_connection_' + SERIAL;

@@ -3,10 +3,12 @@
 var RootNode = require('./RootNode.js');
 var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
 var _ = require('underscore');
+var FusionDialog = require('../view/events-views/fusion/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
-  this.root = new RootNode($('#tree').width() -
+  this.dialog = null;
+  this.root = new RootNode(this, $('#tree').width() -
     parseInt($('#tree').css('margin-left').split('px')[0], null) -
     parseInt($('#tree').css('margin-right').split('px')[0], null),
     $('#tree').height() -
@@ -104,6 +106,7 @@ TreeMap.prototype.onDateHighLighted = function (time) {
     this.root.onDateHighLighted(time);
   }
 };
+
 TreeMap.prototype.destroy = function () {
   this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
     this.eventEnterScope);
@@ -111,5 +114,91 @@ TreeMap.prototype.destroy = function () {
     this.eventLeaveScope);
   this.model.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
+};
+
+
+ /** The treemap's utility functions **/
+
+ /**
+  * Search for the node matching the arguments and returns it.
+  * @param nodeId the unique id in the DOM of the node
+  * @param streamId  the unique id of the stream associated with the node
+  * @param connectionId the unique id of the connection associated with the node
+  * @returns {find|*} returns the uniquely identifiable by the passed arguments
+  */
+TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
+  var node = this.root;
+  node = node.connectionNodes[connectionId];
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by connection' +
+      connectionId);
+  }
+  node = node.streamNodes[streamId];
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by stream' +
+      connectionId + streamId);
+  }
+  var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
+
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by nodeId' +
+      connectionId + ' ' + streamId + ' ' + nodeId);
+  }
+  return that;
+};
+
+
+ /**
+  * Sets up all the controlling to aggregate two nodes.
+  * @param node1 the first node
+  * @param node2 the second node
+  */
+TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
+  var events = { };
+  var attrname = null;
+  for (attrname in node1.events) {
+    if (node1.events.hasOwnProperty(attrname)) {
+      events[attrname] = node1.events[attrname];
+    }
+  }
+  for (attrname in node2.events) {
+    if (node2.events.hasOwnProperty(attrname)) {
+      events[attrname] = node2.events[attrname];
+    }
+  }
+  this.dialog = new FusionDialog($('#detailViewModal').on('hidden.bs.modal', function () {
+    if (this.dialog) {
+      this.dialog.close();
+      this.dialog = null;
+    }
+  }.bind(this)), events);
+  this.dialog.show();
+};
+
+
+
+/* jshint -W098 */
+
+ /**
+  * Creates a virtual node from a certain number of events.
+  * @param events is an array of events you want to fuse, aka show in the same node.
+  */
+TreeMap.prototype.createVirtualNode = function (events) {
+  /* TODO:
+   * create the node, don't remove the already existing
+   * make sure the update follows at both places
+   */
+
+};
+
+
+ /**
+  * Remove a existing virtual node.
+  * @param node the virtual node you want to remove
+  */
+TreeMap.prototype.removeVirtualNode = function (node) {
+  /* TODO:
+   * just remove the indicated node
+   */
 };
 

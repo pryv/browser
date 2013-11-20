@@ -77,23 +77,24 @@ _.extend(Controller.prototype, {
 
       this.listView.on('itemview:chart:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
-        console.log('itemview:chart:clicked', evt.model);
+        //console.log('itemview:chart:clicked', evt.model);
         this.updateSingleView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:select', function (evt) {
-        console.log('itemview:chart:select', evt);
+        //console.log('itemview:chart:select', evt);
         this.addSeriesToFinalView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:unselect', function (evt) {
-        console.log('itemview:chart:unselect', evt);
+        //console.log('itemview:chart:unselect', evt);
         this.removeSeriesFromFinalView(evt.model);
       }.bind(this));
 
       this.singleView.on('chart:clicked', function (evt) {
-        console.log('chart:clicked', evt);
-        this.updateSeriesOnFinalView(evt);
+        //console.log('chart:clicked - evt', evt);
+        var model = this.changeStyleOnSingleView(evt);
+        this.updateSeriesOnFinalView(model);
       }.bind(this));
     }
 
@@ -154,7 +155,7 @@ _.extend(Controller.prototype, {
 
   /* jshint -W098 */
   deleteEvent: function (event) {
-    console.log('TODO: deleteEvent');
+    //console.log('TODO: deleteEvent');
     /*
     delete this.events[event.id];
     var toDelete = this.getEventById(event);
@@ -164,7 +165,7 @@ _.extend(Controller.prototype, {
     */
   },
   updateEvent: function (event) {
-    console.log('TODO: updateEvent');
+    //console.log('TODO: updateEvent');
     /*
     this.events[event.id] = event;
     var toUpdate = this.getEventById(event);
@@ -175,7 +176,7 @@ _.extend(Controller.prototype, {
     */
   },
   highlightDate: function (time) {
-    console.log('TODO: highlight date');
+    //console.log('TODO: highlight date');
     /*
     this.highlightedDate = time;
     var model = this.collection.highlightEvent(time);
@@ -247,6 +248,19 @@ _.extend(Controller.prototype, {
       }
       this.finalView.model.set('events', events);
       this.finalView.render();
+    }
+  },
+
+  changeStyleOnSingleView: function (model) {
+    if (model) {
+      var event = model.get('events');
+      var style = event[0].style;
+      style++;
+      style %= 2;
+      event[0].style = style;
+      this.singleView.model.set('events', event);
+      this.singleView.render();
+      return this.singleView.model;
     }
   },
 

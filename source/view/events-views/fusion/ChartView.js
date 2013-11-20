@@ -84,6 +84,12 @@ module.exports = Marionette.ItemView.extend({
       }
     }
     this.plot = $.plot($(this.chartContainer), plotData, options);
+    $(this.container).unbind();
+    $(this.container).bind('plotclick', this.onClick.bind(this));
+  },
+
+  onClick: function () {
+    this.trigger('chart:clicked', this.model);
   },
 
   resize: function () {

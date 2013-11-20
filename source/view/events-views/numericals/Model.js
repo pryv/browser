@@ -1,9 +1,6 @@
 /* global $ */
 
 var _ = require('underscore'),
-  NumericalsView = require('./View.js'),
-  SuperCondensedView = require('../super-condensed/View.js'),
-  Backbone = require('backbone'),
   ChartView = require('../fusion/ChartView.js'),
   SeriesModel = require('../fusion/SeriesModel.js');
 var NumericalsPlugin = module.exports = function (events, params, node) {
@@ -74,10 +71,7 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
 NumericalsPlugin.prototype.render = function (container) {
   this.container = container;
   if (this.view) {
-    console.log('renderer call from render', 'need to render', this.computeDimensions());
-    this.modelView.set('dimensions', this.computeDimensions());
-    this.modelView.set('container', this.container);
-    this.view.render();
+    this.resize();
   } else {
     this.needToRender = true;
   }
@@ -131,10 +125,6 @@ NumericalsPlugin.prototype._refreshModelView = function () {
     }
   }
 
-  //console.log('data after sort', asdf);
-  //console.log('data after mysorted', this.sortedData);
-
-
   if (!this.modelView || !this.view) {
     //var BasicModel = Backbone.Model.extend({ });
     this.modelView = new SeriesModel({
@@ -151,25 +141,15 @@ NumericalsPlugin.prototype._refreshModelView = function () {
     }
   }
 
-  //console.log('the Data', this.sortedData);
-
-  //this.modelView.set('datas', sortedData);
-  //this.modelView.set('dimensions', this.computeDimensions());
-  //this.modelView.set('height', this.height);
-  //this.modelView.set('eventsNbr', _.size(this.events));
 
   this.view.off();
-  this.view.on('chart:clicked', function () { console.log('NumericalsModel has chart clicked'); });
-  //this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
-  this.view.on('chart:droppped', this.onDragAndDrop.bind(this));
+  this.view.on('chart:clicked', function () { return; });
+  this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
+  this.view.on('chart:resize', this.resize.bind(this));
+
 
   if (this.needToRender) {
-    console.log('renderer call from refreshmodel', 'need to render', this.computeDimensions());
-
-    this.modelView.set('dimensions', this.computeDimensions());
-    this.modelView.set('container', this.container);
-    this.view.render();
-    //this.view.renderView(this.container);
+    this.resize();
     this.needToRender = false;
   }
 };
@@ -224,4 +204,10 @@ NumericalsPlugin.prototype.computeDimensions = function () {
   }
 
   return {width: chartSizeWidth, height: chartSizeHeight};
+};
+
+NumericalsPlugin.prototype.resize = function () {
+  this.modelView.set('dimensions', this.computeDimensions());
+  this.modelView.set('container', '#' + this.container);
+  this.view.render();
 };

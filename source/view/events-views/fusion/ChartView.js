@@ -21,24 +21,14 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
+    if (
+      !this.model.get('events') ||
+      !this.model.get('dimensions') ||
+      !this.model.get('container')) {
+      return;
+    }
     var myModel = this.model.get('events');
-    if (!myModel) {
-      //console.log('there s no model');
-      return;
-    }
-
-    if (!this.model.get('dimensions')) {
-      //console.log('there re no dimensions');
-      return;
-    }
-
-    if (!this.model.get('container')) {
-      //console.log('there s no container');
-      return;
-    }
-
-    this.container = '#' + this.model.get('container');
-    console.log(this.container, 'model', this.model);
+    this.container = this.model.get('container');
 
     this.options = {};
     this.data = [];
@@ -65,6 +55,10 @@ module.exports = Marionette.ItemView.extend({
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
     this.createEventBindings();
+  },
+
+  onClose: function () {
+    $(this.container).html('');
   },
 
 
@@ -139,7 +133,6 @@ module.exports = Marionette.ItemView.extend({
   },
 
   setUpContainer: function () {
-    console.log('the container', $(this.container));
     // Setting up the chart container
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
@@ -154,6 +147,10 @@ module.exports = Marionette.ItemView.extend({
   createEventBindings: function () {
     $(this.container).unbind();
 
+    $(this.container).resize(function () {
+      this.trigger('chart:resize', this.model);
+    });
+
     if (this.model.get('onClick')) {
       $(this.container).bind('plotclick', this.onClick.bind(this));
     }
@@ -161,6 +158,7 @@ module.exports = Marionette.ItemView.extend({
       $(this.container).bind('plothover', this.onHover.bind(this));
     }
     if (this.model.get('onDnD')) {
+      $(this.container).attr('draggable', true);
       $(this.container).bind('dragstart', this.onDragStart.bind(this));
       $(this.container).bind('dragenter', this.onDragEnter.bind(this));
       $(this.container).bind('dragover', this.onDragOver.bind(this));
@@ -179,9 +177,11 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onHover: function (event, pos, item) {
-    console.log('onHover', event, pos, item);
-    this.trigger('chart:hover', this.model);
-  /*
+    if (item) {
+      this.trigger('chart:hover', this.model);
+    }
+
+    /*
       if (item) {
         var id = this.container + '-tooltip' + item.seriesIndex + '-' + item.dataIndex;
         if (!$('#' + id).length) {
@@ -207,10 +207,10 @@ module.exports = Marionette.ItemView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    e.originalEvent.dataTransfer.setData('nodeId', this.container);
-    e.originalEvent.dataTransfer.setData('streamId', $('#' + this.container).attr('data-streamid'));
+    e.originalEvent.dataTransfer.setData('nodeId', this.container.substr(1));
+    e.originalEvent.dataTransfer.setData('streamId', $(this.container).attr('data-streamid'));
     e.originalEvent.dataTransfer.setData('connectionId',
-      $('#' + this.container).attr('data-connectionid'));
+      $(this.container).attr('data-connectionid'));
 
     //$('#' + this.container).addClass('animated shake');
     $('.graphContainer').addClass('animated shake');
@@ -243,8 +243,11 @@ module.exports = Marionette.ItemView.extend({
     var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
     var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
     var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
+
     this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
   }
+
+
 
 
 

@@ -138,7 +138,10 @@ _.extend(Controller.prototype, {
     this.collection.reset();
     this.collection = null;
     this.events = {};
+    this.singleView = null;
+    this.finalView = null;
     $(this.$modal).unbind('keydown');
+    $('#modal-left-content').empty();
     $('#detail-div').empty();
   },
   getEventById: function (event) {

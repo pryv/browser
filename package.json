@@ -11,7 +11,6 @@
   "dependencies": {
     "underscore": "~1.5.2" ,
     "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#master",
-    "timeframe-selector": "git+ssh://git@github.com:pryv/browser-timeline.git#browser-treemap-poc",
     "backbone.marionette": "~1.1.0" ,
     "backbone": "~1.0.0",
     "d3": "~3.3.8",

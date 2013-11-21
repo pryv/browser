@@ -24,6 +24,7 @@ module.exports = Marionette.ItemView.extend({
       !this.model.get('container')) {
       return;
     }
+
     var myModel = this.model.get('events');
     this.container = this.model.get('container');
 

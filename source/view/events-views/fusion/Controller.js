@@ -6,59 +6,27 @@ var _ = require('underscore'),
   ChartView = require('./../numericals/ChartView.js');
 
 var Controller = module.exports = function ($modal, events) {
-  this.events = {};
+  this.events = events;
   this.eventsToAdd = [];
-  this.collection = null;
+  this.collection = new Collection();
   this.highlightedDate = null;
   this.listView = null;
   this.singleView = null;
   this.finalView = null;
   this.$modal = $modal;
 
-
-
   // Create the two div for the single and final view
   $('#modal-left-content')
     .html('<div id="modal-left-content-single"></div><div id="modal-left-content-final"></div>');
 
-
-  this.debounceAdd = _.debounce(function () {
-    this.collection.add(this.eventsToAdd, {sort: false});
-    this.collection.sort();
-    this.eventsToAdd = [];
-    if (this.highlightedDate) {
-      this.highlightDate(this.highlightedDate);
-    }
-  }.bind(this), 100);
-
+  this.debounceAdd = _.debounce(this.addEventsLater.bind(this), 100);
 
   this.testf = _.debounce(function () {
     var elem = this.collection.at(0);
     this.updateSingleView(elem);
   }.bind(this), 2000);
 
-
-  var formatted = _.reduce(events, function (output, el) {
-    var graphName = el.connection.id + '/' + el.streamId + '/' + el.type;
-    if (! output[graphName]) {
-      output[graphName] = {
-        id: graphName,
-        streamId: el.streamId,
-        streamName: el.stream.name,
-        connectionId: el.connection.id,
-        type: el.type,
-        elements: [],
-        trashed: false,
-        tags: el.tags,
-        style: 0
-      };
-    }
-    output[graphName].elements.push({content: el.content, time: el.time});
-    return output;
-  }, {});
-
-  this.addEvents(formatted);
-  formatted = null;
+  this.debounceAdd();
 
   $(window).resize(this.resizeModal.bind(this));
 };
@@ -94,12 +62,13 @@ _.extend(Controller.prototype, {
           onHover: false,
           onDnD: false
         })});
-      this.singleView.model.set('dimensions', null);
-      this.finalView.model.set('dimensions', null);
       this.listView = new ListView({
         collection: this.collection
       });
 
+      /**
+       * Listeners
+       */
       this.listView.on('itemview:chart:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
         //console.log('itemview:chart:clicked', evt.model);
@@ -123,13 +92,12 @@ _.extend(Controller.prototype, {
       }.bind(this));
     }
 
-
     this.testf();
-
     this.listView.render();
     this.singleView.render();
     this.finalView.render();
-    this.resizeModal();//.bind(this);
+    this.resizeModal();
+
     $(this.$modal).keydown(function (e) {
       var LEFT_KEY = 37;
       var UP_KEY = 38;
@@ -147,7 +115,6 @@ _.extend(Controller.prototype, {
   },
 
   close: function () {
-    console.log('Controller, close called');
     this.singleView.close();
     this.finalView.close();
     delete this.finalView.model;
@@ -170,9 +137,11 @@ _.extend(Controller.prototype, {
     this.finalView = null;
     this.$modal = null;
   },
+
   getEventById: function (event) {
     return this.collection.getEventById(event.id);
   },
+
   addEvents: function (event) {
     if (!event) {
       return;
@@ -184,53 +153,87 @@ _.extend(Controller.prototype, {
     if (!this.collection) {
       this.collection = new Collection();
     }
-    _.each(event, function (e) {
-      var m = new Model({
-        selected: false
-      });
-      var table = [e];
-      m.set('events', table);
-      this.events[e.id] = e;
-      this.eventsToAdd.push(m);
-    }, this);
+
+    for (var i = 0; i < event.length; ++i) {
+      if (event[i]) {
+        this.events[event[i].id] = event[i];
+      }
+    }
     this.debounceAdd();
+  },
+
+  addEventsLater: function () {
+    if (this.events.length === 0) {
+      return;
+    }
+
+    var event = [];
+
+    for (var attr in this.events) {
+      if (this.events.hasOwnProperty(attr)) {
+        event.push(this.events[attr]);
+      }
+    }
+
+    var mapped = _.map(event, function (e) {
+      return {
+        id: e.connection.id + '/' + e.streamId + '/' + e.type,
+        streamId: e.streamId,
+        streamName: e.stream.name,
+        connectionId: e.connection.id,
+        type: e.type,
+        elements: {content: e.content, time: e.time},
+        trashed: false,
+        tags: e.tags,
+        style: 0
+      };
+    });
+
+    var grouped = _.groupBy(mapped, 'id');
+
+    var resulting = [];
+    _.each(grouped, function (m) {
+      var copy = m[0];
+      var reduced = _.reduce(m, function (memo, el) { return memo.concat(el.elements); }, [ ]);
+      copy.elements = reduced;
+      resulting.push(copy);
+    });
+
+    this.collection.reset();
+    this.collection.add(resulting, {sort: false});
+    this.collection.sort();
   },
 
   /* jshint -W098 */
   deleteEvent: function (event) {
     //console.log('TODO: deleteEvent');
-    /*
-    delete this.events[event.id];
-    var toDelete = this.getEventById(event);
-    if (toDelete) {
-      toDelete.destroy();
+    if (!event) {
+      return;
     }
-    */
+    delete this.events[event.id];
+    this.debounceAdd();
   },
   updateEvent: function (event) {
     //console.log('TODO: updateEvent');
-    /*
-    this.events[event.id] = event;
-    var toUpdate = this.getEventById(event);
-    if (toUpdate) {
-      toUpdate.set('event', event);
-      this.collection.sort();
-    }
-    */
   },
   highlightDate: function (time) {
     //console.log('TODO: highlight date');
-    /*
-    this.highlightedDate = time;
-    var model = this.collection.highlightEvent(time);
-    this.updateSingleView(model);
-    */
   },
 
 
   updateSingleView: function (model) {
     if (model) {
-      this.singleView.model.set('events', model.get('events'));
+      this.singleView.model.set('events', [{
+        id: model.get('id'),
+        streamId: model.get('streamId'),
+        streamName: model.get('streamName'),
+        connectionId: model.get('connectionId'),
+        type: model.get('type'),
+        elements: model.get('elements'),
+        trashed: model.get('v'),
+        tags: model.get('tags'),
+        style: model.get('style')
+      }]);
     }
   },
 
@@ -242,9 +245,19 @@ _.extend(Controller.prototype, {
     // events of the finalView model is an array
     // of the real events (containing the points)
     if (model) {
-      var eventToAdd = model.get('events')[0];
+      //var eventToAdd = model.get('events')[0];
       var eventsFinalView = this.finalView.model.get('events'); // should be an array
-      eventsFinalView.push(eventToAdd);
+      eventsFinalView.push({
+        id: model.get('id'),
+        streamId: model.get('streamId'),
+        streamName: model.get('streamName'),
+        connectionId: model.get('connectionId'),
+        type: model.get('type'),
+        elements: model.get('elements'),
+        trashed: model.get('v'),
+        tags: model.get('tags'),
+        style: model.get('style')
+      });
       this.finalView.model.set('events', eventsFinalView);
       this.finalView.render();
     }
@@ -256,12 +269,12 @@ _.extend(Controller.prototype, {
    */
   removeSeriesFromFinalView: function (model) {
     if (model) {
-      var eventToRemove = model.get('events')[0];
+      var eventToRemove = model.get('id');
       var eventsFinalView = this.finalView.model.get('events');
       var events = [];
       if (eventsFinalView) {
         for (var i = 0; i < eventsFinalView.length; ++i) {
-          if (eventsFinalView[i].id !== eventToRemove.id) {
+          if (eventsFinalView[i].id !== eventToRemove) {
             events.push(eventsFinalView[i]);
           }
         }

@@ -7,6 +7,8 @@ module.exports = Marionette.ItemView.extend({
   container: null,
   options: null,
   data: null,
+  plot: null,
+  chartContainer: null,
 
 
   initialize: function () {
@@ -48,8 +50,8 @@ module.exports = Marionette.ItemView.extend({
 
 
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
-
     this.createEventBindings();
+    myModel = null;
   },
 
   resize: function () {
@@ -86,6 +88,7 @@ module.exports = Marionette.ItemView.extend({
       backgroundOpacity: 0.3
       //container: null or jQuery object/DOM element/jQuery expression
     };
+    seriesCounts = null;
   },
 
   /**
@@ -134,20 +137,20 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onClose: function () {
+    $(this.chartContainer).empty();
     $(this.container).unbind();
+    $(this.container).empty();
     this.container = null;
+    this.chartContainer = null;
     this.options = null;
     this.data = null;
     this.plot = null;
-    $(this.chartContainer).empty();
-    $(this.container).empty();
   },
 
   createEventBindings: function () {
     $(this.container).unbind();
 
     $(this.container).bind('resize', function () {
-      console.log(this.container, 'ChartView jquery resize!');
       this.trigger('chart:resize', this.model);
     });
 

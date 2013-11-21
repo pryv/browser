@@ -60,6 +60,7 @@ var Controller = module.exports = function ($modal, events) {
   }, {});
 
   this.addEvents(formatted);
+  formatted = null;
 
   $(window).resize(this.resizeModal.bind(this));
 };
@@ -72,6 +73,12 @@ _.extend(Controller.prototype, {
       this.singleView = new ChartView({model:
         new Model({
           container: '#modal-left-content-single',
+          events: [],
+          highlightedTime: null,
+          allowPieChart: false,
+          view: null,
+          highlighted: false,
+          dimensions: null,
           onClick: true,
           onHover: false,
           onDnD: false
@@ -79,6 +86,12 @@ _.extend(Controller.prototype, {
       this.finalView = new ChartView({model:
         new Model({
           container: '#modal-left-content-final',
+          events: [],
+          highlightedTime: null,
+          allowPieChart: false,
+          view: null,
+          highlighted: false,
+          dimensions: null,
           onClick: false,
           onHover: false,
           onDnD: false
@@ -136,15 +149,28 @@ _.extend(Controller.prototype, {
   },
 
   close: function () {
-    console.log('close called');
-    this.collection.reset();
-    this.collection = null;
-    this.events = {};
-    this.singleView = null;
-    this.finalView = null;
+    console.log('Controller, close called');
+    this.singleView.close();
+    this.finalView.close();
+    delete this.finalView.model;
+    delete this.singleView.model;
+    this.singleView.model = null;
+    this.finalView.model = null;
+    delete this.finalView;
+    delete this.singleView;
     $(this.$modal).unbind('keydown');
     $('#modal-left-content').empty();
     $('#detail-div').empty();
+
+    this.events = {};
+    this.eventsToAdd = [];
+    this.collection.reset();
+    this.collection = null;
+    this.highlightedDate = null;
+    this.listView = null;
+    this.singleView = null;
+    this.finalView = null;
+    this.$modal = null;
   },
   getEventById: function (event) {
     return this.collection.getEventById(event.id);

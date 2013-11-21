@@ -78,7 +78,9 @@ NumericalsPlugin.prototype.render = function (container) {
 };
 NumericalsPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
+  this.needToRender = true;
   this.debounceRefresh();
+
 };
 
 NumericalsPlugin.prototype.close = function () {
@@ -190,6 +192,7 @@ NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectio
 NumericalsPlugin.prototype.computeDimensions = function () {
   var chartSizeWidth = null;
   var chartSizeHeight = null;
+
 
   if ($('#' + this.container).length)  {
     chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);

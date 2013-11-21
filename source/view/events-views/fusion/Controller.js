@@ -134,7 +134,9 @@ _.extend(Controller.prototype, {
       }
     }.bind(this));
   },
+
   close: function () {
+    console.log('close called');
     this.collection.reset();
     this.collection = null;
     this.events = {};

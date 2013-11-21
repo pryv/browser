@@ -8,11 +8,6 @@ module.exports = Marionette.ItemView.extend({
   options: null,
   data: null,
 
-  /*
-  modelEvents: {
-    'change': 'render',
-    'change:events': 'render'
-  },*/
 
   initialize: function () {
     this.listenTo(this.model, 'change', this.render);
@@ -56,12 +51,6 @@ module.exports = Marionette.ItemView.extend({
 
     this.createEventBindings();
   },
-
-  onClose: function () {
-    $(this.container).html('');
-  },
-
-
 
   resize: function () {
     if (!this.model.get('dimensions')) {
@@ -144,10 +133,21 @@ module.exports = Marionette.ItemView.extend({
     });
   },
 
+  onClose: function () {
+    $(this.container).unbind();
+    this.container = null;
+    this.options = null;
+    this.data = null;
+    this.plot = null;
+    $(this.chartContainer).empty();
+    $(this.container).empty();
+  },
+
   createEventBindings: function () {
     $(this.container).unbind();
 
-    $(this.container).resize(function () {
+    $(this.container).bind('resize', function () {
+      console.log(this.container, 'ChartView jquery resize!');
       this.trigger('chart:resize', this.model);
     });
 

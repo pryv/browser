@@ -1,5 +1,5 @@
 var Backbone = require('backbone'),
-  Model = require('./SeriesModel.js');
+  Model = require('./../numericals/SeriesModel.js');
 
 module.exports = Backbone.Collection.extend({
   url: '#',

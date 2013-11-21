@@ -1,11 +1,9 @@
 /* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
-  Model = require('./SeriesModel.js'),
+  Model = require('./../numericals/SeriesModel.js'),
   ListView = require('./ListView.js'),
-  //SingleView = require('./SingleView.js'),
-  //FinalView = require('./FinalView.js'),
-  ChartView = require('./ChartView.js');
+  ChartView = require('./../numericals/ChartView.js');
 
 var Controller = module.exports = function ($modal, events) {
   this.events = {};

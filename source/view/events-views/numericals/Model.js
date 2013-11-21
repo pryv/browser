@@ -1,15 +1,14 @@
 /* global $ */
 
 var _ = require('underscore'),
-  ChartView = require('../fusion/ChartView.js'),
-  SeriesModel = require('../fusion/SeriesModel.js');
+  ChartView = require('./ChartView.js'),
+  SeriesModel = require('./SeriesModel.js');
 var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
   }, 100);
 
   this.events = {};
-  this.superCondensed = false;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
@@ -37,26 +36,24 @@ NumericalsPlugin.prototype.eventEnter = function (event) {
     this.datas[event.streamId][event.type] = {};
   }
   this.datas[event.streamId][event.type][event.id] = event;
+  this.needToRender = true;
   this.debounceRefresh();
-
 };
 
 NumericalsPlugin.prototype.eventLeave = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventLeave: event id ' + event.id + ' dont exists');
-  } else {
+  if (this.events[event.id]) {
     delete this.events[event.id];
     delete this.datas[event.streamId][event.type][event.id];
+    this.needToRender = true;
     this.debounceRefresh();
   }
 };
 
 NumericalsPlugin.prototype.eventChange = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventChange: event id ' + event.id + ' dont exists');
-  }  else {
+  if (this.events[event.id]) {
     this.events[event.id] = event;
     this.datas[event.streamId][event.type][event.id] = event;
+    this.needToRender = true;
     this.debounceRefresh();
   }
 };
@@ -80,13 +77,15 @@ NumericalsPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
   this.needToRender = true;
   this.debounceRefresh();
-
 };
 
 NumericalsPlugin.prototype.close = function () {
   if (this.view) {
     this.view.close();
   }
+
+  delete this.modelView;
+  delete this.view;
   this.view = null;
   this.events = null;
   this.datas = null;
@@ -97,40 +96,49 @@ NumericalsPlugin.prototype.close = function () {
 
 };
 NumericalsPlugin.prototype._refreshModelView = function () {
-  // this._findEventToDisplay();
-
-  var asdf = [];
-  _.each(this.datas, function (stream) {
-    _.each(stream, function (item) {
-      asdf.push(_.sortBy(item, function (e) {
-        return e.time;
-      }));
-    });
-  });
-
-  this.sortedData = [];
-  for (var i = 0; i < asdf.length; ++i) {
-    var el = asdf[i][0];
-    this.sortedData.push({
-      connectionId: el.stream.connection.id,
-      elements: [],
-      id: el.connection.id + '/' + el.streamId + '/' + el.type,
-      streamId: el.streamId,
-      streamName: el.stream.name,
-      style: 0,
-      tags: el.tags,
-      trashed: false,
-      type: el.type
-    });
-    for (var j = 0; j < asdf[i].length; ++j) {
-      this.sortedData[i].elements.push({content: asdf[i][j].content, time: asdf[i][j].time});
+  var serie = null;
+  var series = [];
+  for (var streams in this.datas) {
+    if (this.datas.hasOwnProperty(streams)) {
+      for (var types in this.datas[streams]) {
+        if (this.datas[streams].hasOwnProperty(types)) {
+          var elements = [];
+          var latest = null;
+          for (var el in this.datas[streams][types]) {
+            if (this.datas[streams][types].hasOwnProperty(el)) {
+              var elem = this.datas[streams][types][el];
+              if (elem) {
+                latest = elem;
+                elements.push({content: elem.content, time: elem.time});
+              }
+            }
+          }
+          if (elements.length !== 0) {
+            serie = {
+              connectionId: latest.stream.connection.id,
+              elements: elements,
+              id: latest.connection.id + '/' + latest.streamId + '/' + latest.type,
+              streamId: latest.streamId,
+              streamName: latest.stream.name,
+              style: 0,
+              tags: latest.tags,
+              trashed: false,
+              type: latest.type
+            };
+          }
+          if (serie) {
+            series.push(serie);
+          }
+          serie = null;
+          elements = [];
+        }
+      }
     }
   }
 
-  if (!this.modelView || !this.view) {
-    //var BasicModel = Backbone.Model.extend({ });
+  if ((!this.modelView || !this.view) && series.length !== 0) {
     this.modelView = new SeriesModel({
-      events: this.sortedData,
+      events: series,
       dimensions: null,
       container: null,
       onClick: true,
@@ -141,16 +149,21 @@ NumericalsPlugin.prototype._refreshModelView = function () {
       this.view =
         new ChartView({model: this.modelView});
     }
+  } else {
+    if (this.modelView) {
+      this.modelView.set('events', series);
+    }
+    if (this.view) {
+      this.view.model.set('model', this.modelView);
+    }
   }
-
 
   this.view.off();
   this.view.on('chart:clicked', function () { return; });
   this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
   this.view.on('chart:resize', this.resize.bind(this));
 
-
-  if (this.needToRender) {
+  if (this.needToRender && this.container) {
     this.resize();
     this.needToRender = false;
   }
@@ -193,14 +206,17 @@ NumericalsPlugin.prototype.computeDimensions = function () {
   var chartSizeWidth = null;
   var chartSizeHeight = null;
 
-
-  if ($('#' + this.container).length)  {
+  if (this.width !== null) {
+    chartSizeWidth = this.width;
+  } else if ($('#' + this.container).length)  {
     chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
   } else if (this.model.get('width') !== null) {
     chartSizeWidth = this.model.get('width');
   }
 
-  if ($('#' + this.container).length)  {
+  if (this.height !== null) {
+    chartSizeHeight = this.height;
+  } else if ($('#' + this.container).length)  {
     chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
   } else if (this.model.get('height') !== null) {
     chartSizeHeight = this.model.get('height');

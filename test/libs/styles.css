@@ -43,8 +43,7 @@ body{
   background-position: -40px 0px;
 }
 .logo.loading {
-  background:url(../img/loader.gif) 0 0 no-repeat;
-  background-size: contain;
+  background:url(../img/loader2.gif) 0 0 no-repeat;
 }
 #tree {
   width: 100%;

@@ -1,5 +1,5 @@
 var Backbone = require('backbone'),
-  Model = require('./SeriesModel.js');
+  Model = require('./../numericals/EventModel.js');
 
 module.exports = Backbone.Collection.extend({
   url: '#',
@@ -7,8 +7,8 @@ module.exports = Backbone.Collection.extend({
   highlightedDate: null,
   currentElement: null,
   comparator: function (a, b) {
-    a = a.get('events').time;
-    b = b.get('events').time;
+    a = a.get('id');
+    b = b.get('id');
     return a > b ? -1
       : a < b ? 1
       : 0;
@@ -40,7 +40,7 @@ module.exports = Backbone.Collection.extend({
   },
   getEventById: function (id) {
     return this.find(function (e) {
-      return e.get('events')[0].id === id;
+      return e.get('id') === id;
     });
   },
   getActive: function () {
@@ -60,7 +60,7 @@ module.exports = Backbone.Collection.extend({
       return;
     }
     if (!this.currentElement ||
-      this.currentElement.get('events')[0].id !== model.get('events')[0].id) {
+      this.currentElement.get('id') !== model.get('id')) {
       if (this.currentElement) {
         this.currentElement.setHighlighted(false);
       }

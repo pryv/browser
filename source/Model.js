@@ -46,6 +46,7 @@ var Model = module.exports = function () {
     console.log('onDateMasked', arguments);
   };
 
+  Pryv.eventTypes.loadExtras(function () {});
 
 
   // add fredos to Connections

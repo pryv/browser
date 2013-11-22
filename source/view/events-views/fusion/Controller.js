@@ -1,16 +1,14 @@
 /* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
-  Model = require('./SeriesModel.js'),
+  Model = require('./../numericals/SeriesModel.js'),
   ListView = require('./ListView.js'),
-  //SingleView = require('./SingleView.js'),
-  //FinalView = require('./FinalView.js'),
-  ChartView = require('./ChartView.js');
+  ChartView = require('./../numericals/ChartView.js');
 
 var Controller = module.exports = function ($modal, events) {
-  this.events = {};
+  this.events = events;
   this.eventsToAdd = [];
-  this.collection = null;
+  this.collection = new Collection();
   this.highlightedDate = null;
   this.listView = null;
   this.singleView = null;
@@ -21,45 +19,18 @@ var Controller = module.exports = function ($modal, events) {
   $('#modal-left-content')
     .html('<div id="modal-left-content-single"></div><div id="modal-left-content-final"></div>');
 
-
-  this.debounceAdd = _.debounce(function () {
-    this.collection.add(this.eventsToAdd, {sort: false});
-    this.collection.sort();
-    this.eventsToAdd = [];
-    if (this.highlightedDate) {
-      this.highlightDate(this.highlightedDate);
-    }
-  }.bind(this), 100);
-
+  this.debounceAdd = _.debounce(this.addEventsLater.bind(this), 100);
 
   this.testf = _.debounce(function () {
+
     var elem = this.collection.at(0);
-    this.updateSingleView(elem);
-  }.bind(this), 2000);
+    this.updateSingleView(this.collection.next().getCurrentElement());
+    //this.updateSingleView(elem);
+  }.bind(this), 1000);
 
+  this.debounceAdd();
 
-  var formatted = _.reduce(events, function (output, el) {
-    var graphName = el.connection.id + '/' + el.streamId + '/' + el.type;
-    if (! output[graphName]) {
-      output[graphName] = {
-        id: graphName,
-        streamId: el.streamId,
-        streamName: el.stream.name,
-        connectionId: el.connection.id,
-        type: el.type,
-        elements: [],
-        trashed: false,
-        tags: el.tags,
-        style: 0
-      };
-    }
-    output[graphName].elements.push({content: el.content, time: el.time});
-    return output;
-  }, {});
-
-  this.addEvents(formatted);
-
-  $(window).resize(this.resizeModal);
+  $(window).resize(this.resizeModal.bind(this));
 };
 
 _.extend(Controller.prototype, {
@@ -68,13 +39,38 @@ _.extend(Controller.prototype, {
     this.$modal.modal();
     if (!this.listView) {
       this.singleView = new ChartView({model:
-        new Model({container: '#modal-left-content-single'})});
+        new Model({
+          container: '#modal-left-content-single',
+          events: [],
+          highlightedTime: null,
+          allowPieChart: false,
+          view: null,
+          highlighted: false,
+          dimensions: null,
+          onClick: true,
+          onHover: false,
+          onDnD: false
+        })});
       this.finalView = new ChartView({model:
-        new Model({container: '#modal-left-content-final'})});
+        new Model({
+          container: '#modal-left-content-final',
+          events: [],
+          highlightedTime: null,
+          allowPieChart: false,
+          view: null,
+          highlighted: false,
+          dimensions: null,
+          onClick: false,
+          onHover: false,
+          onDnD: false
+        })});
       this.listView = new ListView({
         collection: this.collection
       });
 
+      /**
+       * Listeners
+       */
       this.listView.on('itemview:chart:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
         //console.log('itemview:chart:clicked', evt.model);
@@ -98,18 +94,18 @@ _.extend(Controller.prototype, {
       }.bind(this));
     }
 
-
     this.testf();
-
     this.listView.render();
     this.singleView.render();
     this.finalView.render();
     this.resizeModal();
+
     $(this.$modal).keydown(function (e) {
       var LEFT_KEY = 37;
       var UP_KEY = 38;
       var RIGHT_KEY = 39;
       var DOWN_KEY = 40;
+      var SPACE_KEY = 32;
       if (e.which === LEFT_KEY || e.which === UP_KEY) {
         this.updateSingleView(this.collection.prev().getCurrentElement());
         return false;
@@ -118,18 +114,42 @@ _.extend(Controller.prototype, {
         this.updateSingleView(this.collection.next().getCurrentElement());
         return false;
       }
+      if (e.which === SPACE_KEY) {
+        /* Implement space to act as un/select on the checkbox */
+        //this.updateSingleView(this.collection.next().getCurrentElement());
+        return false;
+      }
     }.bind(this));
   },
+
   close: function () {
+    this.singleView.close();
+    this.finalView.close();
+    delete this.finalView.model;
+    delete this.singleView.model;
+    this.singleView.model = null;
+    this.finalView.model = null;
+    delete this.finalView;
+    delete this.singleView;
+    $(this.$modal).unbind('keydown');
+    $('#modal-left-content').empty();
+    $('#detail-div').empty();
+
+    this.events = {};
+    this.eventsToAdd = [];
     this.collection.reset();
     this.collection = null;
-    this.events = {};
-    $(this.$modal).unbind('keydown');
-    $('#detail-div').empty();
+    this.highlightedDate = null;
+    this.listView = null;
+    this.singleView = null;
+    this.finalView = null;
+    this.$modal = null;
   },
+
   getEventById: function (event) {
     return this.collection.getEventById(event.id);
   },
+
   addEvents: function (event) {
     if (!event) {
       return;
@@ -141,53 +161,87 @@ _.extend(Controller.prototype, {
     if (!this.collection) {
       this.collection = new Collection();
     }
-    _.each(event, function (e) {
-      var m = new Model({
-        selected: false
-      });
-      var table = [e];
-      m.set('events', table);
-      this.events[e.id] = e;
-      this.eventsToAdd.push(m);
-    }, this);
+
+    for (var i = 0; i < event.length; ++i) {
+      if (event[i]) {
+        this.events[event[i].id] = event[i];
+      }
+    }
     this.debounceAdd();
+  },
+
+  addEventsLater: function () {
+    if (this.events.length === 0) {
+      return;
+    }
+
+    var event = [];
+
+    for (var attr in this.events) {
+      if (this.events.hasOwnProperty(attr)) {
+        event.push(this.events[attr]);
+      }
+    }
+
+    var mapped = _.map(event, function (e) {
+      return {
+        id: e.connection.id + '/' + e.streamId + '/' + e.type,
+        streamId: e.streamId,
+        streamName: e.stream.name,
+        connectionId: e.connection.id,
+        type: e.type,
+        elements: {content: e.content, time: e.time},
+        trashed: false,
+        tags: e.tags,
+        style: 0
+      };
+    });
+
+    var grouped = _.groupBy(mapped, 'id');
+
+    var resulting = [];
+    _.each(grouped, function (m) {
+      var copy = m[0];
+      var reduced = _.reduce(m, function (memo, el) { return memo.concat(el.elements); }, [ ]);
+      copy.elements = reduced;
+      resulting.push(copy);
+    });
+
+    this.collection.reset();
+    this.collection.add(resulting, {sort: false});
+    this.collection.sort();
   },
 
   /* jshint -W098 */
   deleteEvent: function (event) {
     //console.log('TODO: deleteEvent');
-    /*
-    delete this.events[event.id];
-    var toDelete = this.getEventById(event);
-    if (toDelete) {
-      toDelete.destroy();
+    if (!event) {
+      return;
     }
-    */
+    delete this.events[event.id];
+    this.debounceAdd();
   },
   updateEvent: function (event) {
     //console.log('TODO: updateEvent');
-    /*
-    this.events[event.id] = event;
-    var toUpdate = this.getEventById(event);
-    if (toUpdate) {
-      toUpdate.set('event', event);
-      this.collection.sort();
-    }
-    */
   },
   highlightDate: function (time) {
     //console.log('TODO: highlight date');
-    /*
-    this.highlightedDate = time;
-    var model = this.collection.highlightEvent(time);
-    this.updateSingleView(model);
-    */
   },
 
 
   updateSingleView: function (model) {
     if (model) {
-      this.singleView.model.set('events', model.get('events'));
+      this.singleView.model.set('events', [{
+        id: model.get('id'),
+        streamId: model.get('streamId'),
+        streamName: model.get('streamName'),
+        connectionId: model.get('connectionId'),
+        type: model.get('type'),
+        elements: model.get('elements'),
+        trashed: model.get('v'),
+        tags: model.get('tags'),
+        style: model.get('style')
+      }]);
     }
   },
 
@@ -199,9 +253,19 @@ _.extend(Controller.prototype, {
     // events of the finalView model is an array
     // of the real events (containing the points)
     if (model) {
-      var eventToAdd = model.get('events')[0];
+      //var eventToAdd = model.get('events')[0];
       var eventsFinalView = this.finalView.model.get('events'); // should be an array
-      eventsFinalView.push(eventToAdd);
+      eventsFinalView.push({
+        id: model.get('id'),
+        streamId: model.get('streamId'),
+        streamName: model.get('streamName'),
+        connectionId: model.get('connectionId'),
+        type: model.get('type'),
+        elements: model.get('elements'),
+        trashed: model.get('v'),
+        tags: model.get('tags'),
+        style: model.get('style')
+      });
       this.finalView.model.set('events', eventsFinalView);
       this.finalView.render();
     }
@@ -213,12 +277,12 @@ _.extend(Controller.prototype, {
    */
   removeSeriesFromFinalView: function (model) {
     if (model) {
-      var eventToRemove = model.get('events')[0];
+      var eventToRemove = model.get('id');
       var eventsFinalView = this.finalView.model.get('events');
       var events = [];
       if (eventsFinalView) {
         for (var i = 0; i < eventsFinalView.length; ++i) {
-          if (eventsFinalView[i].id !== eventToRemove.id) {
+          if (eventsFinalView[i].id !== eventToRemove) {
             events.push(eventsFinalView[i]);
           }
         }
@@ -265,39 +329,41 @@ _.extend(Controller.prototype, {
   },
 
   resizeModal: _.debounce(function () {
+
     $('.modal-panel-left').css({
       width: $('.modal-body').width() - $('.modal-panel-right').width(),
       height: $('.modal-body').height()
     });
 
     $('#modal-left-content').css({
-      width: '98%',
-      height: $('.modal-panel-left').height(),
-      'margin-left': '1%',
-      'margin-right': '1%'
+      width: '100%',
+      height: $('.modal-panel-left').height()
     });
 
+    var chartSizeWidth = $('.modal-panel-left').width() - 20;
+    var chartSizeHeight = ($('.modal-panel-left').height() - 30) / 2;
+
     $('#modal-left-content-single').css({
-      width: $('.modal-panel-content').width(),
-      height: '48%',
-      'margin-top': '2%',
+      width: chartSizeWidth,
+      height: chartSizeHeight,
+      'margin-top': '10px',
+      'margin-left': '10px',
       'background-color': 'Khaki'
     });
 
     $('#modal-left-content-final').css({
-      width: $('.modal-panel-content').width(),
-      height: '48%',
-      'margin-top': '2%',
+      width: chartSizeWidth,
+      height: chartSizeHeight,
+      'margin-top': '10px',
+      'margin-left': '10px',
       'background-color': 'LightSeaGreen'
     });
 
     if (this.finalView) {
-      this.finalView.resize();
+      this.finalView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
     }
     if (this.singleView) {
-      this.singleView.resize();
+      this.singleView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
     }
-
-
-  }.bind(this), 1000)
+  }, 500)
 });

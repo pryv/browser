@@ -1,14 +1,14 @@
+/* global $ */
+
 var _ = require('underscore'),
-  NumericalsView = require('./View.js'),
-  SuperCondensedView = require('../super-condensed/View.js'),
-  Backbone = require('backbone');
+  ChartView = require('./ChartView.js'),
+  SeriesModel = require('./SeriesModel.js');
 var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
   }, 100);
 
   this.events = {};
-  this.superCondensed = false;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
@@ -18,6 +18,7 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.datas = {};
   this.streamIds = {};
   this.eventsNode = node;
+  this.sortedData = null;
 
   _.extend(this, params);
   _.each(events, function (event) {
@@ -35,26 +36,24 @@ NumericalsPlugin.prototype.eventEnter = function (event) {
     this.datas[event.streamId][event.type] = {};
   }
   this.datas[event.streamId][event.type][event.id] = event;
+  this.needToRender = true;
   this.debounceRefresh();
-
 };
 
 NumericalsPlugin.prototype.eventLeave = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventLeave: event id ' + event.id + ' dont exists');
-  } else {
+  if (this.events[event.id]) {
     delete this.events[event.id];
     delete this.datas[event.streamId][event.type][event.id];
+    this.needToRender = true;
     this.debounceRefresh();
   }
 };
 
 NumericalsPlugin.prototype.eventChange = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventChange: event id ' + event.id + ' dont exists');
-  }  else {
+  if (this.events[event.id]) {
     this.events[event.id] = event;
     this.datas[event.streamId][event.type][event.id] = event;
+    this.needToRender = true;
     this.debounceRefresh();
   }
 };
@@ -69,13 +68,14 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
 NumericalsPlugin.prototype.render = function (container) {
   this.container = container;
   if (this.view) {
-    this.view.renderView(this.container);
+    this.resize();
   } else {
     this.needToRender = true;
   }
 };
 NumericalsPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
+  this.needToRender = true;
   this.debounceRefresh();
 };
 
@@ -83,6 +83,9 @@ NumericalsPlugin.prototype.close = function () {
   if (this.view) {
     this.view.close();
   }
+
+  delete this.modelView;
+  delete this.view;
   this.view = null;
   this.events = null;
   this.datas = null;
@@ -93,44 +96,75 @@ NumericalsPlugin.prototype.close = function () {
 
 };
 NumericalsPlugin.prototype._refreshModelView = function () {
-  // this._findEventToDisplay();
-
-  var sortedData = [];
-  _.each(this.datas, function (stream) {
-    _.each(stream, function (item) {
-      sortedData.push(_.sortBy(item, function (e) {
-        return e.time;
-      }));
-    });
-  });
-
-
-  if (!this.modelView || !this.view) {
-    var BasicModel = Backbone.Model.extend({ });
-    this.modelView = new BasicModel({
-      datas: sortedData,
-      width: this.width,
-      height: this.height,
-      eventsNbr: _.size(this.events)
-    });
-    if (typeof(document) !== 'undefined')  {
-      this.view = this.superCondensed ?
-        new SuperCondensedView({model: this.modelView}) :
-        new NumericalsView({model: this.modelView});
+  var serie = null;
+  var series = [];
+  for (var streams in this.datas) {
+    if (this.datas.hasOwnProperty(streams)) {
+      for (var types in this.datas[streams]) {
+        if (this.datas[streams].hasOwnProperty(types)) {
+          var elements = [];
+          var latest = null;
+          for (var el in this.datas[streams][types]) {
+            if (this.datas[streams][types].hasOwnProperty(el)) {
+              var elem = this.datas[streams][types][el];
+              if (elem) {
+                latest = elem;
+                elements.push({content: elem.content, time: elem.time});
+              }
+            }
+          }
+          if (elements.length !== 0) {
+            serie = {
+              connectionId: latest.stream.connection.id,
+              elements: elements,
+              id: latest.connection.id + '/' + latest.streamId + '/' + latest.type,
+              streamId: latest.streamId,
+              streamName: latest.stream.name,
+              style: 0,
+              tags: latest.tags,
+              trashed: false,
+              type: latest.type
+            };
+          }
+          if (serie) {
+            series.push(serie);
+          }
+          serie = null;
+          elements = [];
+        }
+      }
     }
   }
-  this.modelView.set('datas', sortedData);
-  this.modelView.set('width', this.width);
-  this.modelView.set('height', this.height);
-  this.modelView.set('eventsNbr', _.size(this.events));
+
+  if ((!this.modelView || !this.view) && series.length !== 0) {
+    this.modelView = new SeriesModel({
+      events: series,
+      dimensions: null,
+      container: null,
+      onClick: true,
+      onHover: false,
+      onDnD: true
+    });
+    if (typeof(document) !== 'undefined')  {
+      this.view =
+        new ChartView({model: this.modelView});
+    }
+  } else {
+    if (this.modelView) {
+      this.modelView.set('events', series);
+    }
+    if (this.view) {
+      this.view.model.set('model', this.modelView);
+    }
+  }
 
   this.view.off();
-  this.view.on('graphClicked', function () { this.view.changeGraph(); }.bind(this));
-  //this.view.on('graphDragStart', function () { this.view.dragStart(); }.bind(this));
-  this.view.on('dragAndDrop', this.onDragAndDrop.bind(this));
+  this.view.on('chart:clicked', function () { return; });
+  this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
+  this.view.on('chart:resize', this.resize.bind(this));
 
-  if (this.needToRender) {
-    this.view.renderView(this.container);
+  if (this.needToRender && this.container) {
+    this.resize();
     this.needToRender = false;
   }
 };
@@ -168,4 +202,31 @@ NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectio
   this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
 };
 
+NumericalsPlugin.prototype.computeDimensions = function () {
+  var chartSizeWidth = null;
+  var chartSizeHeight = null;
 
+  if (this.width !== null) {
+    chartSizeWidth = this.width;
+  } else if ($('#' + this.container).length)  {
+    chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+  } else if (this.model.get('width') !== null) {
+    chartSizeWidth = this.model.get('width');
+  }
+
+  if (this.height !== null) {
+    chartSizeHeight = this.height;
+  } else if ($('#' + this.container).length)  {
+    chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+  } else if (this.model.get('height') !== null) {
+    chartSizeHeight = this.model.get('height');
+  }
+
+  return {width: chartSizeWidth, height: chartSizeHeight};
+};
+
+NumericalsPlugin.prototype.resize = function () {
+  this.modelView.set('dimensions', this.computeDimensions());
+  this.modelView.set('container', '#' + this.container);
+  this.view.render();
+};

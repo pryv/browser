@@ -22,9 +22,11 @@ var Controller = module.exports = function ($modal, events) {
   this.debounceAdd = _.debounce(this.addEventsLater.bind(this), 100);
 
   this.testf = _.debounce(function () {
+
     var elem = this.collection.at(0);
-    this.updateSingleView(elem);
-  }.bind(this), 2000);
+    this.updateSingleView(this.collection.next().getCurrentElement());
+    //this.updateSingleView(elem);
+  }.bind(this), 1000);
 
   this.debounceAdd();
 
@@ -103,12 +105,18 @@ _.extend(Controller.prototype, {
       var UP_KEY = 38;
       var RIGHT_KEY = 39;
       var DOWN_KEY = 40;
+      var SPACE_KEY = 32;
       if (e.which === LEFT_KEY || e.which === UP_KEY) {
         this.updateSingleView(this.collection.prev().getCurrentElement());
         return false;
       }
       if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
         this.updateSingleView(this.collection.next().getCurrentElement());
+        return false;
+      }
+      if (e.which === SPACE_KEY) {
+        /* Implement space to act as un/select on the checkbox */
+        //this.updateSingleView(this.collection.next().getCurrentElement());
         return false;
       }
     }.bind(this));

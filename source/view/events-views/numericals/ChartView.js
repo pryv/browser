@@ -1,5 +1,6 @@
 /* global $ */
 var Marionette = require('backbone.marionette'),
+  Pryv = require('pryv'),
   _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
@@ -9,22 +10,36 @@ module.exports = Marionette.ItemView.extend({
   data: null,
   plot: null,
   chartContainer: null,
+  useExtras: null,
+  waitExtras: null,
 
 
   initialize: function () {
     this.listenTo(this.model, 'change', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
+    this.useExtras = true;
   },
 
   onRender: function () {
     if (
       !this.model.get('events') ||
       !this.model.get('dimensions') ||
-      !this.model.get('container')) {
+      !this.model.get('container') ||
+      this.model.get('events').length === 0) {
       return;
     }
 
+    try {
+      Pryv.eventTypes.extras('mass/kg');
+    } catch (e) {
+      this.useExtras = false;
+    }
+
+    this.makePlot();
+  },
+
+  makePlot: function () {
     var myModel = this.model.get('events');
     this.container = this.model.get('container');
 
@@ -44,16 +59,16 @@ module.exports = Marionette.ItemView.extend({
     for (var i = 0; i < myModel.length; ++i) {
       this.addSeries({
         data: dataMapper(myModel[i].elements),
-        label: myModel[i].type,
+        label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type) : myModel[i].type,
         type: myModel[i].style
       }, i);
     }
-
 
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
     this.createEventBindings();
     myModel = null;
   },
+
 
   resize: function () {
     if (!this.model.get('dimensions')) {

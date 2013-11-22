@@ -46,7 +46,8 @@ _.extend(Controller.prototype, {
           dimensions: null,
           onClick: true,
           onHover: false,
-          onDnD: false
+          onDnD: false,
+          xaxis: true
         })});
       this.finalView = new ChartView({model:
         new Model({
@@ -59,7 +60,8 @@ _.extend(Controller.prototype, {
           dimensions: null,
           onClick: false,
           onHover: false,
-          onDnD: false
+          onDnD: false,
+          xaxis: true
         })});
       this.listView = new ListView({
         collection: this.collection
@@ -279,12 +281,14 @@ _.extend(Controller.prototype, {
    * @param model the model of the series to remove
    */
   removeSeriesFromFinalView: function (model) {
+
     if (model) {
       var eventToRemove = model.get('id');
       var eventsFinalView = this.finalView.model.get('events');
       var events = [];
       if (eventsFinalView) {
         for (var i = 0; i < eventsFinalView.length; ++i) {
+          console.log(eventsFinalView[i].id, eventToRemove);
           if (eventsFinalView[i].id !== eventToRemove) {
             events.push(eventsFinalView[i]);
           }

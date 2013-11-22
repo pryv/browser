@@ -143,7 +143,8 @@ NumericalsPlugin.prototype._refreshModelView = function () {
       container: null,
       onClick: true,
       onHover: false,
-      onDnD: true
+      onDnD: true,
+      xaxis: false
     });
     if (typeof(document) !== 'undefined')  {
       this.view =

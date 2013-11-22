@@ -29,6 +29,7 @@ module.exports = Marionette.ItemView.extend({
       return;
     }
 
+
     try {
       Pryv.eventTypes.extras('mass/kg');
     } catch (e) {
@@ -51,7 +52,7 @@ module.exports = Marionette.ItemView.extend({
 
     var dataMapper = function (d) {
       return _.map(d, function (e) {
-        return [e.time, e.content];
+        return [e.time * 1000, e.content];
       });
     };
 
@@ -90,7 +91,11 @@ module.exports = Marionette.ItemView.extend({
       borderWidth: 0,
       minBorderMargin: 5
     };
-    this.options.xaxes = [ { show: false } ];
+    this.options.xaxes = [ {
+      show: this.model.get('xaxis'),
+      mode: 'time',
+      timeformat: '%y/%m/%d'
+    } ];
     this.options.yaxes = [];
     this.options.legend = {
       show: (this.model.get('dimensions').width >= 80 &&
@@ -178,8 +183,8 @@ module.exports = Marionette.ItemView.extend({
       var distance = null;
       var best = 0;
       for (var m = 0; m < data[k].data.length; m++) {
-        if (distance === null || Math.abs(date - data[k].data[m][0]) < distance) {
-          distance = Math.abs(date - data[k].data[m][0]);
+        if (distance === null || Math.abs(date - data[k].data[m][0] / 1000) < distance) {
+          distance = Math.abs(date - data[k].data[m][0] / 1000);
           best = m;
         } else { break; }
       }

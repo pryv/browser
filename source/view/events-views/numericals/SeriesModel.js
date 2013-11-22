@@ -13,7 +13,9 @@ module.exports = Backbone.Model.extend({
     /* Events control */
     onClick: null,
     onHover: null,
-    onDnD: null
+    onDnD: null,
+
+    xaxis: null
   },
 
   setHighlighted: function (highlight) {

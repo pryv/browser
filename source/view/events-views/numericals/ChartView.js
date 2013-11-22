@@ -63,10 +63,11 @@ module.exports = Marionette.ItemView.extend({
       });
     };
 
+
     for (var i = 0; i < myModel.length; ++i) {
       this.addSeries({
         data: dataSorter(dataMapper(myModel[i].elements)),
-        label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type) : myModel[i].type,
+        label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type).symbol : myModel[i].type,
         type: myModel[i].style
       }, i);
     }

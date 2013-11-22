@@ -165,6 +165,7 @@ NumericalsPlugin.prototype._refreshModelView = function () {
 
   if (this.needToRender && this.container) {
     this.resize();
+    this.view.onDateHighLighted(this.highlightedTime);
     this.needToRender = false;
   }
 };

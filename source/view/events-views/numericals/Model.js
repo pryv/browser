@@ -143,7 +143,8 @@ NumericalsPlugin.prototype._refreshModelView = function () {
       container: null,
       onClick: true,
       onHover: false,
-      onDnD: true
+      onDnD: true,
+      xaxis: false
     });
     if (typeof(document) !== 'undefined')  {
       this.view =
@@ -165,6 +166,7 @@ NumericalsPlugin.prototype._refreshModelView = function () {
 
   if (this.needToRender && this.container) {
     this.resize();
+    this.view.onDateHighLighted(this.highlightedTime);
     this.needToRender = false;
   }
 };

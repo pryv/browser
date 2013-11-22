@@ -13,7 +13,6 @@ module.exports = Marionette.ItemView.extend({
   useExtras: null,
   waitExtras: null,
 
-
   initialize: function () {
     this.listenTo(this.model, 'change', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
@@ -30,6 +29,7 @@ module.exports = Marionette.ItemView.extend({
       return;
     }
 
+
     try {
       Pryv.eventTypes.extras('mass/kg');
     } catch (e) {
@@ -37,6 +37,7 @@ module.exports = Marionette.ItemView.extend({
     }
 
     this.makePlot();
+    this.onDateHighLighted(0);
   },
 
   makePlot: function () {
@@ -51,7 +52,7 @@ module.exports = Marionette.ItemView.extend({
 
     var dataMapper = function (d) {
       return _.map(d, function (e) {
-        return [e.time, e.content];
+        return [e.time * 1000, e.content];
       });
     };
 
@@ -90,7 +91,11 @@ module.exports = Marionette.ItemView.extend({
       borderWidth: 0,
       minBorderMargin: 5
     };
-    this.options.xaxes = [ { show: false } ];
+    this.options.xaxes = [ {
+      show: this.model.get('xaxis'),
+      mode: 'time',
+      timeformat: '%y/%m/%d'
+    } ];
     this.options.yaxes = [];
     this.options.legend = {
       show: (this.model.get('dimensions').width >= 80 &&
@@ -150,6 +155,41 @@ module.exports = Marionette.ItemView.extend({
       width: this.model.get('dimensions').width + 'px',
       height: this.model.get('dimensions').height + 'px'
     });
+  },
+    /*
+  showTooltip: function (x, y, content) {
+
+    var tooltip = '<div id="chart-tooltip" class="tooltip">' + content + '</div>';
+    if ($('#chart-tooltip').length === 0) {
+      $('body').append(tooltip);
+    }
+    $('#chart-tooltip').css({
+      top: x,
+      left: y
+    }).fadeIn(1500);
+
+  },
+  */
+
+  onDateHighLighted: function (date) {
+    if (!this.plot) {
+      return;
+    }
+
+    this.plot.unhighlight();
+
+    var data = this.plot.getData();
+    for (var k = 0; k < data.length; k++) {
+      var distance = null;
+      var best = 0;
+      for (var m = 0; m < data[k].data.length; m++) {
+        if (distance === null || Math.abs(date - data[k].data[m][0] / 1000) < distance) {
+          distance = Math.abs(date - data[k].data[m][0] / 1000);
+          best = m;
+        } else { break; }
+      }
+      this.plot.highlight(k, best);
+    }
   },
 
   onClose: function () {
@@ -219,7 +259,6 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-
   /* ***********************
    * Drag and Drop Functions
    */
@@ -230,9 +269,7 @@ module.exports = Marionette.ItemView.extend({
     e.originalEvent.dataTransfer.setData('streamId', $(this.container).attr('data-streamid'));
     e.originalEvent.dataTransfer.setData('connectionId',
       $(this.container).attr('data-connectionid'));
-
-    //$('#' + this.container).addClass('animated shake');
-    $('.graphContainer').addClass('animated shake');
+    $('.chartContainer').addClass('animated shake');
   },
 
   /* Fires when a dragged element enters this' scope */
@@ -250,24 +287,16 @@ module.exports = Marionette.ItemView.extend({
 
   /* Called when this object is stops being dragged */
   onDragEnd: function () {
-    //$('#' + this.container).removeClass('animated shake');
-    $('.graphContainer').removeClass('animated shake');
+    $('.chartContainer').removeClass('animated shake');
   },
 
   /* Called when an element is dropped on it */
   onDrop: function (e) {
     e.stopPropagation();
     e.preventDefault();
-
     var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
     var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
     var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
-
     this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
   }
-
-
-
-
-
 });

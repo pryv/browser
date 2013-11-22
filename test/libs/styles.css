@@ -38,12 +38,14 @@ body{
   width: 40px;
   height: 40px;
   background:url(../img/logo-pryv.png) 0 0 no-repeat;
+  background-color: #3e3e3e;
 }
 .logo:hover{
   background-position: -40px 0px;
 }
 .logo.loading {
   background:url(../img/loader2.gif) 0 0 no-repeat;
+  background-color: #3e3e3e;
 }
 #tree {
   width: 100%;

@@ -22,10 +22,7 @@ var Controller = module.exports = function ($modal, events) {
   this.debounceAdd = _.debounce(this.addEventsLater.bind(this), 100);
 
   this.testf = _.debounce(function () {
-
-    var elem = this.collection.at(0);
     this.updateSingleView(this.collection.next().getCurrentElement());
-    //this.updateSingleView(elem);
   }.bind(this), 1000);
 
   this.debounceAdd();
@@ -212,9 +209,8 @@ _.extend(Controller.prototype, {
     this.collection.sort();
   },
 
-  /* jshint -W098 */
+
   deleteEvent: function (event) {
-    //console.log('TODO: deleteEvent');
     if (!event) {
       return;
     }
@@ -222,10 +218,17 @@ _.extend(Controller.prototype, {
     this.debounceAdd();
   },
   updateEvent: function (event) {
-    //console.log('TODO: updateEvent');
+    if (!event) {
+      return;
+    }
+    if (this.events[event.id]) {
+      this.events[event.id] = event;
+      this.debounceAdd();
+    }
   },
   highlightDate: function (time) {
-    //console.log('TODO: highlight date');
+    this.singleView.onDateHighLighted(time);
+    this.finalView.onDateHighLighted(time);
   },
 
 

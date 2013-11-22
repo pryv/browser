@@ -372,5 +372,5 @@ _.extend(Controller.prototype, {
     if (this.singleView) {
       this.singleView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
     }
-  }, 500)
+  }, 250)
 });

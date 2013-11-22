@@ -36,6 +36,7 @@ module.exports = Marionette.ItemView.extend({
       this.useExtras = false;
     }
 
+
     this.makePlot();
     this.onDateHighLighted(0);
   },
@@ -56,10 +57,15 @@ module.exports = Marionette.ItemView.extend({
       });
     };
 
+    var dataSorter = function (d) {
+      return _.sortBy(d, function (e) {
+        return e.time;
+      });
+    };
 
     for (var i = 0; i < myModel.length; ++i) {
       this.addSeries({
-        data: dataMapper(myModel[i].elements),
+        data: dataSorter(dataMapper(myModel[i].elements)),
         label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type) : myModel[i].type,
         type: myModel[i].style
       }, i);

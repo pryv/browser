@@ -42,11 +42,21 @@ body{
 .logo:hover{
   background-position: -40px 0px;
 }
+.logo.loading {
+  background:url(../img/loader.gif) 0 0 no-repeat;
+  background-size: contain;
+}
 #tree {
   width: 100%;
   height: 100%;
   margin: 20px 40px 50px 20px;
   color: white;
+}
+.loading + #tree > #empty-events {
+  display: none;
+}
+.node + #empty-events {
+ display: none;
 }
 .Center-Container.is-Table { display: table;height: 100%;width:100%; }
 .is-Table .Table-Cell {

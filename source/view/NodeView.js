@@ -38,7 +38,7 @@ module.exports = Marionette.ItemView.extend({
     var html = Marionette.Renderer.render(template, data);
     this.$el.html(html);
 
-    $('#' + this.model.get('containerId')).append(this.$el);
+    $('#' + this.model.get('containerId')).prepend(this.$el);
     if (this.model.get('eventView')) {
       this.model.get('eventView').render(this.model.get('id'));
     }

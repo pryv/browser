@@ -3,6 +3,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js');
 var _ = require('underscore');
 var ConnectionsHandler = require('./model/ConnectionsHandler.js');
 
+var SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL;
 var TreeMap = require('./tree/TreeMap.js');
 var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
@@ -25,6 +26,12 @@ var Model = module.exports = function () {
 
   this.connections = new ConnectionsHandler(this);
   this.activeFilter = new MonitorsHandler(this);
+  this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
+    $('#logo-reload').addClass('loading');
+  });
+  this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
+    $('#logo-reload').removeClass('loading');
+  });
   $('#logo-reload').click(function () {
     this.activeFilter.focusOnStreams(null);
   }.bind(this));

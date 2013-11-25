@@ -163,20 +163,24 @@ module.exports = Marionette.ItemView.extend({
       height: this.model.get('dimensions').height + 'px'
     });
   },
-    /*
-  showTooltip: function (x, y, content) {
 
-    var tooltip = '<div id="chart-tooltip" class="tooltip">' + content + '</div>';
+  showTooltip: function (x, y, content) {
     if ($('#chart-tooltip').length === 0) {
-      $('body').append(tooltip);
+      $('body').append('<div id="chart-tooltip" class="tooltip">' + content + '</div>');
+    }
+    if ($('#chart-tooltip').text() !== content) {
+      $('#chart-tooltip').text(content);
     }
     $('#chart-tooltip').css({
-      top: x,
-      left: y
-    }).fadeIn(1500);
-
+      top: x + this.plot.offset().top,
+      left: y + this.plot.offset().left
+    }).fadeIn(500);
   },
-  */
+
+  removeTooltip: function () {
+    $('#chart-tooltip').remove();
+  },
+
 
   onDateHighLighted: function (date) {
     if (!this.plot) {
@@ -184,7 +188,6 @@ module.exports = Marionette.ItemView.extend({
     }
 
     this.plot.unhighlight();
-
     var data = this.plot.getData();
     for (var k = 0; k < data.length; k++) {
       var distance = null;
@@ -244,24 +247,22 @@ module.exports = Marionette.ItemView.extend({
 
   onHover: function (event, pos, item) {
     if (item) {
-      this.trigger('chart:hover', this.model);
+      var labelValue = item.datapoint[1].toFixed(2);
+      var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
+        item.datapoint[0]);
+      this.showTooltip(coords.top + 5, coords.left + 5, labelValue);
+    } else {
+      this.removeTooltip();
     }
+  },
 
-    /*
-      if (item) {
-        var id = this.container + '-tooltip' + item.seriesIndex + '-' + item.dataIndex;
-        if (!$('#' + id).length) {
-          var labelValue = item.datapoint[1].toFixed(2);
-          var clazz = 'hover';
-          var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
-            item.datapoint[0]);
-          this.showTooltip(id, clazz, labelValue, coords.top + 10, coords.left + 10);
-        }
-      } else {
-        $('#' + this.container + ' .tooltip.hover').remove();
-      }
-    }
-    */
+
+  computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
+    var yAxes = this.plot.getYAxes();
+    var xAxes = this.plot.getXAxes();
+    var coordY = yAxes[yAxis].p2c(xPoint);
+    var coordX = xAxes[xAxis].p2c(yPoint);
+    return { top: coordY, left: coordX};
   },
 
 

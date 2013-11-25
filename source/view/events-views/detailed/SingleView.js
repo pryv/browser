@@ -8,7 +8,8 @@ module.exports = Marionette.ItemView.extend({
   itemViewContainer: '#modal-left-content',
   ui: {
     li: 'li',
-    edit: '.edit'
+    edit: '.edit',
+    submit: '#submit-edit'
   },
   templateHelpers: function () {
     return {
@@ -30,6 +31,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.li.bind('dblclick', this.onEditClick.bind(this));
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
+    this.ui.submit.bind('click', this.submit.bind(this));
   },
   onEditClick: function (e) {
     $(e.currentTarget).addClass('editing');
@@ -58,9 +60,12 @@ module.exports = Marionette.ItemView.extend({
       value = value.getTime() / 1000;
     }
     eval('event.' + key + ' = value');
-    this.model.set('event', event).save();
     this.completeEdit($($elem).parent());
     this.render();
+  },
+  submit: function () {
+    var event = this.model.get('event');
+    this.model.set('event', event).save();
   },
   completeEdit: function ($elem) {
     $($elem).removeClass('editing');

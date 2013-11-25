@@ -151,7 +151,7 @@
         <li class="event-structure" id="current-time">time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
           %></label>
-          <input class="edit" id="edit-time" value="<%= event.time %>">
+          <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
         </li>
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">

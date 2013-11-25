@@ -24,18 +24,15 @@ module.exports = Marionette.ItemView.extend({
     if (
       !this.model.get('events') ||
       !this.model.get('dimensions') ||
-      !this.model.get('container') ||
-      this.model.get('events').length === 0) {
+      !this.model.get('container')) {
       return;
     }
-
 
     try {
       Pryv.eventTypes.extras('mass/kg');
     } catch (e) {
       this.useExtras = false;
     }
-
 
     this.makePlot();
     this.onDateHighLighted(0);
@@ -63,7 +60,6 @@ module.exports = Marionette.ItemView.extend({
       });
     };
 
-
     for (var i = 0; i < myModel.length; ++i) {
       this.addSeries({
         data: dataSorter(dataMapper(myModel[i].elements)),
@@ -77,14 +73,12 @@ module.exports = Marionette.ItemView.extend({
     myModel = null;
   },
 
-
   resize: function () {
     if (!this.model.get('dimensions')) {
       return;
     }
     this.render();
   },
-
 
   /**
    * Generates the general plot options based on the model
@@ -99,9 +93,10 @@ module.exports = Marionette.ItemView.extend({
       minBorderMargin: 5
     };
     this.options.xaxes = [ {
-      show: this.model.get('xaxis'),
+      show: this.model.get('xaxis') && (this.model.get('events').length !== 0),
       mode: 'time',
-      timeformat: '%y/%m/%d'
+      timeformat: '%y/%m/%d',
+      ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
     this.options.legend = {
@@ -117,6 +112,19 @@ module.exports = Marionette.ItemView.extend({
       //container: null or jQuery object/DOM element/jQuery expression
     };
     seriesCounts = null;
+  },
+
+  getExtremeTimes: function () {
+    var events = this.model.get('events');
+    var min = Infinity, max = 0;
+    for (var i = 0; i < events.length; ++i) {
+      var el = events[i].elements;
+      for (var j = 0; j < el.length; ++j) {
+        min = (el[j].time < min) ? el[j].time : min;
+        max = (el[j].time > max) ? el[j].time : max;
+      }
+    }
+    return [min * 1000, max * 1000];
   },
 
   /**

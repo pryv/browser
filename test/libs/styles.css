@@ -422,6 +422,8 @@ text-align: center;*/
 
 #DnD-panel-left {
     height: 100%;
+    width: 100%;
+    padding-right: 200px;
     float: left;
 }
 #DnD-panel-right {
@@ -432,14 +434,13 @@ text-align: center;*/
     width: 200px;
     right: 0;
 }
-#detail-div {
-    position: absolute;
-    overflow-y: scroll;
-    float: right;
-    top: 56px;
-    right: 0;
-    bottom: 0px;
-    height: 100%;
+
+.DnD-highlighted {
+    background-color: greenyellow;
+}
+
+.DnD-unhighlighted {
+    background-color: orange;
 }
 
 .DnD-itemView-checkbox {
@@ -453,6 +454,35 @@ text-align: center;*/
 .DnD-itemView-text {
     margin-left: 16px;
     position: relative;
+}
+
+#DnD-left-content {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#DnD-left-content-headerSingle {
+    height: 5%;
+
+}
+
+#DnD-left-content-single {
+    height: 40%;
+    margin-top: 10px;
+    margin-left: 10px;
+    background-color: Khaki;
+}
+
+#DnD-left-content-headerFinal {
+    height: 5%;
+}
+
+#DnD-left-content-final {
+    height: 40%;
+    margin-top: 10px;
+    margin-left: 10px;
+    background-color: LightSeaGreen;
 }
 
 /** END of CSS for Drag and Drop Dialog using the modal **/

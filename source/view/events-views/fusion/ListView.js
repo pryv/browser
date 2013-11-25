@@ -7,7 +7,6 @@ module.exports = Marionette.CompositeView.extend({
   template: '#template-DnD-ListCompositeView',
   container: '#DnD-right-content-lists',
   itemView: ItemView,
-  itemViewContainer: '#detail-div',
   initialize: function () {
     this.listenTo(this.collection, 'add remove', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);

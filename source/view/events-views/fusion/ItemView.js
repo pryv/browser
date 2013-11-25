@@ -39,15 +39,15 @@ module.exports = Marionette.ItemView.extend({
 
     this.ui.checkbox.attr('checked', this.model.get('selected'));
 
-    var children = this.$el.children();
     if (this.model.get('highlighted')) {
-      children.css('background', 'green');
-      this.$el.css('background', 'green');
+      this.$el.removeClass('DnD-unhighlighted');
+      this.$el.addClass('DnD-highlighted');
     } else {
-      children.css('background', 'yellow');
-      this.$el.css('background', 'yellow');
+      this.$el.addClass('DnD-unhighlighted');
+      this.$el.removeClass('DnD-highlighted');
     }
-    this.$('.view').bind('click', function () {
+
+    this.$('.DnD-itemView-text').bind('click', function () {
       this.trigger('chart:clicked', this.model);
     }.bind(this));
 
@@ -73,7 +73,4 @@ module.exports = Marionette.ItemView.extend({
     //console.log('ItemView onClose');
     // custom closing and cleanup goes here
   }
-
-
-
 });

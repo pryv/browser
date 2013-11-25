@@ -32,7 +32,7 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
-    console.log('ItemView onRender');
+    //console.log('ItemView onRender');
     $(this.el).css({
       overflow: 'hidden'
     });

@@ -288,7 +288,7 @@ _.extend(Controller.prototype, {
       var events = [];
       if (eventsFinalView) {
         for (var i = 0; i < eventsFinalView.length; ++i) {
-          console.log(eventsFinalView[i].id, eventToRemove);
+          //console.log(eventsFinalView[i].id, eventToRemove);
           if (eventsFinalView[i].id !== eventToRemove) {
             events.push(eventsFinalView[i]);
           }

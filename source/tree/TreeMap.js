@@ -167,7 +167,7 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
       events[attrname] = node2.events[attrname];
     }
   }
-  this.dialog = new FusionDialog($('#detailViewModal').on('hidden.bs.modal', function () {
+  this.dialog = new FusionDialog($('#pryv-modal').on('hidden.bs.modal', function () {
     if (this.dialog) {
       this.dialog.close();
       this.dialog = null;

@@ -413,6 +413,8 @@ text-align: center;*/
 }
 /** end detail view modal **/
 
+
+/** CSS for Drag and Drop Dialog using the modal **/
 #DnD-body {
     height: 100%;
     padding: 0;
@@ -439,3 +441,20 @@ text-align: center;*/
     bottom: 0px;
     height: 100%;
 }
+
+.DnD-itemView-checkbox {
+    float: left;
+    width: 15px;
+    position: relative;
+    text-align: left;
+    margin-left: 3px;
+}
+
+.DnD-itemView-text {
+    margin-left: 16px;
+    position: relative;
+}
+
+/** END of CSS for Drag and Drop Dialog using the modal **/
+
+

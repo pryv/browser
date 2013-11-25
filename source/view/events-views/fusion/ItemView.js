@@ -7,8 +7,8 @@ module.exports = Marionette.ItemView.extend({
   tagName: 'div',
   ui: {
     checkbox: 'input[type=checkbox]',
-    divCheckbox: '#fusionItemView-checkbox',
-    divText: '#fusionItemView-text'
+    divCheckbox: '.DnD-itemView-checkbox',
+    divText: '.DnD-itemView-text'
   },
   template: '#template-DnD-ItemView',
 
@@ -38,21 +38,6 @@ module.exports = Marionette.ItemView.extend({
     });
 
     this.ui.checkbox.attr('checked', this.model.get('selected'));
-
-    this.ui.divCheckbox.css({
-      float: 'left',
-      width: '15px',
-      position: 'relative',
-      'text-align': 'left',
-      'margin-left': '3px'
-    });
-
-    var textBoxWidth = $('#DnD-panel-right').width() - 15 - 10 - 12;
-    this.ui.divText.css({
-      float: 'right',
-      width: textBoxWidth,
-      position: 'relative'
-    });
 
     var children = this.$el.children();
     if (this.model.get('highlighted')) {

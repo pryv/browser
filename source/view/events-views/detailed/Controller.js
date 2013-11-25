@@ -41,6 +41,9 @@ _.extend(Controller.prototype, {
     this.singleView.render();
     this.resizeModal();
     $(this.$modal).keydown(function (e) {
+      if ($('#detail-full .editing').length !== 0) {
+        return true;
+      }
       var LEFT_KEY = 37;
       var UP_KEY = 38;
       var RIGHT_KEY = 39;

@@ -49,6 +49,14 @@ module.exports = Marionette.ItemView.extend({
     var event = this.model.get('event'),
     key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
     value = $($elem).val().trim();
+    if (key === 'time') {
+      value = new Date(value);
+      if (isNaN(value)) {
+        // TODO input is not a date decide what to do
+        return;
+      }
+      value = value.getTime() / 1000;
+    }
     eval('event.' + key + ' = value');
     this.model.set('event', event).save();
     this.completeEdit($($elem).parent());

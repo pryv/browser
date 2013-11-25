@@ -24,8 +24,7 @@ module.exports = Marionette.ItemView.extend({
     if (
       !this.model.get('events') ||
       !this.model.get('dimensions') ||
-      !this.model.get('container') ||
-      this.model.get('events').length === 0) {
+      !this.model.get('container') ) {
       return;
     }
 

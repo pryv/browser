@@ -72,24 +72,21 @@ _.extend(Controller.prototype, {
        */
       this.listView.on('itemview:chart:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
-        //console.log('itemview:chart:clicked', evt.model);
         this.updateSingleView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:select', function (evt) {
-        //console.log('itemview:chart:select', evt);
         this.addSeriesToFinalView(evt.model);
       }.bind(this));
 
       this.listView.on('itemview:chart:unselect', function (evt) {
-        //console.log('itemview:chart:unselect', evt);
         this.removeSeriesFromFinalView(evt.model);
       }.bind(this));
 
       this.singleView.on('chart:clicked', function (evt) {
-        //console.log('chart:clicked - evt', evt);
         var model = this.changeStyleOnSingleView(evt);
         this.updateSeriesOnFinalView(model);
+        this.collection.setCurrentElement(this.collection.getCurrentElement());
       }.bind(this));
     }
 
@@ -99,7 +96,7 @@ _.extend(Controller.prototype, {
     this.finalView.render();
     this.resizeModal();
 
-    $(this.$modal).keydown(function (e) {
+    $('body').on('keydown', function (e) {
       var LEFT_KEY = 37;
       var UP_KEY = 38;
       var RIGHT_KEY = 39;
@@ -114,8 +111,15 @@ _.extend(Controller.prototype, {
         return false;
       }
       if (e.which === SPACE_KEY) {
-        /* Implement space to act as un/select on the checkbox */
-        //this.updateSingleView(this.collection.next().getCurrentElement());
+        var c = this.collection.getCurrentElement();
+        if (c.get('selected')) {
+          c.set('selected', false);
+          this.removeSeriesFromFinalView(c);
+        } else {
+          c.set('selected', true);
+          this.addSeriesToFinalView(c);
+        }
+        this.collection.setCurrentElement(c);
         return false;
       }
     }.bind(this));
@@ -288,7 +292,6 @@ _.extend(Controller.prototype, {
       var events = [];
       if (eventsFinalView) {
         for (var i = 0; i < eventsFinalView.length; ++i) {
-          //console.log(eventsFinalView[i].id, eventToRemove);
           if (eventsFinalView[i].id !== eventToRemove) {
             events.push(eventsFinalView[i]);
           }

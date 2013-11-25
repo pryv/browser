@@ -39,7 +39,6 @@ module.exports = Marionette.ItemView.extend({
 
     this.ui.checkbox.attr('checked', this.model.get('selected'));
 
-
     if (this.model.get('highlighted')) {
       this.$el.removeClass('DnD-unhighlighted');
       this.$el.addClass('DnD-highlighted');

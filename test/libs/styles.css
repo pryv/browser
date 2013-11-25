@@ -441,16 +441,6 @@ text-align: center;*/
     position: absolute;
 }
 
-#detail-div {
-    position: absolute;
-    overflow-y: scroll;
-    float: right;
-    top: 56px;
-    right: 0;
-    bottom: 0px;
-    height: 100%;
-}
-
 .DnD-highlighted {
     background-color: greenyellow;
 }

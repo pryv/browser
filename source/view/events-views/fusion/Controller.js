@@ -84,9 +84,14 @@ _.extend(Controller.prototype, {
       }.bind(this));
 
       this.singleView.on('chart:clicked', function (evt) {
-        var model = this.changeStyleOnSingleView(evt);
+        var model = this.getEventById(evt.get('events')[0]);
+        var style = model.get('style');
+        style++;
+        style %= 2;
+        model.set('style', style);
+        this.updateSingleView(model);
         this.updateSeriesOnFinalView(model);
-        this.collection.setCurrentElement(this.collection.getCurrentElement());
+        //this.collection.setCurrentElement(model);
       }.bind(this));
     }
 
@@ -308,7 +313,7 @@ _.extend(Controller.prototype, {
    */
   updateSeriesOnFinalView: function (model) {
     if (model) {
-      var eventToUpdate = model.get('events')[0];
+      var eventToUpdate = model;
       var eventsFinalView = this.finalView.model.get('events');
       var events = [];
       if (eventsFinalView) {
@@ -316,25 +321,22 @@ _.extend(Controller.prototype, {
           if (eventsFinalView[i].id !== eventToUpdate.id) {
             events.push(eventsFinalView[i]);
           } else {
-            events.push(eventToUpdate);
+            events.push({
+              id: model.get('id'),
+              streamId: model.get('streamId'),
+              streamName: model.get('streamName'),
+              connectionId: model.get('connectionId'),
+              type: model.get('type'),
+              elements: model.get('elements'),
+              trashed: model.get('v'),
+              tags: model.get('tags'),
+              style: model.get('style')
+            });
           }
         }
       }
       this.finalView.model.set('events', events);
       this.finalView.render();
-    }
-  },
-
-  changeStyleOnSingleView: function (model) {
-    if (model) {
-      var event = model.get('events');
-      var style = event[0].style;
-      style++;
-      style %= 2;
-      event[0].style = style;
-      this.singleView.model.set('events', event);
-      this.singleView.render();
-      return this.singleView.model;
     }
   },
 

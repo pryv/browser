@@ -19,7 +19,7 @@ var Model = module.exports = function (events, params) {
   this.typeView = null;
   this.animationIn = null;
   this.animationOut = null;
-  this.$modal =  $('#detailViewModal').on('hidden.bs.modal', function () {
+  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
     if (this.detailedView) {
       this.detailedView.close();
       this.detailedView = null;

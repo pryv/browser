@@ -26,7 +26,7 @@ var NotesPlugin = module.exports = function (events, params) {
   this.animationOut = null;
 
   this.detailedView = null;
-  this.$modal =  $('#detailViewModal').on('hidden.bs.modal', function () {
+  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
     if (this.detailedView) {
       this.detailedView.close();
       this.detailedView = null;

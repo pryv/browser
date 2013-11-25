@@ -16,14 +16,15 @@
   <script type="text/javascript" src="libs/require.js"></script>
   <script type="text/javascript" charset="utf-8" src="../dist/app_bundle_main.js"></script>
   <script type="text/javascript">
-    $(function() {
+    $(function () {
       var sampleApp = require('SampleApp');
       sampleApp.main();
     });
   </script>
-  <script id="super-condensed-view" type="template" >
+  <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+
     <div class="aggregated-icon-page"></div>
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
@@ -36,9 +37,10 @@
       </div>
     </div>
   </script>
-  <script id="positionsView" type="template" >
+  <script id="positionsView" type="template">
     <div class="aggregated-icon Positions"></div>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+
     <div id="map-canvas-<%=id%>" class="mapView"></div>
   </script>
   <script id="picturesView" type="template">
@@ -47,37 +49,40 @@
   </script>
 
   <script id="notesView" type="template">
-  <div class="aggregated-icon Notes"></div>
+    <div class="aggregated-icon Notes"></div>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
           <%= content %>
         </div>
       </div>
-  </div>
+    </div>
     <div class="tags"><%= tags %></div>
     <div class="date"><%= new Date(time * 1000).toLocaleDateString() %></div>
   </script>
   <script id="genericsView" type="template">
-  <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
+    <div class="aggregated-icon <%= type.split("
+    /")[0] %> <%= type.split("/")[1] %>"></div>
 
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+
     <div class="aggregated-icon-page"></div>
 
-  
+
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
-           <% if (type.split("/")[0] === 'url') { %>
-            <a href="<%= content %>"><%= content %></a>
-            <% } else { %>
-            <%= content %>
-            <% } %>
+          <% if (type.split("/")[0] === 'url') { %>
+          <a href="<%= content %>"><%= content %></a>
+          <% } else { %>
+          <%= content %>
+          <% } %>
         </div>
       </div>
     </div>
-  
+
   </script>
   <script id="nodeView" type="template">
 
@@ -85,12 +90,12 @@
     if (typeof(content) != "undefined") {
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
     <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
-    <% } else   if (typeof(content.name) != "undefined" ) { %>
-      <div class='nodeHeader '><%= content.name %></div>
-    <% } else  if (typeof(content.username) != "undefined") { %>
-    <div class='nodeHeader'  ><%= content.username %> / <%= content._accessInfo.name %></div>
-    <% }  }  %>
-     <span></span>
+    <% } else if (typeof(content.name) != "undefined" ) { %>
+    <div class='nodeHeader '><%= content.name %></div>
+    <% } else if (typeof(content.username) != "undefined") { %>
+    <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <% } } %>
+    <span></span>
   </script>
 
   <script type="text/html" id="template-detailListCompositeView">
@@ -98,7 +103,8 @@
   </script>
   <script type="text/html" id="template-detailItemView">
     <div class="view">
-      <%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %>
+      <%= new Date(event.time * 1000).toLocaleDateString() %> <%= new Date(event.time *
+      1000).toLocaleTimeString() %>
     </div>
   </script>
 
@@ -106,70 +112,67 @@
     <div id="detail-div"></div>
   </script>
   <script type="text/html" id="template-fusionItemView">
-        <div id="fusionItemView-checkbox" class="view">
-          <input type="checkbox" name="chartSelector" value="isSelected">
-        </div>
-        <div id="fusionItemView-text" class="view">
-          <%= streamName %>
-        </div>
+    <div id="fusionItemView-checkbox" class="view">
+      <input type="checkbox" name="chartSelector" value="isSelected">
+    </div>
+    <div id="fusionItemView-text" class="view">
+      <%= streamName %>
+    </div>
   </script>
   <script type="template" id="template-detail-full">
-  <div id="detail-full">
-    <% if (event) {%>
-    <ul>
-  <li class="event-structure" id="current-streamId">streamId: <label><%= event.streamId %></label>
-    <input class="edit" id="edit-streamId" value="<%= event.streamId %>">
-  </li>
-  <li class="event-structure" id="current-time">time: <label><%= new Date(event.time * 1000).toLocaleDateString() %>  <%= new Date(event.time * 1000).toLocaleTimeString() %></label>
-    <input class="edit" id="edit-time" value="<%= event.time %>">
-  </li>
-  <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
-    <input class="edit" id="edit-type" value="<%= event.type %>">
-  </li>
-  <li class="event-structure" id="current-description">description: <label><%= event.description %></label>
-    <input class="edit" id="edit-description" value="<%= event.description %>"></li>
-  <li class="event-structure" id="current-tags">tags: <label><%= event.tags.join(', ') %></label>
-    <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
-  <div class="event-structure" id="full-content"><%= showContent() %></div>
-  </ul>
-  <% } %>
-  </div>
+
+    <div id="detail-full">
+      <% if (event) {%>
+      <ul>
+        <li class="event-structure" id="current-streamId">streamId: <label><%= event.streamId
+          %></label>
+          <input class="edit" id="edit-streamId" value="<%= event.streamId %>">
+        </li>
+        <li class="event-structure" id="current-time">time: <label><%= new Date(event.time *
+          1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
+          %></label>
+          <input class="edit" id="edit-time" value="<%= event.time %>">
+        </li>
+        <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
+          <input class="edit" id="edit-type" value="<%= event.type %>">
+        </li>
+        <li class="event-structure" id="current-description">description: <label><%=
+          event.description %></label>
+          <input class="edit" id="edit-description" value="<%= event.description %>"></li>
+        <li class="event-structure" id="current-tags">tags: <label><%= event.tags.join(', ')
+          %></label>
+          <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
+        <div class="event-structure" id="full-content"><%= showContent() %></div>
+      </ul>
+      <% } %>
+
+    </div>
   </script>
-    <script type="template" id="template-fusion-graph">
-        <div id="fusion-full">
-        </div>
-    </script>
+  <script type="template" id="template-fusion-graph">
+    <div id="fusion-full">
+    </div>
+  </script>
 </head>
 
 <body>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
+
 <div id="tree">
   <div id="empty-events">
     <h1> No events to display </h1>
   </div>
 </div>
 <div id="timeframe"></div>
-<div class="modal fade" id="detailViewModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="pryv-modal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-body">
-        <div class="modal-panel-left">
-          <div id="modal-left-content">
-          </div>
-        </div>
-        <div class="modal-panel-right">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Detailed View</h4>
-          </div>
-          <div id="modal-right-content">
-            <ul id="detail-list"></ul>
-            <div id="detail-div"></div>
-          </div>
-        </div>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
+
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
 </body>
 </html>

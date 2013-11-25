@@ -4,7 +4,8 @@ var Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
-  container: '#modal-left-content',
+  container: '.modal-content',
+  itemViewContainer: '#modal-left-content',
   ui: {
     li: 'li',
     edit: '.edit'
@@ -17,11 +18,15 @@ module.exports = Marionette.ItemView.extend({
     };
   },
   initialize: function () {
+    if ($('.modal-panel-left').length === 0) {
+      /*jshint -W101 */
+      $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"></div></div>');
+    }
     this.listenTo(this.model, 'change', this.render);
 
   },
   onRender: function () {
-    $(this.container).html(this.el);
+    $(this.itemViewContainer).html(this.el);
     this.ui.li.bind('dblclick', this.onEditClick.bind(this));
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));

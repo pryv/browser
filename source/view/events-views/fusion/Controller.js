@@ -336,34 +336,17 @@ _.extend(Controller.prototype, {
   },
 
   resizeModal: _.debounce(function () {
-
-    $('#DnD-panel-left').css({
-      width: $('.modal-content').width() - $('#DnD-panel-right').width(),
-      height: $('.modal-content').height()
-    });
-
-    $('#DnD-left-content').css({
-      width: '100%',
-      height: $('.DnD-panel-left').height()
-    });
-
     var chartSizeWidth = $('#DnD-panel-left').width() - 20;
     var chartSizeHeight = ($('#DnD-panel-left').height() - 30) / 2;
 
     $('#DnD-left-content-single').css({
       width: chartSizeWidth,
-      height: chartSizeHeight,
-      'margin-top': '10px',
-      'margin-left': '10px',
-      'background-color': 'Khaki'
+      height: chartSizeHeight
     });
 
     $('#DnD-left-content-final').css({
       width: chartSizeWidth,
-      height: chartSizeHeight,
-      'margin-top': '10px',
-      'margin-left': '10px',
-      'background-color': 'LightSeaGreen'
+      height: chartSizeHeight
     });
 
     if (this.finalView) {

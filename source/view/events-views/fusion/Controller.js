@@ -340,16 +340,15 @@ _.extend(Controller.prototype, {
 
   resizeModal: _.debounce(function () {
     var chartSizeWidth = $('#DnD-panel-left').width() - 20;
-    var chartSizeHeight = ($('#DnD-panel-left').height() - 30) / 2;
+    var chartSizeHeight = $('DnD-left-content-single').height();
+
 
     $('#DnD-left-content-single').css({
-      width: chartSizeWidth,
-      height: chartSizeHeight
+      width: chartSizeWidth
     });
 
     $('#DnD-left-content-final').css({
-      width: chartSizeWidth,
-      height: chartSizeHeight
+      width: chartSizeWidth
     });
 
     if (this.finalView) {

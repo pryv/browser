@@ -435,12 +435,6 @@ text-align: center;*/
     right: 0;
 }
 
-##DnD-left-content {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-}
-
 .DnD-highlighted {
     background-color: greenyellow;
 }
@@ -462,13 +456,30 @@ text-align: center;*/
     position: relative;
 }
 
+#DnD-left-content {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+#DnD-left-content-headerSingle {
+    height: 5%;
+
+}
+
 #DnD-left-content-single {
+    height: 40%;
     margin-top: 10px;
     margin-left: 10px;
     background-color: Khaki;
 }
 
+#DnD-left-content-headerFinal {
+    height: 5%;
+}
+
 #DnD-left-content-final {
+    height: 40%;
     margin-top: 10px;
     margin-left: 10px;
     background-color: LightSeaGreen;

@@ -4,8 +4,8 @@ var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
 module.exports = Marionette.CompositeView.extend({
-  template: '#template-fusionListCompositeView',
-  container: '#detail-div',
+  template: '#template-DnD-ListCompositeView',
+  container: '#DnD-right-content-lists',
   itemView: ItemView,
   itemViewContainer: '#detail-div',
   initialize: function () {

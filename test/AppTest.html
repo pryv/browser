@@ -102,10 +102,29 @@
     </div>
   </script>
 
-  <script type="text/html" id="template-fusionListCompositeView">
+  <script type="text/html" id="template-DnD">
+    <div id="DnD-body">
+      <div id="DnD-panel-left">
+        <div id="DnD-left-content">
+          <div id="DnD-left-content-single"></div>
+          <div id="DnD-left-content-final"></div>
+        </div>
+      </div>
+      <div id="DnD-panel-right">
+        <div id="DnD-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 id="modal-title" id="myModalLabel">Drag and Drop</h4>
+        </div>
+        <div id="DnD-right-content">
+          <div id="DnD-right-content-lists"></div>
+        </div>
+      </div>
+    </div>
+  </script>
+  <script type="text/html" id="template-DnD-ListCompositeView">
     <div id="detail-div"></div>
   </script>
-  <script type="text/html" id="template-fusionItemView">
+  <script type="text/html" id="template-DnD-ItemView">
         <div id="fusionItemView-checkbox" class="view">
           <input type="checkbox" name="chartSelector" value="isSelected">
         </div>
@@ -151,24 +170,7 @@
 <div id="timeframe"></div>
 <div class="modal fade" id="detailViewModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-body">
-        <div class="modal-panel-left">
-          <div id="modal-left-content">
-          </div>
-        </div>
-        <div class="modal-panel-right">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-            <h4 class="modal-title" id="myModalLabel">Detailed View</h4>
-          </div>
-          <div id="modal-right-content">
-            <ul id="detail-list"></ul>
-            <div id="detail-div"></div>
-          </div>
-        </div>
-      </div>
-    </div><!-- /.modal-content -->
+    <div class="modal-content"></div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 </body>

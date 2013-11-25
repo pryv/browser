@@ -412,3 +412,30 @@ text-align: center;*/
   display: none;
 }
 /** end detail view modal **/
+
+#DnD-body {
+    height: 100%;
+    padding: 0;
+}
+
+#DnD-panel-left {
+    height: 100%;
+    float: left;
+}
+#DnD-panel-right {
+    height: 100%;
+    overflow: hidden;
+    border-left: 1px solid #e5e5e5;
+    position: absolute;
+    width: 200px;
+    right: 0;
+}
+#detail-div {
+    position: absolute;
+    overflow-y: scroll;
+    float: right;
+    top: 56px;
+    right: 0;
+    bottom: 0px;
+    height: 100%;
+}

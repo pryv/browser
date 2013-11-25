@@ -14,10 +14,10 @@ var Controller = module.exports = function ($modal, events) {
   this.singleView = null;
   this.finalView = null;
   this.$modal = $modal;
+  this.$content = $modal.find('.modal-content');
 
-  // Create the two div for the single and final view
-  $('#modal-left-content')
-    .html('<div id="modal-left-content-single"></div><div id="modal-left-content-final"></div>');
+  // Create the div we will use
+  this.$content.html($('#template-DnD').html());
 
   this.debounceAdd = _.debounce(this.addEventsLater.bind(this), 100);
 
@@ -37,7 +37,7 @@ _.extend(Controller.prototype, {
     if (!this.listView) {
       this.singleView = new ChartView({model:
         new Model({
-          container: '#modal-left-content-single',
+          container: '#DnD-left-content-single',
           events: [],
           highlightedTime: null,
           allowPieChart: false,
@@ -51,7 +51,7 @@ _.extend(Controller.prototype, {
         })});
       this.finalView = new ChartView({model:
         new Model({
-          container: '#modal-left-content-final',
+          container: '#DnD-left-content-final',
           events: [],
           highlightedTime: null,
           allowPieChart: false,
@@ -131,8 +131,8 @@ _.extend(Controller.prototype, {
     delete this.finalView;
     delete this.singleView;
     $(this.$modal).unbind('keydown');
-    $('#modal-left-content').empty();
-    $('#detail-div').empty();
+    $('#DnD-body').remove();
+    //$('#detail-div').empty();
 
     this.events = {};
     this.eventsToAdd = [];
@@ -337,20 +337,20 @@ _.extend(Controller.prototype, {
 
   resizeModal: _.debounce(function () {
 
-    $('.modal-panel-left').css({
-      width: $('.modal-body').width() - $('.modal-panel-right').width(),
-      height: $('.modal-body').height()
+    $('#DnD-panel-left').css({
+      width: $('.modal-content').width() - $('#DnD-panel-right').width(),
+      height: $('.modal-content').height()
     });
 
-    $('#modal-left-content').css({
+    $('#DnD-left-content').css({
       width: '100%',
-      height: $('.modal-panel-left').height()
+      height: $('.DnD-panel-left').height()
     });
 
-    var chartSizeWidth = $('.modal-panel-left').width() - 20;
-    var chartSizeHeight = ($('.modal-panel-left').height() - 30) / 2;
+    var chartSizeWidth = $('#DnD-panel-left').width() - 20;
+    var chartSizeHeight = ($('#DnD-panel-left').height() - 30) / 2;
 
-    $('#modal-left-content-single').css({
+    $('#DnD-left-content-single').css({
       width: chartSizeWidth,
       height: chartSizeHeight,
       'margin-top': '10px',
@@ -358,7 +358,7 @@ _.extend(Controller.prototype, {
       'background-color': 'Khaki'
     });
 
-    $('#modal-left-content-final').css({
+    $('#DnD-left-content-final').css({
       width: chartSizeWidth,
       height: chartSizeHeight,
       'margin-top': '10px',

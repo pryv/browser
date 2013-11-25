@@ -10,7 +10,7 @@ module.exports = Marionette.ItemView.extend({
     divCheckbox: '#fusionItemView-checkbox',
     divText: '#fusionItemView-text'
   },
-  template: '#template-fusionItemView',
+  template: '#template-DnD-ItemView',
 
   templateHelpers: function () {
     return {
@@ -32,7 +32,7 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
-    //console.log('ItemView onRender');
+    console.log('ItemView onRender');
     $(this.el).css({
       overflow: 'hidden'
     });
@@ -47,7 +47,7 @@ module.exports = Marionette.ItemView.extend({
       'margin-left': '3px'
     });
 
-    var textBoxWidth = $('.modal-panel-right').width() - 15 - 10 - 12;
+    var textBoxWidth = $('#DnD-panel-right').width() - 15 - 10 - 12;
     this.ui.divText.css({
       float: 'right',
       width: textBoxWidth,

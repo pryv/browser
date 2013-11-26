@@ -61,6 +61,11 @@ module.exports = Marionette.ItemView.extend({
         return;
       }
       value = value.getTime() / 1000;
+    } else if (key === 'tag') {
+      value = value.split(',');
+      value = value.map(function (e) {
+        return e.trim();
+      });
     }
     eval('event.' + key + ' = value');
     this.completeEdit($($elem).parent());

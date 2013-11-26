@@ -15,6 +15,9 @@ module.exports = Marionette.ItemView.extend({
     return {
       showContent: function () {
         return this.objectToHtml('content', this.model.get('event').content, 'content');
+      }.bind(this),
+      getStreamStructure: function () {
+        return this.getStreamStructure();
       }.bind(this)
     };
   },
@@ -69,6 +72,31 @@ module.exports = Marionette.ItemView.extend({
   },
   completeEdit: function ($elem) {
     $($elem).removeClass('editing');
+  },
+  getStreamStructure: function () {
+    var rootStreams = this.model.get('event').connection.datastore.getStreams(),
+        currentStreamId = this.model.get('event').streamId,
+        result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      result += this._walkStreamStructure(rootStreams[i], 0, currentStreamId);
+    }
+    return result;
+
+  },
+  _walkStreamStructure: function (stream, depth, currentStreamId) {
+    var indentNbr = 4,
+    result = '<option ';
+    result += stream.id === currentStreamId ? 'selected="selected" ' : '';
+    result += 'value="' + stream.id + '" >';
+    for (var i = 0; i < depth * indentNbr; i++) {
+      result += '&nbsp;';
+    }
+    result += stream.id;
+    result += '</option>';
+    for (var j = 0; j < stream.children.length; j++) {
+      result += this._walkStreamStructure(stream.children[j], depth++, currentStreamId);
+    }
+    return result;
   },
   objectToHtml: function (key, object, id) {
     var result = '';

@@ -146,7 +146,7 @@
       <ul>
         <li class="event-structure" id="current-streamId">streamId: <label><%= event.streamId
           %></label>
-          <input class="edit" id="edit-streamId" value="<%= event.streamId %>">
+          <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
         </li>
         <li class="event-structure" id="current-time">time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()

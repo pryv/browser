@@ -16,8 +16,13 @@ module.exports = Backbone.Model.extend({
   },
   save: function () {
     var event = this.get('event');
-    event.connection.events.update(event, function () {
-      console.log(arguments);
+    event.update(function () {
+      console.log('update event callback', arguments);
+    });
+  },
+  trash: function () {
+    this.get('event').trash(function () {
+      console.log('trash event callback', arguments);
     });
   }
 });

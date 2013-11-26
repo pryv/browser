@@ -6,10 +6,12 @@ module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
   container: '.modal-content',
   itemViewContainer: '#modal-left-content',
+  waitSubmit: false,
   ui: {
     li: 'li',
     edit: '.edit',
-    submit: '#submit-edit'
+    submit: '#submit-edit',
+    trash: '#trash-edit'
   },
   templateHelpers: function () {
     return {
@@ -35,6 +37,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
     this.ui.submit.bind('click', this.submit.bind(this));
+    this.ui.trash.bind('click', this.trash.bind(this));
   },
   onEditClick: function (e) {
     $(e.currentTarget).addClass('editing');
@@ -42,6 +45,10 @@ module.exports = Marionette.ItemView.extend({
   },
   onEditBlur: function (e) {
     this.updateEvent(e.currentTarget);
+    if (e.relatedTarget.id === 'submit-edit') {
+      this.submit();
+    }
+    return true;
   },
   onEditKeypress: function (e) {
     var ENTER_KEY = 13;
@@ -61,7 +68,7 @@ module.exports = Marionette.ItemView.extend({
         return;
       }
       value = value.getTime() / 1000;
-    } else if (key === 'tag') {
+    } else if (key === 'tags') {
       value = value.split(',');
       value = value.map(function (e) {
         return e.trim();
@@ -70,10 +77,23 @@ module.exports = Marionette.ItemView.extend({
     eval('event.' + key + ' = value');
     this.completeEdit($($elem).parent());
     this.render();
+    if (this.waitSubmit) {
+      this.waitSubmit = false;
+      this.submit();
+    }
   },
-  submit: function () {
-    var event = this.model.get('event');
-    this.model.set('event', event).save();
+  submit: _.throttle(function () {
+      console.log('throttle submit');
+      if ($('.editing').length !== 0) {
+        this.waitSubmit = true;
+        return;
+      }
+      var event = this.model.get('event');
+      this.model.set('event', event).save();
+    }, 5 * 1000),
+
+  trash: function () {
+    this.model.trash();
   },
   completeEdit: function ($elem) {
     $($elem).removeClass('editing');

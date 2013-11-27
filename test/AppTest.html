@@ -8,7 +8,6 @@
   <meta property="og:description" content="Content available on Pryv only." />
   <meta property="og:image" content="http://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
   <meta property="og:image:secure_url" content="https://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
-
   <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
   <link rel="stylesheet" type="text/css" href="libs/bootstrap-responsive.min.css">
   <link rel="stylesheet" type="text/css" href="libs/styles.css">
@@ -69,8 +68,7 @@
     <div class="date"><%= new Date(time * 1000).toLocaleDateString() %></div>
   </script>
   <script id="genericsView" type="template">
-    <div class="aggregated-icon <%= type.split("
-    /")[0] %> <%= type.split("/")[1] %>"></div>
+    <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
 
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
 
@@ -118,7 +116,9 @@
     <div id="DnD-body">
       <div id="DnD-panel-left">
         <div id="DnD-left-content">
+          <div id="DnD-left-content-headerSingle">The Current Chart</div>
           <div id="DnD-left-content-single"></div>
+          <div id="DnD-left-content-headerFinal">Preview</div>
           <div id="DnD-left-content-final"></div>
         </div>
       </div>
@@ -134,15 +134,15 @@
     </div>
   </script>
   <script type="text/html" id="template-DnD-ListCompositeView">
-    <div id="detail-div"></div>
+    <div class="detail-div"></div>
   </script>
   <script type="text/html" id="template-DnD-ItemView">
-        <div class="DnD-itemView-checkbox" class="view">
-          <input type="checkbox" name="chartSelector" value="isSelected">
-        </div>
-        <div class="DnD-itemView-text" class="view">
-          <%= streamName %>
-        </div>
+    <div class="DnD-itemView-checkbox" class="view">
+      <input type="checkbox" name="chartSelector" value="isSelected">
+    </div>
+    <div class="DnD-itemView-text" class="view">
+      <%= streamName %>
+    </div>
   </script>
   <script type="template" id="template-detail-full">
 
@@ -151,12 +151,12 @@
       <ul>
         <li class="event-structure" id="current-streamId">streamId: <label><%= event.streamId
           %></label>
-          <input class="edit" id="edit-streamId" value="<%= event.streamId %>">
+          <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
         </li>
         <li class="event-structure" id="current-time">time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
           %></label>
-          <input class="edit" id="edit-time" value="<%= event.time %>">
+          <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
         </li>
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">
@@ -168,15 +168,17 @@
           %></label>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
         <div class="event-structure" id="full-content"><%= showContent() %></div>
+        <button id ="submit-edit" type="button" class="btn btn-primary">Submit</button>
+        <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
       </ul>
       <% } %>
 
     </div>
   </script>
-    <script type="template" id="template-fusion-graph">
-        <div id="fusion-full">
-        </div>
-    </script>
+  <script type="template" id="template-fusion-graph">
+    <div id="fusion-full">
+    </div>
+  </script>
 </head>
 
 <body>

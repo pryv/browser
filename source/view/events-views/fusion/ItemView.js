@@ -4,7 +4,7 @@ var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
 
-  tagName: 'div',
+  tagName: 'li',
   ui: {
     checkbox: 'input[type=checkbox]',
     divCheckbox: '.DnD-itemView-checkbox',

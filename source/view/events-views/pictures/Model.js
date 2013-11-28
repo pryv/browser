@@ -1,7 +1,8 @@
 /* global $ */
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
-  Backbone = require('backbone');
+  Backbone = require('backbone'),
+  DetailView = require('../detailed/Controller.js');
 var ACCEPTED_TYPE = 'picture/attached';
 var PicturesPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
@@ -27,7 +28,13 @@ var PicturesPlugin = module.exports = function (events, params) {
   this.animationIn = null;
   this.animationOut = null;
 
-
+  this.detailedView = null;
+  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+    if (this.detailedView) {
+      this.detailedView.close();
+      this.detailedView = null;
+    }
+  }.bind(this));
   /**  */
   this.highlightedTime = Infinity;
   this.view = null;
@@ -42,6 +49,9 @@ PicturesPlugin.prototype.eventEnter = function (event) {
   if (event.type === ACCEPTED_TYPE) {
 
     this.events[event.id] = event;
+    if (this.detailedView) {
+      this.detailedView.addEvents(event);
+    }
     this.debounceRefresh();
 
   } else {
@@ -55,8 +65,11 @@ PicturesPlugin.prototype.eventLeave = function (event) {
   if (!this.events[event.id]) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
+    if (this.detailedView) {
+      this.detailedView.deleteEvent(event);
+    }
     delete this.events[event.id];
-
+    this.debounceRefresh();
   }
 };
 
@@ -68,6 +81,9 @@ PicturesPlugin.prototype.eventChange = function (event) {
       'Type accepted is ' + ACCEPTED_TYPE);
   } else {
     this.events[event.id] = event;
+    if (this.detailedView) {
+      this.detailedView.updateEvent(event);
+    }
     this.debounceRefresh();
   }
 };
@@ -76,6 +92,9 @@ PicturesPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
   this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
   this.highlightedTime = time;
+  if (this.detailedView) {
+    this.detailedView.highlightDate(this.highlightedTime);
+  }
   this.debounceRefresh();
 };
 
@@ -158,6 +177,15 @@ PicturesPlugin.prototype._refreshModelView = function () {
       });
       if (typeof(document) !== 'undefined')  {
         this.eventsDisplayed[i].view = new PicturesView({model: this.eventsDisplayed[i].modelView});
+        /* jshint -W083 */
+        this.eventsDisplayed[i].view.on('nodeClicked', function () {
+          if (!this.detailedView) {
+            this.detailedView = new DetailView(this.$modal);
+          }
+          this.detailedView.addEvents(this.events);
+          this.detailedView.show();
+          this.detailedView.highlightDate(this.highlightedTime);
+        }.bind(this));
       }
     } else {
 

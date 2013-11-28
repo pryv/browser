@@ -20,6 +20,11 @@ module.exports = Backbone.Model.extend({
       console.log('update event callback', arguments);
     });
   },
+  addAttachment: function (file) {
+    this.get('event').addAttachment(file, function () {
+      console.log('trash event callback', arguments);
+    });
+  },
   trash: function () {
     this.get('event').trash(function () {
       console.log('trash event callback', arguments);

@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
@@ -6,9 +6,11 @@ module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
   container: '.modal-content',
   itemViewContainer: '#modal-left-content',
+  addAttachmentContainer: '#add-attachment',
   waitSubmit: false,
+  addAttachmentId: 0,
   ui: {
-    li: 'li',
+    li: 'li.editable',
     edit: '.edit',
     submit: '#submit-edit',
     trash: '#trash-edit'
@@ -17,6 +19,9 @@ module.exports = Marionette.ItemView.extend({
     return {
       showContent: function () {
         return this.objectToHtml('content', this.model.get('event').content, 'content');
+      }.bind(this),
+      showAttachment: function () {
+        return this.showAttachment();
       }.bind(this),
       getStreamStructure: function () {
         return this.getStreamStructure();
@@ -33,6 +38,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
+    this.addAttachment();
     this.ui.li.bind('dblclick', this.onEditClick.bind(this));
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
@@ -55,6 +61,38 @@ module.exports = Marionette.ItemView.extend({
     if (e.which === ENTER_KEY) {
       this.updateEvent(e.currentTarget);
     }
+  },
+  addAttachment: function () {
+    var id = 'attachment-' + this.addAttachmentId;
+    var html = '<li><input type="file" id="' + id + '"></li>';
+    this.addAttachmentId++;
+    $(this.addAttachmentContainer).append(html);
+
+    $('#' + id).bind('change', this._onFileAttach.bind(this));
+  },
+  _onFileAttach : function (event)	{
+    var file = new FormData();
+    event.target.disabled = true;
+    file.append('attachment-0', event.target.files[0]);
+    //this.model.addAttachment(file);
+    this.addAttachment();
+  },
+  showAttachment: function () {
+    var event =  this.model.get('event');
+    var attachments = event.attachments;
+    var html = '';
+    if (attachments) {
+      html += '<ul> attachments:';
+      _.each(_.keys(attachments), function (k) {
+        html += '<li>' + k + ': <a href="' + event.url + '/' + attachments[k].fileName +
+          '?auth=' + event.connection.auth + '" target="_blank"> ' +
+          attachments[k].fileName + '</a></li>';
+      });
+      html += '</ul>';
+    } else {
+      return '';
+    }
+    return html;
   },
   /* jshint -W098, -W061 */
   updateEvent: function ($elem) {
@@ -126,14 +164,14 @@ module.exports = Marionette.ItemView.extend({
   objectToHtml: function (key, object, id) {
     var result = '';
     if (_.isObject(object)) {
-      result += '<ul>' + key;
+      result += '<ul>' + key + ':';
       _.each(_.keys(object), function (k) {
         result += this.objectToHtml(k, object[k], id + '-' + k);
       }.bind(this));
       result += '</ul>';
       return result;
     } else {
-      return '<li id="current-' + id + '">' + key + ': <label>' + object + '</label>' +
+      return '<li class="editable" id="current-' + id + '">' + key + ': <label>' + object + '</label>' +
         '<input class="edit" id="edit-' + id + '" value="' + object + '"></li>';
     }
   }

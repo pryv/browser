@@ -60,6 +60,7 @@ NotesPlugin.prototype.eventLeave = function (event) {
       this.detailedView.deleteEvent(event);
     }
     delete this.events[event.id];
+    this.debounceRefresh();
   }
 };
 

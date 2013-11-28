@@ -67,7 +67,11 @@ module.exports = Marionette.ItemView.extend({
         type: myModel[i].style
       }, i);
     }
-
+    var eventsNbr = 0;
+    _.each(this.data, function (d) {
+      eventsNbr += d.data.length;
+    });
+    $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
     this.createEventBindings();
     myModel = null;
@@ -162,6 +166,7 @@ module.exports = Marionette.ItemView.extend({
 
   setUpContainer: function () {
     // Setting up the chart container
+
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
     $(this.chartContainer).css({
@@ -242,6 +247,10 @@ module.exports = Marionette.ItemView.extend({
       $(this.container).bind('dragleave', this.onDragLeave.bind(this));
       $(this.container).bind('drop', this.onDrop.bind(this));
       $(this.container).bind('dragend', this.onDragEnd.bind(this));
+      $(this.container + ' .aggregated-nbr-events').bind('click',
+        function () {
+          this.trigger('nodeClicked');
+        }.bind(this));
     }
   },
 

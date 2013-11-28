@@ -149,11 +149,11 @@
     <div id="detail-full">
       <% if (event) {%>
       <ul>
-        <li class="event-structure" id="current-streamId">streamId: <label><%= event.streamId
+        <li class="event-structure editable" id="current-streamId">streamId: <label><%= event.streamId
           %></label>
           <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
         </li>
-        <li class="event-structure" id="current-time">time: <label><%= new Date(event.time *
+        <li class="event-structure editable" id="current-time">time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
           %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
@@ -161,13 +161,15 @@
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">
         </li>
-        <li class="event-structure" id="current-description">description: <label><%=
+        <li class="event-structure editable" id="current-description">description: <label><%=
           event.description %></label>
           <input class="edit" id="edit-description" value="<%= event.description %>"></li>
-        <li class="event-structure" id="current-tags">tags: <label><%= event.tags.join(', ')
+        <li class="event-structure editable" id="current-tags">tags: <label><%= event.tags.join(', ')
           %></label>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
         <div class="event-structure" id="full-content"><%= showContent() %></div>
+        <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
+        <div class="event-structure" id="add-attachment"></div>
         <button id ="submit-edit" type="button" class="btn btn-primary">Submit</button>
         <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
       </ul>

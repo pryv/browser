@@ -72,6 +72,10 @@ var Model = module.exports = function () {
   var liveatId = this.connections.add(liveat);
   this.activeFilter.addConnection(liveatId, batch);
 
+  var bruno = new Pryv.Connection('brunochanel', 'eTI4uYwsXq', {staging: true});
+  var brunoId = this.connections.add(bruno);
+  this.activeFilter.addConnection(brunoId, batch);
+
   /**
    // create streams and add them to filter
    //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));

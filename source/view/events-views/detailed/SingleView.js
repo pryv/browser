@@ -74,7 +74,7 @@ module.exports = Marionette.ItemView.extend({
     var file = new FormData();
     event.target.disabled = true;
     file.append('attachment-0', event.target.files[0]);
-    //this.model.addAttachment(file);
+    this.model.addAttachment(file);
     this.addAttachment();
   },
   showAttachment: function () {

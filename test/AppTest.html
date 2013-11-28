@@ -106,6 +106,7 @@
     <ul id="detail-list"></ul>
   </script>
   <script type="text/html" id="template-detailItemView">
+    <input type="checkbox" class="checkbox">
     <div class="view">
       <%= new Date(event.time * 1000).toLocaleDateString() %> <%= new Date(event.time *
       1000).toLocaleTimeString() %>
@@ -152,6 +153,8 @@
         <li class="event-structure editable" id="current-streamId">streamId: <label><%= event.streamId
           %></label>
           <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
+        </li>
+        <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
         </li>
         <li class="event-structure editable" id="current-time">time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()

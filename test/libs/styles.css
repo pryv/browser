@@ -378,21 +378,24 @@ text-align: center;*/
   overflow: hidden;
   border-left: 1px solid #e5e5e5;
   position: absolute;
-  width: 200px;
+  width: 230px;
   right: 0;
 }
 #detail-list {
   position: absolute;
   overflow-y: scroll;
   float: right;
-  top: 56px;
+  top: 92px;
   right: 0;
   bottom: 0px;
 }
-#detail-list li.highlighted {
+#detail-list .view, #detail-list .checkbox {
+  display: inline;
+}
+#detail-list li.highlighted .view{
   background-color: #F1C40F !important;
 }
-#detail-list li:hover {
+#detail-list li:hover .view{
   background-color: #F51584;
 }
 #detail-full li.editing {

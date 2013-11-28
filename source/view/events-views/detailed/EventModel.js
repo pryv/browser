@@ -3,7 +3,8 @@ var Backbone = require('backbone');
 module.exports = Backbone.Model.extend({
   defaults: {
     event: null,
-    highlighted: false
+    highlighted: false,
+    checked: false
   },
   getTimeDifference: function (time) {
     return Math.abs(time - this.get('event').time);

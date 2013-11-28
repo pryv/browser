@@ -349,7 +349,16 @@ text-align: center;*/
   width: 80%;
   min-width: 600px;
 }
-.modal, .modal-backdrop, .modal-dialog, .modal-content {
+.modal, .modal-backdrop, .modal-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 54px;
+  overflow: hidden;
+  overflow-y: hidden;
+}
+.modal-dialog{
   position: fixed;
   top: 0;
   left: 0;
@@ -418,6 +427,7 @@ text-align: center;*/
 #DnD-body {
     height: 100%;
     padding: 0;
+    color: #838383;
 }
 
 #DnD-panel-left {
@@ -425,26 +435,32 @@ text-align: center;*/
     width: 100%;
     padding-right: 200px;
     float: left;
+    background-color: #2B2B2B;
 }
 #DnD-panel-right {
     height: 100%;
     overflow: hidden;
-    border-left: 1px solid #e5e5e5;
+    border-left: 1px solid #474747;
     position: absolute;
     width: 200px;
     right: 0;
+    background-color: #383838;
 }
 
 .DnD-highlighted {
-    background-color: greenyellow;
+    background-color: #27A9E3;
+    color:#FFFFFF;
+}
+.DnD-highlighted:hover {
+    background-color: #27A9E3;
 }
 
-.DnD-unhighlighted {
-    background-color: orange;
+.DnD-unhighlighted:hover {
+    background:#333333;
 }
 
 .DnD-itemView-checkbox {
-    float: left;
+    float: right;
     width: 15px;
     position: relative;
     text-align: left;
@@ -452,7 +468,7 @@ text-align: center;*/
 }
 
 .DnD-itemView-text {
-    margin-left: 16px;
+    margin-right: 16px;
     position: relative;
 }
 
@@ -463,26 +479,36 @@ text-align: center;*/
 }
 
 #DnD-left-content-headerSingle {
-    height: 5%;
-
+    margin: 10px;
 }
 
 #DnD-left-content-single {
     height: 40%;
     margin-top: 10px;
     margin-left: 10px;
-    background-color: Khaki;
+    background-color: #363636;
 }
 
 #DnD-left-content-headerFinal {
-    height: 5%;
+    margin: 10px;
 }
 
 #DnD-left-content-final {
     height: 40%;
     margin-top: 10px;
     margin-left: 10px;
-    background-color: LightSeaGreen;
+    background-color: #333;
+}
+ul#DnD-right-content-lists {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+ul#DnD-right-content-lists > li {
+    position: relative;
+    padding: 10px 5px;
+    border-bottom: 1px solid #474747;
+    cursor: pointer;
 }
 
 /** END of CSS for Drag and Drop Dialog using the modal **/

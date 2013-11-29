@@ -183,7 +183,8 @@ module.exports = Marionette.ItemView.extend({
       result += '</ul>';
       return result;
     } else {
-      return '<li class="editable" id="current-' + id + '">' + key + ': <label>' + object + '</label>' +
+      return '<li class="editable" id="current-' + id + '">' + key +
+        ': <label>' + object + '</label>' +
         '<input class="edit" id="edit-' + id + '" value="' + object + '"></li>';
     }
   }

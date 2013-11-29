@@ -3,23 +3,15 @@
 <html>
 <head>
   <title>PoC example</title>
+  <base href="http://jordane.rec.la/PrYv/source/">
   <meta property="og:title" content="Slice of life" />
   <!-- <meta property="og:url" content="https://{host}" />   dynamically updated by static-web-->
   <meta property="og:description" content="Content available on Pryv only." />
   <meta property="og:image" content="http://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
   <meta property="og:image:secure_url" content="https://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
-  <link rel="stylesheet" type="text/css" href="libs/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="libs/bootstrap-responsive.min.css">
-  <link rel="stylesheet" type="text/css" href="libs/styles.css">
-  <link rel="stylesheet" type="text/css" href="libs/animate.css">
-  <link rel="stylesheet" href="../source/timeframe-selector/styles/main.css">
-  <script type="text/javascript" src="libs/jquery-1.9.1.js"></script>
-  <script type="text/javascript" src="libs/jquery.flot.js"></script>
-  <script type="text/javascript" src="libs/jquery.flot.time.js"></script>
-  <script type="text/javascript" src="libs/jquery-ui-1.10.3.custom.min.js"></script>
-  <script type="text/javascript" src="libs/bootstrap.min.js"></script>
-  <script type="text/javascript" src="libs/require.js"></script>
-  <script type="text/javascript" charset="utf-8" src="../dist/app_bundle_main.js"></script>
+  <link rel="stylesheet" type="text/css" href="../dist/styles/pryv.min.css">
+  <script type="text/javascript" charset="utf-8" src="../dist/script/vendor.js"></script>
+  <script type="text/javascript" charset="utf-8" src="../dist/script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');

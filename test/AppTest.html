@@ -129,7 +129,7 @@
           <h4 id="modal-title" id="myModalLabel">Drag and Drop</h4>
         </div>
         <div id="DnD-right-content">
-          <ul id="DnD-right-content-lists"></div>
+          <ul id="DnD-right-content-lists" class="DnD-right-content-lists"></div>
         </div>
       </div>
     </div>
@@ -138,12 +138,10 @@
     <div class="detail-div"></div>
   </script>
   <script type="text/html" id="template-DnD-ItemView">
-    <div class="DnD-itemView-checkbox" class="view">
-      <input type="checkbox" name="chartSelector" value="isSelected">
-    </div>
-    <div class="DnD-itemView-text" class="view">
-      <%= streamName %>
-    </div>
+    <a>
+      <input class="DnD-itemView-checkbox" type="checkbox" name="chartSelector" value="isSelected">
+      <span class="DnD-itemView-text"><%= streamName %></span>
+    </a>
   </script>
   <script type="template" id="template-detail-full">
 

@@ -38,7 +38,7 @@ module.exports = Marionette.ItemView.extend({
     });
 
     this.ui.checkbox.attr('checked', this.model.get('selected'));
-
+    this.$el.attr('id', 'DnD-itemView');
     if (this.model.get('highlighted')) {
       this.$el.removeClass('DnD-unhighlighted');
       this.$el.addClass('DnD-highlighted');
@@ -47,7 +47,7 @@ module.exports = Marionette.ItemView.extend({
       this.$el.removeClass('DnD-highlighted');
     }
 
-    this.$('.DnD-itemView-text').bind('click', function () {
+    this.$el.bind('click', function () {
       this.trigger('chart:clicked', this.model);
     }.bind(this));
 

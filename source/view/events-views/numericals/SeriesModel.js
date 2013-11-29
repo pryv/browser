@@ -15,6 +15,8 @@ module.exports = Backbone.Model.extend({
     onHover: null,
     onDnD: null,
 
+    useExtras: null,
+
     xaxis: null
   },
 

@@ -31,6 +31,7 @@ module.exports = Marionette.ItemView.extend({
     try {
       Pryv.eventTypes.extras('mass/kg');
     } catch (e) {
+      console.log(this.container, 'No extras');
       this.useExtras = false;
     }
 
@@ -61,6 +62,7 @@ module.exports = Marionette.ItemView.extend({
     };
 
     for (var i = 0; i < myModel.length; ++i) {
+      console.log(this.container, myModel[i].type, this.useExtras);
       this.addSeries({
         data: dataSorter(dataMapper(myModel[i].elements)),
         label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type).symbol : myModel[i].type,
@@ -103,16 +105,19 @@ module.exports = Marionette.ItemView.extend({
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
+    console.log('show label', (this.model.get('dimensions').width >= 80 &&
+      this.model.get('dimensions').height >= (19 * seriesCounts) + 15),
+      this.model.get('dimensions').width, this.model.get('dimensions').height);
     this.options.legend = {
       show: (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15),
+        this.model.get('dimensions').height >= (19 * seriesCounts) + 15)
       //labelFormatter: null or (fn: string, series object -> string)
       //labelBoxBorderColor: color
       //noColumns: number
       //position: "ne" or "nw" or "se" or "sw"
       //margin: number of pixels or [x margin, y margin]
       //backgroundColor: null or color
-      backgroundOpacity: 0.3
+      //backgroundOpacity: 0.3
       //container: null or jQuery object/DOM element/jQuery expression
     };
     seriesCounts = null;

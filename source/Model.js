@@ -67,6 +67,9 @@ var Model = module.exports = function () {
   this.treemap = new TreeMap(this);
   this.controller.setTreeMap(this.treemap);
 
+  //var perkikiki = new Pryv.Connection('perkikiki', 'Vei9PbHkBi', {staging: true});
+  //var perkikikiId = this.connections.add(perkikiki);
+  //this.activeFilter.addConnection(perkikikiId, batch);
 
   var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
   var liveatId = this.connections.add(liveat);
@@ -124,7 +127,7 @@ function initTimeAndFilter(timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 20000
+    limit: 5000
   });
 
   timeView.onFiltersChanged({

@@ -45,8 +45,9 @@ _.extend(Controller.prototype, {
           highlighted: false,
           dimensions: null,
           onClick: true,
-          onHover: false,
+          onHover: true,
           onDnD: false,
+          useExtras: true,
           xaxis: true
         })});
       this.finalView = new ChartView({model:
@@ -59,8 +60,9 @@ _.extend(Controller.prototype, {
           highlighted: false,
           dimensions: null,
           onClick: false,
-          onHover: false,
+          onHover: true,
           onDnD: false,
+          useExtras: true,
           xaxis: true
         })});
       this.listView = new ListView({
@@ -342,7 +344,7 @@ _.extend(Controller.prototype, {
 
   resizeModal: _.debounce(function () {
     var chartSizeWidth = $('#DnD-panel-left').width() - 20;
-    var chartSizeHeight = $('DnD-left-content-single').height();
+    var chartSizeHeight = $('#DnD-left-content-single').height();
 
 
     $('#DnD-left-content-single').css({

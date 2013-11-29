@@ -9,13 +9,14 @@
     "node": "~0.8.8"
   },
   "dependencies": {
-    "underscore": "~1.5.2" ,
+    "underscore": "~1.5.2",
     "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#master",
-    "backbone.marionette": "~1.1.0" ,
+    "backbone.marionette": "~1.1.0",
     "backbone": "~1.0.0",
     "d3": "~3.3.8",
     "socket.io-client": "~0.9.16",
-    "google-maps": "~1.0.0"
+    "google-maps": "~1.0.0",
+    "grunt-contrib-copy": "~0.4.1"
   },
   "devDependencies": {
     "blanket": "latest",

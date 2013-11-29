@@ -424,7 +424,10 @@ text-align: center;*/
   display: none;
 }
 /** end detail view modal **/
-
+.delete:after {
+  content: '✖';
+  color: #d2322d;
+}
 
 /** CSS for Drag and Drop Dialog using the modal **/
 #DnD-body {

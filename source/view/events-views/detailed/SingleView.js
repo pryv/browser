@@ -9,6 +9,7 @@ module.exports = Marionette.ItemView.extend({
   addAttachmentContainer: '#add-attachment',
   waitSubmit: false,
   addAttachmentId: 0,
+  attachmentId: {},
   ui: {
     li: 'li.editable',
     edit: '.edit',
@@ -44,6 +45,10 @@ module.exports = Marionette.ItemView.extend({
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
     this.ui.submit.bind('click', this.submit.bind(this));
     this.ui.trash.bind('click', this.trash.bind(this));
+    _.each(_.keys(this.attachmentId), function (k) {
+      $('#' + k + ' i').bind('click', { id: k, fileName: this.attachmentId[k] },
+        this._onRemoveFileClick.bind(this));
+    }.bind(this));
   },
   onEditClick: function (e) {
     $(e.currentTarget).addClass('editing');
@@ -67,7 +72,6 @@ module.exports = Marionette.ItemView.extend({
     var html = '<li><input type="file" id="' + id + '"></li>';
     this.addAttachmentId++;
     $(this.addAttachmentContainer).append(html);
-
     $('#' + id).bind('change', this._onFileAttach.bind(this));
   },
   _onFileAttach : function (event)	{
@@ -84,15 +88,23 @@ module.exports = Marionette.ItemView.extend({
     if (attachments) {
       html += '<ul> attachments:';
       _.each(_.keys(attachments), function (k) {
-        html += '<li>' + k + ': <a href="' + event.url + '/' + attachments[k].fileName +
-          '?auth=' + event.connection.auth + '" target="_blank"> ' +
-          attachments[k].fileName + '</a></li>';
-      });
+        html += '<li id="' + k + '">' + k + ': <a href="' + event.url + '/' +
+          attachments[k].fileName + '?auth=' + event.connection.auth + '" target="_blank"> ' +
+          attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
+        this.attachmentId[k] = attachments[k].fileName;
+      }.bind(this));
       html += '</ul>';
     } else {
       return '';
     }
     return html;
+  },
+  _onRemoveFileClick: function (event) {
+    this.model.removeAttachment(event.data.fileName, function () {
+      $('#' + event.data.id + ' i').off();
+      $('#' + event.data.id).remove();
+      delete this.attachmentId[event.data.id];
+    }.bind(this));
   },
   /* jshint -W098, -W061 */
   updateEvent: function ($elem) {

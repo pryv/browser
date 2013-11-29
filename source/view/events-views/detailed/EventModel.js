@@ -23,12 +23,15 @@ module.exports = Backbone.Model.extend({
   },
   addAttachment: function (file) {
     this.get('event').addAttachment(file, function () {
-      console.log('trash event callback', arguments);
+    //  console.log('trash event callback', arguments);
     });
+  },
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
   },
   trash: function () {
     this.get('event').trash(function () {
-      console.log('trash event callback', arguments);
+    //  console.log('trash event callback', arguments);
     });
   }
 });

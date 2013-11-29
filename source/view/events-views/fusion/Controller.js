@@ -346,7 +346,6 @@ _.extend(Controller.prototype, {
     var chartSizeWidth = $('#DnD-panel-left').width() - 20;
     var chartSizeHeight = $('#DnD-left-content-single').height();
 
-
     $('#DnD-left-content-single').css({
       width: chartSizeWidth
     });

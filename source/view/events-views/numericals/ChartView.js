@@ -31,7 +31,6 @@ module.exports = Marionette.ItemView.extend({
     try {
       Pryv.eventTypes.extras('mass/kg');
     } catch (e) {
-      console.log(this.container, 'No extras');
       this.useExtras = false;
     }
 
@@ -62,7 +61,6 @@ module.exports = Marionette.ItemView.extend({
     };
 
     for (var i = 0; i < myModel.length; ++i) {
-      console.log(this.container, myModel[i].type, this.useExtras);
       this.addSeries({
         data: dataSorter(dataMapper(myModel[i].elements)),
         label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type).symbol : myModel[i].type,
@@ -96,7 +94,8 @@ module.exports = Marionette.ItemView.extend({
       hoverable: true,
       clickable: true,
       borderWidth: 0,
-      minBorderMargin: 5
+      minBorderMargin: 5,
+      autoHighlight: true
     };
     this.options.xaxes = [ {
       show: this.model.get('xaxis') && (this.model.get('events').length !== 0),
@@ -105,9 +104,6 @@ module.exports = Marionette.ItemView.extend({
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
-    console.log('show label', (this.model.get('dimensions').width >= 80 &&
-      this.model.get('dimensions').height >= (19 * seriesCounts) + 15),
-      this.model.get('dimensions').width, this.model.get('dimensions').height);
     this.options.legend = {
       show: (this.model.get('dimensions').width >= 80 &&
         this.model.get('dimensions').height >= (19 * seriesCounts) + 15)
@@ -157,14 +153,14 @@ module.exports = Marionette.ItemView.extend({
     switch (series.type) {
     case 0:
       this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: true };
+      this.data[seriesIndex].points = { show: (series.data.length < 2) };
       break;
     case 1:
       this.data[seriesIndex].bars = { show: true };
       break;
     default:
       this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: true };
+      this.data[seriesIndex].points = { show: (series.data.length < 2) };
       break;
     }
   },

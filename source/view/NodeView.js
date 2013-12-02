@@ -51,7 +51,7 @@ module.exports = Marionette.ItemView.extend({
 
   },
   _refreshStyle: function () {
-    if (this.model.get('height') === 0 || this.model.get('width') === 0) {
+    if (this.model.get('weight') === 0) {
       this.close();
       return;
     }

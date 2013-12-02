@@ -2,7 +2,13 @@
     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <title>PoC example</title>
+  <!-- ENV example -->
+  <!-- @if NODE_ENV == 'DEVELOPMENT' -->
+  <title>Browser atglance DEV</title>
+  <!-- @endif -->
+  <!-- @if NODE_ENV == 'STAGING' -->
+  <title>Browser atglance STAGING</title>
+  <!-- @endif -->
   <base href="">
   <meta property="og:title" content="Slice of life" />
   <!-- <meta property="og:url" content="https://{host}" />   dynamically updated by static-web-->

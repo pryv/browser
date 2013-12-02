@@ -15,7 +15,7 @@ module.exports = function (grunt) {
     watch: {
       all: {
         files: ['source/**/*.*'],
-        tasks: ['browserify', 'cssmin', 'concat', 'copy']
+        tasks: ['env:dev', 'browserify', 'cssmin', 'concat', 'copy', 'preprocess:dev']
       }
     },
     jshint: {
@@ -44,11 +44,11 @@ module.exports = function (grunt) {
       },
       dist: {
         src: ['source/vendor/jquery-1.9.1.js',
-        'source/vendor/jquery-ui-1.10.3.custom.min.js',
-        'source/vendor/bootstrap.min.js',
-        'source/vendor/require.js',
-        'source/vendor/jquery.flot.js',
-        'source/vendor/jquery.flot.time.js'],
+          'source/vendor/jquery-ui-1.10.3.custom.min.js',
+          'source/vendor/bootstrap.min.js',
+          'source/vendor/require.js',
+          'source/vendor/jquery.flot.js',
+          'source/vendor/jquery.flot.time.js'],
         dest: 'dist/script/vendor.js'
       }
     },
@@ -95,6 +95,35 @@ module.exports = function (grunt) {
           captureFile: 'test/coverage.html'
         }
       }
+    },
+    env : {
+      options : {
+        /* Shared Options Hash */
+        //globalOption : 'foo'
+      },
+      dev: {
+        NODE_ENV : 'DEVELOPMENT'
+      },
+      staging : {
+        NODE_ENV : 'STAGING'
+      }
+    },
+    preprocess : {
+      dev : {
+        src : 'source/index.html',
+        dest : 'dist/index.html'
+      },
+      staging : {
+        src : 'source/index.html',
+        dest : 'dist/index.html',
+        options : {
+          /* Environement variable, access with:
+           <!-- @echo name -->
+          context : {
+           name : 'foo'
+           }   */
+        }
+      }
     }
   });
 
@@ -105,6 +134,11 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-env');
+  grunt.loadNpmTasks('grunt-preprocess');
   // Default task.
-  grunt.registerTask('default', ['jshint', 'browserify', 'cssmin', 'concat', 'copy']);
+  grunt.registerTask('default',
+    ['jshint', 'env:dev', 'browserify', 'cssmin', 'concat', 'copy', 'preprocess:dev']);
+  grunt.registerTask('staging',
+    ['jshint', 'env:staging', 'browserify', 'cssmin', 'concat', 'copy', 'preprocess:staging']);
 };

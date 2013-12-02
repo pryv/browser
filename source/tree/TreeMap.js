@@ -8,14 +8,15 @@ var FusionDialog = require('../view/events-views/fusion/Controller.js');
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
-  this.root = new RootNode(this, $('#tree').width() -
-    parseInt($('#tree').css('margin-left').split('px')[0], null) -
-    parseInt($('#tree').css('margin-right').split('px')[0], null),
-    $('#tree').height() -
-    parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
-    parseInt($('#tree').css('margin-top').split('px')[0], null));
-  this.root.x =  parseInt($('#tree').css('margin-left').split('px')[0], null);
-  this.root.y =  parseInt($('#tree').css('margin-top').split('px')[0], null);
+  var $tree = $('#tree');
+  this.root = new RootNode(this, $tree.width() -
+    parseInt($tree.css('margin-left').split('px')[0], null) -
+    parseInt($tree.css('margin-right').split('px')[0], null),
+    $tree.height() -
+    parseInt($tree.css('margin-bottom').split('px')[0], null) -
+    parseInt($tree.css('margin-top').split('px')[0], null));
+  this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
+  this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
 
   this.root.focusOnStreams = function (stream) {
     this.model.activeFilter.focusOnStreams(stream);
@@ -36,14 +37,15 @@ var TreeMap = module.exports = function (model) {
   }.bind(this), 10);
 
   $(window).resize(_.debounce(function () {
-    this.root.width = $('#tree').width() -
-      parseInt($('#tree').css('margin-left').split('px')[0], null) -
-      parseInt($('#tree').css('margin-right').split('px')[0], null);
-    this.root.height = $('#tree').height() -
-      parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
-      parseInt($('#tree').css('margin-top').split('px')[0], null);
-    this.root.x =  parseInt($('#tree').css('margin-left').split('px')[0], null);
-    this.root.y =  parseInt($('#tree').css('margin-top').split('px')[0], null);
+    var $tree = $('#tree');
+    this.root.width = $tree.width() -
+      parseInt($tree.css('margin-left').split('px')[0], null) -
+      parseInt($tree.css('margin-right').split('px')[0], null);
+    this.root.height = $tree.height() -
+      parseInt($tree.css('margin-bottom').split('px')[0], null) -
+      parseInt($tree.css('margin-top').split('px')[0], null);
+    this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
+    this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,

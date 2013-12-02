@@ -18,9 +18,6 @@ var TreeMap = module.exports = function (model) {
   this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
   this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
 
-  this.root.focusOnStreams = function (stream) {
-    this.model.activeFilter.focusOnStreams(stream);
-  }.bind(this);
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
     this.root._generateChildrenTreemap(this.root.x,
@@ -103,7 +100,9 @@ var TreeMap = module.exports = function (model) {
   this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
 };
-
+TreeMap.prototype.focusOnStreams = function (stream) {
+  this.model.activeFilter.focusOnStreams(stream);
+};
 TreeMap.prototype.onDateHighLighted = function (time) {
   if (this.root) {
     this.root.onDateHighLighted(time);

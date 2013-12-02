@@ -167,14 +167,8 @@ _.extend(TreeNode.prototype, {
         // event listenner for focus on stream when clicked on it
         // i.e display only this stream when clicked on it
         this.view.on('headerClicked', function () {
-          // the root node is the only output node of the treemap
-          // so we walk the tree up to the root node and trigger the focusOnStreams
           if (this.stream) {
-            var parent  = this.parent;
-            while (parent.parent) {
-              parent = parent.parent;
-            }
-            parent.focusOnStreams(this.stream);
+            this.treeMap.focusOnStreams(this.stream);
           }
         }, this);
       }

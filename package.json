@@ -1,7 +1,7 @@
 {
   "author": "Pryv <tech@pryv.com>",
-  "name": "browser-treemap-poc",
-  "description": "TreeMap Proof of concept ",
+  "name": "browser",
+  "description": "At glance",
   "version": "0.0.1",
   "private": true,
   "homepage": "http://w.pryv.com",
@@ -33,7 +33,8 @@
     "grunt-cli": "~0.1.8",
     "grunt-mocha-test": "0.8.0",
     "should": "latest",
-    "nock": "latest"
+    "nock": "latest",
+    "grunt-git": "~0.2.2"
   },
   "optionalDependencies": {}
 }

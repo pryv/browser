@@ -124,6 +124,15 @@ module.exports = function (grunt) {
            }   */
         }
       }
+    },
+    gitclone: {
+      initrepo: {
+        options: {
+          repository: 'git@github.com:pryv/browser.git',
+          branch: 'dev',
+          directory: 'dist'
+        }
+      }
     }
   });
 
@@ -136,9 +145,18 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-env');
   grunt.loadNpmTasks('grunt-preprocess');
+  grunt.loadNpmTasks('grunt-git');
+  grunt.registerTask('setup',
+    ['gitclone:initrepo']);
+
+
+
+
   // Default task.
   grunt.registerTask('default',
-    ['jshint', 'env:dev', 'browserify', 'cssmin', 'concat', 'copy', 'preprocess:dev']);
+    ['jshint', 'env:dev', 'browserify',
+      'cssmin', 'concat', 'copy', 'preprocess:dev']);
   grunt.registerTask('staging',
-    ['jshint', 'env:staging', 'browserify', 'cssmin', 'concat', 'copy', 'preprocess:staging']);
+    ['jshint', 'env:staging', 'browserify',
+      'cssmin', 'concat', 'copy', 'preprocess:staging']);
 };

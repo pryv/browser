@@ -1,7 +1,6 @@
 /* global $*/
 var _ = require('underscore'),
-  Backbone = require('backbone'),
-  DetailView = require('../detailed/Controller.js');
+  Backbone = require('backbone');
 var Model = module.exports = function (events, params) {
   this.verbose = true;
   this.events = {};
@@ -12,19 +11,13 @@ var Model = module.exports = function (events, params) {
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
-  this.detailedView = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
   this.typeView = null;
   this.animationIn = null;
   this.animationOut = null;
-  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.detailedView) {
-      this.detailedView.close();
-      this.detailedView = null;
-    }
-  }.bind(this));
+  this.hasDetailedView = false;
   _.extend(this, params);
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
@@ -54,9 +47,10 @@ _.extend(Model.prototype, {
         'current:', this.events[event.id], 'new:', event);
     }
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.addEvents(event);
+    if (this.hasDetailedView) {
+      this.treeMap.addEventsDetailedView(event);
     }
+
     this.debounceRefresh();
   },
   eventLeave: function (event) {
@@ -65,8 +59,8 @@ _.extend(Model.prototype, {
         'event:', event);
     }
     delete this.events[event.id];
-    if (this.detailedView) {
-      this.detailedView.deleteEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
     }
     if (_.size(this.events) !== 0) {
       this.debounceRefresh();
@@ -78,8 +72,8 @@ _.extend(Model.prototype, {
         'event:', event);
     }
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.updateEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
     }
     this.debounceRefresh();
   },
@@ -87,8 +81,8 @@ _.extend(Model.prototype, {
     this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
     this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
     this.highlightedTime = time;
-    if (this.detailedView) {
-      this.detailedView.highlightDate(this.highlightedTime);
+    if (this.hasDetailedView) {
+      this.treeMap.highlightDateDetailedView(this.highlightedTime);
     }
     this.debounceRefresh();
   },
@@ -133,12 +127,14 @@ _.extend(Model.prototype, {
       if (typeof(document) !== 'undefined')  {
         this.view = new this.typeView({model: this.modelView});
         this.view.on('nodeClicked', function () {
-          if (!this.detailedView) {
-            this.detailedView = new DetailView(this.$modal);
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
           }
-          this.detailedView.addEvents(this.events);
-          this.detailedView.show();
-          this.detailedView.highlightDate(this.highlightedTime);
         }.bind(this));
       }
     }

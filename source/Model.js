@@ -32,9 +32,6 @@ var Model = module.exports = function () {
   this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
     $('#logo-reload').removeClass('loading');
   });
-  $('#logo-reload').click(function () {
-    this.activeFilter.focusOnStreams(null);
-  }.bind(this));
   this.timeView = new TimeLine();
   this.timeView.render();
   initTimeAndFilter(this.timeView, this.activeFilter);

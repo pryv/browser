@@ -1,13 +1,16 @@
 
  /* global $, window */
-var RootNode = require('./RootNode.js');
-var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
-var _ = require('underscore');
-var FusionDialog = require('../view/events-views/fusion/Controller.js');
+var RootNode = require('./RootNode.js'),
+ SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
+ _ = require('underscore'),
+ DetailView = require('../view/events-views/detailed/Controller.js'),
+ FusionDialog = require('../view/events-views/fusion/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
+  this.detailedView = null;
+  this.focusedStreams = null;
   var $tree = $('#tree');
   this.root = new RootNode(this, $tree.width() -
     parseInt($tree.css('margin-left').split('px')[0], null) -
@@ -18,6 +21,9 @@ var TreeMap = module.exports = function (model) {
   this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
   this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
 
+  $('#logo-reload').click(function () {
+    this.focusOnStreams(null);
+  }.bind(this));
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
     this.root._generateChildrenTreemap(this.root.x,
@@ -102,6 +108,13 @@ var TreeMap = module.exports = function (model) {
 };
 TreeMap.prototype.focusOnStreams = function (stream) {
   this.model.activeFilter.focusOnStreams(stream);
+  this.setFocusedStreams(stream);
+};
+TreeMap.prototype.setFocusedStreams = function (stream) {
+  this.focusedStreams = stream;
+};
+TreeMap.prototype.getFocusedStreams = function () {
+  return this.focusedStreams;
 };
 TreeMap.prototype.onDateHighLighted = function (time) {
   if (this.root) {
@@ -176,8 +189,53 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   }.bind(this)), events);
   this.dialog.show();
 };
+ //======== Detailed View ========\\
+TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
 
+  if (!this.hasDetailedView()) {
+    this.detailedView = new DetailView($modal);
+  }
+  this.addEventsDetailedView(events);
+  this.showDetailedView();
+  this.highlightDateDetailedView(highlightedTime);
 
+};
+
+TreeMap.prototype.hasDetailedView = function () {
+  return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
+};
+TreeMap.prototype.showDetailedView = function () {
+  if (this.hasDetailedView()) {
+    this.detailedView.show();
+  }
+};
+TreeMap.prototype.closeDetailedView = function () {
+  if (this.hasDetailedView()) {
+    this.detailedView.close();
+    this.detailedView = null;
+  }
+};
+TreeMap.prototype.addEventsDetailedView = function (events) {
+  if (this.hasDetailedView()) {
+    this.detailedView.addEvents(events);
+  }
+};
+TreeMap.prototype.deleteEventDetailedView = function (event) {
+  if (this.hasDetailedView()) {
+    this.detailedView.deleteEvent(event);
+  }
+};
+TreeMap.prototype.updateEventDetailedView = function (event) {
+  if (this.hasDetailedView()) {
+    this.detailedView.updateEvent(event);
+  }
+};
+TreeMap.prototype.highlightDateDetailedView = function (time) {
+  if (this.hasDetailedView()) {
+    this.detailedView.highlightDate(time);
+  }
+};
+/*=================================*/
 
 /* jshint -W098 */
 

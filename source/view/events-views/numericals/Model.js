@@ -2,8 +2,7 @@
 
 var _ = require('underscore'),
   ChartView = require('./ChartView.js'),
-  SeriesModel = require('./SeriesModel.js'),
-  DetailView = require('../detailed/Controller.js');
+  SeriesModel = require('./SeriesModel.js');
 
 var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
@@ -21,14 +20,7 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.streamIds = {};
   this.eventsNode = node;
   this.sortedData = null;
-
-  this.detailedView = null;
-  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.detailedView) {
-      this.detailedView.close();
-      this.detailedView = null;
-    }
-  }.bind(this));
+  this.hasDetailedView = false;
   _.extend(this, params);
   _.each(events, function (event) {
     this.eventEnter(event);
@@ -46,8 +38,8 @@ NumericalsPlugin.prototype.eventEnter = function (event) {
   }
   this.datas[event.streamId][event.type][event.id] = event;
   this.needToRender = true;
-  if (this.detailedView) {
-    this.detailedView.addEvents(event);
+  if (this.hasDetailedView) {
+    this.treeMap.addEventsDetailedView(event);
   }
   this.debounceRefresh();
 };
@@ -57,9 +49,10 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
     delete this.events[event.id];
     delete this.datas[event.streamId][event.type][event.id];
     this.needToRender = true;
-    if (this.detailedView) {
-      this.detailedView.deleteEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
     }
+
     this.debounceRefresh();
   }
 };
@@ -69,8 +62,8 @@ NumericalsPlugin.prototype.eventChange = function (event) {
     this.events[event.id] = event;
     this.datas[event.streamId][event.type][event.id] = event;
     this.needToRender = true;
-    if (this.detailedView) {
-      this.detailedView.updateEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
     }
     this.debounceRefresh();
   }
@@ -81,8 +74,8 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
   if (this.view) {
     this.view.onDateHighLighted(time);
   }
-  if (this.detailedView) {
-    this.detailedView.highlightDate(this.highlightedTime);
+  if (this.hasDetailedView) {
+    this.treeMap.highlightDateDetailedView(this.highlightedTime);
   }
 };
 
@@ -184,12 +177,14 @@ NumericalsPlugin.prototype._refreshModelView = function () {
   this.view.off();
   /* jshint -W083 */
   this.view.on('nodeClicked', function () {
-    if (!this.detailedView) {
-      this.detailedView = new DetailView(this.$modal);
+    if (!this.hasDetailedView) {
+      this.hasDetailedView = true;
+      var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+        this.treeMap.closeDetailedView();
+        this.hasDetailedView = false;
+      }.bind(this));
+      this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
     }
-    this.detailedView.addEvents(this.events);
-    this.detailedView.show();
-    this.detailedView.highlightDate(this.highlightedTime);
   }.bind(this));
   this.view.on('chart:clicked', function () { return; });
   this.view.on('chart:dropped', this.onDragAndDrop.bind(this));

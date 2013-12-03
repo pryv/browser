@@ -124,7 +124,8 @@ var EventsNode = module.exports = TreeNode.implement(
       this.eventView = new this.pluginView(this.events, {
         width: this.width,
         height: this.height,
-        id: this.uniqueId
+        id: this.uniqueId,
+        treeMap: this.treeMap
       }, this);
     },
 

@@ -1,4 +1,4 @@
-/*! browser-treemap-poc - v0.0.1 - 2013-12-02 *//*!
+/*! browser - v0.0.1 - 2013-12-03 *//*!
  * jQuery JavaScript Library v1.9.1
  * http://jquery.com/
  *

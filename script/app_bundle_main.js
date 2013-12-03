@@ -131,9 +131,6 @@ var Model = module.exports = function () {
   this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
     $('#logo-reload').removeClass('loading');
   });
-  $('#logo-reload').click(function () {
-    this.activeFilter.focusOnStreams(null);
-  }.bind(this));
   this.timeView = new TimeLine();
   this.timeView.render();
   initTimeAndFilter(this.timeView, this.activeFilter);
@@ -1882,26 +1879,30 @@ MonitorsHandler.prototype.stats = function () {
 },{"./Messages":7,"pryv":9,"underscore":8}],5:[function(require,module,exports){
 (function(){
  /* global $, window */
-var RootNode = require('./RootNode.js');
-var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
-var _ = require('underscore');
-var FusionDialog = require('../view/events-views/fusion/Controller.js');
+var RootNode = require('./RootNode.js'),
+ SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
+ _ = require('underscore'),
+ DetailView = require('../view/events-views/detailed/Controller.js'),
+ FusionDialog = require('../view/events-views/fusion/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
-  this.root = new RootNode(this, $('#tree').width() -
-    parseInt($('#tree').css('margin-left').split('px')[0], null) -
-    parseInt($('#tree').css('margin-right').split('px')[0], null),
-    $('#tree').height() -
-    parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
-    parseInt($('#tree').css('margin-top').split('px')[0], null));
-  this.root.x =  parseInt($('#tree').css('margin-left').split('px')[0], null);
-  this.root.y =  parseInt($('#tree').css('margin-top').split('px')[0], null);
+  this.detailedView = null;
+  this.focusedStreams = null;
+  var $tree = $('#tree');
+  this.root = new RootNode(this, $tree.width() -
+    parseInt($tree.css('margin-left').split('px')[0], null) -
+    parseInt($tree.css('margin-right').split('px')[0], null),
+    $tree.height() -
+    parseInt($tree.css('margin-bottom').split('px')[0], null) -
+    parseInt($tree.css('margin-top').split('px')[0], null));
+  this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
+  this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
 
-  this.root.focusOnStreams = function (stream) {
-    this.model.activeFilter.focusOnStreams(stream);
-  }.bind(this);
+  $('#logo-reload').click(function () {
+    this.focusOnStreams(null);
+  }.bind(this));
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
     this.root._generateChildrenTreemap(this.root.x,
@@ -1918,14 +1919,15 @@ var TreeMap = module.exports = function (model) {
   }.bind(this), 10);
 
   $(window).resize(_.debounce(function () {
-    this.root.width = $('#tree').width() -
-      parseInt($('#tree').css('margin-left').split('px')[0], null) -
-      parseInt($('#tree').css('margin-right').split('px')[0], null);
-    this.root.height = $('#tree').height() -
-      parseInt($('#tree').css('margin-bottom').split('px')[0], null) -
-      parseInt($('#tree').css('margin-top').split('px')[0], null);
-    this.root.x =  parseInt($('#tree').css('margin-left').split('px')[0], null);
-    this.root.y =  parseInt($('#tree').css('margin-top').split('px')[0], null);
+    var $tree = $('#tree');
+    this.root.width = $tree.width() -
+      parseInt($tree.css('margin-left').split('px')[0], null) -
+      parseInt($tree.css('margin-right').split('px')[0], null);
+    this.root.height = $tree.height() -
+      parseInt($tree.css('margin-bottom').split('px')[0], null) -
+      parseInt($tree.css('margin-top').split('px')[0], null);
+    this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
+    this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,
@@ -1983,7 +1985,16 @@ var TreeMap = module.exports = function (model) {
   this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
 };
-
+TreeMap.prototype.focusOnStreams = function (stream) {
+  this.model.activeFilter.focusOnStreams(stream);
+  this.setFocusedStreams(stream);
+};
+TreeMap.prototype.setFocusedStreams = function (stream) {
+  this.focusedStreams = stream;
+};
+TreeMap.prototype.getFocusedStreams = function () {
+  return this.focusedStreams;
+};
 TreeMap.prototype.onDateHighLighted = function (time) {
   if (this.root) {
     this.root.onDateHighLighted(time);
@@ -2057,8 +2068,53 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   }.bind(this)), events);
   this.dialog.show();
 };
+ //======== Detailed View ========\\
+TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
 
+  if (!this.hasDetailedView()) {
+    this.detailedView = new DetailView($modal);
+  }
+  this.addEventsDetailedView(events);
+  this.showDetailedView();
+  this.highlightDateDetailedView(highlightedTime);
 
+};
+
+TreeMap.prototype.hasDetailedView = function () {
+  return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
+};
+TreeMap.prototype.showDetailedView = function () {
+  if (this.hasDetailedView()) {
+    this.detailedView.show();
+  }
+};
+TreeMap.prototype.closeDetailedView = function () {
+  if (this.hasDetailedView()) {
+    this.detailedView.close();
+    this.detailedView = null;
+  }
+};
+TreeMap.prototype.addEventsDetailedView = function (events) {
+  if (this.hasDetailedView()) {
+    this.detailedView.addEvents(events);
+  }
+};
+TreeMap.prototype.deleteEventDetailedView = function (event) {
+  if (this.hasDetailedView()) {
+    this.detailedView.deleteEvent(event);
+  }
+};
+TreeMap.prototype.updateEventDetailedView = function (event) {
+  if (this.hasDetailedView()) {
+    this.detailedView.updateEvent(event);
+  }
+};
+TreeMap.prototype.highlightDateDetailedView = function (time) {
+  if (this.hasDetailedView()) {
+    this.detailedView.highlightDate(time);
+  }
+};
+/*=================================*/
 
 /* jshint -W098 */
 
@@ -2087,7 +2143,7 @@ TreeMap.prototype.removeVirtualNode = function (node) {
 
 
 })()
-},{"../model/Messages":7,"../view/events-views/fusion/Controller.js":20,"./RootNode.js":19,"underscore":8}],6:[function(require,module,exports){
+},{"../model/Messages":7,"../view/events-views/detailed/Controller.js":20,"../view/events-views/fusion/Controller.js":21,"./RootNode.js":19,"underscore":8}],6:[function(require,module,exports){
 (function(){
 /* global $, navigator, window, document */
 var Backbone = require('backbone'),
@@ -3058,7 +3114,7 @@ module.exports = Backbone.View.extend({
 });
 
 })()
-},{"./modal.js":21,"backbone":22,"underscore":8}],7:[function(require,module,exports){
+},{"./modal.js":22,"backbone":23,"underscore":8}],7:[function(require,module,exports){
 
 var Messages = module.exports = { };
 
@@ -3186,7 +3242,7 @@ var Utility = require('../utility/Utility.js');
 
 module.exports =  Utility.isBrowser() ?
     require('./Access-browser.js') : require('./Access-node.js');
-},{"../utility/Utility.js":16,"./Access-browser.js":23,"./Access-node.js":24}],25:[function(require,module,exports){
+},{"../utility/Utility.js":16,"./Access-browser.js":24,"./Access-node.js":25}],26:[function(require,module,exports){
 var apiPathProfile = '/profile/app';
 
 
@@ -3229,7 +3285,7 @@ Profile.prototype.set = function (keyValuePairs, callback) {
 
 
 module.exports = Profile;
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 //file: system browser
 
 
@@ -3405,7 +3461,7 @@ var _initXHR = function () {
 
 
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 //file: system node
 
 //TODO align with XHR error
@@ -3501,10 +3557,10 @@ exports.request = function (pack)  {
   return req;
 };
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 
 module.exports = {};
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 
 module.exports = {};
 },{}],19:[function(require,module,exports){
@@ -3595,7 +3651,7 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":30,"./TreeNode":29,"underscore":8}],21:[function(require,module,exports){
+},{"./ConnectionNode":31,"./TreeNode":30,"underscore":8}],22:[function(require,module,exports){
 
 var Backbone = require('backbone');
 
@@ -3618,7 +3674,7 @@ module.exports = Backbone.View.extend({
 });
 
 
-},{"backbone":22}],31:[function(require,module,exports){
+},{"backbone":23}],32:[function(require,module,exports){
 (function(){/* global document, navigator */
 
 /* jshint -W101*/
@@ -4186,7 +4242,7 @@ module.exports = Connection;
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./Datastore.js":35,"./connection/ConnectionEvents.js":32,"./connection/ConnectionMonitors.js":34,"./connection/ConnectionProfile.js":25,"./connection/ConnectionStreams.js":33,"./system/System.js":14,"underscore":8}],11:[function(require,module,exports){
+},{"./Datastore.js":36,"./connection/ConnectionEvents.js":33,"./connection/ConnectionMonitors.js":35,"./connection/ConnectionProfile.js":26,"./connection/ConnectionStreams.js":34,"./system/System.js":14,"underscore":8}],11:[function(require,module,exports){
 
 var _ = require('underscore');
 
@@ -4666,7 +4722,7 @@ module.exports = Filter;
  */
 
 
-},{"./Messages.js":17,"./utility/SignalEmitter.js":36,"underscore":8}],22:[function(require,module,exports){
+},{"./Messages.js":17,"./utility/SignalEmitter.js":37,"underscore":8}],23:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -6240,7 +6296,7 @@ module.exports = Filter;
 }).call(this);
 
 })()
-},{"underscore":8}],29:[function(require,module,exports){
+},{"underscore":8}],30:[function(require,module,exports){
 (function(){/* global $ */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -6410,14 +6466,8 @@ _.extend(TreeNode.prototype, {
         // event listenner for focus on stream when clicked on it
         // i.e display only this stream when clicked on it
         this.view.on('headerClicked', function () {
-          // the root node is the only output node of the treemap
-          // so we walk the tree up to the root node and trigger the focusOnStreams
           if (this.stream) {
-            var parent  = this.parent;
-            while (parent.parent) {
-              parent = parent.parent;
-            }
-            parent.focusOnStreams(this.stream);
+            this.treeMap.focusOnStreams(this.stream);
           }
         }, this);
       }
@@ -6570,7 +6620,7 @@ _.extend(TreeNode.prototype, {
 });
 
 })()
-},{"../utility/treemap.js":38,"../view/NodeView.js":37,"backbone":22,"underscore":8}],30:[function(require,module,exports){
+},{"../utility/treemap.js":39,"../view/NodeView.js":38,"backbone":23,"underscore":8}],31:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -6698,7 +6748,130 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
-},{"./StreamNode":39,"./TreeNode":29,"underscore":8}],20:[function(require,module,exports){
+},{"./StreamNode":40,"./TreeNode":30,"underscore":8}],20:[function(require,module,exports){
+(function(){/* global $, window */
+var _ = require('underscore'),
+  Collection = require('./EventCollection.js'),
+  Model = require('./EventModel.js'),
+  ListView = require('./ListView.js'),
+  SingleView = require('./SingleView.js');
+var Controller = module.exports = function ($modal, events) {
+  this.events = {};
+  this.eventsToAdd = [];
+  this.collection = null;
+  this.highlightedDate = null;
+  this.listView = null;
+  this.singleView = null;
+  this.$modal = $modal;
+  this.debounceAdd = _.debounce(function () {
+    this.collection.add(this.eventsToAdd, {sort: false});
+    this.collection.sort();
+    this.eventsToAdd = [];
+    if (this.highlightedDate) {
+      this.highlightDate(this.highlightedDate);
+    }
+  }.bind(this), 100);
+  this.addEvents(events);
+  $(window).resize(this.resizeModal);
+};
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal();
+    if (!this.listView) {
+      this.singleView = new SingleView({model: new Model({})});
+      this.listView = new ListView({
+        collection: this.collection
+      });
+      this.listView.on('itemview:date:clicked', function (evt) {
+        this.collection.setCurrentElement(evt.model);
+        this.updateSingleView(this.collection.getCurrentElement());
+      }.bind(this));
+    }
+    this.listView.render();
+    this.singleView.render();
+    this.resizeModal();
+    $(this.$modal).keydown(function (e) {
+      if ($('#detail-full .editing').length !== 0) {
+        return true;
+      }
+      var LEFT_KEY = 37;
+      var UP_KEY = 38;
+      var RIGHT_KEY = 39;
+      var DOWN_KEY = 40;
+      if (e.which === LEFT_KEY || e.which === UP_KEY) {
+        this.updateSingleView(this.collection.prev().getCurrentElement());
+        return false;
+      }
+      if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
+        this.updateSingleView(this.collection.next().getCurrentElement());
+        return false;
+      }
+    }.bind(this));
+  },
+  close: function () {
+    this.collection.reset();
+    this.collection = null;
+    this.events = {};
+    $(this.$modal).unbind('keydown');
+  },
+  getEventById: function (event) {
+    return this.collection.getEventById(event.id);
+  },
+  addEvents: function (event) {
+    if (!event) {
+      return;
+    }
+    if (event.id) {
+      //we have only one event so we put it on a each for the next each
+      event = [event];
+    }
+    if (!this.collection) {
+      this.collection = new Collection();
+    }
+    _.each(event, function (e) {
+      var m = new Model({
+        event: e
+      });
+      this.events[e.id] = e;
+      this.eventsToAdd.push(m);
+    }, this);
+    this.debounceAdd();
+  },
+  deleteEvent: function (event) {
+    delete this.events[event.id];
+    var toDelete = this.getEventById(event);
+    if (toDelete) {
+      toDelete.destroy();
+    }
+  },
+  updateEvent: function (event) {
+    this.events[event.id] = event;
+    var toUpdate = this.getEventById(event);
+    if (toUpdate) {
+      toUpdate.set('event', event);
+      this.collection.sort();
+    }
+  },
+  highlightDate: function (time) {
+    this.highlightedDate = time;
+    var model = this.collection.highlightEvent(time);
+    this.updateSingleView(model);
+
+  },
+  updateSingleView: function (model) {
+    if (model) {
+      this.singleView.model.set('event', model.get('event'));
+    }
+  },
+  resizeModal: _.debounce(function () {
+    $('.modal-panel-left').css({
+      width: $('.modal-dialog').width() - $('.modal-panel-right').width()
+    });
+  }.bind(this), 1000)
+});
+})()
+},{"./EventCollection.js":41,"./EventModel.js":42,"./ListView.js":43,"./SingleView.js":44,"underscore":8}],21:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
@@ -7064,7 +7237,7 @@ _.extend(Controller.prototype, {
   }, 250)
 });
 })()
-},{"./../numericals/ChartView.js":43,"./../numericals/SeriesModel.js":41,"./EventCollection.js":40,"./ListView.js":42,"underscore":8}],14:[function(require,module,exports){
+},{"./../numericals/ChartView.js":48,"./../numericals/SeriesModel.js":46,"./EventCollection.js":45,"./ListView.js":47,"underscore":8}],14:[function(require,module,exports){
 //TODO: consider merging System into Utility
 
 var Utility = require('../utility/Utility.js');
@@ -7086,7 +7259,7 @@ System.ioConnect = function (settings) {
 };
 
 
-},{"../utility/Utility.js":16,"./System-browser.js":26,"./System-node.js":27,"socket.io-client":44}],16:[function(require,module,exports){
+},{"../utility/Utility.js":16,"./System-browser.js":27,"./System-node.js":28,"socket.io-client":49}],16:[function(require,module,exports){
 var _ = require('underscore');
 
 var isBrowser = function () {
@@ -7167,7 +7340,7 @@ Utility.endsWith = function (str, suffix) {
 };
 
 
-},{"./SignalEmitter.js":36,"./Utility-browser.js":31,"./Utility-node.js":28,"underscore":8}],45:[function(require,module,exports){
+},{"./SignalEmitter.js":37,"./Utility-browser.js":32,"./Utility-node.js":29,"underscore":8}],50:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
     EventsView = require('../../view/events-views/notes/Model.js');
 
@@ -7195,7 +7368,7 @@ NotesEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../../view/events-views/notes/Model.js":46,"../EventsNode":47}],48:[function(require,module,exports){
+},{"../../view/events-views/notes/Model.js":51,"../EventsNode":52}],53:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/positions/Model.js');
 
@@ -7223,7 +7396,7 @@ PositionsEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../../view/events-views/positions/Model.js":49,"../EventsNode":47}],50:[function(require,module,exports){
+},{"../../view/events-views/positions/Model.js":54,"../EventsNode":52}],55:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
     EventsView = require('../../view/events-views/pictures/Model.js');
 
@@ -7252,7 +7425,7 @@ PicturesEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../../view/events-views/pictures/Model.js":51,"../EventsNode":47}],52:[function(require,module,exports){
+},{"../../view/events-views/pictures/Model.js":56,"../EventsNode":52}],57:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
     EventsView = require('../../view/events-views/numericals/Model.js');
 
@@ -7310,7 +7483,7 @@ NumericalsEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../../view/events-views/numericals/Model.js":53,"../EventsNode":47}],54:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":58,"../EventsNode":52}],59:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/generics/Model.js');
 
@@ -7338,7 +7511,7 @@ GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
 };
 
 
-},{"../../view/events-views/generics/Model.js":55,"../EventsNode":47}],35:[function(require,module,exports){
+},{"../../view/events-views/generics/Model.js":60,"../EventsNode":52}],36:[function(require,module,exports){
 var _ = require('underscore');
 
 function Datastore(connection) {
@@ -7403,7 +7576,7 @@ Datastore.prototype.getStreamById = function (streamId, test) {
 module.exports = Datastore;
 
 
-},{"underscore":8}],44:[function(require,module,exports){
+},{"underscore":8}],49:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -11278,7 +11451,7 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 })()
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
  /* TODO This a the view for each node, with dynamic animation
@@ -11352,7 +11525,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":56}],38:[function(require,module,exports){
+},{"backbone.marionette":61}],39:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -11544,7 +11717,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":8}],39:[function(require,module,exports){
+},{"underscore":8}],40:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -11805,7 +11978,374 @@ StreamNode.registeredEventNodeTypes = {
   'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":29,"./eventsNode/GenericEventsNode.js":54,"./eventsNode/NotesEventsNode.js":45,"./eventsNode/NumericalsEventsNode.js":52,"./eventsNode/PicturesEventsNode.js":50,"./eventsNode/PositionsEventsNode.js":48,"underscore":8}],40:[function(require,module,exports){
+},{"./TreeNode":30,"./eventsNode/GenericEventsNode.js":59,"./eventsNode/NotesEventsNode.js":50,"./eventsNode/NumericalsEventsNode.js":57,"./eventsNode/PicturesEventsNode.js":55,"./eventsNode/PositionsEventsNode.js":53,"underscore":8}],41:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./EventModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model,
+  highlightedDate: null,
+  currentElement: null,
+  comparator: function (a, b) {
+    a = a.get('event').time;
+    b = b.get('event').time;
+    return a > b ? -1
+      : a < b ? 1
+      : 0;
+  },
+  highlightEvent: function (time) {
+    var next =  this.getEventhighlighted(time);
+    if (!next || next === Infinity) {
+      return;
+    }
+    this.setCurrentElement(next);
+    return next;
+  },
+  getEventhighlighted: function (time) {
+    this.highlightedDate = time === Infinity ? 99999999999 : time;
+    return this.min(this._getTimeDifference.bind(this));
+  },
+  getTrashed: function () {
+    return this.filter(this._getTrashed);
+  },
+  getEventById: function (id) {
+    return this.find(function (e) {
+      return e.get('event').id === id;
+    });
+  },
+  getActive: function () {
+    return this.reject(this._getTrashed);
+  },
+  _getTimeDifference: function (event) {
+    return event.getTimeDifference(this.highlightedDate);
+  },
+  _getTrashed: function (event) {
+    return event.isTrashed();
+  },
+  getCurrentElement: function () {
+    return this.currentElement;
+  },
+  setCurrentElement: function (model) {
+    if (!model) {
+      return;
+    }
+    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
+      if (this.currentElement) {
+        this.currentElement.setHighlighted(false);
+      }
+      if (model) {
+        model.setHighlighted(true);
+      }
+    }
+    this.currentElement = model;
+  },
+  next: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
+    return this;
+  },
+  prev: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
+    return this;
+  }
+});
+},{"./EventModel.js":42,"backbone":23}],42:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    event: null,
+    highlighted: false,
+    checked: false
+  },
+  getTimeDifference: function (time) {
+    return Math.abs(time - this.get('event').time);
+  },
+  isTrashed: function () {
+    return this.get('event').trashed;
+  },
+  setHighlighted: function (highlight) {
+    this.set('highlighted', highlight);
+  },
+  save: function () {
+    var event = this.get('event');
+    event.update(function () {
+      console.log('update event callback', arguments);
+    });
+  },
+  addAttachment: function (file) {
+    this.get('event').addAttachment(file, function () {
+    //  console.log('trash event callback', arguments);
+    });
+  },
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
+  },
+  trash: function () {
+    this.get('event').trash(function () {
+    //  console.log('trash event callback', arguments);
+    });
+  }
+});
+},{"backbone":23}],43:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./ItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-detailListCompositeView',
+  container: '.modal-content',
+  itemView: ItemView,
+  itemViewContainer: '#detail-list',
+  checkAll: false,
+  events: {
+    'click #check-all': 'onCheckAllClick'
+  },
+  initialize: function () {
+    if ($('.modal-panel-right').length === 0) {
+      /* jshint -W101 */
+      $(this.container).append(
+        '<div class="modal-panel-right"> ' +
+        '    <div class="modal-header">  ' +
+        '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
+        '        <h4 class="modal-title" id="myModalLabel">Detailed View</h4> ' +
+        '    </div>      ' +
+        '    <div id="modal-right-content"> ' +
+        '        <ul id="detail-list"></ul> ' +
+        '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
+          '      <button id ="trash-selected" type="button" class="btn btn-danger">Trash Selected</button></div>' +
+        '    </div> ' +
+        '</div>');
+
+    }
+    this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    var $checkAll = $('#check-all');
+    this.checkAll = false;
+    $checkAll.off();
+    $checkAll[0].checked = false;
+    $checkAll.bind('click', this.onCheckAllClick.bind(this));
+    $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
+  },
+  onTrashSelectedClick: function () {
+    this.collection.each(function (model) {
+      if (model.get('checked')) {
+        model.trash();
+      }
+    }.bind(this));
+  },
+  onCheckAllClick: function () {
+    this.checkAll = !this.checkAll;
+    this.collection.each(function (model) {
+      model.set('checked', this.checkAll);
+    }.bind(this));
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./ItemView.js":62,"backbone.marionette":61,"underscore":8}],44:[function(require,module,exports){
+(function(){/* global $, FormData */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#template-detail-full',
+  container: '.modal-content',
+  itemViewContainer: '#modal-left-content',
+  addAttachmentContainer: '#add-attachment',
+  waitSubmit: false,
+  addAttachmentId: 0,
+  attachmentId: {},
+  ui: {
+    li: 'li.editable',
+    edit: '.edit',
+    submit: '#submit-edit',
+    trash: '#trash-edit'
+  },
+  templateHelpers: function () {
+    return {
+      showContent: function () {
+        return this.objectToHtml('content', this.model.get('event').content, 'content');
+      }.bind(this),
+      showAttachment: function () {
+        return this.showAttachment();
+      }.bind(this),
+      getStreamStructure: function () {
+        return this.getStreamStructure();
+      }.bind(this)
+    };
+  },
+  initialize: function () {
+    if ($('.modal-panel-left').length === 0) {
+      /*jshint -W101 */
+      $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"></div></div>');
+    }
+    this.listenTo(this.model, 'change', this.render);
+
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    this.addAttachment();
+    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
+    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
+    this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
+    this.ui.submit.bind('click', this.submit.bind(this));
+    this.ui.trash.bind('click', this.trash.bind(this));
+    _.each(_.keys(this.attachmentId), function (k) {
+      $('#' + k + ' i').bind('click', { id: k, fileName: this.attachmentId[k] },
+        this._onRemoveFileClick.bind(this));
+    }.bind(this));
+  },
+  onEditClick: function (e) {
+    $(e.currentTarget).addClass('editing');
+    this.ui.edit.focus();
+  },
+  onEditBlur: function (e) {
+    this.updateEvent(e.currentTarget);
+    if (e.relatedTarget.id === 'submit-edit') {
+      this.submit();
+    }
+    return true;
+  },
+  onEditKeypress: function (e) {
+    var ENTER_KEY = 13;
+    if (e.which === ENTER_KEY) {
+      this.updateEvent(e.currentTarget);
+    }
+  },
+  addAttachment: function () {
+    var id = 'attachment-' + this.addAttachmentId;
+    var html = '<li><input type="file" id="' + id + '"></li>';
+    this.addAttachmentId++;
+    $(this.addAttachmentContainer).append(html);
+    $('#' + id).bind('change', this._onFileAttach.bind(this));
+  },
+  _onFileAttach : function (event)	{
+    var file = new FormData();
+    event.target.disabled = true;
+    file.append('attachment-0', event.target.files[0]);
+    this.model.addAttachment(file);
+    this.addAttachment();
+  },
+  showAttachment: function () {
+    var event =  this.model.get('event');
+    var attachments = event.attachments;
+    var html = '';
+    if (attachments) {
+      html += '<ul> attachments:';
+      _.each(_.keys(attachments), function (k) {
+        html += '<li id="' + k + '">' + k + ': <a href="' + event.url + '/' +
+          attachments[k].fileName + '?auth=' + event.connection.auth + '" target="_blank"> ' +
+          attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
+        this.attachmentId[k] = attachments[k].fileName;
+      }.bind(this));
+      html += '</ul>';
+    } else {
+      return '';
+    }
+    return html;
+  },
+  _onRemoveFileClick: function (event) {
+    this.model.removeAttachment(event.data.fileName, function () {
+      $('#' + event.data.id + ' i').off();
+      $('#' + event.data.id).remove();
+      delete this.attachmentId[event.data.id];
+    }.bind(this));
+  },
+  /* jshint -W098, -W061 */
+  updateEvent: function ($elem) {
+    var event = this.model.get('event'),
+    key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
+    value = $($elem).val().trim();
+    if (key === 'time') {
+      value = new Date(value);
+      if (isNaN(value)) {
+        // TODO input is not a date decide what to do
+        return;
+      }
+      value = value.getTime() / 1000;
+    } else if (key === 'tags') {
+      value = value.split(',');
+      value = value.map(function (e) {
+        return e.trim();
+      });
+    }
+    eval('event.' + key + ' = value');
+    this.completeEdit($($elem).parent());
+    this.render();
+    if (this.waitSubmit) {
+      this.waitSubmit = false;
+      this.submit();
+    }
+  },
+  submit: _.throttle(function () {
+      console.log('throttle submit');
+      if ($('.editing').length !== 0) {
+        this.waitSubmit = true;
+        return;
+      }
+      var event = this.model.get('event');
+      this.model.set('event', event).save();
+    }, 5 * 1000),
+
+  trash: function () {
+    this.model.trash();
+  },
+  completeEdit: function ($elem) {
+    $($elem).removeClass('editing');
+  },
+  getStreamStructure: function () {
+    var rootStreams = this.model.get('event').connection.datastore.getStreams(),
+        currentStreamId = this.model.get('event').streamId,
+        result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      result += this._walkStreamStructure(rootStreams[i], 0, currentStreamId);
+    }
+    return result;
+
+  },
+  _walkStreamStructure: function (stream, depth, currentStreamId) {
+    var indentNbr = 4,
+    result = '<option ';
+    result += stream.id === currentStreamId ? 'selected="selected" ' : '';
+    result += 'value="' + stream.id + '" >';
+    for (var i = 0; i < depth * indentNbr; i++) {
+      result += '&nbsp;';
+    }
+    result += stream.id;
+    result += '</option>';
+    for (var j = 0; j < stream.children.length; j++) {
+      result += this._walkStreamStructure(stream.children[j], depth++, currentStreamId);
+    }
+    return result;
+  },
+  objectToHtml: function (key, object, id) {
+    var result = '';
+    if (_.isObject(object)) {
+      result += '<ul>' + key + ':';
+      _.each(_.keys(object), function (k) {
+        result += this.objectToHtml(k, object[k], id + '-' + k);
+      }.bind(this));
+      result += '</ul>';
+      return result;
+    } else {
+      return '<li class="editable" id="current-' + id + '">' + key +
+        ': <label>' + object + '</label>' +
+        '<input class="edit" id="edit-' + id + '" value="' + object + '"></li>';
+    }
+  }
+});
+})()
+},{"backbone.marionette":61,"underscore":8}],45:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./../numericals/EventModel.js');
 
@@ -11887,7 +12427,7 @@ module.exports = Backbone.Collection.extend({
     return this;
   }
 });
-},{"./../numericals/EventModel.js":57,"backbone":22}],41:[function(require,module,exports){
+},{"./../numericals/EventModel.js":63,"backbone":23}],46:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -11921,7 +12461,7 @@ module.exports = Backbone.Model.extend({
     }
   }
 });
-},{"backbone":22}],42:[function(require,module,exports){
+},{"backbone":23}],47:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -11947,7 +12487,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./ItemView.js":58,"backbone.marionette":56,"underscore":8}],43:[function(require,module,exports){
+},{"./ItemView.js":64,"backbone.marionette":61,"underscore":8}],48:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
@@ -12278,7 +12818,7 @@ module.exports = Marionette.ItemView.extend({
 });
 
 })()
-},{"backbone.marionette":56,"pryv":9,"underscore":8}],32:[function(require,module,exports){
+},{"backbone.marionette":61,"pryv":9,"underscore":8}],33:[function(require,module,exports){
 var Utility = require('../utility/Utility.js'),
   _ = require('underscore'),
   Filter = require('../Filter'),
@@ -12491,7 +13031,7 @@ module.exports = ConnectionEvents;
  * @param {Event[]} events
  */
 
-},{"../Event":11,"../Filter":13,"../utility/Utility.js":16,"underscore":8}],33:[function(require,module,exports){
+},{"../Event":11,"../Filter":13,"../utility/Utility.js":16,"underscore":8}],34:[function(require,module,exports){
 var _ = require('underscore'),
     Utility = require('../utility/Utility.js'),
     Stream = require('../Stream.js');
@@ -12781,7 +13321,7 @@ module.exports = ConnectionStreams;
  */
 
 
-},{"../Stream.js":12,"../utility/Utility.js":16,"underscore":8}],34:[function(require,module,exports){
+},{"../Stream.js":12,"../utility/Utility.js":16,"underscore":8}],35:[function(require,module,exports){
 var _ = require('underscore'),
   System = require('../system/System.js'),
   Monitor = require('../Monitor.js');
@@ -12861,7 +13401,7 @@ module.exports = ConnectionMonitors;
 
 
 
-},{"../Monitor.js":59,"../system/System.js":14,"underscore":8}],36:[function(require,module,exports){
+},{"../Monitor.js":65,"../system/System.js":14,"underscore":8}],37:[function(require,module,exports){
 (function(){/**
  * (event)Emitter renamed to avoid confusion with prvy's events
  */
@@ -12992,7 +13532,7 @@ SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
 };
 
 })()
-},{"underscore":8}],23:[function(require,module,exports){
+},{"underscore":8}],24:[function(require,module,exports){
 (function(){/* global confirm, document, navigator, location, window */
 
 var Utility = require('../utility/Utility.js');
@@ -13460,7 +14000,7 @@ Access._cleanStatusFromURL = function () {
 
 module.exports = Access;
 })()
-},{"../system/System.js":14,"../utility/Utility.js":16,"underscore":8}],59:[function(require,module,exports){
+},{"../system/System.js":14,"../utility/Utility.js":16,"underscore":8}],65:[function(require,module,exports){
 var _ = require('underscore');
 var SignalEmitter = require('./utility/SignalEmitter.js');
 var MSGs =  require('./Messages.js');
@@ -13710,7 +14250,36 @@ module.exports = Monitor;
 
 
 
-},{"./Messages.js":17,"./utility/SignalEmitter.js":36,"underscore":8}],57:[function(require,module,exports){
+},{"./Messages.js":17,"./utility/SignalEmitter.js":37,"underscore":8}],62:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+
+  tagName: 'li',
+  template: '#template-detailItemView',
+  ui: {
+    checkbox: '.checkbox'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+
+  },
+  onRender: function () {
+    this.ui.checkbox[0].checked = this.model.get('checked');
+    if (this.model.get('highlighted')) {
+      this.$el.addClass('highlighted');
+    } else {
+      this.$el.removeClass('highlighted');
+    }
+    this.$('.view').bind('click', function () {
+      this.trigger('date:clicked', this.model);
+    }.bind(this));
+    this.$('input').bind('click', function () {
+      this.model.set('checked', this.ui.checkbox[0].checked);
+    }.bind(this));
+  }
+});
+},{"backbone.marionette":61}],63:[function(require,module,exports){
 var Backbone = require('backbone');
 module.exports = Backbone.Model.extend({
   defaults: {
@@ -13728,7 +14297,7 @@ module.exports = Backbone.Model.extend({
     this.set('highlighted', highlight);
   }
 });
-},{"backbone":22}],58:[function(require,module,exports){
+},{"backbone":23}],64:[function(require,module,exports){
 (function(){/* global $ */
 
 var Marionette = require('backbone.marionette');
@@ -13806,7 +14375,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":56}],47:[function(require,module,exports){
+},{"backbone.marionette":61}],52:[function(require,module,exports){
 (function(){var TreeNode = require('./TreeNode'),
   RootNode = require('./RootNode'),
   Backbone = require('backbone'),
@@ -13933,7 +14502,8 @@ var EventsNode = module.exports = TreeNode.implement(
       this.eventView = new this.pluginView(this.events, {
         width: this.width,
         height: this.height,
-        id: this.uniqueId
+        id: this.uniqueId,
+        treeMap: this.treeMap
       }, this);
     },
 
@@ -13960,7 +14530,7 @@ EventsNode.acceptThisEventType = function () {
 
 
 })()
-},{"../view/NodeView.js":37,"./RootNode":19,"./TreeNode":29,"backbone":22,"underscore":8}],60:[function(require,module,exports){
+},{"../view/NodeView.js":38,"./RootNode":19,"./TreeNode":30,"backbone":23,"underscore":8}],66:[function(require,module,exports){
 (function(){/* global window, google, document */
 /*jshint -W084 */
 /*jshint -W089 */
@@ -14153,7 +14723,7 @@ var MarkerClusterer = module.exports = function (map, opt_markers, opt_options) 
  * @private
  */
 MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_PATH_ =
-  'http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/' +
+  'https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/' +
     'images/m';
 
 
@@ -15274,12 +15844,11 @@ Object.keys = Object.keys || function (o) {
 };
 
 })()
-},{}],46:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 (function(){/* global $ */
 var _ = require('underscore'),
   NotesView = require('./View.js'),
-  Backbone = require('backbone'),
-  DetailView = require('../detailed/Controller.js');
+  Backbone = require('backbone');
 var NotesPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
@@ -15301,15 +15870,7 @@ var NotesPlugin = module.exports = function (events, params) {
   this.eventsDisplayed = [];
   this.animationIn = null;
   this.animationOut = null;
-
-  this.detailedView = null;
-  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.detailedView) {
-      this.detailedView.close();
-      this.detailedView = null;
-    }
-  }.bind(this));
-  /**  */
+  this.hasDetailedView = false;
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
@@ -15323,8 +15884,8 @@ var NotesPlugin = module.exports = function (events, params) {
 };
 NotesPlugin.prototype.eventEnter = function (event) {
   this.events[event.id] = event;
-  if (this.detailedView) {
-    this.detailedView.addEvents(event);
+  if (this.hasDetailedView) {
+    this.treeMap.addEventsDetailedView(event);
   }
   this.debounceRefresh();
 };
@@ -15333,8 +15894,8 @@ NotesPlugin.prototype.eventLeave = function (event) {
   if (!this.events[event.id]) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
-    if (this.detailedView) {
-      this.detailedView.deleteEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
     }
     delete this.events[event.id];
     this.debounceRefresh();
@@ -15346,8 +15907,8 @@ NotesPlugin.prototype.eventChange = function (event) {
     console.log('eventChange: event id ' + event.id + ' dont exists');
   }  else {
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.updateEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
     }
     this.debounceRefresh();
   }
@@ -15357,8 +15918,8 @@ NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
   this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
   this.highlightedTime = time;
-  if (this.detailedView) {
-    this.detailedView.highlightDate(this.highlightedTime);
+  if (this.hasDetailedView) {
+    this.treeMap.highlightDateDetailedView(this.highlightedTime);
   }
   this.debounceRefresh();
 };
@@ -15442,12 +16003,14 @@ NotesPlugin.prototype._refreshModelView = function () {
         this.eventsDisplayed[i].view = new NotesView({model: this.eventsDisplayed[i].modelView});
         /* jshint -W083 */
         this.eventsDisplayed[i].view.on('nodeClicked', function () {
-          if (!this.detailedView) {
-            this.detailedView = new DetailView(this.$modal);
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
           }
-          this.detailedView.addEvents(this.events);
-          this.detailedView.show();
-          this.detailedView.highlightDate(this.highlightedTime);
         }.bind(this));
       }
     }
@@ -15533,7 +16096,7 @@ NotesPlugin.prototype._findEventToDisplay = function () {
 };
 
 })()
-},{"../detailed/Controller.js":62,"./View.js":61,"backbone":22,"underscore":8}],49:[function(require,module,exports){
+},{"./View.js":67,"backbone":23,"underscore":8}],54:[function(require,module,exports){
 var _ = require('underscore'),
   PositionsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -15579,12 +16142,11 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":64,"./View.js":63,"underscore":8}],51:[function(require,module,exports){
+},{"../common/Model.js":69,"./View.js":68,"underscore":8}],56:[function(require,module,exports){
 (function(){/* global $ */
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
-  Backbone = require('backbone'),
-  DetailView = require('../detailed/Controller.js');
+  Backbone = require('backbone');
 var ACCEPTED_TYPE = 'picture/attached';
 var PicturesPlugin = module.exports = function (events, params) {
   this.debounceRefresh = _.debounce(function () {
@@ -15609,15 +16171,7 @@ var PicturesPlugin = module.exports = function (events, params) {
   this.eventsDisplayed = [];
   this.animationIn = null;
   this.animationOut = null;
-
-  this.detailedView = null;
-  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.detailedView) {
-      this.detailedView.close();
-      this.detailedView = null;
-    }
-  }.bind(this));
-  /**  */
+  this.hasDetailedView = false;
   this.highlightedTime = Infinity;
   this.view = null;
   this.eventDisplayed = null;
@@ -15631,8 +16185,8 @@ PicturesPlugin.prototype.eventEnter = function (event) {
   if (event.type === ACCEPTED_TYPE) {
 
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.addEvents(event);
+    if (this.hasDetailedView) {
+      this.treeMap.addEventsDetailedView(event);
     }
     this.debounceRefresh();
 
@@ -15647,8 +16201,8 @@ PicturesPlugin.prototype.eventLeave = function (event) {
   if (!this.events[event.id]) {
     console.log('eventLeave: event id ' + event.id + ' dont exists');
   } else {
-    if (this.detailedView) {
-      this.detailedView.deleteEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
     }
     delete this.events[event.id];
     this.debounceRefresh();
@@ -15663,8 +16217,8 @@ PicturesPlugin.prototype.eventChange = function (event) {
       'Type accepted is ' + ACCEPTED_TYPE);
   } else {
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.updateEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
     }
     this.debounceRefresh();
   }
@@ -15674,8 +16228,8 @@ PicturesPlugin.prototype.OnDateHighlightedChange = function (time) {
   this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
   this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
   this.highlightedTime = time;
-  if (this.detailedView) {
-    this.detailedView.highlightDate(this.highlightedTime);
+  if (this.hasDetailedView) {
+    this.treeMap.highlightDateDetailedView(this.highlightedTime);
   }
   this.debounceRefresh();
 };
@@ -15761,12 +16315,14 @@ PicturesPlugin.prototype._refreshModelView = function () {
         this.eventsDisplayed[i].view = new PicturesView({model: this.eventsDisplayed[i].modelView});
         /* jshint -W083 */
         this.eventsDisplayed[i].view.on('nodeClicked', function () {
-          if (!this.detailedView) {
-            this.detailedView = new DetailView(this.$modal);
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
           }
-          this.detailedView.addEvents(this.events);
-          this.detailedView.show();
-          this.detailedView.highlightDate(this.highlightedTime);
         }.bind(this));
       }
     } else {
@@ -15861,13 +16417,12 @@ PicturesPlugin.acceptTheseEvents = function (events) {
   return result;
 };
 })()
-},{"../detailed/Controller.js":62,"./View.js":65,"backbone":22,"underscore":8}],53:[function(require,module,exports){
+},{"./View.js":70,"backbone":23,"underscore":8}],58:[function(require,module,exports){
 (function(){/* global $ */
 
 var _ = require('underscore'),
   ChartView = require('./ChartView.js'),
-  SeriesModel = require('./SeriesModel.js'),
-  DetailView = require('../detailed/Controller.js');
+  SeriesModel = require('./SeriesModel.js');
 
 var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
@@ -15885,14 +16440,7 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.streamIds = {};
   this.eventsNode = node;
   this.sortedData = null;
-
-  this.detailedView = null;
-  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.detailedView) {
-      this.detailedView.close();
-      this.detailedView = null;
-    }
-  }.bind(this));
+  this.hasDetailedView = false;
   _.extend(this, params);
   _.each(events, function (event) {
     this.eventEnter(event);
@@ -15910,8 +16458,8 @@ NumericalsPlugin.prototype.eventEnter = function (event) {
   }
   this.datas[event.streamId][event.type][event.id] = event;
   this.needToRender = true;
-  if (this.detailedView) {
-    this.detailedView.addEvents(event);
+  if (this.hasDetailedView) {
+    this.treeMap.addEventsDetailedView(event);
   }
   this.debounceRefresh();
 };
@@ -15921,9 +16469,10 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
     delete this.events[event.id];
     delete this.datas[event.streamId][event.type][event.id];
     this.needToRender = true;
-    if (this.detailedView) {
-      this.detailedView.deleteEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
     }
+
     this.debounceRefresh();
   }
 };
@@ -15933,8 +16482,8 @@ NumericalsPlugin.prototype.eventChange = function (event) {
     this.events[event.id] = event;
     this.datas[event.streamId][event.type][event.id] = event;
     this.needToRender = true;
-    if (this.detailedView) {
-      this.detailedView.updateEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
     }
     this.debounceRefresh();
   }
@@ -15945,8 +16494,8 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
   if (this.view) {
     this.view.onDateHighLighted(time);
   }
-  if (this.detailedView) {
-    this.detailedView.highlightDate(this.highlightedTime);
+  if (this.hasDetailedView) {
+    this.treeMap.highlightDateDetailedView(this.highlightedTime);
   }
 };
 
@@ -16048,12 +16597,14 @@ NumericalsPlugin.prototype._refreshModelView = function () {
   this.view.off();
   /* jshint -W083 */
   this.view.on('nodeClicked', function () {
-    if (!this.detailedView) {
-      this.detailedView = new DetailView(this.$modal);
+    if (!this.hasDetailedView) {
+      this.hasDetailedView = true;
+      var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+        this.treeMap.closeDetailedView();
+        this.hasDetailedView = false;
+      }.bind(this));
+      this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
     }
-    this.detailedView.addEvents(this.events);
-    this.detailedView.show();
-    this.detailedView.highlightDate(this.highlightedTime);
   }.bind(this));
   this.view.on('chart:clicked', function () { return; });
   this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
@@ -16129,7 +16680,7 @@ NumericalsPlugin.prototype.resize = function () {
 };
 
 })()
-},{"../detailed/Controller.js":62,"./ChartView.js":43,"./SeriesModel.js":41,"underscore":8}],55:[function(require,module,exports){
+},{"./ChartView.js":48,"./SeriesModel.js":46,"underscore":8}],60:[function(require,module,exports){
 var _ = require('underscore'),
   GenericsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -16157,7 +16708,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":64,"./View.js":66,"underscore":8}],56:[function(require,module,exports){
+},{"../common/Model.js":69,"./View.js":71,"underscore":8}],61:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -18119,7 +18670,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":22,"backbone.babysitter":68,"backbone.wreqr":67,"underscore":8}],61:[function(require,module,exports){
+},{"backbone":23,"backbone.babysitter":73,"backbone.wreqr":72,"underscore":8}],67:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
 
@@ -18183,130 +18734,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":56}],62:[function(require,module,exports){
-(function(){/* global $, window */
-var _ = require('underscore'),
-  Collection = require('./EventCollection.js'),
-  Model = require('./EventModel.js'),
-  ListView = require('./ListView.js'),
-  SingleView = require('./SingleView.js');
-var Controller = module.exports = function ($modal, events) {
-  this.events = {};
-  this.eventsToAdd = [];
-  this.collection = null;
-  this.highlightedDate = null;
-  this.listView = null;
-  this.singleView = null;
-  this.$modal = $modal;
-  this.debounceAdd = _.debounce(function () {
-    this.collection.add(this.eventsToAdd, {sort: false});
-    this.collection.sort();
-    this.eventsToAdd = [];
-    if (this.highlightedDate) {
-      this.highlightDate(this.highlightedDate);
-    }
-  }.bind(this), 100);
-  this.addEvents(events);
-  $(window).resize(this.resizeModal);
-};
-
-_.extend(Controller.prototype, {
-  show: function () {
-    this.$modal.modal();
-    if (!this.listView) {
-      this.singleView = new SingleView({model: new Model({})});
-      this.listView = new ListView({
-        collection: this.collection
-      });
-      this.listView.on('itemview:date:clicked', function (evt) {
-        this.collection.setCurrentElement(evt.model);
-        this.updateSingleView(this.collection.getCurrentElement());
-      }.bind(this));
-    }
-    this.listView.render();
-    this.singleView.render();
-    this.resizeModal();
-    $(this.$modal).keydown(function (e) {
-      if ($('#detail-full .editing').length !== 0) {
-        return true;
-      }
-      var LEFT_KEY = 37;
-      var UP_KEY = 38;
-      var RIGHT_KEY = 39;
-      var DOWN_KEY = 40;
-      if (e.which === LEFT_KEY || e.which === UP_KEY) {
-        this.updateSingleView(this.collection.prev().getCurrentElement());
-        return false;
-      }
-      if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
-        this.updateSingleView(this.collection.next().getCurrentElement());
-        return false;
-      }
-    }.bind(this));
-  },
-  close: function () {
-    this.collection.reset();
-    this.collection = null;
-    this.events = {};
-    $(this.$modal).unbind('keydown');
-  },
-  getEventById: function (event) {
-    return this.collection.getEventById(event.id);
-  },
-  addEvents: function (event) {
-    if (!event) {
-      return;
-    }
-    if (event.id) {
-      //we have only one event so we put it on a each for the next each
-      event = [event];
-    }
-    if (!this.collection) {
-      this.collection = new Collection();
-    }
-    _.each(event, function (e) {
-      var m = new Model({
-        event: e
-      });
-      this.events[e.id] = e;
-      this.eventsToAdd.push(m);
-    }, this);
-    this.debounceAdd();
-  },
-  deleteEvent: function (event) {
-    delete this.events[event.id];
-    var toDelete = this.getEventById(event);
-    if (toDelete) {
-      toDelete.destroy();
-    }
-  },
-  updateEvent: function (event) {
-    this.events[event.id] = event;
-    var toUpdate = this.getEventById(event);
-    if (toUpdate) {
-      toUpdate.set('event', event);
-      this.collection.sort();
-    }
-  },
-  highlightDate: function (time) {
-    this.highlightedDate = time;
-    var model = this.collection.highlightEvent(time);
-    this.updateSingleView(model);
-
-  },
-  updateSingleView: function (model) {
-    if (model) {
-      this.singleView.model.set('event', model.get('event'));
-    }
-  },
-  resizeModal: _.debounce(function () {
-    $('.modal-panel-left').css({
-      width: $('.modal-dialog').width() - $('.modal-panel-right').width()
-    });
-  }.bind(this), 1000)
-});
-})()
-},{"./EventCollection.js":69,"./EventModel.js":70,"./ListView.js":71,"./SingleView.js":72,"underscore":8}],63:[function(require,module,exports){
+},{"backbone.marionette":61}],68:[function(require,module,exports){
 (function(){/* global document, $ */
 var  Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
@@ -18483,11 +18911,10 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"./utility/markerclusterer.js":60,"backbone.marionette":56,"google-maps":73,"underscore":8}],64:[function(require,module,exports){
+},{"./utility/markerclusterer.js":66,"backbone.marionette":61,"google-maps":74,"underscore":8}],69:[function(require,module,exports){
 (function(){/* global $*/
 var _ = require('underscore'),
-  Backbone = require('backbone'),
-  DetailView = require('../detailed/Controller.js');
+  Backbone = require('backbone');
 var Model = module.exports = function (events, params) {
   this.verbose = true;
   this.events = {};
@@ -18498,19 +18925,13 @@ var Model = module.exports = function (events, params) {
   this.highlightedTime = Infinity;
   this.modelView = null;
   this.view = null;
-  this.detailedView = null;
   this.eventDisplayed = null;
   this.container = null;
   this.needToRender = null;
   this.typeView = null;
   this.animationIn = null;
   this.animationOut = null;
-  this.$modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.detailedView) {
-      this.detailedView.close();
-      this.detailedView = null;
-    }
-  }.bind(this));
+  this.hasDetailedView = false;
   _.extend(this, params);
   this.debounceRefresh = _.debounce(function () {
     this._refreshModelView();
@@ -18540,9 +18961,10 @@ _.extend(Model.prototype, {
         'current:', this.events[event.id], 'new:', event);
     }
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.addEvents(event);
+    if (this.hasDetailedView) {
+      this.treeMap.addEventsDetailedView(event);
     }
+
     this.debounceRefresh();
   },
   eventLeave: function (event) {
@@ -18551,8 +18973,8 @@ _.extend(Model.prototype, {
         'event:', event);
     }
     delete this.events[event.id];
-    if (this.detailedView) {
-      this.detailedView.deleteEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
     }
     if (_.size(this.events) !== 0) {
       this.debounceRefresh();
@@ -18564,8 +18986,8 @@ _.extend(Model.prototype, {
         'event:', event);
     }
     this.events[event.id] = event;
-    if (this.detailedView) {
-      this.detailedView.updateEvent(event);
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
     }
     this.debounceRefresh();
   },
@@ -18573,8 +18995,8 @@ _.extend(Model.prototype, {
     this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
     this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
     this.highlightedTime = time;
-    if (this.detailedView) {
-      this.detailedView.highlightDate(this.highlightedTime);
+    if (this.hasDetailedView) {
+      this.treeMap.highlightDateDetailedView(this.highlightedTime);
     }
     this.debounceRefresh();
   },
@@ -18619,12 +19041,14 @@ _.extend(Model.prototype, {
       if (typeof(document) !== 'undefined')  {
         this.view = new this.typeView({model: this.modelView});
         this.view.on('nodeClicked', function () {
-          if (!this.detailedView) {
-            this.detailedView = new DetailView(this.$modal);
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
           }
-          this.detailedView.addEvents(this.events);
-          this.detailedView.show();
-          this.detailedView.highlightDate(this.highlightedTime);
         }.bind(this));
       }
     }
@@ -18660,7 +19084,7 @@ _.extend(Model.prototype, {
 
 });
 })()
-},{"../detailed/Controller.js":62,"backbone":22,"underscore":8}],65:[function(require,module,exports){
+},{"backbone":23,"underscore":8}],70:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
 
@@ -18864,7 +19288,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":56}],66:[function(require,module,exports){
+},{"backbone.marionette":61}],71:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
 
@@ -18905,374 +19329,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":56}],70:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    event: null,
-    highlighted: false,
-    checked: false
-  },
-  getTimeDifference: function (time) {
-    return Math.abs(time - this.get('event').time);
-  },
-  isTrashed: function () {
-    return this.get('event').trashed;
-  },
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
-  },
-  save: function () {
-    var event = this.get('event');
-    event.update(function () {
-      console.log('update event callback', arguments);
-    });
-  },
-  addAttachment: function (file) {
-    this.get('event').addAttachment(file, function () {
-    //  console.log('trash event callback', arguments);
-    });
-  },
-  removeAttachment: function (fileName, callback) {
-    this.get('event').removeAttachment(fileName, callback);
-  },
-  trash: function () {
-    this.get('event').trash(function () {
-    //  console.log('trash event callback', arguments);
-    });
-  }
-});
-},{"backbone":22}],69:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./EventModel.js');
-
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model,
-  highlightedDate: null,
-  currentElement: null,
-  comparator: function (a, b) {
-    a = a.get('event').time;
-    b = b.get('event').time;
-    return a > b ? -1
-      : a < b ? 1
-      : 0;
-  },
-  highlightEvent: function (time) {
-    var next =  this.getEventhighlighted(time);
-    if (!next || next === Infinity) {
-      return;
-    }
-    this.setCurrentElement(next);
-    return next;
-  },
-  getEventhighlighted: function (time) {
-    this.highlightedDate = time === Infinity ? 99999999999 : time;
-    return this.min(this._getTimeDifference.bind(this));
-  },
-  getTrashed: function () {
-    return this.filter(this._getTrashed);
-  },
-  getEventById: function (id) {
-    return this.find(function (e) {
-      return e.get('event').id === id;
-    });
-  },
-  getActive: function () {
-    return this.reject(this._getTrashed);
-  },
-  _getTimeDifference: function (event) {
-    return event.getTimeDifference(this.highlightedDate);
-  },
-  _getTrashed: function (event) {
-    return event.isTrashed();
-  },
-  getCurrentElement: function () {
-    return this.currentElement;
-  },
-  setCurrentElement: function (model) {
-    if (!model) {
-      return;
-    }
-    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
-      if (this.currentElement) {
-        this.currentElement.setHighlighted(false);
-      }
-      if (model) {
-        model.setHighlighted(true);
-      }
-    }
-    this.currentElement = model;
-  },
-  next: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
-    return this;
-  },
-  prev: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
-    return this;
-  }
-});
-},{"./EventModel.js":70,"backbone":22}],71:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-detailListCompositeView',
-  container: '.modal-content',
-  itemView: ItemView,
-  itemViewContainer: '#detail-list',
-  checkAll: false,
-  events: {
-    'click #check-all': 'onCheckAllClick'
-  },
-  initialize: function () {
-    if ($('.modal-panel-right').length === 0) {
-      /* jshint -W101 */
-      $(this.container).append(
-        '<div class="modal-panel-right"> ' +
-        '    <div class="modal-header">  ' +
-        '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
-        '        <h4 class="modal-title" id="myModalLabel">Detailed View</h4> ' +
-        '    </div>      ' +
-        '    <div id="modal-right-content"> ' +
-        '        <ul id="detail-list"></ul> ' +
-        '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
-          '      <button id ="trash-selected" type="button" class="btn btn-danger">Trash Selected</button></div>' +
-        '    </div> ' +
-        '</div>');
-
-    }
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
-  onRender: function () {
-    var $checkAll = $('#check-all');
-    this.checkAll = false;
-    $checkAll.off();
-    $checkAll[0].checked = false;
-    $checkAll.bind('click', this.onCheckAllClick.bind(this));
-    $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
-  },
-  onTrashSelectedClick: function () {
-    this.collection.each(function (model) {
-      if (model.get('checked')) {
-        model.trash();
-      }
-    }.bind(this));
-  },
-  onCheckAllClick: function () {
-    this.checkAll = !this.checkAll;
-    this.collection.each(function (model) {
-      model.set('checked', this.checkAll);
-    }.bind(this));
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-})()
-},{"./ItemView.js":74,"backbone.marionette":56,"underscore":8}],72:[function(require,module,exports){
-(function(){/* global $, FormData */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#template-detail-full',
-  container: '.modal-content',
-  itemViewContainer: '#modal-left-content',
-  addAttachmentContainer: '#add-attachment',
-  waitSubmit: false,
-  addAttachmentId: 0,
-  attachmentId: {},
-  ui: {
-    li: 'li.editable',
-    edit: '.edit',
-    submit: '#submit-edit',
-    trash: '#trash-edit'
-  },
-  templateHelpers: function () {
-    return {
-      showContent: function () {
-        return this.objectToHtml('content', this.model.get('event').content, 'content');
-      }.bind(this),
-      showAttachment: function () {
-        return this.showAttachment();
-      }.bind(this),
-      getStreamStructure: function () {
-        return this.getStreamStructure();
-      }.bind(this)
-    };
-  },
-  initialize: function () {
-    if ($('.modal-panel-left').length === 0) {
-      /*jshint -W101 */
-      $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"></div></div>');
-    }
-    this.listenTo(this.model, 'change', this.render);
-
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-    this.addAttachment();
-    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
-    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
-    this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
-    this.ui.submit.bind('click', this.submit.bind(this));
-    this.ui.trash.bind('click', this.trash.bind(this));
-    _.each(_.keys(this.attachmentId), function (k) {
-      $('#' + k + ' i').bind('click', { id: k, fileName: this.attachmentId[k] },
-        this._onRemoveFileClick.bind(this));
-    }.bind(this));
-  },
-  onEditClick: function (e) {
-    $(e.currentTarget).addClass('editing');
-    this.ui.edit.focus();
-  },
-  onEditBlur: function (e) {
-    this.updateEvent(e.currentTarget);
-    if (e.relatedTarget.id === 'submit-edit') {
-      this.submit();
-    }
-    return true;
-  },
-  onEditKeypress: function (e) {
-    var ENTER_KEY = 13;
-    if (e.which === ENTER_KEY) {
-      this.updateEvent(e.currentTarget);
-    }
-  },
-  addAttachment: function () {
-    var id = 'attachment-' + this.addAttachmentId;
-    var html = '<li><input type="file" id="' + id + '"></li>';
-    this.addAttachmentId++;
-    $(this.addAttachmentContainer).append(html);
-    $('#' + id).bind('change', this._onFileAttach.bind(this));
-  },
-  _onFileAttach : function (event)	{
-    var file = new FormData();
-    event.target.disabled = true;
-    file.append('attachment-0', event.target.files[0]);
-    this.model.addAttachment(file);
-    this.addAttachment();
-  },
-  showAttachment: function () {
-    var event =  this.model.get('event');
-    var attachments = event.attachments;
-    var html = '';
-    if (attachments) {
-      html += '<ul> attachments:';
-      _.each(_.keys(attachments), function (k) {
-        html += '<li id="' + k + '">' + k + ': <a href="' + event.url + '/' +
-          attachments[k].fileName + '?auth=' + event.connection.auth + '" target="_blank"> ' +
-          attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
-        this.attachmentId[k] = attachments[k].fileName;
-      }.bind(this));
-      html += '</ul>';
-    } else {
-      return '';
-    }
-    return html;
-  },
-  _onRemoveFileClick: function (event) {
-    this.model.removeAttachment(event.data.fileName, function () {
-      $('#' + event.data.id + ' i').off();
-      $('#' + event.data.id).remove();
-      delete this.attachmentId[event.data.id];
-    }.bind(this));
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-    key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-    value = $($elem).val().trim();
-    if (key === 'time') {
-      value = new Date(value);
-      if (isNaN(value)) {
-        // TODO input is not a date decide what to do
-        return;
-      }
-      value = value.getTime() / 1000;
-    } else if (key === 'tags') {
-      value = value.split(',');
-      value = value.map(function (e) {
-        return e.trim();
-      });
-    }
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-    if (this.waitSubmit) {
-      this.waitSubmit = false;
-      this.submit();
-    }
-  },
-  submit: _.throttle(function () {
-      console.log('throttle submit');
-      if ($('.editing').length !== 0) {
-        this.waitSubmit = true;
-        return;
-      }
-      var event = this.model.get('event');
-      this.model.set('event', event).save();
-    }, 5 * 1000),
-
-  trash: function () {
-    this.model.trash();
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
-  },
-  getStreamStructure: function () {
-    var rootStreams = this.model.get('event').connection.datastore.getStreams(),
-        currentStreamId = this.model.get('event').streamId,
-        result = '';
-    for (var i = 0; i < rootStreams.length; i++) {
-      result += this._walkStreamStructure(rootStreams[i], 0, currentStreamId);
-    }
-    return result;
-
-  },
-  _walkStreamStructure: function (stream, depth, currentStreamId) {
-    var indentNbr = 4,
-    result = '<option ';
-    result += stream.id === currentStreamId ? 'selected="selected" ' : '';
-    result += 'value="' + stream.id + '" >';
-    for (var i = 0; i < depth * indentNbr; i++) {
-      result += '&nbsp;';
-    }
-    result += stream.id;
-    result += '</option>';
-    for (var j = 0; j < stream.children.length; j++) {
-      result += this._walkStreamStructure(stream.children[j], depth++, currentStreamId);
-    }
-    return result;
-  },
-  objectToHtml: function (key, object, id) {
-    var result = '';
-    if (_.isObject(object)) {
-      result += '<ul>' + key + ':';
-      _.each(_.keys(object), function (k) {
-        result += this.objectToHtml(k, object[k], id + '-' + k);
-      }.bind(this));
-      result += '</ul>';
-      return result;
-    } else {
-      return '<li class="editable" id="current-' + id + '">' + key +
-        ': <label>' + object + '</label>' +
-        '<input class="edit" id="edit-' + id + '" value="' + object + '"></li>';
-    }
-  }
-});
-})()
-},{"backbone.marionette":56,"underscore":8}],73:[function(require,module,exports){
+},{"backbone.marionette":61}],74:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var Google, Q;
@@ -19345,7 +19402,7 @@ module.exports = Marionette.ItemView.extend({
 
 }).call(this);
 
-},{"q":75}],67:[function(require,module,exports){
+},{"q":75}],72:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -19625,7 +19682,7 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":22,"underscore":8}],68:[function(require,module,exports){
+},{"backbone":23,"underscore":8}],73:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -19805,7 +19862,7 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":22,"underscore":8}],76:[function(require,module,exports){
+},{"backbone":23,"underscore":8}],76:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -21613,34 +21670,5 @@ return Q;
 });
 
 })(require("__browserify_process"))
-},{"__browserify_process":76}],74:[function(require,module,exports){
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-
-  tagName: 'li',
-  template: '#template-detailItemView',
-  ui: {
-    checkbox: '.checkbox'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-
-  },
-  onRender: function () {
-    this.ui.checkbox[0].checked = this.model.get('checked');
-    if (this.model.get('highlighted')) {
-      this.$el.addClass('highlighted');
-    } else {
-      this.$el.removeClass('highlighted');
-    }
-    this.$('.view').bind('click', function () {
-      this.trigger('date:clicked', this.model);
-    }.bind(this));
-    this.$('input').bind('click', function () {
-      this.model.set('checked', this.ui.checkbox[0].checked);
-    }.bind(this));
-  }
-});
-},{"backbone.marionette":56}]},{},["jR29ZW"])
+},{"__browserify_process":76}]},{},["jR29ZW"])
 ;

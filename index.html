@@ -3,16 +3,16 @@
 <html>
 <head>
   <!-- ENV example -->
-  <title>Browser atglance DEV</title>
-  <base href="">
+  <title>Pryv @ Glance</title>
+  <base href="{browser-source}/">
   <meta property="og:title" content="Slice of life" />
-  <!-- <meta property="og:url" content="https://{host}" />   dynamically updated by static-web-->
+  <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="Content available on Pryv only." />
   <meta property="og:image" content="http://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
   <meta property="og:image:secure_url" content="https://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
-  <link rel="stylesheet" type="text/css" href="../dist/styles/pryv.min.css">
-  <script type="text/javascript" charset="utf-8" src="../dist/script/vendor.js"></script>
-  <script type="text/javascript" charset="utf-8" src="../dist/script/app_bundle_main.js"></script>
+  <link rel="stylesheet" type="text/css" href="styles/pryv.min.css">
+  <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
+  <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');
@@ -197,5 +197,12 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+<!-- Google Analytics -->
+<script>
+  var _gaq=[['_setAccount','UA-36589447-3'],['_trackPageview']];
+  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
 </body>
 </html>

@@ -5,25 +5,23 @@ var Marionette = require('backbone.marionette');
 module.exports = Marionette.ItemView.extend({
 
   tagName: 'li',
-  ui: {
-    checkbox: 'input[type=checkbox]',
-    divCheckbox: '.DnD-itemView-checkbox',
-    divText: '.DnD-itemView-text'
-  },
-  template: '#template-DnD-ItemView',
+  template: '#template-draganddrop-itemview',
 
   templateHelpers: function () {
     return {
       showContent: function () {
         var event = this.model.get('events');
-        return event[0].streamName;
+        if (event.length !== 0) {
+          return event[0].streamName;
+        } else {
+          return '';
+        }
       }.bind(this)
     };
   },
 
   initialize: function () {
     //this.bindUIElements();
-    this.listenTo(this.model, 'change', this.render);
   },
 
   onBeforeRender: function () {
@@ -32,34 +30,7 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onRender: function () {
-    //console.log('ItemView onRender');
-    $(this.el).css({
-      overflow: 'hidden'
-    });
 
-    this.ui.checkbox.attr('checked', this.model.get('selected'));
-    this.$el.attr('id', 'DnD-itemView');
-    if (this.model.get('highlighted')) {
-      this.$el.removeClass('DnD-unhighlighted');
-      this.$el.addClass('DnD-highlighted');
-    } else {
-      this.$el.addClass('DnD-unhighlighted');
-      this.$el.removeClass('DnD-highlighted');
-    }
-
-    this.$el.bind('click', function () {
-      this.trigger('chart:clicked', this.model);
-    }.bind(this));
-
-    this.ui.checkbox.bind('click', function () {
-      if (this.ui.checkbox.is(':checked')) {
-        this.model.set('selected', true);
-        this.trigger('chart:select', this.model);
-      } else {
-        this.model.set('selected', false);
-        this.trigger('chart:unselect', this.model);
-      }
-    }.bind(this));
   },
 
   onBeforeClose: function () {

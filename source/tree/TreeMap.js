@@ -3,7 +3,7 @@
 var RootNode = require('./RootNode.js');
 var SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL;
 var _ = require('underscore');
-var FusionDialog = require('../view/events-views/fusion/Controller.js');
+var FusionDialog = require('../view/events-views/draganddrop/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;

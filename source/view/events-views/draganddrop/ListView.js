@@ -4,8 +4,8 @@ var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
 module.exports = Marionette.CompositeView.extend({
-  template: '#template-DnD-ListCompositeView',
-  container: '#DnD-right-content-lists',
+  template: '#template-draganddrop-listview',
+  container: '#dnd-panel-list',
   itemView: ItemView,
   initialize: function () {
     this.listenTo(this.collection, 'add remove', this.debounceRender);

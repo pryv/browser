@@ -165,6 +165,8 @@ NumericalsPlugin.prototype._refreshModelView = function () {
       onClick: true,
       onHover: true,
       onDnD: true,
+      allowPan: false,
+      allowZoom: false,
       xaxis: false
     });
     if (typeof(document) !== 'undefined')  {

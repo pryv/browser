@@ -62,6 +62,8 @@ _.extend(Controller.prototype, {
           onClick: false,
           onHover: true,
           onDnD: false,
+          allowPan: false,
+          allowZoom: false,
           useExtras: true,
           xaxis: true
         })});

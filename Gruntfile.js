@@ -48,7 +48,8 @@ module.exports = function (grunt) {
           'source/vendor/bootstrap.min.js',
           'source/vendor/require.js',
           'source/vendor/jquery.flot.js',
-          'source/vendor/jquery.flot.time.js'],
+          'source/vendor/jquery.flot.time.js',
+          'source/vendor/jquery.flot.navigate.js'],
         dest: 'dist/script/vendor.js'
       }
     },

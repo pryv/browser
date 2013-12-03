@@ -141,6 +141,13 @@
       <span class="DnD-itemView-text"><%= streamName %></span>
     </a>
   </script>
+  <script type="template" id="template-detail-content-generic">
+    <% if (event) {%>
+    <div class="event-structure" id="full-content"><%= showContent() %></div>
+    <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
+    <div class="event-structure" id="add-attachment"></div>
+    <% } %>
+  </script>
   <script type="template" id="template-detail-full">
 
     <div id="detail-full">
@@ -166,9 +173,7 @@
         <li class="event-structure editable" id="current-tags">tags: <label><%= event.tags.join(', ')
           %></label>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
-        <div class="event-structure" id="full-content"><%= showContent() %></div>
-        <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
-        <div class="event-structure" id="add-attachment"></div>
+
         <button id ="submit-edit" type="button" class="btn btn-primary">Submit</button>
         <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
       </ul>
@@ -183,6 +188,8 @@
 </head>
 
 <body>
+
+<a href="#" id="logo-add" class="logo">+</a>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 
 <div id="tree">

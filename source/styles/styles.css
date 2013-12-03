@@ -407,21 +407,38 @@ text-align: center;*/
 #detail-list li:hover .view{
   background-color: #F51584;
 }
-#detail-full li.editing {
+#modal-left-content li.editing {
   border-bottom: none;
   padding: 0;
 }
 
-#detail-full li.editing .edit {
+#modal-left-content li.editing .edit {
   display: inline;
   padding: 0 6px 0 6px;
 }
 
-#detail-full li.editing label {
+#modal-left-content li.editing label {
   display: none;
 }
-#detail-full li .edit {
+#modal-left-content li .edit {
   display: none;
+}
+#modal-left-content, #modal-left-content div {
+  width: inherit;
+}
+#detail-full {
+  position: absolute;
+  bottom: 0;
+  width: inherit;
+  height: 30%;
+  overflow-y: scroll;
+  border-top: 1px solid #e5e5e5;
+}
+#detail-content {
+  position: absolute;
+  top: 0;
+  width: inherit;
+  height: 70%;
 }
 /** end detail view modal **/
 .delete:after {

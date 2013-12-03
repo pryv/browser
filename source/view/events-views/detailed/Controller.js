@@ -3,15 +3,18 @@ var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
   Model = require('./EventModel.js'),
   ListView = require('./ListView.js'),
-  SingleView = require('./SingleView.js');
+  CommonView = require('./CommonView.js'),
+  ContentView = require('./contentView/Generic.js');
 var Controller = module.exports = function ($modal, events) {
   this.events = {};
   this.eventsToAdd = [];
   this.collection = null;
   this.highlightedDate = null;
   this.listView = null;
-  this.singleView = null;
+  this.commonView = null;
+  this.contentView = null;
   this.$modal = $modal;
+  this.container = '.modal-content';
   this.debounceAdd = _.debounce(function () {
     this.collection.add(this.eventsToAdd, {sort: false});
     this.collection.sort();
@@ -28,7 +31,8 @@ _.extend(Controller.prototype, {
   show: function () {
     this.$modal.modal();
     if (!this.listView) {
-      this.singleView = new SingleView({model: new Model({})});
+      this.commonView = new CommonView({model: new Model({})});
+      this.contentView = new ContentView({model: new Model({})});
       this.listView = new ListView({
         collection: this.collection
       });
@@ -37,8 +41,11 @@ _.extend(Controller.prototype, {
         this.updateSingleView(this.collection.getCurrentElement());
       }.bind(this));
     }
+    /*jshint -W101 */
+    $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
-    this.singleView.render();
+    this.commonView.render();
+    this.contentView.render();
     this.resizeModal();
     $(this.$modal).keydown(function (e) {
       if ($('#detail-full .editing').length !== 0) {
@@ -59,6 +66,9 @@ _.extend(Controller.prototype, {
     }.bind(this));
   },
   close: function () {
+    this.commonView.close();
+    this.contentView.close();
+    $('div').remove('.modal-panel-left');
     this.collection.reset();
     this.collection = null;
     this.events = {};
@@ -110,12 +120,29 @@ _.extend(Controller.prototype, {
   },
   updateSingleView: function (model) {
     if (model) {
-      this.singleView.model.set('event', model.get('event'));
+      console.log('UPDATESINGLEVIEW', model);
+      this.contentView.model.set('event', model.get('event'));
+      this.commonView.model.set('event', model.get('event'));
     }
+  },
+  createNewEvent: function () {
+    var m = new Model({event: this._defaultEvent()});
+    this.eventsToAdd.push(m);
+    this.debounceAdd();
+    this.updateSingleView(m);
+  },
+  _defaultEvent: function () {
+    var defaultProperties = ['streamId', 'time', 'duration', 'type', 'content',
+        'tags', 'description', 'connection'],
+      result = {};
+    for (var i = 0; i < defaultProperties.length; i++) {
+      result[defaultProperties[i]] = null;
+    }
+    return result;
   },
   resizeModal: _.debounce(function () {
     $('.modal-panel-left').css({
-      width: $('.modal-dialog').width() - $('.modal-panel-right').width()
+      width: $('.modal-content').width() - $('.modal-panel-right').width()
     });
   }.bind(this), 1000)
 });

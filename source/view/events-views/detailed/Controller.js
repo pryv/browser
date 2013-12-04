@@ -6,8 +6,8 @@ var _ = require('underscore'),
   CommonView = require('./CommonView.js'),
   GenericContentView = require('./contentView/Generic.js'),
   NoteContentView = require('./contentView/Note.js'),
-  PictureContentView = require('./contentView/Picture.js');
-  //PositionContentView = require('./contentView/Position.js');
+  PictureContentView = require('./contentView/Picture.js'),
+  PositionContentView = require('./contentView/Position.js');
 var Controller = module.exports = function ($modal, events) {
   this.events = {};
   this.eventsToAdd = [];
@@ -155,7 +155,7 @@ _.extend(Controller.prototype, {
     } else if (eventType === 'picture/attached') {
       return {type: 'Picture', view: PictureContentView};
     } else if (eventType === 'position/wgs84') {
-      return {type: 'Position', view: GenericContentView};
+      return {type: 'Position', view: PositionContentView};
     } else {
       return {type: 'Generic', view: GenericContentView};
     }

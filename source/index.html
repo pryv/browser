@@ -152,6 +152,8 @@
     <div class="event-structure" id="add-attachment"></div>
     <% } %>
   </script>
+  <script type="template" id="template-detail-content-position">
+  </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) {%>
     <ul>
@@ -171,8 +173,6 @@
     <% } %>
   </script>
   <script type="template" id="template-detail-full">
-
-    <div id="detail-full">
       <% if (event) {%>
       <ul>
         <li class="event-structure editable" id="current-streamId">streamId: <label><%= event.streamId
@@ -200,8 +200,6 @@
         <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
       </ul>
       <% } %>
-
-    </div>
   </script>
   <script type="template" id="template-fusion-graph">
     <div id="fusion-full">
@@ -231,6 +229,7 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+<!-- @if NODE_ENV != 'DEVELOPMENT'  -->
 <!-- Google Analytics -->
 <script>
   var _gaq=[['_setAccount','UA-36589447-3'],['_trackPageview']];
@@ -238,5 +237,6 @@
     g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
     s.parentNode.insertBefore(g,s)}(document,'script'));
 </script>
+<!-- @endif -->
 </body>
 </html>

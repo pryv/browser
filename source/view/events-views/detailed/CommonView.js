@@ -5,6 +5,8 @@ var Marionette = require('backbone.marionette'),
 module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
   itemViewContainer: '#detail-common',
+  tagName: 'div',
+  id: 'detail-full',
  // addAttachmentContainer: '#add-attachment',
   waitSubmit: false,
  // addAttachmentId: 0,

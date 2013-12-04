@@ -4,7 +4,10 @@ var _ = require('underscore'),
   Model = require('./EventModel.js'),
   ListView = require('./ListView.js'),
   CommonView = require('./CommonView.js'),
-  ContentView = require('./contentView/Generic.js');
+  GenericContentView = require('./contentView/Generic.js'),
+  NoteContentView = require('./contentView/Note.js'),
+  PictureContentView = require('./contentView/Picture.js');
+  //PositionContentView = require('./contentView/Position.js');
 var Controller = module.exports = function ($modal, events) {
   this.events = {};
   this.eventsToAdd = [];
@@ -32,7 +35,6 @@ _.extend(Controller.prototype, {
     this.$modal.modal();
     if (!this.listView) {
       this.commonView = new CommonView({model: new Model({})});
-      this.contentView = new ContentView({model: new Model({})});
       this.listView = new ListView({
         collection: this.collection
       });
@@ -45,10 +47,9 @@ _.extend(Controller.prototype, {
     $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
     this.commonView.render();
-    this.contentView.render();
     this.resizeModal();
     $(this.$modal).keydown(function (e) {
-      if ($('#detail-full .editing').length !== 0) {
+      if ($('.editing').length !== 0) {
         return true;
       }
       var LEFT_KEY = 37;
@@ -120,9 +121,16 @@ _.extend(Controller.prototype, {
   },
   updateSingleView: function (model) {
     if (model) {
-      console.log('UPDATESINGLEVIEW', model);
-      this.contentView.model.set('event', model.get('event'));
       this.commonView.model.set('event', model.get('event'));
+      var newContentView = this._getContentView(model);
+      if (this.contentView === null || this.contentView.type !== newContentView.type) {
+        if (this.contentView !== null) {
+          this.contentView.close();
+        }
+        this.contentView = new newContentView.view({model: new Model({})});
+        this.contentView.render();
+      }
+      this.contentView.model.set('event', model.get('event'));
     }
   },
   createNewEvent: function () {
@@ -139,6 +147,18 @@ _.extend(Controller.prototype, {
       result[defaultProperties[i]] = null;
     }
     return result;
+  },
+  _getContentView: function (model) {
+    var eventType = model.get('event').type;
+    if (eventType === 'note/txt' || eventType === 'note/text') {
+      return {type: 'Note', view: NoteContentView};
+    } else if (eventType === 'picture/attached') {
+      return {type: 'Picture', view: PictureContentView};
+    } else if (eventType === 'position/wgs84') {
+      return {type: 'Position', view: GenericContentView};
+    } else {
+      return {type: 'Generic', view: GenericContentView};
+    }
   },
   resizeModal: _.debounce(function () {
     $('.modal-panel-left').css({

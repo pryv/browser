@@ -3,6 +3,7 @@ var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
+  type: 'Generic',
   template: '#template-detail-content-generic',
   itemViewContainer: '#detail-content',
   addAttachmentContainer: '#add-attachment',
@@ -97,19 +98,6 @@ module.exports = Marionette.ItemView.extend({
     var event = this.model.get('event'),
       key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
       value = $($elem).val().trim();
-    if (key === 'time') {
-      value = new Date(value);
-      if (isNaN(value)) {
-        // TODO input is not a date decide what to do
-        return;
-      }
-      value = value.getTime() / 1000;
-    } else if (key === 'tags') {
-      value = value.split(',');
-      value = value.map(function (e) {
-        return e.trim();
-      });
-    }
     eval('event.' + key + ' = value');
     this.completeEdit($($elem).parent());
     this.render();

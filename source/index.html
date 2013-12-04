@@ -152,6 +152,24 @@
     <div class="event-structure" id="add-attachment"></div>
     <% } %>
   </script>
+  <script type="template" id="template-detail-content-note">
+    <% if (event) {%>
+    <ul>
+      <li class="event-structure editable" id="current-content">content: <label><%= event.content %></label>
+        <textarea class="edit form-control" rows="5" id="edit-content" value="<%= event.content %>"><%= event.content %></textarea>
+      </li>
+    </ul>
+    <% } %>
+  </script>
+  <script type="template" id="template-detail-content-picture">
+    <% if (event) {%>
+    <ul>
+      <li class="event-structure" id="current-picture"><img src="<%= getSrc() %>" alt="<%= getAlt()%>">
+        <div class="event-structure" id="add-attachment"></div>
+      </li>
+    </ul>
+    <% } %>
+  </script>
   <script type="template" id="template-detail-full">
 
     <div id="detail-full">

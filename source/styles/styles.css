@@ -445,6 +445,14 @@ text-align: center;*/
   content: '✖';
   color: #d2322d;
 }
+#current-picture img {
+  max-height: 100%;
+  max-width: 100%;
+  float: left;
+}
+#current-picture #add-attachment {
+  float: left;
+}
 
 /** CSS for Drag and Drop Dialog using the modal **/
 #DnD-body {

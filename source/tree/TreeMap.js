@@ -21,7 +21,8 @@ var TreeMap = module.exports = function (model) {
   this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
   this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
 
-  $('#logo-reload').click(function () {
+  $('#logo-reload').click(function (e) {
+    e.preventDefault();
     this.focusOnStreams(null);
   }.bind(this));
   var refreshTree = _.throttle(function () {

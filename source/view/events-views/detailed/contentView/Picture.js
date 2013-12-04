@@ -28,7 +28,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    this.addAttachment();
+    //this.addAttachment();
   },
   addAttachment: function () {
     var id = 'attachment-' + this.addAttachmentId;

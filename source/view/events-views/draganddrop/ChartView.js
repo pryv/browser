@@ -3,8 +3,8 @@ var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
   _ = require('underscore');
 
-module.exports = Marionette.ItemView.extend({
-  template: '#template-fusion-graph',
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-chart-container',
   container: null,
   options: null,
   data: null,
@@ -14,15 +14,17 @@ module.exports = Marionette.ItemView.extend({
   waitExtras: null,
 
   initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
     this.useExtras = true;
   },
 
   onRender: function () {
+
+
     if (
-      !this.model.get('events') ||
+      !this.model.get('collection') ||
       !this.model.get('dimensions') ||
       !this.model.get('container')) {
       return;
@@ -39,7 +41,7 @@ module.exports = Marionette.ItemView.extend({
   },
 
   makePlot: function () {
-    var myModel = this.model.get('events');
+    var collection = this.model.get('collection');
     this.container = this.model.get('container');
 
     this.options = {};
@@ -54,34 +56,31 @@ module.exports = Marionette.ItemView.extend({
       });
     };
 
-    var dataSorter = function (d) {
-      return _.sortBy(d, function (e) {
-        return e.time;
-      });
-    };
-
-    for (var i = 0; i < myModel.length; ++i) {
+    collection.each(function (s, i) {
       this.addSeries({
-        data: dataSorter(dataMapper(myModel[i].elements)),
-        label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type).symbol : myModel[i].type,
-        type: myModel[i].style
+        data: dataMapper(s.get('events')),
+        label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
+        type: s.get('type')
       }, i);
-    }
+    }.bind(this));
+
     var eventsNbr = 0;
     _.each(this.data, function (d) {
       eventsNbr += d.data.length;
     });
     $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+
+
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
     this.createEventBindings();
-    myModel = null;
   },
 
   resize: function () {
+    console.log('resize in ChartView');
     if (!this.model.get('dimensions')) {
       return;
     }
-    this.render();
+    this.plot.render();
   },
 
   /**

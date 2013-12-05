@@ -12,5 +12,4 @@ module.exports = Backbone.Model.extend({
 
     specConf: null
   }
-
 });

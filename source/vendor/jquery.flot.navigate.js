@@ -124,7 +124,6 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
     };
 
     function init(plot) {
-      console.log('init navigate flot');
         function onZoomClick(e, zoomOut) {
             var c = plot.offset();
             c.left = e.pageX - c.left;
@@ -145,7 +144,6 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
             panTimeout = null;
 
         function onDragStart(e) {
-          console.log('navigate onDragStart');
             if (e.which != 1)  // only accept left-click
                 return false;
             var c = plot.getPlaceholder().css('cursor');
@@ -157,7 +155,6 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         }
         
         function onDrag(e) {
-          console.log('navigate onDrag');
           var frameRate = plot.getOptions().pan.frameRate;
             if (panTimeout || !frameRate)
                 return;
@@ -173,7 +170,6 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         }
 
         function onDragEnd(e) {
-          console.log('navigate onDragEnd');
           if (panTimeout) {
                 clearTimeout(panTimeout);
                 panTimeout = null;
@@ -187,13 +183,11 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         function bindEvents(plot, eventHolder) {
             var o = plot.getOptions();
             if (o.zoom.interactive) {
-              console.log('zoom interactive true');
                 eventHolder[o.zoom.trigger](onZoomClick);
                 eventHolder.mousewheel(onMouseWheel);
             }
 
             if (o.pan.interactive) {
-              console.log('pan interactive true');
               eventHolder.bind("dragstart", { distance: 10 }, onDragStart);
                 eventHolder.bind("drag", onDrag);
                 eventHolder.bind("dragend", onDragEnd);
@@ -332,13 +326,11 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         function shutdown(plot, eventHolder) {
           var o = plot.getOptions();
           if (o.zoom.interactive) {
-            console.log('zoom interactive unbind');
             eventHolder.unbind(plot.getOptions().zoom.trigger, onZoomClick);
             eventHolder.unbind("mousewheel", onMouseWheel);
           }
 
           if (o.pan.interactive) {
-            console.log('pan interactive unbind');
             eventHolder.unbind("dragstart", onDragStart);
             eventHolder.unbind("drag", onDrag);
             eventHolder.unbind("dragend", onDragEnd);

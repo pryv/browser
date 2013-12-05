@@ -17,6 +17,7 @@ module.exports = Marionette.CompositeView.extend({
     console.log('rendering ', this.streamName);
     this.ui.selector.bind('click', function () {
       this.state = true;
+      console.log(this.model);
       this.trigger('series:click', this.model);
     }.bind(this));
   }

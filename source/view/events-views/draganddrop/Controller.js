@@ -1,7 +1,8 @@
-/* global $, window */
+/* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
-  ChartView = require('../numericals/ChartView.js'),
+  ChartView = require('./ChartView.js'),
+  Model = require('../numericals/SeriesModel.js'),
   TimeSeriesCollection = require('./TimeSeriesCollection.js'),
   TimeSeriesModel = require('./TimeSeriesModel.js');
 
@@ -16,6 +17,7 @@ var Controller = module.exports = function ($modal, events) {
   this.eventsToRem = [];
   this.eventsToCha = [];
 
+  this.chartCollection = new TimeSeriesCollection([], {type: 'All'});
   this.eventCollections = {
     note: new TimeSeriesCollection([], {type: 'Note'}),
     picture: new TimeSeriesCollection([], {type: 'Pictures'}),
@@ -40,11 +42,14 @@ var Controller = module.exports = function ($modal, events) {
 
   // Create the div we will use
   this.$content.html($('#template-draganddrop').html());
+  this.resizeModal();
 
   $('#dnd-panel-list').append('<ul></ul>');
   $('#dnd-panel-list').append('<ul></ul>');
   $('#dnd-panel-list').append('<ul></ul>');
   $('#dnd-panel-list').append('<ul></ul>');
+
+  $(window).resize(this.resizeModal.bind(this));
 
 };
 
@@ -60,6 +65,26 @@ _.extend(Controller.prototype, {
       new ListView({collection: this.eventCollections.position });
     this.eventCollectionsViews.numerical =
       new ListView({collection: this.eventCollections.numerical });
+
+    this.chartView = new ChartView({model:
+      new Model({
+        container: '#dnd-panel-chart',
+        collection: this.chartCollection,
+        highlightedTime: null,
+        allowPieChart: false,
+        view: null,
+        highlighted: false,
+        dimensions: null,
+        onClick: false,
+        onHover: true,
+        onDnD: false,
+        allowPan: false,
+        allowZoom: false,
+        useExtras: true,
+        xaxis: true
+      })});
+
+    this.chartView.render();
 
     var $ul = $('#dnd-panel-list ul').first();
     var el;
@@ -93,22 +118,20 @@ _.extend(Controller.prototype, {
 
 
     this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
-      console.log('some click', evt);
+      this.addSerieToChart(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.picture.on('itemview:series:click', function (evt) {
-      console.log('some click', evt);
+      this.addSerieToChart(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.position.on('itemview:series:click', function (evt) {
-      console.log('some click', evt);
+      this.addSerieToChart(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.numerical.on('itemview:series:click', function (evt) {
-      console.log('some click', evt);
+      this.addSerieToChart(evt.model);
     }.bind(this));
-
-
   },
 
   /* Base event functions */
@@ -322,5 +345,31 @@ _.extend(Controller.prototype, {
   eventIsPosition: function (e) {
     var eventType = e.type;
     return (eventType === 'note/txt' || eventType === 'note/text');
-  }
+  },
+
+
+  /**
+   * Adder functions
+   */
+
+  addSerieToChart: function (m) {
+    console.log('Adding a series to the chart', m);
+    this.chartCollection.add(m);
+  },
+
+  resizeModal: _.debounce(function () {
+    console.log('resize event');
+    var chartSizeWidth = $('#dnd-panel-chart').width() - 20;
+    var chartSizeHeight = $('#dnd-panel-chart').height();
+
+    console.log(chartSizeWidth, chartSizeHeight);
+
+    $('.chartContainer').css({
+      width: chartSizeWidth
+    });
+
+    if (this.chartView) {
+      this.chartView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
+    }
+  }, 250)
 });

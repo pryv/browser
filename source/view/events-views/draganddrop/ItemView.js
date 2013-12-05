@@ -1,7 +1,7 @@
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.CompositeView.extend({
-  template: '#node-template',
+  template: '#template-draganddrop-itemview',
   tagName: 'li',
   ui: {
     selector: 'button[type=button]',

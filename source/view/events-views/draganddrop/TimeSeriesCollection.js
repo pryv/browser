@@ -3,7 +3,10 @@ var Backbone = require('backbone'),
 
 module.exports = Backbone.Collection.extend({
   model: Model,
-  type: null,
+
+  initialize: function (models, options) {
+    this.type = options.type;
+  },
 
   comparator: function () {
 

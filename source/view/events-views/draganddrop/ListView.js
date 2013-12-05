@@ -1,23 +1,7 @@
-/* global $ */
 var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js'),
-  _ = require('underscore');
+  ItemView = require('./ItemView.js');
 
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-draganddrop-listview',
-  container: '#dnd-panel-list',
-  itemView: ItemView,
-  initialize: function () {
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.container).append(itemView.el);
-  },
-  onRender: function () {
-    $(this.container).css({'overflow-y': 'scroll'});
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
+module.exports = Marionette.CollectionView.extend({
+  tagName: 'ul',
+  itemView: ItemView
 });

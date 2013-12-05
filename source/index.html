@@ -137,18 +137,25 @@
   </script>
 
   <script type="text/html" id="template-draganddrop">
-      <div id="dnd-body">
-          <div id="dnd-panel-list">
-          </div>
-          <div id="dnd-panel-chart">
-          </div>
+    <div id="dnd-body">
+      <div id="dnd-panel-list">
+
       </div>
+      <div id="dnd-panel-chart">
+      </div>
+    </div>
   </script>
   <script type="text/html" id="template-draganddrop-listview">
-      <ul id="detail-list"></ul>
+    <li id="draganddrop-category"></li>
+      <ul id="stream-container"></ul>
   </script>
   <script type="text/html" id="template-draganddrop-itemview">
-      <%= showContent() %>
+      <li><%= showMessage() %></li>
+  </script>
+
+  <script id="node-template" type="text/template">
+      <button type="button">Add</button>
+      <span class="DnD-itemView-text"><%= displayName() %></span>
   </script>
 
 

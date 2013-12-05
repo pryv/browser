@@ -1,6 +1,7 @@
 /* global $, window */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
+  ChartView = require('../numericals/ChartView.js'),
   TimeSeriesCollection = require('./TimeSeriesCollection.js'),
   TimeSeriesModel = require('./TimeSeriesModel.js');
 
@@ -8,6 +9,7 @@ var Controller = module.exports = function ($modal, events) {
   this.$modal = $modal;
   this.events = events;
   this.datas = {};
+  this.chartView = null;
 
   /* Base event containers */
   this.eventsToAdd = [];
@@ -15,10 +17,10 @@ var Controller = module.exports = function ($modal, events) {
   this.eventsToCha = [];
 
   this.eventCollections = {
-    note: new TimeSeriesCollection(),
-    picture: new TimeSeriesCollection(),
-    position: new TimeSeriesCollection(),
-    numerical: new TimeSeriesCollection()
+    note: new TimeSeriesCollection([], {type: 'Note'}),
+    picture: new TimeSeriesCollection([], {type: 'Pictures'}),
+    position: new TimeSeriesCollection([], {type: 'Positions'}),
+    numerical: new TimeSeriesCollection([], {type: 'Numericals'})
   };
 
   this.eventCollectionsViews = {
@@ -39,6 +41,11 @@ var Controller = module.exports = function ($modal, events) {
   // Create the div we will use
   this.$content.html($('#template-draganddrop').html());
 
+  $('#dnd-panel-list').append('<ul></ul>');
+  $('#dnd-panel-list').append('<ul></ul>');
+  $('#dnd-panel-list').append('<ul></ul>');
+  $('#dnd-panel-list').append('<ul></ul>');
+
 };
 
 _.extend(Controller.prototype, {
@@ -54,10 +61,54 @@ _.extend(Controller.prototype, {
     this.eventCollectionsViews.numerical =
       new ListView({collection: this.eventCollections.numerical });
 
+    var $ul = $('#dnd-panel-list ul').first();
+    var el;
+
+    $ul.append('<li>');
+    $('li', $ul).text('Notes');
     this.eventCollectionsViews.note.render();
+    el = this.eventCollectionsViews.note.el;
+    $('li', $ul).append(el);
+
+    $ul = $ul.next();
+    $ul.append('<li>');
+    $('li', $ul).text('Pictures');
     this.eventCollectionsViews.picture.render();
+    el = this.eventCollectionsViews.picture.el;
+    $('li', $ul).append(el);
+
+    $ul = $ul.next();
+    $ul.append('<li>');
+    $('li', $ul).text('Positions');
     this.eventCollectionsViews.position.render();
+    el = this.eventCollectionsViews.position.el;
+    $('li', $ul).append(el);
+
+    $ul = $ul.next();
+    $ul.append('<li>');
+    $('li', $ul).text('Numericals');
     this.eventCollectionsViews.numerical.render();
+    el = this.eventCollectionsViews.numerical.el;
+    $('li', $ul).append(el);
+
+
+    this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
+      console.log('some click', evt);
+    }.bind(this));
+
+    this.eventCollectionsViews.picture.on('itemview:series:click', function (evt) {
+      console.log('some click', evt);
+    }.bind(this));
+
+    this.eventCollectionsViews.position.on('itemview:series:click', function (evt) {
+      console.log('some click', evt);
+    }.bind(this));
+
+    this.eventCollectionsViews.numerical.on('itemview:series:click', function (evt) {
+      console.log('some click', evt);
+    }.bind(this));
+
+
   },
 
   /* Base event functions */
@@ -138,6 +189,7 @@ _.extend(Controller.prototype, {
             events: [eventsToAdd[i]],
             connectionId: eventsToAdd[i].connection.id,
             streamId: eventsToAdd[i].streamId,
+            streamName: eventsToAdd[i].stream.name,
             type: eventsToAdd[i].type,
             category: this.getEventsCategory(eventsToAdd[i])
           });

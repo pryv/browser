@@ -1,47 +1,23 @@
-/* global $ */
-
 var Marionette = require('backbone.marionette');
 
-module.exports = Marionette.ItemView.extend({
-
+module.exports = Marionette.CompositeView.extend({
+  template: '#node-template',
   tagName: 'li',
-  template: '#template-draganddrop-itemview',
-
-  templateHelpers: function () {
-    return {
-      showContent: function () {
-        var event = this.model.get('events');
-        if (event.length !== 0) {
-          return event[0].streamName;
-        } else {
-          return '';
-        }
-      }.bind(this)
-    };
+  ui: {
+    selector: 'button[type=button]',
+    spanText: '.DnD-itemView-text'
   },
-
-  initialize: function () {
-    //this.bindUIElements();
+  state: false,
+  templateHelpers: {
+    displayName: function () {
+      return this.streamName + ' / ' + this.type;
+    }
   },
-
-  onBeforeRender: function () {
-    // set up final bits just before rendering the view's `el`
-    //console.log('ItemView onBeforeRender');
-  },
-
   onRender: function () {
-
-  },
-
-  onBeforeClose: function () {
-    //console.log('ItemView onBeforeClose');
-    // manipulate the `el` here. it's already
-    // been rendered, and is full of the view's
-    // HTML, ready to go.
-  },
-
-  onClose: function () {
-    //console.log('ItemView onClose');
-    // custom closing and cleanup goes here
+    console.log('rendering ', this.streamName);
+    this.ui.selector.bind('click', function () {
+      this.state = true;
+      this.trigger('series:click', this.model);
+    }.bind(this));
   }
 });

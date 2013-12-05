@@ -5,6 +5,7 @@ module.exports = Backbone.Model.extend({
     events: [],
     connectionId: null,
     streamId: null,
+    streamName: null,
     type: null,
 
     category: null,

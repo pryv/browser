@@ -518,8 +518,13 @@ ul#DnD-right-content-lists > li {
 }
 
 /** END of CSS for Drag and Drop Dialog using the modal **/
-
-#dnd-panel-chart {
+#dnd-body {height: 100%;}
+#dnd-panel-chart, #dnd-panel-list{
     width: 100%;
-    height: 200px;
+    height: 50%;
+}
+
+#dnd-panel-chart > .chartContainer {
+    width: 100%;
+    height: 100%;
 }

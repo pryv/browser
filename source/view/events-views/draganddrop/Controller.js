@@ -374,18 +374,10 @@ _.extend(Controller.prototype, {
   },
 
   resizeModal: _.debounce(function () {
-    console.log('resize event');
-    var chartSizeWidth = $('#dnd-panel-chart').width() - 20;
-    var chartSizeHeight = $('#dnd-panel-chart').height();
+    var chartSizeWidth = null;
+    var chartSizeHeight = null;
 
-    console.log(chartSizeWidth, chartSizeHeight);
+    this.chartView.render();
 
-    $('.chartContainer').css({
-      width: chartSizeWidth
-    });
-
-    if (this.chartView) {
-      this.chartView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
-    }
   }, 250)
 });

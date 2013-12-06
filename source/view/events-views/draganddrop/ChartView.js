@@ -22,10 +22,8 @@ module.exports = Marionette.CompositeView.extend({
 
   onRender: function () {
 
-
     if (
       !this.model.get('collection') ||
-      !this.model.get('dimensions') ||
       !this.model.get('container')) {
       return;
     }
@@ -108,8 +106,6 @@ module.exports = Marionette.CompositeView.extend({
     } ];
     this.options.yaxes = [];
     this.options.legend = {
-      show: (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15),
       //labelBoxBorderColor: color,
       //noColumns: 0,
       //position: "ne" or "nw" or "se" or "sw",
@@ -122,6 +118,15 @@ module.exports = Marionette.CompositeView.extend({
         return '<button type="button">Remove</button>' + label;
       }
     };
+
+    if (this.model.get('dimensions')) {
+      this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
+        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
+    } else {
+      this.options.legend.show = true;
+    }
+
+
     seriesCounts = null;
   },
 
@@ -176,12 +181,15 @@ module.exports = Marionette.CompositeView.extend({
 
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
+
+
     $(this.chartContainer).css({
       top: 0,
       left: 0,
-      width: this.model.get('dimensions').width + 'px',
-      height: this.model.get('dimensions').height + 'px'
+      width: '100%',
+      height: '100%'
     });
+
   },
 
   rebuildLegend: function convertToList(element) {

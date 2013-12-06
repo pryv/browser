@@ -50,8 +50,8 @@ var Model = module.exports = function () {
 
 
   // add fredos to Connections
-  //var fredosSerial =
-  //  this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: true})));
+  var fredosSerial =
+    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: false})));
 
   var batch = this.activeFilter.startBatch('adding connections');
 
@@ -60,7 +60,7 @@ var Model = module.exports = function () {
   }.bind(this));
 
   // tell the filter we want to show this connection
-  //this.activeFilter.addConnection(fredosSerial, batch);
+  this.activeFilter.addConnection(fredosSerial, batch);
 
   // create the TreeMap
   this.controller = new Controller();
@@ -71,9 +71,9 @@ var Model = module.exports = function () {
   //var perkikikiId = this.connections.add(perkikiki);
   //this.activeFilter.addConnection(perkikikiId, batch);
 
-  var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
-  var liveatId = this.connections.add(liveat);
-  this.activeFilter.addConnection(liveatId, batch);
+  //var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: false});
+  //var liveatId = this.connections.add(liveat);
+  //this.activeFilter.addConnection(liveatId, batch);
 /*
   var bruno = new Pryv.Connection('brunochanel', 'eTI4uYwsXq', {staging: true});
   var brunoId = this.connections.add(bruno);
@@ -100,7 +100,7 @@ var Model = module.exports = function () {
 
   setTimeout(function () {
     //this.activeFilter.focusOnConnections(liveat);
-  }.bind(this), 10000);
+  }.bind(this), 2000);
 
 };
 

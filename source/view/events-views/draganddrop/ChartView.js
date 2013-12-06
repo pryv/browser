@@ -195,8 +195,6 @@ module.exports = Marionette.CompositeView.extend({
     $(element).replaceWith(list);
   },
 
-
-
   showTooltip: function (x, y, content) {
     if ($('#chart-tooltip').length === 0) {
       $('body').append('<div id="chart-tooltip" class="tooltip">' + content + '</div>');

@@ -12,6 +12,10 @@ var Controller = module.exports = function ($modal, events) {
   this.datas = {};
   this.chartView = null;
 
+  // Very important hack flag.
+  this.initial = true;
+  this.called = false;
+
   /* Base event containers */
   this.eventsToAdd = [];
   this.eventsToRem = [];
@@ -45,17 +49,16 @@ var Controller = module.exports = function ($modal, events) {
   this.resizeModal();
 
   $('#dnd-panel-list').append('<ul></ul>');
-  $('#dnd-panel-list').append('<ul></ul>');
-  $('#dnd-panel-list').append('<ul></ul>');
-  $('#dnd-panel-list').append('<ul></ul>');
-
   $(window).resize(this.resizeModal.bind(this));
-
 };
 
 _.extend(Controller.prototype, {
 
   show: function () {
+    if (this.initial) {
+      this.called = true;
+      return;
+    }
     this.$modal.modal();
     this.eventCollectionsViews.note =
       new ListView({collection: this.eventCollections.note });
@@ -86,36 +89,41 @@ _.extend(Controller.prototype, {
 
     this.chartView.render();
 
-    var $ul = $('#dnd-panel-list ul').first();
+    var $ul = $('#dnd-panel-list ul');
     var el;
 
-    $ul.append('<li>');
-    $('li', $ul).text('Notes');
-    this.eventCollectionsViews.note.render();
-    el = this.eventCollectionsViews.note.el;
-    $('li', $ul).append(el);
+    if (this.eventCollections.note.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Notes');
+      this.eventCollectionsViews.note.render();
+      el = this.eventCollectionsViews.note.el;
+      $('li:last', $ul).append(el);
+    }
 
-    $ul = $ul.next();
-    $ul.append('<li>');
-    $('li', $ul).text('Pictures');
-    this.eventCollectionsViews.picture.render();
-    el = this.eventCollectionsViews.picture.el;
-    $('li', $ul).append(el);
+    if (this.eventCollections.picture.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Pictures');
+      this.eventCollectionsViews.picture.render();
+      el = this.eventCollectionsViews.picture.el;
+      console.log('the el', el);
+      $('li:last', $ul).append(el);
+    }
 
-    $ul = $ul.next();
-    $ul.append('<li>');
-    $('li', $ul).text('Positions');
-    this.eventCollectionsViews.position.render();
-    el = this.eventCollectionsViews.position.el;
-    $('li', $ul).append(el);
+    if (this.eventCollections.position.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Positions');
+      this.eventCollectionsViews.position.render();
+      el = this.eventCollectionsViews.position.el;
+      $('li:last', $ul).append(el);
+    }
 
-    $ul = $ul.next();
-    $ul.append('<li>');
-    $('li', $ul).text('Numericals');
-    this.eventCollectionsViews.numerical.render();
-    el = this.eventCollectionsViews.numerical.el;
-    $('li', $ul).append(el);
-
+    if (this.eventCollections.numerical.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Numericals');
+      this.eventCollectionsViews.numerical.render();
+      el = this.eventCollectionsViews.numerical.el;
+      $('li:last', $ul).append(el);
+    }
 
     this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
@@ -266,7 +274,15 @@ _.extend(Controller.prototype, {
         }
       }
     }
+
     console.log('all collection after', this.eventCollections);
+
+    if (this.initial) {
+      this.initial = false;
+      if (this.called) {
+        this.show();
+      }
+    }
   }, 100),
 
   getEventsCategory: function (event) {

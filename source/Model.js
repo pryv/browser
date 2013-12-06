@@ -50,8 +50,8 @@ var Model = module.exports = function () {
 
 
   // add fredos to Connections
-  var fredosSerial =
-    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: true})));
+  //var fredosSerial =
+  //  this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: true})));
 
   var batch = this.activeFilter.startBatch('adding connections');
 
@@ -60,7 +60,7 @@ var Model = module.exports = function () {
   }.bind(this));
 
   // tell the filter we want to show this connection
-  this.activeFilter.addConnection(fredosSerial, batch);
+  //this.activeFilter.addConnection(fredosSerial, batch);
 
   // create the TreeMap
   this.controller = new Controller();
@@ -74,11 +74,11 @@ var Model = module.exports = function () {
   var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
   var liveatId = this.connections.add(liveat);
   this.activeFilter.addConnection(liveatId, batch);
-
+/*
   var bruno = new Pryv.Connection('brunochanel', 'eTI4uYwsXq', {staging: true});
   var brunoId = this.connections.add(bruno);
   this.activeFilter.addConnection(brunoId, batch);
-
+*/
   /**
    // create streams and add them to filter
    //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));

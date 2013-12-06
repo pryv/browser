@@ -73,6 +73,10 @@ module.exports = Marionette.CompositeView.extend({
 
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
     this.createEventBindings();
+
+    console.log($(this.container + ' table'));
+
+    this.rebuildLegend(this.container + ' table');
   },
 
   resize: function () {
@@ -105,15 +109,18 @@ module.exports = Marionette.CompositeView.extend({
     this.options.yaxes = [];
     this.options.legend = {
       show: (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15)
-      //labelFormatter: null or (fn: string, series object -> string)
-      //labelBoxBorderColor: color
-      //noColumns: number
-      //position: "ne" or "nw" or "se" or "sw"
-      //margin: number of pixels or [x margin, y margin]
-      //backgroundColor: null or color
-      //backgroundOpacity: 0.3
-      //container: null or jQuery object/DOM element/jQuery expression
+        this.model.get('dimensions').height >= (19 * seriesCounts) + 15),
+      //labelBoxBorderColor: color,
+      //noColumns: 0,
+      //position: "ne" or "nw" or "se" or "sw",
+      //margin: number of pixels or [x margin, y margin],
+      //backgroundColor: null or color,
+      //backgroundOpacity: 0.3,
+      //container: null or jQuery object/DOM element/jQuery expression,
+      labelFormatter: function (label) {
+        // series is the series object for the label
+        return '<button type="button">Remove</button>' + label;
+      }
     };
     seriesCounts = null;
   },
@@ -176,6 +183,19 @@ module.exports = Marionette.CompositeView.extend({
       height: this.model.get('dimensions').height + 'px'
     });
   },
+
+  rebuildLegend: function convertToList(element) {
+    var list = $('<ul/>');
+    $(element).find('tr').each(function () {
+      var p = $(this).children().map(function () {
+        return $(this).html();
+      });
+      list.append('<li>' + $.makeArray(p).join('') + '</li>');
+    });
+    $(element).replaceWith(list);
+  },
+
+
 
   showTooltip: function (x, y, content) {
     if ($('#chart-tooltip').length === 0) {

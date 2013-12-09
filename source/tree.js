@@ -6,8 +6,8 @@ var Model = require('./Model.js');
 
 //----- test -------//
 /*jshint -W098 */
-exports.main = function () {
+exports.main = function (DEVMODE) {
 
-  var model = new Model();
+  var model = new Model(DEVMODE);
   window.pryvBrowser = model;
 };

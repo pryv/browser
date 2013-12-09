@@ -9,7 +9,8 @@ var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
 var TimeLine = require('./timeframe-selector/timeframe-selector.js');
 
-var Model = module.exports = function () {
+var Model = module.exports = function (DEVMODE) {
+
   // create connection handler and filter
   this.onFiltersChanged = function () {
     console.log('onFiltersChanged', arguments);
@@ -22,82 +23,84 @@ var Model = module.exports = function () {
       this.treemap.onDateHighLighted(arguments[0].getTime() / 1000);
     }
   }, 100);
+  // Singin
+  Pryv.Access.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
+  var requestedPermissions = [
+    {
+      'streamId' : '*',
+      'level' : 'manage'
+    }
+  ];
+  this.initBrowser = function (username, token) {
+    this.connections = new ConnectionsHandler(this);
+    this.activeFilter = new MonitorsHandler(this);
+    this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
+      $('#logo-reload').addClass('loading');
+    });
+    this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
+      $('#logo-reload').removeClass('loading');
+    });
+    this.timeView = new TimeLine();
+    this.timeView.render();
+    initTimeAndFilter(this.timeView, this.activeFilter);
+    this.timeView.on('filtersChanged', this.onFiltersChanged, this);
+    this.timeView.on('dateHighlighted', this.onDateHighlighted, this);
+    this.timeView.on('dateMasked', this.onDateMasked, this);
+
+    this.onDateMasked = function () {
+     // console.log('onDateMasked', arguments);
+    };
+
+    Pryv.eventTypes.loadExtras(function () {});
 
 
-  this.connections = new ConnectionsHandler(this);
-  this.activeFilter = new MonitorsHandler(this);
-  this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
-    $('#logo-reload').addClass('loading');
-  });
-  this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
-    $('#logo-reload').removeClass('loading');
-  });
-  this.timeView = new TimeLine();
-  this.timeView.render();
-  initTimeAndFilter(this.timeView, this.activeFilter);
-  this.timeView.on('filtersChanged', this.onFiltersChanged, this);
-  this.timeView.on('dateHighlighted', this.onDateHighlighted, this);
-  this.timeView.on('dateMasked', this.onDateMasked, this);
+    var userConnection =
+      this.connections.add((new Pryv.Connection(username, token, {staging: false})));
 
-  this.onDateMasked = function () {
-    console.log('onDateMasked', arguments);
+    var batch = this.activeFilter.startBatch('adding connections');
+
+    batch.addOnDoneListener('connloading', function () {}.bind(this));
+
+    // tell the filter we want to show this connection
+    this.activeFilter.addConnection(userConnection, batch);
+
+    // create the TreeMap
+    this.controller = new Controller();
+    this.treemap = new TreeMap(this);
+    this.controller.setTreeMap(this.treemap);
+
+
   };
+  // ----------------------- //
+  var settings = {
+    requestingAppId : 'browser',
+    requestedPermissions : requestedPermissions,
+    returnURL : 'auto#', // set this if you don't want a popup
+    spanButtonID : 'pryvButton', // (optional)
+    callbacks : {
+      initialization : function () {},
+      needSignin : function () {},
+      needValidation : function () {},
+      accepted : function (username, appToken, languageCode) {
+        console.log('** SUCCESS! username:' + username +
+          ' appToken:' + appToken +
+          ' lang:' + languageCode);
+        this.initBrowser(username, appToken);
+      }.bind(this),
+      refused: function (reason) {
+        console.log('** REFUSED! ' + reason);
+      },
+      error: function (code, message) {
+        console.log('** ERROR! ' + code + ' ' + message);
+      }
+    }
+  };
+  if (!DEVMODE) {
+    Pryv.Access.setup(settings);
+  }  else {
+    this.initBrowser('fredos71', 'VVTi1NMWD');
+  }
 
-  Pryv.eventTypes.loadExtras(function () {});
-
-
-  // add fredos to Connections
-  var fredosSerial =
-    this.connections.add((new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: false})));
-
-  var batch = this.activeFilter.startBatch('adding connections');
-
-  batch.addOnDoneListener('connloading', function () {
-
-  }.bind(this));
-
-  // tell the filter we want to show this connection
-  this.activeFilter.addConnection(fredosSerial, batch);
-
-  // create the TreeMap
-  this.controller = new Controller();
-  this.treemap = new TreeMap(this);
-  this.controller.setTreeMap(this.treemap);
-
-  //var perkikiki = new Pryv.Connection('perkikiki', 'Vei9PbHkBi', {staging: true});
-  //var perkikikiId = this.connections.add(perkikiki);
-  //this.activeFilter.addConnection(perkikikiId, batch);
-
- /* var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
-  var liveatId = this.connections.add(liveat);
-  this.activeFilter.addConnection(liveatId, batch);
-
-  var bruno = new Pryv.Connection('brunochanel', 'eTI4uYwsXq', {staging: true});
-  var brunoId = this.connections.add(bruno);
-  this.activeFilter.addConnection(brunoId, batch);     */
-
-  /**
-   // create streams and add them to filter
-   //this.connections.add(new Pryv.Connection('jordane', 'eTpAijAyD5'));
-   **/
-
-  /* var perki1Serial =
-   this.connections.add((new Pryv.Connection('perkikiki', 'Ve-U8SCASM',  {staging: true}));
-   var perki2Serial =
-   this.connections.add((new Pryv.Connection('perkikiki', 'PVriN2MuJ9',  {staging: true}));
-
-   // activate them in batch in the filter
-
-   //this.activeFilter.addConnection(perki1Serial, batch);
-   this.activeFilter.addConnection(perki2Serial, batch);
-   **/
-
-
-  batch.done();
-
-  setTimeout(function () {
-    //this.activeFilter.focusOnConnections(liveat);
-  }.bind(this), 10000);
 
 };
 

@@ -51,7 +51,7 @@ body{
   z-index: 90000;
   position: absolute;
   top: 0;
-  right: 0;
+  right: 120px;
   text-indent: -9999em;
   display: block;
   width: 40px;
@@ -562,4 +562,7 @@ ul#DnD-right-content-lists > li {
 
 /** END of CSS for Drag and Drop Dialog using the modal **/
 
-
+/** Login btn */
+#pryvButton {
+  float: right;
+}

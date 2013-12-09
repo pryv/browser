@@ -25,7 +25,12 @@
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');
+      <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
       sampleApp.main();
+        <!-- @endif -->
+      <!-- @if NODE_ENV == 'DEVELOPMENT' -->
+      sampleApp.main(true);
+      <!-- @endif -->
     });
   </script>
   <script id="super-condensed-view" type="template">
@@ -220,8 +225,13 @@
 </head>
 
 <body>
-
+<!-- @if NODE_ENV != 'DEVELOPMENT' -->
+<span id="pryvButton"></span>
+<!-- @endif -->
 <a href="#" id="logo-add">+</a>
+<!-- @if NODE_ENV == 'DEVELOPMENT' -->
+<!-- do not put anything between #logo-reload and #tree -->
+<!-- @endif -->
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 
 <div id="tree">

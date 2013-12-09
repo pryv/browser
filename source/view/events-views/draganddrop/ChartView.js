@@ -13,6 +13,7 @@ module.exports = Marionette.CompositeView.extend({
   useExtras: null,
   waitExtras: null,
 
+
   initialize: function () {
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
@@ -58,7 +59,8 @@ module.exports = Marionette.CompositeView.extend({
       this.addSeries({
         data: dataMapper(s.get('events')),
         label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
-        type: s.get('type')
+        type: s.get('type'),
+        colId: i
       }, i);
     }.bind(this));
 
@@ -74,7 +76,10 @@ module.exports = Marionette.CompositeView.extend({
 
     console.log($(this.container + ' table'));
 
-    this.rebuildLegend(this.container + ' table');
+    // build legend as list
+    if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
+      this.rebuildLegend(this.container + ' table');
+    }
   },
 
   resize: function () {
@@ -105,28 +110,24 @@ module.exports = Marionette.CompositeView.extend({
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
-    this.options.legend = {
-      //labelBoxBorderColor: color,
-      //noColumns: 0,
-      //position: "ne" or "nw" or "se" or "sw",
-      //margin: number of pixels or [x margin, y margin],
-      //backgroundColor: null or color,
-      //backgroundOpacity: 0.3,
-      //container: null or jQuery object/DOM element/jQuery expression,
-      labelFormatter: function (label) {
-        // series is the series object for the label
-        return '<button type="button">Remove</button>' + label;
-      }
-    };
+    this.options.legend = {};
 
-    if (this.model.get('dimensions')) {
-      this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
-    } else {
-      this.options.legend.show = true;
+
+    if (this.model.get('legendButton')) {
+      this.options.legend.labelFormatter = function (label, series) {
+        console.log('labelformater', series);
+        return '<button id="" type="button">Remove</button>' + label;
+      };
     }
 
-
+    if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
+      this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
+        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
+    } else if (this.model.get('legendShow') && this.model.get('legendShow') === 'any') {
+      this.options.legend.show = true;
+    } else {
+      this.options.legend.show = false;
+    }
     seriesCounts = null;
   },
 
@@ -178,10 +179,8 @@ module.exports = Marionette.CompositeView.extend({
 
   setUpContainer: function () {
     // Setting up the chart container
-
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
-
 
     $(this.chartContainer).css({
       top: 0,
@@ -192,15 +191,24 @@ module.exports = Marionette.CompositeView.extend({
 
   },
 
-  rebuildLegend: function convertToList(element) {
+  // TODO: virer les this imbriques
+  rebuildLegend: function (element) {
     var list = $('<ul/>');
-    $(element).find('tr').each(function () {
-      var p = $(this).children().map(function () {
+    //var chartView = this;
+    $(element).find('tr').each(function (index) {
+      var p = $(this).children().map(function (index2) {
+
+        if (index2 === 1) {
+          $('button', $(this)).bind('click', this.seriesButtonClicked);
+          $('button', $(this)).attr('id', index);
+        }
         return $(this).html();
       });
       list.append('<li>' + $.makeArray(p).join('') + '</li>');
     });
+    $('div', $(element).parent()).remove();
     $(element).replaceWith(list);
+
   },
 
   showTooltip: function (x, y, content) {
@@ -349,5 +357,9 @@ module.exports = Marionette.CompositeView.extend({
     var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
     var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
     this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
+  },
+
+  seriesButtonClicked: function (e) {
+    console.log('seriesButtonClicked', e);
   }
 });

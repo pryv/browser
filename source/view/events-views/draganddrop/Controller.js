@@ -84,7 +84,10 @@ _.extend(Controller.prototype, {
         allowPan: false,
         allowZoom: false,
         useExtras: true,
-        xaxis: true
+        xaxis: true,
+        legendStyle: 'list',
+        legendButton: true,
+        legendShow: 'any'
       })});
 
     this.chartView.render();
@@ -374,10 +377,6 @@ _.extend(Controller.prototype, {
   },
 
   resizeModal: _.debounce(function () {
-    var chartSizeWidth = null;
-    var chartSizeHeight = null;
-
     this.chartView.render();
-
   }, 250)
 });

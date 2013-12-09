@@ -28,7 +28,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    //this.addAttachment();
+    this.addAttachment();
   },
   addAttachment: function () {
     var id = 'attachment-' + this.addAttachmentId;
@@ -39,22 +39,31 @@ module.exports = Marionette.ItemView.extend({
   },
   _onFileAttach : function (e)	{
     var file = new FormData(),
-      keys = _.keys(this.model.get('event').attachments);
+      keys = this.model.get('event').attachments ? _.keys(this.model.get('event').attachments) :
+        [e.target.files[0].name];
     e.target.disabled = true;
     file.append(keys[0], e.target.files[0]);
     this.model.addAttachment(file);
   },
   getSrc: function () {
     var event = this.model.get('event'),
-    attachments = event.attachments,
-    keys = _.keys(attachments);
-    return event.url + '/' + attachments[keys[0]].fileName + '?auth=' + event.connection.auth;
+      attachments = event.attachments;
+    if (attachments) {
+      var keys = _.keys(attachments);
+      return event.url + '/' + attachments[keys[0]].fileName + '?auth=' + event.connection.auth;
+    } else {
+      return '';
+    }
   },
   getAlt: function () {
     var event = this.model.get('event'),
-        attachments = event.attachments,
-        keys = _.keys(attachments);
-    return keys[0];
+      attachments = event.attachments;
+    if (attachments) {
+      var keys = _.keys(attachments);
+      return keys[0];
+    } else {
+      return '';
+    }
   },
   /* jshint -W098, -W061 */
   updateEvent: function ($elem) {

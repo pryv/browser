@@ -145,6 +145,8 @@
       <span class="DnD-itemView-text"><%= streamName %></span>
     </a>
   </script>
+  <script type="template" id="template-detail-content-position">
+  </script>
   <script type="template" id="template-detail-content-generic">
     <% if (event) {%>
     <div class="event-structure" id="full-content"><%= showContent() %></div>
@@ -152,7 +154,17 @@
     <div class="event-structure" id="add-attachment"></div>
     <% } %>
   </script>
-  <script type="template" id="template-detail-content-position">
+  <script type="template" id="template-detail-creation-type">
+    <h1>Choose an event type</h1>
+    <ul id="type-select">
+      <li class="type-select" data-type="note/txt">Add a note</li>
+      <li class="type-select" data-type="picture/attached">Add a picture</li>
+      <li class="type-select" data-type="position/wgs84">Add a position</li>
+    </ul>
+  </script>
+  <script type="template" id="template-detail-creation-stream">
+    <h1>Choose a stream</h1>
+    <%= getStream() %>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) {%>
@@ -209,7 +221,7 @@
 
 <body>
 
-<a href="#" id="logo-add" class="logo">+</a>
+<a href="#" id="logo-add">+</a>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 
 <div id="tree">

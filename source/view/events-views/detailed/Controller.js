@@ -7,11 +7,14 @@ var _ = require('underscore'),
   GenericContentView = require('./contentView/Generic.js'),
   NoteContentView = require('./contentView/Note.js'),
   PictureContentView = require('./contentView/Picture.js'),
-  PositionContentView = require('./contentView/Position.js');
-var Controller = module.exports = function ($modal, events) {
+  PositionContentView = require('./contentView/Position.js'),
+  CreationView = require('./contentView/Creation.js');
+var Controller = module.exports = function ($modal, connection) {
   this.events = {};
   this.eventsToAdd = [];
-  this.collection = null;
+  this.connection = connection;
+  this.newEvent = null;
+  this.collection =  new Collection();
   this.highlightedDate = null;
   this.listView = null;
   this.commonView = null;
@@ -26,7 +29,6 @@ var Controller = module.exports = function ($modal, events) {
       this.highlightDate(this.highlightedDate);
     }
   }.bind(this), 100);
-  this.addEvents(events);
   $(window).resize(this.resizeModal);
 };
 
@@ -46,7 +48,9 @@ _.extend(Controller.prototype, {
     /*jshint -W101 */
     $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
-    this.commonView.render();
+    if (_.size(this.events) > 0) {
+      this.commonView.render();
+    }
     this.resizeModal();
     $(this.$modal).keydown(function (e) {
       if ($('.editing').length !== 0) {
@@ -82,7 +86,7 @@ _.extend(Controller.prototype, {
     if (!event) {
       return;
     }
-    if (event.id) {
+    if (event.streamId) {
       //we have only one event so we put it on a each for the next each
       event = [event];
     }
@@ -121,31 +125,48 @@ _.extend(Controller.prototype, {
   },
   updateSingleView: function (model) {
     if (model) {
-      this.commonView.model.set('event', model.get('event'));
+      if (model.get('event').type !== 'Creation') {
+        this.commonView.model.set('event', model.get('event'));
+      }
       var newContentView = this._getContentView(model);
       if (this.contentView === null || this.contentView.type !== newContentView.type) {
         if (this.contentView !== null) {
           this.contentView.close();
         }
         this.contentView = new newContentView.view({model: new Model({})});
+        if (newContentView.type === 'Creation') {
+          this.contentView.connection = this.connection;
+          this.commonView.close();
+          var currentElement = this.collection.getCurrentElement();
+          if (currentElement) {
+            // The creation view was called while a detailed view is open
+            // we preset the stream;
+            this.contentView.streamId = currentElement.get('event').streamId;
+            this.contentView.connectionId = currentElement.get('event').connection.serialId;
+          }
+          this.contentView.on('endOfSelection', function () {
+            this.addEvents(this.newEvent.get('event'));
+            this.commonView.model.set('event', this.newEvent.get('event'));
+            this.commonView.render();
+            this.updateSingleView(this.newEvent);
+          }.bind(this));
+        }
         this.contentView.render();
       }
       this.contentView.model.set('event', model.get('event'));
     }
   },
   createNewEvent: function () {
-    var m = new Model({event: this._defaultEvent()});
-    this.eventsToAdd.push(m);
-    this.debounceAdd();
-    this.updateSingleView(m);
+    this.newEvent = new Model({event: this._defaultEvent()});
+    this.updateSingleView(this.newEvent);
   },
   _defaultEvent: function () {
-    var defaultProperties = ['streamId', 'time', 'duration', 'type', 'content',
-        'tags', 'description', 'connection'],
-      result = {};
-    for (var i = 0; i < defaultProperties.length; i++) {
-      result[defaultProperties[i]] = null;
-    }
+    var result = {};
+    result.type = 'Creation';
+    result.time = new Date().getTime() / 1000;
+    result.tags = [];
+    result.content = null;
+    result.desctiption = '';
     return result;
   },
   _getContentView: function (model) {
@@ -156,6 +177,8 @@ _.extend(Controller.prototype, {
       return {type: 'Picture', view: PictureContentView};
     } else if (eventType === 'position/wgs84') {
       return {type: 'Position', view: PositionContentView};
+    } else if (eventType === 'Creation') {
+      return {type: 'Creation', view: CreationView};
     } else {
       return {type: 'Generic', view: GenericContentView};
     }

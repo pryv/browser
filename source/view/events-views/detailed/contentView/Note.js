@@ -24,9 +24,6 @@ module.exports = Marionette.ItemView.extend({
   },
   onEditBlur: function (e) {
     this.updateEvent(e.currentTarget);
-    if (e.relatedTarget.id === 'submit-edit') {
-      this.submit();
-    }
     return true;
   },
   /* jshint -W098, -W061 */

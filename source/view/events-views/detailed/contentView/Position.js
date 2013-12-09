@@ -44,8 +44,11 @@ module.exports = Marionette.ItemView.extend({
       $(this.itemViewContainer).html(this.el);
       setTimeout(function () {
         if (this.model.get('event')) {
-          var lat = this.model.get('event').content.latitude,
-            lng = this.model.get('event').content.longitude;
+          if (!this.model.get('event').content) {
+            this.model.get('event').content = {};
+          }
+          var lat = this.model.get('event').content.latitude || 46.51759,
+            lng = this.model.get('event').content.longitude || 6.56267;
           this.map = new this.google.maps.Map(document.getElementById('map_canvas'), {
             zoom: 16,
             center: new this.google.maps.LatLng(lat, lng),

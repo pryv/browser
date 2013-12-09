@@ -25,6 +25,14 @@ var TreeMap = module.exports = function (model) {
     e.preventDefault();
     this.focusOnStreams(null);
   }.bind(this));
+  $('#logo-add').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeDetailedView();
+    }.bind(this));
+    this.initDetailedView($modal);
+    this.detailedView.createNewEvent();
+  }.bind(this));
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
     this.root._generateChildrenTreemap(this.root.x,
@@ -192,14 +200,12 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
 };
  //======== Detailed View ========\\
 TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
-
   if (!this.hasDetailedView()) {
-    this.detailedView = new DetailView($modal);
+    this.detailedView = new DetailView($modal, this.model.connections);
+    this.addEventsDetailedView(events);
+    this.showDetailedView();
+    this.highlightDateDetailedView(highlightedTime);
   }
-  this.addEventsDetailedView(events);
-  this.showDetailedView();
-  this.highlightDateDetailedView(highlightedTime);
-
 };
 
 TreeMap.prototype.hasDetailedView = function () {

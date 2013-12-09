@@ -194,21 +194,21 @@ module.exports = Marionette.CompositeView.extend({
   // TODO: virer les this imbriques
   rebuildLegend: function (element) {
     var list = $('<ul/>');
-    //var chartView = this;
+    var chartView = this;
     $(element).find('tr').each(function (index) {
       var p = $(this).children().map(function (index2) {
 
         if (index2 === 1) {
-          $('button', $(this)).bind('click', this.seriesButtonClicked);
+          $('button', $(this)).bind('click', chartView.seriesButtonClicked.bind(chartView));
           $('button', $(this)).attr('id', index);
         }
         return $(this).html();
       });
       list.append('<li>' + $.makeArray(p).join('') + '</li>');
     });
+    $(element).parent().append(list);
     $('div', $(element).parent()).remove();
-    $(element).replaceWith(list);
-
+    $('table', $(element).parent()).remove();
   },
 
   showTooltip: function (x, y, content) {

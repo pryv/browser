@@ -429,96 +429,11 @@ text-align: center;*/
   color: #d2322d;
 }
 
+
 /** CSS for Drag and Drop Dialog using the modal **/
-#DnD-body {
+#dnd-body {
     height: 100%;
-    padding: 0;
-    color: #838383;
 }
-
-#DnD-panel-left {
-    height: 100%;
-    width: 100%;
-    padding-right: 200px;
-    float: left;
-    background-color: #2B2B2B;
-}
-#DnD-panel-right {
-    height: 100%;
-    overflow: hidden;
-    border-left: 1px solid #474747;
-    position: absolute;
-    width: 200px;
-    right: 0;
-    background-color: #383838;
-}
-
-.DnD-highlighted {
-    background-color: #27A9E3;
-    color:#FFFFFF;
-}
-.DnD-highlighted:hover {
-    background-color: #27A9E3;
-}
-
-.DnD-unhighlighted:hover {
-    background:#333333;
-}
-
-.DnD-itemView-checkbox {
-    float: right;
-    width: 15px;
-    position: relative;
-    text-align: left;
-    margin-left: 3px;
-}
-
-.DnD-itemView-text {
-    margin-right: 16px;
-    position: relative;
-}
-
-#DnD-left-content {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-}
-
-#DnD-left-content-headerSingle {
-    margin: 10px;
-}
-
-#DnD-left-content-single {
-    height: 40%;
-    margin-top: 10px;
-    margin-left: 10px;
-    background-color: #363636;
-}
-
-#DnD-left-content-headerFinal {
-    margin: 10px;
-}
-
-#DnD-left-content-final {
-    height: 40%;
-    margin-top: 10px;
-    margin-left: 10px;
-    background-color: #333;
-}
-ul#DnD-right-content-lists {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-ul#DnD-right-content-lists > li {
-    position: relative;
-    padding: 10px 5px;
-    border-bottom: 1px solid #474747;
-    cursor: pointer;
-}
-
-/** END of CSS for Drag and Drop Dialog using the modal **/
-#dnd-body {height: 100%;}
 #dnd-panel-chart, #dnd-panel-list{
     width: 100%;
     height: 50%;
@@ -528,3 +443,35 @@ ul#DnD-right-content-lists > li {
     width: 100%;
     height: 100%;
 }
+
+#dnd-panel-chart .legend {
+    position: absolute;
+}
+
+#DnD-legend div {
+
+}
+
+#DnD-legend button {
+
+}
+
+#DnD-legend span {
+
+}
+
+ul#DnD-legend {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul#DnD-legend > li {
+    position: relative;
+    padding: 10px 5px;
+    border-bottom: 1px solid #474747;
+    cursor: pointer;
+}
+
+/** END of CSS for Drag and Drop Dialog using the modal **/
+

@@ -108,7 +108,6 @@ _.extend(Controller.prototype, {
       $('li:last', $ul).text('Pictures');
       this.eventCollectionsViews.picture.render();
       el = this.eventCollectionsViews.picture.el;
-      console.log('the el', el);
       $('li:last', $ul).append(el);
     }
 
@@ -277,8 +276,6 @@ _.extend(Controller.prototype, {
         }
       }
     }
-
-    console.log('all collection after', this.eventCollections);
 
     if (this.initial) {
       this.initial = false;

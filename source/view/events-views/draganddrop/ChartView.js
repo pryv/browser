@@ -74,16 +74,14 @@ module.exports = Marionette.CompositeView.extend({
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
     this.createEventBindings();
 
-    console.log($(this.container + ' table'));
-
     // build legend as list
     if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
+      $('.chartContainer > .legend').attr('id', 'DnD-legend');
       this.rebuildLegend(this.container + ' table');
     }
   },
 
   resize: function () {
-    console.log('resize in ChartView');
     if (!this.model.get('dimensions')) {
       return;
     }
@@ -114,9 +112,11 @@ module.exports = Marionette.CompositeView.extend({
 
 
     if (this.model.get('legendButton')) {
-      this.options.legend.labelFormatter = function (label, series) {
-        console.log('labelformater', series);
-        return '<button id="" type="button">Remove</button>' + label;
+      this.options.legend.labelFormatter = function (label) {
+        return '<button class="DnD-legend-button" type="button">Remove</button>' +
+          //'<button type="button">Remove</button>' +
+          //'<span class="DnD-legend-text">' + label + '</span>';
+          '<span>' + label + '</span>';
       };
     }
 
@@ -194,13 +194,19 @@ module.exports = Marionette.CompositeView.extend({
   // TODO: virer les this imbriques
   rebuildLegend: function (element) {
     var list = $('<ul/>');
-    //var chartView = this;
+    var chartView = this;
     $(element).find('tr').each(function (index) {
       var p = $(this).children().map(function (index2) {
-
+        if (index2 === 0) {
+          if ($('div > div', $(this))) {
+            console.log('rebuildLegend found the div', $('div > div', $(this)));
+            //$('div > div', $(this)).addClass('DnD-legend-color');
+            return $('div > div', $(this))[0].outerHTML;
+          }
+        }
         if (index2 === 1) {
           if ($('button', $(this))) {
-            $('button', $(this)).bind('click', this.seriesButtonClicked);
+            $('button', $(this)).bind('click', chartView.seriesButtonClicked.bind(chartView));
             $('button', $(this)).attr('id', index);
           }
         }

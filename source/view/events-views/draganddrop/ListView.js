@@ -5,6 +5,7 @@ module.exports = Marionette.CollectionView.extend({
   tagName: 'ul',
   itemView: ItemView,
   onAfterItemAdded: function () {
-    console.log('item added', this.collection.type);
+    console.log('DnD ListView, onAfterItemAdded', this.collection.type);
+
   }
 });

@@ -4,8 +4,8 @@ module.exports = Marionette.CompositeView.extend({
   template: '#template-draganddrop-itemview',
   tagName: 'li',
   ui: {
-    selector: 'button[type=button]',
-    spanText: '.DnD-itemView-text'
+    selector: '.DnD-legend-button',
+    spanText: '.DnD-legend-text'
   },
   state: false,
   templateHelpers: {

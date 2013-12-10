@@ -136,9 +136,46 @@
       <span class="DnD-itemView-text"><%= streamName %></span>
     </a>
   </script>
+  <script type="template" id="template-detail-content-position">
+  </script>
+  <script type="template" id="template-detail-content-generic">
+    <% if (event) {%>
+    <div class="event-structure" id="full-content"><%= showContent() %></div>
+    <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
+    <div class="event-structure" id="add-attachment"></div>
+    <% } %>
+  </script>
+  <script type="template" id="template-detail-creation-type">
+    <h1>Choose an event type</h1>
+    <ul id="type-select">
+      <li class="type-select" data-type="note/txt">Add a note</li>
+      <li class="type-select" data-type="picture/attached">Add a picture</li>
+      <li class="type-select" data-type="position/wgs84">Add a position</li>
+    </ul>
+  </script>
+  <script type="template" id="template-detail-creation-stream">
+    <h1>Choose a stream</h1>
+    <%= getStream() %>
+  </script>
+  <script type="template" id="template-detail-content-note">
+    <% if (event) {%>
+    <ul>
+      <li class="event-structure editable" id="current-content">content: <label><%= event.content %></label>
+        <textarea class="edit form-control" rows="5" id="edit-content" value="<%= event.content %>"><%= event.content %></textarea>
+      </li>
+    </ul>
+    <% } %>
+  </script>
+  <script type="template" id="template-detail-content-picture">
+    <% if (event) {%>
+    <ul>
+      <li class="event-structure" id="current-picture"><img src="<%= getSrc() %>" alt="<%= getAlt()%>">
+        <div class="event-structure" id="add-attachment"></div>
+      </li>
+    </ul>
+    <% } %>
+  </script>
   <script type="template" id="template-detail-full">
-
-    <div id="detail-full">
       <% if (event) {%>
       <ul>
         <li class="event-structure editable" id="current-streamId">streamId: <label><%= event.streamId
@@ -161,15 +198,11 @@
         <li class="event-structure editable" id="current-tags">tags: <label><%= event.tags.join(', ')
           %></label>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
-        <div class="event-structure" id="full-content"><%= showContent() %></div>
-        <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
-        <div class="event-structure" id="add-attachment"></div>
+
         <button id ="submit-edit" type="button" class="btn btn-primary">Submit</button>
         <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
       </ul>
       <% } %>
-
-    </div>
   </script>
   <script type="template" id="template-fusion-graph">
     <div id="fusion-full">
@@ -178,6 +211,8 @@
 </head>
 
 <body>
+<span id="pryvButton"></span>
+<a href="#" id="logo-add">+</a>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 
 <div id="tree">

@@ -98,7 +98,7 @@ var Model = module.exports = function (DEVMODE) {
   if (!DEVMODE) {
     Pryv.Access.setup(settings);
   }  else {
-    this.initBrowser('fredos71', 'VVTi1NMWD');
+    this.initBrowser('fredos71', 'VVTi1NMWDM');
   }
 
 

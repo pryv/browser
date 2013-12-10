@@ -115,10 +115,8 @@ module.exports = Marionette.CompositeView.extend({
 
     if (this.model.get('legendButton')) {
       this.options.legend.labelFormatter = function (label) {
-        return '<button type="button">Remove</button>' +
-          //'<button type="button">Remove</button>' +
-          //'<span class="DnD-legend-text">' + label + '</span>';
-          '<span>' + label + '</span>';
+        return '<a class="DnD-legend-button" href="javascript:;">x</a>' +
+          '<span class="DnD-legend-text">' + label + '</span>';
       };
     }
 
@@ -200,13 +198,13 @@ module.exports = Marionette.CompositeView.extend({
       var p = $(this).children().map(function (index2) {
         if (index2 === 0) {
           if ($('div > div', $(this)).length !== 0) {
-            //$('div > div', $(this)).addClass('DnD-legend-color');
+            $('div > div', $(this)).addClass('DnD-legend-color');
             return $('div > div', $(this))[0].outerHTML;
           }
         }
         if (index2 === 1) {
-          if ($('button', $(this)).length !== 0) {
-            $('button', $(this)).attr('id', 'series-' + index);
+          if ($('a', $(this)).length !== 0) {
+            $('a', $(this)).attr('id', 'series-' + index);
             return $(this).html();
           }
         }
@@ -256,12 +254,14 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onClose: function () {
+
     if (this.model.get('legendButton')) {
-      var buttons = $(':button', $(this.container));
+      var buttons = $('a', $(this.container));
       for (var i = 0; i < buttons.length; ++i) {
         buttons[i].unbind();
       }
     }
+
 
     $(this.chartContainer).empty();
     $(this.container).unbind();
@@ -302,14 +302,16 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   legendButtonBindings: function () {
+
     if (this.model.get('legendButton')) {
-      var buttons = $(':button', $(this.container));
+      var buttons = $('a', $(this.container));
       var chartView = this;
       buttons.each(function () {
           $(this).bind('click', chartView.seriesButtonClicked.bind(chartView));
         }
       );
     }
+
   },
 
 

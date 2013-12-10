@@ -366,6 +366,10 @@ _.extend(Controller.prototype, {
     return (eventType === 'note/txt' || eventType === 'note/text');
   },
 
+  close: function () {
+    this.chartView.close();
+  },
+
 
   /**
    * Adder functions

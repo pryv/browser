@@ -199,8 +199,10 @@ module.exports = Marionette.CompositeView.extend({
       var p = $(this).children().map(function (index2) {
 
         if (index2 === 1) {
-          $('button', $(this)).bind('click', this.seriesButtonClicked);
-          $('button', $(this)).attr('id', index);
+          if ($('button', $(this))) {
+            $('button', $(this)).bind('click', this.seriesButtonClicked);
+            $('button', $(this)).attr('id', index);
+          }
         }
         return $(this).html();
       });
@@ -208,7 +210,6 @@ module.exports = Marionette.CompositeView.extend({
     });
     $('div', $(element).parent()).remove();
     $(element).replaceWith(list);
-
   },
 
   showTooltip: function (x, y, content) {
@@ -250,6 +251,13 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onClose: function () {
+    if (this.model.get('legendButton')) {
+      var buttons = $(this.chartContainer + ' button');
+      for (var i = 0; i < buttons.length; ++i) {
+        buttons[i].unbind();
+      }
+    }
+
     $(this.chartContainer).empty();
     $(this.container).unbind();
     $(this.container).empty();

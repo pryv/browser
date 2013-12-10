@@ -42,7 +42,7 @@ module.exports = Marionette.ItemView.extend({
       keys = this.model.get('event').attachments ? _.keys(this.model.get('event').attachments) :
         [e.target.files[0].name];
     e.target.disabled = true;
-    file.append(keys[0], e.target.files[0]);
+    file.append(keys[0].split('.')[0], e.target.files[0]);
     this.model.addAttachment(file);
   },
   getSrc: function () {

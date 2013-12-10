@@ -47,17 +47,20 @@ body{
   background:url(../images/loader2.gif) 0 0 no-repeat;
   background-color: #3e3e3e;
 }
-#logo-add {
+#logo-add:after {
   z-index: 90000;
   position: absolute;
   top: 0;
   right: 120px;
-  text-indent: -9999em;
+ /* text-indent: -9999em;    */
   display: block;
   width: 40px;
   height: 40px;
-  background:url(../images/loader.gif) 0 0 no-repeat;
-  background-size: contain;
+  content: "+";
+  background-color: #3e3e3e;
+  font-size: 26px;
+  color: white;
+  text-align: center;
 +}
 #tree {
   width: 100%;

@@ -63,7 +63,7 @@ var Model = module.exports = function (DEVMODE) {
 
     // tell the filter we want to show this connection
     this.activeFilter.addConnection(userConnection, batch);
-
+    batch.done();
     // create the TreeMap
     this.controller = new Controller();
     this.treemap = new TreeMap(this);

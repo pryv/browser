@@ -78,7 +78,9 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
       $('.chartContainer > .legend').attr('id', 'DnD-legend');
       this.rebuildLegend(this.container + ' table');
+      this.legendButtonBindings();
     }
+
   },
 
   resize: function () {
@@ -113,7 +115,7 @@ module.exports = Marionette.CompositeView.extend({
 
     if (this.model.get('legendButton')) {
       this.options.legend.labelFormatter = function (label) {
-        return '<button class="DnD-legend-button" type="button">Remove</button>' +
+        return '<button type="button">Remove</button>' +
           //'<button type="button">Remove</button>' +
           //'<span class="DnD-legend-text">' + label + '</span>';
           '<span>' + label + '</span>';
@@ -194,23 +196,20 @@ module.exports = Marionette.CompositeView.extend({
   // TODO: virer les this imbriques
   rebuildLegend: function (element) {
     var list = $('<ul/>');
-    var chartView = this;
     $(element).find('tr').each(function (index) {
       var p = $(this).children().map(function (index2) {
         if (index2 === 0) {
-          if ($('div > div', $(this))) {
-            console.log('rebuildLegend found the div', $('div > div', $(this)));
+          if ($('div > div', $(this)).length !== 0) {
             //$('div > div', $(this)).addClass('DnD-legend-color');
             return $('div > div', $(this))[0].outerHTML;
           }
         }
         if (index2 === 1) {
-          if ($('button', $(this))) {
-            $('button', $(this)).bind('click', chartView.seriesButtonClicked.bind(chartView));
-            $('button', $(this)).attr('id', index);
+          if ($('button', $(this)).length !== 0) {
+            $('button', $(this)).attr('id', 'series-' + index);
+            return $(this).html();
           }
         }
-        return $(this).html();
       });
       list.append('<li>' + $.makeArray(p).join('') + '</li>');
     });
@@ -258,7 +257,7 @@ module.exports = Marionette.CompositeView.extend({
 
   onClose: function () {
     if (this.model.get('legendButton')) {
-      var buttons = $(this.chartContainer + ' button');
+      var buttons = $(':button', $(this.container));
       for (var i = 0; i < buttons.length; ++i) {
         buttons[i].unbind();
       }
@@ -299,6 +298,17 @@ module.exports = Marionette.CompositeView.extend({
         function () {
           this.trigger('nodeClicked');
         }.bind(this));
+    }
+  },
+
+  legendButtonBindings: function () {
+    if (this.model.get('legendButton')) {
+      var buttons = $(':button', $(this.container));
+      var chartView = this;
+      buttons.each(function () {
+          $(this).bind('click', chartView.seriesButtonClicked.bind(chartView));
+        }
+      );
     }
   },
 
@@ -374,6 +384,9 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   seriesButtonClicked: function (e) {
-    console.log('seriesButtonClicked', e);
+    var idx = $(e.target).attr('id').split('-')[1];
+    var removed = this.model.get('collection').at(idx);
+    this.model.get('collection').remove(removed);
+    this.render();
   }
 });

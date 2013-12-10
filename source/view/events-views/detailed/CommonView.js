@@ -168,7 +168,7 @@ module.exports = Marionette.ItemView.extend({
     for (var i = 0; i < depth * indentNbr; i++) {
       result += '&nbsp;';
     }
-    result += stream.id;
+    result += stream.name;
     result += '</option>';
     for (var j = 0; j < stream.children.length; j++) {
       result += this._walkStreamStructure(stream.children[j], depth++, currentStreamId);

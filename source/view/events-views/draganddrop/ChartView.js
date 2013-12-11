@@ -94,7 +94,7 @@ module.exports = Marionette.CompositeView.extend({
    * Generates the general plot options based on the model
    */
   makeOptions: function () {
-    var seriesCounts = this.model.get('events').length;
+    var seriesCounts = this.model.get('collection').length;
     this.options = {};
     this.options.grid = {
       hoverable: true,
@@ -104,12 +104,13 @@ module.exports = Marionette.CompositeView.extend({
       autoHighlight: true
     };
     this.options.xaxes = [ {
-      show: this.model.get('xaxis') && (this.model.get('events').length !== 0),
+      show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
       timeformat: '%y/%m/%d',
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
+    this.options.xaxis = {};
 
 
     this.options.legend = {};
@@ -132,26 +133,43 @@ module.exports = Marionette.CompositeView.extend({
     // If pan is activated
     if (this.model.get('allowPan')) {
       this.options.pan = {
-        interactive: true
+        interactive: true,
+        cursor: 'move',
+        frameRate: 20
       };
-      this.options.xaxis = {panRange: [-10, 10]};
-      this.options.yaxis = {panRange: [-10, 10]};
+      this.options.xaxis.panRange = this.getExtremeTimes();
+    }
+
+    if (this.model.get('allowZoom')) {
+      this.options.zoom = {
+        interactive: true,
+        trigger: 'dblclick',
+        amount: 1.2
+      };
     }
 
     seriesCounts = null;
   },
 
   getExtremeTimes: function () {
-    var events = this.model.get('events');
+    var collection = this.model.get('collection');
     var min = Infinity, max = 0;
-    for (var i = 0; i < events.length; ++i) {
-      var el = events[i].elements;
-      for (var j = 0; j < el.length; ++j) {
-        min = (el[j].time < min) ? el[j].time : min;
-        max = (el[j].time > max) ? el[j].time : max;
-      }
-    }
+    collection.each(function (s) {
+      var events = s.get('events');
+      min = (events[events.length - 1].time < min) ? events[events.length - 1].time : min;
+      max = (events[0].time > max) ? events[0].time : max;
+    });
     return [min * 1000, max * 1000];
+  },
+
+  getExtremeValues: function (series) {
+    var e = series.data;
+    var min = Infinity, max = 0;
+    for (var i = 0; i < e.length; ++i) {
+      min = (e[i][1] < min) ? e[i][1] : min;
+      max = (e[i][1] > max) ? e[i][1] : max;
+    }
+    return [min, max];
   },
 
   /**
@@ -171,11 +189,13 @@ module.exports = Marionette.CompositeView.extend({
     // Configures the axis
     this.options.yaxes.push({ show: false});
 
-    // Pan allowed
-    /*
+
     if (this.model.get('allowPan')) {
-      this.options.yaxes[this.options.yaxes.length - 1].panRange = [-10, 10];
-    }*/
+      this.options.yaxes[seriesIndex].panRange = this.getExtremeValues(series);
+    }
+    if (this.model.get('allowZoom')) {
+      this.options.yaxes[seriesIndex].zoomRange = [0.001, 1000];
+    }
 
     // Configures the series' style
     switch (series.type) {
@@ -315,6 +335,13 @@ module.exports = Marionette.CompositeView.extend({
           this.trigger('nodeClicked');
         }.bind(this));
     }
+
+    if (this.model.get('allowPan')) {
+      $(this.chartContainer).bind('plotpan', this.onPlotPan.bind(this));
+    }
+    if (this.model.get('allowZoom')) {
+      $(this.chartContainer).bind('plotzoom', this.onPlotPan.bind(this));
+    }
   },
 
   legendButtonBindings: function () {
@@ -407,5 +434,9 @@ module.exports = Marionette.CompositeView.extend({
     var removed = this.model.get('collection').at(idx);
     this.model.get('collection').remove(removed);
     this.render();
+  },
+
+  onPlotPan: function () {
+    this.rebuildLegend(this.container + ' table');
   }
 });

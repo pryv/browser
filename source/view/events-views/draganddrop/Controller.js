@@ -82,7 +82,7 @@ _.extend(Controller.prototype, {
         onHover: true,
         onDnD: false,
         allowPan: true,
-        allowZoom: false,
+        allowZoom: true,
         useExtras: true,
         xaxis: true,
         legendStyle: 'list',

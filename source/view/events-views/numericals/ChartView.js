@@ -291,10 +291,10 @@ module.exports = Marionette.ItemView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    e.originalEvent.dataTransfer.setData('nodeId', this.container.substr(1));
-    e.originalEvent.dataTransfer.setData('streamId', $(this.container).attr('data-streamid'));
-    e.originalEvent.dataTransfer.setData('connectionId',
-      $(this.container).attr('data-connectionid'));
+    var data = '{ "nodeId": "' + this.container.substr(1) + '", ' +
+      '"streamId": "' + $(this.container).attr('data-streamid') + '", ' +
+      '"connectionId": "' + $(this.container).attr('data-connectionid') + '"}';
+    e.originalEvent.dataTransfer.setData('text', data);
     $('.chartContainer').addClass('animated shake');
   },
 
@@ -320,9 +320,10 @@ module.exports = Marionette.ItemView.extend({
   onDrop: function (e) {
     e.stopPropagation();
     e.preventDefault();
-    var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
-    var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
-    var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
+    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var droppedNodeID = data.nodeId;
+    var droppedStreamID = data.streamId;
+    var droppedConnectionID = data.connectionId;
     this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
   }
 });

@@ -81,7 +81,7 @@ _.extend(Controller.prototype, {
         onClick: false,
         onHover: true,
         onDnD: false,
-        allowPan: false,
+        allowPan: true,
         allowZoom: false,
         useExtras: true,
         xaxis: true,

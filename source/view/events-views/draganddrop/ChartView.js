@@ -110,16 +110,15 @@ module.exports = Marionette.CompositeView.extend({
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
+
+
     this.options.legend = {};
-
-
     if (this.model.get('legendButton')) {
       this.options.legend.labelFormatter = function (label) {
         return '<a class="DnD-legend-button" href="javascript:;">x</a>' +
           '<span class="DnD-legend-text">' + label + '</span>';
       };
     }
-
     if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
       this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
         this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
@@ -128,6 +127,17 @@ module.exports = Marionette.CompositeView.extend({
     } else {
       this.options.legend.show = false;
     }
+
+
+    // If pan is activated
+    if (this.model.get('allowPan')) {
+      this.options.pan = {
+        interactive: true
+      };
+      this.options.xaxis = {panRange: [-10, 10]};
+      this.options.yaxis = {panRange: [-10, 10]};
+    }
+
     seriesCounts = null;
   },
 
@@ -160,6 +170,12 @@ module.exports = Marionette.CompositeView.extend({
 
     // Configures the axis
     this.options.yaxes.push({ show: false});
+
+    // Pan allowed
+    /*
+    if (this.model.get('allowPan')) {
+      this.options.yaxes[this.options.yaxes.length - 1].panRange = [-10, 10];
+    }*/
 
     // Configures the series' style
     switch (series.type) {
@@ -350,10 +366,11 @@ module.exports = Marionette.CompositeView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    e.originalEvent.dataTransfer.setData('nodeId', this.container.substr(1));
-    e.originalEvent.dataTransfer.setData('streamId', $(this.container).attr('data-streamid'));
-    e.originalEvent.dataTransfer.setData('connectionId',
-      $(this.container).attr('data-connectionid'));
+    console.log(e);
+    var data = '{ nodeId: ' + this.container.substr(1) + ',' +
+      'streamId: ' + $(this.container).attr('data-streamid') +
+      'connectionId: ' + $(this.container).attr('data-connectionid') + '}';
+    e.originalEvent.dataTransfer.setData('text', data);
     $('.chartContainer').addClass('animated shake');
   },
 

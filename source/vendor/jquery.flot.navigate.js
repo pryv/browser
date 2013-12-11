@@ -124,6 +124,7 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
     };
 
     function init(plot) {
+      console.log('flot.navigate.js loaded');
         function onZoomClick(e, zoomOut) {
             var c = plot.offset();
             c.left = e.pageX - c.left;
@@ -135,6 +136,7 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         }
 
         function onMouseWheel(e, delta) {
+          console.log('Navigate: onMouseWheel');
             e.preventDefault();
             onZoomClick(e, delta < 0);
             return false;
@@ -144,6 +146,7 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
             panTimeout = null;
 
         function onDragStart(e) {
+          console.log('Navigate: onDragStart');
             if (e.which != 1)  // only accept left-click
                 return false;
             var c = plot.getPlaceholder().css('cursor');
@@ -155,6 +158,7 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         }
         
         function onDrag(e) {
+          console.log('Navigate: onDrag');
           var frameRate = plot.getOptions().pan.frameRate;
             if (panTimeout || !frameRate)
                 return;
@@ -170,6 +174,7 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         }
 
         function onDragEnd(e) {
+          console.log('Navigate: onDragEnd');
           if (panTimeout) {
                 clearTimeout(panTimeout);
                 panTimeout = null;
@@ -181,13 +186,18 @@ Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-L
         }
         
         function bindEvents(plot, eventHolder) {
+          console.log('Navigate: Binder');
             var o = plot.getOptions();
             if (o.zoom.interactive) {
-                eventHolder[o.zoom.trigger](onZoomClick);
+              console.log('Navigate: Binder zoom');
+
+              eventHolder[o.zoom.trigger](onZoomClick);
                 eventHolder.mousewheel(onMouseWheel);
             }
 
             if (o.pan.interactive) {
+              console.log('Navigate: Binder pan');
+
               eventHolder.bind("dragstart", { distance: 10 }, onDragStart);
                 eventHolder.bind("drag", onDrag);
                 eventHolder.bind("dragend", onDragEnd);

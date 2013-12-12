@@ -20,6 +20,7 @@ module.exports = CommonModel.implement(
         tags: this.eventDisplayed.tags,
         time: this.eventDisplayed.time,
         type: this.eventDisplayed.type,
+        picUrl: this.eventDisplayed.attachmentsUrl,
         eventsNbr: _.size(this.events)
       };
     }

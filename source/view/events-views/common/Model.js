@@ -2,7 +2,7 @@
 var _ = require('underscore'),
   Backbone = require('backbone');
 var Model = module.exports = function (events, params) {
-  this.verbose = true;
+  this.verbose = false;
   this.events = {};
   this.modelContent = {};
   _.each(events, function (event) {
@@ -138,7 +138,17 @@ _.extend(Model.prototype, {
         }.bind(this));
       }
     }
-
+    this.view.off('nodeClicked');
+    this.view.on('nodeClicked', function () {
+      if (!this.hasDetailedView) {
+        this.hasDetailedView = true;
+        var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+          this.treeMap.closeDetailedView();
+          this.hasDetailedView = false;
+        }.bind(this));
+        this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
+      }
+    }.bind(this));
     if (this.needToRender) {
       this.view.renderView(this.container, this.animationIn);
       this.needToRender = false;

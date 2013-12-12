@@ -57,7 +57,7 @@ var EventsNode = module.exports = TreeNode.implement(
     /*jshint -W098 */
     eventChange: function (event, reason, callback) {
       this.events[event.id] = event;
-      console.log('eventChange', event);
+      //console.log('eventChange', event);
       if (this.eventView) {
         this.eventView.eventChange(event);
       }

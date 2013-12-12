@@ -15,7 +15,6 @@ var DEFAULT_MIN_WIDTH = 550;
 var DEFAULT_MIN_HEIGHT = 500;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (treemap, parent) {
-  //console.log('TreeNode ctor called', treemap);
   //Init all the instance variables
   this.treeMap = treemap;
   this.parent = parent;

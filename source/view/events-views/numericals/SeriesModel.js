@@ -15,6 +15,9 @@ module.exports = Backbone.Model.extend({
     onHover: null,
     onDnD: null,
 
+    allowPan: null,
+    allowZoom: null,
+
     useExtras: null,
 
     xaxis: null

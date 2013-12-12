@@ -4,7 +4,7 @@ var RootNode = require('./RootNode.js'),
  SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
  _ = require('underscore'),
  DetailView = require('../view/events-views/detailed/Controller.js'),
- FusionDialog = require('../view/events-views/fusion/Controller.js');
+ FusionDialog = require('../view/events-views/draganddrop/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;

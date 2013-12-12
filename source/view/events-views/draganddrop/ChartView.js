@@ -3,8 +3,8 @@ var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
   _ = require('underscore');
 
-module.exports = Marionette.ItemView.extend({
-  template: '#template-fusion-graph',
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-chart-container',
   container: null,
   options: null,
   data: null,
@@ -13,25 +13,28 @@ module.exports = Marionette.ItemView.extend({
   useExtras: null,
   waitExtras: null,
 
+
   initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
-    this.useExtras = true;
   },
 
   onRender: function () {
+
     if (
-      !this.model.get('events') ||
-      !this.model.get('dimensions') ||
+      !this.model.get('collection') ||
       !this.model.get('container')) {
       return;
     }
 
-    try {
-      Pryv.eventTypes.extras('mass/kg');
-    } catch (e) {
-      this.useExtras = false;
+    if (this.model.get('legendExtras')) {
+      this.useExtras  = true;
+      try {
+        Pryv.eventTypes.extras('mass/kg');
+      } catch (e) {
+        this.useExtras = false;
+      }
     }
 
     this.makePlot();
@@ -39,7 +42,7 @@ module.exports = Marionette.ItemView.extend({
   },
 
   makePlot: function () {
-    var myModel = this.model.get('events');
+    var collection = this.model.get('collection');
     this.container = this.model.get('container');
 
     this.options = {};
@@ -48,47 +51,57 @@ module.exports = Marionette.ItemView.extend({
     this.makeOptions();
     this.setUpContainer();
 
+    collection.each(function (s) {
+      s.sortData();
+    });
+
     var dataMapper = function (d) {
       return _.map(d, function (e) {
         return [e.time * 1000, e.content];
       });
     };
 
-    var dataSorter = function (d) {
-      return _.sortBy(d, function (e) {
-        return e.time;
-      });
-    };
-
-    for (var i = 0; i < myModel.length; ++i) {
+    collection.each(function (s, i) {
       this.addSeries({
-        data: dataSorter(dataMapper(myModel[i].elements)),
-        label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type).symbol : myModel[i].type,
-        type: myModel[i].style
+        data: dataMapper(s.get('events')),
+        label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
+        type: s.get('type'),
+        colId: i
       }, i);
-    }
+    }.bind(this));
+
     var eventsNbr = 0;
     _.each(this.data, function (d) {
       eventsNbr += d.data.length;
     });
     $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+
+
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
+
     this.createEventBindings();
-    myModel = null;
+
+    // build legend as list
+    if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
+      $('.chartContainer > .legend').attr('id', 'DnD-legend');
+      this.rebuildLegend(this.container + ' table');
+      this.legendButtonBindings();
+    }
+
   },
 
   resize: function () {
     if (!this.model.get('dimensions')) {
       return;
     }
-    this.render();
+    this.plot.render();
   },
 
   /**
    * Generates the general plot options based on the model
    */
   makeOptions: function () {
-    var seriesCounts = this.model.get('events').length;
+    var seriesCounts = this.model.get('collection').length;
     this.options = {};
     this.options.grid = {
       hoverable: true,
@@ -98,38 +111,72 @@ module.exports = Marionette.ItemView.extend({
       autoHighlight: true
     };
     this.options.xaxes = [ {
-      show: this.model.get('xaxis') && (this.model.get('events').length !== 0),
+      show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
       timeformat: '%y/%m/%d',
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
-    this.options.legend = {
-      show: (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15)
-      //labelFormatter: null or (fn: string, series object -> string)
-      //labelBoxBorderColor: color
-      //noColumns: number
-      //position: "ne" or "nw" or "se" or "sw"
-      //margin: number of pixels or [x margin, y margin]
-      //backgroundColor: null or color
-      //backgroundOpacity: 0.3
-      //container: null or jQuery object/DOM element/jQuery expression
-    };
+    this.options.xaxis = {};
+
+
+    this.options.legend = {};
+    if (this.model.get('legendButton')) {
+      this.options.legend.labelFormatter = function (label) {
+        return '<a class="DnD-legend-button" href="javascript:;">x</a>' +
+          '<span class="DnD-legend-text">' + label + '</span>';
+      };
+    }
+    if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
+      this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
+        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
+    } else if (this.model.get('legendShow')) {
+      this.options.legend.show = true;
+    } else {
+      this.options.legend.show = false;
+    }
+
+
+    // If pan is activated
+    if (this.model.get('allowPan')) {
+      this.options.pan = {
+        interactive: true,
+        cursor: 'move',
+        frameRate: 20
+      };
+      this.options.xaxis.panRange = this.getExtremeTimes();
+    }
+
+    if (this.model.get('allowZoom')) {
+      this.options.zoom = {
+        interactive: true,
+        trigger: 'dblclick',
+        amount: 1.2
+      };
+    }
+
     seriesCounts = null;
   },
 
   getExtremeTimes: function () {
-    var events = this.model.get('events');
+    var collection = this.model.get('collection');
     var min = Infinity, max = 0;
-    for (var i = 0; i < events.length; ++i) {
-      var el = events[i].elements;
-      for (var j = 0; j < el.length; ++j) {
-        min = (el[j].time < min) ? el[j].time : min;
-        max = (el[j].time > max) ? el[j].time : max;
-      }
-    }
+    collection.each(function (s) {
+      var events = s.get('events');
+      min = (events[events.length - 1].time < min) ? events[events.length - 1].time : min;
+      max = (events[0].time > max) ? events[0].time : max;
+    });
     return [min * 1000, max * 1000];
+  },
+
+  getExtremeValues: function (series) {
+    var e = series.data;
+    var min = Infinity, max = 0;
+    for (var i = 0; i < e.length; ++i) {
+      min = (e[i][1] < min) ? e[i][1] : min;
+      max = (e[i][1] > max) ? e[i][1] : max;
+    }
+    return [min, max];
   },
 
   /**
@@ -149,6 +196,14 @@ module.exports = Marionette.ItemView.extend({
     // Configures the axis
     this.options.yaxes.push({ show: false});
 
+
+    if (this.model.get('allowPan')) {
+      this.options.yaxes[seriesIndex].panRange = this.getExtremeValues(series);
+    }
+    if (this.model.get('allowZoom')) {
+      this.options.yaxes[seriesIndex].zoomRange = [0.001, 1000];
+    }
+
     // Configures the series' style
     switch (series.type) {
     case 0:
@@ -167,15 +222,40 @@ module.exports = Marionette.ItemView.extend({
 
   setUpContainer: function () {
     // Setting up the chart container
-
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
+
     $(this.chartContainer).css({
       top: 0,
       left: 0,
-      width: this.model.get('dimensions').width + 'px',
-      height: this.model.get('dimensions').height + 'px'
+      width: '100%',
+      height: '100%'
     });
+
+  },
+
+  // TODO: virer les this imbriques
+  rebuildLegend: function (element) {
+    var list = $('<ul/>');
+    $(element).find('tr').each(function (index) {
+      var p = $(this).children().map(function (index2) {
+        if (index2 === 0) {
+          if ($('div > div', $(this)).length !== 0) {
+            $('div > div', $(this)).addClass('DnD-legend-color');
+            return $('div > div', $(this))[0].outerHTML;
+          }
+        }
+        if (index2 === 1) {
+          if ($('a', $(this)).length !== 0) {
+            $('a', $(this)).attr('id', 'series-' + index);
+            return $(this).html();
+          }
+        }
+      });
+      list.append('<li>' + $.makeArray(p).join('') + '</li>');
+    });
+    $('div', $(element).parent()).remove();
+    $(element).replaceWith(list);
   },
 
   showTooltip: function (x, y, content) {
@@ -253,6 +333,24 @@ module.exports = Marionette.ItemView.extend({
           this.trigger('nodeClicked');
         }.bind(this));
     }
+
+    if (this.model.get('allowPan')) {
+      $(this.chartContainer).bind('plotpan', this.onPlotPan.bind(this));
+    }
+    if (this.model.get('allowZoom')) {
+      $(this.chartContainer).bind('plotzoom', this.onPlotPan.bind(this));
+    }
+  },
+
+  legendButtonBindings: function () {
+    if (this.model.get('legendButton')) {
+      var buttons = $('a', $(this.container));
+      var chartView = this;
+      buttons.each(function () {
+          $(this).bind('click', chartView.seriesButtonClicked.bind(chartView));
+        }
+      );
+    }
   },
 
 
@@ -273,7 +371,6 @@ module.exports = Marionette.ItemView.extend({
       this.removeTooltip();
     }
   },
-
 
   computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
     var yAxes = this.plot.getYAxes();
@@ -325,5 +422,21 @@ module.exports = Marionette.ItemView.extend({
     var droppedStreamID = data.streamId;
     var droppedConnectionID = data.connectionId;
     this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
+  },
+
+  seriesButtonClicked: function (e) {
+    var idx = $(e.target).attr('id').split('-')[1];
+    var removed = this.model.get('collection').at(idx);
+    this.model.get('collection').remove(removed);
+    this.render();
+  },
+
+  onPlotPan: function () {
+    if (this.model.get('legendShow') &&
+      this.model.get('legendStyle') &&
+      this.model.get('legendStyle') === 'list') {
+      this.rebuildLegend(this.container + ' table');
+      this.legendButtonBindings();
+    }
   }
 });

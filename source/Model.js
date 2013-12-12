@@ -127,7 +127,7 @@ function initTimeAndFilter(timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 1000
+    limit: 5000
   });
 
   timeView.onFiltersChanged({

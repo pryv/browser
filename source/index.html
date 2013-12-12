@@ -119,36 +119,19 @@
       1000).toLocaleTimeString() %>
     </div>
   </script>
-
-  <script type="text/html" id="template-DnD">
-    <div id="DnD-body">
-      <div id="DnD-panel-left">
-        <div id="DnD-left-content">
-          <div id="DnD-left-content-headerSingle">The Current Chart</div>
-          <div id="DnD-left-content-single"></div>
-          <div id="DnD-left-content-headerFinal">Preview</div>
-          <div id="DnD-left-content-final"></div>
-        </div>
-      </div>
-      <div id="DnD-panel-right">
-        <div id="DnD-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 id="modal-title" id="myModalLabel">Drag and Drop</h4>
-        </div>
-        <div id="DnD-right-content">
-          <ul id="DnD-right-content-lists" class="DnD-right-content-lists"></div>
-        </div>
-      </div>
+    
+  <script type="text/html" id="template-draganddrop">
+    <div id="dnd-body" class="dnd-body">
+      <div id="dnd-panel-list"></div>
+      <div id="dnd-panel-chart"></div>
     </div>
   </script>
-  <script type="text/html" id="template-DnD-ListCompositeView">
-    <div class="detail-div"></div>
+  <script type="text/template" id="template-draganddrop-itemview">
+    <a class="DnD-legend-button" href="javascript:;">+</a>
+    <span class="DnD-legend-text"><%= displayName() %></span>
   </script>
-  <script type="text/html" id="template-DnD-ItemView">
-    <a>
-      <input class="DnD-itemView-checkbox" type="checkbox" name="chartSelector" value="isSelected">
-      <span class="DnD-itemView-text"><%= streamName %></span>
-    </a>
+  <script type="text/template" id="template-chart-container">
+    <div id="chart-container"></div>
   </script>
   <script type="template" id="template-detail-content-position">
   </script>
@@ -189,6 +172,7 @@
     </ul>
     <% } %>
   </script>
+
   <script type="template" id="template-detail-full">
       <% if (event) {%>
       <ul>

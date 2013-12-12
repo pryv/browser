@@ -18,7 +18,6 @@ module.exports = Marionette.CompositeView.extend({
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
-    this.useExtras = true;
   },
 
   onRender: function () {
@@ -29,10 +28,13 @@ module.exports = Marionette.CompositeView.extend({
       return;
     }
 
-    try {
-      Pryv.eventTypes.extras('mass/kg');
-    } catch (e) {
-      this.useExtras = false;
+    if (this.model.get('legendExtras')) {
+      this.useExtras  = true;
+      try {
+        Pryv.eventTypes.extras('mass/kg');
+      } catch (e) {
+        this.useExtras = false;
+      }
     }
 
     this.makePlot();
@@ -76,6 +78,7 @@ module.exports = Marionette.CompositeView.extend({
 
 
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
+
     this.createEventBindings();
 
     // build legend as list
@@ -127,7 +130,7 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
       this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
         this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
-    } else if (this.model.get('legendShow') && this.model.get('legendShow') === 'any') {
+    } else if (this.model.get('legendShow')) {
       this.options.legend.show = true;
     } else {
       this.options.legend.show = false;
@@ -349,7 +352,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   legendButtonBindings: function () {
-
     if (this.model.get('legendButton')) {
       var buttons = $('a', $(this.container));
       var chartView = this;
@@ -358,7 +360,6 @@ module.exports = Marionette.CompositeView.extend({
         }
       );
     }
-
   },
 
 
@@ -379,7 +380,6 @@ module.exports = Marionette.CompositeView.extend({
       this.removeTooltip();
     }
   },
-
 
   computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
     var yAxes = this.plot.getYAxes();
@@ -441,6 +441,11 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onPlotPan: function () {
-    this.rebuildLegend(this.container + ' table');
+    if (this.model.get('legendShow') &&
+      this.model.get('legendStyle') &&
+      this.model.get('legendStyle') === 'list') {
+      this.rebuildLegend(this.container + ' table');
+      this.legendButtonBindings();
+    }
   }
 });

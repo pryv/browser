@@ -72,22 +72,22 @@ _.extend(Controller.prototype, {
     this.chartView = new ChartView({model:
       new Model({
         container: '#dnd-panel-chart',
+        view: null,
         collection: this.chartCollection,
+        highlighted: false,
         highlightedTime: null,
         allowPieChart: false,
-        view: null,
-        highlighted: false,
         dimensions: null,
+        legendStyle: 'list', // Legend style: 'list', 'table'
+        legendButton: true,  // A button in the legend
+        legendShow: true,     // Show legend or not
+        legendExtras: true,   // use extras in the legend
         onClick: false,
         onHover: true,
         onDnD: false,
-        allowPan: true,
-        allowZoom: true,
-        useExtras: true,
-        xaxis: true,
-        legendStyle: 'list',
-        legendButton: true,
-        legendShow: 'any'
+        allowPan: true,      // Allows navigation through the chart
+        allowZoom: true,     // Allows zooming on the chart
+        xaxis: true
       })});
 
     this.chartView.render();

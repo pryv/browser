@@ -297,15 +297,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onClose: function () {
-
-    if (this.model.get('legendButton')) {
-      var buttons = $('a', $(this.container));
-      for (var i = 0; i < buttons.length; ++i) {
-        buttons[i].unbind();
-      }
-    }
-
-
     $(this.chartContainer).empty();
     $(this.container).unbind();
     $(this.container).empty();

@@ -364,8 +364,9 @@ _.extend(Controller.prototype, {
   },
 
   close: function () {
+    console.log('call close');
     this.chartView.close();
-    this.$content.empty();
+    this.$modal.find('#dnd-body').remove();
   },
 
 

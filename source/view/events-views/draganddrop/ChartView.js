@@ -49,6 +49,10 @@ module.exports = Marionette.CompositeView.extend({
     this.makeOptions();
     this.setUpContainer();
 
+    collection.each(function (s) {
+      s.sortData();
+    });
+
     var dataMapper = function (d) {
       return _.map(d, function (e) {
         return [e.time * 1000, e.content];

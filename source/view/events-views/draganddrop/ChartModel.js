@@ -31,7 +31,10 @@ module.exports = Backbone.Model.extend({
     allowZoom: false,     // Allows zooming on the chart
 
     // Display X-axis
-    xaxis: null
+    xaxis: null,
+
+    // Editable point mode
+    editPoint: false
   },
 
   setHighlighted: function (highlight) {

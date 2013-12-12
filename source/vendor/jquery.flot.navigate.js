@@ -143,6 +143,8 @@
       plot.getPlaceholder().css('cursor', plot.getOptions().pan.cursor);
       prevPageX = e.originalEvent.pageX;
       prevPageY = e.originalEvent.pageY;
+
+      plot.getPlaceholder().trigger("plotclick");
     }
 
     function onDrag(e) {

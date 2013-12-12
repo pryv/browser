@@ -1,13 +1,27 @@
 /* global $ */
 
 var _ = require('underscore'),
-  ChartView = require('./ChartView.js'),
-  SeriesModel = require('./SeriesModel.js');
+  ChartView = require('../draganddrop/ChartView.js'),
+  TsCollection = require('../draganddrop/TimeSeriesCollection.js'),
+  TsModel = require('../draganddrop/TimeSeriesModel.js'),
+  ChartModel = require('../draganddrop/ChartModel.js');
+
 
 var NumericalsPlugin = module.exports = function (events, params, node) {
+
+  console.log('numerical of ', node.uniqueId);
+
+  this.seriesCollection = null;
+
+  /* Base event containers */
+  this.eventsToAdd = [];
+  this.eventsToRem = [];
+  this.eventsToCha = [];
+
   this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
+    this.refreshCollection();
   }, 100);
+
 
   this.events = {};
   this.highlightedTime = Infinity;
@@ -19,13 +33,16 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.datas = {};
   this.streamIds = {};
   this.eventsNode = node;
-  this.sortedData = null;
   this.hasDetailedView = false;
-  _.extend(this, params);
-  _.each(events, function (event) {
-    this.eventEnter(event);
-  }, this);
+  //_.extend(this, params);
 
+  for (var e in events) {
+    if (events.hasOwnProperty(e)) {
+      this.eventEnter(events[e]);
+    }
+  }
+  console.log('calling debounce adder', node.uniqueId);
+  this.debounceRefresh();
 };
 NumericalsPlugin.prototype.eventEnter = function (event) {
   this.streamIds[event.streamId] = event;
@@ -41,6 +58,7 @@ NumericalsPlugin.prototype.eventEnter = function (event) {
   if (this.hasDetailedView) {
     this.treeMap.addEventsDetailedView(event);
   }
+  this.eventsToAdd.push(event);
   this.debounceRefresh();
 };
 
@@ -52,7 +70,7 @@ NumericalsPlugin.prototype.eventLeave = function (event) {
     if (this.hasDetailedView) {
       this.treeMap.deleteEventDetailedView(event);
     }
-
+    this.eventsToRem.push(event);
     this.debounceRefresh();
   }
 };
@@ -65,6 +83,7 @@ NumericalsPlugin.prototype.eventChange = function (event) {
     if (this.hasDetailedView) {
       this.treeMap.updateEventDetailedView(event);
     }
+    this.eventsToCha.push(event);
     this.debounceRefresh();
   }
 };
@@ -109,95 +128,136 @@ NumericalsPlugin.prototype.close = function () {
   this.needToRender = false;
 
 };
-NumericalsPlugin.prototype._refreshModelView = function () {
-  var serie = null;
-  var series = [];
-  for (var streams in this.datas) {
-    if (this.datas.hasOwnProperty(streams)) {
-      for (var types in this.datas[streams]) {
-        if (this.datas[streams].hasOwnProperty(types)) {
-          var elements = [];
-          var latest = null;
-          for (var el in this.datas[streams][types]) {
-            if (this.datas[streams][types].hasOwnProperty(el)) {
-              var elem = this.datas[streams][types][el];
-              if (elem) {
-                latest = elem;
-                elements.push({content: elem.content, time: elem.time});
-              }
-            }
-          }
-          if (elements.length !== 0) {
-            serie = {
-              connectionId: latest.stream.connection.id,
-              elements: elements,
-              id: latest.connection.id + '/' + latest.streamId + '/' + latest.type,
-              streamId: latest.streamId,
-              streamName: latest.stream.name,
-              style: 0,
-              tags: latest.tags,
-              trashed: false,
-              type: latest.type
-            };
-          }
-          if (serie) {
-            series.push(serie);
-          }
-          serie = null;
-          elements = [];
+
+
+NumericalsPlugin.prototype.refreshCollection = function () {
+  console.log('refreshCollection', this.container);
+
+  if (this.seriesCollection === null) {
+    this.seriesCollection = new TsCollection([], {type: 'any'});
+  }
+
+  var eventsToAdd = this.eventsToAdd;
+  var eventsToRem = this.eventsToRem;
+  var eventsToCha = this.eventsToCha;
+
+  var eventsModel;
+  var events;
+  var matching;
+
+  this.eventsToAdd = [];
+  this.eventsToRem = [];
+  this.eventsToCha = [];
+
+  var i;
+  var eIter;
+
+  // Process those to add
+  for (i = 0; i < eventsToAdd.length; ++i) {
+    var filter = {
+      connectionId: eventsToAdd[i].connection.id,
+      streamId: eventsToAdd[i].streamId,
+      type: eventsToAdd[i].type
+    };
+
+
+      // find corresponding model
+    matching = this.seriesCollection.where(filter);
+    if (matching && matching.length !== 0) {
+      eventsModel = matching[0];
+      eventsModel.get('events').push(eventsToAdd[i]);
+    } else {
+      eventsModel = new TsModel({
+        events: [eventsToAdd[i]],
+        connectionId: eventsToAdd[i].connection.id,
+        streamId: eventsToAdd[i].streamId,
+        streamName: eventsToAdd[i].stream.name,
+        type: eventsToAdd[i].type,
+        category: 'any'
+      });
+      this.seriesCollection.add(eventsModel);
+    }
+
+  }
+
+  // Process those to remove
+  for (i = 0; i < eventsToRem.length; ++i) {
+      // find corresponding model
+    matching = this.seriesCollection.where({
+      connectionId: eventsToAdd[i].connection.id,
+      streamId: eventsToAdd[i].streamId,
+      type: eventsToAdd[i].type
+    });
+    if (matching && matching.length !== 0) {
+      eventsModel = matching[0];
+      events = eventsModel.get('events');
+      for (eIter = 0; eIter < events.length; ++eIter) {
+        if (events[eIter].id === eventsToRem[i].id) {
+          delete events[eIter];
         }
       }
     }
   }
 
-  if ((!this.modelView || !this.view) && series.length !== 0) {
-    this.modelView = new SeriesModel({
-      events: series,
-      dimensions: null,
-      container: null,
-      onClick: true,
-      onHover: true,
-      onDnD: true,
-      allowPan: false,
-      allowZoom: false,
-      xaxis: false
+  // Process those to change
+  for (i = 0; i < eventsToCha.length; ++i) {
+    // find corresponding model
+    matching = this.seriesCollection.where({
+      connectionId: eventsToAdd[i].connection.id,
+      streamId: eventsToAdd[i].streamId,
+      type: eventsToAdd[i].type
     });
+    if (matching && matching.length !== 0) {
+      eventsModel = matching[0];
+      events = eventsModel.get('events');
+      for (eIter = 0; eIter < events.length; ++eIter) {
+        if (events[eIter].id === eventsToRem[i].id) {
+          events[eIter] = eventsToRem[i];
+        }
+      }
+    }
+  }
+
+  /*
+  if (this.initial) {
+    this.initial = false;
+    if (this.called) {
+      this.show();
+    }
+  }
+  */
+
+  console.log('data added');
+  if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0) {
+    console.log('creating chart model');
+    this.modelView = new ChartModel({
+        container: '#' + this.container,
+        view: null,
+        collection: this.seriesCollection,
+        highlighted: false,
+        highlightedTime: null,
+        allowPieChart: false,
+        dimensions: null,
+        legendStyle: 'table', // Legend style: 'list', 'table'
+        legendButton: false,  // A button in the legend
+        legendShow: true,     // Show legend or not
+        legendExtras: true,   // use extras in the legend
+        onClick: true,
+        onHover: true,
+        onDnD: true,
+        allowPan: false,      // Allows navigation through the chart
+        allowZoom: false,     // Allows zooming on the chart
+        xaxis: false
+      });
     if (typeof(document) !== 'undefined')  {
-      this.view =
-        new ChartView({model: this.modelView});
-
-    }
-  } else {
-    if (this.modelView) {
-      this.modelView.set('events', series);
-    }
-    if (this.view) {
-      this.view.model.set('model', this.modelView);
+      console.log('creating chart view');
+      this.view = new ChartView({model: this.modelView});
+      this.view.render();
     }
   }
 
-  this.view.off();
-  /* jshint -W083 */
-  this.view.on('nodeClicked', function () {
-    if (!this.hasDetailedView) {
-      this.hasDetailedView = true;
-      var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-        this.treeMap.closeDetailedView();
-        this.hasDetailedView = false;
-      }.bind(this));
-      this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-    }
-  }.bind(this));
-  this.view.on('chart:clicked', function () { return; });
-  this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
-  this.view.on('chart:resize', this.resize.bind(this));
-
-  if (this.needToRender && this.container) {
-    this.resize();
-    this.view.onDateHighLighted(this.highlightedTime);
-    this.needToRender = false;
-  }
 };
+
 
 NumericalsPlugin.prototype._findEventToDisplay = function () {
   if (this.highlightedTime === Infinity) {

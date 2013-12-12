@@ -364,7 +364,6 @@ _.extend(Controller.prototype, {
   },
 
   close: function () {
-    console.log('call close');
     this.chartView.close();
     this.$modal.find('#dnd-body').remove();
   },
@@ -375,7 +374,6 @@ _.extend(Controller.prototype, {
    */
 
   addSerieToChart: function (m) {
-    console.log('Adding a series to the chart', m);
     this.chartCollection.add(m);
   },
 

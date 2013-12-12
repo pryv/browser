@@ -15,18 +15,26 @@ module.exports = Marionette.CompositeView.extend({
 
 
   initialize: function () {
+    console.log('ChartView initialize');
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
   },
 
   onRender: function () {
+    console.log('ChartView onRender');
 
     if (
       !this.model.get('collection') ||
       !this.model.get('container')) {
       return;
     }
+
+    console.log('ChartView onRender 2',
+      this.model.get('collection'),
+      this.model.get('container'),
+      this.model.get('dimensions'));
+
 
     if (this.model.get('legendExtras')) {
       this.useExtras  = true;
@@ -36,6 +44,8 @@ module.exports = Marionette.CompositeView.extend({
         this.useExtras = false;
       }
     }
+    console.log('ChartView onRender 3');
+
 
     this.makePlot();
     this.onDateHighLighted(0);
@@ -91,6 +101,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   resize: function () {
+    console.log('ChartView resize');
     if (!this.model.get('dimensions')) {
       return;
     }
@@ -358,6 +369,7 @@ module.exports = Marionette.CompositeView.extend({
    * Click and Point hover Functions
    */
   onClick: function () {
+    console.log('chart clicked');
     this.trigger('chart:clicked', this.model);
   },
 
@@ -402,6 +414,7 @@ module.exports = Marionette.CompositeView.extend({
   /* Fires when a dragged element is over this' scope */
   onDragOver: function (e) {
     e.preventDefault();
+    console.log(e);
   },
 
   /* Fires when a dragged element leaves this' scope */

@@ -3,9 +3,5 @@ var Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.CollectionView.extend({
   tagName: 'ul',
-  itemView: ItemView,
-  onAfterItemAdded: function () {
-    console.log('DnD ListView, onAfterItemAdded', this.collection.type);
-
-  }
+  itemView: ItemView
 });

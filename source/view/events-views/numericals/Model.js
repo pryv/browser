@@ -1,4 +1,4 @@
-/* global $ */
+/* global window, $ */
 
 var _ = require('underscore'),
   ChartView = require('../draganddrop/ChartView.js'),
@@ -8,8 +8,6 @@ var _ = require('underscore'),
 
 
 var NumericalsPlugin = module.exports = function (events, params, node) {
-
-  console.log('numerical of ', node.uniqueId);
 
   this.seriesCollection = null;
 
@@ -21,6 +19,10 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.debounceRefresh = _.debounce(function () {
     this.refreshCollection();
   }, 100);
+
+  this.debounceResize = _.debounce(function () {
+    this.resize();
+  }, 1000);
 
 
   this.events = {};
@@ -41,8 +43,10 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
       this.eventEnter(events[e]);
     }
   }
-  console.log('calling debounce adder', node.uniqueId);
   this.debounceRefresh();
+
+  $(window).resize(this.debounceResize.bind(this));
+
 };
 NumericalsPlugin.prototype.eventEnter = function (event) {
   this.streamIds[event.streamId] = event;
@@ -131,8 +135,6 @@ NumericalsPlugin.prototype.close = function () {
 
 
 NumericalsPlugin.prototype.refreshCollection = function () {
-  console.log('refreshCollection', this.container);
-
   if (this.seriesCollection === null) {
     this.seriesCollection = new TsCollection([], {type: 'any'});
   }
@@ -218,26 +220,17 @@ NumericalsPlugin.prototype.refreshCollection = function () {
     }
   }
 
-  /*
-  if (this.initial) {
-    this.initial = false;
-    if (this.called) {
-      this.show();
-    }
-  }
-  */
 
-  console.log('data added');
   if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0) {
-    console.log('creating chart model');
     this.modelView = new ChartModel({
         container: '#' + this.container,
         view: null,
+        requiresDim: true,
         collection: this.seriesCollection,
         highlighted: false,
         highlightedTime: null,
         allowPieChart: false,
-        dimensions: null,
+        dimensions: this.computeDimensions(),
         legendStyle: 'table', // Legend style: 'list', 'table'
         legendButton: false,  // A button in the legend
         legendShow: true,     // Show legend or not
@@ -250,12 +243,13 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         xaxis: false
       });
     if (typeof(document) !== 'undefined')  {
-      console.log('creating chart view');
       this.view = new ChartView({model: this.modelView});
+      this.modelView.set('dimensions', this.computeDimensions());
       this.view.render();
+      this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
+      this.view.on('chart:resize', this.resize.bind(this));
     }
   }
-
 };
 
 
@@ -316,7 +310,8 @@ NumericalsPlugin.prototype.computeDimensions = function () {
 };
 
 NumericalsPlugin.prototype.resize = function () {
+  console.log('resize event');
   this.modelView.set('dimensions', this.computeDimensions());
   this.modelView.set('container', '#' + this.container);
-  this.view.render();
+  this.view.resize();
 };

@@ -2,7 +2,7 @@
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
   ChartView = require('./ChartView.js'),
-  Model = require('../numericals/SeriesModel.js'),
+  Model = require('./ChartModel.js'),
   TimeSeriesCollection = require('./TimeSeriesCollection.js'),
   TimeSeriesModel = require('./TimeSeriesModel.js');
 
@@ -73,6 +73,7 @@ _.extend(Controller.prototype, {
       new Model({
         container: '#dnd-panel-chart',
         view: null,
+        requiresDim: false,
         collection: this.chartCollection,
         highlighted: false,
         highlightedTime: null,

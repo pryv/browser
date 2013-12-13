@@ -5,6 +5,8 @@ module.exports = Backbone.Model.extend({
     container: null,
     view: null,
 
+    requiresDim: false,
+
     collection: null,
 
     highlighted: false,
@@ -39,9 +41,5 @@ module.exports = Backbone.Model.extend({
 
   setHighlighted: function (highlight) {
     this.set('highlighted', highlight);
-  },
-
-  onChartClicked: function () {
-    console.log('Chart clicked');
   }
 });

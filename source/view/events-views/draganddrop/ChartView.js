@@ -21,9 +21,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onRender: function () {
-
-    console.log('require dimension', this.model.get('requiresDim'), this.model.get('dimensions'));
-
     if (
       !this.model.get('collection') ||
       !this.model.get('container')) {

@@ -310,7 +310,6 @@ NumericalsPlugin.prototype.computeDimensions = function () {
 };
 
 NumericalsPlugin.prototype.resize = function () {
-  console.log('resize event');
   this.modelView.set('dimensions', this.computeDimensions());
   this.modelView.set('container', '#' + this.container);
   this.view.resize();

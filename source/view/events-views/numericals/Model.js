@@ -1,6 +1,7 @@
 /* global window, $ */
 
 var _ = require('underscore'),
+  DetailView = require('../detailed/Controller.js'),
   ChartView = require('../draganddrop/ChartView.js'),
   TsCollection = require('../draganddrop/TimeSeriesCollection.js'),
   TsModel = require('../draganddrop/TimeSeriesModel.js'),
@@ -36,7 +37,13 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
   this.streamIds = {};
   this.eventsNode = node;
   this.hasDetailedView = false;
-  //_.extend(this, params);
+  this.$modal = $('#pryv-modal').on('hidden.bs.modal', function () {
+    if (this.detailedView) {
+      this.detailedView.close();
+      this.detailedView = null;
+    }
+  }.bind(this));
+  _.extend(this, params);
 
   for (var e in events) {
     if (events.hasOwnProperty(e)) {
@@ -248,8 +255,17 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       this.view.render();
       this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
       this.view.on('chart:resize', this.resize.bind(this));
+      this.view.on('nodeClicked', function () {
+        if (!this.detailedView) {
+          this.detailedView = new DetailView(this.$modal);
+        }
+        this.detailedView.addEvents(this.events);
+        this.detailedView.show();
+        this.detailedView.highlightDate(this.highlightedTime);
+      }.bind(this));
     }
   }
+
 };
 
 

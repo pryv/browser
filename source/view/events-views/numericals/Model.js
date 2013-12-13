@@ -25,7 +25,6 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
     this.resize();
   }, 1000);
 
-
   this.events = {};
   this.highlightedTime = Infinity;
   this.modelView = null;

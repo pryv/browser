@@ -399,7 +399,6 @@ module.exports = Marionette.CompositeView.extend({
       '"streamId": "' + $(this.container).attr('data-streamid') + '", ' +
       '"connectionId": "' + $(this.container).attr('data-connectionid') + '"}';
     e.originalEvent.dataTransfer.setData('text', data);
-    $('.chartContainer').addClass('animated shake');
   },
 
   /* Fires when a dragged element enters this' scope */
@@ -413,6 +412,7 @@ module.exports = Marionette.CompositeView.extend({
 
   /* Fires when a dragged element leaves this' scope */
   onDragLeave: function () {
+    $('.chartContainer').addClass('animated shake');
   },
 
   /* Called when this object is stops being dragged */

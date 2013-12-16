@@ -138,7 +138,9 @@ var EventsNode = module.exports = TreeNode.implement(
     dragAndDrop: function (nodeId, streamId, connectionId) {
       var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
       var thisNode = this;
-      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+      if (otherNode !== thisNode) {
+        this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+      }
     }
 
   });

@@ -244,8 +244,8 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         onClick: true,
         onHover: true,
         onDnD: true,
-        allowPan: false,      // Allows navigation through the chart
-        allowZoom: false,     // Allows zooming on the chart
+        allowPan: true,      // Allows navigation through the chart
+        allowZoom: true,     // Allows zooming on the chart
         xaxis: false
       });
     if (typeof(document) !== 'undefined')  {

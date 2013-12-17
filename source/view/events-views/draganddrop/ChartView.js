@@ -164,6 +164,7 @@ module.exports = Marionette.CompositeView.extend({
         amount: 1.2
       };
     }
+    this.options.xaxis.zoomRange = [1000, null];
 
     seriesCounts = null;
   },
@@ -213,7 +214,9 @@ module.exports = Marionette.CompositeView.extend({
         this.getExtremeValues(series) : false;
     }
     if (this.model.get('allowZoom')) {
-      this.options.yaxes[seriesIndex].zoomRange = [0.001, 1000];
+      this.options.yaxes[seriesIndex].zoomRange = series.length > 1 ?
+        [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
+        false;
     }
 
     // Configures the series' style

@@ -6,6 +6,7 @@ var _ = require('underscore'),
   CommonView = require('./CommonView.js'),
   GenericContentView = require('./contentView/Generic.js'),
   NoteContentView = require('./contentView/Note.js'),
+  NumericalContentView = require('./contentView/Numerical.js'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
@@ -127,6 +128,7 @@ _.extend(Controller.prototype, {
     if (model) {
       if (model.get('event').type !== 'Creation') {
         this.commonView.model.set('event', model.get('event'));
+        this.commonView.model.set('collection', this.collection);
       }
       var newContentView = this._getContentView(model);
       if (this.contentView === null || this.contentView.type !== newContentView.type) {
@@ -179,6 +181,8 @@ _.extend(Controller.prototype, {
       return {type: 'Position', view: PositionContentView};
     } else if (eventType === 'Creation') {
       return {type: 'Creation', view: CreationView};
+    } else if (this.eventIsNumerical(eventType)) {
+      return {type: 'Numerical', view: NumericalContentView};
     } else {
       return {type: 'Generic', view: GenericContentView};
     }
@@ -187,5 +191,38 @@ _.extend(Controller.prototype, {
     $('.modal-panel-left').css({
       width: $('.modal-content').width() - $('.modal-panel-right').width()
     });
-  }.bind(this), 1000)
+  }.bind(this), 1000),
+  eventIsNumerical: function (e) {
+    var eventTypeClass = e.split('/')[0];
+    return (
+      eventTypeClass === 'money' ||
+        eventTypeClass === 'absorbed-dose' ||
+        eventTypeClass === 'absorbed-dose-equivalent' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'area' ||
+        eventTypeClass === 'capacitance' ||
+        eventTypeClass === 'catalytic-activity' ||
+        eventTypeClass === 'count' ||
+        eventTypeClass === 'data-quantity' ||
+        eventTypeClass === 'density' ||
+        eventTypeClass === 'dynamic-viscosity' ||
+        eventTypeClass === 'electric-charge' ||
+        eventTypeClass === 'electric-charge-line-density' ||
+        eventTypeClass === 'electric-current' ||
+        eventTypeClass === 'electrical-conductivity' ||
+        eventTypeClass === 'electromotive-force' ||
+        eventTypeClass === 'energy' ||
+        eventTypeClass === 'force' ||
+        eventTypeClass === 'length' ||
+        eventTypeClass === 'luminous-intensity' ||
+        eventTypeClass === 'mass' ||
+        eventTypeClass === 'mol' ||
+        eventTypeClass === 'power' ||
+        eventTypeClass === 'pressure' ||
+        eventTypeClass === 'speed' ||
+        eventTypeClass === 'temperature' ||
+        eventTypeClass === 'volume'
+      );
+  },
 });

@@ -23,6 +23,7 @@ module.exports = Marionette.CompositeView.extend({
   onRender: function () {
     if (
       !this.model.get('collection') ||
+      this.model.get('collection').length === 0 ||
       !this.model.get('container')) {
       //(this.model.get('requiresDim') && !this.model.get('dimensions'))) {
       return;
@@ -107,7 +108,8 @@ module.exports = Marionette.CompositeView.extend({
    */
   makeOptions: function () {
 
-    var seriesCounts = this.model.get('collection').length;
+    var collection = this.model.get('collection');
+    var seriesCounts = collection.length;
     this.options = {};
     this.options.grid = {
       hoverable: true,
@@ -119,7 +121,7 @@ module.exports = Marionette.CompositeView.extend({
     this.options.xaxes = [ {
       show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
-      timeformat: '%y/%m/%d',
+      timeformat: '%y/%m/%d %h:%M:%S',
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
@@ -146,11 +148,13 @@ module.exports = Marionette.CompositeView.extend({
     // If pan is activated
     if (this.model.get('allowPan')) {
       this.options.pan = {
-        interactive: true,
+        interactive: collection ? (seriesCounts < 2 ?
+          (collection.at(0).get('events').length > 1) : true)  : true,
         cursor: 'move',
         frameRate: 20
       };
-      this.options.xaxis.panRange = this.getExtremeTimes();
+      this.options.xaxis.panRange = [this.getExtremeTimes()[0] - 100000,
+        this.getExtremeTimes()[1] + 100000];
     }
 
     if (this.model.get('allowZoom')) {
@@ -205,7 +209,8 @@ module.exports = Marionette.CompositeView.extend({
 
 
     if (this.model.get('allowPan')) {
-      this.options.yaxes[seriesIndex].panRange = this.getExtremeValues(series);
+      this.options.yaxes[seriesIndex].panRange = series.length > 1 ?
+        this.getExtremeValues(series) : false;
     }
     if (this.model.get('allowZoom')) {
       this.options.yaxes[seriesIndex].zoomRange = [0.001, 1000];

@@ -264,6 +264,10 @@
           return;
         }
 
+        if (_ === 'xaxis') {
+          plot.getOptions().xaxes[0].ticks = [min, max];
+        }
+
 
 
         opts.min = min;
@@ -299,6 +303,7 @@
         if (pr === false) // no panning on this axis
           return;
 
+
         if (pr) {
           // check whether we hit the wall
           if (pr[0] != null && pr[0] > min) {
@@ -314,8 +319,16 @@
           }
         }
 
+
+
         opts.min = min;
+        if (_ === 'xaxis') {
+          plot.getOptions().xaxes[0].ticks = [min, plot.getOptions().xaxes[0].ticks[1]];
+        }
         opts.max = max;
+        if (_ === 'xaxis') {
+            plot.getOptions().xaxes[0].ticks = [plot.getOptions().xaxes[0].ticks[0], max];
+        }
       });
 
       plot.setupGrid();

@@ -42,6 +42,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   makePlot: function () {
+
     var collection = this.model.get('collection');
     this.container = this.model.get('container');
 
@@ -57,7 +58,7 @@ module.exports = Marionette.CompositeView.extend({
 
     var dataMapper = function (d) {
       return _.map(d, function (e) {
-        return [e.time * 1000, e.content];
+        return [e.time * 1000, +e.content];
       });
     };
 
@@ -91,6 +92,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   resize: function () {
+
     if (!this.model.get('dimensions')) {
       return;
     }
@@ -104,6 +106,7 @@ module.exports = Marionette.CompositeView.extend({
    * Generates the general plot options based on the model
    */
   makeOptions: function () {
+
     var seriesCounts = this.model.get('collection').length;
     this.options = {};
     this.options.grid = {
@@ -162,6 +165,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   getExtremeTimes: function () {
+
     var collection = this.model.get('collection');
     var min = Infinity, max = 0;
     collection.each(function (s) {
@@ -174,7 +178,7 @@ module.exports = Marionette.CompositeView.extend({
 
   getExtremeValues: function (series) {
     var e = series.data;
-    var min = Infinity, max = 0;
+    var min = Infinity, max = -Infinity;
     for (var i = 0; i < e.length; ++i) {
       min = (e[i][1] < min) ? e[i][1] : min;
       max = (e[i][1] > max) ? e[i][1] : max;

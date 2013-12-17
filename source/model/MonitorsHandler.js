@@ -121,8 +121,7 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
     if (! monitor) {
       throw new Error('cannot find monitor for connection: ' + connectionId);
     }
-
-    monitor.focusOnStreams([]);
+    this.focusOnStreams([]);
     this._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
       monitor.getEvents(), myBatch);
     delete this._monitors[connectionSerialId];

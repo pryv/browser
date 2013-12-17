@@ -31,7 +31,7 @@ var Model = module.exports = function (DEVMODE) {
       'level' : 'manage'
     }
   ];
-  this.initBrowser = function (username, token) {
+  this.initBrowser = function (connection) {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
     this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
@@ -52,18 +52,8 @@ var Model = module.exports = function (DEVMODE) {
     };
 
     Pryv.eventTypes.loadExtras(function () {});
+    this.addConnection(connection);
 
-
-    var userConnection =
-      this.connections.add((new Pryv.Connection(username, token, {staging: false})));
-
-    var batch = this.activeFilter.startBatch('adding connections');
-
-    batch.addOnDoneListener('connloading', function () {}.bind(this));
-
-    // tell the filter we want to show this connection
-    this.activeFilter.addConnection(userConnection, batch);
-    batch.done();
     // create the TreeMap
     this.controller = new Controller();
     this.treemap = new TreeMap(this);
@@ -78,15 +68,8 @@ var Model = module.exports = function (DEVMODE) {
     returnURL : 'auto#', // set this if you don't want a popup
     spanButtonID : 'pryvButton', // (optional)
     callbacks : {
-      initialization : function () {},
-      needSignin : function () {},
-      needValidation : function () {},
-      accepted : function (username, appToken, languageCode) {
-        console.log('** SUCCESS! username:' + username +
-          ' appToken:' + appToken +
-          ' lang:' + languageCode);
-        this.initBrowser(username, appToken);
-      }.bind(this),
+      signedIn: this.initBrowser.bind(this),
+      signedOut: this.removeConnection.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
       },
@@ -98,13 +81,21 @@ var Model = module.exports = function (DEVMODE) {
   if (!DEVMODE) {
     Pryv.Access.setup(settings);
   }  else {
-    this.initBrowser('fredos71', 'VVTi1NMWDM');
+    var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
+    this.initBrowser(defaultConnection);
   }
 
 
 };
 
-
+Model.prototype.addConnection = function (connection) {
+  var userConnection = this.connections.add(connection);
+  this.activeFilter.addConnection(userConnection);
+};
+Model.prototype.removeConnection = function (connection) {
+  console.log('remove connection', this,  connection);
+  this.activeFilter.removeConnections(connection.serialId);
+};
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.
  */

@@ -3,6 +3,7 @@ var Backbone = require('backbone');
 module.exports = Backbone.Model.extend({
   defaults: {
     event: null,
+    collection: null,
     highlighted: false,
     checked: false
   },

@@ -128,14 +128,14 @@ _.extend(Controller.prototype, {
     if (model) {
       if (model.get('event').type !== 'Creation') {
         this.commonView.model.set('event', model.get('event'));
-        this.commonView.model.set('collection', this.collection);
       }
       var newContentView = this._getContentView(model);
       if (this.contentView === null || this.contentView.type !== newContentView.type) {
         if (this.contentView !== null) {
           this.contentView.close();
         }
-        this.contentView = new newContentView.view({model: new Model({})});
+        this.contentView = new newContentView.view({model: new Model({collection:
+          this.collection})});
         if (newContentView.type === 'Creation') {
           this.contentView.connection = this.connection;
           this.commonView.close();
@@ -149,6 +149,7 @@ _.extend(Controller.prototype, {
           this.contentView.on('endOfSelection', function () {
             this.addEvents(this.newEvent.get('event'));
             this.commonView.model.set('event', this.newEvent.get('event'));
+            this.commonView.model.set('collection', this.collection);
             this.commonView.render();
             this.updateSingleView(this.newEvent);
           }.bind(this));
@@ -156,6 +157,7 @@ _.extend(Controller.prototype, {
         this.contentView.render();
       }
       this.contentView.model.set('event', model.get('event'));
+      this.contentView.model.set('collection', this.collection);
     }
   },
   createNewEvent: function () {

@@ -35,7 +35,7 @@ var Model = module.exports = function (DEVMODE) {
       'level' : 'manage'
     }
   ];
-  this.initBrowser = function (connection) {
+  this.initBrowser = function () {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
     this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
@@ -56,7 +56,6 @@ var Model = module.exports = function (DEVMODE) {
     };
 
     Pryv.eventTypes.loadExtras(function () {});
-    this.addConnection(connection);
 
     // create the TreeMap
     this.controller = new Controller();
@@ -77,7 +76,7 @@ var Model = module.exports = function (DEVMODE) {
         if (this.publicConnection) {
           this.removeConnection(this.publicConnection);
         }
-        this.initBrowser(connection);
+        this.addConnection(connection);
       }.bind(this),
       signedOut: function (connection) {
         this.removeConnection(connection);
@@ -94,28 +93,29 @@ var Model = module.exports = function (DEVMODE) {
     }
   };
   if (!DEVMODE) {
-    Pryv.Access.setup(settings);
     if (this.publicConnection) {
-      this.initBrowser(this.publicConnection);
+      this.addConnection(this.publicConnection);
     }
+    Pryv.Access.setup(settings);
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
-    this.initBrowser(defaultConnection);
+    this.addConnection(defaultConnection);
   }
 
 
 };
 
 Model.prototype.addConnection = function (connection) {
+  if (!this.treemap) {
+    this.initBrowser();
+  }
   var userConnection = this.connections.add(connection),
   batch = this.activeFilter.startBatch('adding connections');
   this.activeFilter.addConnection(userConnection, batch);
   batch.done();
 };
 Model.prototype.removeConnection = function (connection) {
-  var batch = this.activeFilter.startBatch('removing connections');
-  this.activeFilter.removeConnections(connection.serialId, batch);
-  batch.done();
+  this.activeFilter.removeConnections(connection.serialId);
 };
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.

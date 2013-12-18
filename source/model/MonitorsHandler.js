@@ -14,6 +14,7 @@ var MonitorsHandler = module.exports = function (model, batchSetKeyValues) {
   this.model = model;
   this._monitors = {}; // serialIds / monitor
   this.rootFilter = new Filter();
+  this.connectionToRemove = [];
   if (batchSetKeyValues) {
     this.set(batchSetKeyValues);
   }
@@ -80,7 +81,11 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
     if (useLocalStorageError) {
       throw new Error('failed activating localStorage for ' + connection.id);
     }
-
+    var connectionIndex = this.connectionToRemove.indexOf(connection.serialId);
+    if (connectionIndex !== -1) {
+      this.connectionToRemove[connectionIndex] = null;
+      return;
+    }
     var filterSettings = _.omit(this.rootFilter.getData(), 'streams'); //copy everything but Streams
     var specificFilter = new Filter(filterSettings);
     specificFilter._xerialId =  'F' + connection.serialId;
@@ -119,7 +124,10 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
 
     var monitor = this._monitors[connectionId];
     if (! monitor) {
-      throw new Error('cannot find monitor for connection: ' + connectionId);
+      if (this.connectionToRemove.indexOf(connectionId) === -1) {
+        this.connectionToRemove.push(connectionId);
+      }
+      return;
     }
     this.focusOnStreams([]);
     this._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,

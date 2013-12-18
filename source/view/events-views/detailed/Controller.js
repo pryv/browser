@@ -6,6 +6,7 @@ var _ = require('underscore'),
   CommonView = require('./CommonView.js'),
   GenericContentView = require('./contentView/Generic.js'),
   NoteContentView = require('./contentView/Note.js'),
+  NumericalContentView = require('./contentView/Numerical.js'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
@@ -133,7 +134,8 @@ _.extend(Controller.prototype, {
         if (this.contentView !== null) {
           this.contentView.close();
         }
-        this.contentView = new newContentView.view({model: new Model({})});
+        this.contentView = new newContentView.view({model: new Model({collection:
+          this.collection})});
         if (newContentView.type === 'Creation') {
           this.contentView.connection = this.connection;
           this.commonView.close();
@@ -147,6 +149,7 @@ _.extend(Controller.prototype, {
           this.contentView.on('endOfSelection', function () {
             this.addEvents(this.newEvent.get('event'));
             this.commonView.model.set('event', this.newEvent.get('event'));
+            this.commonView.model.set('collection', this.collection);
             this.commonView.render();
             this.updateSingleView(this.newEvent);
           }.bind(this));
@@ -154,6 +157,7 @@ _.extend(Controller.prototype, {
         this.contentView.render();
       }
       this.contentView.model.set('event', model.get('event'));
+      this.contentView.model.set('collection', this.collection);
     }
   },
   createNewEvent: function () {
@@ -179,6 +183,8 @@ _.extend(Controller.prototype, {
       return {type: 'Position', view: PositionContentView};
     } else if (eventType === 'Creation') {
       return {type: 'Creation', view: CreationView};
+    } else if (this.eventIsNumerical(eventType)) {
+      return {type: 'Numerical', view: NumericalContentView};
     } else {
       return {type: 'Generic', view: GenericContentView};
     }
@@ -187,5 +193,38 @@ _.extend(Controller.prototype, {
     $('.modal-panel-left').css({
       width: $('.modal-content').width() - $('.modal-panel-right').width()
     });
-  }.bind(this), 1000)
+  }.bind(this), 1000),
+  eventIsNumerical: function (e) {
+    var eventTypeClass = e.split('/')[0];
+    return (
+      eventTypeClass === 'money' ||
+        eventTypeClass === 'absorbed-dose' ||
+        eventTypeClass === 'absorbed-dose-equivalent' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'area' ||
+        eventTypeClass === 'capacitance' ||
+        eventTypeClass === 'catalytic-activity' ||
+        eventTypeClass === 'count' ||
+        eventTypeClass === 'data-quantity' ||
+        eventTypeClass === 'density' ||
+        eventTypeClass === 'dynamic-viscosity' ||
+        eventTypeClass === 'electric-charge' ||
+        eventTypeClass === 'electric-charge-line-density' ||
+        eventTypeClass === 'electric-current' ||
+        eventTypeClass === 'electrical-conductivity' ||
+        eventTypeClass === 'electromotive-force' ||
+        eventTypeClass === 'energy' ||
+        eventTypeClass === 'force' ||
+        eventTypeClass === 'length' ||
+        eventTypeClass === 'luminous-intensity' ||
+        eventTypeClass === 'mass' ||
+        eventTypeClass === 'mol' ||
+        eventTypeClass === 'power' ||
+        eventTypeClass === 'pressure' ||
+        eventTypeClass === 'speed' ||
+        eventTypeClass === 'temperature' ||
+        eventTypeClass === 'volume'
+      );
+  },
 });

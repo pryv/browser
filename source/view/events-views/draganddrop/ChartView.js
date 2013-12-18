@@ -38,6 +38,8 @@ module.exports = Marionette.CompositeView.extend({
       }
     }
 
+    this.container = this.model.get('container');
+
     this.makePlot();
     this.onDateHighLighted(0);
   },
@@ -78,7 +80,6 @@ module.exports = Marionette.CompositeView.extend({
     });
     $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
 
-
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
     this.createEventBindings();
@@ -86,7 +87,11 @@ module.exports = Marionette.CompositeView.extend({
     // build legend as list
     if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
       $('.chartContainer > .legend').attr('id', 'DnD-legend');
-      this.rebuildLegend(this.container + ' table');
+      if (this.model.get('legendContainer')) {
+        this.rebuildLegend(this.model.get('legendContainer') + ' table');
+      } else {
+        this.rebuildLegend(this.container + ' table');
+      }
       this.legendButtonBindings();
     }
 
@@ -135,6 +140,9 @@ module.exports = Marionette.CompositeView.extend({
           '<span class="DnD-legend-text">' + label + '</span>';
       };
     }
+    if (this.model.get('legendContainer')) {
+      this.options.legend.container = this.model.get('legendContainer');
+    }
     if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
       this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
         this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
@@ -164,6 +172,7 @@ module.exports = Marionette.CompositeView.extend({
         amount: 1.2
       };
     }
+    this.options.xaxis.zoomRange = [1000, null];
 
     seriesCounts = null;
   },
@@ -213,7 +222,9 @@ module.exports = Marionette.CompositeView.extend({
         this.getExtremeValues(series) : false;
     }
     if (this.model.get('allowZoom')) {
-      this.options.yaxes[seriesIndex].zoomRange = [0.001, 1000];
+      this.options.yaxes[seriesIndex].zoomRange = series.length > 1 ?
+        [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
+        false;
     }
 
     // Configures the series' style
@@ -356,7 +367,12 @@ module.exports = Marionette.CompositeView.extend({
 
   legendButtonBindings: function () {
     if (this.model.get('legendButton')) {
-      var buttons = $('a', $(this.container));
+      var buttons = null;
+      if (this.model.get('legendContainer')) {
+        buttons = $('a', $(this.model.get('legendContainer')));
+      } else {
+        buttons  = $('a', $(this.container));
+      }
       var chartView = this;
       buttons.each(function () {
           $(this).bind('click', chartView.seriesButtonClicked.bind(chartView));
@@ -447,7 +463,11 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('legendShow') &&
       this.model.get('legendStyle') &&
       this.model.get('legendStyle') === 'list') {
-      this.rebuildLegend(this.container + ' table');
+      if (this.model.get('legendContainer')) {
+        this.rebuildLegend(this.model.get('legendContainer') + ' table');
+      } else {
+        this.rebuildLegend(this.container + ' table');
+      }
       this.legendButtonBindings();
     }
   }

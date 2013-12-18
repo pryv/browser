@@ -107,6 +107,9 @@ module.exports = function (grunt) {
       },
       staging : {
         NODE_ENV : 'STAGING'
+      },
+      localStaging: {
+        NODE_ENV : 'LOCAL_STAGING'
       }
     },
     preprocess : {
@@ -159,5 +162,8 @@ module.exports = function (grunt) {
       'cssmin', 'concat', 'copy', 'preprocess:dev']);
   grunt.registerTask('staging',
     ['jshint', 'env:staging', 'browserify',
+      'cssmin', 'concat', 'copy', 'preprocess:staging']);
+  grunt.registerTask('local',
+    ['jshint', 'env:localStaging', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:staging']);
 };

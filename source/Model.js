@@ -83,16 +83,6 @@ var Model = module.exports = function (DEVMODE) {
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
     this.initBrowser(defaultConnection);
-
-    var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
-    var liveatId = this.connections.add(liveat);
-    this.activeFilter.addConnection(liveatId);
-
-    var fredos = new Pryv.Connection('fredos71', 'VVTi1NMWDM', {staging: true});
-    var fredosId  = this.connections.add(fredos);
-    this.activeFilter.addConnection(fredosId);
-
-
   }
 
 

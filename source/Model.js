@@ -8,9 +8,13 @@ var TreeMap = require('./tree/TreeMap.js');
 var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
 var TimeLine = require('./timeframe-selector/timeframe-selector.js');
-
+var PUBLIC_TOKEN = 'TeVY2x0kgq';
 var Model = module.exports = function (DEVMODE) {
-
+  this.urlUsername = Pryv.Utility.getUsernameFromHostname();
+  this.publicConnection = null;
+  if (this.urlUsername) {
+    this.publicConnection =  new Pryv.Connection(this.urlUsername, PUBLIC_TOKEN, {staging: false});
+  }
   // create connection handler and filter
   this.onFiltersChanged = function () {
     console.log('onFiltersChanged', arguments);
@@ -68,8 +72,19 @@ var Model = module.exports = function (DEVMODE) {
     returnURL : 'auto#', // set this if you don't want a popup
     spanButtonID : 'pryvButton', // (optional)
     callbacks : {
-      signedIn: this.initBrowser.bind(this),
-      signedOut: this.removeConnection.bind(this),
+      signedIn: function (connection) {
+        console.log('signedIn', connection, this.publicConnection);
+        if (this.publicConnection) {
+          this.removeConnection(this.publicConnection);
+        }
+        this.initBrowser(connection);
+      }.bind(this),
+      signedOut: function (connection) {
+        this.removeConnection(connection);
+        if (this.publicConnection) {
+          this.addConnection(this.publicConnection);
+        }
+      }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
       },
@@ -80,6 +95,9 @@ var Model = module.exports = function (DEVMODE) {
   };
   if (!DEVMODE) {
     Pryv.Access.setup(settings);
+    if (this.publicConnection) {
+      this.initBrowser(this.publicConnection);
+    }
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
     this.initBrowser(defaultConnection);
@@ -89,12 +107,15 @@ var Model = module.exports = function (DEVMODE) {
 };
 
 Model.prototype.addConnection = function (connection) {
-  var userConnection = this.connections.add(connection);
-  this.activeFilter.addConnection(userConnection);
+  var userConnection = this.connections.add(connection),
+  batch = this.activeFilter.startBatch('adding connections');
+  this.activeFilter.addConnection(userConnection, batch);
+  batch.done();
 };
 Model.prototype.removeConnection = function (connection) {
-  console.log('remove connection', this,  connection);
-  this.activeFilter.removeConnections(connection.serialId);
+  var batch = this.activeFilter.startBatch('removing connections');
+  this.activeFilter.removeConnections(connection.serialId, batch);
+  batch.done();
 };
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.

@@ -407,19 +407,6 @@ module.exports = Marionette.CompositeView.extend({
         buttons.each(binder);
       }
     }
-
-/*
-
-      var buttons = null;
-      if (this.model.get('legendContainer')) {
-        buttons = $('a', $(this.model.get('legendContainer')));
-      } else {
-        buttons  = $('a', $(this.container));
-      }
-
-
-    }
-      */
   },
 
 
@@ -497,17 +484,7 @@ module.exports = Marionette.CompositeView.extend({
     var buttonType = e.data.type;
     var index = e.data.index;
     var model = this.model.get('collection').at(index);
-    switch (buttonType) {
-    case 'remove':
-      this.trigger('remove', model);
-      break;
-    case 'duplicate':
-      this.trigger('duplicate', model);
-      break;
-    case 'edit':
-      this.trigger('edit', model);
-      break;
-    }
+    this.trigger(buttonType, model);
   },
 
   onPlotPan: function () {

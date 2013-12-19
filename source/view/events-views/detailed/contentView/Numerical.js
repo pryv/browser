@@ -1,10 +1,10 @@
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
-  Model = require('../../draganddrop/TimeSeriesModel.js'),
-  Collection = require('../../draganddrop/TimeSeriesCollection.js'),
-  ChartModel = require('../../draganddrop/ChartModel.js'),
-  ChartView = require('../../draganddrop/ChartView.js');
+  Model = require('../../numericals/TimeSeriesModel.js'),
+  Collection = require('../../numericals/TimeSeriesCollection.js'),
+  ChartModel = require('../../numericals/ChartModel.js'),
+  ChartView = require('../../numericals/ChartView.js');
 
 
 module.exports = Marionette.ItemView.extend({
@@ -16,10 +16,6 @@ module.exports = Marionette.ItemView.extend({
   attachmentId: {},
   collection: new Collection([], {type: 'All'}),
   chartView: null,
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
-  },
   initialize: function () {
     this.listenTo(this.model, 'change', this.debounceRender.bind(this));
   },
@@ -77,8 +73,6 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this));
     }
 
-
-
     if ($('#detail-chart-container').length !== 0) {
       this.chartView.render();
     }
@@ -98,44 +92,10 @@ module.exports = Marionette.ItemView.extend({
     file.append(keys[0].split('.')[0], e.target.files[0]);
     this.model.addAttachment(file);
   },
-  getSrc: function () {
-    var event = this.model.get('event'),
-      attachments = event.attachments;
-    if (attachments) {
-      var keys = _.keys(attachments);
-      return event.url + '/' + attachments[keys[0]].fileName + '?auth=' + event.connection.auth;
-    } else {
-      return '';
-    }
-  },
-  getAlt: function () {
-    var event = this.model.get('event'),
-      attachments = event.attachments;
-    if (attachments) {
-      var keys = _.keys(attachments);
-      return keys[0];
-    } else {
-      return '';
-    }
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
-  },
   updateCollection: function () {
     if (!this.collection) {
       this.collection = new Collection([], {type: 'All'});
     }
-    //this.collection.empty();
     var myCol = this.collection;
     this.model.get('collection').each(function (e) {
       var ev = e.get('event');

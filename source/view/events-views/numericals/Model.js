@@ -2,10 +2,10 @@
 
 var _ = require('underscore'),
   DetailView = require('../detailed/Controller.js'),
-  ChartView = require('../draganddrop/ChartView.js'),
-  TsCollection = require('../draganddrop/TimeSeriesCollection.js'),
-  TsModel = require('../draganddrop/TimeSeriesModel.js'),
-  ChartModel = require('../draganddrop/ChartModel.js');
+  ChartView = require('./ChartView.js'),
+  ChartModel = require('./ChartModel.js'),
+  TsCollection = require('./TimeSeriesCollection.js'),
+  TsModel = require('./TimeSeriesModel.js');
 
 
 var NumericalsPlugin = module.exports = function (events, params, node) {

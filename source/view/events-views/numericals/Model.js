@@ -107,7 +107,6 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
 };
 
 NumericalsPlugin.prototype.render = function (container) {
-  console.log(this.eventsNode.uniqueId, 'render called');
   this.container = container;
   this.needToRender = true;
   this.debounceRefresh();
@@ -248,9 +247,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
     if (typeof(document) !== 'undefined')  {
       this.view = new ChartView({model: this.modelView});
       this.modelView.set('dimensions', this.computeDimensions());
-      //console.log($('#' + this.container));
       $('#' + this.container).resize(function () {
-        console.log('container resize event');
         this.debounceResize.bind(this);
       }.bind(this));
       this.view.render();
@@ -265,7 +262,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         this.detailedView.highlightDate(this.highlightedTime);
       }.bind(this));
     }
-  } else {
+  } else if (this.view) {
     this.view.render();
     this.debounceResize();
   }
@@ -310,35 +307,21 @@ NumericalsPlugin.prototype.computeDimensions = function () {
   var chartSizeWidth = null;
   var chartSizeHeight = null;
 
-  //console.log(this.eventsNode);
-
   if (this.width !== null) {
     chartSizeWidth = this.width;
-    //console.log(this.container, 'width 1', chartSizeWidth);
-  }
-  if ($('#' + this.container).length)  {
+  } else if ($('#' + this.container).length)  {
     chartSizeWidth = $('#' + this.container).width();
-    //console.log(this.container, 'width 2', chartSizeWidth);
-  }
-  if ($('#' + this.container).length)  {
+  } else if ($('#' + this.container).length)  {
     chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
-    //console.log(this.container, 'width 3', chartSizeWidth);
   }
 
   if (this.height !== null) {
     chartSizeHeight = this.height;
-    //console.log(this.container, 'height 1', chartSizeHeight);
-  }
-  if ($('#' + this.container).length)  {
+  } else if ($('#' + this.container).length)  {
     chartSizeHeight = $('#' + this.container).height();
-    //console.log(this.container, 'height 2', chartSizeHeight);
-  }
-  if ($('#' + this.container).length)  {
+  } else if ($('#' + this.container).length)  {
     chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
-    //console.log(this.container, 'height 3', chartSizeHeight);
   }
-
-  //console.log(this.container, {width: chartSizeWidth, height: chartSizeHeight});
 
   return {width: chartSizeWidth, height: chartSizeHeight};
 };

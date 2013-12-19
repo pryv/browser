@@ -28,7 +28,6 @@ module.exports = Marionette.CompositeView.extend({
       this.model.get('container') === null) {
       return;
     }
-    console.log(this.container);
 
     if (this.model.get('legendExtras')) {
       this.useExtras  = true;
@@ -81,11 +80,6 @@ module.exports = Marionette.CompositeView.extend({
     });
     $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
 
-    console.log(this.container);
-    if (this.container === 'node_22' || this.container === 'node_23') {
-      console.log(this.container, this.chartContainer, this.data);
-      return;
-    }
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
     this.createEventBindings();

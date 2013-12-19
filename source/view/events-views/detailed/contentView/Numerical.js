@@ -20,19 +20,8 @@ module.exports = Marionette.ItemView.extend({
     li: 'li.editable',
     edit: '.edit'
   },
-  templateHelpers: function () {
-    return {
-      getSrc: function () {
-        return this.getSrc();
-      }.bind(this),
-      getAlt: function () {
-        return this.getAlt();
-      }.bind(this)
-    };
-  },
   initialize: function () {
     this.listenTo(this.model, 'change', this.debounceRender.bind(this));
-    //this.listenTo(this.model.get('collection'), 'change', this.updateCollection);
   },
   onRender: function () {
     this.updateCollection();
@@ -66,17 +55,33 @@ module.exports = Marionette.ItemView.extend({
           allowZoom: false,     // Allows zooming on the chart
           xaxis: true
         })});
+
+      this.chartView.on('remove', function (m) {
+        this.chartView.model.get('collection').remove(m);
+      }.bind(this));
+
+      this.chartView.on('edit', function (m) {
+        console.log('edit', m);
+      }.bind(this));
+
+      this.chartView.on('duplicate', function (m) {
+        var model = new Model({
+          events: m.get('events'),
+          connectionId: m.get('connectionId'),
+          streamId: m.get('streamId'),
+          streamName: m.get('streamName'),
+          type: m.get('type'),
+          category: m.get('category')
+        });
+        this.chartView.model.get('collection').add(model);
+      }.bind(this));
     }
+
+
 
     if ($('#detail-chart-container').length !== 0) {
       this.chartView.render();
     }
-
-
-    //this.updateCollection();
-
-    //this.addAttachment();
-
   },
   addAttachment: function () {
     var id = 'attachment-' + this.addAttachmentId;
@@ -127,7 +132,10 @@ module.exports = Marionette.ItemView.extend({
     $($elem).removeClass('editing');
   },
   updateCollection: function () {
-    this.collection = new Collection([], {type: 'All'});
+    if (!this.collection) {
+      this.collection = new Collection([], {type: 'All'});
+    }
+    //this.collection.empty();
     var myCol = this.collection;
     this.model.get('collection').each(function (e) {
       var ev = e.get('event');

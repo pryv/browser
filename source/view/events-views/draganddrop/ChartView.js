@@ -29,6 +29,9 @@ module.exports = Marionette.CompositeView.extend({
       this.model.get('container') === null) {
       if (this.model.get('collection').length === 0) {
         $(this.model.get('container')).empty();
+        if (this.model.get('legendContainer')) {
+          $(this.model.get('legendContainer')).empty();
+        }
       }
       return;
     }

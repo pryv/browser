@@ -8,9 +8,20 @@ var TreeMap = require('./tree/TreeMap.js');
 var Controller = require('./orchestrator/Controller.js');
 var Pryv = require('pryv');
 var TimeLine = require('./timeframe-selector/timeframe-selector.js');
-
+var PUBLIC_TOKEN = 'TeVY2x0kgq';
 var Model = module.exports = function (DEVMODE) {
-
+  this.urlUsername = Pryv.Utility.getUsernameFromHostname();
+  this.urlSharings = Pryv.Utility.getSharingsFromPath();
+  this.publicConnection = null;
+  this.sharingsConnections = null;
+  if (this.urlSharings.length > 0) {
+    this.sharingsConnections = [];
+    this.urlSharings.forEach(function (token) {
+      this.sharingsConnections.push(new Pryv.Connection(this.urlUsername, token, {staging: false}));
+    }.bind(this));
+  } else if (this.urlUsername) {
+    this.publicConnection =  new Pryv.Connection(this.urlUsername, PUBLIC_TOKEN, {staging: false});
+  }
   // create connection handler and filter
   this.onFiltersChanged = function () {
     console.log('onFiltersChanged', arguments);
@@ -31,14 +42,19 @@ var Model = module.exports = function (DEVMODE) {
       'level' : 'manage'
     }
   ];
-  this.initBrowser = function (connection) {
+  this.initBrowser = function () {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
+    var batchCount = 0;
     this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
+      batchCount++;
       $('#logo-reload').addClass('loading');
     });
     this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
-      $('#logo-reload').removeClass('loading');
+      batchCount--;
+      if (batchCount === 0) {
+        $('#logo-reload').removeClass('loading');
+      }
     });
     this.timeView = new TimeLine();
     this.timeView.render();
@@ -52,7 +68,6 @@ var Model = module.exports = function (DEVMODE) {
     };
 
     Pryv.eventTypes.loadExtras(function () {});
-    this.addConnection(connection);
 
     // create the TreeMap
     this.controller = new Controller();
@@ -68,8 +83,18 @@ var Model = module.exports = function (DEVMODE) {
     returnURL : 'auto#', // set this if you don't want a popup
     spanButtonID : 'pryvButton', // (optional)
     callbacks : {
-      signedIn: this.initBrowser.bind(this),
-      signedOut: this.removeConnection.bind(this),
+      signedIn: function (connection) {
+        if (this.publicConnection) {
+          this.removeConnection(this.publicConnection);
+        }
+        this.addConnection(connection);
+      }.bind(this),
+      signedOut: function (connection) {
+        this.removeConnection(connection);
+        if (this.publicConnection) {
+          this.addConnection(this.publicConnection);
+        }
+      }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
       },
@@ -79,21 +104,32 @@ var Model = module.exports = function (DEVMODE) {
     }
   };
   if (!DEVMODE) {
+    if (this.publicConnection) {
+      this.addConnection(this.publicConnection);
+    } else if (this.sharingsConnections) {
+      this.sharingsConnections.forEach(function (connection) {
+        this.addConnection(connection);
+      }.bind(this));
+    }
     Pryv.Access.setup(settings);
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
-    this.initBrowser(defaultConnection);
+    this.addConnection(defaultConnection);
   }
 
 
 };
 
 Model.prototype.addConnection = function (connection) {
-  var userConnection = this.connections.add(connection);
-  this.activeFilter.addConnection(userConnection);
+  if (!this.treemap) {
+    this.initBrowser();
+  }
+  var userConnection = this.connections.add(connection),
+  batch = this.activeFilter.startBatch('adding connections');
+  this.activeFilter.addConnection(userConnection, batch);
+  batch.done();
 };
 Model.prototype.removeConnection = function (connection) {
-  console.log('remove connection', this,  connection);
   this.activeFilter.removeConnections(connection.serialId);
 };
 /**

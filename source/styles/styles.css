@@ -358,6 +358,7 @@ text-align: center;*/
   padding: 2px;
   background-color: #dfe400;
   opacity: 1;
+  z-index: 9999;
 }
 /** detail view modal **/
 .modal-dialog {

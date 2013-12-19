@@ -19,11 +19,11 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
 
   this.debounceRefresh = _.debounce(function () {
     this.refreshCollection();
-  }, 500);
+  }, 1000);
 
   this.debounceResize = _.debounce(function () {
     this.resize();
-  }, 1000);
+  }, 1500);
 
   this.events = {};
   this.highlightedTime = Infinity;
@@ -49,8 +49,7 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
       this.eventEnter(events[e]);
     }
   }
-  this.debounceRefresh();
-  $(window).resize(this.debounceResize.bind(this));
+  $(window).resize(this.debounceRefresh.bind(this));
 
 };
 NumericalsPlugin.prototype.eventEnter = function (event) {
@@ -108,13 +107,10 @@ NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
 };
 
 NumericalsPlugin.prototype.render = function (container) {
+  console.log(this.eventsNode.uniqueId, 'render called');
   this.container = container;
-  if (this.view) {
-    this.debounceResize();
-  } else {
-    this.needToRender = true;
-    this.debounceRefresh();
-  }
+  this.needToRender = true;
+  this.debounceRefresh();
 };
 NumericalsPlugin.prototype.refresh = function (object) {
   _.extend(this, object);
@@ -187,7 +183,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
     }
 
   }
-
+/*
   // Process those to remove
   for (i = 0; i < eventsToRem.length; ++i) {
       // find corresponding model
@@ -206,6 +202,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       }
     }
   }
+  */
 
   // Process those to change
   for (i = 0; i < eventsToCha.length; ++i) {
@@ -227,11 +224,11 @@ NumericalsPlugin.prototype.refreshCollection = function () {
   }
 
 
-  if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0) {
+  if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0 && this.container) {
     this.modelView = new ChartModel({
         container: '#' + this.container,
         view: null,
-        requiresDim: false,
+        requiresDim: true,
         collection: this.seriesCollection,
         highlighted: false,
         highlightedTime: null,
@@ -257,7 +254,6 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         this.debounceResize.bind(this);
       }.bind(this));
       this.view.render();
-      this.debounceResize();
       this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
       this.view.on('chart:resize', this.resize.bind(this));
       this.view.on('nodeClicked', function () {
@@ -269,10 +265,9 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         this.detailedView.highlightDate(this.highlightedTime);
       }.bind(this));
     }
-    if (this.needToRender) {
-      this.view.render();
-      this.debounceResize();
-    }
+  } else {
+    this.view.render();
+    this.debounceResize();
   }
 
 };

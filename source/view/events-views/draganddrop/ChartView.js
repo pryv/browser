@@ -24,10 +24,11 @@ module.exports = Marionette.CompositeView.extend({
     if (
       !this.model.get('collection') ||
       this.model.get('collection').length === 0 ||
-      !this.model.get('container')) {
-      //(this.model.get('requiresDim') && !this.model.get('dimensions'))) {
+      !this.model.get('container') ||
+      this.model.get('container') === null) {
       return;
     }
+    console.log(this.container);
 
     if (this.model.get('legendExtras')) {
       this.useExtras  = true;
@@ -80,6 +81,11 @@ module.exports = Marionette.CompositeView.extend({
     });
     $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
 
+    console.log(this.container);
+    if (this.container === 'node_22' || this.container === 'node_23') {
+      console.log(this.container, this.chartContainer, this.data);
+      return;
+    }
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
     this.createEventBindings();

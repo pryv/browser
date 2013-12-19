@@ -8,7 +8,7 @@ var Marionette = require('backbone.marionette'),
 
 
 module.exports = Marionette.ItemView.extend({
-  type: 'Picture',
+  type: 'Numerical',
   template: '#template-detail-content-numerical',
   itemViewContainer: '#detail-content',
   addAttachmentContainer: '#add-attachment',
@@ -16,6 +16,7 @@ module.exports = Marionette.ItemView.extend({
   attachmentId: {},
   collection: new Collection([], {type: 'All'}),
   chartView: null,
+  rendered: false,
   initialize: function () {
     this.listenTo(this.model, 'change', this.debounceRender.bind(this));
   },
@@ -57,7 +58,6 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this));
 
       this.chartView.on('edit', function (m) {
-        console.log('edit', m);
       }.bind(this));
 
       this.chartView.on('duplicate', function (m) {
@@ -75,6 +75,7 @@ module.exports = Marionette.ItemView.extend({
 
     if ($('#detail-chart-container').length !== 0) {
       this.chartView.render();
+      this.rendered = true;
     }
   },
   addAttachment: function () {
@@ -128,6 +129,8 @@ module.exports = Marionette.ItemView.extend({
     });
   },
   debounceRender: _.debounce(function () {
-    this.render();
+    if (!this.rendered) {
+      this.render();
+    }
   }, 1000)
 });

@@ -16,6 +16,7 @@ module.exports = Marionette.CompositeView.extend({
 
   initialize: function () {
     this.listenTo(this.model.get('collection'), 'add', this.render);
+    this.listenTo(this.model.get('collection'), 'remove', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
     this.container = this.model.get('container');
   },
@@ -26,6 +27,9 @@ module.exports = Marionette.CompositeView.extend({
       this.model.get('collection').length === 0 ||
       !this.model.get('container') ||
       this.model.get('container') === null) {
+      if (this.model.get('collection').length === 0) {
+        $(this.model.get('container')).empty();
+      }
       return;
     }
 
@@ -135,9 +139,24 @@ module.exports = Marionette.CompositeView.extend({
 
     this.options.legend = {};
     if (this.model.get('legendButton')) {
+      var model = this.model;
       this.options.legend.labelFormatter = function (label) {
-        return '<a class="DnD-legend-button" href="javascript:;">x</a>' +
-          '<span class="DnD-legend-text">' + label + '</span>';
+        var buttons = model.get('legendButtonContent');
+        var legend = '<span class="DnD-legend-text">' + label + '</span>';
+        for (var i = 0; i < buttons.length; ++i) {
+          switch (buttons[i]) {
+          case 'duplicate':
+            legend = legend + '<a class="DnD-legend-button-duplicate" href="javascript:;">2</a>';
+            break;
+          case 'remove':
+            legend = legend + '<a class="DnD-legend-button-remove" href="javascript:;">x</a>';
+            break;
+          case 'edit':
+            legend = legend + '<a class="DnD-legend-button-edit" href="javascript:;">e</a>';
+            break;
+          }
+        }
+        return legend;
       };
     }
     if (this.model.get('legendContainer')) {
@@ -367,18 +386,40 @@ module.exports = Marionette.CompositeView.extend({
 
   legendButtonBindings: function () {
     if (this.model.get('legendButton')) {
+
+      var chartView = this;
+      var buttons = null;
+      var buttonTypes = this.model.get('legendButtonContent');
+      var selector = '';
+      var current = null;
+      var binder = function (i, e) {
+        $(e).bind('click', {type: current, index: i},
+          chartView.legendButtonClicked.bind(chartView));
+      };
+      for (var i = 0; i < buttonTypes.length; ++i) {
+        current = buttonTypes[i];
+        selector = '.DnD-legend-button-' + current;
+        if (this.model.get('legendContainer')) {
+          buttons = $(selector, $(this.model.get('legendContainer')));
+        } else {
+          buttons  = $(selector, $(this.container));
+        }
+        buttons.each(binder);
+      }
+    }
+
+/*
+
       var buttons = null;
       if (this.model.get('legendContainer')) {
         buttons = $('a', $(this.model.get('legendContainer')));
       } else {
         buttons  = $('a', $(this.container));
       }
-      var chartView = this;
-      buttons.each(function () {
-          $(this).bind('click', chartView.seriesButtonClicked.bind(chartView));
-        }
-      );
+
+
     }
+      */
   },
 
 
@@ -452,11 +493,21 @@ module.exports = Marionette.CompositeView.extend({
     this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
   },
 
-  seriesButtonClicked: function (e) {
-    var idx = $(e.target).attr('id').split('-')[1];
-    var removed = this.model.get('collection').at(idx);
-    this.model.get('collection').remove(removed);
-    this.render();
+  legendButtonClicked: function (e) {
+    var buttonType = e.data.type;
+    var index = e.data.index;
+    var model = this.model.get('collection').at(index);
+    switch (buttonType) {
+    case 'remove':
+      this.trigger('remove', model);
+      break;
+    case 'duplicate':
+      this.trigger('duplicate', model);
+      break;
+    case 'edit':
+      this.trigger('edit', model);
+      break;
+    }
   },
 
   onPlotPan: function () {

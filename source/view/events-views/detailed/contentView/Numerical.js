@@ -55,6 +55,7 @@ module.exports = Marionette.ItemView.extend({
           dimensions: null,
           legendStyle: 'list', // Legend style: 'list', 'table'
           legendButton: true,  // A button in the legend
+          legendButtonContent: ['edit', 'duplicate', 'remove'],
           legendShow: true,     // Show legend or not
           legendContainer: '#detail-legend', //false or a a selector
           legendExtras: true,   // use extras in the legend

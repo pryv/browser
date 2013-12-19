@@ -20,6 +20,7 @@ module.exports = Backbone.Model.extend({
     // Legend style
     legendStyle: 'table', // Legend style: 'list', 'table'
     legendButton: false,  // A button in the legend
+    legendButtonCount: ['edit', 'duplicate', 'remove'],
     legendShow: true,     // Show legend on size/true/false
     legendExtras: true,   // use extras in the legend
 
@@ -37,6 +38,12 @@ module.exports = Backbone.Model.extend({
 
     // Editable point mode
     editPoint: false
+  },
+
+  initialize: function () {
+    this.on('remove', function () {
+      console.log('model: remove received');
+    });
   },
 
   setHighlighted: function (highlight) {

@@ -81,6 +81,7 @@ _.extend(Controller.prototype, {
         dimensions: null,
         legendStyle: 'list', // Legend style: 'list', 'table'
         legendButton: true,  // A button in the legend
+        legendButtonContent: ['remove'],
         legendShow: true,     // Show legend or not
         legendExtras: true,   // use extras in the legend
         onClick: false,
@@ -92,6 +93,10 @@ _.extend(Controller.prototype, {
       })});
 
     this.chartView.render();
+
+    this.chartView.on('remove', function (m) {
+      this.chartCollection.remove(m);
+    }.bind(this));
 
     var $ul = $('#dnd-panel-list ul');
     var el;

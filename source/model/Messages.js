@@ -1,7 +1,7 @@
 
 var Messages = module.exports = { };
 
-var SignalEmitter = require('pryv').Utility.SignalEmitter;
+var SignalEmitter = require('pryv').utility.SignalEmitter;
 
 var PryvMSGs = require('pryv').Messages;
 

@@ -10,7 +10,7 @@ var MSGs = require('./Messages').MonitorsHandler;
  * @type {Function}
  */
 var MonitorsHandler = module.exports = function (model, batchSetKeyValues) {
-  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'MonitorsHandler');
+  Pryv.utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'MonitorsHandler');
   this.model = model;
   this._monitors = {}; // serialIds / monitor
   this.rootFilter = new Filter();
@@ -78,6 +78,7 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
 
   // be sure localstorage is activated
   connection.fetchStructure(function (useLocalStorageError) {
+    console.log('fetchStructure', arguments);
     if (useLocalStorageError) {
       throw new Error('failed activating localStorage for ' + connection.id);
     }

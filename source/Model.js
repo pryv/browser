@@ -10,8 +10,8 @@ var Pryv = require('pryv');
 var TimeLine = require('./timeframe-selector/timeframe-selector.js');
 var PUBLIC_TOKEN = 'TeVY2x0kgq';
 var Model = module.exports = function (DEVMODE) {
-  this.urlUsername = Pryv.Utility.getUsernameFromHostname();
-  this.urlSharings = Pryv.Utility.getSharingsFromPath();
+  this.urlUsername = Pryv.utility.getUsernameFromHostname();
+  this.urlSharings = Pryv.utility.getSharingsFromPath();
   this.publicConnection = null;
   this.sharingsConnections = null;
   if (this.urlSharings.length > 0) {

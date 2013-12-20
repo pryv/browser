@@ -99,13 +99,10 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
       this._eventsEnterScope(MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION, events, batch);
       if (batchWaitForMe) { batchWaitForMe.done(); } // called only once at load
     }
-    monitor.addEventListener(
-      Pryv.Messages.Monitor.ON_LOAD, onMonitorOnLoad.bind(this));
+    monitor.addEventListener('started', onMonitorOnLoad.bind(this));
 
-    monitor.addEventListener(
-      Pryv.Messages.Monitor.ON_EVENT_CHANGE, this._onMonitorEventChange.bind(this));
-    monitor.addEventListener(
-      Pryv.Messages.Monitor.ON_FILTER_CHANGE, this._onMonitorFilterChange.bind(this));
+    monitor.addEventListener('eventsChanged', this._onMonitorEventChange.bind(this));
+    specificFilter.addEventListener('changed', this._onMonitorFilterChange.bind(this));
 
     monitor.start(function (error) {
       console.log('monitor started ' + error);

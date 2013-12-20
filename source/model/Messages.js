@@ -28,6 +28,6 @@ Messages.MonitorsHandler = {
     // may happend when several refresh requests overlaps
     FORCE : 'forced',
 
-    FILTER_STREAMS_CHANGED : PryvMSGs.Filter.STREAMS_CHANGE
+    FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };

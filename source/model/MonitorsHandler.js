@@ -102,7 +102,7 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
     monitor.addEventListener('started', onMonitorOnLoad.bind(this));
 
     monitor.addEventListener('eventsChanged', this._onMonitorEventChange.bind(this));
-    specificFilter.addEventListener('changed', this._onMonitorFilterChange.bind(this));
+    monitor.addEventListener('filterChanged', this._onMonitorFilterChange.bind(this));
 
     monitor.start(function (error) {
       console.log('monitor started ' + error);

@@ -2,9 +2,6 @@
 var Messages = module.exports = { };
 
 var SignalEmitter = require('pryv').utility.SignalEmitter;
-
-var PryvMSGs = require('pryv').Messages;
-
 Messages.MonitorsHandler = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
   SIGNAL : {

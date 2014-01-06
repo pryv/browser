@@ -35,7 +35,7 @@ var Model = module.exports = function (DEVMODE) {
     }
   }, 100);
   // Singin
-  Pryv.Access.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
+  Pryv.Auth.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
   var requestedPermissions = [
     {
       'streamId' : '*',
@@ -111,7 +111,7 @@ var Model = module.exports = function (DEVMODE) {
         this.addConnection(connection);
       }.bind(this));
     }
-    Pryv.Access.setup(settings);
+    Pryv.Auth.setup(settings);
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
     this.addConnection(defaultConnection);

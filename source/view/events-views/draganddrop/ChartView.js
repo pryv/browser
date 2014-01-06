@@ -393,7 +393,7 @@ module.exports = Marionette.CompositeView.extend({
       var selector = '';
       var current = null;
       var binder = function (i, e) {
-        $(e).bind('click', {type: current, index: i},
+        $(e).on('click', {type: current, index: i},
           chartView.legendButtonClicked.bind(chartView));
       };
       for (var i = 0; i < buttonTypes.length; ++i) {
@@ -451,7 +451,15 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   /* Fires when a dragged element enters this' scope */
-  onDragEnter: function () {
+  onDragEnter: function (e) {
+    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var droppedNodeID = data.nodeId;
+    if ($(e.currentTarget).attr('id') !== droppedNodeID) {
+      $('.chartContainer', $(e.currentTarget)).not(this.container).addClass('animated shake');
+      setTimeout(function () {
+        $('.chartContainer', $(e.currentTarget)).removeClass('animated shake');
+      }, 1000);
+    }
   },
 
   /* Fires when a dragged element is over this' scope */
@@ -460,13 +468,17 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   /* Fires when a dragged element leaves this' scope */
-  onDragLeave: function () {
-    $('.chartContainer').addClass('animated shake');
+  onDragLeave: function (e) {
+    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var droppedNodeID = data.nodeId;
+    $('.chartContainer').not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
+    setTimeout(function () {
+      $('.chartContainer').removeClass('animated shake');
+    }, 1000);
   },
 
   /* Called when this object is stops being dragged */
   onDragEnd: function () {
-    $('.chartContainer').removeClass('animated shake');
   },
 
   /* Called when an element is dropped on it */

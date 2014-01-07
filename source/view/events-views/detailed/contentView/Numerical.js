@@ -143,5 +143,13 @@ module.exports = Marionette.ItemView.extend({
 
   highlightEvent: function () {
     this.chartView.highlightEvent(this.model.get('event'));
+  },
+
+  close: function () {
+    this.chartView.close();
+    this.collection.reset();
+    this.collection = null;
+    this.chartView = null;
+    this.rendered = false;
   }
 });

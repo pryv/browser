@@ -19,9 +19,11 @@ module.exports = Marionette.ItemView.extend({
   rendered: false,
   initialize: function () {
     this.listenTo(this.model, 'change', this.debounceRender.bind(this));
+    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
   },
   onRender: function () {
     this.updateCollection();
+
     $(this.itemViewContainer).html(this.el);
     $('#detail-legend', $(this.itemViewContainer)).css({height: '35px'});
     $('#detail-chart-container', $(this.itemViewContainer)).css({height: '360px'});
@@ -135,6 +137,11 @@ module.exports = Marionette.ItemView.extend({
   debounceRender: _.debounce(function () {
     if (!this.rendered) {
       this.render();
+      this.highlightEvent();
     }
-  }, 1000)
+  }, 1000),
+
+  highlightEvent: function () {
+    this.chartView.highlightEvent(this.model.get('event'));
+  }
 });

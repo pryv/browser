@@ -344,6 +344,45 @@ module.exports = Marionette.CompositeView.extend({
     }
   },
 
+  highlightEvent: function (event) {
+    if (!this.plot) {
+      return;
+    }
+    this.plot.unhighlight();
+
+    var c = this.model.get('collection');
+    var e = event;
+    var m = null;
+
+    var cIdx, eIdx;
+
+    var connectionId = e.connection.id;
+    var streamId = e.streamId;
+    var streamName = e.stream.name;
+
+    for (var it = 0; it < c.length; ++it) {
+      m = c.at(it);
+      if (m) {
+        if (m.get('connectionId') === connectionId &&
+          m.get('streamId') === streamId &&
+          m.get('streamName') === streamName) {
+          break;
+        }
+      }
+    }
+    cIdx = it;
+
+    var data = this.plot.getData()[it];
+    for (it = 0; it < data.data.length; ++it) {
+      var elem = data.data[it];
+      if (elem[0] === e.time * 1000 && elem[1] === e.content) {
+        break;
+      }
+    }
+    eIdx = it;
+    this.plot.highlight(cIdx, eIdx);
+  },
+
   onClose: function () {
     $(this.chartContainer).empty();
     $(this.container).unbind();

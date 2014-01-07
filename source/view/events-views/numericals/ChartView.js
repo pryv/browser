@@ -39,7 +39,9 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('legendExtras')) {
       this.useExtras  = true;
       try {
-        Pryv.eventTypes.extras('mass/kg');
+        if (!Pryv.eventTypes.extras('mass/kg')) {
+          this.useExtras = false;
+        }
       } catch (e) {
         this.useExtras = false;
       }
@@ -71,6 +73,7 @@ module.exports = Marionette.CompositeView.extend({
         return [e.time * 1000, +e.content];
       });
     };
+
 
     collection.each(function (s, i) {
       this.addSeries({

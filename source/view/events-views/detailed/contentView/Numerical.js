@@ -57,7 +57,8 @@ module.exports = Marionette.ItemView.extend({
         this.chartView.model.get('collection').remove(m);
       }.bind(this));
 
-      this.chartView.on('edit', function (m) {
+      this.chartView.on('edit', function () {
+        //console.log('Launching ChartEditView on this series.');
       }.bind(this));
 
       this.chartView.on('duplicate', function (m) {
@@ -97,6 +98,7 @@ module.exports = Marionette.ItemView.extend({
     if (!this.collection) {
       this.collection = new Collection([], {type: 'All'});
     }
+
     var myCol = this.collection;
     this.model.get('collection').each(function (e) {
       var ev = e.get('event');
@@ -114,7 +116,9 @@ module.exports = Marionette.ItemView.extend({
       var matching = myCol.where(filter);
 
       if (matching && matching.length !== 0) {
-        matching[0].get('events').push(ev);
+        if (_.indexOf(matching[0].get('events'), ev) === -1) {
+          matching[0].get('events').push(ev);
+        }
       } else {
         myCol.add(new Model({
             events: [ev],

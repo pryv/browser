@@ -1,10 +1,7 @@
 
 var Messages = module.exports = { };
 
-var SignalEmitter = require('pryv').Utility.SignalEmitter;
-
-var PryvMSGs = require('pryv').Messages;
-
+var SignalEmitter = require('pryv').utility.SignalEmitter;
 Messages.MonitorsHandler = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
   SIGNAL : {
@@ -28,6 +25,6 @@ Messages.MonitorsHandler = {
     // may happend when several refresh requests overlaps
     FORCE : 'forced',
 
-    FILTER_STREAMS_CHANGED : PryvMSGs.Filter.STREAMS_CHANGE
+    FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };

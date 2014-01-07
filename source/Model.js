@@ -10,8 +10,8 @@ var Pryv = require('pryv');
 var TimeLine = require('./timeframe-selector/timeframe-selector.js');
 var PUBLIC_TOKEN = 'TeVY2x0kgq';
 var Model = module.exports = function (DEVMODE) {
-  this.urlUsername = Pryv.Utility.getUsernameFromHostname();
-  this.urlSharings = Pryv.Utility.getSharingsFromPath();
+  this.urlUsername = Pryv.utility.getUsernameFromHostname();
+  this.urlSharings = Pryv.utility.getSharingsFromPath();
   this.publicConnection = null;
   this.sharingsConnections = null;
   if (this.urlSharings.length > 0) {
@@ -35,7 +35,7 @@ var Model = module.exports = function (DEVMODE) {
     }
   }, 100);
   // Singin
-  Pryv.Access.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
+  Pryv.Auth.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
   var requestedPermissions = [
     {
       'streamId' : '*',
@@ -111,7 +111,7 @@ var Model = module.exports = function (DEVMODE) {
         this.addConnection(connection);
       }.bind(this));
     }
-    Pryv.Access.setup(settings);
+    Pryv.Auth.setup(settings);
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
     this.addConnection(defaultConnection);

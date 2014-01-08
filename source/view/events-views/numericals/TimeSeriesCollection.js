@@ -1,5 +1,5 @@
 var Backbone = require('backbone'),
-  Model = require('./../draganddrop/TimeSeriesModel.js');
+  Model = require('./TimeSeriesModel.js');
 
 module.exports = Backbone.Collection.extend({
   model: Model,

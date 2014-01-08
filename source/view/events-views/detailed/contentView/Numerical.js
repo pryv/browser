@@ -1,14 +1,14 @@
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
-  Model = require('../../draganddrop/TimeSeriesModel.js'),
-  Collection = require('../../draganddrop/TimeSeriesCollection.js'),
-  ChartModel = require('../../draganddrop/ChartModel.js'),
-  ChartView = require('../../draganddrop/ChartView.js');
+  Model = require('../../numericals/TimeSeriesModel.js'),
+  Collection = require('../../numericals/TimeSeriesCollection.js'),
+  ChartModel = require('../../numericals/ChartModel.js'),
+  ChartView = require('../../numericals/ChartView.js');
 
 
 module.exports = Marionette.ItemView.extend({
-  type: 'Picture',
+  type: 'Numerical',
   template: '#template-detail-content-numerical',
   itemViewContainer: '#detail-content',
   addAttachmentContainer: '#add-attachment',
@@ -16,23 +16,9 @@ module.exports = Marionette.ItemView.extend({
   attachmentId: {},
   collection: new Collection([], {type: 'All'}),
   chartView: null,
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
-  },
-  templateHelpers: function () {
-    return {
-      getSrc: function () {
-        return this.getSrc();
-      }.bind(this),
-      getAlt: function () {
-        return this.getAlt();
-      }.bind(this)
-    };
-  },
+  rendered: false,
   initialize: function () {
     this.listenTo(this.model, 'change', this.debounceRender.bind(this));
-    //this.listenTo(this.model.get('collection'), 'change', this.updateCollection);
   },
   onRender: function () {
     this.updateCollection();
@@ -66,17 +52,32 @@ module.exports = Marionette.ItemView.extend({
           allowZoom: false,     // Allows zooming on the chart
           xaxis: true
         })});
+
+      this.chartView.on('remove', function (m) {
+        this.chartView.model.get('collection').remove(m);
+      }.bind(this));
+
+      this.chartView.on('edit', function () {
+        //console.log('Launching ChartEditView on this series.');
+      }.bind(this));
+
+      this.chartView.on('duplicate', function (m) {
+        var model = new Model({
+          events: m.get('events'),
+          connectionId: m.get('connectionId'),
+          streamId: m.get('streamId'),
+          streamName: m.get('streamName'),
+          type: m.get('type'),
+          category: m.get('category')
+        });
+        this.chartView.model.get('collection').add(model);
+      }.bind(this));
     }
 
     if ($('#detail-chart-container').length !== 0) {
       this.chartView.render();
+      this.rendered = true;
     }
-
-
-    //this.updateCollection();
-
-    //this.addAttachment();
-
   },
   addAttachment: function () {
     var id = 'attachment-' + this.addAttachmentId;
@@ -93,41 +94,11 @@ module.exports = Marionette.ItemView.extend({
     file.append(keys[0].split('.')[0], e.target.files[0]);
     this.model.addAttachment(file);
   },
-  getSrc: function () {
-    var event = this.model.get('event'),
-      attachments = event.attachments;
-    if (attachments) {
-      var keys = _.keys(attachments);
-      return event.url + '/' + attachments[keys[0]].fileName + '?auth=' + event.connection.auth;
-    } else {
-      return '';
-    }
-  },
-  getAlt: function () {
-    var event = this.model.get('event'),
-      attachments = event.attachments;
-    if (attachments) {
-      var keys = _.keys(attachments);
-      return keys[0];
-    } else {
-      return '';
-    }
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
-  },
   updateCollection: function () {
-    this.collection = new Collection([], {type: 'All'});
+    if (!this.collection) {
+      this.collection = new Collection([], {type: 'All'});
+    }
+
     var myCol = this.collection;
     this.model.get('collection').each(function (e) {
       var ev = e.get('event');
@@ -145,7 +116,9 @@ module.exports = Marionette.ItemView.extend({
       var matching = myCol.where(filter);
 
       if (matching && matching.length !== 0) {
-        matching[0].get('events').push(ev);
+        if (_.indexOf(matching[0].get('events'), ev) === -1) {
+          matching[0].get('events').push(ev);
+        }
       } else {
         myCol.add(new Model({
             events: [ev],
@@ -160,6 +133,8 @@ module.exports = Marionette.ItemView.extend({
     });
   },
   debounceRender: _.debounce(function () {
-    this.render();
+    if (!this.rendered) {
+      this.render();
+    }
   }, 1000)
 });

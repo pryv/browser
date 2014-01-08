@@ -1,10 +1,10 @@
 /* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
-  ChartView = require('./ChartView.js'),
-  Model = require('./ChartModel.js'),
-  TimeSeriesCollection = require('./TimeSeriesCollection.js'),
-  TimeSeriesModel = require('./TimeSeriesModel.js');
+  ChartView = require('./../numericals/ChartView.js'),
+  Model = require('./../numericals/ChartModel.js'),
+  TimeSeriesCollection = require('./../numericals/TimeSeriesCollection.js'),
+  TimeSeriesModel = require('./../numericals/TimeSeriesModel.js');
 
 var Controller = module.exports = function ($modal, events) {
   this.$modal = $modal;

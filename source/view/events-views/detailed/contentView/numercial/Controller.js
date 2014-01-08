@@ -19,7 +19,9 @@ module.exports = Marionette.ItemView.extend({
   viewType: Gcv,
   rendered: false,
   needToRender: null,
+  firstRender: null,
   initialize: function () {
+    this.firstRender = true;
     this.listenTo(this.model, 'change:collection', this.collectionChanged.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
     this.updateCollection();
@@ -37,9 +39,14 @@ module.exports = Marionette.ItemView.extend({
       this.view.bind('duplicate', this.duplicateSeriesEvent.bind(this));
       this.view.bind('remove', this.removeSeriesEvent.bind(this));
     } else if (this.viewType === Sev) {
-      this.view.bind('edited', this.editedSeriesEvent.bind(this));
+      this.view.bind('ready', this.readySeriesEvent.bind(this));
     }
-    this.debounceChildRender();
+    if (this.firstRender) {
+      this.firstRender = false;
+      this.debounceChildRender();
+    } else {
+      this.view.render();
+    }
   },
   updateCollection: function () {
     if (!this.collection) {
@@ -91,33 +98,50 @@ module.exports = Marionette.ItemView.extend({
     this.needToRender = null;
   },
   editSeriesEvent: function (m) {
-    // save changes made on the series
+
+    this.closeChild();
     this.viewType = Sev;
     this.prepareSingleEditModel(m);
-    this.view.unbind();
-    this.view.close();
     this.render();
   },
-  editedSeriesEvent: function () {
-    // TODO: implement
+  readySeriesEvent: function () {
 
+    // TODO: save model changes in stream's storage and virtual node's storage
+    this.closeChild();
     this.viewType = Gcv;
-    this.view.unbind();
-
+    this.prepareGeneralConfigModel();
+    this.render();
   },
-  duplicateSeriesEvent: function () {
-    // TODO: implement
+  duplicateSeriesEvent: function (m) {
 
-    // directly enter edit mode
+    this.closeChild();
     this.viewType = Gcv;
-    this.view.unbind();
-
+    var model = new Model({
+      events: m.get('events'),
+      connectionId: m.get('connectionId'),
+      streamId: m.get('streamId'),
+      streamName: m.get('streamName'),
+      type: m.get('type'),
+      category: m.get('category')
+    });
+    this.collection.add(model);
+    this.prepareGeneralConfigModel();
+    this.render();
   },
-  removeSeriesEvent: function () {
-    // TODO: implement
+  removeSeriesEvent: function (m) {
+    this.closeChild();
+    this.viewType = Gcv;
+    this.collection.remove(m);
+    this.prepareGeneralConfigModel();
+    this.render();
   },
   collectionChanged: function () {
+    // TODO: depends on view type
     this.updateCollection();
+    if (this.view) {
+      this.view.unbind();
+      this.view.close();
+    }
     this.render();
   },
   prepareSingleEditModel: function (m) {
@@ -131,6 +155,10 @@ module.exports = Marionette.ItemView.extend({
     this.viewModel = new Model({
       collection: this.collection
     });
+  },
+  closeChild: function () {
+    this.view.unbind();
+    this.view.close();
   },
   debounceChildRender: _.debounce(function () {
     this.view.render();

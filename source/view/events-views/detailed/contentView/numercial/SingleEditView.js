@@ -53,7 +53,9 @@ module.exports = Marionette.ItemView.extend({
           xaxis: true
         })});
 
-
+      this.chartView.on('ready', function (m) {
+        this.trigger('ready', m);
+      }.bind(this));
     }
 
     if ($('#detail-chart-container-edit').length !== 0) {
@@ -87,7 +89,9 @@ module.exports = Marionette.ItemView.extend({
   }, 1000),
 
   highlightEvent: function () {
-    this.chartView.highlightEvent(this.model.get('event'));
+    if (this.chartView) {
+      this.chartView.highlightEvent(this.model.get('event'));
+    }
   },
   onClose: function () {
     this.chartView.close();

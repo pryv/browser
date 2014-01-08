@@ -1,7 +1,7 @@
 /* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
-  Model = require('../../../numericals/TimeSeriesModel.js'),
+  //Model = require('../../../numericals/TimeSeriesModel.js'),
   ChartModel = require('../../../numericals/ChartModel.js'),
   ChartView = require('../../../numericals/ChartView.js');
 
@@ -52,8 +52,7 @@ module.exports = Marionette.ItemView.extend({
         })});
 
       this.chartView.on('remove', function (m) {
-        this.chartView.model.get('collection').remove(m);
-        this.trigger('remove', this.model);
+        this.trigger('remove', m);
       }.bind(this));
 
       this.chartView.on('edit', function (m) {
@@ -61,16 +60,7 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this));
 
       this.chartView.on('duplicate', function (m) {
-        var model = new Model({
-          events: m.get('events'),
-          connectionId: m.get('connectionId'),
-          streamId: m.get('streamId'),
-          streamName: m.get('streamName'),
-          type: m.get('type'),
-          category: m.get('category')
-        });
-        this.trigger('duplicate', this.model);
-        this.chartView.model.get('collection').add(model);
+        this.trigger('duplicate', m);
       }.bind(this));
     }
 
@@ -105,7 +95,9 @@ module.exports = Marionette.ItemView.extend({
   }, 1000),
 
   highlightEvent: function () {
-    this.chartView.highlightEvent(this.model.get('event'));
+    if (this.chartView) {
+      this.chartView.highlightEvent(this.model.get('event'));
+    }
   },
   onClose: function () {
     this.chartView.close();

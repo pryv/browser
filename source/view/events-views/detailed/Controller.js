@@ -74,7 +74,7 @@ _.extend(Controller.prototype, {
   close: function () {
     this.commonView.close();
     this.contentView.close();
-    $('div').remove('.modal-panel-left');
+    $('div').remove('.modal-panel-left, .modal-panel-right');
     this.collection.reset();
     this.collection = null;
     this.events = {};

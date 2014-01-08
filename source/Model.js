@@ -1,26 +1,29 @@
-/* global $ */
-var MonitorsHandler = require('./model/MonitorsHandler.js');
-var _ = require('underscore');
-var ConnectionsHandler = require('./model/ConnectionsHandler.js');
-
-var SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL;
-var TreeMap = require('./tree/TreeMap.js');
-var Controller = require('./orchestrator/Controller.js');
-var Pryv = require('pryv');
-var TimeLine = require('./timeframe-selector/timeframe-selector.js');
-var PUBLIC_TOKEN = 'TeVY2x0kgq';
+/* global $, window */
+var MonitorsHandler = require('./model/MonitorsHandler.js'),
+_ = require('underscore'),
+ConnectionsHandler = require('./model/ConnectionsHandler.js'),
+SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
+TreeMap = require('./tree/TreeMap.js'),
+Controller = require('./orchestrator/Controller.js'),
+Pryv = require('pryv'),
+TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+PUBLIC_TOKEN = 'TeVY2x0kgq',
+toShowWhenLoggedIn = ['#logo-sharing', '#logo-add'];
 var Model = module.exports = function (DEVMODE) {
+  window.Pryv = Pryv;
   this.urlUsername = Pryv.utility.getUsernameFromHostname();
   this.urlSharings = Pryv.utility.getSharingsFromPath();
   this.publicConnection = null;
+  this.loggedConnection = null;
   this.sharingsConnections = null;
+  this.hideLoggedInElement();
   if (this.urlSharings.length > 0) {
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
-      this.sharingsConnections.push(new Pryv.Connection(this.urlUsername, token, {staging: false}));
+      this.sharingsConnections.push(new Pryv.Connection(this.urlUsername, token, {staging: true}));
     }.bind(this));
   } else if (this.urlUsername) {
-    this.publicConnection =  new Pryv.Connection(this.urlUsername, PUBLIC_TOKEN, {staging: false});
+    this.publicConnection =  new Pryv.Connection(this.urlUsername, PUBLIC_TOKEN, {staging: true});
   }
   // create connection handler and filter
   this.onFiltersChanged = function () {
@@ -34,14 +37,6 @@ var Model = module.exports = function (DEVMODE) {
       this.treemap.onDateHighLighted(arguments[0].getTime() / 1000);
     }
   }, 100);
-  // Singin
-  Pryv.Auth.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
-  var requestedPermissions = [
-    {
-      'streamId' : '*',
-      'level' : 'manage'
-    }
-  ];
   this.initBrowser = function () {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
@@ -77,23 +72,33 @@ var Model = module.exports = function (DEVMODE) {
 
   };
   // ----------------------- //
+
+  // Singin
+  Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
+
   var settings = {
-    requestingAppId : 'browser',
-    requestedPermissions : requestedPermissions,
-    returnURL : 'auto#', // set this if you don't want a popup
-    spanButtonID : 'pryvButton', // (optional)
+    appId : 'pryv-browser',
     callbacks : {
       signedIn: function (connection) {
+        console.log('Successfully signed in', connection);
+        this.loggedConnection = connection;
+        $('#login-button-username').text(connection.username);
+        //$('#login .dropdown-toggle').dropdown('toggle'); // close the login form
+        $('#login .toggle').toggle(); // display the username on the button
+        this.showLoggedInElement();
         if (this.publicConnection) {
           this.removeConnection(this.publicConnection);
         }
         this.addConnection(connection);
       }.bind(this),
       signedOut: function (connection) {
+        this.loggedConnection = null;
+        this.hideLoggedInElement();
         this.removeConnection(connection);
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
+        $('#login .toggle').toggle(); // display "sign in" on the button
       }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
@@ -111,13 +116,30 @@ var Model = module.exports = function (DEVMODE) {
         this.addConnection(connection);
       }.bind(this));
     }
-    Pryv.Auth.setup(settings);
+    Pryv.Auth.loginWithCookie(settings);
+    $('#login .dropdown-menu input, #login .dropdown-menu label').click(function (e) {
+      e.stopPropagation();
+    });
+    $('#login button').click(function (e) {
+      if (this.loggedConnection) {
+        e.stopPropagation();
+        Pryv.Auth.logout();
+      }
+    }.bind(this));
+    $('#login-submit').click(function (e) {
+      e.preventDefault();
+      settings.username = $('#login-username').val();
+      settings.password = $('#login-password').val();
+      settings.rememberMe = $('#login-remember-me').prop('checked');
+      Pryv.Auth.login(settings);
+    });
   }  else {
-    var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
+    // for dev env only
+    // add connections here, you mut set the loggedConnection with a staging connection
+    var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: true});
+    this.loggedConnection = defaultConnection;
     this.addConnection(defaultConnection);
-
-    var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
-    this.addConnection(liveat);
+    this.showLoggedInElement();
   }
 
 
@@ -148,6 +170,14 @@ Model.prototype.updateTimeFrameLimits = function () {
 };
 
 
+
+Model.prototype.showLoggedInElement = function () {
+  $(toShowWhenLoggedIn.join(',')).show();
+};
+
+Model.prototype.hideLoggedInElement = function () {
+  $(toShowWhenLoggedIn.join(',')).hide();
+};
 function initTimeAndFilter(timeView, filter) {
   var spanTime = 86400000,
     fromTime = new Date(),

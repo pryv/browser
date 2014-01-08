@@ -80,11 +80,14 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
   connection.fetchStructure(function (useLocalStorageError) {
     console.log('fetchStructure', arguments);
     if (useLocalStorageError) {
-      throw new Error('failed activating localStorage for ' + connection.id);
+      console.error('failed activating localStorage for ' + connection.id);
+      if (batchWaitForMe) { batchWaitForMe.done(); }
+      return;
     }
     var connectionIndex = this.connectionToRemove.indexOf(connection.serialId);
     if (connectionIndex !== -1) {
       this.connectionToRemove[connectionIndex] = null;
+      if (batchWaitForMe) { batchWaitForMe.done(); }
       return;
     }
     var filterSettings = _.omit(this.rootFilter.getData(), 'streams'); //copy everything but Streams

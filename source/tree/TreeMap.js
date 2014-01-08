@@ -4,6 +4,7 @@ var RootNode = require('./RootNode.js'),
  SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
  _ = require('underscore'),
  DetailView = require('../view/events-views/detailed/Controller.js'),
+ SharingView = require('../view/sharings/Controller.js'),
  FusionDialog = require('../view/events-views/draganddrop/Controller.js');
 
 var TreeMap = module.exports = function (model) {
@@ -20,7 +21,6 @@ var TreeMap = module.exports = function (model) {
     parseInt($tree.css('margin-top').split('px')[0], null));
   this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
   this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
-
   $('#logo-reload').click(function (e) {
     e.preventDefault();
     this.focusOnStreams(null);
@@ -32,6 +32,13 @@ var TreeMap = module.exports = function (model) {
     }.bind(this));
     this.initDetailedView($modal);
     this.detailedView.createNewEvent();
+  }.bind(this));
+  $('#logo-sharing').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeSharingView();
+    }.bind(this));
+    this.showSharingView($modal, this.model.loggedConnection);
   }.bind(this));
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
@@ -212,6 +219,7 @@ TreeMap.prototype.hasDetailedView = function () {
   return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
 };
 TreeMap.prototype.showDetailedView = function () {
+  this.closeSharingView();
   if (this.hasDetailedView()) {
     this.detailedView.show();
   }
@@ -243,7 +251,25 @@ TreeMap.prototype.highlightDateDetailedView = function (time) {
   }
 };
 /*=================================*/
-
+//========== SHARING VIEW =========\\
+TreeMap.prototype.hasSharingView = function () {
+  return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
+};
+TreeMap.prototype.showSharingView = function ($modal, connection) {
+  this.closeSharingView();
+  this.closeDetailedView();
+  if ($modal && connection) {
+    this.sharingView = new SharingView($modal, connection);
+    this.sharingView.show();
+  }
+};
+TreeMap.prototype.closeSharingView = function () {
+  if (this.hasSharingView()) {
+    this.sharingView.close();
+    this.sharingView = null;
+  }
+};
+ /*=================================*/
 /* jshint -W098 */
 
  /**
@@ -268,4 +294,3 @@ TreeMap.prototype.removeVirtualNode = function (node) {
    * just remove the indicated node
    */
 };
-

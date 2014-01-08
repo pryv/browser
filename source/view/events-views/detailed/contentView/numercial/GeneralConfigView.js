@@ -1,42 +1,38 @@
-/* global $, FormData */
+/* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
-  Model = require('../../numericals/TimeSeriesModel.js'),
-  Collection = require('../../numericals/TimeSeriesCollection.js'),
-  ChartModel = require('../../numericals/ChartModel.js'),
-  ChartView = require('../../numericals/ChartView.js');
+  Model = require('../../../numericals/TimeSeriesModel.js'),
+  ChartModel = require('../../../numericals/ChartModel.js'),
+  ChartView = require('../../../numericals/ChartView.js');
 
 
 module.exports = Marionette.ItemView.extend({
   type: 'Numerical',
-  template: '#template-detail-content-numerical',
+  template: '#template-detail-content-numerical-general',
   itemViewContainer: '#detail-content',
-  addAttachmentContainer: '#add-attachment',
-  addAttachmentId: 0,
-  attachmentId: {},
-  collection: new Collection([], {type: 'All'}),
   chartView: null,
   rendered: false,
   initialize: function () {
-    this.listenTo(this.model, 'change', this.debounceRender.bind(this));
+    this.listenTo(this.model, 'change', this.render.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
   },
   onRender: function () {
-    this.updateCollection();
-
     $(this.itemViewContainer).html(this.el);
-    $('#detail-legend', $(this.itemViewContainer)).css({height: '35px'});
-    $('#detail-chart-container', $(this.itemViewContainer)).css({height: '360px'});
+    $('#legend-container-general', $(this.itemViewContainer))
+      .css({height: '35px', width: '100%'});
+    $('#detail-chart-container-general', $(this.itemViewContainer))
+      .css({height: '360px', width: '100%'});
+
 
     if (this.chartView) {
-      this.chartView.model.set('collection', this.collection);
+      this.chartView.model.set('collection', this.model.get('collection'));
     } else {
       this.chartView = new ChartView({model:
         new ChartModel({
-          container: '#detail-chart-container',
+          container: '#detail-chart-container-general',
           view: null,
           requiresDim: false,
-          collection: this.collection,
+          collection: this.model.get('collection'),
           highlighted: false,
           highlightedTime: null,
           allowPieChart: false,
@@ -45,7 +41,7 @@ module.exports = Marionette.ItemView.extend({
           legendButton: true,  // A button in the legend
           legendButtonContent: ['edit', 'duplicate', 'remove'],
           legendShow: true,     // Show legend or not
-          legendContainer: '#detail-legend', //false or a a selector
+          legendContainer: '#legend-container-general', //false or a a selector
           legendExtras: true,   // use extras in the legend
           onClick: false,
           onHover: false,
@@ -57,10 +53,11 @@ module.exports = Marionette.ItemView.extend({
 
       this.chartView.on('remove', function (m) {
         this.chartView.model.get('collection').remove(m);
+        this.trigger('remove', this.model);
       }.bind(this));
 
-      this.chartView.on('edit', function () {
-        //console.log('Launching ChartEditView on this series.');
+      this.chartView.on('edit', function (m) {
+        this.trigger('edit', m);
       }.bind(this));
 
       this.chartView.on('duplicate', function (m) {
@@ -72,15 +69,17 @@ module.exports = Marionette.ItemView.extend({
           type: m.get('type'),
           category: m.get('category')
         });
+        this.trigger('duplicate', this.model);
         this.chartView.model.get('collection').add(model);
       }.bind(this));
     }
 
-    if ($('#detail-chart-container').length !== 0) {
+    if ($('#detail-chart-container-general').length !== 0) {
       this.chartView.render();
       this.rendered = true;
     }
   },
+  /*
   addAttachment: function () {
     var id = 'attachment-' + this.addAttachmentId;
     var html = '<li><input type="file" id="' + id + '"></li>';
@@ -96,44 +95,8 @@ module.exports = Marionette.ItemView.extend({
     file.append(keys[0].split('.')[0], e.target.files[0]);
     this.model.addAttachment(file);
   },
-  updateCollection: function () {
-    if (!this.collection) {
-      this.collection = new Collection([], {type: 'All'});
-    }
+  */
 
-    var myCol = this.collection;
-    this.model.get('collection').each(function (e) {
-      var ev = e.get('event');
-      var connectionId = ev.connection.id;
-      var streamId = ev.streamId;
-      var streamName = ev.stream.name;
-      var type = ev.type;
-
-      var filter = {
-        connectionId: connectionId,
-        streamId: streamId,
-        type: type
-      };
-
-      var matching = myCol.where(filter);
-
-      if (matching && matching.length !== 0) {
-        if (_.indexOf(matching[0].get('events'), ev) === -1) {
-          matching[0].get('events').push(ev);
-        }
-      } else {
-        myCol.add(new Model({
-            events: [ev],
-            connectionId: connectionId,
-            streamId: streamId,
-            streamName: streamName,
-            type: type,
-            category: 'any'
-          })
-        );
-      }
-    });
-  },
   debounceRender: _.debounce(function () {
     if (!this.rendered) {
       this.render();
@@ -144,12 +107,9 @@ module.exports = Marionette.ItemView.extend({
   highlightEvent: function () {
     this.chartView.highlightEvent(this.model.get('event'));
   },
-
-  close: function () {
+  onClose: function () {
     this.chartView.close();
-    this.collection.reset();
-    this.collection = null;
     this.chartView = null;
-    this.rendered = false;
+    $(this.itemViewContainer).empty();
   }
 });

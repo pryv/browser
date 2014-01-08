@@ -151,6 +151,9 @@ module.exports = Marionette.CompositeView.extend({
         var legend = '<span class="DnD-legend-text">' + label + '</span>';
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
+          case 'ready':
+            legend = legend + '<a class="DnD-legend-button-ready" href="javascript:;">ok</a>';
+            break;
           case 'duplicate':
             legend = legend + '<a class="DnD-legend-button-duplicate" href="javascript:;">2</a>';
             break;
@@ -345,6 +348,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   highlightEvent: function (event) {
+    // TODO: Support multiple series containing the same event.
     if (!this.plot) {
       return;
     }
@@ -353,9 +357,7 @@ module.exports = Marionette.CompositeView.extend({
     var c = this.model.get('collection');
     var e = event;
     var m = null;
-
     var cIdx, eIdx;
-
     var connectionId = e.connection.id;
     var streamId = e.streamId;
     var streamName = e.stream.name;

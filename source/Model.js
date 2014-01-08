@@ -115,6 +115,9 @@ var Model = module.exports = function (DEVMODE) {
   }  else {
     var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: false});
     this.addConnection(defaultConnection);
+
+    var liveat = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
+    this.addConnection(liveat);
   }
 
 

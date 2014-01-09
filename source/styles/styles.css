@@ -534,9 +534,33 @@ ul#DnD-legend > li {
     cursor: pointer;
 }
 
+#detail-chart-container-general {
+    position: absolute;
+    width: 100%;
+    top: 35px;
+    bottom: 0px;
+}
+
+.legend-container {
+    position: absolute;
+    width: 100%;
+    height: 35px;
+    top: 0px;
+}
+
+#detail-chart-container-edit {
+    position: absolute;
+    width: 100%;
+    top: 35px;
+    bottom:120px;
+}
+
 .editor-container {
+    position: absolute;
     border-top: 1px solid #e5e5e5;
+    width: 100%;
     height: 120px;
+    bottom: 0px;
 }
 
 #dc-editor-appearance {

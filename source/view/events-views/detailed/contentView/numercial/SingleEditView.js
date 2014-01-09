@@ -13,18 +13,11 @@ module.exports = Marionette.ItemView.extend({
   chartView: null,
   rendered: false,
   initialize: function () {
-    this.listenTo(this.model, 'change', this.render.bind(this));
+    this.listenTo(this.model, 'change:collection', this.render.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    $('#legend-container-edit', $(this.itemViewContainer))
-      .css({height: '35px', width: '100%'});
-    $('#detail-chart-container-edit', $(this.itemViewContainer))
-      .css({height: '240px', width: '100%'});
-    $('#editor-container', $(this.itemViewContainer))
-      .css({height: '120px', width: '100%'});
-
 
     if (this.chartView) {
       this.chartView.model.set('collection', this.model.get('collection'));
@@ -60,6 +53,7 @@ module.exports = Marionette.ItemView.extend({
 
     if ($('#detail-chart-container-edit').length !== 0) {
       this.chartView.render();
+      this.highlightEvent();
       this.rendered = true;
     }
   },
@@ -89,7 +83,7 @@ module.exports = Marionette.ItemView.extend({
   }, 1000),
 
   highlightEvent: function () {
-    if (this.chartView) {
+    if (this.chartView && this.model.get('event')) {
       this.chartView.highlightEvent(this.model.get('event'));
     }
   },

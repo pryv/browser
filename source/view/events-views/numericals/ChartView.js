@@ -18,6 +18,7 @@ module.exports = Marionette.CompositeView.extend({
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model.get('collection'), 'remove', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
+    this.listenTo(this.model, 'change:highlightedTime', this.onDateHighLighted);
     this.container = this.model.get('container');
   },
 
@@ -50,7 +51,7 @@ module.exports = Marionette.CompositeView.extend({
     this.container = this.model.get('container');
 
     this.makePlot();
-    this.onDateHighLighted(0);
+    this.onDateHighLighted();
   },
 
   makePlot: function () {
@@ -328,7 +329,11 @@ module.exports = Marionette.CompositeView.extend({
 
 
   onDateHighLighted: function (date) {
-    if (!this.plot) {
+    if (!date) {
+      date = this.model.get('highlightedTime');
+    }
+
+    if (!this.plot || !date) {
       return;
     }
 
@@ -353,7 +358,6 @@ module.exports = Marionette.CompositeView.extend({
       return;
     }
     this.plot.unhighlight();
-
     var c = this.model.get('collection');
     var e = event;
     var m = null;
@@ -372,16 +376,24 @@ module.exports = Marionette.CompositeView.extend({
         }
       }
     }
-    cIdx = it;
+    if (it !== c.length) {
+      cIdx = it;
+    } else {
+      return;
+    }
 
     var data = this.plot.getData()[it];
     for (it = 0; it < data.data.length; ++it) {
       var elem = data.data[it];
-      if (elem[0] === e.time * 1000 && elem[1] === e.content) {
+      if (elem[0] === e.time * 1000 && elem[1] === +e.content) {
         break;
       }
     }
-    eIdx = it;
+    if (it !== data.data.length) {
+      eIdx = it;
+    } else {
+      return;
+    }
     this.plot.highlight(cIdx, eIdx);
   },
 

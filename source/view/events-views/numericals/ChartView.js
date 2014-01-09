@@ -18,6 +18,7 @@ module.exports = Marionette.CompositeView.extend({
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model.get('collection'), 'remove', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
+    this.listenTo(this.model, 'change:highlightedTime', this.onDateHighLighted);
     this.container = this.model.get('container');
   },
 
@@ -50,7 +51,7 @@ module.exports = Marionette.CompositeView.extend({
     this.container = this.model.get('container');
 
     this.makePlot();
-    this.onDateHighLighted(0);
+    this.onDateHighLighted();
   },
 
   makePlot: function () {
@@ -151,6 +152,9 @@ module.exports = Marionette.CompositeView.extend({
         var legend = '<span class="DnD-legend-text">' + label + '</span>';
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
+          case 'ready':
+            legend = legend + '<a class="DnD-legend-button-ready" href="javascript:;">ok</a>';
+            break;
           case 'duplicate':
             legend = legend + '<a class="DnD-legend-button-duplicate" href="javascript:;">2</a>';
             break;
@@ -325,7 +329,11 @@ module.exports = Marionette.CompositeView.extend({
 
 
   onDateHighLighted: function (date) {
-    if (!this.plot) {
+    if (!date) {
+      date = this.model.get('highlightedTime');
+    }
+
+    if (!this.plot || !date) {
       return;
     }
 
@@ -342,6 +350,51 @@ module.exports = Marionette.CompositeView.extend({
       }
       this.plot.highlight(k, best);
     }
+  },
+
+  highlightEvent: function (event) {
+    // TODO: Support multiple series containing the same event.
+    if (!this.plot) {
+      return;
+    }
+    this.plot.unhighlight();
+    var c = this.model.get('collection');
+    var e = event;
+    var m = null;
+    var cIdx, eIdx;
+    var connectionId = e.connection.id;
+    var streamId = e.streamId;
+    var streamName = e.stream.name;
+
+    for (var it = 0; it < c.length; ++it) {
+      m = c.at(it);
+      if (m) {
+        if (m.get('connectionId') === connectionId &&
+          m.get('streamId') === streamId &&
+          m.get('streamName') === streamName) {
+          break;
+        }
+      }
+    }
+    if (it !== c.length) {
+      cIdx = it;
+    } else {
+      return;
+    }
+
+    var data = this.plot.getData()[it];
+    for (it = 0; it < data.data.length; ++it) {
+      var elem = data.data[it];
+      if (elem[0] === e.time * 1000 && elem[1] === +e.content) {
+        break;
+      }
+    }
+    if (it !== data.data.length) {
+      eIdx = it;
+    } else {
+      return;
+    }
+    this.plot.highlight(cIdx, eIdx);
   },
 
   onClose: function () {

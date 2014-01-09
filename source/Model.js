@@ -136,9 +136,12 @@ var Model = module.exports = function (DEVMODE) {
   }  else {
     // for dev env only
     // add connections here, you mut set the loggedConnection with a staging connection
-    var defaultConnection = new Pryv.Connection('perkikiki', 'VeA1YshUgO', {staging: true});
+    var defaultConnection = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
     this.loggedConnection = defaultConnection;
     this.addConnection(defaultConnection);
+    this.addConnection(new Pryv.Connection('fredos71',
+      'chq6k6jfk000b52w4bf86thgv', {staging: true}));
+    this.addConnection();
     this.showLoggedInElement();
   }
 

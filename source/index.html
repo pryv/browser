@@ -187,11 +187,56 @@
     <% } %>
   </script>
 
-  <script type="template" id="template-detail-content-numerical">
-      <% if (event) {%>
-      <div class="legend-container" id="detail-legend"></div>
-      <div class="detail-chart-container" id="detail-chart-container"></div>
-      <% } %>
+  <script type="template" id="template-detail-content-numerical-general">
+      <div class="legend-container" id="legend-container-general"></div>
+      <div class="detail-chart-container" id="detail-chart-container-general"></div>
+  </script>
+  <script type="template" id="template-detail-content-numerical-edit">
+      <div class="legend-container" id="legend-container-edit"></div>
+      <div class="detail-chart-container" id="detail-chart-container-edit"></div>
+      <div class="editor-container">
+        <div id="dc-editor-appearance">
+          <span>Appearance</span>
+          <ul>
+            <li>
+              <span>Color</span>
+                <select>
+                    <option value="" style="background-color: Aqua">Aqua</option>
+                    <option value="" style="background-color: Black">Black</option>
+                    <option value="" style="background-color: Blue">Blue</option>
+                    <option value="" style="background-color: Fuchsia">Fuchsia</option>
+                    <option value="" style="background-color: Gray">Gray</option>
+                    <option value="" style="background-color: Green">Green</option>
+                </select>
+            </li>
+            <li>
+              <span>Style</span>
+              <select>
+                <option value="line">Line</option>
+                <option value="bar">Bar</option>
+                </select>
+            </li>
+          </ul>
+        </div>
+        <div id="dc-editor-transform">
+          <span>Operation</span>
+          <select id="op-sel" name="op-sel" size="4">
+            <option value="">None</option>
+            <option value="">Sum</option>
+            <option value="">Average</option>
+          </select>
+        </div>
+        <div id="dc-editor-period">
+          <span>Interval</span>
+            <select id="op-int" name="op-int" size="4">
+              <option value="">None</option>
+              <option value="">Daily</option>
+              <option value="">Weekly</option>
+              <option value="">Monthly</option>
+              <option value="">Yearly</option>
+            </select>
+        </div>
+      </div>
   </script>
 
   <script type="template" id="template-detail-full">

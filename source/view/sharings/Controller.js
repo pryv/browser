@@ -5,7 +5,8 @@ var _ = require('underscore'),
   SharingListView = require('./SharingListView.js'),
   BookmarkCollection = require('./BookmarkCollection.js'),
   BookmarkModel = require('./BookmarkModel.js'),
-  BookmarkListView = require('./BookmarkListView.js');
+  BookmarkListView = require('./BookmarkListView.js'),
+  Pryv = require('pryv');
 var Controller = module.exports = function ($modal, connection) {
   this.sharings = {};
   this.connection = connection;
@@ -29,6 +30,8 @@ _.extend(Controller.prototype, {
       this.bookmarkListView = new BookmarkListView({
         collection: this.bookmarkCollection
       });
+      this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
+      this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
     }
     this.sharingListView.render();
     this.bookmarkListView.render();
@@ -67,6 +70,7 @@ _.extend(Controller.prototype, {
     }.bind(this));
   },
   addBookmarks: function (bookmarks) {
+    console.log('addBookmarks', bookmarks);
     if (!Array.isArray(bookmarks)) {
       bookmarks = [bookmarks];
     }
@@ -75,6 +79,38 @@ _.extend(Controller.prototype, {
         bookmark: bookmark
       });
       this.bookmarkCollection.add(m);
+    }.bind(this));
+  },
+  _createBookmark: function (url, auth, name) {
+    if (url && auth && name) {
+      var conn = new Pryv.Connection({url: url, auth: auth});
+      conn.accessInfo(function (error) {
+        if (!error) {
+          console.log('Bookmark exist!');
+          this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
+          function (error, result) {
+            if (!error && result) {
+              this.addBookmarks(result);
+            }
+            if (error) {
+              console.error('Bookmarks creation error:', error);
+            }
+            this.bookmarkListView.endAddBookmark(error);
+          }.bind(this));
+        } else {
+          this.bookmarkListView.endAddBookmark(error);
+          console.warn('Bookmark dont exist', url, auth);
+        }
+      }.bind(this));
+    }
+  },
+  _onDeleteBookmarkClick: function (e, bookmarkModel) {
+    console.log('deleteBookmark', bookmarkModel);
+    this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
+    function (error) {
+      if (!error) {
+        this.bookmarkCollection.remove(bookmarkModel);
+      }
     }.bind(this));
   }
 });

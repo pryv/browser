@@ -89,6 +89,15 @@ var Model = module.exports = function (DEVMODE) {
         if (this.publicConnection) {
           this.removeConnection(this.publicConnection);
         }
+        if (this.sharingsConnections) {
+          this.removeConnections(this.sharingsConnections);
+        }
+        connection.bookmarks.get(function (error, result) {
+          if (!error) {
+            this.sharingsConnections = result;
+            this.addConnections(this.sharingsConnections);
+          }
+        }.bind(this));
         this.addConnection(connection);
       }.bind(this),
       signedOut: function (connection) {
@@ -157,8 +166,19 @@ Model.prototype.addConnection = function (connection) {
   this.activeFilter.addConnection(userConnection, batch);
   batch.done();
 };
+Model.prototype.addConnections = function (connections) {
+  connections.forEach(function (conn) {
+    this.addConnection(conn);
+  }.bind(this));
+};
 Model.prototype.removeConnection = function (connection) {
   this.activeFilter.removeConnections(connection.serialId);
+};
+
+Model.prototype.removeConnections = function (connections) {
+  connections.forEach(function (conn) {
+    this.removeConnection(conn);
+  }.bind(this));
 };
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.

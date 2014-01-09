@@ -141,7 +141,6 @@ var Model = module.exports = function (DEVMODE) {
     this.addConnection(defaultConnection);
     this.addConnection(new Pryv.Connection('fredos71',
       'chq6k6jfk000b52w4bf86thgv', {staging: true}));
-    this.addConnection();
     this.showLoggedInElement();
   }
 

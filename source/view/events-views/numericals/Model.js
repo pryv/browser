@@ -97,7 +97,9 @@ NumericalsPlugin.prototype.eventChange = function (event) {
 };
 
 NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
-  this.highlightedTime = time;
+  if (time) {
+    this.highlightedTime = time;
+  }
   if (this.view) {
     this.view.onDateHighLighted(time);
   }
@@ -251,6 +253,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         this.debounceResize.bind(this);
       }.bind(this));
       this.view.render();
+      this.view.onDateHighLighted(this.highlightedTime);
       this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
       this.view.on('chart:resize', this.resize.bind(this));
       this.view.on('nodeClicked', function () {
@@ -264,6 +267,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
     }
   } else if (this.view) {
     this.view.render();
+    this.view.onDateHighLighted(this.highlightedTime);
     this.debounceResize();
   }
 

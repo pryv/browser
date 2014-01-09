@@ -7,10 +7,10 @@ module.exports = Backbone.Model.extend({
     streamId: null,
     streamName: null,
     type: null,
-
     category: null,
 
-    specConf: null
+    color: null,
+    style: null
   },
   sortData: function () {
     this.get('events').sort(function (a, b) {

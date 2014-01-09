@@ -10,20 +10,38 @@ module.exports = Marionette.ItemView.extend({
   type: 'Numerical',
   template: '#template-detail-content-numerical-edit',
   itemViewContainer: '#detail-content',
+  ui: {
+    selColor: '#detailed-view-chart-color',
+    selStyle: '#detailed-view-chart-style',
+    selOperation: '#detailed-view-chart-operation',
+    selInterval: '#detailed-view-chart-interval'
+  },
   chartView: null,
+  chartViewModel: null,
   rendered: false,
+  collection: null,
+  color: null,
+  style: null,
+  operation: null,
+  interval: null,
   initialize: function () {
-    this.listenTo(this.model, 'change:collection', this.render.bind(this));
+    this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+
+    /* Initialize them from userData
+    color: null,
+    style: null,
+    operation: null,
+    interval: null,
+    */
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-
     if (this.chartView) {
-      this.chartView.model.set('collection', this.model.get('collection'));
+      this.chartView.model.set('collection', this.collection);
     } else {
-      this.chartView = new ChartView({model:
-        new ChartModel({
+      this.prepareCollection();
+      this.chartViewModel = new ChartModel({
           container: '#detail-chart-container-edit',
           view: null,
           requiresDim: false,
@@ -44,8 +62,12 @@ module.exports = Marionette.ItemView.extend({
           allowPan: false,      // Allows navigation through the chart
           allowZoom: false,     // Allows zooming on the chart
           xaxis: true
-        })});
-
+        });
+      this.chartView = new ChartView({model: this.chartViewModel});
+      this.ui.selColor.bind('change', this.editorChange.bind(this));
+      this.ui.selStyle.bind('change', this.editorChange.bind(this));
+      this.ui.selOperation.bind('change', this.editorChange.bind(this));
+      this.ui.selInterval.bind('change', this.editorChange.bind(this));
       this.chartView.on('ready', function (m) {
         this.trigger('ready', m);
       }.bind(this));
@@ -57,35 +79,38 @@ module.exports = Marionette.ItemView.extend({
       this.rendered = true;
     }
   },
-  /*
-   addAttachment: function () {
-   var id = 'attachment-' + this.addAttachmentId;
-   var html = '<li><input type="file" id="' + id + '"></li>';
-   this.addAttachmentId++;
-   $(this.addAttachmentContainer).append(html);
-   $('#' + id).bind('change', this._onFileAttach.bind(this));
-   },
-   _onFileAttach : function (e)	{
-   var file = new FormData(),
-   keys = this.model.get('event').attachments ? _.keys(this.model.get('event').attachments) :
-   [e.target.files[0].name];
-   e.target.disabled = true;
-   file.append(keys[0].split('.')[0], e.target.files[0]);
-   this.model.addAttachment(file);
-   },
-   */
-
   debounceRender: _.debounce(function () {
     if (!this.rendered) {
       this.render();
       this.highlightEvent();
     }
   }, 1000),
+  editorChange: function () {
+    if (this.ui.selColor[0].selectedIndex > -1) {
+      this.color = this.ui.selColor[0].options[this.ui.selColor[0].selectedIndex].value;
+    }
+    if (this.ui.selStyle[0].selectedIndex > -1) {
+      this.style = this.ui.selStyle[0].options[this.ui.selStyle[0].selectedIndex].value;
+    }
+    if (this.ui.selOperation[0].selectedIndex > -1) {
+      this.operation = this.ui.selOperation[0].options[this.ui.selOperation[0].selectedIndex].value;
+    }
+    if (this.ui.selInterval[0].selectedIndex > -1) {
+      this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
+    }
 
+    this.collection.at(0).set('color', this.color);
+    this.collection.at(0).set('style', this.style);
+
+    this.chartView.render();
+  },
   highlightEvent: function () {
     if (this.chartView && this.model.get('event')) {
       this.chartView.highlightEvent(this.model.get('event'));
     }
+  },
+  prepareCollection: function () {
+    this.collection = this.model.get('collection');
   },
   onClose: function () {
     this.chartView.close();

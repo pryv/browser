@@ -204,19 +204,20 @@
           <ul>
             <li>
               <span>Color</span>
-                <select>
-                    <option value="" style="background-color: Aqua">Aqua</option>
-                    <option value="" style="background-color: Black">Black</option>
-                    <option value="" style="background-color: Blue">Blue</option>
-                    <option value="" style="background-color: Fuchsia">Fuchsia</option>
-                    <option value="" style="background-color: Gray">Gray</option>
-                    <option value="" style="background-color: Green">Green</option>
+                <select id="detailed-view-chart-color">
+                    <option value="#00FFFF" style="background-color: Aqua">Aqua</option>
+                    <option value="#000000" style="background-color: Black">Black</option>
+                    <option value="#0000FF" style="background-color: Blue">Blue</option>
+                    <option value="#FF00FF" style="background-color: Fuchsia">Fuchsia</option>
+                    <option value="#808080" style="background-color: Gray">Gray</option>
+                    <option value="#008000" style="background-color: Green">Green</option>
                 </select>
             </li>
             <li>
               <span>Style</span>
-              <select>
+              <select id="detailed-view-chart-style">
                 <option value="line">Line</option>
+                <option value="point">Point</option>
                 <option value="bar">Bar</option>
                 </select>
             </li>
@@ -224,20 +225,20 @@
         </div>
         <div id="dc-editor-transform">
           <span>Operation</span>
-          <select id="op-sel" name="op-sel" size="4">
+          <select id="detailed-view-chart-operation" size="4">
             <option value="">None</option>
-            <option value="">Sum</option>
-            <option value="">Average</option>
+            <option value="sum">Sum</option>
+            <option value="average">Average</option>
           </select>
         </div>
         <div id="dc-editor-period">
           <span>Interval</span>
-            <select id="op-int" name="op-int" size="4">
+            <select id="detailed-view-chart-interval" size="4">
               <option value="">None</option>
-              <option value="">Daily</option>
-              <option value="">Weekly</option>
-              <option value="">Monthly</option>
-              <option value="">Yearly</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
             </select>
         </div>
       </div>

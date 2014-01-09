@@ -75,13 +75,14 @@ module.exports = Marionette.CompositeView.extend({
       });
     };
 
-
     collection.each(function (s, i) {
       this.addSeries({
         data: dataMapper(s.get('events')),
         label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
         type: s.get('type'),
-        colId: i
+        colId: i,
+        style: s.get('style'),
+        color: s.get('color')
       }, i);
     }.bind(this));
 
@@ -245,7 +246,6 @@ module.exports = Marionette.CompositeView.extend({
     // Configures the axis
     this.options.yaxes.push({ show: false});
 
-
     if (this.model.get('allowPan')) {
       this.options.yaxes[seriesIndex].panRange = series.length > 1 ?
         this.getExtremeValues(series) : false;
@@ -256,14 +256,22 @@ module.exports = Marionette.CompositeView.extend({
         false;
     }
 
+    // Configure the serie's color
+    if (series.color) {
+      this.data[seriesIndex].color = series.color;
+    }
+
     // Configures the series' style
-    switch (series.type) {
-    case 0:
+    switch (series.style) {
+    case 'line':
       this.data[seriesIndex].lines = { show: true };
       this.data[seriesIndex].points = { show: (series.data.length < 2) };
       break;
-    case 1:
+    case 'bar':
       this.data[seriesIndex].bars = { show: true };
+      break;
+    case 'point':
+      this.data[seriesIndex].points = { show: true };
       break;
     default:
       this.data[seriesIndex].lines = { show: true };

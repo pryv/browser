@@ -120,7 +120,6 @@
     </div>
   </script>
   <script type="text/html" id="template-sharingListCompositeView">
-    <h1>Sharings</h1>
     <ul id="sharing-list"></ul>
   </script>
   <script type="text/html" id="template-sharingItemView">
@@ -129,13 +128,10 @@
     </div>
   </script>
   <script type="text/html" id="template-bookmarkListCompositeView">
-    <h1>Bookmarks</h1>
     <ul id="bookmark-list"></ul>
   </script>
   <script type="text/html" id="template-bookmarkItemView">
-    <div class="view">
-      <%= JSON.stringify(bookmark) %>
-    </div>
+    <td class="bookmark-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= bookmark.settings.name %></td><td><%= bookmark.settings.auth %></td><td><%= bookmark.settings.url %></td>
   </script>
     
   <script type="text/html" id="template-draganddrop">
@@ -289,9 +285,11 @@
   </button>
     <form accept-charset="UTF-8" class="dropdown-menu form-horizontal" role="form">
       <div class="form-group">
+        <label class="sr-only" for="login-username">Username</label>
         <input id="login-username" class="form-control" type="text" placeholder="Username" size="10" />
       </div>
       <div class="form-group">
+        <label class="sr-only" for="login-username">Password</label>
         <input id="login-password" class="form-control" type="password" placeholder="Password" size="10" />
       </div>
       <div class="form-group">

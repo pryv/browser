@@ -11,8 +11,8 @@ PUBLIC_TOKEN = 'TeVY2x0kgq',
 toShowWhenLoggedIn = ['#logo-sharing', '#logo-add'];
 var Model = module.exports = function (DEVMODE) {
   window.Pryv = Pryv;
-  this.urlUsername = Pryv.utility.getUsernameFromHostname();
-  this.urlSharings = Pryv.utility.getSharingsFromPath();
+  this.urlUsername = Pryv.utility.getUsernameFromUrl();
+  this.urlSharings = Pryv.utility.getSharingsFromUrl();
   this.publicConnection = null;
   this.loggedConnection = null;
   this.sharingsConnections = null;
@@ -126,7 +126,7 @@ var Model = module.exports = function (DEVMODE) {
         Pryv.Auth.logout();
       }
     }.bind(this));
-    $('#login-submit').click(function (e) {
+    $('#login form').submit(function (e) {
       e.preventDefault();
       settings.username = $('#login-username').val();
       settings.password = $('#login-password').val();

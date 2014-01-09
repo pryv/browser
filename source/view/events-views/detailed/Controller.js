@@ -226,5 +226,5 @@ _.extend(Controller.prototype, {
         eventTypeClass === 'temperature' ||
         eventTypeClass === 'volume'
       );
-  },
+  }
 });

@@ -1,7 +1,8 @@
 /* global $ */
 var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
-  _ = require('underscore');
+  _ = require('underscore'),
+  ChartTransform = require('./utils/ChartTransform.js');
 
 module.exports = Marionette.CompositeView.extend({
   template: '#template-chart-container',
@@ -15,6 +16,7 @@ module.exports = Marionette.CompositeView.extend({
 
 
   initialize: function () {
+    _.extend(this, ChartTransform);
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model.get('collection'), 'remove', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
@@ -69,15 +71,10 @@ module.exports = Marionette.CompositeView.extend({
       s.sortData();
     });
 
-    var dataMapper = function (d) {
-      return _.map(d, function (e) {
-        return [e.time * 1000, +e.content];
-      });
-    };
 
     collection.each(function (s, i) {
       this.addSeries({
-        data: dataMapper(s.get('events')),
+        data: this.transform(s),
         label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
         type: s.get('type'),
         colId: i,

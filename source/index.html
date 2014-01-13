@@ -112,6 +112,9 @@
   <script type="text/html" id="template-detailListCompositeView">
     <ul id="detail-list"></ul>
   </script>
+  <script type="text/html" id="template-subscribeListCompositeView">
+    <ul id="subscribe-list"></ul>
+  </script>
   <script type="text/html" id="template-detailItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
@@ -125,6 +128,15 @@
   <script type="text/html" id="template-sharingItemView">
     <div class="view">
       <%= JSON.stringify(sharing) %>
+    </div>
+  </script> <script type="text/html" id="template-subscriptionItemView">
+    <input type="checkbox" class="checkbox">
+    <div class="view">
+      <%= connection.id %>
+      <input type="text" placeholder="Name" required class="subscription-name">
+      <% if (error) {%>
+        <span class="glyphicon glyphicon-warning-sign"></span>
+      <% } %>
     </div>
   </script>
   <script type="text/html" id="template-bookmarkListCompositeView">
@@ -305,8 +317,9 @@
     </form>
 </div>
 <!-- @endif -->
-<a href="#" id="logo-sharing"></a>
-<a href="#" id="logo-add"></a>
+<a href="#" id="logo-sharing"><span class="glyphicon glyphicon-star"></span></a>
+<a href="#" id="logo-add"><span class="glyphicon glyphicon-plus"></span></a>
+<a href="#" id="logo-subscribe"><span class="glyphicon glyphicon-star-empty"></span></a>
 <!-- @if NODE_ENV == 'DEVELOPMENT' -->
 <!-- do not put anything between #logo-reload and #tree -->
 <!-- @endif -->

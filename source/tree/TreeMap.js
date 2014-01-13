@@ -5,12 +5,15 @@ var RootNode = require('./RootNode.js'),
  _ = require('underscore'),
  DetailView = require('../view/events-views/detailed/Controller.js'),
  SharingView = require('../view/sharings/Controller.js'),
+ SubscribeView = require('../view/subscribe/Controller.js'),
  FusionDialog = require('../view/events-views/draganddrop/Controller.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
   this.detailedView = null;
+  this.sharingView = null;
+  this.subscribeView = null;
   this.focusedStreams = null;
   var $tree = $('#tree');
   this.root = new RootNode(this, $tree.width() -
@@ -23,7 +26,20 @@ var TreeMap = module.exports = function (model) {
   this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
   $('#logo-reload').click(function (e) {
     e.preventDefault();
-    this.focusOnStreams(null);
+    if (this.model.sharingsConnections &&
+      this.model.urlUsername === this.model.loggedConnection.username) {
+      this.model.removeConnections(this.model.sharingsConnections);
+      this.model.sharingsConnections = null;
+      this.model.loggedConnection.bookmarks.get(function (error, result) {
+        if (!error) {
+          this.model.bookmarksConnections = result;
+          this.model.addConnections(this.model.bookmarksConnections);
+        }
+      }.bind(this));
+      this.model.addConnection(this.model.loggedConnection);
+    } else {
+      this.focusOnStreams(null);
+    }
   }.bind(this));
   $('#logo-add').click(function (e) {
     e.preventDefault();
@@ -39,6 +55,13 @@ var TreeMap = module.exports = function (model) {
       this.closeSharingView();
     }.bind(this));
     this.showSharingView($modal, this.model.loggedConnection);
+  }.bind(this));
+  $('#logo-subscribe').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeSubscribeView();
+    }.bind(this));
+    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections);
   }.bind(this));
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
@@ -267,6 +290,24 @@ TreeMap.prototype.closeSharingView = function () {
   if (this.hasSharingView()) {
     this.sharingView.close();
     this.sharingView = null;
+  }
+};
+ /*=================================*/
+ //========== SUBSCRIBE VIEW =========\\
+TreeMap.prototype.hasSubscribeView = function () {
+  return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
+};
+TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections) {
+  this.closeSubscribeView();
+  if ($modal && loggedConnection) {
+    this.subscribeView = new SubscribeView($modal, loggedConnection, sharingsConnections);
+    this.subscribeView.show();
+  }
+};
+TreeMap.prototype.closeSubscribeView = function () {
+  if (this.hasSubscribeView()) {
+    this.subscribeView.close();
+    this.subscribeView = null;
   }
 };
  /*=================================*/

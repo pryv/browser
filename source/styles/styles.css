@@ -4,7 +4,7 @@
 }
 @font-face {
   font-family: MuseoSans-300;
-  src: url(../font/MuseoSans-300.otf);
+  src: url(../fonts/MuseoSans-300.otf);
 }
 html{
   height: 100%;
@@ -47,36 +47,28 @@ body{
   background:url(../images/loader2.gif) 0 0 no-repeat;
   background-color: #3e3e3e;
 }
-#logo-add:after {
+#logo-add, #logo-sharing, #logo-subscribe {
   z-index: 90000;
   position: absolute;
   top: 0;
+  display: block;
+  width: 40px;
+  height: 40px;
+  background-color: #3e3e3e;
+  font-size: 26px;
+  color: #eee;
+  padding-top: 6px;
+  padding-left: 8px;
+}
+#logo-add {
   right: 120px;
- /* text-indent: -9999em;    */
-  display: block;
-  width: 40px;
-  height: 40px;
-  content: "+";
-  background-color: #3e3e3e;
-  font-size: 26px;
-  color: white;
-  text-align: center;
 +}
-#logo-sharing:after {
-  z-index: 90000;
-  position: absolute;
-  top: 0;
+#logo-sharing {
   right: 165px;
- /* text-indent: -9999em;    */
-  display: block;
-  width: 40px;
-  height: 40px;
-  content: "sh";
-  background-color: #3e3e3e;
-  font-size: 26px;
-  color: white;
-  text-align: center;
-+}
+}
+#logo-subscribe {
+  right: 120px;
+}
 #tree {
   width: 100%;
   height: 100%;
@@ -376,6 +368,10 @@ text-align: center;*/
   z-index: 9999;
 }
 /** detail view modal **/
+.sharings {
+  overflow-y: scroll;
+  height: 100%;
+}
 .modal-dialog {
   width: 80%;
   min-width: 600px;

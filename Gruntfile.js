@@ -60,8 +60,8 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             filter: 'isFile',
-            src: 'source/font/**',
-            dest: 'dist/font/'
+            src: 'source/fonts/**',
+            dest: 'dist/fonts/'
           },
           {
             expand: true,

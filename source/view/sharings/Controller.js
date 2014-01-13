@@ -1,4 +1,4 @@
-
+/* global $ */
 var _ = require('underscore'),
   SharingCollection = require('./SharingCollection.js'),
   SharingModel = require('./SharingModel.js'),
@@ -15,7 +15,9 @@ var Controller = module.exports = function ($modal, connection) {
   this.bookmarkCollection =  new BookmarkCollection();
   this.bookmarkListView = null;
   this.$modal = $modal;
-  this.container = '.modal-content';
+  $('.modal-content').append('<div class="sharings"></div>');
+  this.container = '.sharings';
+
 };
 
 _.extend(Controller.prototype, {

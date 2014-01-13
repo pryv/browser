@@ -5,7 +5,7 @@ var Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.CompositeView.extend({
   template: '#template-sharingListCompositeView',
-  container: '.modal-content',
+  container: '.sharings',
   itemView: ItemView,
   itemViewContainer: '#sharing-list',
 

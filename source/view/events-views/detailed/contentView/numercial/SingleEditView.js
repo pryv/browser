@@ -27,13 +27,6 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
-
-    /* Initialize them from userData
-    color: null,
-    style: null,
-    operation: null,
-    interval: null,
-    */
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
@@ -74,6 +67,7 @@ module.exports = Marionette.ItemView.extend({
     }
 
     if ($('#detail-chart-container-edit').length !== 0) {
+      this.updateEditor();
       this.chartView.render();
       this.highlightEvent();
       this.rendered = true;
@@ -118,5 +112,36 @@ module.exports = Marionette.ItemView.extend({
     this.chartView.close();
     this.chartView = null;
     $(this.itemViewContainer).empty();
+  },
+  updateEditor: function () {
+    var i;
+    var options = this.ui.selColor[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('color')) {
+        this.ui.selColor[0].selectedIndex = i;
+        break;
+      }
+    }
+    options = this.ui.selStyle[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('style')) {
+        this.ui.selStyle[0].selectedIndex = i;
+        break;
+      }
+    }
+    options = this.ui.selOperation[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('transform')) {
+        this.ui.selOperation[0].selectedIndex = i;
+        break;
+      }
+    }
+    options = this.ui.selInterval[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('interval')) {
+        this.ui.selInterval[0].selectedIndex = i;
+        break;
+      }
+    }
   }
 });

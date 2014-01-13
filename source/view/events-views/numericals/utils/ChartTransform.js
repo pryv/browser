@@ -2,10 +2,6 @@ var _ = require('underscore');
 
 var ChartTransform = module.exports = {};
 
-/*
- TODO: special case transform:sum and interval:none continous sum per point
- */
-
 
 /**
  * ISO ISO8601 week numbers

@@ -22,7 +22,7 @@ module.exports = Marionette.ItemView.extend({
   collection: null,
   color: null,
   style: null,
-  operation: null,
+  transform: null,
   interval: null,
   initialize: function () {
     this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
@@ -93,7 +93,7 @@ module.exports = Marionette.ItemView.extend({
       this.style = this.ui.selStyle[0].options[this.ui.selStyle[0].selectedIndex].value;
     }
     if (this.ui.selOperation[0].selectedIndex > -1) {
-      this.operation = this.ui.selOperation[0].options[this.ui.selOperation[0].selectedIndex].value;
+      this.transform = this.ui.selOperation[0].options[this.ui.selOperation[0].selectedIndex].value;
     }
     if (this.ui.selInterval[0].selectedIndex > -1) {
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
@@ -101,6 +101,8 @@ module.exports = Marionette.ItemView.extend({
 
     this.collection.at(0).set('color', this.color);
     this.collection.at(0).set('style', this.style);
+    this.collection.at(0).set('transform', this.transform);
+    this.collection.at(0).set('interval', this.interval);
 
     this.chartView.render();
   },

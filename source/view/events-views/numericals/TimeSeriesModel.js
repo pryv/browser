@@ -10,7 +10,9 @@ module.exports = Backbone.Model.extend({
     category: null,
 
     color: null,
-    style: null
+    style: null,
+    transform: null,
+    interval: null
   },
   sortData: function () {
     this.get('events').sort(function (a, b) {

@@ -380,9 +380,12 @@ text-align: center;*/
   overflow-y: scroll;
   height: 100%;
 }
-#share img {
+.share img {
   margin-top: -12px;
   padding: 5px;
+}
+.share iframe {
+  margin-right: 5px;
 }
 .modal-dialog {
   width: 80%;

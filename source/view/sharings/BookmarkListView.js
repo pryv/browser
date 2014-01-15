@@ -47,7 +47,7 @@ module.exports = Marionette.CompositeView.extend({
       '<span id ="add-bookmark-tick">&#10004</span>' +
      ' </form>' +
       '<table class="table table-striped" >' +
-      '<thead><tr><th></th><th>name</th><th>accessToken</th><th>url</th></tr></thead>' +
+      '<thead><tr><th></th><th>Name</th><th>Token</th><th>Url</th></tr></thead>' +
       '<tbody id="bookmark-list"></tbody>' +
       '</table>');
     this.$url = $('#add-bookmark-url');

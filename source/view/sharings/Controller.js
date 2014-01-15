@@ -34,6 +34,7 @@ _.extend(Controller.prototype, {
       });
       this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
       this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
+      this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
     }
     this.sharingListView.render();
     this.bookmarkListView.render();
@@ -41,7 +42,7 @@ _.extend(Controller.prototype, {
       if (error) {
         console.error('GET ACCESSES:', error);
       } else {
-        this.addSharings(result);
+        this.addSharings(result, this.connection);
       }
     }.bind(this));
     this.connection.bookmarks.get(function (error, result) {
@@ -59,12 +60,15 @@ _.extend(Controller.prototype, {
     this.sharingCollection = null;
     this.sharings = {};
   },
-  addSharings: function (sharings) {
+  addSharings: function (sharings, connection) {
     if (!Array.isArray(sharings)) {
       sharings = [sharings];
     }
     sharings.forEach(function (sharing) {
       if (sharing.type === 'shared') {
+        var url = connection.id.replace(/\?auth.*$/, '');
+        url += '#/sharings/' + sharing.token;
+        sharing.url = url;
         var m = new SharingModel({
           sharing: sharing
         });
@@ -108,11 +112,18 @@ _.extend(Controller.prototype, {
     }
   },
   _onDeleteBookmarkClick: function (e, bookmarkModel) {
-    console.log('deleteBookmark', bookmarkModel);
     this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
     function (error) {
       if (!error) {
         this.bookmarkCollection.remove(bookmarkModel);
+      }
+    }.bind(this));
+  },
+  _onDeleteSharingClick: function (e, sharingModel) {
+    this.connection.accesses.delete(sharingModel.get('sharing').token,
+    function (error) {
+      if (!error) {
+        this.sharingCollection.remove(sharingModel);
       }
     }.bind(this));
   }

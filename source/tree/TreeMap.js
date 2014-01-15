@@ -268,6 +268,7 @@ TreeMap.prototype.hasDetailedView = function () {
 };
 TreeMap.prototype.showDetailedView = function () {
   this.closeSharingView();
+  this.closeCreateSharingView();
   if (this.hasDetailedView()) {
     this.detailedView.show();
   }

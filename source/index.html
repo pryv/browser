@@ -127,9 +127,12 @@
     <ul id="sharing-list"></ul>
   </script>
   <script type="text/html" id="template-sharingItemView">
-    <div class="view">
-      <%= JSON.stringify(sharing) %>
-    </div>
+
+    <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= sharing.name %></td><td><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
+    <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
+      <a href="https://twitter.com/share" class="twitter-share-button" data-url="<%= sharing.url %>" data-via="pryv" data-count="none">Tweet</a>
+      <fb:share-button href="<%= sharing.url %>" type="button"></fb:share-button></td>
+
   </script> <script type="text/html" id="template-subscriptionItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
@@ -144,7 +147,7 @@
     <ul id="bookmark-list"></ul>
   </script>
   <script type="text/html" id="template-bookmarkItemView">
-    <td class="bookmark-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= bookmark.settings.name %></td><td><%= bookmark.settings.auth %></td><td><%= bookmark.settings.url %></td>
+    <td class="bookmark-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= bookmark.settings.name %></td><td><%= bookmark.settings.auth %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td>
   </script>
     
   <script type="text/html" id="template-draganddrop">
@@ -361,7 +364,8 @@
   js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1&appId=589869207755296";
   fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));</script>
-
+<!-- Twitter -->
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
 <!-- Google Analytics -->
 <script>

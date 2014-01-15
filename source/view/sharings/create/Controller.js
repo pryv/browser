@@ -1,4 +1,4 @@
-/* global $, FB */
+/* global $, FB, twttr */
 var Backbone = require('Backbone'),
   Marionette = require('backbone.marionette');
 // The recursive tree view
@@ -191,15 +191,17 @@ Controller.prototype.show = function () {
     url += '#/sharings/' + token;
     $(this.container).html('<div class="container"><h1>Share</h1>' +
       '<p>Your sharing was successfully created, share it or give this url: </p>' +
-      '<p><a href="' + url + '"/>url</a></p>' +
-      '<p class="text-center" id="share">' +
+      '<p><a href="' + url + '">' + url + '</a></p>' +
+      '<p class="text-center share">' +
       '<a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: ' + url +
       '" title="Share by Email">' +
       '<img src="./images/mail-24.png"/></a>' +
+      '<a href="https://twitter.com/share" class="twitter-share-button"' +
+      ' data-url="' + url + '" data-via="pryv" data-count="none">Tweet</a>' +
       '<fb:share-button href="' + url + '" ' +
       ' type="button"></fb:share-button></p></div>');
-    FB.XFBML.parse($('#share').get(0));
-
+    FB.XFBML.parse($('.share').get(0));
+    twttr.widgets.load();
 
   }.bind(this));
 };

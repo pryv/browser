@@ -57,7 +57,7 @@ ChartTransform.map = function (data, f) {
   } else {
     m = _.map(data, function (e) {
       var d = new Date(e.time * 1000);
-      return [Math.floor(+f(d)), e.time * 1000, +e.content];
+      return [f[0](d), +f[1](d), +e.content];
     });
   }
 
@@ -66,32 +66,70 @@ ChartTransform.map = function (data, f) {
   });
 };
 
+
+ChartTransform.getBarWidth = function (interval) {
+  if (interval) {
+    switch (interval) {
+    case 'hourly' :
+      return 3600 * 1000;
+    case 'daily' :
+      return 24 * 3600 * 1000;
+    case 'weekly' :
+      return 7 * 24 * 3600 * 1000;
+    case 'monthly' :
+      return 30 * 24 * 3600 * 1000;
+    case 'yearly' :
+      return 365 * 24 * 3600 * 1000;
+    default :
+      return null;
+    }
+  } else {
+    return null;
+  }
+};
+
 ChartTransform.getMapper = function (interval) {
   switch (interval) {
   case 'hourly' :
-    return function (d) {
-      return d.getFullYear().toString() + d.getMonth().toString() +
-        d.getDate().toString() + d.getHours().toString();
-    };
+    return [function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+        d.getDate().toString() +  '-' + d.getHours().toString();
+    }, function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+        d.getHours(), 0, 0, 0)).getTime() + (3600 * 500);
+    }];
   case 'daily' :
-    return function (d) {
-      return d.getFullYear().toString() + d.getMonth().toString() + d.getDate().toString();
-    };
+    return [function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+        d.getDate().toString();
+    }, function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).getTime() +
+        (24 * 3600 * 500);
+    }];
   case 'weekly' :
-    return function (d) {
-      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 +
-        d.getHours() * 3600 * 1000 + d.getMinutes() * 60 * 1000 + d.getMilliseconds();
+    return [function (d) {
+      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
       var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
-      return asWeek.getFullYear().toString() + asWeek.getISO8601Week().toString();
-    };
+      return asWeek.getFullYear().toString() +  '-' + asWeek.getISO8601Week().toString();
+    }, function (d) {
+      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
+      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
+      return (new Date(asWeek.getFullYear(), asWeek.getMonth(),
+        asWeek.getDate(), 0, 0, 0, 0)).getTime() + (7 * 24 * 3600 * 500);
+    }];
   case 'monthly' :
-    return function (d) {
-      return d.getFullYear().toString() + d.getMonth().toString();
-    };
+    return [function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
+    }, function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), 0, 0, 0, 0, 0)).getTime()  +
+        (30 * 24 * 3600 * 500);
+    }];
   case 'yearly' :
-    return function (d) {
+    return [function (d) {
       return d.getFullYear().toString();
-    };
+    }, function (d) {
+      return (new Date(d.getFullYear(), 0, 0, 0, 0, 0, 0)).getTime() + (365 + 24 * 3600 * 500);
+    }];
   default :
     return null;
   }
@@ -111,7 +149,7 @@ ChartTransform.sum = function (data) {
   };
   for (var a in data) {
     if (data.hasOwnProperty(a)) {
-      r.push([+a, summer(data[a])]);
+      r.push([+data[a][0][1], summer(data[a])]);
     }
   }
   return r;
@@ -144,7 +182,7 @@ ChartTransform.stackedSum = function (data) {
   keys.sort();
 
   for (var i = 0; i < keys.length; ++i) {
-    r.push([+keys[i], summer(data[keys[i]])]);
+    r.push([+data[keys[i]][0][1], summer(data[keys[i]])]);
   }
   return r;
 };
@@ -164,7 +202,7 @@ ChartTransform.avg = function (data) {
   };
   for (var a in data) {
     if (data.hasOwnProperty(a)) {
-      r.push([+a, averager(data[a])]);
+      r.push([+data[a][0][1], averager(data[a])]);
     }
   }
   return r;

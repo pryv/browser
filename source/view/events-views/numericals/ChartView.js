@@ -73,6 +73,8 @@ module.exports = Marionette.CompositeView.extend({
 
 
     collection.each(function (s, i) {
+      this.addSeries(s, i);
+      /*
       this.addSeries({
         data: this.transform(s),
         label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
@@ -80,7 +82,7 @@ module.exports = Marionette.CompositeView.extend({
         colId: i,
         style: s.get('style'),
         color: s.get('color')
-      }, i);
+      }, i);*/
     }.bind(this));
 
     var eventsNbr = 0;
@@ -125,6 +127,7 @@ module.exports = Marionette.CompositeView.extend({
     var collection = this.model.get('collection');
     var seriesCounts = collection.length;
     this.options = {};
+    this.options.shadowSize = 0;
     this.options.grid = {
       hoverable: true,
       clickable: true,
@@ -216,8 +219,8 @@ module.exports = Marionette.CompositeView.extend({
     return [min * 1000, max * 1000];
   },
 
-  getExtremeValues: function (series) {
-    var e = series.data;
+  getExtremeValues: function (data) {
+    var e = data;
     var min = Infinity, max = -Infinity;
     for (var i = 0; i < e.length; ++i) {
       min = (e[i][1] < min) ? e[i][1] : min;
@@ -233,10 +236,14 @@ module.exports = Marionette.CompositeView.extend({
    */
   addSeries: function (series, seriesIndex) {
 
+    var data = this.transform(series);
+    var label = this.useExtras ?
+      Pryv.eventTypes.extras(series.get('type')).symbol : series.get('type');
+
     // Configures series
     this.data.push({
-      data: series.data,
-      label: series.label,
+      data: data,
+      label: label,
       yaxis: (seriesIndex + 1)
     });
 
@@ -244,35 +251,36 @@ module.exports = Marionette.CompositeView.extend({
     this.options.yaxes.push({ show: false});
 
     if (this.model.get('allowPan')) {
-      this.options.yaxes[seriesIndex].panRange = series.length > 1 ?
-        this.getExtremeValues(series) : false;
+      this.options.yaxes[seriesIndex].panRange = data.length > 1 ?
+        this.getExtremeValues(data) : false;
     }
     if (this.model.get('allowZoom')) {
-      this.options.yaxes[seriesIndex].zoomRange = series.length > 1 ?
+      this.options.yaxes[seriesIndex].zoomRange = data.length > 1 ?
         [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
         false;
     }
 
     // Configure the serie's color
-    if (series.color) {
-      this.data[seriesIndex].color = series.color;
+    if (series.get('color')) {
+      this.data[seriesIndex].color = series.get('color');
     }
 
     // Configures the series' style
-    switch (series.style) {
+    switch (series.get('style')) {
     case 'line':
       this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: (series.data.length < 2) };
+      this.data[seriesIndex].points = { show: (data.length < 2) };
       break;
     case 'bar':
-      this.data[seriesIndex].bars = { show: true };
+      this.data[seriesIndex].bars = { show: true,
+                                      barWidth : this.getBarWidth(series.get('interval'))};
       break;
     case 'point':
       this.data[seriesIndex].points = { show: true };
       break;
     default:
       this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: (series.data.length < 2) };
+      this.data[seriesIndex].points = { show: (data.length < 2) };
       break;
     }
   },

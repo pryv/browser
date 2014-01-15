@@ -8,7 +8,7 @@ Controller = require('./orchestrator/Controller.js'),
 Pryv = require('pryv'),
 TimeLine = require('./timeframe-selector/timeframe-selector.js'),
 PUBLIC_TOKEN = 'TeVY2x0kgq',
-toShowWhenLoggedIn = ['#logo-sharing', '#logo-add'],
+toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
 toShowSubscribe = ['#logo-subscribe'];
 var Model = module.exports = function (DEVMODE) {
   window.Pryv = Pryv;
@@ -91,6 +91,7 @@ var Model = module.exports = function (DEVMODE) {
         if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
           this.showLoggedInElement();
           if (!this.sharingsConnections) {
+            this.addConnection(connection);
             if (this.publicConnection) {
               this.removeConnection(this.publicConnection);
             }
@@ -100,7 +101,6 @@ var Model = module.exports = function (DEVMODE) {
                 this.addConnections(this.bookmakrsConnections);
               }
             }.bind(this));
-            this.addConnection(connection);
           }
         } else {
           this.showSubscribeElement();
@@ -143,11 +143,15 @@ var Model = module.exports = function (DEVMODE) {
     }.bind(this));
     $('#login form').submit(function (e) {
       e.preventDefault();
+      if (this.loggedConnection) {
+        console.warn('You are already logged in, please log out');
+        return;
+      }
       settings.username = $('#login-username').val();
       settings.password = $('#login-password').val();
       settings.rememberMe = $('#login-remember-me').prop('checked');
       Pryv.Auth.login(settings);
-    });
+    }.bind(this));
   }  else {
     // for dev env only
     // add connections here, you mut set the loggedConnection with a staging connection
@@ -191,9 +195,9 @@ Model.prototype.removeConnections = function (connections) {
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
     var stats = this.activeFilter.stats(),
-      currentLimit = {from: this.timeView.limitFrom, to: this.timeView.limitTo};
+      currentLimit = {from: this.timeView.limitFrom - 3600, to: this.timeView.limitTo + 3600};
     console.log('updateLimits', stats, currentLimit);
-    this.timeView.setLimit(stats.timeFrameLT[0], stats.timeFrameLT[1]);
+    this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
   }.bind(this), 100))();
 };
 

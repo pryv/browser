@@ -201,7 +201,7 @@ MonitorsHandler.prototype.getStreams = function () {
   var result = [];
   this._eachMonitor(function (monitor) {
     _.each(monitor.filter.streamsIds, function (streamId) {
-      result.push(monitor.connection.getStreamById(streamId));
+      result.push(monitor.connection.datastore.getStreamById(streamId));
     });
   });
   return result;

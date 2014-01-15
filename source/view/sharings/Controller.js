@@ -41,7 +41,6 @@ _.extend(Controller.prototype, {
       if (error) {
         console.error('GET ACCESSES:', error);
       } else {
-        console.log('GER ACCESSES:', result);
         this.addSharings(result);
       }
     }.bind(this));
@@ -49,7 +48,6 @@ _.extend(Controller.prototype, {
       if (error) {
         console.error('GET ACCESSES:', error);
       } else {
-        console.log('GER ACCESSES:', result);
         this.addBookmarks(result);
       }
     }.bind(this));
@@ -57,6 +55,7 @@ _.extend(Controller.prototype, {
   close: function () {
     this.sharingListView.close();
     this.sharingCollection.reset();
+    $(this.container).remove();
     this.sharingCollection = null;
     this.sharings = {};
   },
@@ -65,10 +64,12 @@ _.extend(Controller.prototype, {
       sharings = [sharings];
     }
     sharings.forEach(function (sharing) {
-      var m = new SharingModel({
-        sharing: sharing
-      });
-      this.sharingCollection.add(m);
+      if (sharing.type === 'shared') {
+        var m = new SharingModel({
+          sharing: sharing
+        });
+        this.sharingCollection.add(m);
+      }
     }.bind(this));
   },
   addBookmarks: function (bookmarks) {

@@ -18,8 +18,8 @@ module.exports = Backbone.Model.extend({
   },
   sortData: function () {
     this.get('events').sort(function (a, b) {
-      if (a.time < b.time) { return 1; }
-      if (b.time < a.time) { return -1; }
+      if (a.time < b.time) { return -1; }
+      if (b.time < a.time) { return 1; }
       return 0;
     });
   },

@@ -67,22 +67,8 @@ module.exports = Marionette.CompositeView.extend({
     this.makeOptions();
     this.setUpContainer();
 
-    collection.each(function (s) {
-      s.sortData();
-    });
-
-
     collection.each(function (s, i) {
       this.addSeries(s, i);
-      /*
-      this.addSeries({
-        data: this.transform(s),
-        label: this.useExtras ? Pryv.eventTypes.extras(s.get('type')).symbol : s.get('type'),
-        type: s.get('type'),
-        colId: i,
-        style: s.get('style'),
-        color: s.get('color')
-      }, i);*/
     }.bind(this));
 
     var eventsNbr = 0;
@@ -138,8 +124,8 @@ module.exports = Marionette.CompositeView.extend({
     this.options.xaxes = [ {
       show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
-      timeformat: '%y/%m/%d %h:%M:%S',
-      ticks: this.getExtremeTimes()
+      timeformat: '%y/%m/%d %h:%M:%S'
+      //ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
     this.options.xaxis = {};
@@ -236,6 +222,7 @@ module.exports = Marionette.CompositeView.extend({
    */
   addSeries: function (series, seriesIndex) {
 
+    series.sortData();
     var data = this.transform(series);
     var label = this.useExtras ?
       Pryv.eventTypes.extras(series.get('type')).symbol : series.get('type');
@@ -273,7 +260,8 @@ module.exports = Marionette.CompositeView.extend({
       break;
     case 'bar':
       this.data[seriesIndex].bars = { show: true,
-                                      barWidth : this.getBarWidth(series.get('interval'))};
+                                      barWidth : this.getDurationFunction(series.get('interval'))
+                                        (new Date(2011, 1, 1, 1, 1))};
       break;
     case 'point':
       this.data[seriesIndex].points = { show: true };
@@ -345,24 +333,42 @@ module.exports = Marionette.CompositeView.extend({
     if (!date) {
       date = this.model.get('highlightedTime');
     }
-
     if (!this.plot || !date) {
       return;
     }
 
     this.plot.unhighlight();
+
+    var chartView = this;
     var data = this.plot.getData();
-    for (var k = 0; k < data.length; k++) {
+
+    this.model.get('collection').each(function (s, i) {
+      var dF = chartView.getDurationFunction(s.get('interval'));
       var distance = null;
       var best = 0;
-      for (var m = 0; m < data[k].data.length; m++) {
-        if (distance === null || Math.abs(date - data[k].data[m][0] / 1000) < distance) {
-          distance = Math.abs(date - data[k].data[m][0] / 1000);
-          best = m;
-        } else { break; }
+      for (var j = 0; j < data[i].data.length; ++j) {
+        var duration = dF(new Date(data[i].data[j][0]));
+
+        var d1 = Math.abs(date - (data[i].data[j][0] / 1000));
+        var d2 = Math.abs(date - ((data[i].data[j][0] + duration) / 1000));
+
+        if (distance === null) {
+          best = j;
+          distance = d1 < d2 ? d1 : d2;
+        } else if ((data[i].data[j][0] / 1000) <= date &&
+          date <= ((data[i].data[j][0] + duration) / 1000)) {
+          best = j;
+          break;
+        } else if (d1 < distance || d2 < distance) {
+          best = j;
+          distance = d1 < d2 ? d1 : d2;
+        } else {
+          break;
+        }
       }
-      this.plot.highlight(k, best);
-    }
+      best = data[i].data.length === best ? best - 1: best;
+      chartView.plot.highlight(i, best);
+    });
   },
 
   highlightEvent: function (event) {

@@ -2,12 +2,10 @@ var _ = require('underscore');
 
 var ChartTransform = module.exports = {};
 
-
 /**
  * ISO ISO8601 week numbers
  * @returns {number} the week number of this date.
  */
-
 Date.prototype.getISO8601Week = function () {
   var target = new Date(this.valueOf());
   var dayNr = (this.getDay() + 6) % 7;
@@ -18,19 +16,20 @@ Date.prototype.getISO8601Week = function () {
   return weekNr;
 };
 
-
 ChartTransform.transform = function (model) {
   if (!model.get('transform')) {
     return this.default(model.get('events'));
   }
 
-  var f = this.getMapper(model.get('interval'));
-  var cut = this.map(model.get('events'), f);
+  var mapper = this.getMapFunction(model.get('interval'));
+  var dater = this.getDateFunction(model.get('interval'));
+
+  var cut = this.map(model.get('events'), mapper, dater);
 
   var r = null;
   switch (model.get('transform')) {
   case 'sum':
-    r = (f === null) ? this.stackedSum(cut) : this.sum(cut);
+    r = (!model.get('interval')) ? this.stackedSum(cut) : this.sum(cut);
     break;
   case 'average':
     r = this.avg(cut);
@@ -48,90 +47,103 @@ ChartTransform.default = function (data) {
   });
 };
 
-ChartTransform.map = function (data, f) {
-  var m = null;
-  if (f === null) {
-    m = _.map(data, function (e) {
-      return [e.time * 1000, e.time * 1000, +e.content];
-    });
-  } else {
-    m = _.map(data, function (e) {
-      var d = new Date(e.time * 1000);
-      return [f[0](d), +f[1](d), +e.content];
-    });
-  }
-
+ChartTransform.map = function (data, mapper, dater) {
+  var m = _.map(data, function (e) {
+    var d = new Date(e.time * 1000);
+    return [mapper(d), +dater(d), +e.content];
+  });
   return _.groupBy(m, function (e) {
     return e[0];
   });
 };
 
 
-ChartTransform.getBarWidth = function (interval) {
-  if (interval) {
-    switch (interval) {
-    case 'hourly' :
-      return 3600 * 1000;
-    case 'daily' :
-      return 24 * 3600 * 1000;
-    case 'weekly' :
-      return 7 * 24 * 3600 * 1000;
-    case 'monthly' :
-      return 30 * 24 * 3600 * 1000;
-    case 'yearly' :
-      return 365 * 24 * 3600 * 1000;
-    default :
-      return null;
-    }
-  } else {
-    return null;
+ChartTransform.getDurationFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function () { return 3600 * 1000; };
+  case 'daily' :
+    return function () { return 24 * 3600 * 1000; };
+  case 'weekly' :
+    return function () { return 7 * 24 * 3600 * 1000; };
+  case 'monthly' :
+    return function (d) { return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() *
+      24 * 3600 * 1000; };
+  case 'yearly' :
+    return function (d) {
+      return (d.getFullYear() % 4 === 0 &&
+        (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
+    };
+  default :
+    return function () {
+      return 0;
+    };
   }
 };
 
-ChartTransform.getMapper = function (interval) {
+ChartTransform.getMapFunction = function (interval) {
   switch (interval) {
   case 'hourly' :
-    return [function (d) {
+    return function (d) {
       return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
         d.getDate().toString() +  '-' + d.getHours().toString();
-    }, function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(),
-        d.getHours(), 0, 0, 0)).getTime() + (3600 * 500);
-    }];
+    };
   case 'daily' :
-    return [function (d) {
+    return function (d) {
       return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
         d.getDate().toString();
-    }, function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).getTime() +
-        (24 * 3600 * 500);
-    }];
+    };
   case 'weekly' :
-    return [function (d) {
+    return function (d) {
       var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
       var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
       return asWeek.getFullYear().toString() +  '-' + asWeek.getISO8601Week().toString();
-    }, function (d) {
+    };
+  case 'monthly' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
+    };
+  case 'yearly' :
+    return function (d) {
+      return d.getFullYear().toString();
+    };
+  default :
+    return function (d) {
+      return d.getDate().toString();
+    };
+  }
+};
+
+ChartTransform.getDateFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+        d.getHours(), 0, 0, 0)).getTime();
+    };
+  case 'daily' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).getTime();
+    };
+  case 'weekly' :
+    return function (d) {
       var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
       var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
       return (new Date(asWeek.getFullYear(), asWeek.getMonth(),
-        asWeek.getDate(), 0, 0, 0, 0)).getTime() + (7 * 24 * 3600 * 500);
-    }];
+        asWeek.getDate(), 0, 0, 0, 0)).getTime();
+    };
   case 'monthly' :
-    return [function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
-    }, function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), 0, 0, 0, 0, 0)).getTime()  +
-        (30 * 24 * 3600 * 500);
-    }];
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), 0, 0, 0, 0, 0)).getTime();
+    };
   case 'yearly' :
-    return [function (d) {
-      return d.getFullYear().toString();
-    }, function (d) {
-      return (new Date(d.getFullYear(), 0, 0, 0, 0, 0, 0)).getTime() + (365 + 24 * 3600 * 500);
-    }];
+    return function (d) {
+      return (new Date(d.getFullYear(), 0, 0, 0, 0, 0, 0)).getTime();
+    };
   default :
-    return null;
+    return function (d) {
+      return d.getTime();
+    };
   }
 };
 

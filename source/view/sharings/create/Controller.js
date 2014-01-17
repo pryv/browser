@@ -1,5 +1,5 @@
 /* global $, FB, twttr */
-var Backbone = require('Backbone'),
+var Backbone = require('backbone'),
   Marionette = require('backbone.marionette');
 // The recursive tree view
 function slugMe(value) {

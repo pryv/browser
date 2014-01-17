@@ -42,6 +42,7 @@ module.exports = Marionette.ItemView.extend({
           highlighted: false,
           highlightedTime: null,
           allowPieChart: false,
+          singleNumberAsText: false,
           dimensions: null,
           legendStyle: 'list', // Legend style: 'list', 'table'
           legendButton: true,  // A button in the legend

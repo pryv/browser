@@ -28,9 +28,8 @@ module.exports = function (grunt) {
     cssmin: {
       combine: {
         files: {
-          'dist/styles/pryv.min.css': ['source/styles/bootstrap.min.css',
+          'dist/styles/vendor.min.css': ['source/styles/bootstrap.min.css',
             'source/styles/bootstrap-responsive.min.css',
-            'source/styles/styles.css',
             'source/styles/animate.css',
             'source/timeframe-selector/styles/main.css']
         }
@@ -69,6 +68,13 @@ module.exports = function (grunt) {
             filter: 'isFile',
             src: 'source/images/**',
             dest: 'dist/images/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            filter: 'isFile',
+            src: 'source/styles/styles.css',
+            dest: 'dist/styles/'
           },
           {
             expand: true,

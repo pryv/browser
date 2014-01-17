@@ -39,6 +39,7 @@ module.exports = Marionette.CompositeView.extend({
       return;
     }
 
+
     if (this.model.get('legendExtras')) {
       this.useExtras  = true;
       try {
@@ -52,8 +53,17 @@ module.exports = Marionette.CompositeView.extend({
 
     this.container = this.model.get('container');
 
-    this.makePlot();
-    this.onDateHighLighted();
+    if (this.model.get('collection').length === 1 &&
+      this.model.get('collection').at(0).get('events').length === 1) {
+      var m = this.model.get('collection').at(0);
+      $(this.container).html('<span class="single-number">' + m.get('events')[0].content + ' ' +
+        (this.useExtras ?
+          Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
+        '</span>');
+    } else {
+      this.makePlot();
+      this.onDateHighLighted();
+    }
   },
 
   makePlot: function () {

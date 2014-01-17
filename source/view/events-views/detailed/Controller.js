@@ -137,6 +137,7 @@ _.extend(Controller.prototype, {
         this.contentView = new newContentView.view({model: new Model({collection:
           this.collection})});
         if (newContentView.type === 'Creation') {
+          $('.modal-panel-right').hide();
           this.contentView.connection = this.connection;
           this.commonView.close();
           var currentElement = this.collection.getCurrentElement();
@@ -147,6 +148,7 @@ _.extend(Controller.prototype, {
             this.contentView.connectionId = currentElement.get('event').connection.serialId;
           }
           this.contentView.on('endOfSelection', function () {
+            $('.modal-panel-right').show();
             this.addEvents(this.newEvent.get('event'));
             this.commonView.model.set('event', this.newEvent.get('event'));
             this.commonView.model.set('collection', this.collection);

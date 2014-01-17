@@ -357,9 +357,9 @@ module.exports = Marionette.CompositeView.extend({
       var dF = chartView.getDurationFunction(s.get('interval'));
       var distance = null;
       var best = 0;
+
       for (var j = 0; j < data[i].data.length; ++j) {
         var duration = dF(new Date(data[i].data[j][0]));
-
         var d1 = Math.abs(date - (data[i].data[j][0] / 1000));
         var d2 = Math.abs(date - ((data[i].data[j][0] + duration) / 1000));
 
@@ -370,13 +370,12 @@ module.exports = Marionette.CompositeView.extend({
           date <= ((data[i].data[j][0] + duration) / 1000)) {
           best = j;
           break;
-        } else if (d1 < distance || d2 < distance) {
+        } else if (d1 <= distance || d2 <= distance) {
           best = j;
           distance = d1 < d2 ? d1 : d2;
-        } else {
-          break;
         }
       }
+
       best = data[i].data.length === best ? best - 1: best;
       chartView.plot.highlight(i, best);
     });

@@ -60,9 +60,13 @@ module.exports = Marionette.ItemView.extend({
     var result = '<ul id="stream-select">',
       connections  = this.connection._connections;
     _.each(connections, function (c) {
+      if (!this._isWritePermission(c)) {
+        return;
+      }
       result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
       result += this.getStreamStructure(c);
       result += '</ul>';
+
     }.bind(this));
     return result + '</ul>';
   },
@@ -70,7 +74,9 @@ module.exports = Marionette.ItemView.extend({
     var rootStreams = connection.datastore.getStreams(),
       result = '';
     for (var i = 0; i < rootStreams.length; i++) {
-      result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+      if (this._isWritePermission(connection, rootStreams[i])) {
+        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+      }
     }
     return result;
 
@@ -82,8 +88,34 @@ module.exports = Marionette.ItemView.extend({
       stream.connection.serialId + '" data-stream="' +
       stream.id + '">' + stream.name + '</li>';
     for (var j = 0; j < stream.children.length; j++) {
-      result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+      if (this._isWritePermission(stream.connection, stream.children[j])) {
+        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+      }
     }
     return result;
+  },
+  _isWritePermission: function (connection, streamId) {
+    if (!connection._accessInfo) {
+      return false;
+    }
+    if (connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId !== 'read') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId === 'read') {
+      return false;
+    }
+    if (streamId) {
+      return !!_.find(connection._accessInfo.permissions, function (p) {
+        return p.streamId === streamId && p.level !== 'read';
+      });
+    }
+    return false;
   }
 });

@@ -20,7 +20,8 @@
   <meta property="og:image" content="http://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
   <meta property="og:image:secure_url" content="https://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
   <meta property="fb:app_id" content="589869207755296" />
-  <link rel="stylesheet" type="text/css" href="styles/pryv.min.css">
+  <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
+  <link rel="stylesheet" type="text/css" href="styles/styles.css">
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
@@ -129,7 +130,7 @@
   <script type="text/html" id="template-sharingItemView">
 
     <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= sharing.name %></td><td><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
-    <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
+     <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
       <a href="https://twitter.com/share" class="twitter-share-button" data-url="<%= sharing.url %>" data-via="pryv" data-count="none">Tweet</a>
       <fb:share-button href="<%= sharing.url %>" type="button"></fb:share-button></td>
 

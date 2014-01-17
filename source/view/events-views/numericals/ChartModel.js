@@ -14,6 +14,8 @@ module.exports = Backbone.Model.extend({
 
     allowPieChart: false,
 
+    singleNumberAsText: true,
+
     // Chart dimensions
     dimensions: null,
 

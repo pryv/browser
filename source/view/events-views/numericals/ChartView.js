@@ -54,7 +54,8 @@ module.exports = Marionette.CompositeView.extend({
     this.container = this.model.get('container');
 
     if (this.model.get('collection').length === 1 &&
-      this.model.get('collection').at(0).get('events').length === 1) {
+      this.model.get('collection').at(0).get('events').length === 1 &&
+      this.model.get('singleNumberAsText')) {
       var m = this.model.get('collection').at(0);
       $(this.container).html('<span class="single-number">' + m.get('events')[0].content + ' ' +
         (this.useExtras ?
@@ -134,8 +135,8 @@ module.exports = Marionette.CompositeView.extend({
     this.options.xaxes = [ {
       show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
-      timeformat: '%y/%m/%d %h:%M:%S'
-      //ticks: this.getExtremeTimes()
+      timeformat: '%y/%m/%d %h:%M:%S',
+      ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
     this.options.xaxis = {};

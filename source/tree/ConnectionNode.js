@@ -2,6 +2,8 @@
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 var StreamNode = require('./StreamNode');
+var VirtualNode = require('./VirtualNode.js');
+
 var STREAM_MARGIN = 20;
 var SERIAL = 0;
 /**
@@ -31,6 +33,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
       options = options || {};
       this.streamNodes = {};
+      var virtNodeWaiting = {};
 
 
       this.connection.streams.walkTree(options,
@@ -39,7 +42,47 @@ var ConnectionNode = module.exports = TreeNode.implement(
           if (stream.parent) {   // if not parent, this connection node is the parent
             parentNode = this.streamNodes[stream.parent.id];
           }
+
           this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
+
+
+          if (VirtualNode.hasInNode(stream)) {
+            var vn = VirtualNode.getFromNode(stream);
+            vn.each(function (virtualNode) {
+              var id = '';
+              // create the virtual node's id
+              virtualNode.filters.each(function (s) {
+                id = id + s.filter.id;
+              });
+
+              // create its child list
+              virtualNode.filters.each(function (s) {
+
+                if (virtNodeWaiting[s.filter.id]) {
+                  virtNodeWaiting[s.filter.id].push(id);
+                } else {
+                  virtNodeWaiting[s.filter.id] = [id];
+                }
+              });
+              this.streamNodes[id] = new StreamNode(this, stream, stream); // hack with stream
+            });
+            console.log('has virtual node', vn);
+          }
+
+
+
+
+
+          // check for event redirection
+          if (virtNodeWaiting[stream.id]) {
+            if (this.streamNodes[stream.id].redirect) {
+              this.streamNodes[stream.id].redirect.push(virtNodeWaiting[stream.id]);
+            } else {
+              this.streamNodes[stream.id].redirect = virtNodeWaiting[stream.id];
+            }
+          }
+
+
         }.bind(this),
         function (error) {   // done
           if (error) { error = 'ConnectionNode failed to init structure - ' + error; }

@@ -1,5 +1,5 @@
 
- /* global $, window */
+ /* global $, window, Pryv */
 var RootNode = require('./RootNode.js'),
  SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
  _ = require('underscore'),
@@ -7,7 +7,8 @@ var RootNode = require('./RootNode.js'),
  SharingView = require('../view/sharings/Controller.js'),
  CreateSharingView = require('../view/sharings/create/Controller.js'),
  SubscribeView = require('../view/subscribe/Controller.js'),
- FusionDialog = require('../view/events-views/draganddrop/Controller.js');
+ FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
+ VirtualNode = require('./VirtualNode.js');
 
 var TreeMap = module.exports = function (model) {
   this.model = model;
@@ -253,7 +254,28 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   }.bind(this)), events);
   this.dialog.show();
 };
- //======== Detailed View ========\\
+
+TreeMap.prototype.getFiltersFromNode = function (node) {
+  var streams = [];
+  var u = {}, s;
+  for (var attribute in node.events) {
+    if (node.events.hasOwnProperty(attribute)) {
+      s = {stream: node.events[attribute].stream, type: node.events[attribute].type};
+      if (!u.hasOwnProperty(s.streamId)) {
+        u[s.streamId] = {};
+        if (!u[s.streamId].hasOwnProperty(s.type)) {
+          u[s.streamId][s.type] = 1;
+          streams.push(s);
+        }
+      }
+    }
+  }
+  return s;
+};
+
+
+
+   //======== Detailed View ========\\
 TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
   if (!this.hasDetailedView()) {
     this.detailedView = new DetailView($modal, this.model.connections);
@@ -362,14 +384,75 @@ TreeMap.prototype.closeSubscribeView = function () {
 
  /**
   * Creates a virtual node from a certain number of events.
-  * @param events is an array of events you want to fuse, aka show in the same node.
+  * @param eventsNodes is an array of events nodes you want to aggregate permanently.
   */
-TreeMap.prototype.createVirtualNode = function (events) {
-  /* TODO:
-   * create the node, don't remove the already existing
-   * make sure the update follows at both places
-   */
+TreeMap.prototype.createVirtualNode = function (filters) {
+  var streams = [];
+  var f = [];
+  for (var i = 0, n = filters.length; i < n; ++i) {
+    streams.push(filters[i].stream);
+    f.push({streamId: filters[i].stream.id, type: filters[i].type});
+  }
+  var parent = this.getFirstCommonParent(_.uniq(streams));
 
+  var vn = new VirtualNode(parent, 'Virtual Node', f);
+  if (parent instanceof Pryv.Connection) {
+    console.log('Setting new Virtual node in connection', parent, 'with filters', f);
+  } else if (parent instanceof Pryv.Stream) {
+    console.log('Setting new Virtual node in stream', parent, 'with filters', f);
+    // parent.clientData['browser:virtualnode'] = [{name: 'test aggr', filters: filters}];
+  }
+
+  console.log('Virtual node', vn);
+
+
+};
+
+TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
+
+   /* TODO:
+    * create the node, don't remove the already existing
+    * make sure the update follows at both places
+    */
+
+  // Depth first search for goal, starting from parent
+  var hasChild = function (parent, goal) {
+    var found = false;
+    if (parent.id === goal.id) {
+      found = true;
+    } else if (parent.children.length !== 0) {
+      _.each(parent.children, function (c) {
+        found = found || hasChild(c, goal);
+      });
+    }
+    return found;
+  };
+
+
+  // returns common parent of start and goal
+  var matchChild = function (start, goal) {
+    var found = false;
+    var depth = start;
+    while (found === false) {
+      found = hasChild(depth, goal);
+      if (!found) {
+        if (depth.parent) {
+          depth = depth.parent;
+        } else {
+          return depth.connection;
+        }
+      }
+    }
+    return depth;
+  };
+
+
+  // start contains the common parent of all arguments in the end.
+  var start = eventsNodes[0];
+  for (var i = 1, n = eventsNodes.length; i < n; ++i) {
+    start = matchChild(start, eventsNodes[i]);
+  }
+  return start;
 };
 
 

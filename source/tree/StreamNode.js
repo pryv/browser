@@ -1,5 +1,6 @@
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
+var VirtualNode = require('./VirtualNode.js');
 
 /**
  * Holder for Connection Nodes.
@@ -19,6 +20,9 @@ var StreamNode = module.exports = TreeNode.implement(
     } else if (parentNode.stream && parentNode.stream.color) {
       this.stream.color = parentNode.stream.color;
     }
+
+    console.log('this node', this.uniqueId, VirtualNode.getFromNode(this.stream));
+
     /**
      * eventsNodes are stored by their key
      **/

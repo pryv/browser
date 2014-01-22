@@ -304,33 +304,27 @@
 <body>
 <!-- @if NODE_ENV != 'DEVELOPMENT' -->
 <span id="pryvButton"></span>
-<div id="login" class="btn-group">
-  <button type="button" class="btn pryv-access-btn-pryv-access-color dropdown-toggle" data-toggle="dropdown">
-    <span class="toggle">Sign In <span class="caret"></span></span>
-    <span class="toggle" style="display: none" id="login-button-username">Username </span>
-  </button>
-    <form accept-charset="UTF-8" class="dropdown-menu form-horizontal" role="form">
+<div id="login">
+  <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
+  </div>
+  <div id="login-form" class="centered">
+    <form role="form">
+      <h3>Login</h3>
+
       <div class="form-group">
         <label class="sr-only" for="login-username">Username</label>
-        <input id="login-username" class="form-control" type="text" placeholder="Username" size="10" />
+        <input type="text" class="form-control" id="login-username" placeholder="Username">
       </div>
       <div class="form-group">
-        <label class="sr-only" for="login-username">Password</label>
-        <input id="login-password" class="form-control" type="password" placeholder="Password" size="10" />
+        <label class="sr-only" for="login-password">Password</label>
+        <input type="password" class="form-control" id="login-password" placeholder="Password">
       </div>
-      <div class="form-group">
-        <div class="checkbox">
-          <label>
-            <input id="login-remember-me" type="checkbox"> Remember me
-          </label>
-        </div>
-      </div>
-      <div class="form-group">
-        <input id="login-submit" class="btn pryv-access-btn-pryv-access-color" type="submit" name="commit" value="Sign In" />
-      </div>
+      <button type="submit" class="btn btn-pryv-turquoise">Sign In</button>
     </form>
+  </div>
 </div>
 <!-- @endif -->
+<a href="#" id="login-button" class="menu-button">Sign In</a>
 <a href="#" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="#" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
 <a href="#" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>

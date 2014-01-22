@@ -85,9 +85,7 @@ var Model = module.exports = function (DEVMODE) {
       signedIn: function (connection) {
         console.log('Successfully signed in', connection);
         this.loggedConnection = connection;
-        $('#login-button-username').text(connection.username);
-        //$('#login .dropdown-toggle').dropdown('toggle'); // close the login form
-        $('#login .toggle').toggle(); // display the username on the button
+        $('#login-button').text(connection.username);
         if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
           this.showLoggedInElement();
           if (!this.sharingsConnections) {
@@ -105,15 +103,19 @@ var Model = module.exports = function (DEVMODE) {
         } else {
           this.showSubscribeElement();
         }
+        $('#login').removeClass('animated slideInRight');
+        $('#tree').removeClass('animated slideOutLeft');
+        $('#login').addClass('animated slideOutRight');
+        $('#tree').addClass('animated slideInLeft');
       }.bind(this),
       signedOut: function (connection) {
-        this.loggedConnection = null;
         this.hideLoggedInElement();
         this.removeConnection(connection);
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login .toggle').toggle(); // display "sign in" on the button
+        $('#login-button').text('Sign In');
+        this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
@@ -132,15 +134,24 @@ var Model = module.exports = function (DEVMODE) {
       }.bind(this));
     }
     Pryv.Auth.whoAmI(settings);
-    $('#login .dropdown-menu input, #login .dropdown-menu label').click(function (e) {
-      e.stopPropagation();
-    });
-    $('#login button').click(function (e) {
+    $('#login-button').click(function (e) {
       if (this.loggedConnection) {
         e.stopPropagation();
         Pryv.Auth.logout();
+      } else {
+        $('#login').css('display', 'block');
+        $('#login').removeClass('animated slideOutRight');
+        $('#tree').removeClass('animated slideInLeft');
+        $('#login').addClass('animated slideInRight');
+        $('#tree').addClass('animated slideOutLeft');
       }
     }.bind(this));
+    $('#login-caret').click(function () {
+      $('#login').removeClass('animated slideInRight');
+      $('#tree').removeClass('animated slideOutLeft');
+      $('#login').addClass('animated slideOutRight');
+      $('#tree').addClass('animated slideInLeft');
+    });
     $('#login form').submit(function (e) {
       e.preventDefault();
       if (this.loggedConnection) {
@@ -149,7 +160,6 @@ var Model = module.exports = function (DEVMODE) {
       }
       settings.username = $('#login-username').val();
       settings.password = $('#login-password').val();
-      settings.rememberMe = $('#login-remember-me').prop('checked');
       Pryv.Auth.login(settings);
     }.bind(this));
   }  else {

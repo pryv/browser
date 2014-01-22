@@ -8,7 +8,10 @@ var RootNode = require('./RootNode.js'),
  CreateSharingView = require('../view/sharings/create/Controller.js'),
  SubscribeView = require('../view/subscribe/Controller.js'),
  FusionDialog = require('../view/events-views/draganddrop/Controller.js');
-
+var MARGIN_TOP = 20;
+var MARGIN_RIGHT = 20;
+var MARGIN_BOTTOM = 30;
+var MARGIN_LEFT = 20;
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
@@ -18,14 +21,10 @@ var TreeMap = module.exports = function (model) {
   this.createSharingView = null;
   this.focusedStreams = null;
   var $tree = $('#tree');
-  this.root = new RootNode(this, $tree.width() -
-    parseInt($tree.css('margin-left').split('px')[0], null) -
-    parseInt($tree.css('margin-right').split('px')[0], null),
-    $tree.height() -
-    parseInt($tree.css('margin-bottom').split('px')[0], null) -
-    parseInt($tree.css('margin-top').split('px')[0], null));
-  this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
-  this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
+  this.root = new RootNode(this, $tree.width() - MARGIN_LEFT - MARGIN_RIGHT,
+    $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
+  this.root.x =  MARGIN_LEFT;
+  this.root.y =  MARGIN_TOP;
   $('#logo-reload').click(function (e) {
     e.preventDefault();
     if (this.model.sharingsConnections &&
@@ -105,14 +104,10 @@ var TreeMap = module.exports = function (model) {
 
   $(window).resize(_.debounce(function () {
     var $tree = $('#tree');
-    this.root.width = $tree.width() -
-      parseInt($tree.css('margin-left').split('px')[0], null) -
-      parseInt($tree.css('margin-right').split('px')[0], null);
-    this.root.height = $tree.height() -
-      parseInt($tree.css('margin-bottom').split('px')[0], null) -
-      parseInt($tree.css('margin-top').split('px')[0], null);
-    this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
-    this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
+    this.root.width = $tree.width() - MARGIN_LEFT - MARGIN_RIGHT;
+    this.root.height = $tree.height() - MARGIN_BOTTOM - MARGIN_TOP;
+    this.root.x =  MARGIN_LEFT;
+    this.root.y =  MARGIN_TOP;
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,

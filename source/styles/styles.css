@@ -52,31 +52,52 @@ body{
   position: absolute;
   top: 0;
   display: block;
-  width: 40px;
-  height: 40px;
   background-color: #3e3e3e;
-  font-size: 26px;
   color: #eee;
   padding-top: 6px;
   padding-left: 8px;
 }
+#login-button {
+  right: 0;
+  padding: 10px;
+  font-weight: bold;
+}
+#login-button:hover {
+  text-decoration: none;
+  color: white;
+}
 #logo-add {
   right: 120px;
-+}
+  width: 40px;
+  height: 40px;
+  font-size: 26px;
+}
 #logo-sharing {
   right: 165px;
+  width: 40px;
+  height: 40px;
+  font-size: 26px;
 }
 #logo-subscribe {
   right: 120px;
+  width: 40px;
+  height: 40px;
+  font-size: 26px;
 }
 #logo-create-sharing {
   right: 210px;
+  width: 40px;
+  height: 40px;
+  font-size: 26px;
 }
 #tree {
   width: 100%;
   height: 100%;
-  margin: 20px 40px 50px 20px;
   color: white;
+  -webkit-animation-duration: 0.5s;
+  -moz-animation-duration: 0.5s;
+  -ms-animation-duration: 0.5s;
+  -o-animation-duration: 0.5s;
 }
 .loading + #tree > #empty-events {
   display: none;
@@ -614,25 +635,38 @@ ul#DnD-legend > li {
 /** END of CSS for Drag and Drop Dialog using the modal **/
 
 /** Login btn */
-#pryvButton {
-  float: left;
-}
 
-/** Login btn */
 #login {
-  float: right;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  display: none;
+  padding: 40px 40px 60px 40px;
+  -webkit-animation-duration: 0.5s;
+  -moz-animation-duration: 0.5s;
+  -ms-animation-duration: 0.5s;
+  -o-animation-duration: 0.5s;
 }
-#login>.dropdown-menu {
-  right: 0;
-  left: auto !important;
+#login-caret {
+  font-size: 40px;
+  cursor: pointer;
 }
-
-#login .form-group {
-  margin-right: 5px;
-  margin-bottom: 5px;
-  margin-left: 5px;
+#login-form form {
+  text-align: initial;
 }
-
-#login button .carret {
-  border-top: 4px solid #fff;
+#login:before {
+  content:'';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+.centered {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 10px 15px;
+}
+.btn-pryv-turquoise {
+  background-color: #1abc9c;
+  color: white;
 }

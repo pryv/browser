@@ -2,7 +2,7 @@ var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
 
-var CONNECTION_MARGIN = 20;
+var CONNECTION_MARGIN = 30;
 /**
  * Holder for Connection Nodes.
  * @type {*}

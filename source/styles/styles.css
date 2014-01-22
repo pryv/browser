@@ -111,19 +111,19 @@ body{
   line-height:18px;
 }
 /*-----------------theme Connection*/
-#node_connection_0 .NotesEventsNode .node{background-color: #1BBC9D;}
+#node_connection_0 .NotesEventsNode{background-color: #1BBC9D;}
 #node_connection_0 .GenericEventsNode{background-color: #16A086;}
 #node_connection_0 .PositionsEventsNode{background-color: #00896E;}
 #node_connection_0 .NumericalsEventsNode{background-color: #00896E;}
 #node_connection_0 > .nodeHeader {border-left:20px solid #1BBC9D;}
 
-#node_connection_1 .NotesEventsNode .node{background-color: #3598DC;}
+#node_connection_1 .NotesEventsNode{background-color: #3598DC;}
 #node_connection_1 .GenericEventsNode{background-color: #2A80B9;}
 #node_connection_1 .PositionsEventsNode{background-color: #266A9C;}
 #node_connection_1 .NumericalsEventsNode{background-color: #266A9C;}
 #node_connection_1 > .nodeHeader {border-left:20px solid #3598DC;}
 
-#node_connection_2 .NotesEventsNode .node{background-color: #F1C40F;}
+#node_connection_2 .NotesEventsNode{background-color: #F1C40F;}
 #node_connection_2 .GenericEventsNode{background-color: #F49C14;}
 #node_connection_2 .PositionsEventsNode{background-color: #D68912;}
 #node_connection_2 .NumericalsEventsNode{background-color: #D68912;}
@@ -137,6 +137,13 @@ body{
   cursor: pointer;
   background-color: rgba(0, 0, 0, 0.12);
 }
+.StreamNode:hover {
+  background-color: white;
+  outline: #fff solid 5px;
+}
+.StreamNode:hover>.nodeHeader{
+  color:black;
+}
 .StreamNode .nodeHeader {
   font-size:12px;
 }
@@ -147,7 +154,7 @@ body{
   /*box-sizing:border-box;
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;  */
-  overflow: hidden;
+  /*overflow: hidden; */
   word-break: break-all;
 }
 .GenericEventsNode {
@@ -187,6 +194,9 @@ body{
   bottom: 5px;
   right: 5px;
   display:none;
+}
+.node .tags {
+  display: none;
 }
 .PositionsEventsNode {
   /*background-color: #3FA2F0;*/
@@ -379,6 +389,10 @@ text-align: center;*/
 .sharings, #create-sharing {
   overflow-y: scroll;
   height: 100%;
+}
+#form-create-sharing .form-group {
+  margin-right: 0px !important;
+  margin-left: 0px !important;
 }
 .share img {
   margin-top: -12px;

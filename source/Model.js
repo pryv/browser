@@ -170,6 +170,9 @@ Model.prototype.addConnection = function (connection) {
   if (!this.treemap) {
     this.initBrowser();
   }
+  if (!connection._accessInfo) {
+    connection.accessInfo();
+  }
   var userConnection = this.connections.add(connection),
   batch = this.activeFilter.startBatch('adding connections');
   this.activeFilter.addConnection(userConnection, batch);

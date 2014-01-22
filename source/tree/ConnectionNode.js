@@ -2,7 +2,7 @@
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 var StreamNode = require('./StreamNode');
-
+var STREAM_MARGIN = 20;
 var SERIAL = 0;
 /**
  * Always call intStructure after creating a new ConnectionNode
@@ -13,6 +13,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentnode.treeMap, parentnode);
     this.connection = connection;
     this.streamNodes = {};
+    this.margin = STREAM_MARGIN;
     this.uniqueId = 'node_connection_' + SERIAL;
     SERIAL++;
   }, {

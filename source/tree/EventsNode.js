@@ -79,6 +79,7 @@ var EventsNode = module.exports = TreeNode.implement(
           x: this.x,
           y: this.y,
           depth: this.depth,
+          color: this.parent.stream.color,
           weight: this.getWeight(),
           content: this.events || this.stream || this.connection,
           eventView: this.eventView,

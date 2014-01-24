@@ -22,7 +22,7 @@ body{
   font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
   font-size:14px;
   overflow: hidden;
-  background: url(../images/bg2.jpg) no-repeat center fixed;
+  background: url(../images/bg3.jpg) no-repeat center fixed;
   -webkit-background-size: cover; /* pour Chrome et Safari */
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
@@ -125,6 +125,7 @@ body{
   position: absolute;
   transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
   -webkit-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
+  border-radius: 2px;
 }
 .nodeHeader {
   /*font-family: MuseoSans-300;*/
@@ -133,6 +134,19 @@ body{
   /*border-left: 2px solid #FFF;*/
   line-height:18px;
 }
+.ConnectionNode:hover, .StreamNode:hover, .GenericEventsNode:hover, .NotesEventsNode:hover, .PositionsEventsNode:hover, .PicturesEventsNode:hover, .NumericalsEventsNode:hover {
+opacity: .9;
+}
+.GenericEventsNode:hover .aggregated-nbr-events, .NotesEventsNode:hover .aggregated-nbr-events, .PositionsEventsNode:hover .aggregated-nbr-events, .PicturesEventsNode:hover .aggregated-nbr-events, .NumericalsEventsNode:hover .aggregated-nbr-events {
+font-size:50px;
+font-weight: 100;
+padding: 0px 15px;
+-webkit-transition: font 0.1s ease;
+-moz-transition: font 0.1s ease;
+-o-transition: font 0.1s ease;
+-ms-transition: font 0.1s ease;
+}
+
 /*-----------------theme Connection*/
 #node_connection_0 .NotesEventsNode{background-color: #1BBC9D;}
 #node_connection_0 .GenericEventsNode{background-color: #16A086;}
@@ -169,7 +183,7 @@ body{
 }
 .StreamNode .nodeHeader {
   font-size:12px;
-  text-align: center;
+  /*text-align: center;*/
 }
 .ConnectionNode, .StreamNode,.GenericEventsNode, .NotesEventsNode,.PositionsEventsNode, .PicturesEventsNode, .NumericalsEventsNode{
   /* border-right: 2px solid white;      */
@@ -292,17 +306,19 @@ body{
 }
 .aggregated-nbr-events {
   position: absolute;
-  bottom: 5px;
-  left: 5px;
-  -moz-border-radius: 50px;
-  -webkit-border-radius: 50px;
-  border-radius: 50px;
+  bottom: 0px;
+  right: 0px;
+  -moz-border-radius: 0px;
+  -webkit-border-radius: 0px;
+  border-radius: 0px;
   background-color: rgba(60, 60, 60, 0.6);
   padding: 0px 6px;
-  font-size: 9px;
+  font-size: 10px;
   color: #FFF;
   z-index: 1;
   cursor: pointer;
+  font-weight: bold;
+  letter-spacing: 0px;
 }
 .mapView {
   width: 100%;
@@ -650,6 +666,7 @@ ul#DnD-legend > li {
   -moz-animation-duration: 0.5s;
   -ms-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
+  color: #FFF;
 }
 #login-caret {
   font-size: 40px;

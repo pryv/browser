@@ -154,6 +154,8 @@ var EventsNode = module.exports = TreeNode.implement(
       console.log(streams);
       this.treeMap.createVirtualNode(streams);
 
+
+
     }
 
   });

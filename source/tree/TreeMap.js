@@ -395,13 +395,16 @@ TreeMap.prototype.createVirtualNode = function (filters) {
   }
   var parent = this.getFirstCommonParent(_.uniq(streams));
 
-  var vn = new VirtualNode(parent, 'Virtual Node', f);
+  var vn = new VirtualNode(parent, 'Virtual Node');
+  vn.addFilters(f);
   if (parent instanceof Pryv.Connection) {
     console.log('Setting new Virtual node in connection', parent, 'with filters', f);
   } else if (parent instanceof Pryv.Stream) {
     console.log('Setting new Virtual node in stream', parent, 'with filters', f);
     // parent.clientData['browser:virtualnode'] = [{name: 'test aggr', filters: filters}];
   }
+
+
 
   console.log('Virtual node', vn);
 

@@ -23,198 +23,160 @@ var _ = require('underscore');
 
 var KEY = 'browser:virtualnode';
 
-var VirtualNode = module.exports = function VirtualNode(parent, name, filters) {
-  this.parent = null;
-  this._parent = parent;
-  this.name = name;
+var VirtualNode = module.exports = function VirtualNode(node, name) {
+  this._node = node;
   this._name = name;
-  this.filters = filters ? filters : [];
+
+  this._clientData();
+  this._createIfNotExist();
+
 };
-Object.defineProperty(VirtualNode.prototype, 'parent', {
+
+VirtualNode.prototype._integrity = function () {
+  if (!this._node) {
+    throw new Error('_integrity: Node does not exists');
+  }
+};
+
+VirtualNode.prototype._createIfNotExist = function () {
+  var found = false;
+  for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+    if (this._node.clientData[KEY][i].name === this._name) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    this._node.clientData[KEY].push({name: this._name, filters: []});
+  }
+};
+
+
+VirtualNode.prototype._clientData = function () {
+  if (!this._node.clientData) {
+    this._node.clientData = {};
+  }
+  if (!this._node.clientData[KEY]) {
+    this._node.clientData[KEY] = [];
+  }
+};
+
+
+VirtualNode.prototype._pushChanges = function () {
+  this._integrity();
+  if (this._node instanceof Pryv.Connection) {
+    console.log('_pushChanges: to private data');
+    throw new Error('Virtual nodes having connection as parent not supported.');
+  } else if  (this._node instanceof Pryv.Stream) {
+    var changes = {id: this._node.id, clientData: this._node.clientData};
+    console.log('Pushing these changes', changes);
+    this._node.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for', KEY, 'has been pushed:', error, result);
+    });
+  }
+};
+
+Object.defineProperty(VirtualNode.prototype, 'filters', {
   get: function () {
-    return this._parent;
-  },
-  set: function (p) {
-    if (p && this.parent.clientData && this.parent.clientData[KEY]) {
-      var vn = null;
-      for (var i = 0, n = this.parent.clientData[KEY]; i < n; ++i) {
-        if (this.parent.clientData[KEY][i].name === this._name) {
-          vn = _.clone(this.parent.clientData[KEY][i]);
-          this.parent.clientData[KEY].splice(i, 1);
-          break;
-        }
+    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+      if (this._node.clientData[KEY][i].name === this._name) {
+        return this._node.clientData[KEY][i].filters;
       }
-      p.clientData[KEY].push(vn);
-      this._parent = p;
+    }
+    return [];
+  },
+  set: function (filters) {
+    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+      if (this._node.clientData[KEY][i].name === this._name) {
+        this._node.clientData[KEY][i].filters = filters;
+        this._pushChanges();
+        break;
+      }
     }
   }
 });
+
 Object.defineProperty(VirtualNode.prototype, 'name', {
   get: function () {
     return this._name;
   },
   set: function (name) {
-    console.log('Object.defineProperty(VirtualNode.prototype, name, set', name);
-    if (this.parent instanceof Pryv.Connection) {
-      throw new Error('Virtual nodes having connection as parent not supported.');
-    } else if (this.parent instanceof Pryv.Stream) {
-      if (!this.parent.clientData) {
-        this.parent.clientData = {};
-      }
-      if (!this.parent.clientData[KEY] || !this._name) {
-        this.parent.clientData[KEY] = [{name: name, filters: []}];
-      } else {
-        var found = false;
-        for (var i = 0, n = this.parent.clientData[KEY].length; i < n; ++i) {
-          if (this.parent.clientData[KEY][i].name === this._name) {
-            found = true;
-            break;
-          }
-        }
-        if (found) {
-          this.parent.clientData[KEY][i].name = name;
-        } else {
-          this.parent.clientData[KEY].push({name: name, filters: []});
-        }
+    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+      if (this._node.clientData[KEY][i].name === this._name) {
+        this._node.clientData[KEY][i].name = name;
+        this._name = name;
+        this._pushChanges();
+        break;
       }
     }
-    this._name = name;
   }
 });
-Object.defineProperty(VirtualNode.prototype, 'filters', {
+
+Object.defineProperty(VirtualNode.prototype, 'parent', {
   get: function () {
-    if (this.parent instanceof Pryv.Connection) {
-      throw new Error('Virtual nodes having connection as parent not supported.');
-    } else if (this.parent instanceof Pryv.Stream &&
-      this.parent.clientData && this.parent.clientData[KEY]) {
-      for (var i = 0, n = this.parent.clientData[KEY].length; i < n; ++i) {
-        if (this.parent.clientData[KEY][i].name === this._name) {
-          return this.parent.clientData[KEY][i].filters;
-        }
-      }
-    }
-    return [];
+    return this._node;
   },
-  set: function (f) {
-    if (f && f.length !== 0 && this.parent.clientData && this.parent.clientData[KEY]) {
-      for (var i = 0, n = this.parent.clientData[KEY].length; i < n; ++i) {
-        if (this.parent.clientData[KEY][i].name === this._name) {
-          this.parent.clientData[KEY][i].filters = f;
-          break;
-        }
-      }
-    }
+  set: function () {
+    throw new Error('Virtual nodes having connection as parent not supported.');
   }
 });
-VirtualNode.prototype.update = function () {
-  if (this._name) {
-    if (!this.parent) {
-      throw new Error('Parent unset');
-    }
-    if (this.parent instanceof Pryv.Connection) {
-      throw new Error('Virtual nodes having connection as parent not supported.');
-    } else if (this.parent instanceof Pryv.Stream &&
-      this.parent.clientData && this.parent.clientData[KEY]) {
-      if (!this.parent.clientData[KEY]) {
-        this.parent.clientData[KEY] = [];
-      }
-      this.parent.clientData[KEY].push({
-        name: this._name,
-        filters: []
-      });
-    }
-  }
-};
-VirtualNode.prototype.remove = function () {
-  if (this._name) {
-    if (!this.parent) {
-      throw new Error('Parent unset');
-    } else if (this.parent instanceof Pryv.Connection) {
-      throw new Error('Virtual nodes having connection as parent not supported.');
-    } else if (this.parent instanceof Pryv.Stream &&
-      this.parent.clientData && this.parent.clientData[KEY]) {
-      for (var i = 0, n = this.parent.clientData[KEY]; i < n; ++i) {
-        if (this.parent.clientData[KEY][i].name === this._name) {
-          this.parent.clientData[KEY].splice(i, 1);
-          break;
-        }
-      }
-    }
-  }
-};
-VirtualNode.prototype.addFilter = function (streamId, type) {
-  if (!this.parent) {
-    throw new Error('Parent unset');
-  } else if (this.parent instanceof Pryv.Connection) {
-    throw new Error('Virtual nodes having connection as parent not supported.');
-  } else if (this.parent instanceof Pryv.Stream &&
-    this.parent.clientData && this.parent.clientData[KEY]) {
+
+
+
+
+VirtualNode.prototype.addFilters = function (filter) {
+  this._integrity();
+  this._clientData();
+  if (filter && filter.length !== 0) {
     var found = false;
-    for (var i = 0, n = this.clientData[KEY].length; i < n; ++i) {
-      if (this.clientData[KEY][i].name === this.name) {
-        if (!this.clientData[KEY][i].filters) {
-          this.clientData[KEY][i].filters = [];
-        }
-        this.clientData[KEY][i].filters.push({streamId: streamId, type: type});
+    filter = (filter instanceof Array) ? filter : [filter];
+    for (var i = 0, n = this._node.clientData[KEY].length; i < n; ++i) {
+      if (this.parent.clientData[KEY][i].name === this._name) {
+        found = true;
         break;
       }
     }
-    if (!found) {
-      this.clientData[KEY].push({name: this.name, filters: [
-        {streamId: streamId, type: type}
-      ]});
-    }
-  }
-};
-VirtualNode.prototype.removeFilter = function (streamId, type) {
-  for (var i = 0, n = this.clientData[KEY].length; i < n; ++i) {
-    if (this.clientData[KEY][i].name === this.name) {
-      if (!this.clientData[KEY][i].filters) {
-        break;
+
+    if (found) {
+      if (!this.parent.clientData[KEY][i].filters) {
+        this.parent.clientData[KEY][i].filters = [filter];
       } else {
-        for (var j = 0, l = this.clientData[KEY][i].filters.length; j < l; ++j) {
-          if (this.clientData[KEY][i].filters[j].streamId === streamId &&
-            this.clientData[KEY][i].filters[j].type === type) {
-            this.clientData[KEY][i].filters.splice(j, 1);
-            break;
-          }
+        for (var j = 0; j < filter.length; ++j) {
+          this.parent.clientData[KEY][i].filters.push(filter[j]);
         }
       }
+    } else {
+      this.parent.clientData[KEY].push({name: this._name, filters: filter});
     }
+    this._pushChanges();
   }
 };
 
-/* Static accessor methods. */
-/**
- * Returns an array of virtual nodes of a stream or a connection.
- * @param node Can be a Stream or a Connection
- * @returns {Array} an array of VirtualNodes
+
+/*****************************************3333
+ *333333333333333333333333333333333333333333333
  */
-VirtualNode.getFromNode = function (node) {
-  if (node instanceof Pryv.Connection) {
-    throw new Error('Virtual nodes having connection as parent not supported.');
-  } else if (node instanceof Pryv.Stream) {
-    var ret = [];
-    if (!this.clientData) {
-      return [];
-    }
-    var vn = this.clientData[KEY];
-    vn = vn ? vn : [];
-    for (var i = 0, n = vn.length; i < n; ++i) {
-      ret.push(new VirtualNode(vn[i].name, node, vn[i].filters));
-    }
-    return ret;
-  } else {
-    return [];
+
+
+VirtualNode.getNodes = function (node) {
+  var vn = [];
+  if (node.clientData && node.clientData[KEY]) {
+    _.each(node.clientData[KEY], function (e) {
+      if (e.name) {
+        vn.push(new VirtualNode(node, e.name));
+      }
+    });
   }
+  return vn;
 };
+
 
 /**
  * Checks if node has virtual children.
  * @param node a connection or stream
  * @returns {*}
  */
-VirtualNode.hasInNode = function (node) {
+VirtualNode.nodeHas = function (node) {
   if (node instanceof Pryv.Connection) {
     throw new Error('Virtual nodes having connection as parent not supported.');
   } else if (node instanceof Pryv.Stream) {

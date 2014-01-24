@@ -403,12 +403,6 @@ TreeMap.prototype.createVirtualNode = function (filters) {
     console.log('Setting new Virtual node in stream', parent, 'with filters', f);
     // parent.clientData['browser:virtualnode'] = [{name: 'test aggr', filters: filters}];
   }
-
-
-
-  console.log('Virtual node', vn);
-
-
 };
 
 TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {

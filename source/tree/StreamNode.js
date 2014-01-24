@@ -1,6 +1,5 @@
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
-var VirtualNode = require('./VirtualNode.js');
 
 /**
  * Holder for Connection Nodes.
@@ -20,8 +19,6 @@ var StreamNode = module.exports = TreeNode.implement(
     } else if (parentNode.stream && parentNode.stream.color) {
       this.stream.color = parentNode.stream.color;
     }
-
-    console.log('this node', this.uniqueId, VirtualNode.getNodes(this.stream));
 
     /**
      * eventsNodes are stored by their key
@@ -159,9 +156,6 @@ var StreamNode = module.exports = TreeNode.implement(
 
     },
     eventEnterScope: function (event, reason, callback) {
-      if (this.stream.id === 'PTOEGdArKOTTm2OwA3Kq') {
-        console.log('eventEnterScope: Virtual node received event.');
-      }
       var key = this._findEventNodeType(event);
       var eventNode = this._findEventNode(key, this.eventsNodes);
       if (eventNode === null) {
@@ -189,9 +183,6 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     eventLeaveScope: function (event, reason, callback) {
-      if (this.stream.id === 'PTOEGdArKOTTm2OwA3Kq') {
-        console.log('eventEnterScope: Virtual node received event.');
-      }
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
@@ -222,13 +213,9 @@ var StreamNode = module.exports = TreeNode.implement(
           delete aggregatedParent.eventsNodesAggregated[key];
         }
       }
-
     },
 
     eventChange: function (event, reason, callback) {
-      if (this.stream.id === 'PTOEGdArKOTTm2OwA3Kq') {
-        console.log('eventEnterScope: Virtual node received event.');
-      }
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);

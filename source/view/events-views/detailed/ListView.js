@@ -17,10 +17,6 @@ module.exports = Marionette.CompositeView.extend({
       /* jshint -W101 */
       $(this.container).append(
         '<div class="modal-panel-right"> ' +
-        '    <div class="modal-header">  ' +
-        '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
-        '        <h4 class="modal-title" id="myModalLabel">Detailed View</h4> ' +
-        '    </div>      ' +
         '    <div id="modal-right-content"> ' +
         '        <ul id="detail-list"></ul> ' +
         '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
@@ -58,5 +54,5 @@ module.exports = Marionette.CompositeView.extend({
   },
   debounceRender: _.debounce(function () {
     this.render();
-  }, 10)
+  }, 100)
 });

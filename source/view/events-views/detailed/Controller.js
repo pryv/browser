@@ -10,10 +10,10 @@ var _ = require('underscore'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
-var Controller = module.exports = function ($modal, connection) {
+var Controller = module.exports = function ($modal, connections) {
   this.events = {};
   this.eventsToAdd = [];
-  this.connection = connection;
+  this.connection = connections;
   this.newEvent = null;
   this.collection =  new Collection();
   this.highlightedDate = null;
@@ -47,7 +47,12 @@ _.extend(Controller.prototype, {
       }.bind(this));
     }
     /*jshint -W101 */
-    $(this.container).append('<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
+    $(this.container).append('<div class="modal-header">  ' +
+      '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
+      '        <h4 class="modal-title" id="myModalLabel">Detailed View</h4>' +
+      '        <div class="modal-close"></div> ' +
+      '    </div>      ' +
+      '<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
     if (_.size(this.events) > 0) {
       this.commonView.render();
@@ -74,7 +79,7 @@ _.extend(Controller.prototype, {
   close: function () {
     this.commonView.close();
     this.contentView.close();
-    $('div').remove('.modal-panel-left, .modal-panel-right');
+    $('div').remove('.modal-panel-left, .modal-panel-right, .modal-header');
     this.collection.reset();
     this.collection = null;
     this.events = {};

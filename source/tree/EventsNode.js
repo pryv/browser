@@ -32,6 +32,8 @@ var EventsNode = module.exports = TreeNode.implement(
     },
 
     eventEnterScope: function (event, reason, callback) {
+      event.streamName =
+        this.parent.connectionNode.connection.datastore.getStreamById(event.streamId).name;
       this.events[event.id] = event;
       if (!this.eventView) {
         this._createEventView();
@@ -84,6 +86,7 @@ var EventsNode = module.exports = TreeNode.implement(
           content: this.events || this.stream || this.connection,
           eventView: this.eventView,
           streamId: this.parent.stream.id,
+          streamName: this.parent.stream.name,
           connectionId: this.parent.connectionNode.id
         });
       } else {
@@ -126,7 +129,8 @@ var EventsNode = module.exports = TreeNode.implement(
         width: this.width,
         height: this.height,
         id: this.uniqueId,
-        treeMap: this.treeMap
+        treeMap: this.treeMap,
+        stream: this.parent.stream
       }, this);
     },
 

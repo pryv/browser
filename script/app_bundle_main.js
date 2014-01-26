@@ -1,6 +1,6 @@
 require=(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({"SampleApp":[function(require,module,exports){
-module.exports=require('X4tAXF');
-},{}],"X4tAXF":[function(require,module,exports){
+module.exports=require('jR29ZW');
+},{}],"jR29ZW":[function(require,module,exports){
 (function(){/*global require, window*/
 // ---------- helpers that should be  adapted to BackBone fashion ----------- //
 
@@ -97,19 +97,35 @@ Controller.prototype.showFusionDialog =
 
 
 },{}],1:[function(require,module,exports){
-(function(){/* global $ */
-var MonitorsHandler = require('./model/MonitorsHandler.js');
-var _ = require('underscore');
-var ConnectionsHandler = require('./model/ConnectionsHandler.js');
-
-var SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL;
-var TreeMap = require('./tree/TreeMap.js');
-var Controller = require('./orchestrator/Controller.js');
-var Pryv = require('pryv');
-var TimeLine = require('./timeframe-selector/timeframe-selector.js');
-
+(function(){/* global $, window */
+var MonitorsHandler = require('./model/MonitorsHandler.js'),
+_ = require('underscore'),
+ConnectionsHandler = require('./model/ConnectionsHandler.js'),
+SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
+TreeMap = require('./tree/TreeMap.js'),
+Controller = require('./orchestrator/Controller.js'),
+Pryv = require('pryv'),
+TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+PUBLIC_TOKEN = 'TeVY2x0kgq',
+toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
+toShowSubscribe = ['#logo-subscribe'];
 var Model = module.exports = function (DEVMODE) {
-
+  window.Pryv = Pryv;
+  this.urlUsername = Pryv.utility.getUsernameFromUrl();
+  this.urlSharings = Pryv.utility.getSharingsFromUrl();
+  this.publicConnection = null;
+  this.loggedConnection = null;
+  this.sharingsConnections = null;
+  this.bookmakrsConnections = null;
+  this.hideLoggedInElement();
+  if (this.urlSharings.length > 0) {
+    this.sharingsConnections = [];
+    this.urlSharings.forEach(function (token) {
+      this.sharingsConnections.push(new Pryv.Connection(this.urlUsername, token, {staging: true}));
+    }.bind(this));
+  } else if (this.urlUsername) {
+    this.publicConnection =  new Pryv.Connection(this.urlUsername, PUBLIC_TOKEN, {staging: true});
+  }
   // create connection handler and filter
   this.onFiltersChanged = function () {
     console.log('onFiltersChanged', arguments);
@@ -122,22 +138,19 @@ var Model = module.exports = function (DEVMODE) {
       this.treemap.onDateHighLighted(arguments[0].getTime() / 1000);
     }
   }, 100);
-  // Singin
-  Pryv.Access.config.registerURL = { host: 'reg.pryv.io', 'ssl': true};
-  var requestedPermissions = [
-    {
-      'streamId' : '*',
-      'level' : 'manage'
-    }
-  ];
-  this.initBrowser = function (username, token) {
+  this.initBrowser = function () {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
+    var batchCount = 0;
     this.activeFilter.addEventListener(SIGNAL.BATCH_BEGIN, function () {
+      batchCount++;
       $('#logo-reload').addClass('loading');
     });
     this.activeFilter.addEventListener(SIGNAL.BATCH_DONE, function () {
-      $('#logo-reload').removeClass('loading');
+      batchCount--;
+      if (batchCount === 0) {
+        $('#logo-reload').removeClass('loading');
+      }
     });
     this.timeView = new TimeLine();
     this.timeView.render();
@@ -152,17 +165,6 @@ var Model = module.exports = function (DEVMODE) {
 
     Pryv.eventTypes.loadExtras(function () {});
 
-
-    var userConnection =
-      this.connections.add((new Pryv.Connection(username, token, {staging: false})));
-
-    var batch = this.activeFilter.startBatch('adding connections');
-
-    batch.addOnDoneListener('connloading', function () {}.bind(this));
-
-    // tell the filter we want to show this connection
-    this.activeFilter.addConnection(userConnection, batch);
-    batch.done();
     // create the TreeMap
     this.controller = new Controller();
     this.treemap = new TreeMap(this);
@@ -171,20 +173,48 @@ var Model = module.exports = function (DEVMODE) {
 
   };
   // ----------------------- //
+
+  // Singin
+  Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
+
   var settings = {
-    requestingAppId : 'browser',
-    requestedPermissions : requestedPermissions,
-    returnURL : 'auto#', // set this if you don't want a popup
-    spanButtonID : 'pryvButton', // (optional)
+    appId : 'pryv-browser',
+    username: this.urlUsername,
     callbacks : {
-      initialization : function () {},
-      needSignin : function () {},
-      needValidation : function () {},
-      accepted : function (username, appToken, languageCode) {
-        console.log('** SUCCESS! username:' + username +
-          ' appToken:' + appToken +
-          ' lang:' + languageCode);
-        this.initBrowser(username, appToken);
+      signedIn: function (connection) {
+        console.log('Successfully signed in', connection);
+        this.loggedConnection = connection;
+        $('#login-button').text(connection.username);
+        if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
+          this.showLoggedInElement();
+          if (!this.sharingsConnections) {
+            this.addConnection(connection);
+            if (this.publicConnection) {
+              this.removeConnection(this.publicConnection);
+            }
+            connection.bookmarks.get(function (error, result) {
+              if (!error) {
+                this.bookmakrsConnections = result;
+                this.addConnections(this.bookmakrsConnections);
+              }
+            }.bind(this));
+          }
+        } else {
+          this.showSubscribeElement();
+        }
+        $('#login').removeClass('animated slideInRight');
+        $('#tree').removeClass('animated slideOutLeft');
+        $('#login').addClass('animated slideOutRight');
+        $('#tree').addClass('animated slideInLeft');
+      }.bind(this),
+      signedOut: function (connection) {
+        this.hideLoggedInElement();
+        this.removeConnection(connection);
+        if (this.publicConnection) {
+          this.addConnection(this.publicConnection);
+        }
+        $('#login-button').text('Sign In');
+        this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
@@ -195,28 +225,110 @@ var Model = module.exports = function (DEVMODE) {
     }
   };
   if (!DEVMODE) {
-    Pryv.Access.setup(settings);
+    if (this.publicConnection) {
+      this.addConnection(this.publicConnection);
+    } else if (this.sharingsConnections) {
+      this.sharingsConnections.forEach(function (connection) {
+        this.addConnection(connection);
+      }.bind(this));
+    }
+    Pryv.Auth.whoAmI(settings);
+    $('#login-button').click(function (e) {
+      if (this.loggedConnection) {
+        e.stopPropagation();
+        Pryv.Auth.logout();
+      } else {
+        $('#login').css('display', 'block');
+        $('#login').removeClass('animated slideOutRight');
+        $('#tree').removeClass('animated slideInLeft');
+        $('#login').addClass('animated slideInRight');
+        $('#tree').addClass('animated slideOutLeft');
+      }
+    }.bind(this));
+    $('#login-caret').click(function () {
+      $('#login').removeClass('animated slideInRight');
+      $('#tree').removeClass('animated slideOutLeft');
+      $('#login').addClass('animated slideOutRight');
+      $('#tree').addClass('animated slideInLeft');
+    });
+    $('#login form').submit(function (e) {
+      e.preventDefault();
+      if (this.loggedConnection) {
+        console.warn('You are already logged in, please log out');
+        return;
+      }
+      settings.username = $('#login-username').val();
+      settings.password = $('#login-password').val();
+      Pryv.Auth.login(settings);
+    }.bind(this));
   }  else {
-    this.initBrowser('fredos71', 'VVTi1NMWDM');
+    // for dev env only
+    // add connections here, you mut set the loggedConnection with a staging connection
+    var defaultConnection = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
+    this.loggedConnection = defaultConnection;
+    this.addConnection(defaultConnection);
+    this.addConnection(new Pryv.Connection('fredos71',
+      'chq6k6jfk000b52w4bf86thgv', {staging: true}));
+    this.showLoggedInElement();
   }
 
 
 };
 
+Model.prototype.addConnection = function (connection) {
+  if (!this.treemap) {
+    this.initBrowser();
+  }
+  if (!connection._accessInfo) {
+    connection.accessInfo();
+  }
+  if (!connection._privateProfile) {
+    connection.privateProfile();
+  }
+  var userConnection = this.connections.add(connection),
+  batch = this.activeFilter.startBatch('adding connections');
+  this.activeFilter.addConnection(userConnection, batch);
+  batch.done();
+};
+Model.prototype.addConnections = function (connections) {
+  connections.forEach(function (conn) {
+    this.addConnection(conn);
+  }.bind(this));
+};
+Model.prototype.removeConnection = function (connection) {
+  this.activeFilter.removeConnections(connection.serialId);
+};
 
+Model.prototype.removeConnections = function (connections) {
+  connections.forEach(function (conn) {
+    this.removeConnection(conn);
+  }.bind(this));
+};
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.
  */
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
     var stats = this.activeFilter.stats(),
-      currentLimit = {from: this.timeView.limitFrom, to: this.timeView.limitTo};
+      currentLimit = {from: this.timeView.limitFrom - 3600, to: this.timeView.limitTo + 3600};
     console.log('updateLimits', stats, currentLimit);
-    this.timeView.setLimit(stats.timeFrameLT[0], stats.timeFrameLT[1]);
+    this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
   }.bind(this), 100))();
 };
 
 
+
+Model.prototype.showLoggedInElement = function () {
+  $(toShowWhenLoggedIn.join(',')).show();
+};
+Model.prototype.showSubscribeElement = function () {
+  $(toShowSubscribe.join(',')).show();
+};
+
+Model.prototype.hideLoggedInElement = function () {
+  $(toShowWhenLoggedIn.join(',')).hide();
+  $(toShowSubscribe.join(',')).hide();
+};
 function initTimeAndFilter(timeView, filter) {
   var spanTime = 86400000,
     fromTime = new Date(),
@@ -226,7 +338,7 @@ function initTimeAndFilter(timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 5000
+    limit: 500
   });
 
   timeView.onFiltersChanged({
@@ -1517,63 +1629,20 @@ function initTimeAndFilter(timeView, filter) {
 
 })()
 },{}],9:[function(require,module,exports){
-/**
- * @class Pryv
- * @constructor
- */
-function Pryv() { }
+module.exports = {
+  // TODO: fix singleton (see with me [sgoumaz] if needed)
+  Auth: require('./auth/Auth.js'),
+  Connection: require('./Connection.js'),
+  Event: require('./Event.js'),
+  Stream: require('./Stream.js'),
+  Filter: require('./Filter.js'),
+  system: require('./system/system.js'),
+  utility: require('./utility/utility.js'),
 
-Pryv.prototype.Connection = require('./Connection.js');
-Pryv.prototype.Event = require('./Event.js');
-Pryv.prototype.Stream = require('./Stream.js');
-Pryv.prototype.Filter = require('./Filter.js');
-Pryv.prototype.System = require('./system/System.js');
-Pryv.prototype.Access = require('./access/Access.js');
-Pryv.prototype.Utility = require('./utility/Utility.js');
-Pryv.prototype.Messages = require('./Messages.js');
-
-
-Pryv.prototype.eventTypes = require('./eventTypes.js');
-
-module.exports = new Pryv();
-
-},{"./Connection.js":10,"./Event.js":11,"./Filter.js":12,"./Messages.js":15,"./Stream.js":18,"./access/Access.js":17,"./eventTypes.js":16,"./system/System.js":13,"./utility/Utility.js":14}],15:[function(require,module,exports){
-var Messages = module.exports = { };
-
-Messages.Monitor = {
-  /** content: events **/
-  ON_LOAD : 'onLoad',
-  /** content: error **/
-  ON_ERROR : '_onIoError',
-  /** content: { enter: [], leave: [], change } **/
-  ON_EVENT_CHANGE : 'onEventChange',
-  /** content: streams **/
-  ON_STRUCTURE_CHANGE : 'onStructureChange',
-  /** content: streams **/
-  ON_FILTER_CHANGE : 'onFilterChange'
+  eventTypes: require('./eventTypes.js')
 };
 
-
-Messages.Filter = {
-  /**
-   * generic change event called on any change
-   * content: {filter, signal, content}
-   **/
-  ON_CHANGE : 'onChange',
-  /**
-   * called on streams changes
-   * content: streams
-   */
-  STREAMS_CHANGE : 'streamsChange',
-
-  /*
-  * called on date changes
-  * content: streams
-  */
-  DATE_CHANGE : 'dateChange'
-
-};
-},{}],4:[function(require,module,exports){
+},{"./Connection.js":11,"./Event.js":12,"./Filter.js":14,"./Stream.js":13,"./auth/Auth.js":10,"./eventTypes.js":17,"./system/system.js":15,"./utility/utility.js":16}],4:[function(require,module,exports){
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
@@ -1586,10 +1655,11 @@ var MSGs = require('./Messages').MonitorsHandler;
  * @type {Function}
  */
 var MonitorsHandler = module.exports = function (model, batchSetKeyValues) {
-  Pryv.Utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'MonitorsHandler');
+  Pryv.utility.SignalEmitter.extend(this, MSGs.SIGNAL, 'MonitorsHandler');
   this.model = model;
   this._monitors = {}; // serialIds / monitor
   this.rootFilter = new Filter();
+  this.connectionToRemove = [];
   if (batchSetKeyValues) {
     this.set(batchSetKeyValues);
   }
@@ -1653,10 +1723,18 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
 
   // be sure localstorage is activated
   connection.fetchStructure(function (useLocalStorageError) {
+    console.log('fetchStructure', arguments);
     if (useLocalStorageError) {
-      throw new Error('failed activating localStorage for ' + connection.id);
+      console.error('failed activating localStorage for ' + connection.id);
+      if (batchWaitForMe) { batchWaitForMe.done(); }
+      return;
     }
-
+    var connectionIndex = this.connectionToRemove.indexOf(connection.serialId);
+    if (connectionIndex !== -1) {
+      this.connectionToRemove[connectionIndex] = null;
+      if (batchWaitForMe) { batchWaitForMe.done(); }
+      return;
+    }
     var filterSettings = _.omit(this.rootFilter.getData(), 'streams'); //copy everything but Streams
     var specificFilter = new Filter(filterSettings);
     specificFilter._xerialId =  'F' + connection.serialId;
@@ -1669,13 +1747,10 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
       this._eventsEnterScope(MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION, events, batch);
       if (batchWaitForMe) { batchWaitForMe.done(); } // called only once at load
     }
-    monitor.addEventListener(
-      Pryv.Messages.Monitor.ON_LOAD, onMonitorOnLoad.bind(this));
+    monitor.addEventListener('started', onMonitorOnLoad.bind(this));
 
-    monitor.addEventListener(
-      Pryv.Messages.Monitor.ON_EVENT_CHANGE, this._onMonitorEventChange.bind(this));
-    monitor.addEventListener(
-      Pryv.Messages.Monitor.ON_FILTER_CHANGE, this._onMonitorFilterChange.bind(this));
+    monitor.addEventListener('eventsChanged', this._onMonitorEventChange.bind(this));
+    monitor.addEventListener('filterChanged', this._onMonitorFilterChange.bind(this));
 
     monitor.start(function (error) {
       console.log('monitor started ' + error);
@@ -1695,10 +1770,12 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
 
     var monitor = this._monitors[connectionId];
     if (! monitor) {
-      throw new Error('cannot find monitor for connection: ' + connectionId);
+      if (this.connectionToRemove.indexOf(connectionId) === -1) {
+        this.connectionToRemove.push(connectionId);
+      }
+      return;
     }
-
-    monitor.focusOnStreams([]);
+    this.focusOnStreams([]);
     this._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
       monitor.getEvents(), myBatch);
     delete this._monitors[connectionSerialId];
@@ -1769,7 +1846,7 @@ MonitorsHandler.prototype.getStreams = function () {
   var result = [];
   this._eachMonitor(function (monitor) {
     _.each(monitor.filter.streamsIds, function (streamId) {
-      result.push(monitor.connection.getStreamById(streamId));
+      result.push(monitor.connection.datastore.getStreamById(streamId));
     });
   });
   return result;
@@ -1886,26 +1963,45 @@ var RootNode = require('./RootNode.js'),
  SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
  _ = require('underscore'),
  DetailView = require('../view/events-views/detailed/Controller.js'),
- FusionDialog = require('../view/events-views/fusion/Controller.js');
-
+ SharingView = require('../view/sharings/Controller.js'),
+ CreateSharingView = require('../view/sharings/create/Controller.js'),
+ SubscribeView = require('../view/subscribe/Controller.js'),
+ FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
+ VirtualNode = require('./VirtualNode.js'),
+ Pryv = require('pryv');
+var MARGIN_TOP = 20;
+var MARGIN_RIGHT = 20;
+var MARGIN_BOTTOM = 30;
+var MARGIN_LEFT = 20;
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
   this.detailedView = null;
+  this.sharingView = null;
+  this.subscribeView = null;
+  this.createSharingView = null;
   this.focusedStreams = null;
   var $tree = $('#tree');
-  this.root = new RootNode(this, $tree.width() -
-    parseInt($tree.css('margin-left').split('px')[0], null) -
-    parseInt($tree.css('margin-right').split('px')[0], null),
-    $tree.height() -
-    parseInt($tree.css('margin-bottom').split('px')[0], null) -
-    parseInt($tree.css('margin-top').split('px')[0], null));
-  this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
-  this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
-
+  this.root = new RootNode(this, $tree.width() - MARGIN_LEFT - MARGIN_RIGHT,
+    $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
+  this.root.x =  MARGIN_LEFT;
+  this.root.y =  MARGIN_TOP;
   $('#logo-reload').click(function (e) {
     e.preventDefault();
-    this.focusOnStreams(null);
+    if (this.model.sharingsConnections &&
+      this.model.urlUsername === this.model.loggedConnection.username) {
+      this.model.removeConnections(this.model.sharingsConnections);
+      this.model.sharingsConnections = null;
+      this.model.loggedConnection.bookmarks.get(function (error, result) {
+        if (!error) {
+          this.model.bookmarksConnections = result;
+          this.model.addConnections(this.model.bookmarksConnections);
+        }
+      }.bind(this));
+      this.model.addConnection(this.model.loggedConnection);
+    } else {
+      this.focusOnStreams(null);
+    }
   }.bind(this));
   $('#logo-add').click(function (e) {
     e.preventDefault();
@@ -1914,6 +2010,43 @@ var TreeMap = module.exports = function (model) {
     }.bind(this));
     this.initDetailedView($modal);
     this.detailedView.createNewEvent();
+  }.bind(this));
+  $('#logo-sharing').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeSharingView();
+    }.bind(this));
+    this.showSharingView($modal, this.model.loggedConnection);
+  }.bind(this));
+  $('#logo-subscribe').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeSubscribeView();
+    }.bind(this));
+    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections);
+  }.bind(this));
+  $('#logo-create-sharing').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeCreateSharingView();
+    }.bind(this));
+    console.log(this.model);
+    var streams = [],
+      loggedUsername = this.model.loggedConnection.username;
+    this.model.activeFilter.getStreams().forEach(function (stream) {
+      if (stream.connection.username === loggedUsername) {
+        streams.push({id: stream.id, name: stream.name, children: stream.children});
+      }
+    });
+    if (streams.length === 0) {
+      this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
+        streams.push({id: stream.id, name: stream.name, children: stream.children});
+      });
+    }
+    if (streams.length !== 0) {
+      this.showCreateSharingView($modal, this.model.loggedConnection, streams,
+      this.model.activeFilter.timeFrameST);
+    }
   }.bind(this));
   var refreshTree = _.throttle(function () {
     var start = new Date().getTime();
@@ -1932,14 +2065,10 @@ var TreeMap = module.exports = function (model) {
 
   $(window).resize(_.debounce(function () {
     var $tree = $('#tree');
-    this.root.width = $tree.width() -
-      parseInt($tree.css('margin-left').split('px')[0], null) -
-      parseInt($tree.css('margin-right').split('px')[0], null);
-    this.root.height = $tree.height() -
-      parseInt($tree.css('margin-bottom').split('px')[0], null) -
-      parseInt($tree.css('margin-top').split('px')[0], null);
-    this.root.x =  parseInt($tree.css('margin-left').split('px')[0], null);
-    this.root.y =  parseInt($tree.css('margin-top').split('px')[0], null);
+    this.root.width = $tree.width() - MARGIN_LEFT - MARGIN_RIGHT;
+    this.root.height = $tree.height() - MARGIN_BOTTOM - MARGIN_TOP;
+    this.root.x =  MARGIN_LEFT;
+    this.root.y =  MARGIN_TOP;
     this.root._createView();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,
@@ -2080,7 +2209,28 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   }.bind(this)), events);
   this.dialog.show();
 };
- //======== Detailed View ========\\
+
+TreeMap.prototype.getFiltersFromNode = function (node) {
+  var streams = [];
+  var u = {}, s;
+  for (var attribute in node.events) {
+    if (node.events.hasOwnProperty(attribute)) {
+      s = {stream: node.events[attribute].stream, type: node.events[attribute].type};
+      if (!u.hasOwnProperty(s.streamId)) {
+        u[s.streamId] = {};
+        if (!u[s.streamId].hasOwnProperty(s.type)) {
+          u[s.streamId][s.type] = 1;
+          streams.push(s);
+        }
+      }
+    }
+  }
+  return s;
+};
+
+
+
+   //======== Detailed View ========\\
 TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
   if (!this.hasDetailedView()) {
     this.detailedView = new DetailView($modal, this.model.connections);
@@ -2094,6 +2244,8 @@ TreeMap.prototype.hasDetailedView = function () {
   return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
 };
 TreeMap.prototype.showDetailedView = function () {
+  this.closeSharingView();
+  this.closeCreateSharingView();
   if (this.hasDetailedView()) {
     this.detailedView.show();
   }
@@ -2125,19 +2277,134 @@ TreeMap.prototype.highlightDateDetailedView = function (time) {
   }
 };
 /*=================================*/
-
+//========== SHARING VIEW =========\\
+TreeMap.prototype.hasSharingView = function () {
+  return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
+};
+TreeMap.prototype.showSharingView = function ($modal, connection) {
+  this.closeSharingView();
+  this.closeCreateSharingView();
+  this.closeDetailedView();
+  if ($modal && connection) {
+    this.sharingView = new SharingView($modal, connection);
+    this.sharingView.show();
+  }
+};
+TreeMap.prototype.closeSharingView = function () {
+  if (this.hasSharingView()) {
+    this.sharingView.close();
+    this.sharingView = null;
+  }
+};
+ /*=================================*/
+//========== CREATE SHARING VIEW =========\\
+TreeMap.prototype.hasCreateSharingView = function () {
+  return typeof this.createSharingView !== 'undefined' && this.createSharingView !== null;
+};
+TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilter, streams) {
+  this.closeCreateSharingView();
+  this.closeDetailedView();
+  this.closeSharingView();
+  if ($modal && timeFilter && streams) {
+    this.createSharingView = new CreateSharingView($modal, connection, timeFilter, streams);
+    this.createSharingView.show();
+  }
+};
+TreeMap.prototype.closeCreateSharingView = function () {
+  if (this.hasCreateSharingView()) {
+    this.createSharingView.close();
+    this.createSharingView = null;
+  }
+};
+ /*=================================*/
+ //========== SUBSCRIBE VIEW =========\\
+TreeMap.prototype.hasSubscribeView = function () {
+  return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
+};
+TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections) {
+  this.closeSubscribeView();
+  if ($modal && loggedConnection) {
+    this.subscribeView = new SubscribeView($modal, loggedConnection, sharingsConnections);
+    this.subscribeView.show();
+  }
+};
+TreeMap.prototype.closeSubscribeView = function () {
+  if (this.hasSubscribeView()) {
+    this.subscribeView.close();
+    this.subscribeView = null;
+  }
+};
+ /*=================================*/
 /* jshint -W098 */
 
  /**
   * Creates a virtual node from a certain number of events.
-  * @param events is an array of events you want to fuse, aka show in the same node.
+  * @param eventsNodes is an array of events nodes you want to aggregate permanently.
   */
-TreeMap.prototype.createVirtualNode = function (events) {
-  /* TODO:
-   * create the node, don't remove the already existing
-   * make sure the update follows at both places
-   */
+TreeMap.prototype.createVirtualNode = function (filters) {
+  var streams = [];
+  var f = [];
+  for (var i = 0, n = filters.length; i < n; ++i) {
+    streams.push(filters[i].stream);
+    f.push({streamId: filters[i].stream.id, type: filters[i].type});
+  }
+  var parent = this.getFirstCommonParent(_.uniq(streams));
 
+  var vn = new VirtualNode(parent, 'Virtual Node');
+  vn.addFilters(f);
+  if (parent instanceof Pryv.Connection) {
+    console.log('Setting new Virtual node in connection', parent, 'with filters', f);
+  } else if (parent instanceof Pryv.Stream) {
+    console.log('Setting new Virtual node in stream', parent, 'with filters', f);
+    // parent.clientData['browser:virtualnode'] = [{name: 'test aggr', filters: filters}];
+  }
+};
+
+TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
+
+   /* TODO:
+    * create the node, don't remove the already existing
+    * make sure the update follows at both places
+    */
+
+  // Depth first search for goal, starting from parent
+  var hasChild = function (parent, goal) {
+    var found = false;
+    if (parent.id === goal.id) {
+      found = true;
+    } else if (parent.children.length !== 0) {
+      _.each(parent.children, function (c) {
+        found = found || hasChild(c, goal);
+      });
+    }
+    return found;
+  };
+
+
+  // returns common parent of start and goal
+  var matchChild = function (start, goal) {
+    var found = false;
+    var depth = start;
+    while (found === false) {
+      found = hasChild(depth, goal);
+      if (!found) {
+        if (depth.parent) {
+          depth = depth.parent;
+        } else {
+          return depth.connection;
+        }
+      }
+    }
+    return depth;
+  };
+
+
+  // start contains the common parent of all arguments in the end.
+  var start = eventsNodes[0];
+  for (var i = 1, n = eventsNodes.length; i < n; ++i) {
+    start = matchChild(start, eventsNodes[i]);
+  }
+  return start;
 };
 
 
@@ -2150,17 +2417,12 @@ TreeMap.prototype.removeVirtualNode = function (node) {
    * just remove the indicated node
    */
 };
-
-
 })()
-},{"../model/Messages":7,"../view/events-views/detailed/Controller.js":19,"../view/events-views/fusion/Controller.js":20,"./RootNode.js":21,"underscore":8}],7:[function(require,module,exports){
+},{"../model/Messages":7,"../view/events-views/detailed/Controller.js":19,"../view/events-views/draganddrop/Controller.js":23,"../view/sharings/Controller.js":20,"../view/sharings/create/Controller.js":21,"../view/subscribe/Controller.js":22,"./RootNode.js":18,"./VirtualNode.js":24,"pryv":9,"underscore":8}],7:[function(require,module,exports){
 
 var Messages = module.exports = { };
 
-var SignalEmitter = require('pryv').Utility.SignalEmitter;
-
-var PryvMSGs = require('pryv').Messages;
-
+var SignalEmitter = require('pryv').utility.SignalEmitter;
 Messages.MonitorsHandler = {
   UNREGISTER_LISTENER : SignalEmitter.Messages.UNREGISTER_LISTENER,
   SIGNAL : {
@@ -2184,7 +2446,7 @@ Messages.MonitorsHandler = {
     // may happend when several refresh requests overlaps
     FORCE : 'forced',
 
-    FILTER_STREAMS_CHANGED : PryvMSGs.Filter.STREAMS_CHANGE
+    FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };
 },{"pryv":9}],6:[function(require,module,exports){
@@ -3158,9 +3420,15 @@ module.exports = Backbone.View.extend({
 });
 
 })()
-},{"./modal.js":22,"backbone":23,"underscore":8}],16:[function(require,module,exports){
+},{"./modal.js":25,"backbone":26,"underscore":8}],10:[function(require,module,exports){
+var utility = require('../utility/utility.js');
 
-var System = require('./system/System.js');
+module.exports =  utility.isBrowser() ?
+    require('./Auth-browser.js') : require('./Auth-node.js');
+
+},{"../utility/utility.js":16,"./Auth-browser.js":27,"./Auth-node.js":28}],17:[function(require,module,exports){
+
+var system = require('./system/system.js');
 var eventTypes = module.exports = { };
 
 // staging cloudfront https://d1kp76srklnnah.cloudfront.net/dist/data-types/event-extras.json
@@ -3176,7 +3444,7 @@ var PATH = '/dist/data-types/';
  * @param callback
  */
 function _getFile(fileName, callback) {
-  System.request({
+  system.request({
     method : 'GET',
     host : HOSTNAME,
     path : PATH + fileName,
@@ -3246,19 +3514,14 @@ eventTypes.extras = function (eventType) {
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./system/System.js":13}],17:[function(require,module,exports){
-var Utility = require('../utility/Utility.js');
-
-
-module.exports =  Utility.isBrowser() ?
-    require('./Access-browser.js') : require('./Access-node.js');
-},{"../utility/Utility.js":14,"./Access-browser.js":24,"./Access-node.js":25}],26:[function(require,module,exports){
-var apiPathProfile = '/profile/app';
+},{"./system/system.js":15}],29:[function(require,module,exports){
+var apiPathPrivateProfile = '/profile/private';
+var apiPathPublicProfile = '/profile/app';
 
 
 /**
  * @class Profile
-   @link http://api.pryv.com/reference.html#methods-app-profile
+ @link http://api.pryv.com/reference.html#methods-app-profile
  * @param {Connection} connection
  * @constructor
  */
@@ -3266,18 +3529,27 @@ function Profile(connection) {
   this.connection = connection;
 }
 
+
+
 /**
  * @param {String | null} key
  * @param {Connection~requestCallback} callback - handles the response
  */
-Profile.prototype.get = function (key, callback) {
+Profile.prototype._get = function (path, key, callback) {
+
   function myCallBack(error, result) {
     if (key !== null && result) {
       result = result[key];
     }
     callback(error, result);
   }
-  this.connection.request('GET', apiPathProfile, myCallBack);
+  this.connection.request('GET', path, myCallBack);
+};
+Profile.prototype.getPrivate = function (key, callback) {
+  this._get(apiPathPrivateProfile, key, callback);
+};
+Profile.prototype.getPublic = function (key, callback) {
+  this._get(apiPathPublicProfile, key, callback);
 };
 
 
@@ -3289,13 +3561,56 @@ Profile.prototype.get = function (key, callback) {
  * @param {Object} keyValuePairs
  * @param {Connection~requestCallback} callback - handles the response
  */
-Profile.prototype.set = function (keyValuePairs, callback) {
-  this.connection.request('PUT', apiPathProfile, callback, keyValuePairs);
+Profile.prototype._set = function (path, keyValuePairs, callback) {
+  this.connection.request('PUT', path, callback, keyValuePairs);
+};
+Profile.prototype.setPrivate = function (key, callback) {
+  this._set(apiPathPrivateProfile, key, callback);
+};
+Profile.prototype.setPublic = function (key, callback) {
+  this._set(apiPathPublicProfile, key, callback);
 };
 
 
 module.exports = Profile;
-},{}],27:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
+var apiPathAccesses = '/accesses';
+
+/**
+ * @class Accesses
+ * @link http://api.pryv.com/reference.html#methods-accesses
+ * @link http://api.pryv.com/reference.html#data-structure-access
+ * @param {Connection} connection
+ * @constructor
+ */
+function Accesses(connection) {
+  this.connection = connection;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Accesses.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathAccesses, callback);
+};
+
+Accesses.prototype.create = function (access, callback) {
+  this.connection.request('POST', apiPathAccesses, callback, access);
+};
+
+Accesses.prototype.delete = function (sharingId, callback) {
+  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+module.exports = Accesses;
+},{}],28:[function(require,module,exports){
+
+module.exports = {};
+},{}],31:[function(require,module,exports){
 //file: system browser
 
 
@@ -3471,7 +3786,10 @@ var _initXHR = function () {
 
 
 
-},{}],28:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
+
+module.exports = {};
+},{}],33:[function(require,module,exports){
 //file: system node
 
 //TODO align with XHR error
@@ -3540,7 +3858,7 @@ exports.request = function (pack)  {
         try {
           result = JSON.parse(bodyarr.join(''));
         } catch (error) {
-          return onError('System-node.request failed to parse JSON in response' +
+          return onError('system-node.request failed to parse JSON in response' +
             bodyarr.join('')
           );
         }
@@ -3567,18 +3885,403 @@ exports.request = function (pack)  {
   return req;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
+(function(){/* global document, navigator */
+/* jshint -W101*/
 
-module.exports = {};
-},{}],25:[function(require,module,exports){
+/*
+ return error, was used only by getURLContent() and  loadURLContentInElementId() but never used outside the lib
+ var system = require('../system/system.js');
+ */
 
-module.exports = {};
-},{}],21:[function(require,module,exports){
+/**
+ * Browser only utils
+ */
+var utility = module.exports = {};
+
+/* Regular expressions. */
+
+
+/**
+ * Test if hostname is a *.rec.la or pryv.li if yes. it assumes that the client
+ * runs on a staging version
+ */
+utility.testIfStagingFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return utility.endsWith(location.hostname, 'pryv.li') ||
+    utility.endsWith(location.hostname, 'rec.la');
+};
+
+utility.getUsernameFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  var hostname = location.hostname.split('.'),
+    recIndex = hostname.indexOf('rec'),
+    pryvIndex = hostname.indexOf('pryv');
+  if (recIndex <= 0 && pryvIndex <= 0) {
+    console.log('getUsernameFromUrl:', 'unknown hostname:', hostname);
+    return null;
+  }
+  var usernameIndex = pryvIndex > 0 ? pryvIndex - 1: recIndex - 1;
+  if (hostname[usernameIndex].match(utility.regex.username)) {
+    return hostname[usernameIndex];
+  } else {
+    console.log('getUsernameFromUrl:', 'invalid username:', hostname[usernameIndex]);
+    return null;
+  }
+};
+
+utility.getSharingsFromUrl = function (url) {
+  var username = utility.getUsernameFromUrl(url);
+  if (!username) {
+    return [];
+  }
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  var path = location.hash.split('/'),
+    sharingsIndex = path.indexOf('sharings');
+  if (sharingsIndex !== -1) {
+    return path.splice(sharingsIndex + 1).filter(function (el) { return el.length > 0; });
+  } else {
+    return [];
+  }
+};
+
+utility.getParamsFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  var str = location.search;
+  var objURL = {};
+  str.replace(new RegExp('([^?=&]+)(=([^&]*))?', 'g'), function ($0, $1, $2, $3) {
+    objURL[$1] = $3;
+  });
+  return objURL;
+};
+utility.getPathFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.pathname === '/' ? '' : location.pathname;
+};
+utility.getHostFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.hostname;
+};
+utility.getPortFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.port === '' ? null : location.port;
+};
+utility.isUrlSsl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.protocol === 'https:';
+};
+/**
+ *  return true if browser is seen as a mobile or tablet
+ *  list grabbed from https://github.com/codefuze/js-mobile-tablet-redirect/blob/master/mobile-redirect.js
+ */
+utility.browserIsMobileOrTablet = function () {
+  return (/iphone|ipod|android|blackberry|opera mini|opera mobi|skyfire|maemo|windows phone|palm|iemobile|symbian|symbianos|fennec|ipad|android 3|sch-i800|playbook|tablet|kindle|gt-p1000|sgh-t849|shw-m180s|a510|a511|a100|dell streak|silk/i.test(navigator.userAgent.toLowerCase()));
+};
+
+/**
+ * Method to get the preferred language, either from desiredLanguage or from the browser settings
+ * @method getPreferredLanguage
+ * @param {Array} supportedLanguages an array of supported languages encoded on 2characters
+ * @param {String} desiredLanguage (optional) get this language if supported
+ */
+utility.getPreferredLanguage = function (supportedLanguages, desiredLanguage) {
+  if (desiredLanguage) {
+    if (supportedLanguages.indexOf(desiredLanguage) >= 0) { return desiredLanguage; }
+  }
+  var lct = null;
+  if (navigator.language) {
+    lct = navigator.language.toLowerCase().substring(0, 2);
+  } else if (navigator.userLanguage) {
+    lct = navigator.userLanguage.toLowerCase().substring(0, 2);
+  } else if (navigator.userAgent.indexOf('[') !== -1) {
+    var start = navigator.userAgent.indexOf('[');
+    var end = navigator.userAgent.indexOf(']');
+    lct = navigator.userAgent.substring(start + 1, end).toLowerCase();
+  }
+  if (desiredLanguage) {
+    if (lct.indexOf(desiredLanguage) >= 0) { return lct; }
+  }
+
+  return supportedLanguages[0];
+};
+
+
+/**
+ * //TODO check if it's robust
+ * Method to check the browser supports CSS3.
+ * @method supportCSS3
+ * @return boolean
+ */
+utility.supportCSS3 = function ()  {
+  var stub = document.createElement('div'),
+    testProperty = 'textShadow';
+
+  if (testProperty in stub.style) { return true; }
+
+  testProperty = testProperty.replace(/^[a-z]/, function (val) {
+    return val.toUpperCase();
+  });
+
+  return false;
+};
+
+/**
+ * Method to load external files like javascript and stylesheet. this version
+ * of method only support to file types - js|javascript and css|stylesheet.
+ * @method loadExternalFiles
+ * @param {String} string filename
+ * @param {String} type -- 'js' or 'css'
+ */
+utility.loadExternalFiles = function (filename, type)  {
+  var tag = null;
+
+  type = type.toLowerCase();
+
+  if (type === 'js' || type === 'javascript') {
+    tag = document.createElement('script');
+    tag.setAttribute('type', 'text/javascript');
+    tag.setAttribute('src', filename);
+  } else if (type === 'css' || type === 'stylesheet')  {
+    tag = document.createElement('link');
+    tag.setAttribute('rel', 'stylesheet');
+    tag.setAttribute('type', 'text/css');
+    tag.setAttribute('href', filename);
+  }
+
+  if (tag !== null || tag !== undefined) {
+    document.getElementsByTagName('head')[0].appendChild(tag);
+  }
+};
+
+/**
+ * Get the content on an URL as a String ,
+ * Mainly designed to load HTML ressources
+ * @param {String} url
+ * @param {Function} callBack  function(error,content,xhr)
+ * @return {Object} xhr request
+ */
+/*  UNUSED function
+utility.getURLContent = function (url, callback) {
+
+  function onSuccess(result, xhr) {
+    callback(null, result, xhr);
+  }
+
+  function onError(error) {
+    callback(error, null, error.xhr);
+  }
+
+  return system.request({
+    method : 'GET',
+    url : url,
+    parseResult : 'text',
+    success: onSuccess,
+    error: onError
+  });
+};
+*/
+/**
+ * Load the content of a URL into a div
+ * !! No error will go to the console.
+ */
+/*  UNUSED function
+utility.loadURLContentInElementId = function (url, elementId, next) {
+  next = next || function () {};
+  var content = document.getElementById(elementId);
+  utility.getURLContent(url,
+    function (error, result) {
+      content.innerHTML = result;
+      next();
+      if (error) {
+        console.error(error);
+      }
+    }
+  );
+};
+*/
+
+
+
+
+/* jshint ignore:start */
+/*\
+ |*|
+ |*|  :: cookies.js ::
+ |*|
+ |*|  A complete cookies reader/writer framework with full unicode support.
+ |*|
+ |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
+ |*|
+ |*|  Syntaxes:
+ |*|
+ |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
+ |*|  * docCookies.getItem(name)
+ |*|  * docCookies.removeItem(name[, path])
+ |*|  * docCookies.hasItem(name)
+ |*|  * docCookies.keys()
+ |*|
+ \*/
+utility.docCookies = {
+  getItem: function (sKey) {
+    if (!sKey || !this.hasItem(sKey)) { return null; }
+    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
+      escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+  },
+  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
+    var sExpires = "";
+    if (vEnd) {
+      switch (vEnd.constructor) {
+        case Number:
+          sExpires = vEnd === Infinity ?
+            "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
+          break;
+        case String:
+          sExpires = "; expires=" + vEnd;
+          break;
+        case Date:
+          sExpires = "; expires=" + vEnd.toGMTString();
+          break;
+      }
+    }
+    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
+  },
+  removeItem: function (sKey, sPath) {
+    if (!sKey || !this.hasItem(sKey)) { return; }
+    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
+  },
+  hasItem: function (sKey) {
+    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+  },
+  keys: /* optional method: you can safely remove it! */ function () {
+    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
+    return aKeys;
+  }
+};
+
+/* jshint ignore:end */
+
+
+//----------- DomReady ----------//
+
+
+/*!
+ * domready (c) Dustin Diaz 2012 - License MIT
+ */
+
+/* jshint ignore:start */
+utility.domReady = function (ready) {
+
+
+  var fns = [], fn, f = false,
+    doc = document,
+    testEl = doc.documentElement,
+    hack = testEl.doScroll,
+    domContentLoaded = 'DOMContentLoaded',
+    addEventListener = 'addEventListener',
+    onreadystatechange = 'onreadystatechange',
+    readyState = 'readyState',
+    loaded = /^loade|c/.test(doc[readyState]);
+
+  function flush(f) {
+    loaded = 1;
+    while (f = fns.shift()) { 
+      f()
+    }
+  }
+
+  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
+    doc.removeEventListener(domContentLoaded, fn, f);
+    flush();
+  }, f);
+
+
+  hack && doc.attachEvent(onreadystatechange, fn = function () {
+    if (/^c/.test(doc[readyState])) {
+      doc.detachEvent(onreadystatechange, fn);
+      flush();
+    }
+  });
+
+  return (ready = hack ?
+    function (fn) {
+      self != top ?
+        loaded ? fn() : fns.push(fn) :
+        function () {
+          console.log("on dom ready 2");
+          try {
+            testEl.doScroll('left')
+          } catch (e) {
+            return setTimeout(function() { ready(fn) }, 50)
+          }
+          fn()
+        }()
+    } :
+    function (fn) {
+      loaded ? fn() : fns.push(fn)
+    })
+}();
+
+/* jshint ignore:end */
+
+
+
+})()
+},{}],18:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
 
-var CONNECTION_MARGIN = 20;
+var CONNECTION_MARGIN = 30;
 /**
  * Holder for Connection Nodes.
  * @type {*}
@@ -3661,7 +4364,197 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":31,"./TreeNode":30,"underscore":8}],22:[function(require,module,exports){
+},{"./ConnectionNode":36,"./TreeNode":35,"underscore":8}],24:[function(require,module,exports){
+var Pryv = require('pryv');
+var _ = require('underscore');
+
+
+/* Definition of a virtual node attached to a stream as its child
+ *  stream: <streamId>, // the node where it's attached to
+ *  name: <my name>,    // the name of that virtual node
+ *  filters: [          // an array of filter/setting pairs contained in this virtual node
+ *    { filter: f1,
+ *      settings:             // settings of that filter, such as color,
+ *        [{ color: 'green', // style, ... (especially for charts)
+ *        style: 'bar',
+ *         ... }, {}]
+ *    },
+ *    { filter: f2, settings: {...}},
+ *    ...
+ *   ]
+ *   Note:
+ *   The filters are ofa special kind. Each filter concerns exactly one type.
+ *   The settings override the stream/type pair's default one. Numerical data
+ *   would contain style (line, bar, ..), color, transform.
+ */
+
+var KEY = 'browser:virtualnode';
+
+var VirtualNode = module.exports = function VirtualNode(node, name) {
+  this._node = node;
+  this._name = name;
+
+  this._clientData();
+  this._createIfNotExist();
+
+};
+
+VirtualNode.prototype._integrity = function () {
+  if (!this._node) {
+    throw new Error('_integrity: Node does not exists');
+  }
+};
+
+VirtualNode.prototype._createIfNotExist = function () {
+  var found = false;
+  for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+    if (this._node.clientData[KEY][i].name === this._name) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    this._node.clientData[KEY].push({name: this._name, filters: []});
+  }
+};
+
+
+VirtualNode.prototype._clientData = function () {
+  if (!this._node.clientData) {
+    this._node.clientData = {};
+  }
+  if (!this._node.clientData[KEY]) {
+    this._node.clientData[KEY] = [];
+  }
+};
+
+
+VirtualNode.prototype._pushChanges = function () {
+  this._integrity();
+  if (this._node instanceof Pryv.Connection) {
+    console.log('_pushChanges: to private data');
+    throw new Error('Virtual nodes having connection as parent not supported.');
+  } else if  (this._node instanceof Pryv.Stream) {
+    var changes = {id: this._node.id, clientData: this._node.clientData};
+    console.log('Pushing these changes', changes);
+    this._node.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for', KEY, 'has been pushed:', error, result);
+    });
+  }
+};
+
+Object.defineProperty(VirtualNode.prototype, 'filters', {
+  get: function () {
+    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+      if (this._node.clientData[KEY][i].name === this._name) {
+        return this._node.clientData[KEY][i].filters;
+      }
+    }
+    return [];
+  },
+  set: function (filters) {
+    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+      if (this._node.clientData[KEY][i].name === this._name) {
+        this._node.clientData[KEY][i].filters = filters;
+        this._pushChanges();
+        break;
+      }
+    }
+  }
+});
+
+Object.defineProperty(VirtualNode.prototype, 'name', {
+  get: function () {
+    return this._name;
+  },
+  set: function (name) {
+    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
+      if (this._node.clientData[KEY][i].name === this._name) {
+        this._node.clientData[KEY][i].name = name;
+        this._name = name;
+        this._pushChanges();
+        break;
+      }
+    }
+  }
+});
+
+Object.defineProperty(VirtualNode.prototype, 'parent', {
+  get: function () {
+    return this._node;
+  },
+  set: function () {
+    throw new Error('Virtual nodes having connection as parent not supported.');
+  }
+});
+
+
+
+
+VirtualNode.prototype.addFilters = function (filter) {
+  this._integrity();
+  this._clientData();
+  if (filter && filter.length !== 0) {
+    var found = false;
+    filter = (filter instanceof Array) ? filter : [filter];
+    for (var i = 0, n = this._node.clientData[KEY].length; i < n; ++i) {
+      if (this.parent.clientData[KEY][i].name === this._name) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      if (!this.parent.clientData[KEY][i].filters) {
+        this.parent.clientData[KEY][i].filters = [filter];
+      } else {
+        for (var j = 0; j < filter.length; ++j) {
+          this.parent.clientData[KEY][i].filters.push(filter[j]);
+        }
+      }
+    } else {
+      this.parent.clientData[KEY].push({name: this._name, filters: filter});
+    }
+    this._pushChanges();
+  }
+};
+
+
+/*****************************************3333
+ *333333333333333333333333333333333333333333333
+ */
+
+
+VirtualNode.getNodes = function (node) {
+  var vn = [];
+  if (node.clientData && node.clientData[KEY]) {
+    _.each(node.clientData[KEY], function (e) {
+      if (e.name) {
+        vn.push(new VirtualNode(node, e.name));
+      }
+    });
+  }
+  return vn;
+};
+
+
+/**
+ * Checks if node has virtual children.
+ * @param node a connection or stream
+ * @returns {*}
+ */
+VirtualNode.nodeHas = function (node) {
+  if (node instanceof Pryv.Connection) {
+    throw new Error('Virtual nodes having connection as parent not supported.');
+  } else if (node instanceof Pryv.Stream) {
+    return (node.clientData) && (node.clientData[KEY]) &&
+      (node.clientData[KEY].length !== 0);
+  } else {
+    return false;
+  }
+};
+
+},{"pryv":9,"underscore":8}],25:[function(require,module,exports){
 
 var Backbone = require('backbone');
 
@@ -3684,298 +4577,215 @@ module.exports = Backbone.View.extend({
 });
 
 
-},{"backbone":23}],32:[function(require,module,exports){
-(function(){/* global document, navigator */
-
-/* jshint -W101*/
-
-var System = require('../system/System.js');
-
-/**
- * Browser only utils
- */
-
-var UtilityBrowser = {};
-
-module.exports = UtilityBrowser;
-
-/* Regular expressions. */
-
-
-/**
- * Test if hostname is a *.rec.la or pryv.li if yes. it assumes that the client
- * runs on a staging version
- */
-UtilityBrowser.testIfStagingFromHostname = function () {
-  return UtilityBrowser.endsWith(document.location.hostname, 'pryv.li') ||
-    UtilityBrowser.endsWith(document.location.hostname, 'rec.la');
-};
-
-
-/**
- *  return true if browser is seen as a mobile or tablet
- *  list grabbed from https://github.com/codefuze/js-mobile-tablet-redirect/blob/master/mobile-redirect.js
- */
-UtilityBrowser.browserIsMobileOrTablet = function () {
-  return (/iphone|ipod|android|blackberry|opera mini|opera mobi|skyfire|maemo|windows phone|palm|iemobile|symbian|symbianos|fennec|ipad|android 3|sch-i800|playbook|tablet|kindle|gt-p1000|sgh-t849|shw-m180s|a510|a511|a100|dell streak|silk/i.test(navigator.userAgent.toLowerCase()));
-};
-
-/**
- * Method to get the preferred language, either from desiredLanguage or from the browser settings
- * @method getPreferredLanguage
- * @param {Array} supportedLanguages an array of supported languages encoded on 2characters
- * @param {String} desiredLanguage (optional) get this language if supported
- */
-UtilityBrowser.getPreferredLanguage = function (supportedLanguages, desiredLanguage) {
-  if (desiredLanguage) {
-    if (supportedLanguages.indexOf(desiredLanguage) >= 0) { return desiredLanguage; }
-  }
-  var lct = null;
-  if (navigator.language) {
-    lct = navigator.language.toLowerCase().substring(0, 2);
-  } else if (navigator.userLanguage) {
-    lct = navigator.userLanguage.toLowerCase().substring(0, 2);
-  } else if (navigator.userAgent.indexOf('[') !== -1) {
-    var start = navigator.userAgent.indexOf('[');
-    var end = navigator.userAgent.indexOf(']');
-    lct = navigator.userAgent.substring(start + 1, end).toLowerCase();
-  }
-  if (desiredLanguage) {
-    if (lct.indexOf(desiredLanguage) >= 0) { return lct; }
-  }
-
-  return supportedLanguages[0];
-};
-
-
-/**
- * //TODO check if it's robust
- * Method to check the browser supports CSS3.
- * @method supportCSS3
- * @return boolean
- */
-UtilityBrowser.supportCSS3 = function ()  {
-  var stub = document.createElement('div'),
-    testProperty = 'textShadow';
-
-  if (testProperty in stub.style) { return true; }
-
-  testProperty = testProperty.replace(/^[a-z]/, function (val) {
-    return val.toUpperCase();
-  });
-
-  return false;
-};
-
-/**
- * Method to load external files like javascript and stylesheet. this version
- * of method only support to file types - js|javascript and css|stylesheet.
- * @method loadExternalFiles
- * @param {String} string filename
- * @param {String} type -- 'js' or 'css'
- */
-UtilityBrowser.loadExternalFiles = function (filename, type)  {
-  var tag = null;
-
-  type = type.toLowerCase();
-
-  if (type === 'js' || type === 'javascript') {
-    tag = document.createElement('script');
-    tag.setAttribute('type', 'text/javascript');
-    tag.setAttribute('src', filename);
-  } else if (type === 'css' || type === 'stylesheet')  {
-    tag = document.createElement('link');
-    tag.setAttribute('rel', 'stylesheet');
-    tag.setAttribute('type', 'text/css');
-    tag.setAttribute('href', filename);
-  }
-
-  if (tag !== null || tag !== undefined) {
-    document.getElementsByTagName('head')[0].appendChild(tag);
-  }
-};
-
-/**
- * Get the content on an URL as a String ,
- * Mainly designed to load HTML ressources
- * @param {String} url
- * @param {Function} callBack  function(error,content,xhr)
- * @return {Object} xhr request
- */
-UtilityBrowser.getURLContent = function (url, callback) {
-
-  function onSuccess(result, xhr) {
-    callback(null, result, xhr);
-  }
-
-  function onError(error) {
-    callback(error, null, error.xhr);
-  }
-
-  return System.request({
-    method : 'GET',
-    url : url,
-    parseResult : 'text',
-    success: onSuccess,
-    error: onError
-  });
-};
-
-/**
- * Load the content of a URL into a div
- * !! No error will go to the console.
- */
-UtilityBrowser.loadURLContentInElementId = function (url, elementId, next) {
-  next = next || function () {};
-  var content = document.getElementById(elementId);
-  UtilityBrowser.getURLContent(url,
-    function (error, result) {
-      content.innerHTML = result;
-      next();
-      if (error) {
-        console.error(error);
-      }
-    }
-  );
-};
-
-
-
-
-/* jshint ignore:start */
-/*\
- |*|
- |*|  :: cookies.js ::
- |*|
- |*|  A complete cookies reader/writer framework with full unicode support.
- |*|
- |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
- |*|
- |*|  Syntaxes:
- |*|
- |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
- |*|  * docCookies.getItem(name)
- |*|  * docCookies.removeItem(name[, path])
- |*|  * docCookies.hasItem(name)
- |*|  * docCookies.keys()
- |*|
- \*/
-UtilityBrowser.docCookies = {
-  getItem: function (sKey) {
-    if (!sKey || !this.hasItem(sKey)) { return null; }
-    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
-      escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
-  },
-  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
-    var sExpires = "";
-    if (vEnd) {
-      switch (vEnd.constructor) {
-        case Number:
-          sExpires = vEnd === Infinity ?
-            "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
-          break;
-        case String:
-          sExpires = "; expires=" + vEnd;
-          break;
-        case Date:
-          sExpires = "; expires=" + vEnd.toGMTString();
-          break;
-      }
-    }
-    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
-  },
-  removeItem: function (sKey, sPath) {
-    if (!sKey || !this.hasItem(sKey)) { return; }
-    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
-  },
-  hasItem: function (sKey) {
-    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
-  },
-  keys: /* optional method: you can safely remove it! */ function () {
-    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
-    return aKeys;
-  }
-};
-
-/* jshint ignore:end */
-
-
-//----------- DomReady ----------//
-
-
-/*!
- * domready (c) Dustin Diaz 2012 - License MIT
- */
-
-/* jshint ignore:start */
-UtilityBrowser.domReady = function (ready) {
-
-
-  var fns = [], fn, f = false,
-    doc = document,
-    testEl = doc.documentElement,
-    hack = testEl.doScroll,
-    domContentLoaded = 'DOMContentLoaded',
-    addEventListener = 'addEventListener',
-    onreadystatechange = 'onreadystatechange',
-    readyState = 'readyState',
-    loaded = /^loade|c/.test(doc[readyState]);
-
-  function flush(f) {
-    loaded = 1;
-    while (f = fns.shift()) { 
-      f()
-    }
-  }
-
-  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
-    doc.removeEventListener(domContentLoaded, fn, f);
-    flush();
-  }, f);
-
-
-  hack && doc.attachEvent(onreadystatechange, fn = function () {
-    if (/^c/.test(doc[readyState])) {
-      doc.detachEvent(onreadystatechange, fn);
-      flush();
-    }
-  });
-
-  return (ready = hack ?
-    function (fn) {
-      self != top ?
-        loaded ? fn() : fns.push(fn) :
-        function () {
-          console.log("on dom ready 2");
-          try {
-            testEl.doScroll('left')
-          } catch (e) {
-            return setTimeout(function() { ready(fn) }, 50)
-          }
-          fn()
-        }()
-    } :
-    function (fn) {
-      loaded ? fn() : fns.push(fn)
-    })
-}();
-
-/* jshint ignore:end */
-
-
-
-})()
-},{"../system/System.js":13}],10:[function(require,module,exports){
+},{"backbone":26}],20:[function(require,module,exports){
+(function(){/* global $ */
 var _ = require('underscore'),
-  System = require('./system/System.js'),
+  SharingCollection = require('./SharingCollection.js'),
+  SharingModel = require('./SharingModel.js'),
+  SharingListView = require('./SharingListView.js'),
+  BookmarkCollection = require('./BookmarkCollection.js'),
+  BookmarkModel = require('./BookmarkModel.js'),
+  BookmarkListView = require('./BookmarkListView.js'),
+  Pryv = require('pryv');
+var Controller = module.exports = function ($modal, connection) {
+  this.sharings = {};
+  this.connection = connection;
+  this.sharingCollection =  new SharingCollection();
+  this.sharingListView = null;
+  this.bookmarkCollection =  new BookmarkCollection();
+  this.bookmarkListView = null;
+  this.$modal = $modal;
+  $('.modal-content').append('<div class="sharings"></div>');
+  this.container = '.sharings';
+
+};
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal();
+    if (!this.sharingListView) {
+      this.sharingListView = new SharingListView({
+        collection: this.sharingCollection
+      });
+    }
+    if (!this.bookmarkListView) {
+      this.bookmarkListView = new BookmarkListView({
+        collection: this.bookmarkCollection
+      });
+      this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
+      this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
+      this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
+    }
+    this.sharingListView.render();
+    this.bookmarkListView.render();
+    this.connection.accesses.get(function (error, result) {
+      if (error) {
+        console.error('GET ACCESSES:', error);
+      } else {
+        this.addSharings(result, this.connection);
+      }
+    }.bind(this));
+    this.connection.bookmarks.get(function (error, result) {
+      if (error) {
+        console.error('GET ACCESSES:', error);
+      } else {
+        this.addBookmarks(result);
+      }
+    }.bind(this));
+  },
+  close: function () {
+    this.sharingListView.close();
+    this.sharingCollection.reset();
+    $(this.container).remove();
+    this.sharingCollection = null;
+    this.sharings = {};
+  },
+  addSharings: function (sharings, connection) {
+    if (!Array.isArray(sharings)) {
+      sharings = [sharings];
+    }
+    sharings.forEach(function (sharing) {
+      if (sharing.type === 'shared') {
+        var url = connection.id.replace(/\?auth.*$/, '');
+        url += '#/sharings/' + sharing.token;
+        sharing.url = url;
+        var m = new SharingModel({
+          sharing: sharing
+        });
+        this.sharingCollection.add(m);
+      }
+    }.bind(this));
+  },
+  addBookmarks: function (bookmarks) {
+    console.log('addBookmarks', bookmarks);
+    if (!Array.isArray(bookmarks)) {
+      bookmarks = [bookmarks];
+    }
+    bookmarks.forEach(function (bookmark) {
+      var m = new BookmarkModel({
+        bookmark: bookmark
+      });
+      this.bookmarkCollection.add(m);
+    }.bind(this));
+  },
+  _createBookmark: function (url, auth, name) {
+    if (url && auth && name) {
+      var conn = new Pryv.Connection({url: url, auth: auth});
+      conn.accessInfo(function (error) {
+        if (!error) {
+          console.log('Bookmark exist!');
+          this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
+          function (error, result) {
+            if (!error && result) {
+              this.addBookmarks(result);
+            }
+            if (error) {
+              console.error('Bookmarks creation error:', error);
+            }
+            this.bookmarkListView.endAddBookmark(error);
+          }.bind(this));
+        } else {
+          this.bookmarkListView.endAddBookmark(error);
+          console.warn('Bookmark dont exist', url, auth);
+        }
+      }.bind(this));
+    }
+  },
+  _onDeleteBookmarkClick: function (e, bookmarkModel) {
+    this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
+    function (error) {
+      if (!error) {
+        this.bookmarkCollection.remove(bookmarkModel);
+      }
+    }.bind(this));
+  },
+  _onDeleteSharingClick: function (e, sharingModel) {
+    this.connection.accesses.delete(sharingModel.get('sharing').token,
+    function (error) {
+      if (!error) {
+        this.sharingCollection.remove(sharingModel);
+      }
+    }.bind(this));
+  }
+});
+})()
+},{"./BookmarkCollection.js":40,"./BookmarkListView.js":42,"./BookmarkModel.js":41,"./SharingCollection.js":37,"./SharingListView.js":39,"./SharingModel.js":38,"pryv":9,"underscore":8}],22:[function(require,module,exports){
+
+var _ = require('underscore'),
+  Collection = require('./Collection.js'),
+  Model = require('./Model.js'),
+  ListView = require('./ListView.js');
+var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections) {
+  this.loggedConnection = loggedConnection;
+  this.collection =  new Collection();
+  this.listView = null;
+  this.$modal = $modal;
+  this.container = '.modal-content';
+  this.addSharings(sharingsConnections);
+};
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal();
+    if (!this.listView) {
+      this.listView = new ListView({
+        collection: this.collection
+      });
+      this.listView.on('subscription:add', this._createSubscription.bind(this));
+    }
+    this.listView.render();
+  },
+  close: function () {
+    this.listView.close();
+    if (this.collection) {
+      this.collection.reset();
+      this.collection = null;
+    }
+  },
+  addSharings: function (sharings) {
+    if (!Array.isArray(sharings)) {
+      sharings = [sharings];
+    }
+    sharings.forEach(function (sharing) {
+      var m = new Model({
+        connection: sharing
+      });
+      this.collection.add(m);
+    }.bind(this));
+  },
+  _createSubscription: function (subscriptions) {
+    var subNumber = subscriptions.length;
+    subscriptions.forEach(function (model) {
+      var connection = model.get('connection');
+      if (connection.name && connection.auth && connection.id) {
+        this.loggedConnection.bookmarks.create(
+          {url: connection.id, accessToken: connection.auth, name: connection.name},
+          function (error) {
+          if (!error) {
+            subNumber -= 1;
+            if (subNumber === 0) {
+              this.close();
+              this.$modal.modal('hide');
+            }
+          } else {
+            model.set('error', error);
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+  }
+});
+},{"./Collection.js":43,"./ListView.js":45,"./Model.js":44,"underscore":8}],11:[function(require,module,exports){
+var _ = require('underscore'),
+  system = require('./system/system.js'),
+  utility = require('./utility/utility.js'),
   ConnectionEvents = require('./connection/ConnectionEvents.js'),
   ConnectionStreams = require('./connection/ConnectionStreams.js'),
   ConnectionProfile = require('./connection/ConnectionProfile.js'),
+  ConnectionBookmarks = require('./connection/ConnectionBookmarks.js'),
+  ConnectionAccesses = require('./connection/ConnectionAccesses.js'),
   ConnectionMonitors = require('./connection/ConnectionMonitors.js'),
   Datastore = require('./Datastore.js');
-
 
 /**
  * @class Connection
@@ -3999,21 +4809,35 @@ var _ = require('underscore'),
  * @param {boolean} [settings.ssl = true] Use ssl (https) or no
  * @param {string} [settings.extraPath = ''] append to the connections. Must start with a '/'
  */
-function Connection(username, auth, settings) {
+var Connection = module.exports = function Connection() {
+  var settings;
+  if (!arguments[0] || typeof arguments[0] === 'string') {
+    console.warn('new Connection(username, auth, settings) is deprecated.',
+      'Please use new Connection(settings)', arguments);
+    this.username = arguments[0];
+    this.auth = arguments[1];
+    settings = arguments[2];
+  } else {
+    settings = arguments[0];
+    this.username = settings.username;
+    this.auth = settings.auth;
+    if (settings.url) {
+      this.username = utility.getUsernameFromUrl(settings.url);
+      settings.port = utility.getPortFromUrl(settings.url) || 443;
+      settings.extraPath = utility.getPathFromUrl(settings.url);
+      settings.ssl = utility.isUrlSsl(settings.url);
+    }
+  }
   this._serialId = Connection._serialCounter++;
-
-  this.username = username;
-  this.auth = auth;
 
   this.settings = _.extend({
     port: 443,
     ssl: true,
-    domain: 'pryv.io',
+    domain: 'pryv.in',
     extraPath: '',
     staging: false
   }, settings);
 
-  if (settings && settings.staging) { this.settings.domain = 'pryv.in'; }
 
   this.serverInfos = {
     // nowLocalTime - nowServerTime
@@ -4023,6 +4847,7 @@ function Connection(username, auth, settings) {
   };
 
   this._accessInfo = null;
+  this._privateProfile = null;
 
   this._streamSerialCounter = 0;
   this._eventSerialCounter = 0;
@@ -4043,13 +4868,23 @@ function Connection(username, auth, settings) {
   */
   this.profile = new ConnectionProfile(this);
   /**
+  * Manipulate bookmarks for this connection
+  * @type {ConnectionProfile}
+  */
+  this.bookmarks = new ConnectionBookmarks(this, Connection);
+  /**
+  * Manipulate accesses for this connection
+  * @type {ConnectionProfile}
+  */
+  this.accesses = new ConnectionAccesses(this);
+  /**
    * Manipulate this connection monitors
    */
   this.monitors = new ConnectionMonitors(this);
 
   this.datastore = null;
 
-}
+};
 
 Connection._serialCounter = 0;
 
@@ -4084,10 +4919,36 @@ Connection.prototype.accessInfo = function (callback) {
   if (this._accessInfo) { return this._accessInfo; }
   var url = '/access-info';
   this.request('GET', url, function (error, result) {
-    if (! error) {
+    if (result && result.id) {
+      error = result;
+    }
+    if (! error && !result.message) {
       this._accessInfo = result;
     }
-    return callback(error, result);
+    if (typeof(callback) === 'function') {
+      return callback(error, result);
+    }
+  }.bind(this));
+  return this;
+};
+
+/**
+ * Get the private profile related this connection.
+ * @param {Connection~privateProfileCallback} callback
+ * @returns {Connection} this
+ */
+Connection.prototype.privateProfile = function (callback) {
+  if (this._privateProfile) { return this._privateProfile; }
+  this.profile.getPrivate(null, function (error, result) {
+    if (result && result.message) {
+      error = result;
+    }
+    if (! error) {
+      this._privateProfile = result;
+    }
+    if (typeof(callback) === 'function') {
+      return callback(error, result);
+    }
   }.bind(this));
   return this;
 };
@@ -4157,9 +5018,9 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
     withoutCredentials = true;
   }
 
-  var request = System.request({
+  var request = system.request({
     method : method,
-    host : this.username + '.' + this.settings.domain,
+    host : this._getDomain(),
     port : this.settings.port,
     ssl : this.settings.ssl,
     path : this.settings.extraPath + path,
@@ -4175,14 +5036,19 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
    * @this {Connection}
    */
   function onSuccess(result, requestInfos) {
-    this.serverInfos.lastSeenLT = (new Date()).getTime();
-    this.serverInfos.apiVersion = requestInfos.headers['api-version'] ||
-      this.serverInfos.apiVersion;
-    if (_.has(requestInfos.headers, 'server-time')) {
-      this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
-        requestInfos.headers['server-time'];
+    var error = null;
+    if (requestInfos.code >= 400) {
+      error = result;
+    } else {
+      this.serverInfos.lastSeenLT = (new Date()).getTime();
+      this.serverInfos.apiVersion = requestInfos.headers['api-version'] ||
+        this.serverInfos.apiVersion;
+      if (_.has(requestInfos.headers, 'server-time')) {
+        this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
+          requestInfos.headers['server-time'];
+      }
     }
-    callback(null, result);
+    callback(error, result);
   }
 
   function onError(error /*, requestInfo*/) {
@@ -4191,7 +5057,14 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
   return request;
 };
 
-
+Connection.prototype._getDomain = function () {
+  if (this.settings.url) {
+    return utility.getHostFromUrl(this.settings.url);
+  } else {
+    var host = this.settings.staging ? 'pryv.in' : this.settings.domain;
+    return this.username ? this.username + '.' + host : host;
+  }
+};
 
 /**
  * @property {string} Connection.id an unique id that contains all needed information to access
@@ -4200,7 +5073,7 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
 Object.defineProperty(Connection.prototype, 'id', {
   get: function () {
     var id = this.settings.ssl ? 'https://' : 'http://';
-    id += this.username + '.' + this.settings.domain + ':' +
+    id += this._getDomain() + ':' +
       this.settings.port + this.settings.extraPath + '/?auth=' + this.auth;
     return id;
   },
@@ -4229,10 +5102,6 @@ Object.defineProperty(Connection.prototype, 'displayId', {
 Object.defineProperty(Connection.prototype, 'serialId', {
   get: function () { return 'C' + this._serialId; }
 });
-
-module.exports = Connection;
-
-
 /**
  * Called with the desired Streams as result.
  * @callback Connection~accessInfoCallback
@@ -4252,7 +5121,7 @@ module.exports = Connection;
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./Datastore.js":34,"./connection/ConnectionEvents.js":33,"./connection/ConnectionMonitors.js":35,"./connection/ConnectionProfile.js":26,"./connection/ConnectionStreams.js":36,"./system/System.js":13,"underscore":8}],11:[function(require,module,exports){
+},{"./Datastore.js":50,"./connection/ConnectionAccesses.js":30,"./connection/ConnectionBookmarks.js":48,"./connection/ConnectionEvents.js":46,"./connection/ConnectionMonitors.js":49,"./connection/ConnectionProfile.js":29,"./connection/ConnectionStreams.js":47,"./system/system.js":15,"./utility/utility.js":16,"underscore":8}],12:[function(require,module,exports){
 
 var _ = require('underscore');
 
@@ -4265,7 +5134,7 @@ var RW_PROPERTIES =
  * @type {Function}
  * @constructor
  */
-var Event = module.exports = function (connection, data) {
+var Event = module.exports = function Event(connection, data) {
   this.connection = connection;
   this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
   _.extend(this, data);
@@ -4360,14 +5229,87 @@ Object.defineProperty(Event.prototype, 'attachmentsUrl', {
  * @property {number} [time]
  */
 
-},{"underscore":8}],12:[function(require,module,exports){
+},{"underscore":8}],13:[function(require,module,exports){
+
 var _ = require('underscore');
 
-var SignalEmitter = require('./utility/SignalEmitter.js');
-var MSGs = require('./Messages.js').Filter;
+var Stream = module.exports = function Stream(connection, data) {
+  this.connection = connection;
 
-function Filter(settings) {
-  SignalEmitter.extend(this, MSGs, 'Filter');
+  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this._children = [];
+  _.extend(this, data);
+};
+
+/**
+ * Set or erase clientData properties
+ * @example // set x=25 and delete y
+ * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValueMap
+ * @param {Connection~requestCallback} callback
+ */
+Stream.prototype.setClientData = function (keyValueMap, callback) {
+  return this.connection.streams.setClientData(this, keyValueMap, callback);
+};
+
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (! this.parentId) { return null; }
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      var child = this.connection.datastore.getStreamById(childrenId);
+      children.push(child);
+    }.bind(this));
+    return children;
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    if (! this.parentId || this.parent === null) { return []; }
+    var result = this.parent.ancestors;
+    result.push(this.parent);
+    return result;
+  },
+  set: function () { throw new Error('Stream.ancestors property is read only'); }
+});
+
+
+
+
+
+
+
+},{"underscore":8}],14:[function(require,module,exports){
+var _ = require('underscore'),
+    SignalEmitter = require('./utility/SignalEmitter.js');
+
+/**
+ * @constructor
+ */
+var Filter = module.exports = function Filter(settings) {
+  SignalEmitter.extend(this, Messages, 'Filter');
 
   this._settings = _.extend({
     //TODO: set default values
@@ -4380,8 +5322,26 @@ function Filter(settings) {
     modifiedSince: null,
     state: null
   }, settings);
-}
+};
 
+var Messages = Filter.Messages = {
+  /**
+   * generic change event called on any change
+   * content: {filter, signal, content}
+   **/
+  ON_CHANGE : 'changed',
+  /**
+   * called on streams changes
+   * content: streams
+   */
+  STREAMS_CHANGE : 'streamsChanged',
+
+  /*
+   * called on date changes
+   * content: streams
+   */
+  DATE_CHANGE : 'timeFrameChanged'
+};
 
 // TODO
 // redundant with get
@@ -4515,7 +5475,9 @@ Filter.prototype.getData = function (ignoreNulls, withDelta) {
 };
 
 Filter.prototype._fireFilterChange = function (signal, content, batch) {
-  this._fireEvent(MSGs.ON_CHANGE, {filter: this, signal: signal, content: content}, batch);//generic
+  // generic
+  this._fireEvent(Messages.ON_CHANGE, {filter: this, signal: signal, content: content}, batch);
+  // specific
   this._fireEvent(signal, content, batch);
 };
 
@@ -4558,7 +5520,7 @@ Filter.prototype._setValue = function (key, newValue, batch) {
     if (this._settings.fromTime !== newValue[0] || this._settings.toTime !== newValue[1]) {
       this._settings.fromTime = newValue[0];
       this._settings.toTime = newValue[1];
-      this._fireFilterChange(MSGs.DATE_CHANGE, this.timeFrameST, batch);
+      this._fireFilterChange(Messages.DATE_CHANGE, this.timeFrameST, batch);
     }
     if (waitForMe) { waitForMe.done(); }
     return;
@@ -4577,7 +5539,7 @@ Filter.prototype._setValue = function (key, newValue, batch) {
 
     // TODO check that this stream is valid
     this._settings.streams = newValue;
-    this._fireFilterChange(MSGs.STREAMS_CHANGE, this.streams, batch);
+    this._fireFilterChange(Messages.STREAMS_CHANGE, this.streams, batch);
     if (waitForMe) { waitForMe.done(); }
     return;
   }
@@ -4652,8 +5614,6 @@ Filter.prototype.focusedOnSingleStream = function () {
   return null;
 };
 
-module.exports = Filter;
-
 /**
  * An pryv Filter or an object corresponding at what we can get with Filter.getData().
  * @typedef {(Filter|Object)} FilterLike
@@ -4667,531 +5627,7 @@ module.exports = Filter;
  */
 
 
-},{"./Messages.js":15,"./utility/SignalEmitter.js":37,"underscore":8}],18:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var Stream = module.exports = function (connection, data) {
-  this.connection = connection;
-
-  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
-  /** those are only used when no datastore **/
-  this._parent = null;
-  this._children = [];
-  _.extend(this, data);
-};
-
-/**
- * Set or erase clientData properties
- * @example // set x=25 and delete y
- * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValueMap
- * @param {Connection~requestCallback} callback
- */
-Stream.prototype.setClientData = function (keyValueMap, callback) {
-  return this.connection.streams.setClientData(this, keyValueMap, callback);
-};
-
-Object.defineProperty(Stream.prototype, 'parent', {
-  get: function () {
-
-    if (! this.parentId) { return null; }
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._parent;
-    }
-
-    return this.connection.datastore.getStreamById(this.parentId);
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._children;
-    }
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      var child = this.connection.datastore.getStreamById(childrenId);
-      children.push(child);
-    }.bind(this));
-    return children;
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-// TODO write test
-Object.defineProperty(Stream.prototype, 'ancestors', {
-  get: function () {
-    if (! this.parentId || this.parent === null) { return []; }
-    var result = this.parent.ancestors;
-    result.push(this.parent);
-    return result;
-  },
-  set: function () { throw new Error('Stream.ancestors property is read only'); }
-});
-
-
-
-
-
-
-
-},{"underscore":8}],31:[function(require,module,exports){
-
-var _ = require('underscore');
-var TreeNode = require('./TreeNode');
-var StreamNode = require('./StreamNode');
-
-var SERIAL = 0;
-/**
- * Always call intStructure after creating a new ConnectionNode
- * @type {*}
- */
-var ConnectionNode = module.exports = TreeNode.implement(
-  function (parentnode, connection) {
-    TreeNode.call(this, parentnode.treeMap, parentnode);
-    this.connection = connection;
-    this.streamNodes = {};
-    this.uniqueId = 'node_connection_' + SERIAL;
-    SERIAL++;
-  }, {
-    className: 'ConnectionNode',
-
-    // ---------------------------------- //
-
-
-    /**
-     * Build Structure
-     * @param callback
-     * @param options
-     */
-    initStructure: function (options, callback) {
-
-      options = options || {};
-      this.streamNodes = {};
-
-
-      this.connection.streams.walkTree(options,
-        function (stream) {  // eachNode
-          var parentNode = this;
-          if (stream.parent) {   // if not parent, this connection node is the parent
-            parentNode = this.streamNodes[stream.parent.id];
-          }
-          this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
-        }.bind(this),
-        function (error) {   // done
-          if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
-          callback(error);
-        });
-
-    },
-
-    /**
-     * Advertise a structure change event
-     * @param options {state : all, default}
-     * @param callback
-     */
-
-    /*jshint -W098 */
-    structureChange: function (callback, options) {
-
-      // - load streamTree from connection
-      // - create nodes
-      // - redistribute events (if needed)
-      // when implemented review "eventEnterScope" which creates the actual structure
-
-      // warnings
-      // - there is no list of events directly accessible.
-      // Maybe this could be asked to the rootNode
-
-      // possible optimization
-      // - calculate the changes and rebuild only what's needed :)
-      // - this would need cleverer StreamNodes
-
-      console.log('Warning: Implement ConnectionNode.structureChange');
-      callback();
-    },
-
-// ---------- Node -------------  //
-
-    getChildren: function () {
-      var children = [];
-      _.each(this.streamNodes, function (node) {
-        if (node.getParent() === this) { children.push(node); }
-      }, this);
-      return children;
-    },
-
-
-    eventEnterScope: function (event, reason, callback) {
-      var node =  this.streamNodes[event.stream.id]; // do we already know this stream?
-      if (typeof node === 'undefined') {
-        throw new Error('Cannot find stream with id: ' + event.stream.id);
-      }
-      node.eventEnterScope(event, reason, callback);
-    },
-
-    eventLeaveScope: function (event, reason, callback) {
-      var node = this.streamNodes[event.stream.id];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
-      }
-      node.eventLeaveScope(event, reason, callback);
-
-    },
-
-    eventChange: function (event, reason, callback) {
-      var node = this.streamNodes[event.stream.id];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
-      }
-      node.eventChange(event, reason, callback);
-    },
-
-//----------- debug ------------//
-    _debugTree : function () {
-      var me = {
-        name : this.connection.displayId
-      };
-
-      _.extend(me, TreeNode.prototype._debugTree.call(this));
-
-      return me;
-    }
-
-  });
-Object.defineProperty(ConnectionNode.prototype, 'id', {
-  get: function () { return this.connection.id; },
-  set: function () { throw new Error('ConnectionNode.id property is read only'); }
-});
-},{"./StreamNode":38,"./TreeNode":30,"underscore":8}],30:[function(require,module,exports){
-(function(){/* global $ */
-var _ = require('underscore'),
-  NodeView = require('../view/NodeView.js'),
-  Backbone = require('backbone'),
-  TreemapUtil = require('../utility/treemap.js');
-
-/**
- * The model for all Nodes
- * @param parent
- * @constructor
- */
-var DEFAULT_OFFSET = 18;
-var DEFAULT_MARGIN = 2;
-var DEFAULT_MIN_WIDTH = 550;
-var DEFAULT_MIN_HEIGHT = 500;
-var MAIN_CONTAINER_ID = 'tree';
-var TreeNode = module.exports = function (treemap, parent) {
-  //console.log('TreeNode ctor called', treemap);
-  //Init all the instance variables
-  this.treeMap = treemap;
-  this.parent = parent;
-  this.uniqueId = _.uniqueId('node_');
-  this.width = null;
-  this.height = null;
-  this.x = 0;
-  this.y = 0;
-  this.aggregated = false;
-  this.view = null;
-  this.model = null;
-  this.offset = DEFAULT_OFFSET;
-  this.margin = DEFAULT_MARGIN;
-  this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
-  this.minHeight = this.parent ? this.parent.minHeight : DEFAULT_MIN_HEIGHT;
-};
-
-
-TreeNode.implement = function (constructor, members) {
-  var newImplementation = constructor;
-
-  if (typeof Object.create === 'undefined') {
-    Object.create = function (prototype) {
-      function C() { }
-      C.prototype = prototype;
-      return new C();
-    };
-  }
-  newImplementation.prototype = Object.create(this.prototype);
-  _.extend(newImplementation.prototype, members);
-  newImplementation.implement = this.implement;
-  return newImplementation;
-};
-
-_.extend(TreeNode.prototype, {
-  className: 'TreeNode',
-  /** TreeNode parent or null if rootNode **/
-
-  //---------- view management ------------//
-
-  _createView: function () {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    if (!this.view && typeof(document) !== 'undefined') {
-      this._refreshViewModel(false);
-      this.view = new NodeView({model: this.model});
-    }
-    if (this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._createView();
-      });
-    }
-  },
-  _closeView: function (recursive) {
-    if (recursive) {
-      _.each(this.getChildren(), function (child) {
-        child._closeView(recursive);
-      });
-    }
-    if (this.view) {
-      this.view.close();
-      this.view = null;
-    }
-  },
-  /**
-   * Generate the size and position of each child of this node
-   * @param x
-   * @param y
-   * @param width
-   * @param height
-   * @param recursive
-   * @private
-   */
-  _generateChildrenTreemap: function (x, y, width, height, recursive) {
-    if (this.getWeight() === 0) {
-      return;
-    }
-    if (this._needToAggregate() && !this.aggregated) {
-      this._aggregate();
-    }
-    if (!this._needToAggregate() && this.aggregated) {
-      this._desaggregate();
-    }
-    var children = this.getChildren();
-    if (children) {
-      // we need to normalize child weights by the parent weight
-      var weight = this.getWeight();
-      _.each(children, function (child) {
-        child.normalizedWeight = (child.getWeight() / weight);
-      }, this);
-
-      // we squarify all the children passing a container dimension and position
-      // no recursion needed
-      var squarified =  TreemapUtil.squarify({
-        x: x,
-        y: y + this.offset,
-        width: width,
-        height: height - this.offset
-      }, children);
-      _.each(children, function (child) {
-        child.x = squarified[child.uniqueId].x;
-        child.y = squarified[child.uniqueId].y;
-        child.width = squarified[child.uniqueId].width;
-        //no right margin for rightest child
-        child.width -= child.width + child.x === this.width ? 0 : this.margin;
-        child.height = squarified[child.uniqueId].height - this.margin;
-      }, this);
-
-      _.each(children, function (child) {
-        if (recursive) {
-          child._generateChildrenTreemap(0, 0, child.width, child.height, true);
-        }
-      }, this);
-    }
-  },
-  _needToAggregate: function () {
-    this.aggregated = false;
-    return this.aggregated;
-  },
-  _aggregate: function () {
-    return;
-  },
-  _desaggregate: function () {
-    return;
-  },
-  /** Render or close the view if needed
-   For more performance we need to render or close views once all processing are done
-   i.e: when eventLeaveScope is trigged and a eventsNode becomes empty if we close it right away
-   it result with a unpleasant visual with div disappears randomly.
-   So we need to close all the view at the same time.
-   */
-  renderView: function (recurcive) {
-    /** If the node has no events to display (getWeight = 0) we close it **/
-    if (this.getWeight() === 0) {
-      this.aggregated = false; // Reset the aggregation to false;
-      if (this.eventView) {
-        this.eventView.close();
-        this.eventView = null;
-      }
-      if (this.view) {
-        this.view.close();
-        this.view = null;
-      }
-    } else {
-      // Test is the view is not already displayed and the view is not null
-      if ($('#' + this.uniqueId).length === 0 && this.view) {
-        this.view.renderView();
-        // event listenner for focus on stream when clicked on it
-        // i.e display only this stream when clicked on it
-        this.view.on('headerClicked', function () {
-          if (this.stream) {
-            this.treeMap.focusOnStreams(this.stream);
-          }
-        }, this);
-      }
-    }
-    if (recurcive) {
-      _.each(this.getChildren(), function (child) {
-        child.renderView(true);
-      });
-    }
-  },
-  /**
-   * Refresh the model of the view and create it if there is no
-   * If the model change this will automatically update the view thanks to backbone
-   * @param recursive
-   * @private
-   */
-  _refreshViewModel: function (recursive) {
-    if (!this.model) {
-      var BasicModel = Backbone.Model.extend({ });
-      this.model = new BasicModel({
-        containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
-        id: this.uniqueId,
-        className: this.className,
-        width: this.width,
-        height: this.height,
-        x: this.x,
-        y: this.y,
-        depth: this.depth,
-        weight: this.getWeight(),
-        content: this.events || this.stream || this.connection,
-        eventView: this.eventView
-      });
-    } else {
-      // TODO For now empty nodes (i.e streams) are not displayed
-      // but we'll need to display them to create event, drag drop ...
-      /*if (this.getWeight() === 0) {
-        if (this.model) {
-          this.model.set('width', 0);
-          this.model.set('height', 0);
-        }
-        return;
-      } */
-      this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
-      this.model.set('id', this.uniqueId);
-      this.model.set('name', this.className);
-      this.model.set('width', this.width);
-      this.model.set('height', this.height);
-      this.model.set('x', this.x);
-      this.model.set('y', this.y);
-      this.model.set('depth', this.depth);
-      this.model.set('weight', this.getWeight());
-      if (this.eventView) {
-        this.eventView.refresh({
-          width: this.width,
-          height: this.height
-        });
-      }
-    }
-    if (recursive && this.getChildren()) {
-      _.each(this.getChildren(), function (child) {
-        child._refreshViewModel(true);
-      });
-    }
-  },
-
-
-
-  //-------------- Tree Browsing -------------------//
-
-  /**
-   * @return TreeNode parent or null if root
-   */
-  getParent: function () {
-    return this.parent;
-  },
-
-  /**
-   * @return Array of TreeNode or null if leaf
-   */
-  getChildren: function () {
-    throw new Error(this.className + ': getChildren must be implemented');
-  },
-
-
-  /**
-   * Return the total weight (in TreeMap referential) of this node and it's children
-   * This should be overwritten by Leaf nodes
-   * @return Number
-   */
-  getWeight: function () {
-    if (this.getChildren() === null) {
-      throw new Error(this.className + ': Leafs must overwrite getWeight');
-    }
-    var weight = 0;
-    this.getChildren().forEach(function (child) {
-      weight += child.getWeight();
-    });
-    return weight;
-  },
-
-
-
-  //----------- event management ------------//
-  onDateHighLighted: function (time) {
-    _.each(this.getChildren(), function (child) {
-      child.onDateHighLighted(time);
-    });
-  },
-  /**
-   * Add an Event to the Tree
-   * @param event Event
-   * @return TreeNode the node in charge of this event. To be handled directly,
-   * next event addition or renderView() call can modify structure, and change
-   * the owner of this Event. This is designed for animation. .. add event then
-   * call returnedNode.currentWarpingDOMObject()
-   */
-  eventEnterScope: function () {
-    throw new Error(this.className + ': eventEnterScope must be implemented');
-  },
-
-  /**
-   * the Event changed from the Tree
-   * @param event Event or eventId .. to be discussed
-   */
-  eventChange: function () {
-    throw new Error(this.className + ': eventChange must be implemented');
-  },
-
-  /**
-   * Event removed
-   * @parma eventChange
-   */
-  eventLeaveScope: function () {
-    throw new Error(this.className + ': eventLeaveScope must be implemented');
-  },
-  //----------- debug ------------//
-  _debugTree : function () {
-    var me = {
-      className : this.className,
-      weight : this.getWeight()
-    };
-    if (this.getChildren()) {
-      me.children = [];
-      _.each(this.getChildren(), function (child) {
-        me.children.push(child._debugTree());
-      });
-    }
-    return me;
-  }
-});
-
-})()
-},{"../utility/treemap.js":39,"../view/NodeView.js":40,"backbone":23,"underscore":8}],23:[function(require,module,exports){
+},{"./utility/SignalEmitter.js":51,"underscore":8}],26:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -6765,373 +7201,516 @@ _.extend(TreeNode.prototype, {
 }).call(this);
 
 })()
-},{"underscore":8}],20:[function(require,module,exports){
-(function(){/* global $, window */
+},{"underscore":8}],35:[function(require,module,exports){
+(function(){/* global $ */
 var _ = require('underscore'),
-  Collection = require('./EventCollection.js'),
-  Model = require('./../numericals/SeriesModel.js'),
-  ListView = require('./ListView.js'),
-  ChartView = require('./../numericals/ChartView.js');
+  NodeView = require('../view/NodeView.js'),
+  Backbone = require('backbone'),
+  TreemapUtil = require('../utility/treemap.js');
 
-var Controller = module.exports = function ($modal, events) {
-  this.events = events;
-  this.eventsToAdd = [];
-  this.collection = new Collection();
-  this.highlightedDate = null;
-  this.listView = null;
-  this.singleView = null;
-  this.finalView = null;
-  this.$modal = $modal;
-  this.$content = $modal.find('.modal-content');
-
-  // Create the div we will use
-  this.$content.html($('#template-DnD').html());
-
-  this.debounceAdd = _.debounce(this.addEventsLater.bind(this), 100);
-
-  this.testf = _.debounce(function () {
-    this.updateSingleView(this.collection.next().getCurrentElement());
-  }.bind(this), 1000);
-
-  this.debounceAdd();
-
-  $(window).resize(this.resizeModal.bind(this));
+/**
+ * The model for all Nodes
+ * @param parent
+ * @constructor
+ */
+var DEFAULT_OFFSET = 18;
+var DEFAULT_MARGIN = 2;
+var DEFAULT_MIN_WIDTH = 550;
+var DEFAULT_MIN_HEIGHT = 500;
+var MAIN_CONTAINER_ID = 'tree';
+var TreeNode = module.exports = function (treemap, parent) {
+  //Init all the instance variables
+  this.treeMap = treemap;
+  this.parent = parent;
+  this.uniqueId = _.uniqueId('node_');
+  this.width = null;
+  this.height = null;
+  this.x = 0;
+  this.y = 0;
+  this.aggregated = false;
+  this.view = null;
+  this.model = null;
+  this.offset = DEFAULT_OFFSET;
+  this.margin = DEFAULT_MARGIN;
+  this.minWidth = this.parent ? this.parent.minWidth : DEFAULT_MIN_WIDTH;
+  this.minHeight = this.parent ? this.parent.minHeight : DEFAULT_MIN_HEIGHT;
 };
 
-_.extend(Controller.prototype, {
 
-  show: function () {
-    this.$modal.modal();
-    if (!this.listView) {
-      this.singleView = new ChartView({model:
-        new Model({
-          container: '#DnD-left-content-single',
-          events: [],
-          highlightedTime: null,
-          allowPieChart: false,
-          view: null,
-          highlighted: false,
-          dimensions: null,
-          onClick: true,
-          onHover: true,
-          onDnD: false,
-          useExtras: true,
-          xaxis: true
-        })});
-      this.finalView = new ChartView({model:
-        new Model({
-          container: '#DnD-left-content-final',
-          events: [],
-          highlightedTime: null,
-          allowPieChart: false,
-          view: null,
-          highlighted: false,
-          dimensions: null,
-          onClick: false,
-          onHover: true,
-          onDnD: false,
-          useExtras: true,
-          xaxis: true
-        })});
-      this.listView = new ListView({
-        collection: this.collection
+TreeNode.implement = function (constructor, members) {
+  var newImplementation = constructor;
+
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+_.extend(TreeNode.prototype, {
+  className: 'TreeNode',
+  /** TreeNode parent or null if rootNode **/
+
+  //---------- view management ------------//
+
+  _createView: function () {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    if (!this.view && typeof(document) !== 'undefined') {
+      this._refreshViewModel(false);
+      this.view = new NodeView({model: this.model});
+    }
+    if (this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._createView();
       });
-
-      /**
-       * Listeners
-       */
-      this.listView.on('itemview:chart:clicked', function (evt) {
-        this.collection.setCurrentElement(evt.model);
-        this.updateSingleView(evt.model);
-      }.bind(this));
-
-      this.listView.on('itemview:chart:select', function (evt) {
-        this.addSeriesToFinalView(evt.model);
-      }.bind(this));
-
-      this.listView.on('itemview:chart:unselect', function (evt) {
-        this.removeSeriesFromFinalView(evt.model);
-      }.bind(this));
-
-      this.singleView.on('chart:clicked', function (evt) {
-        var model = this.getEventById(evt.get('events')[0]);
-        var style = model.get('style');
-        style++;
-        style %= 2;
-        model.set('style', style);
-        this.updateSingleView(model);
-        this.updateSeriesOnFinalView(model);
-        //this.collection.setCurrentElement(model);
-      }.bind(this));
-    }
-
-    this.testf();
-    this.listView.render();
-    this.singleView.render();
-    this.finalView.render();
-    this.resizeModal();
-
-    $('body').on('keydown', function (e) {
-      var LEFT_KEY = 37;
-      var UP_KEY = 38;
-      var RIGHT_KEY = 39;
-      var DOWN_KEY = 40;
-      var SPACE_KEY = 32;
-      if (e.which === LEFT_KEY || e.which === UP_KEY) {
-        this.updateSingleView(this.collection.prev().getCurrentElement());
-        return false;
-      }
-      if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
-        this.updateSingleView(this.collection.next().getCurrentElement());
-        return false;
-      }
-      if (e.which === SPACE_KEY) {
-        var c = this.collection.getCurrentElement();
-        if (c.get('selected')) {
-          c.set('selected', false);
-          this.removeSeriesFromFinalView(c);
-        } else {
-          c.set('selected', true);
-          this.addSeriesToFinalView(c);
-        }
-        this.collection.setCurrentElement(c);
-        return false;
-      }
-    }.bind(this));
-  },
-
-  close: function () {
-    this.singleView.close();
-    this.finalView.close();
-    delete this.finalView.model;
-    delete this.singleView.model;
-    this.singleView.model = null;
-    this.finalView.model = null;
-    delete this.finalView;
-    delete this.singleView;
-    $(this.$modal).unbind('keydown');
-    $('#DnD-body').remove();
-    //$('#detail-div').empty();
-
-    this.events = {};
-    this.eventsToAdd = [];
-    this.collection.reset();
-    this.collection = null;
-    this.highlightedDate = null;
-    this.listView = null;
-    this.singleView = null;
-    this.finalView = null;
-    this.$modal = null;
-  },
-
-  getEventById: function (event) {
-    return this.collection.getEventById(event.id);
-  },
-
-  addEvents: function (event) {
-    if (!event) {
-      return;
-    }
-    if (event.id) {
-      //we have only one event so we put it on a each for the next each
-      event = [event];
-    }
-    if (!this.collection) {
-      this.collection = new Collection();
-    }
-
-    for (var i = 0; i < event.length; ++i) {
-      if (event[i]) {
-        this.events[event[i].id] = event[i];
-      }
-    }
-    this.debounceAdd();
-  },
-
-  addEventsLater: function () {
-    if (this.events.length === 0) {
-      return;
-    }
-
-    var event = [];
-
-    for (var attr in this.events) {
-      if (this.events.hasOwnProperty(attr)) {
-        event.push(this.events[attr]);
-      }
-    }
-
-    var mapped = _.map(event, function (e) {
-      return {
-        id: e.connection.id + '/' + e.streamId + '/' + e.type,
-        streamId: e.streamId,
-        streamName: e.stream.name,
-        connectionId: e.connection.id,
-        type: e.type,
-        elements: {content: e.content, time: e.time},
-        trashed: false,
-        tags: e.tags,
-        style: 0
-      };
-    });
-
-    var grouped = _.groupBy(mapped, 'id');
-
-    var resulting = [];
-    _.each(grouped, function (m) {
-      var copy = m[0];
-      var reduced = _.reduce(m, function (memo, el) { return memo.concat(el.elements); }, [ ]);
-      copy.elements = reduced;
-      resulting.push(copy);
-    });
-
-    this.collection.reset();
-    this.collection.add(resulting, {sort: false});
-    this.collection.sort();
-  },
-
-
-  deleteEvent: function (event) {
-    if (!event) {
-      return;
-    }
-    delete this.events[event.id];
-    this.debounceAdd();
-  },
-  updateEvent: function (event) {
-    if (!event) {
-      return;
-    }
-    if (this.events[event.id]) {
-      this.events[event.id] = event;
-      this.debounceAdd();
     }
   },
-  highlightDate: function (time) {
-    this.singleView.onDateHighLighted(time);
-    this.finalView.onDateHighLighted(time);
-  },
-
-
-  updateSingleView: function (model) {
-    if (model) {
-      this.singleView.model.set('events', [{
-        id: model.get('id'),
-        streamId: model.get('streamId'),
-        streamName: model.get('streamName'),
-        connectionId: model.get('connectionId'),
-        type: model.get('type'),
-        elements: model.get('elements'),
-        trashed: model.get('v'),
-        tags: model.get('tags'),
-        style: model.get('style')
-      }]);
-    }
-  },
-
-  /**
-   * Adds a series from the final view
-   * @param model the model of the series to add
-   */
-  addSeriesToFinalView: function (model) {
-    // events of the finalView model is an array
-    // of the real events (containing the points)
-    if (model) {
-      //var eventToAdd = model.get('events')[0];
-      var eventsFinalView = this.finalView.model.get('events'); // should be an array
-      eventsFinalView.push({
-        id: model.get('id'),
-        streamId: model.get('streamId'),
-        streamName: model.get('streamName'),
-        connectionId: model.get('connectionId'),
-        type: model.get('type'),
-        elements: model.get('elements'),
-        trashed: model.get('v'),
-        tags: model.get('tags'),
-        style: model.get('style')
+  _closeView: function (recursive) {
+    if (recursive) {
+      _.each(this.getChildren(), function (child) {
+        child._closeView(recursive);
       });
-      this.finalView.model.set('events', eventsFinalView);
-      this.finalView.render();
     }
+    if (this.view) {
+      this.view.close();
+      this.view = null;
+    }
+  },
+  /**
+   * Generate the size and position of each child of this node
+   * @param x
+   * @param y
+   * @param width
+   * @param height
+   * @param recursive
+   * @private
+   */
+  _generateChildrenTreemap: function (x, y, width, height, recursive) {
+    if (this.getWeight() === 0) {
+      return;
+    }
+    if (this._needToAggregate() && !this.aggregated) {
+      this._aggregate();
+    }
+    if (!this._needToAggregate() && this.aggregated) {
+      this._desaggregate();
+    }
+    var children = this.getChildren();
+    if (children) {
+      // we need to normalize child weights by the parent weight
+      var weight = this.getWeight();
+      _.each(children, function (child) {
+        child.normalizedWeight = (child.getWeight() / weight);
+      }, this);
+
+      // we squarify all the children passing a container dimension and position
+      // no recursion needed
+      var squarified =  TreemapUtil.squarify({
+        x: x,
+        y: y + this.offset,
+        width: width,
+        height: height - this.offset
+      }, children);
+      _.each(children, function (child) {
+        child.x = squarified[child.uniqueId].x;
+        child.y = squarified[child.uniqueId].y;
+        child.width = squarified[child.uniqueId].width;
+        //no right margin for rightest child
+        child.width -= child.width + child.x === this.width ? 0 : this.margin;
+        child.height = squarified[child.uniqueId].height - this.margin;
+      }, this);
+
+      _.each(children, function (child) {
+        if (recursive) {
+          child._generateChildrenTreemap(0, 0, child.width, child.height, true);
+        }
+      }, this);
+    }
+  },
+  _needToAggregate: function () {
+    this.aggregated = false;
+    return this.aggregated;
+  },
+  _aggregate: function () {
+    return;
+  },
+  _desaggregate: function () {
+    return;
+  },
+  /** Render or close the view if needed
+   For more performance we need to render or close views once all processing are done
+   i.e: when eventLeaveScope is trigged and a eventsNode becomes empty if we close it right away
+   it result with a unpleasant visual with div disappears randomly.
+   So we need to close all the view at the same time.
+   */
+  renderView: function (recurcive) {
+    /** If the node has no events to display (getWeight = 0) we close it **/
+    if (this.getWeight() === 0) {
+      this.aggregated = false; // Reset the aggregation to false;
+      if (this.eventView) {
+        this.eventView.close();
+        this.eventView = null;
+      }
+      if (this.view) {
+        this.view.close();
+        this.view = null;
+      }
+    } else {
+      // Test is the view is not already displayed and the view is not null
+      if ($('#' + this.uniqueId).length === 0 && this.view) {
+        this.view.renderView();
+        // event listenner for focus on stream when clicked on it
+        // i.e display only this stream when clicked on it
+        this.view.on('headerClicked', function () {
+          if (this.stream) {
+            this.treeMap.focusOnStreams(this.stream);
+          }
+        }, this);
+      }
+    }
+    if (recurcive) {
+      _.each(this.getChildren(), function (child) {
+        child.renderView(true);
+      });
+    }
+  },
+  /**
+   * Refresh the model of the view and create it if there is no
+   * If the model change this will automatically update the view thanks to backbone
+   * @param recursive
+   * @private
+   */
+  _refreshViewModel: function (recursive) {
+    if (!this.model) {
+      var BasicModel = Backbone.Model.extend({ });
+      this.model = new BasicModel({
+        containerId: this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID,
+        id: this.uniqueId,
+        className: this.className,
+        width: this.width,
+        height: this.height,
+        x: this.x,
+        y: this.y,
+        depth: this.depth,
+        weight: this.getWeight(),
+        content: this.events || this.stream || this.connection,
+        eventView: this.eventView
+      });
+    } else {
+      // TODO For now empty nodes (i.e streams) are not displayed
+      // but we'll need to display them to create event, drag drop ...
+      /*if (this.getWeight() === 0) {
+        if (this.model) {
+          this.model.set('width', 0);
+          this.model.set('height', 0);
+        }
+        return;
+      } */
+      this.model.set('containerId', this.parent ? this.parent.uniqueId : MAIN_CONTAINER_ID);
+      this.model.set('id', this.uniqueId);
+      this.model.set('name', this.className);
+      this.model.set('width', this.width);
+      this.model.set('height', this.height);
+      this.model.set('x', this.x);
+      this.model.set('y', this.y);
+      this.model.set('depth', this.depth);
+      this.model.set('weight', this.getWeight());
+      if (this.eventView) {
+        this.eventView.refresh({
+          width: this.width,
+          height: this.height
+        });
+      }
+    }
+    if (recursive && this.getChildren()) {
+      _.each(this.getChildren(), function (child) {
+        child._refreshViewModel(true);
+      });
+    }
+  },
+
+
+
+  //-------------- Tree Browsing -------------------//
+
+  /**
+   * @return TreeNode parent or null if root
+   */
+  getParent: function () {
+    return this.parent;
   },
 
   /**
-   * Removes a series from the final view
-   * @param model the model of the series to remove
+   * @return Array of TreeNode or null if leaf
    */
-  removeSeriesFromFinalView: function (model) {
+  getChildren: function () {
+    throw new Error(this.className + ': getChildren must be implemented');
+  },
 
-    if (model) {
-      var eventToRemove = model.get('id');
-      var eventsFinalView = this.finalView.model.get('events');
-      var events = [];
-      if (eventsFinalView) {
-        for (var i = 0; i < eventsFinalView.length; ++i) {
-          if (eventsFinalView[i].id !== eventToRemove) {
-            events.push(eventsFinalView[i]);
-          }
-        }
-      }
-      this.finalView.model.set('events', events);
-      this.finalView.render();
+
+  /**
+   * Return the total weight (in TreeMap referential) of this node and it's children
+   * This should be overwritten by Leaf nodes
+   * @return Number
+   */
+  getWeight: function () {
+    if (this.getChildren() === null) {
+      throw new Error(this.className + ': Leafs must overwrite getWeight');
     }
+    var weight = 0;
+    this.getChildren().forEach(function (child) {
+      weight += child.getWeight();
+    });
+    return weight;
+  },
+
+
+
+  //----------- event management ------------//
+  onDateHighLighted: function (time) {
+    _.each(this.getChildren(), function (child) {
+      child.onDateHighLighted(time);
+    });
+  },
+  /**
+   * Add an Event to the Tree
+   * @param event Event
+   * @return TreeNode the node in charge of this event. To be handled directly,
+   * next event addition or renderView() call can modify structure, and change
+   * the owner of this Event. This is designed for animation. .. add event then
+   * call returnedNode.currentWarpingDOMObject()
+   */
+  eventEnterScope: function () {
+    throw new Error(this.className + ': eventEnterScope must be implemented');
   },
 
   /**
-   * Update a series on the Finalview if it exists
-   * @param model you want to update
+   * the Event changed from the Tree
+   * @param event Event or eventId .. to be discussed
    */
-  updateSeriesOnFinalView: function (model) {
-    if (model) {
-      var eventToUpdate = model;
-      var eventsFinalView = this.finalView.model.get('events');
-      var events = [];
-      if (eventsFinalView) {
-        for (var i = 0; i < eventsFinalView.length; ++i) {
-          if (eventsFinalView[i].id !== eventToUpdate.id) {
-            events.push(eventsFinalView[i]);
-          } else {
-            events.push({
-              id: model.get('id'),
-              streamId: model.get('streamId'),
-              streamName: model.get('streamName'),
-              connectionId: model.get('connectionId'),
-              type: model.get('type'),
-              elements: model.get('elements'),
-              trashed: model.get('v'),
-              tags: model.get('tags'),
-              style: model.get('style')
-            });
-          }
-        }
-      }
-      this.finalView.model.set('events', events);
-      this.finalView.render();
-    }
+  eventChange: function () {
+    throw new Error(this.className + ': eventChange must be implemented');
   },
 
-  resizeModal: _.debounce(function () {
-    var chartSizeWidth = $('#DnD-panel-left').width() - 20;
-    var chartSizeHeight = $('#DnD-left-content-single').height();
-
-    $('#DnD-left-content-single').css({
-      width: chartSizeWidth
-    });
-
-    $('#DnD-left-content-final').css({
-      width: chartSizeWidth
-    });
-
-    if (this.finalView) {
-      this.finalView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
+  /**
+   * Event removed
+   * @parma eventChange
+   */
+  eventLeaveScope: function () {
+    throw new Error(this.className + ': eventLeaveScope must be implemented');
+  },
+  //----------- debug ------------//
+  _debugTree : function () {
+    var me = {
+      className : this.className,
+      weight : this.getWeight()
+    };
+    if (this.getChildren()) {
+      me.children = [];
+      _.each(this.getChildren(), function (child) {
+        me.children.push(child._debugTree());
+      });
     }
-    if (this.singleView) {
-      this.singleView.model.set('dimensions', {width: chartSizeWidth, height: chartSizeHeight});
-    }
-  }, 250)
+    return me;
+  }
 });
+
 })()
-},{"./../numericals/ChartView.js":44,"./../numericals/SeriesModel.js":41,"./EventCollection.js":42,"./ListView.js":43,"underscore":8}],19:[function(require,module,exports){
+},{"../utility/treemap.js":53,"../view/NodeView.js":52,"backbone":26,"underscore":8}],36:[function(require,module,exports){
+
+var _ = require('underscore');
+var TreeNode = require('./TreeNode');
+var StreamNode = require('./StreamNode');
+var VirtualNode = require('./VirtualNode.js');
+var Pryv = require('pryv');
+
+var STREAM_MARGIN = 20;
+var SERIAL = 0;
+/**
+ * Always call intStructure after creating a new ConnectionNode
+ * @type {*}
+ */
+var ConnectionNode = module.exports = TreeNode.implement(
+  function (parentnode, connection) {
+    TreeNode.call(this, parentnode.treeMap, parentnode);
+    this.connection = connection;
+    this.streamNodes = {};
+    this.margin = STREAM_MARGIN;
+    this.uniqueId = 'node_connection_' + SERIAL;
+    SERIAL++;
+  }, {
+    className: 'ConnectionNode',
+
+    // ---------------------------------- //
+
+
+    /**
+     * Build Structure
+     * @param callback
+     * @param options
+     */
+    initStructure: function (options, callback) {
+
+      options = options || {};
+      this.streamNodes = {};
+      var virtNodeWaiting = {};
+
+
+      this.connection.streams.walkTree(options,
+        function (stream) {  // eachNode
+          var parentNode = this;
+          if (stream.parent) {   // if not parent, this connection node is the parent
+            parentNode = this.streamNodes[stream.parent.id];
+          }
+
+          this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
+
+          if (VirtualNode.nodeHas(stream)) {
+            var vn = VirtualNode.getNodes(stream);
+            console.log('The stream', stream.id, 'has virtual nodes:', vn);
+
+            // for each virtual node of stream
+            _.each(vn, function (virtualNode) {
+              var id = '';
+              // create the virtual node's id
+              _.each(virtualNode.filters, function (s) {
+                id = id + s.streamId;
+              });
+
+              // set the redirections to the children
+              _.each(virtualNode.filters, function (s) {
+                if (this.streamNodes[s.streamId]) {
+                  if (this.streamNodes[s.streamId].redirect) {
+                    this.streamNodes[s.streamId].push({to: id, type: s.type});
+                  } else {
+                    this.streamNodes[s.streamId] = [{to: id, type: s.type}];
+                  }
+                } else {
+                  if (virtNodeWaiting[s.streamId]) {
+                    virtNodeWaiting[s.streamId].push({to: id, type: s.type});
+                  } else {
+                    virtNodeWaiting[s.streamId] = [{to: id, type: s.type}];
+                  }
+                }
+              }.bind(this));
+              var connectionNode =  this;
+              var virtualStreamNode = this.streamNodes[stream.id];
+              var virtualStream = new Pryv.Stream(this.connection, {_parent: stream,
+                parentId: stream.id, childrenIds: [], id: id});
+              this.streamNodes[id] = new StreamNode(connectionNode,
+                virtualStreamNode, virtualStream);
+              this.connection.datastore.streamsIndex[virtualStream.id] = virtualStream;
+              stream.childrenIds.push(virtualStream.id);
+
+              console.log('Set up new virtual node as VirtualStream:', virtualStream);
+              console.log('The virtual node\'s parent has the following children',
+                stream.children);
+            }.bind(this));
+          }
+          // check for event redirection
+          if (virtNodeWaiting[stream.id]) {
+            if (this.streamNodes[stream.id].redirect) {
+              // for loop to add them all ?
+              this.streamNodes[stream.id].redirect.push(virtNodeWaiting[stream.id]);
+            } else {
+              this.streamNodes[stream.id].redirect = virtNodeWaiting[stream.id];
+            }
+          }
+        }.bind(this),
+        function (error) {   // done
+          if (error) { error = 'ConnectionNode failed to init structure - ' + error; }
+          callback(error);
+        });
+
+    },
+
+    /**
+     * Advertise a structure change event
+     * @param options {state : all, default}
+     * @param callback
+     */
+
+    /*jshint -W098 */
+    structureChange: function (callback, options) {
+
+      // - load streamTree from connection
+      // - create nodes
+      // - redistribute events (if needed)
+      // when implemented review "eventEnterScope" which creates the actual structure
+
+      // warnings
+      // - there is no list of events directly accessible.
+      // Maybe this could be asked to the rootNode
+
+      // possible optimization
+      // - calculate the changes and rebuild only what's needed :)
+      // - this would need cleverer StreamNodes
+
+      console.log('Warning: Implement ConnectionNode.structureChange');
+      callback();
+    },
+
+// ---------- Node -------------  //
+
+    getChildren: function () {
+      var children = [];
+      _.each(this.streamNodes, function (node) {
+        if (node.getParent() === this) { children.push(node); }
+      }, this);
+      return children;
+    },
+
+
+    eventEnterScope: function (event, reason, callback) {
+      var node =  this.streamNodes[event.stream.id]; // do we already know this stream?
+      if (typeof node === 'undefined') {
+        throw new Error('Cannot find stream with id: ' + event.stream.id);
+      }
+      node.eventEnterScope(event, reason, callback);
+    },
+
+    eventLeaveScope: function (event, reason, callback) {
+      var node = this.streamNodes[event.stream.id];
+      if (node === 'undefined') {
+        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
+      }
+      node.eventLeaveScope(event, reason, callback);
+
+    },
+
+    eventChange: function (event, reason, callback) {
+      var node = this.streamNodes[event.stream.id];
+      if (node === 'undefined') {
+        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
+      }
+      node.eventChange(event, reason, callback);
+    },
+
+//----------- debug ------------//
+    _debugTree : function () {
+      var me = {
+        name : this.connection.displayId
+      };
+
+      _.extend(me, TreeNode.prototype._debugTree.call(this));
+
+      return me;
+    }
+
+  });
+Object.defineProperty(ConnectionNode.prototype, 'id', {
+  get: function () { return this.connection.id; },
+  set: function () { throw new Error('ConnectionNode.id property is read only'); }
+});
+},{"./StreamNode":54,"./TreeNode":35,"./VirtualNode.js":24,"pryv":9,"underscore":8}],19:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
@@ -7140,6 +7719,7 @@ var _ = require('underscore'),
   CommonView = require('./CommonView.js'),
   GenericContentView = require('./contentView/Generic.js'),
   NoteContentView = require('./contentView/Note.js'),
+  NumericalContentView = require('./contentView/numercial/Controller.js'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
@@ -7207,7 +7787,7 @@ _.extend(Controller.prototype, {
   close: function () {
     this.commonView.close();
     this.contentView.close();
-    $('div').remove('.modal-panel-left');
+    $('div').remove('.modal-panel-left, .modal-panel-right');
     this.collection.reset();
     this.collection = null;
     this.events = {};
@@ -7267,8 +7847,10 @@ _.extend(Controller.prototype, {
         if (this.contentView !== null) {
           this.contentView.close();
         }
-        this.contentView = new newContentView.view({model: new Model({})});
+        this.contentView = new newContentView.view({model: new Model({collection:
+          this.collection})});
         if (newContentView.type === 'Creation') {
+          $('.modal-panel-right').hide();
           this.contentView.connection = this.connection;
           this.commonView.close();
           var currentElement = this.collection.getCurrentElement();
@@ -7279,8 +7861,10 @@ _.extend(Controller.prototype, {
             this.contentView.connectionId = currentElement.get('event').connection.serialId;
           }
           this.contentView.on('endOfSelection', function () {
+            $('.modal-panel-right').show();
             this.addEvents(this.newEvent.get('event'));
             this.commonView.model.set('event', this.newEvent.get('event'));
+            this.commonView.model.set('collection', this.collection);
             this.commonView.render();
             this.updateSingleView(this.newEvent);
           }.bind(this));
@@ -7288,6 +7872,7 @@ _.extend(Controller.prototype, {
         this.contentView.render();
       }
       this.contentView.model.set('event', model.get('event'));
+      this.contentView.model.set('collection', this.collection);
     }
   },
   createNewEvent: function () {
@@ -7313,6 +7898,8 @@ _.extend(Controller.prototype, {
       return {type: 'Position', view: PositionContentView};
     } else if (eventType === 'Creation') {
       return {type: 'Creation', view: CreationView};
+    } else if (this.eventIsNumerical(eventType)) {
+      return {type: 'Numerical', view: NumericalContentView};
     } else {
       return {type: 'Generic', view: GenericContentView};
     }
@@ -7321,32 +7908,648 @@ _.extend(Controller.prototype, {
     $('.modal-panel-left').css({
       width: $('.modal-content').width() - $('.modal-panel-right').width()
     });
-  }.bind(this), 1000)
+  }.bind(this), 1000),
+  eventIsNumerical: function (e) {
+    var eventTypeClass = e.split('/')[0];
+    return (
+      eventTypeClass === 'money' ||
+        eventTypeClass === 'absorbed-dose' ||
+        eventTypeClass === 'absorbed-dose-equivalent' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'area' ||
+        eventTypeClass === 'capacitance' ||
+        eventTypeClass === 'catalytic-activity' ||
+        eventTypeClass === 'count' ||
+        eventTypeClass === 'data-quantity' ||
+        eventTypeClass === 'density' ||
+        eventTypeClass === 'dynamic-viscosity' ||
+        eventTypeClass === 'electric-charge' ||
+        eventTypeClass === 'electric-charge-line-density' ||
+        eventTypeClass === 'electric-current' ||
+        eventTypeClass === 'electrical-conductivity' ||
+        eventTypeClass === 'electromotive-force' ||
+        eventTypeClass === 'energy' ||
+        eventTypeClass === 'force' ||
+        eventTypeClass === 'length' ||
+        eventTypeClass === 'luminous-intensity' ||
+        eventTypeClass === 'mass' ||
+        eventTypeClass === 'mol' ||
+        eventTypeClass === 'power' ||
+        eventTypeClass === 'pressure' ||
+        eventTypeClass === 'speed' ||
+        eventTypeClass === 'temperature' ||
+        eventTypeClass === 'volume'
+      );
+  }
 });
 })()
-},{"./CommonView.js":48,"./EventCollection.js":45,"./EventModel.js":46,"./ListView.js":47,"./contentView/Creation.js":53,"./contentView/Generic.js":51,"./contentView/Note.js":49,"./contentView/Picture.js":50,"./contentView/Position.js":52,"underscore":8}],13:[function(require,module,exports){
-//TODO: consider merging System into Utility
+},{"./CommonView.js":58,"./EventCollection.js":55,"./EventModel.js":56,"./ListView.js":57,"./contentView/Creation.js":64,"./contentView/Generic.js":59,"./contentView/Note.js":60,"./contentView/Picture.js":62,"./contentView/Position.js":63,"./contentView/numercial/Controller.js":61,"underscore":8}],23:[function(require,module,exports){
+(function(){/* global window, $ */
+var _ = require('underscore'),
+  ListView = require('./ListView.js'),
+  ChartView = require('./../numericals/ChartView.js'),
+  Model = require('./../numericals/ChartModel.js'),
+  TimeSeriesCollection = require('./../numericals/TimeSeriesCollection.js'),
+  TimeSeriesModel = require('./../numericals/TimeSeriesModel.js');
 
-var Utility = require('../utility/Utility.js');
+var Controller = module.exports = function ($modal, events) {
+  this.$modal = $modal;
+  this.events = events;
+  this.datas = {};
+  this.chartView = null;
 
+  // Very important hack flag.
+  this.initial = true;
+  this.called = false;
 
-var socketIO = require('socket.io-client');
+  /* Base event containers */
+  this.eventsToAdd = [];
+  this.eventsToRem = [];
+  this.eventsToCha = [];
 
+  this.chartCollection = new TimeSeriesCollection([], {type: 'All'});
+  this.eventCollections = {
+    note: new TimeSeriesCollection([], {type: 'Note'}),
+    picture: new TimeSeriesCollection([], {type: 'Pictures'}),
+    position: new TimeSeriesCollection([], {type: 'Positions'}),
+    numerical: new TimeSeriesCollection([], {type: 'Numericals'})
+  };
 
-var System =
-  module.exports =  Utility.isBrowser() ?
-    require('./System-browser.js') : require('./System-node.js');
+  this.eventCollectionsViews = {
+    note: null,
+    picture: null,
+    position: null,
+    numerical: null
+  };
 
-System.ioConnect = function (settings) {
-  var httpMode = settings.ssl ? 'https' : 'http';
-  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
-    settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
+  for (var e in events) {
+    if (events.hasOwnProperty(e)) {
+      this.eventEnter(events[e]);
+    }
+  }
 
-  return socketIO.connect(url, {'force new connection': true});
+  this.$content = $modal.find('.modal-content');
+
+  // Create the div we will use
+  this.$content.html($('#template-draganddrop').html());
+  this.resizeModal();
+
+  $('#dnd-panel-list').append('<ul></ul>');
+  $(window).resize(this.resizeModal.bind(this));
 };
 
+_.extend(Controller.prototype, {
 
-},{"../utility/Utility.js":14,"./System-browser.js":27,"./System-node.js":28,"socket.io-client":54}],14:[function(require,module,exports){
+  show: function () {
+    if (this.initial) {
+      this.called = true;
+      return;
+    }
+    this.$modal.modal();
+    this.eventCollectionsViews.note =
+      new ListView({collection: this.eventCollections.note });
+    this.eventCollectionsViews.picture =
+      new ListView({collection: this.eventCollections.picture });
+    this.eventCollectionsViews.position =
+      new ListView({collection: this.eventCollections.position });
+    this.eventCollectionsViews.numerical =
+      new ListView({collection: this.eventCollections.numerical });
+
+    this.chartView = new ChartView({model:
+      new Model({
+        container: '#dnd-panel-chart',
+        view: null,
+        requiresDim: false,
+        collection: this.chartCollection,
+        highlighted: false,
+        highlightedTime: null,
+        allowPieChart: false,
+        dimensions: null,
+        legendStyle: 'list', // Legend style: 'list', 'table'
+        legendButton: true,  // A button in the legend
+        legendButtonContent: ['remove'],
+        legendShow: true,     // Show legend or not
+        legendExtras: true,   // use extras in the legend
+        onClick: false,
+        onHover: true,
+        onDnD: false,
+        allowPan: true,      // Allows navigation through the chart
+        allowZoom: true,     // Allows zooming on the chart
+        xaxis: true
+      })});
+
+    this.chartView.render();
+
+    this.chartView.on('remove', function (m) {
+      this.chartCollection.remove(m);
+    }.bind(this));
+
+    var $ul = $('#dnd-panel-list ul');
+    var el;
+
+    if (this.eventCollections.note.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Notes');
+      this.eventCollectionsViews.note.render();
+      el = this.eventCollectionsViews.note.el;
+      $('li:last', $ul).append(el);
+    }
+
+    if (this.eventCollections.picture.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Pictures');
+      this.eventCollectionsViews.picture.render();
+      el = this.eventCollectionsViews.picture.el;
+      $('li:last', $ul).append(el);
+    }
+
+    if (this.eventCollections.position.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Positions');
+      this.eventCollectionsViews.position.render();
+      el = this.eventCollectionsViews.position.el;
+      $('li:last', $ul).append(el);
+    }
+
+    if (this.eventCollections.numerical.length !== 0) {
+      $ul.append('<li>');
+      $('li:last', $ul).text('Numericals');
+      this.eventCollectionsViews.numerical.render();
+      el = this.eventCollectionsViews.numerical.el;
+      $('li:last', $ul).append(el);
+    }
+
+    this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
+      this.addSerieToChart(evt.model);
+    }.bind(this));
+
+    this.eventCollectionsViews.picture.on('itemview:series:click', function (evt) {
+      this.addSerieToChart(evt.model);
+    }.bind(this));
+
+    this.eventCollectionsViews.position.on('itemview:series:click', function (evt) {
+      this.addSerieToChart(evt.model);
+    }.bind(this));
+
+    this.eventCollectionsViews.numerical.on('itemview:series:click', function (evt) {
+      this.addSerieToChart(evt.model);
+    }.bind(this));
+  },
+
+  /* Base event functions */
+  eventEnter: function (event) {
+    this.events[event.id] = event;
+    if (!this.datas[event.streamId]) {
+      this.datas[event.streamId] = {};
+    }
+    if (!this.datas[event.streamId][event.type]) {
+      this.datas[event.streamId][event.type] = {};
+    }
+    this.datas[event.streamId][event.type][event.id] = event;
+    this.eventsToAdd.push(event);
+    this.debounceUpdateCollections();
+  },
+
+  eventLeave: function (event) {
+    if (this.events[event.id]) {
+      delete this.events[event.id];
+    }
+    if (this.datas[event.streamId] &&
+      this.datas[event.streamId][event.type] &&
+      this.datas[event.streamId][event.type][event.id]) {
+      delete this.datas[event.streamId][event.type][event.id];
+    }
+    this.eventsToRem.push(event);
+    this.debounceUpdateCollections();
+  },
+
+  eventChange: function (event) {
+    if (this.events[event.id]) {
+      this.events[event.id] = event;
+    }
+    if (this.datas[event.streamId] &&
+      this.datas[event.streamId][event.type] &&
+      this.datas[event.streamId][event.type][event.id]) {
+      this.datas[event.streamId][event.type][event.id] = event;
+    }
+    this.eventsToCha.push(event);
+    this.debounceUpdateCollections();
+  },
+
+  debounceUpdateCollections: _.debounce(function () {
+    var eventsToAdd = this.eventsToAdd;
+    var eventsToRem = this.eventsToRem;
+    var eventsToCha = this.eventsToCha;
+
+    var eventsCategory;
+    var eventsCollection;
+    var eventsModel;
+    var events;
+    var matching;
+
+    this.eventsToAdd = [];
+    this.eventsToRem = [];
+    this.eventsToCha = [];
+
+    var i;
+    var eIter;
+
+    // Process those to add
+    for (i = 0; i < eventsToAdd.length; ++i) {
+      var filter = {
+        connectionId: eventsToAdd[i].connection.id,
+        streamId: eventsToAdd[i].streamId,
+        type: eventsToAdd[i].type
+      };
+      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      if (eventsCollection) {
+        // find corresponding model
+        matching = eventsCollection.where(filter);
+        if (matching && matching.length !== 0) {
+          eventsModel = matching[0];
+          eventsModel.get('events').push(eventsToAdd[i]);
+        } else {
+          eventsModel = new TimeSeriesModel({
+            events: [eventsToAdd[i]],
+            connectionId: eventsToAdd[i].connection.id,
+            streamId: eventsToAdd[i].streamId,
+            streamName: eventsToAdd[i].stream.name,
+            type: eventsToAdd[i].type,
+            category: this.getEventsCategory(eventsToAdd[i])
+          });
+          eventsCollection.add(eventsModel);
+        }
+      }
+    }
+
+    // Process those to remove
+    for (i = 0; i < eventsToRem.length; ++i) {
+      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      if (eventsCollection) {
+        // find corresponding model
+        matching = eventsCollection.where({
+          connectionId: eventsToAdd[i].connection.id,
+          streamId: eventsToAdd[i].streamId,
+          type: eventsToAdd[i].type
+        });
+        if (matching && matching.length !== 0) {
+          eventsModel = matching[0];
+          events = eventsModel.get('events');
+          for (eIter = 0; eIter < events.length; ++eIter) {
+            if (events[eIter].id === eventsToRem[i].id) {
+              delete events[eIter];
+            }
+          }
+        }
+      }
+    }
+
+    // Process those to change
+    for (i = 0; i < eventsToCha.length; ++i) {
+      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      if (eventsCollection) {
+        // find corresponding model
+        matching = eventsCollection.where({
+          connectionId: eventsToAdd[i].connection.id,
+          streamId: eventsToAdd[i].streamId,
+          type: eventsToAdd[i].type
+        });
+        if (matching && matching.length !== 0) {
+          eventsModel = matching[0];
+          events = eventsModel.get('events');
+          for (eIter = 0; eIter < events.length; ++eIter) {
+            if (events[eIter].id === eventsToRem[i].id) {
+              events[eIter] = eventsToRem[i];
+            }
+          }
+        }
+      }
+    }
+
+    if (this.initial) {
+      this.initial = false;
+      if (this.called) {
+        this.show();
+      }
+    }
+  }, 100),
+
+  getEventsCategory: function (event) {
+    if (this.eventIsNote(event)) {
+      return 'note';
+    } else if (this.eventIsNumerical(event)) {
+      return 'numerical';
+    } else if (this.eventIsPicture(event)) {
+      return 'picture';
+    } else if (this.eventIsPosition(event)) {
+      return 'position';
+    } else {
+      return null;
+    }
+  },
+
+  getTimeSeriesCollectionByEvent: function (event) {
+    if (this.eventIsNote(event)) {
+      return this.eventCollections.note;
+    } else if (this.eventIsNumerical(event)) {
+      return this.eventCollections.numerical;
+    } else if (this.eventIsPicture(event)) {
+      return this.eventCollections.picture;
+    } else if (this.eventIsPosition(event)) {
+      return this.eventCollections.position;
+    } else {
+      return null;
+    }
+  },
+
+  /* Functions to the event category */
+  eventIsNote: function (e) {
+    var eventType = e.type;
+    return (eventType === 'note/txt' || eventType === 'note/text');
+  },
+
+  eventIsNumerical: function (e) {
+    var eventTypeClass = e.type.split('/')[0];
+    return (
+      eventTypeClass === 'money' ||
+        eventTypeClass === 'absorbed-dose' ||
+        eventTypeClass === 'absorbed-dose-equivalent' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'absorbed-dose-rate' ||
+        eventTypeClass === 'area' ||
+        eventTypeClass === 'capacitance' ||
+        eventTypeClass === 'catalytic-activity' ||
+        eventTypeClass === 'count' ||
+        eventTypeClass === 'data-quantity' ||
+        eventTypeClass === 'density' ||
+        eventTypeClass === 'dynamic-viscosity' ||
+        eventTypeClass === 'electric-charge' ||
+        eventTypeClass === 'electric-charge-line-density' ||
+        eventTypeClass === 'electric-current' ||
+        eventTypeClass === 'electrical-conductivity' ||
+        eventTypeClass === 'electromotive-force' ||
+        eventTypeClass === 'energy' ||
+        eventTypeClass === 'force' ||
+        eventTypeClass === 'length' ||
+        eventTypeClass === 'luminous-intensity' ||
+        eventTypeClass === 'mass' ||
+        eventTypeClass === 'mol' ||
+        eventTypeClass === 'power' ||
+        eventTypeClass === 'pressure' ||
+        eventTypeClass === 'speed' ||
+        eventTypeClass === 'temperature' ||
+        eventTypeClass === 'volume'
+      );
+  },
+
+  eventIsPicture: function (e) {
+    var eventType = e.type;
+    return (eventType === 'note/txt' || eventType === 'note/text');
+  },
+
+  eventIsPosition: function (e) {
+    var eventType = e.type;
+    return (eventType === 'note/txt' || eventType === 'note/text');
+  },
+
+  close: function () {
+    this.chartView.close();
+    this.$modal.find('#dnd-body').remove();
+  },
+
+
+  /**
+   * Adder functions
+   */
+
+  addSerieToChart: function (m) {
+    this.chartCollection.add(m);
+  },
+
+  resizeModal: _.debounce(function () {
+    this.chartView.render();
+  }, 250)
+});
+
+})()
+},{"./../numericals/ChartModel.js":67,"./../numericals/ChartView.js":66,"./../numericals/TimeSeriesCollection.js":68,"./../numericals/TimeSeriesModel.js":69,"./ListView.js":65,"underscore":8}],21:[function(require,module,exports){
+(function(){/* global $, FB, twttr */
+var Backbone = require('backbone'),
+  Marionette = require('backbone.marionette');
+// The recursive tree view
+function slugMe(value) {
+  var rExps = [
+    {re: /[\xC0-\xC6]/g, ch: 'A'},
+    {re: /[\xE0-\xE6]/g, ch: 'a'},
+    {re: /[\xC8-\xCB]/g, ch: 'E'},
+    {re: /[\xE8-\xEB]/g, ch: 'e'},
+    {re: /[\xCC-\xCF]/g, ch: 'I'},
+    {re: /[\xEC-\xEF]/g, ch: 'i'},
+    {re: /[\xD2-\xD6]/g, ch: 'O'},
+    {re: /[\xF2-\xF6]/g, ch: 'o'},
+    {re: /[\xD9-\xDC]/g, ch: 'U'},
+    {re: /[\xF9-\xFC]/g, ch: 'u'},
+    {re: /[\xC7-\xE7]/g, ch: 'c'},
+    {re: /[\xD1]/g, ch: 'N'},
+    {re: /[\xF1]/g, ch: 'n'}
+  ];
+  for (var i = 0, len = rExps.length; i < len; i++) {
+    value = value.replace(rExps[i].re, rExps[i].ch);
+  }
+  return value.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/\-{2,}/g, '-');
+}
+var TreeView = Marionette.CompositeView.extend({
+  template: '#node-template',
+  tagName: 'ul',
+  ui: {
+    checkbox: '.input-checkbox'
+  },
+  initialize: function () {
+    // grab the child collection from the parent model
+    // so that we can render the collection as children
+    // of this parent node
+    this.collection = this.model.children;
+    this.listenTo(this.model, 'change', this.render);
+  },
+  appendHtml: function (collectionView, itemView) {
+    // ensure we nest the child list inside of 
+    // the current list item
+    collectionView.$('li:first').append(itemView.el);
+  },
+  onRender: function () {
+    this.ui.checkbox[0].checked = this.model.get('checked');
+    this.ui.checkbox.click(this.toggleCheck.bind(this));
+  },
+  toggleCheck: function () {
+    this.model.set('checked', !this.model.get('checked'));
+    this.collection.each(function (model) {
+      model.set('checked', this.model.get('checked'));
+    }.bind(this));
+  }
+});
+
+// The tree's root: a simple collection view that renders 
+// a recursive tree structure for each item in the collection
+var TreeRoot = Marionette.CollectionView.extend({
+  itemView: TreeView,
+  id: 'create-sharing',
+  className: 'container',
+  onRender: function () {
+    var dateFrom = new Date(this.options.timeFrom * 1000);
+    var dateTo = new Date(this.options.timeTo * 1000);
+    function toDateInputValue(date) {
+      var local = new Date(date);
+      local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      return local.toJSON().slice(0, 10);
+    }
+    this.$el.prepend('<h1>Create sharing</h1>' +
+      '<form role="form" id="form-create-sharing"' +
+      '<div class="form-horizontal">' +
+      '<div class="form-group">' +
+      '<div class="col-sm-5">' +
+      '<input type="text" class="form-control" id="input-name" placeholder="Name">' +
+      '</div>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<div class="col-sm-5">' +
+      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
+      '</div>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<div class="col-sm-5">' +
+      '<select class="form-control" id="input-global-permission">' +
+      '  <option value ="">Permission for all stream</option>' +
+      '  <option value="read">Read</option>' +
+      '  <option value="contribute">Contribute</option>' +
+      '  <option value="manage">Manage</option>' +
+      '</select>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="form-inline">' +
+      '<div class="form-group">' +
+      '<input type="date" class="form-control" id="input-from-date" ' +
+      'value="' + toDateInputValue(dateFrom) + '" disabled>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<input type="time" class="form-control" id="input-from-time" ' +
+      'value="' + dateFrom.toLocaleTimeString() + '" disabled>' +
+      '</div>' +
+      '<label> < --- > </label>' +
+      '<div class="form-group">' +
+      '<input type="date" class="form-control" id="input-to-date" ' +
+      'value="' + toDateInputValue(dateTo) + '" disabled>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<input type="time" class="form-control" id="input-to-time" ' +
+      'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
+      '</div>' +
+      '</div>' +
+      '');
+    this.$el.append('<div class="form-group">' +
+      '<button type="submit" class="btn btn-primary">Create</button>' +
+      '</div>' +
+      '</form>');
+    var $form = $('#form-create-sharing', this.$el),
+      $name = $('#input-name', this.$el),
+      $token = $('#input-token', this.$el),
+      $permission = $('#input-global-permission', this.$el),
+      $btn = $('button', this.$el);
+    function createSharing(e) {
+      e.preventDefault();
+      var access = {}, name = $name.val(), token = $token.val(), permission = $permission.val();
+      if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
+        permission = 'read';
+      }
+      access.name = name;
+      access.token = token;
+      access.permissions = [{streamId : '*', level: permission}];
+      this.options.connection.accesses.create(access, function (error, result) {
+        if (error || result.message) {
+          $btn.removeClass('btn-primary');
+          $btn.addClass('btn-danger');
+        } else {
+          $btn.removeClass('btn-primary');
+          $btn.addClass('btn-success');
+          this.trigger('sharing:createSuccess', result.token);
+        }
+      }.bind(this));
+    }
+    $form.submit(createSharing.bind(this));
+    $btn.click(createSharing.bind(this));
+    $name.bind('change paste keyup', function () {
+      $token.val(slugMe($name.val()));
+    });
+  }
+});
+var TreeNode = Backbone.Model.extend({
+  defaults : {
+    checked: true
+  },
+  initialize: function () {
+    var children = this.get('children');
+    if (children) {
+      this.children = new TreeNodeCollection(children);
+      this.unset('children');
+    }
+  }
+});
+var TreeNodeCollection = Backbone.Collection.extend({
+  model: TreeNode
+});
+var Controller = module.exports = function ($modal, connection, streams, timeFilter) {
+  this.$modal = $modal;
+  this.connection = connection;
+  this.streams = streams;
+  this.timeFrom = timeFilter[1];
+  this.timeTo = timeFilter[0];
+  this.container = '.modal-content';
+  this.treeView = null;
+};
+Controller.prototype.show = function () {
+  this.$modal.modal();
+  var tree = new TreeNodeCollection(this.streams);
+  this.treeView = new TreeRoot({
+    collection: tree,
+    timeFrom: this.timeFrom,
+    timeTo: this.timeTo,
+    connection: this.connection
+  });
+  this.treeView.render();
+  $(this.container).html(this.treeView.el);
+  this.treeView.on('sharing:createSuccess', function (token) {
+    $(this.container).empty();
+    var url = this.connection.id.replace(/\?auth.*$/, '');
+    url += '#/sharings/' + token;
+    $(this.container).html('<div class="container"><h1>Share</h1>' +
+      '<p>Your sharing was successfully created, share it or give this url: </p>' +
+      '<p><a href="' + url + '">' + url + '</a></p>' +
+      '<p class="text-center share">' +
+      '<a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: ' + url +
+      '" title="Share by Email">' +
+      '<img src="./images/mail-24.png"/></a>' +
+      '<a href="https://twitter.com/share" class="twitter-share-button"' +
+      ' data-url="' + url + '" data-via="pryv" data-count="none">Tweet</a>' +
+      '<fb:share-button href="' + url + '" ' +
+      ' type="button"></fb:share-button></p></div>');
+    FB.XFBML.parse($('.share').get(0));
+    twttr.widgets.load();
+
+  }.bind(this));
+};
+Controller.prototype.close = function () {
+  this.treeView.close();
+  $(this.container).empty();
+};
+})()
+},{"backbone":26,"backbone.marionette":70}],16:[function(require,module,exports){
 var _ = require('underscore');
 
 var isBrowser = function () {
@@ -7354,19 +8557,17 @@ var isBrowser = function () {
 };
 
 
-var Utility =  module.exports =  isBrowser() ?
-  require('./Utility-browser.js') : require('./Utility-node.js');
-
-module.exports = Utility;
+var utility = module.exports = isBrowser() ?
+  require('./utility-browser.js') : require('./utility-node.js');
 
 /**
  * return true if environment is a web browser
  * @returns {boolean}
  */
-Utility.isBrowser = isBrowser;
+utility.isBrowser = isBrowser;
 
 
-Utility.SignalEmitter = require('./SignalEmitter.js');
+utility.SignalEmitter = require('./SignalEmitter.js');
 
 /**
  * Merge two object (key/value map) and remove "null" properties
@@ -7374,7 +8575,7 @@ Utility.SignalEmitter = require('./SignalEmitter.js');
  * @param {Object} sourceB
  * @returns {*|Block|Node|Tag}
  */
-Utility.mergeAndClean = function (sourceA, sourceB) {
+utility.mergeAndClean = function (sourceA, sourceB) {
   sourceA = sourceA || {};
   sourceB = sourceB || {};
   var result = _.clone(sourceA);
@@ -7390,7 +8591,7 @@ Utility.mergeAndClean = function (sourceA, sourceB) {
  * @param {Object} data
  * @returns {String} key1=value1&key2=value2....
  */
-Utility.getQueryParametersString = function (data) {
+utility.getQueryParametersString = function (data) {
   data = this.mergeAndClean(data);
   return Object.keys(data).map(function (key) {
     if (data[key] !== null) {
@@ -7411,7 +8612,7 @@ Utility.getQueryParametersString = function (data) {
  * Common regexp
  * @type {{username: RegExp, email: RegExp}}
  */
-Utility.regex = {
+utility.regex = {
   username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
   email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
 };
@@ -7422,40 +8623,271 @@ Utility.regex = {
  * @param {String} suffix
  * @returns {boolean}
  */
-Utility.endsWith = function (str, suffix) {
+utility.endsWith = function (str, suffix) {
   return str.indexOf(suffix, str.length - suffix.length) !== -1;
 };
 
 
-},{"./SignalEmitter.js":37,"./Utility-browser.js":32,"./Utility-node.js":29,"underscore":8}],55:[function(require,module,exports){
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/positions/Model.js');
+},{"./SignalEmitter.js":51,"./utility-browser.js":34,"./utility-node.js":32,"underscore":8}],15:[function(require,module,exports){
+//TODO: consider merging system into utility
 
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var PositionsEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'PositionsEventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return 1;
-    }
+var utility = require('../utility/utility.js');
 
-  });
 
-// we accept all kind of events
-PositionsEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'position/wgs84');
+var socketIO = require('socket.io-client');
+
+
+var system =
+  module.exports =  utility.isBrowser() ?
+    require('./system-browser.js') : require('./system-node.js');
+
+system.ioConnect = function (settings) {
+  var httpMode = settings.ssl ? 'https' : 'http';
+  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
+    settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
+
+  return socketIO.connect(url, {'force new connection': true});
 };
 
 
+},{"../utility/utility.js":16,"./system-browser.js":31,"./system-node.js":33,"socket.io-client":71}],37:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./SharingModel.js');
 
-},{"../../view/events-views/positions/Model.js":56,"../EventsNode":57}],58:[function(require,module,exports){
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./SharingModel.js":38,"backbone":26}],38:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    sharing: null,
+    collection: null
+  }
+});
+},{"backbone":26}],39:[function(require,module,exports){
+(function(){/* global $, FB, twttr */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./SharingItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-sharingListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#sharing-list',
+
+  initialize: function () {
+    this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h1>Sharings</h1>' +
+    '<table class="table table-striped" >' +
+      '<thead><tr><th></th><th>Name</th><th>Url</th><th>Share</th></tr></thead>' +
+      '<tbody id="sharing-list"></tbody>' +
+    '</table>');
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    FB.XFBML.parse($('.share').getAll);
+    twttr.widgets.load();
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./SharingItemView.js":72,"backbone.marionette":70,"underscore":8}],40:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./BookmarkModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./BookmarkModel.js":41,"backbone":26}],41:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    bookmark: null,
+    collection: null
+  }
+});
+},{"backbone":26}],42:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./BookmarkItemView.js'),
+  Pryv = require('pryv'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-bookmarkListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#bookmark-list',
+  $url: null,
+  $auth: null,
+  $name: null,
+  $tick: null,
+  $form: null,
+  _findAuthFromUrl: function () {
+
+    var url = this.$url.val(),
+      params = Pryv.utility.getParamsFromUrl(url),
+      sharings = Pryv.utility.getSharingsFromUrl(url);
+    if (params && params.auth) {
+      this.$auth.val(params.auth);
+    } else if (sharings && sharings.length > 0) {
+      this.$auth.val(sharings.join(','));
+    }
+
+  },
+  initialize: function () {
+    this.listenTo(this.collection, 'change', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h1>Bookmarks</h1>' +
+      '<form class="form-inline" id="add-bookmark" role="form">' +
+      '<div class="form-group">' +
+        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
+        '<input type="text" class="form-control" id="add-bookmark-name" placeholder="name">' +
+      '</div>' +
+      '<div class="form-group">' +
+        ' <label class="sr-only" for="add-bookmark-url">url</label>' +
+        ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="url">' +
+      '</div> ' +
+      '<div class="form-group">' +
+        ' <label class="sr-only" for="add-bookmark-auth">url</label>' +
+        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="token">' +
+      '</div> ' +
+      ' <button type="submit" class="btn btn-default">Add</button>  ' +
+      '<span id ="add-bookmark-tick">&#10004</span>' +
+     ' </form>' +
+      '<table class="table table-striped" >' +
+      '<thead><tr><th></th><th>Name</th><th>Token</th><th>Url</th></tr></thead>' +
+      '<tbody id="bookmark-list"></tbody>' +
+      '</table>');
+    this.$url = $('#add-bookmark-url');
+    this.$auth = $('#add-bookmark-auth');
+    this.$name = $('#add-bookmark-name');
+    this.$tick = $('#add-bookmark-tick');
+    this.$form = $('#add-bookmark');
+    this.$tick.hide();
+    this.$form.bind('change paste keyup', function () {
+      this.$tick.hide();
+    }.bind(this));
+    this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
+    this.$form.submit(function (e) {
+      e.preventDefault();
+      var auths = this.$auth.val().split(','),
+        url = this.$url.val(),
+        name = this.$name.val(),
+        sameNameExtension = '',
+        i = 0;
+      auths.forEach(function (auth) {
+        this.trigger('bookmark:add', url, auth, name + sameNameExtension);
+        i += 1;
+        sameNameExtension = '-' + i;
+      }.bind(this));
+    }.bind(this));
+  },
+  endAddBookmark: function (error) {
+    this.$tick.show();
+    if (error) {
+      this.$tick.css('color', 'red');
+    } else {
+      this.$tick.css('color', 'limegreen');
+    }
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./BookmarkItemView.js":73,"backbone.marionette":70,"pryv":9,"underscore":8}],43:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./Model.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./Model.js":44,"backbone":26}],44:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    connection: null,
+    collection: null,
+    checked: true,
+    error: null
+  }
+});
+},{"backbone":26}],45:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./ItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-subscribeListCompositeView',
+  container: '.modal-content',
+  itemView: ItemView,
+  itemViewContainer: '#subscribe-list',
+  $addButton: null,
+  initialize: function () {
+    this.listenTo(this.collection, 'change', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h3>Choose sharing you want to save</h3>' +
+      '<ul id="subscribe-list"></ul>' +
+      '<button class="btn btn-success" id="add-subscribe">Save</button>'
+      );
+    this.$addButton = $('#add-subscribe');
+    this.$addButton.bind('click', this._addSubscribe.bind(this));
+  },
+  _addSubscribe: function () {
+    var subscriptions = [];
+    this.collection.each(function (model) {
+      if (model.get('checked')) {
+        subscriptions.push(model);
+      }
+    }.bind(this));
+    this.trigger('subscription:add', subscriptions);
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./ItemView.js":74,"backbone.marionette":70,"underscore":8}],75:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
     EventsView = require('../../view/events-views/notes/Model.js');
 
@@ -7483,21 +8915,20 @@ NotesEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../../view/events-views/notes/Model.js":59,"../EventsNode":57}],60:[function(require,module,exports){
+},{"../../view/events-views/notes/Model.js":76,"../EventsNode":77}],78:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/generics/Model.js');
-
+  EventsView = require('../../view/events-views/positions/Model.js');
 
 /**
  * Holder for EventsNode
  * @type {*}
  */
-var GenericEventsNode = module.exports = EventsNode.implement(
+var PositionsEventsNode = module.exports = EventsNode.implement(
   function (parentStreamNode) {
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'GenericEventsNode',
+    className: 'PositionsEventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return 1;
@@ -7506,12 +8937,42 @@ var GenericEventsNode = module.exports = EventsNode.implement(
   });
 
 // we accept all kind of events
-GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
-  return true;
+PositionsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'position/wgs84');
 };
 
 
-},{"../../view/events-views/generics/Model.js":61,"../EventsNode":57}],62:[function(require,module,exports){
+
+},{"../../view/events-views/positions/Model.js":79,"../EventsNode":77}],80:[function(require,module,exports){
+var EventsNode = require('../EventsNode'),
+    EventsView = require('../../view/events-views/pictures/Model.js');
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var PicturesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'PicturesEventsNode',
+    pluginView: EventsView,
+
+    getWeight: function () {
+      return 1;
+    }
+
+  });
+
+// we accept all kind of events
+PicturesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'picture/attached');
+};
+
+
+
+},{"../../view/events-views/pictures/Model.js":81,"../EventsNode":77}],82:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
     EventsView = require('../../view/events-views/numericals/Model.js');
 
@@ -7569,22 +9030,22 @@ NumericalsEventsNode.acceptThisEventType = function (eventType) {
 
 
 
-},{"../../view/events-views/numericals/Model.js":63,"../EventsNode":57}],64:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":83,"../EventsNode":77}],84:[function(require,module,exports){
 var EventsNode = require('../EventsNode'),
-    EventsView = require('../../view/events-views/pictures/Model.js');
+  EventsView = require('../../view/events-views/generics/Model.js');
+
 
 /**
  * Holder for EventsNode
  * @type {*}
  */
-var PicturesEventsNode = module.exports = EventsNode.implement(
+var GenericEventsNode = module.exports = EventsNode.implement(
   function (parentStreamNode) {
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'PicturesEventsNode',
+    className: 'GenericEventsNode',
     pluginView: EventsView,
-
     getWeight: function () {
       return 1;
     }
@@ -7592,78 +9053,12 @@ var PicturesEventsNode = module.exports = EventsNode.implement(
   });
 
 // we accept all kind of events
-PicturesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'picture/attached');
+GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
+  return true;
 };
 
 
-
-},{"../../view/events-views/pictures/Model.js":65,"../EventsNode":57}],34:[function(require,module,exports){
-var _ = require('underscore');
-
-function Datastore(connection) {
-  this.connection = connection;
-  this.streamsIndex = {}; // streams are linked to their object representation
-  this.rootStreams = [];
-}
-
-Datastore.prototype.init = function (callback) {
-  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
-    if (error) { return callback('Datastore faild to init - '  + error); }
-    if (result) {
-      this._rebuildStreamIndex(result); // maybe done transparently
-    }
-    callback(null, result);
-  }.bind(this));
-
-  // TODO activate monitoring
-};
-
-Datastore.prototype._rebuildStreamIndex = function (streamArray) {
-  this.streamsIndex = {};
-  this.rootStreams = [];
-  this._indexStreamArray(streamArray);
-};
-
-Datastore.prototype._indexStreamArray = function (streamArray) {
-  _.each(streamArray, function (stream) {
-    this.streamsIndex[stream.id] = stream;
-    if (! stream._parent) { this.rootStreams.push(stream); }
-    this._indexStreamArray(stream._children);
-    delete stream._children; // cleanup when in datastore mode
-    delete stream._parent;
-  }.bind(this));
-};
-
-
-/**
- *
- * @param streamId
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreams = function () {
-  return this.rootStreams;
-};
-
-
-/**
- *
- * @param streamId
- * @param test (do no throw error if Stream is not found
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreamById = function (streamId, test) {
-  var result = this.streamsIndex[streamId];
-  if (! test && ! result) {
-    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
-  }
-  return result;
-};
-
-module.exports = Datastore;
-
-
-},{"underscore":8}],54:[function(require,module,exports){
+},{"../../view/events-views/generics/Model.js":85,"../EventsNode":77}],71:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -11538,7 +12933,148 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 })()
-},{}],39:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
+var _ = require('underscore');
+
+function Datastore(connection) {
+  this.connection = connection;
+  this.streamsIndex = {}; // streams are linked to their object representation
+  this.rootStreams = [];
+}
+
+Datastore.prototype.init = function (callback) {
+  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
+    if (error) { return callback('Datastore faild to init - '  + error); }
+    if (result) {
+      this._rebuildStreamIndex(result); // maybe done transparently
+    }
+    callback(null, result);
+  }.bind(this));
+
+  // TODO activate monitoring
+};
+
+Datastore.prototype._rebuildStreamIndex = function (streamArray) {
+  this.streamsIndex = {};
+  this.rootStreams = [];
+  this._indexStreamArray(streamArray);
+};
+
+Datastore.prototype._indexStreamArray = function (streamArray) {
+  _.each(streamArray, function (stream) {
+    this.streamsIndex[stream.id] = stream;
+    if (! stream._parent) { this.rootStreams.push(stream); }
+    this._indexStreamArray(stream._children);
+    delete stream._children; // cleanup when in datastore mode
+    delete stream._parent;
+  }.bind(this));
+};
+
+
+/**
+ *
+ * @param streamId
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreams = function () {
+  return this.rootStreams;
+};
+
+
+/**
+ *
+ * @param streamId
+ * @param test (do no throw error if Stream is not found
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreamById = function (streamId, test) {
+  var result = this.streamsIndex[streamId];
+  if (! test && ! result) {
+    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
+  }
+  return result;
+};
+
+module.exports = Datastore;
+
+
+},{"underscore":8}],52:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+ /* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
+module.exports = Marionette.ItemView.extend({
+  template: '#nodeView',
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+
+    this.$el.attr('id', this.model.get('id'));
+    this.$el.attr('data-streamId', this.model.get('streamId'));
+    this.$el.attr('data-connectionId', this.model.get('connectionId'));
+    this.$el.addClass('node animated  fadeIn');
+    this.$el.addClass(this.model.get('className'));
+
+  },
+  triggers: {
+    'click .nodeHeader': 'headerClicked'
+  },
+  change: function () {
+
+    this._refreshStyle();
+  },
+
+  renderView: function () {
+
+    this.render();
+  },
+  render: function () {
+    if (this.beforeRender) { this.beforeRender(); }
+    this.trigger('before:render', this);
+    this.trigger('item:before:render', this);
+    this._refreshStyle();
+    var data = this.serializeData();
+    var template = this.getTemplate();
+    var html = Marionette.Renderer.render(template, data);
+    this.$el.html(html);
+
+    $('#' + this.model.get('containerId')).prepend(this.$el);
+    if (this.model.get('eventView')) {
+      this.model.get('eventView').render(this.model.get('id'));
+    }
+    this.bindUIElements();
+
+    if (this.onRender) { this.onRender(); }
+    this.trigger('render', this);
+    this.trigger('item:rendered', this);
+    return this;
+
+  },
+  _refreshStyle: function () {
+    if (this.model.get('weight') === 0) {
+      this.close();
+      return;
+    }
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('className'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+    if (this.model.get('color')) {
+      this.$el.css('background-color', this.model.get('color'));
+    }
+  },
+  close: function () {
+
+    this.$el.removeClass('animated  fadeIn');
+    this.$el.addClass('animated  fadeOut');
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":70}],53:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -11730,81 +13266,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":8}],40:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
- /* TODO This a the view for each node, with dynamic animation
- we can't re-render on change because animation would no be done
- If the model is a event Node we must include a new typed view
- */
-module.exports = Marionette.ItemView.extend({
-  template: '#nodeView',
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-
-    this.$el.attr('id', this.model.get('id'));
-    this.$el.attr('data-streamId', this.model.get('streamId'));
-    this.$el.attr('data-connectionId', this.model.get('connectionId'));
-    this.$el.addClass('node animated  fadeIn');
-    this.$el.addClass(this.model.get('className'));
-
-  },
-  triggers: {
-    'click .nodeHeader': 'headerClicked'
-  },
-  change: function () {
-
-    this._refreshStyle();
-  },
-
-  renderView: function () {
-
-    this.render();
-  },
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    this._refreshStyle();
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.html(html);
-
-    $('#' + this.model.get('containerId')).prepend(this.$el);
-    if (this.model.get('eventView')) {
-      this.model.get('eventView').render(this.model.get('id'));
-    }
-    this.bindUIElements();
-
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
-
-  },
-  _refreshStyle: function () {
-    if (this.model.get('weight') === 0) {
-      this.close();
-      return;
-    }
-    this.$el.attr('weight', this.model.get('weight'));
-    this.$el.attr('className', this.model.get('className'));
-    this.$el.css('width', this.model.get('width'));
-    this.$el.css('height', this.model.get('height'));
-    this.$el.css('left', this.model.get('x'));
-    this.$el.css('top', this.model.get('y'));
-
-  },
-  close: function () {
-
-    this.$el.removeClass('animated  fadeIn');
-    this.$el.addClass('animated  fadeOut');
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":66}],38:[function(require,module,exports){
+},{"underscore":8}],54:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -11818,6 +13280,14 @@ var StreamNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentNode.treeMap, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
+    if (this.stream.clientData && this.stream.clientData['pryv-browser:bgColor']) {
+      this.stream.color = this.stream.clientData['pryv-browser:bgColor'];
+    } else if (parentNode.stream && parentNode.stream.clientData &&
+      parentNode.stream.clientData['pryv-browser:bgColor']) {
+      this.stream.color = parentNode.stream.clientData['pryv-browser:bgColor'];
+    } else if (parentNode.stream && parentNode.stream.color) {
+      this.stream.color = parentNode.stream.color;
+    }
 
     /**
      * eventsNodes are stored by their key
@@ -11960,6 +13430,15 @@ var StreamNode = module.exports = TreeNode.implement(
       if (eventNode === null) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventEnterScope(event, reason, callback);
+          }
+        }
+      }
       eventNode.eventEnterScope(event, reason, callback);
       var aggregatedParent = this._findAggregatedParent();
       if (aggregatedParent) {
@@ -11976,6 +13455,15 @@ var StreamNode = module.exports = TreeNode.implement(
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventLeaveScope(event, reason, callback);
+          }
+        }
       }
       eventNode.eventLeaveScope(event, reason, callback);
       if (_.size(eventNode.events) === 0) {
@@ -11994,13 +13482,21 @@ var StreamNode = module.exports = TreeNode.implement(
           delete aggregatedParent.eventsNodesAggregated[key];
         }
       }
-
     },
 
     eventChange: function (event, reason, callback) {
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventChange(event, reason, callback);
+          }
+        }
       }
       eventNode.eventChange(event, reason, callback);
       var aggregatedParent = this._findAggregatedParent();
@@ -12065,59 +13561,189 @@ StreamNode.registeredEventNodeTypes = {
   'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":30,"./eventsNode/GenericEventsNode.js":60,"./eventsNode/NotesEventsNode.js":58,"./eventsNode/NumericalsEventsNode.js":62,"./eventsNode/PicturesEventsNode.js":64,"./eventsNode/PositionsEventsNode.js":55,"underscore":8}],41:[function(require,module,exports){
+},{"./TreeNode":35,"./eventsNode/GenericEventsNode.js":84,"./eventsNode/NotesEventsNode.js":75,"./eventsNode/NumericalsEventsNode.js":82,"./eventsNode/PicturesEventsNode.js":80,"./eventsNode/PositionsEventsNode.js":78,"underscore":8}],55:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./EventModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model,
+  highlightedDate: null,
+  currentElement: null,
+  comparator: function (a, b) {
+    a = a.get('event').time;
+    b = b.get('event').time;
+    return a > b ? -1
+      : a < b ? 1
+      : 0;
+  },
+  highlightEvent: function (time) {
+    var next =  this.getEventhighlighted(time);
+    if (!next || next === Infinity) {
+      return;
+    }
+    this.setCurrentElement(next);
+    return next;
+  },
+  getEventhighlighted: function (time) {
+    this.highlightedDate = time === Infinity ? 99999999999 : time;
+    return this.min(this._getTimeDifference.bind(this));
+  },
+  getTrashed: function () {
+    return this.filter(this._getTrashed);
+  },
+  getEventById: function (id) {
+    return this.find(function (e) {
+      return e.get('event').id === id;
+    });
+  },
+  getActive: function () {
+    return this.reject(this._getTrashed);
+  },
+  _getTimeDifference: function (event) {
+    return event.getTimeDifference(this.highlightedDate);
+  },
+  _getTrashed: function (event) {
+    return event.isTrashed();
+  },
+  getCurrentElement: function () {
+    return this.currentElement;
+  },
+  setCurrentElement: function (model) {
+    if (!model) {
+      return;
+    }
+    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
+      if (this.currentElement) {
+        this.currentElement.setHighlighted(false);
+      }
+      if (model) {
+        model.setHighlighted(true);
+      }
+    }
+    this.currentElement = model;
+  },
+  next: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
+    return this;
+  },
+  prev: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
+    return this;
+  }
+});
+},{"./EventModel.js":56,"backbone":26}],56:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
   defaults: {
-    events: [],
-    highlightedTime: null,
-    container: null,
-    allowPieChart: false,
-    view: null,
+    event: null,
+    collection: null,
     highlighted: false,
-    dimensions: null,
-
-    /* Events control */
-    onClick: null,
-    onHover: null,
-    onDnD: null,
-
-    useExtras: null,
-
-    xaxis: null
+    checked: false
   },
-
+  getTimeDifference: function (time) {
+    return Math.abs(time - this.get('event').time);
+  },
+  isTrashed: function () {
+    return this.get('event').trashed;
+  },
   setHighlighted: function (highlight) {
     this.set('highlighted', highlight);
   },
-
-  onChartClicked: function () {
-    var events = this.get('events');
-    if (events.length === 1) {
-      events[0].style = this.allowPieChart ? (++events[0].style) % 3 : (++events[0].style) % 2;
+  save: function () {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      this.get('event').addAttachment(file, function () {
+        //  console.log('trash event callback', arguments);
+      });
     }
+    event.update(function () {
+      //  console.log('update event callback', arguments);
+    });
+  },
+  create: function () {
+    console.log('CREATE', this);
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      event.connection.events.createWithAttachment(event, file);
+    }  else {
+      event.connection.events.create(event);
+    }
+  },
+  addAttachment: function (file) {
+    this.get('event').file = file;
+    console.log('addAttachment', file, this);
+  },
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
+  },
+  trash: function () {
+    this.get('event').trash(function () {
+    //  console.log('trash event callback', arguments);
+    });
   }
 });
-},{"backbone":23}],43:[function(require,module,exports){
+},{"backbone":26}],57:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
   _ = require('underscore');
 
 module.exports = Marionette.CompositeView.extend({
-  template: '#template-DnD-ListCompositeView',
-  container: '#DnD-right-content-lists',
+  template: '#template-detailListCompositeView',
+  container: '.modal-content',
   itemView: ItemView,
+  itemViewContainer: '#detail-list',
+  checkAll: false,
+  events: {
+    'click #check-all': 'onCheckAllClick'
+  },
   initialize: function () {
+    if ($('.modal-panel-right').length === 0) {
+      /* jshint -W101 */
+      $(this.container).append(
+        '<div class="modal-panel-right"> ' +
+        '    <div class="modal-header">  ' +
+        '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
+        '        <h4 class="modal-title" id="myModalLabel">Detailed View</h4> ' +
+        '    </div>      ' +
+        '    <div id="modal-right-content"> ' +
+        '        <ul id="detail-list"></ul> ' +
+        '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
+          '      <button id ="trash-selected" type="button" class="btn btn-danger">Trash Selected</button></div>' +
+        '    </div> ' +
+        '</div>');
+
+    }
     this.listenTo(this.collection, 'add remove', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
   },
   appendHtml: function (collectionView, itemView) {
-    $(this.container).append(itemView.el);
+    $(this.itemViewContainer).append(itemView.el);
   },
   onRender: function () {
-    $(this.container).css({'overflow-y': 'scroll'});
+    var $checkAll = $('#check-all');
+    this.checkAll = false;
+    $checkAll.off();
+    $checkAll[0].checked = false;
+    $checkAll.bind('click', this.onCheckAllClick.bind(this));
+    $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
+  },
+  onTrashSelectedClick: function () {
+    this.collection.each(function (model) {
+      if (model.get('checked')) {
+        model.trash();
+      }
+    }.bind(this));
+  },
+  onCheckAllClick: function () {
+    this.checkAll = !this.checkAll;
+    this.collection.each(function (model) {
+      model.set('checked', this.checkAll);
+    }.bind(this));
   },
   debounceRender: _.debounce(function () {
     this.render();
@@ -12125,338 +13751,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./ItemView.js":67,"backbone.marionette":66,"underscore":8}],44:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  Pryv = require('pryv'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#template-fusion-graph',
-  container: null,
-  options: null,
-  data: null,
-  plot: null,
-  chartContainer: null,
-  useExtras: null,
-  waitExtras: null,
-
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-    this.listenTo(this.model, 'change:dimensions', this.resize);
-    this.container = this.model.get('container');
-    this.useExtras = true;
-  },
-
-  onRender: function () {
-    if (
-      !this.model.get('events') ||
-      !this.model.get('dimensions') ||
-      !this.model.get('container')) {
-      return;
-    }
-
-    try {
-      Pryv.eventTypes.extras('mass/kg');
-    } catch (e) {
-      this.useExtras = false;
-    }
-
-    this.makePlot();
-    this.onDateHighLighted(0);
-  },
-
-  makePlot: function () {
-    var myModel = this.model.get('events');
-    this.container = this.model.get('container');
-
-    this.options = {};
-    this.data = [];
-
-    this.makeOptions();
-    this.setUpContainer();
-
-    var dataMapper = function (d) {
-      return _.map(d, function (e) {
-        return [e.time * 1000, e.content];
-      });
-    };
-
-    var dataSorter = function (d) {
-      return _.sortBy(d, function (e) {
-        return e.time;
-      });
-    };
-
-    for (var i = 0; i < myModel.length; ++i) {
-      this.addSeries({
-        data: dataSorter(dataMapper(myModel[i].elements)),
-        label: this.useExtras ? Pryv.eventTypes.extras(myModel[i].type).symbol : myModel[i].type,
-        type: myModel[i].style
-      }, i);
-    }
-    var eventsNbr = 0;
-    _.each(this.data, function (d) {
-      eventsNbr += d.data.length;
-    });
-    $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
-    this.plot = $.plot($(this.chartContainer), this.data, this.options);
-    this.createEventBindings();
-    myModel = null;
-  },
-
-  resize: function () {
-    if (!this.model.get('dimensions')) {
-      return;
-    }
-    this.render();
-  },
-
-  /**
-   * Generates the general plot options based on the model
-   */
-  makeOptions: function () {
-    var seriesCounts = this.model.get('events').length;
-    this.options = {};
-    this.options.grid = {
-      hoverable: true,
-      clickable: true,
-      borderWidth: 0,
-      minBorderMargin: 5,
-      autoHighlight: true
-    };
-    this.options.xaxes = [ {
-      show: this.model.get('xaxis') && (this.model.get('events').length !== 0),
-      mode: 'time',
-      timeformat: '%y/%m/%d',
-      ticks: this.getExtremeTimes()
-    } ];
-    this.options.yaxes = [];
-    this.options.legend = {
-      show: (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15)
-      //labelFormatter: null or (fn: string, series object -> string)
-      //labelBoxBorderColor: color
-      //noColumns: number
-      //position: "ne" or "nw" or "se" or "sw"
-      //margin: number of pixels or [x margin, y margin]
-      //backgroundColor: null or color
-      //backgroundOpacity: 0.3
-      //container: null or jQuery object/DOM element/jQuery expression
-    };
-    seriesCounts = null;
-  },
-
-  getExtremeTimes: function () {
-    var events = this.model.get('events');
-    var min = Infinity, max = 0;
-    for (var i = 0; i < events.length; ++i) {
-      var el = events[i].elements;
-      for (var j = 0; j < el.length; ++j) {
-        min = (el[j].time < min) ? el[j].time : min;
-        max = (el[j].time > max) ? el[j].time : max;
-      }
-    }
-    return [min * 1000, max * 1000];
-  },
-
-  /**
-   * Adds a series to the plot and configures it based on the model.
-   * @param series, the series to add (a single one)
-   * @param seriesIndex, its index
-   */
-  addSeries: function (series, seriesIndex) {
-
-    // Configures series
-    this.data.push({
-      data: series.data,
-      label: series.label,
-      yaxis: (seriesIndex + 1)
-    });
-
-    // Configures the axis
-    this.options.yaxes.push({ show: false});
-
-    // Configures the series' style
-    switch (series.type) {
-    case 0:
-      this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: (series.data.length < 2) };
-      break;
-    case 1:
-      this.data[seriesIndex].bars = { show: true };
-      break;
-    default:
-      this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: (series.data.length < 2) };
-      break;
-    }
-  },
-
-  setUpContainer: function () {
-    // Setting up the chart container
-
-    this.chartContainer = this.container + ' .chartContainer';
-    $(this.container).html('<div class="chartContainer"></div>');
-    $(this.chartContainer).css({
-      top: 0,
-      left: 0,
-      width: this.model.get('dimensions').width + 'px',
-      height: this.model.get('dimensions').height + 'px'
-    });
-  },
-
-  showTooltip: function (x, y, content) {
-    if ($('#chart-tooltip').length === 0) {
-      $('body').append('<div id="chart-tooltip" class="tooltip">' + content + '</div>');
-    }
-    if ($('#chart-tooltip').text() !== content) {
-      $('#chart-tooltip').text(content);
-    }
-    $('#chart-tooltip').css({
-      top: x + this.plot.offset().top,
-      left: y + this.plot.offset().left
-    }).fadeIn(500);
-  },
-
-  removeTooltip: function () {
-    $('#chart-tooltip').remove();
-  },
-
-
-  onDateHighLighted: function (date) {
-    if (!this.plot) {
-      return;
-    }
-
-    this.plot.unhighlight();
-    var data = this.plot.getData();
-    for (var k = 0; k < data.length; k++) {
-      var distance = null;
-      var best = 0;
-      for (var m = 0; m < data[k].data.length; m++) {
-        if (distance === null || Math.abs(date - data[k].data[m][0] / 1000) < distance) {
-          distance = Math.abs(date - data[k].data[m][0] / 1000);
-          best = m;
-        } else { break; }
-      }
-      this.plot.highlight(k, best);
-    }
-  },
-
-  onClose: function () {
-    $(this.chartContainer).empty();
-    $(this.container).unbind();
-    $(this.container).empty();
-    this.container = null;
-    this.chartContainer = null;
-    this.options = null;
-    this.data = null;
-    this.plot = null;
-  },
-
-  createEventBindings: function () {
-    $(this.container).unbind();
-
-    $(this.container).bind('resize', function () {
-      this.trigger('chart:resize', this.model);
-    });
-
-    if (this.model.get('onClick')) {
-      $(this.container).bind('plotclick', this.onClick.bind(this));
-    }
-    if (this.model.get('onHover')) {
-      $(this.container).bind('plothover', this.onHover.bind(this));
-    }
-    if (this.model.get('onDnD')) {
-      $(this.container).attr('draggable', true);
-      $(this.container).bind('dragstart', this.onDragStart.bind(this));
-      $(this.container).bind('dragenter', this.onDragEnter.bind(this));
-      $(this.container).bind('dragover', this.onDragOver.bind(this));
-      $(this.container).bind('dragleave', this.onDragLeave.bind(this));
-      $(this.container).bind('drop', this.onDrop.bind(this));
-      $(this.container).bind('dragend', this.onDragEnd.bind(this));
-      $(this.container + ' .aggregated-nbr-events').bind('click',
-        function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
-    }
-  },
-
-
-  /* ***********************
-   * Click and Point hover Functions
-   */
-  onClick: function () {
-    this.trigger('chart:clicked', this.model);
-  },
-
-  onHover: function (event, pos, item) {
-    if (item) {
-      var labelValue = item.datapoint[1].toFixed(2);
-      var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
-        item.datapoint[0]);
-      this.showTooltip(coords.top + 5, coords.left + 5, labelValue);
-    } else {
-      this.removeTooltip();
-    }
-  },
-
-
-  computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
-    var yAxes = this.plot.getYAxes();
-    var xAxes = this.plot.getXAxes();
-    var coordY = yAxes[yAxis].p2c(xPoint);
-    var coordX = xAxes[xAxis].p2c(yPoint);
-    return { top: coordY, left: coordX};
-  },
-
-
-
-  /* ***********************
-   * Drag and Drop Functions
-   */
-
-  /* Called when this object is starts being dragged */
-  onDragStart: function (e) {
-    e.originalEvent.dataTransfer.setData('nodeId', this.container.substr(1));
-    e.originalEvent.dataTransfer.setData('streamId', $(this.container).attr('data-streamid'));
-    e.originalEvent.dataTransfer.setData('connectionId',
-      $(this.container).attr('data-connectionid'));
-    $('.chartContainer').addClass('animated shake');
-  },
-
-  /* Fires when a dragged element enters this' scope */
-  onDragEnter: function () {
-  },
-
-  /* Fires when a dragged element is over this' scope */
-  onDragOver: function (e) {
-    e.preventDefault();
-  },
-
-  /* Fires when a dragged element leaves this' scope */
-  onDragLeave: function () {
-  },
-
-  /* Called when this object is stops being dragged */
-  onDragEnd: function () {
-    $('.chartContainer').removeClass('animated shake');
-  },
-
-  /* Called when an element is dropped on it */
-  onDrop: function (e) {
-    e.stopPropagation();
-    e.preventDefault();
-    var droppedNodeID = e.originalEvent.dataTransfer.getData('nodeId');
-    var droppedStreamID = e.originalEvent.dataTransfer.getData('streamId');
-    var droppedConnectionID = e.originalEvent.dataTransfer.getData('connectionId');
-    this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
-  }
-});
-
-})()
-},{"backbone.marionette":66,"pryv":9,"underscore":8}],48:[function(require,module,exports){
+},{"./ItemView.js":86,"backbone.marionette":70,"underscore":8}],58:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -12627,7 +13922,7 @@ module.exports = Marionette.ItemView.extend({
     for (var i = 0; i < depth * indentNbr; i++) {
       result += '&nbsp;';
     }
-    result += stream.id;
+    result += stream.name;
     result += '</option>';
     for (var j = 0; j < stream.children.length; j++) {
       result += this._walkStreamStructure(stream.children[j], depth++, currentStreamId);
@@ -12651,279 +13946,750 @@ module.exports = Marionette.ItemView.extend({
    }  */
 });
 })()
-},{"backbone.marionette":66,"underscore":8}],47:[function(require,module,exports){
+},{"backbone.marionette":70,"underscore":8}],65:[function(require,module,exports){
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./ItemView.js');
+
+module.exports = Marionette.CollectionView.extend({
+  tagName: 'ul',
+  itemView: ItemView
+});
+
+},{"./ItemView.js":87,"backbone.marionette":70}],66:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js'),
-  _ = require('underscore');
+  Pryv = require('pryv'),
+  _ = require('underscore'),
+  ChartTransform = require('./utils/ChartTransform.js');
 
 module.exports = Marionette.CompositeView.extend({
-  template: '#template-detailListCompositeView',
-  container: '.modal-content',
-  itemView: ItemView,
-  itemViewContainer: '#detail-list',
-  checkAll: false,
-  events: {
-    'click #check-all': 'onCheckAllClick'
-  },
-  initialize: function () {
-    if ($('.modal-panel-right').length === 0) {
-      /* jshint -W101 */
-      $(this.container).append(
-        '<div class="modal-panel-right"> ' +
-        '    <div class="modal-header">  ' +
-        '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
-        '        <h4 class="modal-title" id="myModalLabel">Detailed View</h4> ' +
-        '    </div>      ' +
-        '    <div id="modal-right-content"> ' +
-        '        <ul id="detail-list"></ul> ' +
-        '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
-          '      <button id ="trash-selected" type="button" class="btn btn-danger">Trash Selected</button></div>' +
-        '    </div> ' +
-        '</div>');
+  template: '#template-chart-container',
+  container: null,
+  options: null,
+  data: null,
+  plot: null,
+  chartContainer: null,
+  useExtras: null,
+  waitExtras: null,
 
-    }
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
+
+  initialize: function () {
+    _.extend(this, ChartTransform);
+    this.listenTo(this.model.get('collection'), 'add', this.render);
+    this.listenTo(this.model.get('collection'), 'remove', this.render);
+    this.listenTo(this.model, 'change:dimensions', this.resize);
+    this.listenTo(this.model, 'change:highlightedTime', this.onDateHighLighted);
+    this.container = this.model.get('container');
   },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
+
   onRender: function () {
-    var $checkAll = $('#check-all');
-    this.checkAll = false;
-    $checkAll.off();
-    $checkAll[0].checked = false;
-    $checkAll.bind('click', this.onCheckAllClick.bind(this));
-    $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
-  },
-  onTrashSelectedClick: function () {
-    this.collection.each(function (model) {
-      if (model.get('checked')) {
-        model.trash();
+    if (
+      !this.model.get('collection') ||
+      this.model.get('collection').length === 0 ||
+      !this.model.get('container') ||
+      this.model.get('container') === null) {
+      if (this.model.get('collection').length === 0) {
+        $(this.model.get('container')).empty();
+        if (this.model.get('legendContainer')) {
+          $(this.model.get('legendContainer')).empty();
+        }
       }
-    }.bind(this));
+      return;
+    }
+
+
+    if (this.model.get('legendExtras')) {
+      this.useExtras  = true;
+      try {
+        if (!Pryv.eventTypes.extras('mass/kg')) {
+          this.useExtras = false;
+        }
+      } catch (e) {
+        this.useExtras = false;
+      }
+    }
+
+    this.container = this.model.get('container');
+
+    if (this.model.get('collection').length === 1 &&
+      this.model.get('collection').at(0).get('events').length === 1 &&
+      this.model.get('singleNumberAsText')) {
+      var m = this.model.get('collection').at(0);
+      $(this.container).html('<span class="single-number">' + m.get('events')[0].content + ' ' +
+        (this.useExtras ?
+          Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
+        '</span>');
+    } else {
+      this.makePlot();
+      this.onDateHighLighted();
+    }
   },
-  onCheckAllClick: function () {
-    this.checkAll = !this.checkAll;
-    this.collection.each(function (model) {
-      model.set('checked', this.checkAll);
+
+  makePlot: function () {
+
+    var collection = this.model.get('collection');
+    this.container = this.model.get('container');
+
+    this.options = {};
+    this.data = [];
+
+    this.makeOptions();
+    this.setUpContainer();
+
+    collection.each(function (s, i) {
+      this.addSeries(s, i);
     }.bind(this));
+
+    var eventsNbr = 0;
+    _.each(this.data, function (d) {
+      eventsNbr += d.data.length;
+    });
+    $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+
+    this.plot = $.plot($(this.chartContainer), this.data, this.options);
+
+    this.createEventBindings();
+
+    // build legend as list
+    if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
+      $('.chartContainer > .legend').attr('id', 'DnD-legend');
+      if (this.model.get('legendContainer')) {
+        this.rebuildLegend(this.model.get('legendContainer') + ' table');
+      } else {
+        this.rebuildLegend(this.container + ' table');
+      }
+      this.legendButtonBindings();
+    }
+
   },
-  debounceRender: _.debounce(function () {
+
+  resize: function () {
+
+    if (!this.model.get('dimensions')) {
+      return;
+    }
+    if (this.model.get('requiresDim')) {
+      $(this.chartContainer).css(this.model.get('dimensions'));
+    }
     this.render();
-  }, 10)
+  },
+
+  /**
+   * Generates the general plot options based on the model
+   */
+  makeOptions: function () {
+
+    var collection = this.model.get('collection');
+    var seriesCounts = collection.length;
+    this.options = {};
+    this.options.shadowSize = 0;
+    this.options.grid = {
+      hoverable: true,
+      clickable: true,
+      borderWidth: 0,
+      minBorderMargin: 5,
+      autoHighlight: true
+    };
+    this.options.xaxes = [ {
+      show: (this.model.get('xaxis') && seriesCounts !== 0),
+      mode: 'time',
+      timeformat: '%y/%m/%d %h:%M:%S',
+      ticks: this.getExtremeTimes()
+    } ];
+    this.options.yaxes = [];
+    this.options.xaxis = {};
+
+
+    this.options.legend = {};
+    if (this.model.get('legendButton')) {
+      var model = this.model;
+      this.options.legend.labelFormatter = function (label) {
+        var buttons = model.get('legendButtonContent');
+        var legend = '<span class="DnD-legend-text">' + label + '</span>';
+        for (var i = 0; i < buttons.length; ++i) {
+          switch (buttons[i]) {
+          case 'ready':
+            legend = legend + '<a class="DnD-legend-button-ready" href="javascript:;">ok</a>';
+            break;
+          case 'duplicate':
+            legend = legend + '<a class="DnD-legend-button-duplicate" href="javascript:;">2</a>';
+            break;
+          case 'remove':
+            legend = legend + '<a class="DnD-legend-button-remove" href="javascript:;">x</a>';
+            break;
+          case 'edit':
+            legend = legend + '<a class="DnD-legend-button-edit" href="javascript:;">e</a>';
+            break;
+          }
+        }
+        return legend;
+      };
+    }
+    if (this.model.get('legendContainer')) {
+      this.options.legend.container = this.model.get('legendContainer');
+    }
+    if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
+      this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
+        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
+    } else if (this.model.get('legendShow')) {
+      this.options.legend.show = true;
+    } else {
+      this.options.legend.show = false;
+    }
+
+
+    // If pan is activated
+    if (this.model.get('allowPan')) {
+      this.options.pan = {
+        interactive: collection ? (seriesCounts < 2 ?
+          (collection.at(0).get('events').length > 1) : true)  : true,
+        cursor: 'move',
+        frameRate: 20
+      };
+      this.options.xaxis.panRange = [this.getExtremeTimes()[0] - 100000,
+        this.getExtremeTimes()[1] + 100000];
+    }
+
+    if (this.model.get('allowZoom')) {
+      this.options.zoom = {
+        interactive: true,
+        trigger: 'dblclick',
+        amount: 1.2
+      };
+    }
+    this.options.xaxis.zoomRange = [1000, null];
+
+    seriesCounts = null;
+  },
+
+  getExtremeTimes: function () {
+
+    var collection = this.model.get('collection');
+    var min = Infinity, max = 0;
+    collection.each(function (s) {
+      var events = s.get('events');
+      min = (events[events.length - 1].time < min) ? events[events.length - 1].time : min;
+      max = (events[0].time > max) ? events[0].time : max;
+    });
+    return [min * 1000, max * 1000];
+  },
+
+  getExtremeValues: function (data) {
+    var e = data;
+    var min = Infinity, max = -Infinity;
+    for (var i = 0; i < e.length; ++i) {
+      min = (e[i][1] < min) ? e[i][1] : min;
+      max = (e[i][1] > max) ? e[i][1] : max;
+    }
+    return [min, max];
+  },
+
+  /**
+   * Adds a series to the plot and configures it based on the model.
+   * @param series, the series to add (a single one)
+   * @param seriesIndex, its index
+   */
+  addSeries: function (series, seriesIndex) {
+
+    series.sortData();
+    var data = this.transform(series);
+    var label = this.useExtras ?
+      Pryv.eventTypes.extras(series.get('type')).symbol : series.get('type');
+
+    // Configures series
+    this.data.push({
+      data: data,
+      label: label,
+      yaxis: (seriesIndex + 1)
+    });
+
+    // Configures the axis
+    this.options.yaxes.push({ show: false});
+
+    if (this.model.get('allowPan')) {
+      this.options.yaxes[seriesIndex].panRange = data.length > 1 ?
+        this.getExtremeValues(data) : false;
+    }
+    if (this.model.get('allowZoom')) {
+      this.options.yaxes[seriesIndex].zoomRange = data.length > 1 ?
+        [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
+        false;
+    }
+
+    // Configure the serie's color
+    if (series.get('color')) {
+      this.data[seriesIndex].color = series.get('color');
+    }
+
+    // Configures the series' style
+    switch (series.get('style')) {
+    case 'line':
+      this.data[seriesIndex].lines = { show: true };
+      this.data[seriesIndex].points = { show: (data.length < 2) };
+      break;
+    case 'bar':
+      this.data[seriesIndex].bars = { show: true,
+                                      barWidth : this.getDurationFunction(series.get('interval'))
+                                        (new Date(2011, 1, 1, 1, 1))};
+      break;
+    case 'point':
+      this.data[seriesIndex].points = { show: true };
+      break;
+    default:
+      this.data[seriesIndex].lines = { show: true };
+      this.data[seriesIndex].points = { show: (data.length < 2) };
+      break;
+    }
+  },
+
+  setUpContainer: function () {
+    // Setting up the chart container
+    this.chartContainer = this.container + ' .chartContainer';
+    $(this.container).html('<div class="chartContainer"></div>');
+
+    $(this.chartContainer).css({
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%'
+    });
+
+  },
+
+  // TODO: virer les this imbriques
+  rebuildLegend: function (element) {
+    var list = $('<ul/>');
+    $(element).find('tr').each(function (index) {
+      var p = $(this).children().map(function (index2) {
+        if (index2 === 0) {
+          if ($('div > div', $(this)).length !== 0) {
+            $('div > div', $(this)).addClass('DnD-legend-color');
+            return $('div > div', $(this))[0].outerHTML;
+          }
+        }
+        if (index2 === 1) {
+          if ($('a', $(this)).length !== 0) {
+            $('a', $(this)).attr('id', 'series-' + index);
+            return $(this).html();
+          }
+        }
+      });
+      list.append('<li>' + $.makeArray(p).join('') + '</li>');
+    });
+    $('div', $(element).parent()).remove();
+    $(element).replaceWith(list);
+  },
+
+  showTooltip: function (x, y, content) {
+    if ($('#chart-tooltip').length === 0) {
+      $('body').append('<div id="chart-tooltip" class="tooltip">' + content + '</div>');
+    }
+    if ($('#chart-tooltip').text() !== content) {
+      $('#chart-tooltip').text(content);
+    }
+    $('#chart-tooltip').css({
+      top: x + this.plot.offset().top,
+      left: y + this.plot.offset().left
+    }).fadeIn(500);
+  },
+
+  removeTooltip: function () {
+    $('#chart-tooltip').remove();
+  },
+
+
+  onDateHighLighted: function (date) {
+    if (!date) {
+      date = this.model.get('highlightedTime');
+    }
+    if (!this.plot || !date) {
+      return;
+    }
+
+    this.plot.unhighlight();
+
+    var chartView = this;
+    var data = this.plot.getData();
+
+    this.model.get('collection').each(function (s, i) {
+      var dF = chartView.getDurationFunction(s.get('interval'));
+      var distance = null;
+      var best = 0;
+
+      for (var j = 0; j < data[i].data.length; ++j) {
+        var duration = dF(new Date(data[i].data[j][0]));
+        var d1 = Math.abs(date - (data[i].data[j][0] / 1000));
+        var d2 = Math.abs(date - ((data[i].data[j][0] + duration) / 1000));
+
+        if (distance === null) {
+          best = j;
+          distance = d1 < d2 ? d1 : d2;
+        } else if ((data[i].data[j][0] / 1000) <= date &&
+          date <= ((data[i].data[j][0] + duration) / 1000)) {
+          best = j;
+          break;
+        } else if (d1 <= distance || d2 <= distance) {
+          best = j;
+          distance = d1 < d2 ? d1 : d2;
+        }
+      }
+
+      best = data[i].data.length === best ? best - 1: best;
+      chartView.plot.highlight(i, best);
+    });
+  },
+
+  highlightEvent: function (event) {
+    // TODO: Support multiple series containing the same event.
+    if (!this.plot) {
+      return;
+    }
+    this.plot.unhighlight();
+    var c = this.model.get('collection');
+    var e = event;
+    var m = null;
+    var cIdx, eIdx;
+    var connectionId = e.connection.id;
+    var streamId = e.streamId;
+    var streamName = e.stream.name;
+
+    for (var it = 0; it < c.length; ++it) {
+      m = c.at(it);
+      if (m) {
+        if (m.get('connectionId') === connectionId &&
+          m.get('streamId') === streamId &&
+          m.get('streamName') === streamName) {
+          break;
+        }
+      }
+    }
+    if (it !== c.length) {
+      cIdx = it;
+    } else {
+      return;
+    }
+
+    var data = this.plot.getData()[it];
+    for (it = 0; it < data.data.length; ++it) {
+      var elem = data.data[it];
+      if (elem[0] === e.time * 1000 && elem[1] === +e.content) {
+        break;
+      }
+    }
+    if (it !== data.data.length) {
+      eIdx = it;
+    } else {
+      return;
+    }
+    this.plot.highlight(cIdx, eIdx);
+  },
+
+  onClose: function () {
+    $(this.chartContainer).empty();
+    $(this.container).unbind();
+    $(this.container).empty();
+    this.container = null;
+    this.chartContainer = null;
+    this.options = null;
+    this.data = null;
+    this.plot = null;
+  },
+
+  createEventBindings: function () {
+    $(this.container).unbind();
+
+    $(this.container).bind('resize', function () {
+      this.trigger('chart:resize', this.model);
+    });
+
+    if (this.model.get('onClick')) {
+      $(this.container).bind('plotclick', this.onClick.bind(this));
+    }
+    if (this.model.get('onHover')) {
+      $(this.container).bind('plothover', this.onHover.bind(this));
+    }
+    if (this.model.get('onDnD')) {
+      $(this.container).attr('draggable', true);
+      $(this.container).bind('dragstart', this.onDragStart.bind(this));
+      $(this.container).bind('dragenter', this.onDragEnter.bind(this));
+      $(this.container).bind('dragover', this.onDragOver.bind(this));
+      $(this.container).bind('dragleave', this.onDragLeave.bind(this));
+      $(this.container).bind('drop', this.onDrop.bind(this));
+      $(this.container).bind('dragend', this.onDragEnd.bind(this));
+      $(this.container + ' .aggregated-nbr-events').bind('click',
+        function () {
+          this.trigger('nodeClicked');
+        }.bind(this));
+    }
+
+    if (this.model.get('allowPan')) {
+      $(this.chartContainer).bind('plotpan', this.onPlotPan.bind(this));
+    }
+    if (this.model.get('allowZoom')) {
+      $(this.chartContainer).bind('plotzoom', this.onPlotPan.bind(this));
+    }
+  },
+
+  legendButtonBindings: function () {
+    if (this.model.get('legendButton')) {
+
+      var chartView = this;
+      var buttons = null;
+      var buttonTypes = this.model.get('legendButtonContent');
+      var selector = '';
+      var current = null;
+      var binder = function (i, e) {
+        $(e).on('click', {type: current, index: i},
+          chartView.legendButtonClicked.bind(chartView));
+      };
+      for (var i = 0; i < buttonTypes.length; ++i) {
+        current = buttonTypes[i];
+        selector = '.DnD-legend-button-' + current;
+        if (this.model.get('legendContainer')) {
+          buttons = $(selector, $(this.model.get('legendContainer')));
+        } else {
+          buttons  = $(selector, $(this.container));
+        }
+        buttons.each(binder);
+      }
+    }
+  },
+
+
+  /* ***********************
+   * Click and Point hover Functions
+   */
+  onClick: function () {
+    this.trigger('chart:clicked', this.model);
+  },
+
+  onHover: function (event, pos, item) {
+    if (item) {
+      var labelValue = item.datapoint[1].toFixed(2);
+      var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
+        item.datapoint[0]);
+      this.showTooltip(coords.top + 5, coords.left + 5, labelValue);
+    } else {
+      this.removeTooltip();
+    }
+  },
+
+  computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
+    var yAxes = this.plot.getYAxes();
+    var xAxes = this.plot.getXAxes();
+    var coordY = yAxes[yAxis].p2c(xPoint);
+    var coordX = xAxes[xAxis].p2c(yPoint);
+    return { top: coordY, left: coordX};
+  },
+
+
+
+  /* ***********************
+   * Drag and Drop Functions
+   */
+
+  /* Called when this object is starts being dragged */
+  onDragStart: function (e) {
+    var data = '{ "nodeId": "' + this.container.substr(1) + '", ' +
+      '"streamId": "' + $(this.container).attr('data-streamid') + '", ' +
+      '"connectionId": "' + $(this.container).attr('data-connectionid') + '"}';
+    e.originalEvent.dataTransfer.setData('text', data);
+  },
+
+  /* Fires when a dragged element enters this' scope */
+  onDragEnter: function (e) {
+    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var droppedNodeID = data.nodeId;
+    if ($(e.currentTarget).attr('id') !== droppedNodeID) {
+      $('.chartContainer', $(e.currentTarget)).not(this.container).addClass('animated shake');
+      setTimeout(function () {
+        $('.chartContainer', $(e.currentTarget)).removeClass('animated shake');
+      }, 1000);
+    }
+  },
+
+  /* Fires when a dragged element is over this' scope */
+  onDragOver: function (e) {
+    e.preventDefault();
+  },
+
+  /* Fires when a dragged element leaves this' scope */
+  onDragLeave: function (e) {
+    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var droppedNodeID = data.nodeId;
+    $('.chartContainer').not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
+    setTimeout(function () {
+      $('.chartContainer').removeClass('animated shake');
+    }, 1000);
+  },
+
+  /* Called when this object is stops being dragged */
+  onDragEnd: function () {
+  },
+
+  /* Called when an element is dropped on it */
+  onDrop: function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var droppedNodeID = data.nodeId;
+    var droppedStreamID = data.streamId;
+    var droppedConnectionID = data.connectionId;
+    this.trigger('chart:dropped', droppedNodeID, droppedStreamID, droppedConnectionID);
+  },
+
+  legendButtonClicked: function (e) {
+    var buttonType = e.data.type;
+    var index = e.data.index;
+    var model = this.model.get('collection').at(index);
+    this.trigger(buttonType, model);
+  },
+
+  onPlotPan: function () {
+    if (this.model.get('legendShow') &&
+      this.model.get('legendStyle') &&
+      this.model.get('legendStyle') === 'list') {
+      if (this.model.get('legendContainer')) {
+        this.rebuildLegend(this.model.get('legendContainer') + ' table');
+      } else {
+        this.rebuildLegend(this.container + ' table');
+      }
+      this.legendButtonBindings();
+    }
+  }
 });
 
 })()
-},{"./ItemView.js":68,"backbone.marionette":66,"underscore":8}],46:[function(require,module,exports){
+},{"./utils/ChartTransform.js":88,"backbone.marionette":70,"pryv":9,"underscore":8}],68:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./TimeSeriesModel.js');
+
+module.exports = Backbone.Collection.extend({
+  model: Model,
+
+  initialize: function (models, options) {
+    this.type = options.type;
+  },
+
+  comparator: function () {
+
+  }
+});
+},{"./TimeSeriesModel.js":69,"backbone":26}],67:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
   defaults: {
-    event: null,
+    container: null,
+    view: null,
+
+    requiresDim: false,
+
+    collection: null,
+
     highlighted: false,
-    checked: false
+    highlightedTime: null,
+
+    allowPieChart: false,
+
+    singleNumberAsText: true,
+
+    // Chart dimensions
+    dimensions: null,
+
+    // Legend style
+    legendStyle: 'table', // Legend style: 'list', 'table'
+    legendButton: false,  // A button in the legend
+    legendButtonCount: ['edit', 'duplicate', 'remove'],
+    legendShow: true,     // Show legend on size/true/false
+    legendExtras: true,   // use extras in the legend
+
+    /* Events control */
+    onClick: null,
+    onHover: null,
+    onDnD: null,
+
+    // Panning and Zooming
+    allowPan: false,      // Allows navigation through the chart
+    allowZoom: false,     // Allows zooming on the chart
+
+    // Display X-axis
+    xaxis: null,
+
+    // Editable point mode
+    editPoint: false
   },
-  getTimeDifference: function (time) {
-    return Math.abs(time - this.get('event').time);
+
+  initialize: function () {
+    this.on('remove', function () {
+      console.log('model: remove received');
+    });
   },
-  isTrashed: function () {
-    return this.get('event').trashed;
-  },
+
   setHighlighted: function (highlight) {
     this.set('highlighted', highlight);
-  },
-  save: function () {
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      this.get('event').addAttachment(file, function () {
-        //  console.log('trash event callback', arguments);
-      });
-    }
-    event.update(function () {
-      //  console.log('update event callback', arguments);
-    });
-  },
-  create: function () {
-    console.log('CREATE', this);
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      event.connection.events.createWithAttachment(event, file);
-    }  else {
-      event.connection.events.create(event);
-    }
-  },
-  addAttachment: function (file) {
-    this.get('event').file = file;
-    console.log('addAttachment', file, this);
-  },
-  removeAttachment: function (fileName, callback) {
-    this.get('event').removeAttachment(fileName, callback);
-  },
-  trash: function () {
-    this.get('event').trash(function () {
-    //  console.log('trash event callback', arguments);
-    });
   }
 });
-},{"backbone":23}],42:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./../numericals/EventModel.js');
+},{"backbone":26}],69:[function(require,module,exports){
+(function(){/* global window */
 
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model,
-  highlightedDate: null,
-  currentElement: null,
-  comparator: function (a, b) {
-    a = a.get('id');
-    b = b.get('id');
-    return a > b ? -1
-      : a < b ? 1
-      : 0;
-  },
+var Backbone = require('backbone');
 
-  /* jshint -W098 */
+module.exports = Backbone.Model.extend({
+  defaults: {
+    events: [],
+    connectionId: null,
+    streamId: null,
+    streamName: null,
+    type: null,
+    category: null,
 
-  highlightEvent: function (time) {
-    console.log('EventCollection', 'highlightEvent');
-    /*
-    var next =  this.getEventhighlighted(time);
-    if (!next || next === Infinity) {
-      return;
-    }
-    this.setCurrentElement(next);
-    return next;
-    */
+    color: null,
+    style: null,
+    transform: null,
+    interval: null
   },
-  getEventhighlighted: function (time) {
-    console.log('EventCollection', 'highlightEvent');
-    /*
-    this.highlightedDate = time === Infinity ? 99999999999 : time;
-    return this.min(this._getTimeDifference.bind(this));*/
-  },
-  getTrashed: function () {
-    console.log('EventCollection', 'highlightEvent');
-    /*
-    return this.filter(this._getTrashed);*/
-  },
-  getEventById: function (id) {
-    return this.find(function (e) {
-      return e.get('id') === id;
+  sortData: function () {
+    this.get('events').sort(function (a, b) {
+      if (a.time < b.time) { return -1; }
+      if (b.time < a.time) { return 1; }
+      return 0;
     });
   },
-  getActive: function () {
-    return this.reject(this._getTrashed);
-  },
-  _getTimeDifference: function (event) {
-    return event.getTimeDifference(this.highlightedDate);
-  },
-  _getTrashed: function (event) {
-    return event.isTrashed();
-  },
-  getCurrentElement: function () {
-    return this.currentElement;
-  },
-  setCurrentElement: function (model) {
-    if (!model) {
-      return;
+  set: function (attr, options) {
+    Backbone.Model.prototype.set.call(this, attr, options);
+    if (this.supports_html5_storage() &&
+      (attr === 'color' ||
+      attr === 'style' ||
+      attr === 'transform' ||
+      attr === 'interval')) {
+      window.localStorage.setItem(this.get('streamId') + '.' +
+        this.get('type') + '.' + attr, options);
     }
-    if (!this.currentElement ||
-      this.currentElement.get('id') !== model.get('id')) {
-      if (this.currentElement) {
-        this.currentElement.setHighlighted(false);
-      }
-      if (model) {
-        model.setHighlighted(true);
-      }
-    }
-    this.currentElement = model;
-  },
-  next: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
-    return this;
-  },
-  prev: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
-    return this;
-  }
-});
-},{"./../numericals/EventModel.js":69,"backbone":23}],45:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./EventModel.js');
 
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model,
-  highlightedDate: null,
-  currentElement: null,
-  comparator: function (a, b) {
-    a = a.get('event').time;
-    b = b.get('event').time;
-    return a > b ? -1
-      : a < b ? 1
-      : 0;
   },
-  highlightEvent: function (time) {
-    var next =  this.getEventhighlighted(time);
-    if (!next || next === Infinity) {
-      return;
+  get: function (attr) {
+    var r = Backbone.Model.prototype.get.call(this, attr);
+    if (this.supports_html5_storage() && (attr === 'color' ||
+        attr === 'style' ||
+        attr === 'transform' ||
+        attr === 'interval')) {
+      r = window.localStorage.getItem(this.get('streamId') + '.' +
+        this.get('type') + '.' + attr);
     }
-    this.setCurrentElement(next);
-    return next;
+    return r;
   },
-  getEventhighlighted: function (time) {
-    this.highlightedDate = time === Infinity ? 99999999999 : time;
-    return this.min(this._getTimeDifference.bind(this));
-  },
-  getTrashed: function () {
-    return this.filter(this._getTrashed);
-  },
-  getEventById: function (id) {
-    return this.find(function (e) {
-      return e.get('event').id === id;
-    });
-  },
-  getActive: function () {
-    return this.reject(this._getTrashed);
-  },
-  _getTimeDifference: function (event) {
-    return event.getTimeDifference(this.highlightedDate);
-  },
-  _getTrashed: function (event) {
-    return event.isTrashed();
-  },
-  getCurrentElement: function () {
-    return this.currentElement;
-  },
-  setCurrentElement: function (model) {
-    if (!model) {
-      return;
+  supports_html5_storage: function () {
+    try {
+      return 'localStorage' in window && window.localStorage !== null;
+    } catch (e) {
+      return false;
     }
-    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
-      if (this.currentElement) {
-        this.currentElement.setHighlighted(false);
-      }
-      if (model) {
-        model.setHighlighted(true);
-      }
-    }
-    this.currentElement = model;
-  },
-  next: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
-    return this;
-  },
-  prev: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
-    return this;
   }
 });
-},{"./EventModel.js":46,"backbone":23}],33:[function(require,module,exports){
-var Utility = require('../utility/Utility.js'),
+})()
+},{"backbone":26}],46:[function(require,module,exports){
+var utility = require('../utility/utility.js'),
   _ = require('underscore'),
   Filter = require('../Filter'),
   Event = require('../Event');
@@ -13112,7 +14878,7 @@ ConnectionEvents.prototype._get = function (filter, callback) {
   if (_.has(tParams, 'streams') && tParams.streams.length === 0) { // dead end filter..
     return callback(null, []);
   }
-  var url = '/events?' + Utility.getQueryParametersString(tParams);
+  var url = '/events?' + utility.getQueryParametersString(tParams);
   this.connection.request('GET', url, callback, null);
 };
 
@@ -13160,89 +14926,9 @@ module.exports = ConnectionEvents;
  * @param {Event[]} events
  */
 
-},{"../Event":11,"../Filter":12,"../utility/Utility.js":14,"underscore":8}],35:[function(require,module,exports){
+},{"../Event":12,"../Filter":14,"../utility/utility.js":16,"underscore":8}],47:[function(require,module,exports){
 var _ = require('underscore'),
-  System = require('../system/System.js'),
-  Monitor = require('../Monitor.js');
-
-/**
- * @class ConnectionMonitors
- * @private
- *
- * @param {Connection} connection
- * @constructor
- */
-function ConnectionMonitors(connection) {
-  this.connection = connection;
-  this._monitors = {};
-  this.ioSocket = null;
-}
-
-/**
- * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
- * will trigger an event. Changes to the filter will also trigger events if they have an impact on
- * the monitored data.
- * @param {Filter} filter - changes to this filter will be monitored.
- * @returns {Monitor}
- */
-ConnectionMonitors.prototype.create = function (filter) {
-  return new Monitor(this.connection, filter);
-};
-
-
-
-/**
- * TODO
- * @private
- */
-ConnectionMonitors.prototype._stopMonitoring = function (/*callback*/) {
-
-};
-
-/**
- * Internal for Connection.Monitor
- * Maybe moved in Monitor by the way
- * @param callback
- * @private
- * @return {Object} XHR or Node http request
- */
-ConnectionMonitors.prototype._startMonitoring = function (callback) {
-
-  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
-
-  var settings = {
-    host : this.connection.username + '.' + this.connection.settings.domain,
-    port : this.connection.settings.port,
-    ssl : this.connection.settings.ssl,
-    path : this.connection.settings.extraPath + '/' + this.connection.username,
-    namespace : '/' + this.connection.username,
-    auth : this.connection.auth
-  };
-
-  this.ioSocket = System.ioConnect(settings);
-
-  this.ioSocket.on('connect', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
-  }.bind(this));
-  this.ioSocket.on('error', function (error) {
-    _.each(this._monitors, function (monitor) { monitor._onIoError(error); });
-  }.bind(this));
-  this.ioSocket.on('eventsChanged', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoEventsChanged(); });
-  }.bind(this));
-  this.ioSocket.on('streamsChanged', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoStreamsChanged(); });
-  }.bind(this));
-  callback(null);
-};
-
-module.exports = ConnectionMonitors;
-
-
-
-},{"../Monitor.js":70,"../system/System.js":13,"underscore":8}],36:[function(require,module,exports){
-var _ = require('underscore'),
-    Utility = require('../utility/Utility.js'),
+    utility = require('../utility/utility.js'),
     Stream = require('../Stream.js');
 
 /**
@@ -13336,7 +15022,7 @@ ConnectionStreams.prototype.getById = function (streamId) {
  * @param callback
  */
 ConnectionStreams.prototype._getData = function (opts, callback) {
-  var url = opts ? '/streams?' + Utility.getQueryParametersString(opts) : '/streams';
+  var url = opts ? '/streams?' + utility.getQueryParametersString(opts) : '/streams';
   this.connection.request('GET', url, callback, null);
 };
 
@@ -13364,7 +15050,7 @@ ConnectionStreams.prototype._createWithData = function (streamData, callback) {
  */
 ConnectionStreams.prototype._updateWithData = function (streamData, callback) {
   var url = '/streams/' + streamData.id;
-  this.connection.request('PUT', url, callback, null);
+  this.connection.request('PUT', url, callback, streamData);
 };
 
 // -- helper for get --- //
@@ -13456,7 +15142,7 @@ ConnectionStreams.prototype.getDisplayTree = function (arrayOfStreams) {
 };
 
 
-// TODO Validate that it's the good place for them .. Could have been in Stream or Utility
+// TODO Validate that it's the good place for them .. Could have been in Stream or utility
 ConnectionStreams.Utils = {
 
 
@@ -13530,7 +15216,159 @@ module.exports = ConnectionStreams;
  */
 
 
-},{"../Stream.js":18,"../utility/Utility.js":14,"underscore":8}],37:[function(require,module,exports){
+},{"../Stream.js":13,"../utility/utility.js":16,"underscore":8}],48:[function(require,module,exports){
+var apiPathBookmarks = '/bookmarks',
+  Connection = require('../Connection.js'),
+  _ = require('underscore');
+
+/**
+ * @class Bookmarks
+ * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
+ * @param {Connection} connection
+ * @constructor
+ */
+function Bookmarks(connection, Conn) {
+  this.connection = connection;
+  Connection = Conn;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Bookmarks.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathBookmarks, function (error, bookmarks) {
+    var result = [];
+    _.each(bookmarks, function (bookmark) {
+      var conn =  new Connection({
+        auth: bookmark.accessToken,
+        url: bookmark.url,
+        name: bookmark.name,
+        bookmarkId: bookmark.id
+      });
+      result.push(conn);
+    });
+    callback(error, result);
+  });
+};
+
+Bookmarks.prototype.create = function (bookmark, callback) {
+  if (bookmark.name && bookmark.url && bookmark.accessToken) {
+    this.connection.request('POST', apiPathBookmarks, function (err, result) {
+      var error = err;
+      if (result && result.message) {
+        error = result;
+      } else if (result) {
+        var conn =  new Connection({
+          auth: bookmark.accessToken,
+          url: bookmark.url,
+          name: bookmark.name,
+          bookmarkId: result.id
+        });
+        bookmark = conn;
+      }
+      callback(error, bookmark);
+    }, bookmark);
+    return bookmark;
+  }
+};
+Bookmarks.prototype.delete = function (bookmarkId, callback) {
+  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+
+module.exports = Bookmarks;
+},{"../Connection.js":11,"underscore":8}],49:[function(require,module,exports){
+var _ = require('underscore'),
+  system = require('../system/system.js'),
+  Monitor = require('../Monitor.js');
+
+/**
+ * @class ConnectionMonitors
+ * @private
+ *
+ * @param {Connection} connection
+ * @constructor
+ */
+function ConnectionMonitors(connection) {
+  this.connection = connection;
+  this._monitors = {};
+  this.ioSocket = null;
+}
+
+/**
+ * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
+ * will trigger an event. Changes to the filter will also trigger events if they have an impact on
+ * the monitored data.
+ * @param {Filter} filter - changes to this filter will be monitored.
+ * @returns {Monitor}
+ */
+ConnectionMonitors.prototype.create = function (filter) {
+  if (!this.connection.username) {
+    console.error('Cannot create a monitor for a connection without username:', this.connection);
+    return null;
+  }
+  return new Monitor(this.connection, filter);
+};
+
+
+
+/**
+ * TODO
+ * @private
+ */
+ConnectionMonitors.prototype._stopMonitoring = function (/*callback*/) {
+
+};
+
+/**
+ * Internal for Connection.Monitor
+ * Maybe moved in Monitor by the way
+ * @param callback
+ * @private
+ * @return {Object} XHR or Node http request
+ */
+ConnectionMonitors.prototype._startMonitoring = function (callback) {
+  if (!this.connection.username) {
+    console.error('Cannot start monitoring for a connection without username:', this.connection);
+    return callback(true);
+  }
+  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
+
+  var settings = {
+    host : this.connection.username + '.' + this.connection.settings.domain,
+    port : this.connection.settings.port,
+    ssl : this.connection.settings.ssl,
+    path : this.connection.settings.extraPath + '/' + this.connection.username,
+    namespace : '/' + this.connection.username,
+    auth : this.connection.auth
+  };
+
+  this.ioSocket = system.ioConnect(settings);
+
+  this.ioSocket.on('connect', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
+  }.bind(this));
+  this.ioSocket.on('error', function (error) {
+    _.each(this._monitors, function (monitor) { monitor._onIoError(error); });
+  }.bind(this));
+  this.ioSocket.on('eventsChanged', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoEventsChanged(); });
+  }.bind(this));
+  this.ioSocket.on('streamsChanged', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoStreamsChanged(); });
+  }.bind(this));
+  callback(null);
+};
+
+module.exports = ConnectionMonitors;
+
+
+
+},{"../Monitor.js":89,"../system/system.js":15,"underscore":8}],51:[function(require,module,exports){
 (function(){/**
  * (event)Emitter renamed to avoid confusion with prvy's events
  */
@@ -13567,7 +15405,7 @@ SignalEmitter.Messages = {
 
 /**
  * Add an event listener
- * @param signal one of  MSGs.SIGNAL.*.*
+ * @param signal one of  Messages.SIGNAL.*.*
  * @param callback function(content) .. content vary on each signal.
  * If the callback returns SignalEmitter.Messages.UNREGISTER_LISTENER it will be removed
  * @return the callback function for further reference
@@ -13661,22 +15499,25 @@ SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
 };
 
 })()
-},{"underscore":8}],24:[function(require,module,exports){
+},{"underscore":8}],27:[function(require,module,exports){
 (function(){/* global confirm, document, navigator, location, window */
 
-var Utility = require('../utility/Utility.js');
-var System = require('../system/System.js');
+var utility = require('../utility/utility.js');
+var system = require('../system/system.js');
+var Connection = require('../Connection.js');
 var _ = require('underscore');
 
 
 //--------------------- access ----------//
 /**
- * @class Access
+ * @class Auth
  * */
-var Access = function () {
+var Auth = function () {
 };
 
-_.extend(Access, {
+
+_.extend(Auth.prototype, {
+  connection: null, // actual connection managed by Auth
   config: {
     registerURL: {ssl: true, host: 'reg.pryv.io'},
     registerStagingURL: {ssl: true, host: 'reg.pryv.in'},
@@ -13700,37 +15541,37 @@ _.extend(Access, {
  * @method _init
  * @access private
  */
-Access._init = function (i) {
-  // start only if Utility is loaded
-  if (typeof Utility === 'undefined') {
+Auth._init = function (i) {
+  // start only if utility is loaded
+  if (typeof utility === 'undefined') {
     if (i > 100) {
-      throw new Error('Cannot find Utility');
+      throw new Error('Cannot find utility');
     }
     i++;
-    return setTimeout('Access._init(' + i + ')', 10 * i);
+    return setTimeout('Auth._init(' + i + ')', 10 * i);
   }
 
-  Utility.loadExternalFiles(
-    this.config.sdkFullPath + '/media/buttonSigninPryv.css', 'css');
+  utility.loadExternalFiles(
+    Auth.prototype.config.sdkFullPath + '/media/buttonSigninPryv.css', 'css');
 
-  if (Utility.testIfStagingFromHostname()) {
+  if (utility.testIfStagingFromUrl()) {
     console.log('staging mode');
-    Access.config.registerURL = Access.config.registerStagingURL;
+    Auth.prototype.config.registerURL = Auth.prototype.config.registerStagingURL;
   }
 
   console.log('init done');
 };
 
 
-Access._init(1);
+Auth._init(1);
 
 //--------------------- UI Content -----------//
 
 
-Access.uiSupportedLanguages = ['en', 'fr'];
+Auth.prototype.uiSupportedLanguages = ['en', 'fr'];
 
-Access.uiButton = function (onClick, buttonText) {
-  if (Utility.supportCSS3()) {
+Auth.prototype.uiButton = function (onClick, buttonText) {
+  if (utility.supportCSS3()) {
     return '<div id="pryv-access-btn" class="pryv-access-btn-signin" data-onclick-action="' +
       onClick + '">' +
       '<a class="pryv-access-btn pryv-access-btn-pryv-access-color" href="#">' +
@@ -13744,20 +15585,19 @@ Access.uiButton = function (onClick, buttonText) {
   }
 };
 
-Access.uiErrorButton = function () {
+Auth.prototype.uiErrorButton = function () {
   var strs = {
     'en': { 'msg': 'Error :(' },
     'fr': { 'msg': 'Erreur :('}
   }[this.settings.languageCode];
   this.onClick.Error = function () {
-    Access.logout();
+    this.logout();
     return false;
-  };
-  return Access.uiButton('Error', strs.msg);
-
+  }.bind(this);
+  return this.uiButton('Error', strs.msg);
 };
 
-Access.uiLoadingButton = function () {
+Auth.prototype.uiLoadingButton = function () {
   var strs = {
     'en': { 'msg': 'Loading ...' },
     'fr': { 'msg': 'Chargement ...'}
@@ -13765,94 +15605,96 @@ Access.uiLoadingButton = function () {
   this.onClick.Loading = function () {
     return false;
   };
-  return Access.uiButton('Loading', strs.msg);
+  return this.uiButton('Loading', strs.msg);
 
 };
 
-Access.uiSigninButton = function () {
+Auth.prototype.uiSigninButton = function () {
   var strs = {
     'en': { 'msg': 'Pryv Sign-In' },
     'fr': { 'msg': 'Connection à PrYv'}
   }[this.settings.languageCode];
   this.onClick.Signin = function () {
-    Access.popupLogin();
+    this.popupLogin();
     return false;
-  };
-  return Access.uiButton('Signin', strs.msg);
+  }.bind(this);
+  return this.uiButton('Signin', strs.msg);
 
 };
 
-Access.uiConfirmLogout = function () {
+Auth.prototype.uiConfirmLogout = function () {
   var strs = {
     'en': { 'logout': 'Logout ?'},
     'fr': { 'logout': 'Se déconnecter?'}
   }[this.settings.languageCode];
 
   if (confirm(strs.logout)) {
-    Access.logout();
+    this.logout();
   }
 };
 
-Access.uiInButton = function (username) {
+Auth.prototype.uiInButton = function (username) {
   this.onClick.In = function () {
-    Access.uiConfirmLogout();
+    this.uiConfirmLogout();
     return false;
-  };
-  return Access.uiButton('In', username);
+  }.bind(this);
+  return this.uiButton('In', username);
 };
 
-Access.uiRefusedButton = function (message) {
+Auth.prototype.uiRefusedButton = function (message) {
   console.log('Pryv access [REFUSED]' + message);
   var strs = {
     'en': { 'msg': 'access refused'},
     'fr': { 'msg': 'Accès refusé'}
   }[this.settings.languageCode];
   this.onClick.Refused = function () {
-    Access.retry();
+    this.retry();
     return false;
-  };
-  return Access.uiButton('Refused', strs.msg);
+  }.bind(this);
+  return this.uiButton('Refused', strs.msg);
 
 };
 
 //--------------- end of UI ------------------//
 
 
-Access.updateButton = function (html) {
+Auth.prototype.updateButton = function (html) {
   this.buttonHTML = html;
   if (! this.settings.spanButtonID) { return; }
 
-  Utility.domReady(function () {
-    if (! Access.spanButton) {
-      var element = document.getElementById(Access.settings.spanButtonID);
+  utility.domReady(function () {
+    if (! this.spanButton) {
+      var element = document.getElementById(this.settings.spanButtonID);
       if (typeof(element) === 'undefined' || element === null) {
         throw new Error('access-SDK cannot find span ID: "' +
-          Access.settings.spanButtonID + '"');
+          this.settings.spanButtonID + '"');
       } else {
-        Access.spanButton = element;
+        this.spanButton = element;
       }
     }
-    Access.spanButton.innerHTML = Access.buttonHTML;
-    Access.spanButton.onclick = function (e) {
+    this.spanButton.innerHTML = this.buttonHTML;
+    this.spanButton.onclick = function (e) {
       e.preventDefault();
       var element = document.getElementById('pryv-access-btn');
-      console.log('onClick', Access.spanButton,
+      console.log('onClick', this.spanButton,
         element.getAttribute('data-onclick-action'));
-      Access.onClick[element.getAttribute('data-onclick-action')]();
-    };
-  });
+      this.onClick[element.getAttribute('data-onclick-action')]();
+    }.bind(this);
+  }.bind(this));
 };
 
-Access.internalError = function (message, jsonData) {
-  Access.stateChanged({id: 'INTERNAL_ERROR', message: message, data: jsonData});
+Auth.prototype.internalError = function (message, jsonData) {
+  this.stateChanged({id: 'INTERNAL_ERROR', message: message, data: jsonData});
 };
 
 //STATE HUB
-Access.stateChanged  = function (data) {
+Auth.prototype.stateChanged  = function (data) {
 
 
   if (data.id) { // error
-    this.settings.callbacks.error(data.id, data.message);
+    if (this.settings.callbacks.error) {
+      this.settings.callbacks.error(data.id, data.message);
+    }
     this.updateButton(this.uiErrorButton());
     console.log('Error: ' + JSON.stringify(data));
     // this.logout();   Why should I retry if it failed already once?
@@ -13883,59 +15725,209 @@ Access.stateChanged  = function (data) {
 };
 
 //STATE 0 Init
-Access.stateInitialization = function () {
+Auth.prototype.stateInitialization = function () {
   this.state = {status : 'initialization'};
   this.updateButton(this.uiLoadingButton());
-  this.settings.callbacks.initialization();
+  if (this.settings.callbacks.initialization) {
+    this.settings.callbacks.initialization();
+  }
 };
 
 //STATE 1 Need Signin
-Access.stateNeedSignin = function () {
+Auth.prototype.stateNeedSignin = function () {
   this.updateButton(this.uiSigninButton());
-  this.settings.callbacks.needSignin(this.state.url, this.state.poll,
-    this.state.poll_rate_ms);
+  if (this.settings.callbacks.needSignin) {
+    this.settings.callbacks.needSignin(this.state.url, this.state.poll,
+      this.state.poll_rate_ms);
+  }
 };
 
 
 //STATE 2 User logged in and authorized
-Access.stateAccepted = function () {
+Auth.prototype.stateAccepted = function () {
   if (this.cookieEnabled) {
-    Utility.docCookies.setItem('access_username', this.state.username, 3600);
-    Utility.docCookies.setItem('access_token', this.state.token, 3600);
+    utility.docCookies.setItem('access_username', this.state.username, 3600);
+    utility.docCookies.setItem('access_token', this.state.token, 3600);
   }
   this.updateButton(this.uiInButton(this.state.username));
-  this.settings.callbacks.accepted(this.state.username, this.state.token, this.state.lang);
+
+  this.connection.username = this.state.username;
+  this.connection.auth = this.state.token;
+  if (this.settings.callbacks.accepted) {
+    this.settings.callbacks.accepted(this.state.username, this.state.token, this.state.lang);
+  }
+  if (this.settings.callbacks.signedIn) {
+    this.settings.callbacks.signedIn(this.connection, this.state.lang);
+  }
 };
 
 //STATE 3 User refused
-Access.stateRefused = function () {
+Auth.prototype.stateRefused = function () {
   this.updateButton(this.uiRefusedButton(this.state.message));
-  this.settings.callbacks.refused('refused:' + this.state.message);
+  if (this.settings.callbacks.refused) {
+    this.settings.callbacks.refused('refused:' + this.state.message);
+  }
 };
 
 
 /**
  * clear all references
  */
-Access.logout = function () {
+Auth.prototype.logout = function () {
   this.ignoreStateFromURL = true;
   if (this.cookieEnabled) {
-    Utility.docCookies.removeItem('access_username');
-    Utility.docCookies.removeItem('access_token');
+    utility.docCookies.removeItem('access_username');
+    utility.docCookies.removeItem('access_token');
   }
   this.state = null;
-  this.settings.callbacks.accepted(false, false, false);
+  if (this.settings.callbacks.accepted) {
+    this.settings.callbacks.accepted(false, false, false);
+  }
+  if (this.settings.callbacks.signedOut) {
+    this.settings.callbacks.signedOut(this.connection);
+  }
+  this.connection = null;
   this.setup(this.settings);
 };
 
 /**
  * clear references and try again
  */
-Access.retry = Access.logout;
+Auth.prototype.retry = Auth.prototype.logout;
 
+Auth.prototype.login = function (settings) {
+  // cookies
+  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
+  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
+    document.cookie = 'testcookie';
+    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
+  }
+  this.settings = settings;
 
-Access.setup = function (settings) {
+  var params = {
+    appId : settings.appId,
+    username : settings.username,
+    password : settings.password
+  };
+  var path = utility.testIfStagingFromUrl() ? '/auth/login' : '/admin/login';
+  this.config.registerURL.host = utility.testIfStagingFromUrl() ?
+    settings.username + '.pryv.in' : settings.username + '.pryv.io';
+  var domain = utility.testIfStagingFromUrl() ? 'pryv.in' : 'pryv.io';
+  this.connection = new Connection(null, null, {
+    ssl: this.config.registerURL.ssl,
+    domain: domain
+  });
+
+  var pack = {
+    path :  path,
+    params : params,
+    success : function (data)  {
+      if (data.token) {
+        if (this.cookieEnabled && settings.rememberMe) {
+          utility.docCookies.setItem('access_username', settings.username, 3600);
+          utility.docCookies.setItem('access_token', data.token, 3600);
+          utility.docCookies.setItem('access_preferredLanguage', data.preferredLanguage, 3600);
+        }
+        console.log('set cookie', this.cookieEnabled, settings.rememberMe,
+          utility.docCookies.getItem('access_username'),
+          utility.docCookies.getItem('access_token'));
+        this.connection.username = settings.username;
+        this.connection.auth = data.token;
+        if (typeof(this.settings.callbacks.signedIn)  === 'function') {
+          this.settings.callbacks.signedIn(this.connection);
+        }
+      } else {
+        if (typeof(this.settings.error) === 'function') {
+          this.settings.callbacks.error(data);
+        }
+      }
+    }.bind(this),
+    error : function (jsonError) {
+      if (typeof(this.settings.callbacks.error) === 'function') {
+        this.settings.callbacks.error(jsonError);
+      }
+    }.bind(this)
+  };
+
+  system.request(_.extend(pack, this.config.registerURL));
+};
+Auth.prototype.whoAmI = function (settings) {
+  this.settings = settings;
+  var domain = (this.config.registerURL.host === 'reg.pryv.io') ? 'pryv.io' : 'pryv.in';
+  var path = '/auth/who-am-i';
+  this.config.registerURL.host = utility.testIfStagingFromUrl() ?
+    settings.username + '.pryv.in' : settings.username + '.pryv.io';
+  this.connection = new Connection(null, null, {ssl: this.config.registerURL.ssl, domain: domain});
+  var pack = {
+    path :  path,
+    method: 'GET',
+    success : function (data)  {
+      if (data.token) {
+        this.connection.username = data.username;
+        this.connection.auth = data.token;
+        var conn = new Connection(data.username, data.token,
+          {ssl: this.config.registerURL.ssl, domain: domain});
+        console.log('before access info', this.connection);
+        conn.accessInfo(function (error) {
+          console.log('after access info', this.connection);
+          if (!error) {
+            if (typeof(this.settings.callbacks.signedIn)  === 'function') {
+              this.settings.callbacks.signedIn(this.connection);
+            }
+          } else {
+            if (typeof(this.settings.callbacks.error) === 'function') {
+              this.settings.callbacks.error(error);
+            }
+          }
+        }.bind(this));
+
+      } else {
+        if (typeof(this.settings.callbacks.error) === 'function') {
+          this.settings.callbacks.error(data);
+        }
+      }
+    }.bind(this),
+    error : function (jsonError) {
+      if (typeof(this.settings.callbacks.error) === 'function') {
+        this.settings.callbacks.error(jsonError);
+      }
+    }.bind(this)
+  };
+
+  system.request(_.extend(pack, this.config.registerURL));
+
+};
+Auth.prototype.loginWithCookie = function (settings) {
+  this.settings = settings;
+  var domain = (this.config.registerURL.host === 'reg.pryv.io') ? 'pryv.io' : 'pryv.in';
+  this.connection = new Connection(null, null, {ssl: this.config.registerURL.ssl, domain: domain});
+  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
+  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
+    document.cookie = 'testcookie';
+    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
+  }
+  var cookieUserName = this.cookieEnabled ? utility.docCookies.getItem('access_username') : false;
+  var cookieToken = this.cookieEnabled ? utility.docCookies.getItem('access_token') : false;
+  console.log('get cookie', cookieUserName, cookieToken);
+  if (cookieUserName && cookieToken) {
+    this.connection.username = cookieUserName;
+    this.connection.auth = cookieToken;
+    if (typeof(this.settings.callbacks.signedIn) === 'function') {
+      this.settings.callbacks.signedIn(this.connection);
+    }
+    return this.connection;
+  }
+  return false;
+};
+/**
+ *
+ * @param settings
+ * @returns {Connection} the connection managed by Auth.. A new one is created each time setup is
+ * called.
+ */
+Auth.prototype.setup = function (settings) {
   this.state = null;
+
   //--- check the browser capabilities
 
 
@@ -13946,12 +15938,13 @@ Access.setup = function (settings) {
     this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
   }
 
-  //TODO check settings.. 
+  //TODO check settings..
 
   settings.languageCode =
-    Utility.getPreferredLanguage(this.uiSupportedLanguages, settings.languageCode);
+    utility.getPreferredLanguage(this.uiSupportedLanguages, settings.languageCode);
 
   //-- returnURL
+  settings.returnURL = settings.returnURL || 'auto#';
   if (settings.returnURL) {
     // check the trailer
     var trailer = settings.returnURL.charAt(settings.returnURL.length - 1);
@@ -13963,7 +15956,7 @@ Access.setup = function (settings) {
     // set self as return url?
     var returnself = (settings.returnURL.indexOf('self') === 0);
     if (settings.returnURL.indexOf('auto') === 0) {
-      returnself = Utility.browserIsMobileOrTablet();
+      returnself = utility.browserIsMobileOrTablet();
       if (!returnself) { settings.returnURL = false; }
     }
 
@@ -13981,7 +15974,7 @@ Access.setup = function (settings) {
     }
   }
 
-  //  spanButtonID is checked only when possible  
+  //  spanButtonID is checked only when possible
   this.settings = settings;
 
   var params = {
@@ -13991,16 +15984,18 @@ Access.setup = function (settings) {
     returnURL : settings.returnURL
   };
 
-  if (Access.config.localDevel) {
-    // return url will be forced to https://l.pryv.in:4443/Access.html
-    params.localDevel = Access.config.localDevel;
+  if (this.config.localDevel) {
+    // return url will be forced to https://l.pryv.in:4443/Auth.html
+    params.localDevel = this.config.localDevel;
   }
 
   this.stateInitialization();
+  var domain = (this.config.registerURL.host === 'reg.pryv.io') ? 'pryv.io' : 'pryv.in';
 
+  this.connection = new Connection(null, null, {ssl: this.config.registerURL.ssl, domain: domain});
   // look if we have a returning user (document.cookie)
-  var cookieUserName = this.cookieEnabled ? Utility.docCookies.getItem('access_username') : false;
-  var cookieToken = this.cookieEnabled ? Utility.docCookies.getItem('access_token') : false;
+  var cookieUserName = this.cookieEnabled ? utility.docCookies.getItem('access_username') : false;
+  var cookieToken = this.cookieEnabled ? utility.docCookies.getItem('access_token') : false;
 
   // look in the URL if we are returning from a login process
   var stateFromURL =  this._getStatusFromURL();
@@ -14027,24 +16022,26 @@ Access.setup = function (settings) {
       }.bind(this)
     };
 
-    System.request(_.extend(pack, Access.config.registerURL));
+    system.request(_.extend(pack, this.config.registerURL));
 
 
   }
-  return true;
+
+
+  return this.connection;
 };
 
-//logout the user if 
+//logout the user if
 
-//read the polling 
-Access.poll = function poll() {
+//read the polling
+Auth.prototype.poll = function poll() {
   if (this.pollingIsOn && this.state.poll_rate_ms) {
-    // remove eventually waiting poll.. 
+    // remove eventually waiting poll..
     if (this.pollingID) { clearTimeout(this.pollingID); }
 
 
     var pack = {
-      path :  '/access/' + Access.state.key,
+      path :  '/access/' + this.state.key,
       method : 'GET',
       success : function (data)  {
         this.stateChanged(data);
@@ -14054,10 +16051,10 @@ Access.poll = function poll() {
       }.bind(this)
     };
 
-    System.request(_.extend(pack, Access.config.registerURL));
+    system.request(_.extend(pack, this.config.registerURL));
 
 
-    this.pollingID = setTimeout(Access.poll.bind(this), this.state.poll_rate_ms);
+    this.pollingID = setTimeout(this.poll.bind(this), this.state.poll_rate_ms);
   } else {
     console.log('stopped polling: on=' + this.pollingIsOn + ' rate:' + this.state.poll_rate_ms);
   }
@@ -14065,23 +16062,23 @@ Access.poll = function poll() {
 
 
 //messaging between browser window and window.opener
-Access.popupCallBack = function (event) {
+Auth.prototype.popupCallBack = function (event) {
   // Do not use 'this' here !
-  if (Access.settings.forcePolling) { return; }
-  if (event.source !== Access.window) {
-    console.log('popupCallBack event.source does not match Access.window');
+  if (this.settings.forcePolling) { return; }
+  if (event.source !== this.window) {
+    console.log('popupCallBack event.source does not match Auth.window');
     return false;
   }
   console.log('from popup >>> ' + JSON.stringify(event.data));
-  Access.pollingIsOn = false; // if we can receive messages we stop polling
-  Access.stateChanged(event.data);
+  this.pollingIsOn = false; // if we can receive messages we stop polling
+  this.stateChanged(event.data);
 };
 
 
 
-Access.popupLogin = function popupLogin() {
+Auth.prototype.popupLogin = function popupLogin() {
   if ((! this.state) || (! this.state.url)) {
-    throw new Error('Pryv Sign-In Error: NO SETUP. Please call Access.setup() first.');
+    throw new Error('Pryv Sign-In Error: NO SETUP. Please call Auth.setup() first.');
   }
 
   if (this.settings.returnURL) {
@@ -14090,7 +16087,7 @@ Access.popupLogin = function popupLogin() {
   }
 
   // start polling
-  setTimeout(Access.poll(), 1000);
+  setTimeout(this.poll(), 1000);
 
   var screenX = typeof window.screenX !== 'undefined' ? window.screenX : window.screenLeft,
     screenY = typeof window.screenY !== 'undefined' ? window.screenY : window.screenTop,
@@ -14111,7 +16108,7 @@ Access.popupLogin = function popupLogin() {
       );
 
 
-  window.addEventListener('message', Access.popupCallBack, false);
+  window.addEventListener('message', this.popupCallBack.bind(this), false);
 
   this.window = window.open(this.state.url, 'prYv Sign-in', features);
 
@@ -14131,7 +16128,7 @@ Access.popupLogin = function popupLogin() {
 
 
 //util to grab parameters from url query string
-Access._getStatusFromURL = function () {
+Auth.prototype._getStatusFromURL = function () {
   var vars = {};
   window.location.href.replace(/[?#&]+prYv([^=&]+)=([^&]*)/gi,
     function (m, key, value) {
@@ -14144,149 +16141,82 @@ Access._getStatusFromURL = function () {
 };
 
 //util to grab parameters from url query string
-Access._cleanStatusFromURL = function () {
+Auth.prototype._cleanStatusFromURL = function () {
   return window.location.href.replace(/[?#&]+prYv([^=&]+)=([^&]*)/gi, '');
 };
 
 //-------------------- UTILS ---------------------//
 
-module.exports = Access;
+module.exports = new Auth();
+
 })()
-},{"../system/System.js":13,"../utility/Utility.js":14,"underscore":8}],49:[function(require,module,exports){
-(function(){/* global $, FormData */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
+},{"../Connection.js":11,"../system/system.js":15,"../utility/utility.js":16,"underscore":8}],72:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
-  type: 'Note',
-  template: '#template-detail-content-note',
-  itemViewContainer: '#detail-content',
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
+
+  tagName: 'tr',
+  template: '#template-sharingItemView',
+  events: {
+    'click .sharing-trash': '_onTrashClick'
   },
   initialize: function () {
     this.listenTo(this.model, 'change', this.render);
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
-    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
-  },
-  onEditClick: function (e) {
-    $(e.currentTarget).addClass('editing');
-    this.ui.edit.focus();
-  },
-  onEditBlur: function (e) {
-    this.updateEvent(e.currentTarget);
-    return true;
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
 
   },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
+  onRender: function () {
+  },
+  _onTrashClick: function () {
+    this.trigger('sharing:delete', this.model);
   }
 });
-})()
-},{"backbone.marionette":66,"underscore":8}],52:[function(require,module,exports){
-(function(){/* global $, document*/
-var Marionette = require('backbone.marionette'),
-  MapLoader = require('google-maps');
+},{"backbone.marionette":70}],73:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
-  type: 'Position',
-  template: '#template-detail-content-position',
-  tagName: 'div',
-  id: 'map_canvas',
-  itemViewContainer: '#detail-content',
-  google: null,
-  map: null,
-  waitForGoogle: false,
-  marker: null,
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
+
+  tagName: 'tr',
+  template: '#template-bookmarkItemView',
+  events: {
+    'click .bookmark-trash': '_onTrashClick'
   },
   initialize: function () {
-    this.listenTo(this.model, 'change', this.actualizePosition);
-    MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
-    MapLoader.load().then(function (google) {
-      this.google = google;
-      if (this.waitForGoogle) {
-        this.waitForGoogle = false;
-        this.render();
-      }
-    }.bind(this));
-  },
-  actualizePosition: function () {
-    if (!this.google) {
-      this.waitForGoogle = true;
-    } else {
-      var lat = this.model.get('event').content.latitude,
-        lng = this.model.get('event').content.longitude;
-      this.marker.setPosition(new this.google.maps.LatLng(lat, lng));
-      this.map.setCenter(this.marker.position);
-    }
+    this.listenTo(this.model, 'change', this.render);
+
   },
   onRender: function () {
-    if (!this.google) {
-      this.waitForGoogle = true;
-    } else {
-      $(this.itemViewContainer).html(this.el);
-      setTimeout(function () {
-        if (this.model.get('event')) {
-          if (!this.model.get('event').content) {
-            this.model.get('event').content = {};
-          }
-          var lat = this.model.get('event').content.latitude || 46.51759,
-            lng = this.model.get('event').content.longitude || 6.56267;
-          this.map = new this.google.maps.Map(document.getElementById('map_canvas'), {
-            zoom: 16,
-            center: new this.google.maps.LatLng(lat, lng),
-            mapTypeId: this.google.maps.MapTypeId.ROADMAP
-          });
-          var elevator = new this.google.maps.ElevationService();
-          this.marker = new this.google.maps.Marker({
-            position: new this.google.maps.LatLng(lat, lng),
-            draggable: true
-          });
-
-          this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
-            var event = this.model.get('event');
-            event.content.latitude = evt.latLng.lat();
-            event.content.longitude = evt.latLng.lng();
-            var positionalRequest = {
-              'locations': [evt.latLng]
-            };
-            elevator.getElevationForLocations(positionalRequest, function (results, status) {
-              if (status === this.google.maps.ElevationStatus.OK) {
-                // Retrieve the first result
-                if (results[0]) {
-                  var event = this.model.get('event');
-                  event.content.altitude = results[0].elevation;
-                }
-              }
-            }.bind(this));
-          }.bind(this));
-
-          this.map.setCenter(this.marker.position);
-          this.marker.setMap(this.map);
-        }
-      }.bind(this), 1000);
-
-    }
+  },
+  _onTrashClick: function () {
+    this.trigger('bookmark:delete', this.model);
   }
 });
-})()
-},{"backbone.marionette":66,"google-maps":71}],51:[function(require,module,exports){
+},{"backbone.marionette":70}],74:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+
+  tagName: 'li',
+  template: '#template-subscriptionItemView',
+  ui: {
+    checkbox: '.checkbox',
+    name: '.subscription-name'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+
+  },
+  onRender: function () {
+    console.log('onRender');
+    this.ui.checkbox[0].checked = this.model.get('checked');
+    this.ui.checkbox.bind('click', function () {
+      this.model.set('checked', this.ui.checkbox[0].checked);
+    }.bind(this));
+    this.ui.name.bind('change paste keyup', function () {
+      this.model.get('connection').name =  this.ui.name.val();
+    }.bind(this));
+  }
+});
+},{"backbone.marionette":70}],59:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -14412,7 +16342,51 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":66,"underscore":8}],50:[function(require,module,exports){
+},{"backbone.marionette":70,"underscore":8}],60:[function(require,module,exports){
+(function(){/* global $, FormData */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Note',
+  template: '#template-detail-content-note',
+  itemViewContainer: '#detail-content',
+  ui: {
+    li: 'li.editable',
+    edit: '.edit'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
+    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
+  },
+  onEditClick: function (e) {
+    $(e.currentTarget).addClass('editing');
+    this.ui.edit.focus();
+  },
+  onEditBlur: function (e) {
+    this.updateEvent(e.currentTarget);
+    return true;
+  },
+  /* jshint -W098, -W061 */
+  updateEvent: function ($elem) {
+    var event = this.model.get('event'),
+      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
+      value = $($elem).val().trim();
+    eval('event.' + key + ' = value');
+    this.completeEdit($($elem).parent());
+    this.render();
+
+  },
+  completeEdit: function ($elem) {
+    $($elem).removeClass('editing');
+  }
+});
+})()
+},{"backbone.marionette":70,"underscore":8}],62:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -14495,7 +16469,97 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":66,"underscore":8}],53:[function(require,module,exports){
+},{"backbone.marionette":70,"underscore":8}],63:[function(require,module,exports){
+(function(){/* global $, document*/
+var Marionette = require('backbone.marionette'),
+  MapLoader = require('google-maps');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Position',
+  template: '#template-detail-content-position',
+  tagName: 'div',
+  id: 'map_canvas',
+  itemViewContainer: '#detail-content',
+  google: null,
+  map: null,
+  waitForGoogle: false,
+  marker: null,
+  ui: {
+    li: 'li.editable',
+    edit: '.edit'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.actualizePosition);
+    MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
+    MapLoader.load().then(function (google) {
+      this.google = google;
+      if (this.waitForGoogle) {
+        this.waitForGoogle = false;
+        this.render();
+      }
+    }.bind(this));
+  },
+  actualizePosition: function () {
+    if (!this.google) {
+      this.waitForGoogle = true;
+    } else {
+      var lat = this.model.get('event').content.latitude,
+        lng = this.model.get('event').content.longitude;
+      this.marker.setPosition(new this.google.maps.LatLng(lat, lng));
+      this.map.setCenter(this.marker.position);
+    }
+  },
+  onRender: function () {
+    if (!this.google) {
+      this.waitForGoogle = true;
+    } else {
+      $(this.itemViewContainer).html(this.el);
+      setTimeout(function () {
+        if (this.model.get('event')) {
+          if (!this.model.get('event').content) {
+            this.model.get('event').content = {};
+          }
+          var lat = this.model.get('event').content.latitude || 46.51759,
+            lng = this.model.get('event').content.longitude || 6.56267;
+          this.map = new this.google.maps.Map(document.getElementById('map_canvas'), {
+            zoom: 16,
+            center: new this.google.maps.LatLng(lat, lng),
+            mapTypeId: this.google.maps.MapTypeId.ROADMAP
+          });
+          var elevator = new this.google.maps.ElevationService();
+          this.marker = new this.google.maps.Marker({
+            position: new this.google.maps.LatLng(lat, lng),
+            draggable: true
+          });
+
+          this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
+            var event = this.model.get('event');
+            event.content.latitude = evt.latLng.lat();
+            event.content.longitude = evt.latLng.lng();
+            var positionalRequest = {
+              'locations': [evt.latLng]
+            };
+            elevator.getElevationForLocations(positionalRequest, function (results, status) {
+              if (status === this.google.maps.ElevationStatus.OK) {
+                // Retrieve the first result
+                if (results[0]) {
+                  var event = this.model.get('event');
+                  event.content.altitude = results[0].elevation;
+                }
+              }
+            }.bind(this));
+          }.bind(this));
+
+          this.map.setCenter(this.marker.position);
+          this.marker.setMap(this.map);
+        }
+      }.bind(this), 1000);
+
+    }
+  }
+});
+})()
+},{"backbone.marionette":70,"google-maps":90}],64:[function(require,module,exports){
 (function(){/* global $*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -14558,9 +16622,13 @@ module.exports = Marionette.ItemView.extend({
     var result = '<ul id="stream-select">',
       connections  = this.connection._connections;
     _.each(connections, function (c) {
+      if (!this._isWritePermission(c)) {
+        return;
+      }
       result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
       result += this.getStreamStructure(c);
       result += '</ul>';
+
     }.bind(this));
     return result + '</ul>';
   },
@@ -14568,7 +16636,9 @@ module.exports = Marionette.ItemView.extend({
     var rootStreams = connection.datastore.getStreams(),
       result = '';
     for (var i = 0; i < rootStreams.length; i++) {
-      result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+      if (this._isWritePermission(connection, rootStreams[i])) {
+        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+      }
     }
     return result;
 
@@ -14580,17 +16650,42 @@ module.exports = Marionette.ItemView.extend({
       stream.connection.serialId + '" data-stream="' +
       stream.id + '">' + stream.name + '</li>';
     for (var j = 0; j < stream.children.length; j++) {
-      result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+      if (this._isWritePermission(stream.connection, stream.children[j])) {
+        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+      }
     }
     return result;
+  },
+  _isWritePermission: function (connection, streamId) {
+    if (!connection._accessInfo) {
+      return false;
+    }
+    if (connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId !== 'read') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId === 'read') {
+      return false;
+    }
+    if (streamId) {
+      return !!_.find(connection._accessInfo.permissions, function (p) {
+        return p.streamId === streamId && p.level !== 'read';
+      });
+    }
+    return false;
   }
 });
 })()
-},{"backbone.marionette":66,"underscore":8}],70:[function(require,module,exports){
-var _ = require('underscore');
-var SignalEmitter = require('./utility/SignalEmitter.js');
-var MSGs =  require('./Messages.js');
-var MyMsgs = MSGs.Monitor;
+},{"backbone.marionette":70,"underscore":8}],89:[function(require,module,exports){
+var _ = require('underscore'),
+    SignalEmitter = require('./utility/SignalEmitter.js'),
+    Filter = require('./Filter.js');
 
 
 var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
@@ -14601,7 +16696,7 @@ var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
  * @constructor
  */
 function Monitor(connection, filter) {
-  SignalEmitter.extend(this, MyMsgs, 'Monitor');
+  SignalEmitter.extend(this, Messages, 'Monitor');
   this.connection = connection;
   this.id = 'M' + Monitor.serial++;
 
@@ -14613,13 +16708,25 @@ function Monitor(connection, filter) {
     throw new Error('Monitors only work for default state, not trashed or all');
   }
 
-  this.filter.addEventListener(MSGs.Filter.ON_CHANGE, this._onFilterChange.bind(this));
+  this.filter.addEventListener(Filter.Messages.ON_CHANGE, this._onFilterChange.bind(this));
   this._events = null;
 
 }
 
 Monitor.serial = 0;
 
+var Messages = Monitor.Messages = {
+  /** content: events **/
+  ON_LOAD : 'started',
+/** content: error **/
+  ON_ERROR : 'error',
+/** content: { enter: [], leave: [], change } **/
+  ON_EVENT_CHANGE : 'eventsChanged',
+/** content: streams **/
+  ON_STRUCTURE_CHANGE : 'streamsChanged',
+/** content: ? **/
+  ON_FILTER_CHANGE : 'filterChanged'
+};
 
 // ----------- prototype  public ------------//
 
@@ -14658,7 +16765,7 @@ Monitor.prototype._onIoError = function (error) {
   console.log('Monitor _onIoError' + error);
 };
 Monitor.prototype._onIoEventsChanged = function () {
-  this._connectionEventsGetChanges(MyMsgs.ON_EVENT_CHANGE);
+  this._connectionEventsGetChanges(Messages.ON_EVENT_CHANGE);
 };
 Monitor.prototype._onIoStreamsChanged = function () { };
 
@@ -14677,7 +16784,7 @@ Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
 
   var processLocalyOnly = 0;
   var foundsignal = 0;
-  if (signal.signal === MSGs.Filter.DATE_CHANGE) {  // only load events if date is wider
+  if (signal.signal === Filter.Messages.DATE_CHANGE) {  // only load events if date is wider
     foundsignal = 1;
     console.log('** DATE CHANGE ', changes.timeFrame);
     if (changes.timeFrame === 0) {
@@ -14689,7 +16796,7 @@ Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
 
   }
 
-  if (signal.signal === MSGs.Filter.STREAMS_CHANGE) {
+  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
     foundsignal = 1;
     console.log('** STREAMS_CHANGE', changes.streams);
     if (changes.streams === 0) {
@@ -14710,9 +16817,9 @@ Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
 
 
   if (processLocalyOnly) {
-    this._refilterLocaly(MyMsgs.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
+    this._refilterLocaly(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
   } else {
-    this._connectionEventsGetAllAndCompare(MyMsgs.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
+    this._connectionEventsGetAllAndCompare(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
   }
 };
 
@@ -14740,11 +16847,11 @@ Monitor.prototype._initEvents = function () {
   this._events = { active : {}};
   this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
     function (error, events) {
-      if (error) { this._fireEvent(MyMsgs.ON_ERROR, error); }
+      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
       _.each(events, function (event) {
         this._events.active[event.id] = event;
       }.bind(this));
-      this._fireEvent(MyMsgs.ON_LOAD, events);
+      this._fireEvent(Messages.ON_LOAD, events);
     }.bind(this));
 };
 
@@ -14758,7 +16865,7 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
   this.connection.events.get(this.filter.getData(true, options),
     function (error, events) {
       if (error) {
-        this._fireEvent(MyMsgs.ON_ERROR, error);
+        this._fireEvent(Messages.ON_ERROR, error);
       }
 
       _.each(events, function (event) {
@@ -14791,7 +16898,7 @@ Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracon
 
   this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
     function (error, events) {
-      if (error) { this._fireEvent(MyMsgs.ON_ERROR, error); }
+      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
       _.each(events, function (event) {
         if (this._events.active[event.id]) {  // already known event we don't care
           delete toremove[event.id];
@@ -14836,103 +16943,175 @@ module.exports = Monitor;
 
 
 
-},{"./Messages.js":15,"./utility/SignalEmitter.js":37,"underscore":8}],67:[function(require,module,exports){
-(function(){/* global $ */
-
-var Marionette = require('backbone.marionette');
+},{"./Filter.js":14,"./utility/SignalEmitter.js":51,"underscore":8}],61:[function(require,module,exports){
+(function(){/* global window */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  Model = require('../../../numericals/TimeSeriesModel.js'),
+  Collection = require('../../../numericals/TimeSeriesCollection.js'),
+  Sev = require('./SingleEditView.js'),
+  Gcv = require('./GeneralConfigView.js');
 
 module.exports = Marionette.ItemView.extend({
-
-  tagName: 'li',
-  ui: {
-    checkbox: 'input[type=checkbox]',
-    divCheckbox: '.DnD-itemView-checkbox',
-    divText: '.DnD-itemView-text'
-  },
-  template: '#template-DnD-ItemView',
-
-  templateHelpers: function () {
-    return {
-      showContent: function () {
-        var event = this.model.get('events');
-        return event[0].streamName;
-      }.bind(this)
-    };
-  },
-
+  type: 'Numerical',
+  template: '#template-detail-content-numerical-general',
+  itemViewContainer: '#detail-content',
+  //addAttachmentContainer: '#add-attachment',
+  //addAttachmentId: 0,
+  //attachmentId: {},
+  collection: new Collection([], {type: 'All'}),
+  view: null,
+  viewModel: null,
+  viewType: Gcv,
+  rendered: false,
+  needToRender: null,
+  firstRender: null,
   initialize: function () {
-    //this.bindUIElements();
-    this.listenTo(this.model, 'change', this.render);
+    this.firstRender = true;
+    this.listenTo(this.model, 'change:collection', this.collectionChanged.bind(this));
+    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+    this.updateCollection();
+    this.prepareGeneralConfigModel();
+    window.addEventListener('resize', this.debounceChildRender.bind(this));
   },
-
-  onBeforeRender: function () {
-    // set up final bits just before rendering the view's `el`
-    //console.log('ItemView onBeforeRender');
+  highlightEvent: function () {
+    this.viewModel.set('event', this.model.get('event'));
   },
-
   onRender: function () {
-    //console.log('ItemView onRender');
-    $(this.el).css({
-      overflow: 'hidden'
-    });
+    this.view = new this.viewType({model: this.viewModel});
 
-    this.ui.checkbox.attr('checked', this.model.get('selected'));
-    this.$el.attr('id', 'DnD-itemView');
-    if (this.model.get('highlighted')) {
-      this.$el.removeClass('DnD-unhighlighted');
-      this.$el.addClass('DnD-highlighted');
+    if (this.viewType === Gcv) {
+      this.view.bind('edit', this.editSeriesEvent.bind(this));
+      this.view.bind('duplicate', this.duplicateSeriesEvent.bind(this));
+      this.view.bind('remove', this.removeSeriesEvent.bind(this));
+    } else if (this.viewType === Sev) {
+      this.view.bind('ready', this.readySeriesEvent.bind(this));
+    }
+    if (this.firstRender) {
+      this.firstRender = false;
+      this.debounceChildRender();
     } else {
-      this.$el.addClass('DnD-unhighlighted');
-      this.$el.removeClass('DnD-highlighted');
+      this.view.render();
+    }
+  },
+  updateCollection: function () {
+    if (!this.collection) {
+      this.collection = new Collection([], {type: 'All'});
     }
 
-    this.$el.bind('click', function () {
-      this.trigger('chart:clicked', this.model);
-    }.bind(this));
+    var c = this.collection;
+    this.model.get('collection').each(function (e) {
+      var ev = e.get('event');
+      var connectionId = ev.connection.id;
+      var streamId = ev.streamId;
+      var streamName = ev.stream.name;
+      var type = ev.type;
 
-    this.ui.checkbox.bind('click', function () {
-      if (this.ui.checkbox.is(':checked')) {
-        this.model.set('selected', true);
-        this.trigger('chart:select', this.model);
+      var filter = {
+        connectionId: connectionId,
+        streamId: streamId,
+        type: type
+      };
+
+      var m = c.where(filter);
+      if (m && m.length !== 0) {
+        for (var i = 0; i < m.length; ++i) {
+          if (_.indexOf(m[i].get('events'), ev) === -1) {
+            m[i].get('events').push(ev);
+          }
+        }
       } else {
-        this.model.set('selected', false);
-        this.trigger('chart:unselect', this.model);
+        c.add(new Model({
+            events: [ev],
+            connectionId: connectionId,
+            streamId: streamId,
+            streamName: streamName,
+            type: type,
+            category: 'any'
+          })
+        );
       }
-    }.bind(this));
+    });
   },
-
-  onBeforeClose: function () {
-    //console.log('ItemView onBeforeClose');
-    // manipulate the `el` here. it's already
-    // been rendered, and is full of the view's
-    // HTML, ready to go.
-  },
-
   onClose: function () {
-    //console.log('ItemView onClose');
-    // custom closing and cleanup goes here
-  }
+    this.view.close();
+    this.view = null;
+    this.viewType = Gcv;
+    this.viewModel = null;
+    this.collection.reset();
+    this.collection = null;
+    this.rendered = null;
+    this.needToRender = null;
+  },
+  editSeriesEvent: function (m) {
+
+    this.closeChild();
+    this.viewType = Sev;
+    this.prepareSingleEditModel(m);
+    this.render();
+  },
+  readySeriesEvent: function () {
+
+    // TODO: save model changes in stream's storage and virtual node's storage
+    this.closeChild();
+    this.viewType = Gcv;
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  duplicateSeriesEvent: function (m) {
+
+    this.closeChild();
+    this.viewType = Gcv;
+    var model = new Model({
+      events: m.get('events'),
+      connectionId: m.get('connectionId'),
+      streamId: m.get('streamId'),
+      streamName: m.get('streamName'),
+      type: m.get('type'),
+      category: m.get('category')
+    });
+    this.collection.add(model);
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  removeSeriesEvent: function (m) {
+    this.closeChild();
+    this.viewType = Gcv;
+    this.collection.remove(m);
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  collectionChanged: function () {
+    // TODO: depends on view type
+    this.updateCollection();
+    if (this.view) {
+      this.view.unbind();
+      this.view.close();
+    }
+    this.render();
+  },
+  prepareSingleEditModel: function (m) {
+    var c = new Collection([], {type: 'All'});
+    c.add(m);
+    this.viewModel = new Model({
+      collection: c
+    });
+  },
+  prepareGeneralConfigModel: function () {
+    this.viewModel = new Model({
+      collection: this.collection
+    });
+  },
+  closeChild: function () {
+    this.view.unbind();
+    this.view.close();
+  },
+  debounceChildRender: _.debounce(function () {
+    this.view.render();
+  }, 1000)
 });
 })()
-},{"backbone.marionette":66}],69:[function(require,module,exports){
-var Backbone = require('backbone');
-module.exports = Backbone.Model.extend({
-  defaults: {
-    id: null,
-    streamId: null,
-    streamName: null,
-    connectionId: null,
-    type: null,
-    elements: null,
-    trashed: false,
-    tags: null,
-    style: 0
-  },
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
-  }
-});
-},{"backbone":23}],68:[function(require,module,exports){
+},{"../../../numericals/TimeSeriesCollection.js":68,"../../../numericals/TimeSeriesModel.js":69,"./GeneralConfigView.js":92,"./SingleEditView.js":91,"backbone.marionette":70,"underscore":8}],86:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -14961,7 +17140,255 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":66}],57:[function(require,module,exports){
+},{"backbone.marionette":70}],87:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-draganddrop-itemview',
+  tagName: 'li',
+  ui: {
+    selector: '.DnD-legend-button',
+    spanText: '.DnD-legend-text'
+  },
+  state: false,
+  templateHelpers: {
+    displayName: function () {
+      return this.streamName + ' / ' + this.type;
+    }
+  },
+  onRender: function () {
+    this.ui.selector.bind('click', function () {
+      this.state = true;
+      this.trigger('series:click', this.model);
+    }.bind(this));
+  }
+});
+},{"backbone.marionette":70}],88:[function(require,module,exports){
+var _ = require('underscore');
+
+var ChartTransform = module.exports = {};
+
+/**
+ * ISO ISO8601 week numbers
+ * @returns {number} the week number of this date.
+ */
+Date.prototype.getISO8601Week = function () {
+  var target = new Date(this.valueOf());
+  var dayNr = (this.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  var jan4 = new Date(target.getFullYear(), 0, 4);
+  var dayDiff = (target - jan4) / 86400000;
+  var weekNr = 1 + Math.ceil(dayDiff / 7);
+  return weekNr;
+};
+
+ChartTransform.transform = function (model) {
+  if (!model.get('transform')) {
+    return this.default(model.get('events'));
+  }
+
+  var mapper = this.getMapFunction(model.get('interval'));
+  var dater = this.getDateFunction(model.get('interval'));
+
+  var cut = this.map(model.get('events'), mapper, dater);
+
+  var r = null;
+  switch (model.get('transform')) {
+  case 'sum':
+    r = (!model.get('interval')) ? this.stackedSum(cut) : this.sum(cut);
+    break;
+  case 'average':
+    r = this.avg(cut);
+    break;
+  default:
+    r = this.default(model.get('events'));
+    break;
+  }
+  return r;
+};
+
+ChartTransform.default = function (data) {
+  return _.map(data, function (e) {
+    return [e.time * 1000, +e.content];
+  });
+};
+
+ChartTransform.map = function (data, mapper, dater) {
+  var m = _.map(data, function (e) {
+    var d = new Date(e.time * 1000);
+    return [mapper(d), +dater(d), +e.content];
+  });
+  return _.groupBy(m, function (e) {
+    return e[0];
+  });
+};
+
+
+ChartTransform.getDurationFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function () { return 3600 * 1000; };
+  case 'daily' :
+    return function () { return 24 * 3600 * 1000; };
+  case 'weekly' :
+    return function () { return 7 * 24 * 3600 * 1000; };
+  case 'monthly' :
+    return function (d) { return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() *
+      24 * 3600 * 1000; };
+  case 'yearly' :
+    return function (d) {
+      return (d.getFullYear() % 4 === 0 &&
+        (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
+    };
+  default :
+    return function () {
+      return 0;
+    };
+  }
+};
+
+ChartTransform.getMapFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+        d.getDate().toString() +  '-' + d.getHours().toString();
+    };
+  case 'daily' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+        d.getDate().toString();
+    };
+  case 'weekly' :
+    return function (d) {
+      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
+      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
+      return asWeek.getFullYear().toString() +  '-' + asWeek.getISO8601Week().toString();
+    };
+  case 'monthly' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
+    };
+  case 'yearly' :
+    return function (d) {
+      return d.getFullYear().toString();
+    };
+  default :
+    return function (d) {
+      return d.getDate().toString();
+    };
+  }
+};
+
+ChartTransform.getDateFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+        d.getHours(), 0, 0, 0)).getTime();
+    };
+  case 'daily' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).getTime();
+    };
+  case 'weekly' :
+    return function (d) {
+      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
+      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
+      return (new Date(asWeek.getFullYear(), asWeek.getMonth(),
+        asWeek.getDate(), 0, 0, 0, 0)).getTime();
+    };
+  case 'monthly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), 0, 0, 0, 0, 0)).getTime();
+    };
+  case 'yearly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), 0, 0, 0, 0, 0, 0)).getTime();
+    };
+  default :
+    return function (d) {
+      return d.getTime();
+    };
+  }
+};
+
+
+/*
+ in -> {1234: [123, 1234, 345], 145: [1234] ,...}
+ out -> [[1234, sum], [145, sum]]
+ */
+ChartTransform.sum = function (data) {
+  var r = [];
+  var summer = function (a) {
+    return _.reduce(a, function (c, e) {
+      return c + e[2];
+    }, 0);
+  };
+  for (var a in data) {
+    if (data.hasOwnProperty(a)) {
+      r.push([+data[a][0][1], summer(data[a])]);
+    }
+  }
+  return r;
+};
+
+
+/*
+ in -> {1234: [123, 1234, 345], 145: [1234] ,...}
+ out -> [[1234, sum], [145, sum]]
+ */
+ChartTransform.stackedSum = function (data) {
+  var r = [];
+  var previous = 0;
+
+  var summer = function (a) {
+    return _.reduce(a, function (c, e) {
+      var s = c + e[2] + previous;
+      previous = s;
+      return s;
+    }, 0);
+  };
+
+  var keys = [];
+
+  for (var key in data) {
+    if (data.hasOwnProperty(key)) {
+      keys.push(key);
+    }
+  }
+  keys.sort();
+
+  for (var i = 0; i < keys.length; ++i) {
+    r.push([+data[keys[i]][0][1], summer(data[keys[i]])]);
+  }
+  return r;
+};
+
+
+/*
+ in -> {1234: [123, 1234, 345], 145: [1234] ,...}
+ out -> [[1234, avg], [145, avg]]
+ */
+ChartTransform.avg = function (data) {
+  var r = [];
+  var averager = function (a) {
+    var s = _.reduce(a, function (c, e) {
+      return c + e[2];
+    }, 0);
+    return s / a.length;
+  };
+  for (var a in data) {
+    if (data.hasOwnProperty(a)) {
+      r.push([+data[a][0][1], averager(data[a])]);
+    }
+  }
+  return r;
+};
+
+
+
+},{"underscore":8}],77:[function(require,module,exports){
 (function(){var TreeNode = require('./TreeNode'),
   RootNode = require('./RootNode'),
   Backbone = require('backbone'),
@@ -15021,7 +17448,7 @@ var EventsNode = module.exports = TreeNode.implement(
     /*jshint -W098 */
     eventChange: function (event, reason, callback) {
       this.events[event.id] = event;
-      console.log('eventChange', event);
+      //console.log('eventChange', event);
       if (this.eventView) {
         this.eventView.eventChange(event);
       }
@@ -15043,6 +17470,7 @@ var EventsNode = module.exports = TreeNode.implement(
           x: this.x,
           y: this.y,
           depth: this.depth,
+          color: this.parent.stream.color,
           weight: this.getWeight(),
           content: this.events || this.stream || this.connection,
           eventView: this.eventView,
@@ -15102,7 +17530,23 @@ var EventsNode = module.exports = TreeNode.implement(
     dragAndDrop: function (nodeId, streamId, connectionId) {
       var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
       var thisNode = this;
-      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+      if (otherNode !== thisNode) {
+        this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+      }
+
+      var thisStreams = this.treeMap.getFiltersFromNode(thisNode);
+      thisStreams = [thisStreams];
+      var streams = this.treeMap.getFiltersFromNode(otherNode);
+      streams = [streams];
+
+      for (var i = 0, n = thisStreams.length; i < n; ++i) {
+        streams.push(thisStreams[i]);
+      }
+      console.log(streams);
+      this.treeMap.createVirtualNode(streams);
+
+
+
     }
 
   });
@@ -15116,7 +17560,7 @@ EventsNode.acceptThisEventType = function () {
 
 
 })()
-},{"../view/NodeView.js":40,"./RootNode":21,"./TreeNode":30,"backbone":23,"underscore":8}],72:[function(require,module,exports){
+},{"../view/NodeView.js":52,"./RootNode":18,"./TreeNode":35,"backbone":26,"underscore":8}],93:[function(require,module,exports){
 (function(){/* global window, google, document */
 /*jshint -W084 */
 /*jshint -W089 */
@@ -16430,2752 +18874,7 @@ Object.keys = Object.keys || function (o) {
 };
 
 })()
-},{}],71:[function(require,module,exports){
-// Generated by CoffeeScript 1.6.3
-(function() {
-  var Google, Q;
-
-  Q = require('q');
-
-  Google = (function() {
-    function Google() {}
-
-    Google.URL = 'https://maps.googleapis.com/maps/api/js?sensor=false';
-
-    Google.KEY = null;
-
-    Google.WINDOW_CALLBACK_NAME = '__google_maps_api_provider_initializator__';
-
-    Google.google = null;
-
-    Google.loading = false;
-
-    Google.promises = [];
-
-    Google.load = function() {
-      var deferred, script, url,
-        _this = this;
-      deferred = Q.defer();
-      if (this.google === null) {
-        if (this.loading === true) {
-          this.promises.push(deferred);
-        } else {
-          this.loading = true;
-          window[this.WINDOW_CALLBACK_NAME] = function() {
-            return _this._ready(deferred);
-          };
-          url = this.URL;
-          if (this.KEY !== null) {
-            url += "&key=" + this.KEY;
-          }
-          url += "&callback=" + this.WINDOW_CALLBACK_NAME;
-          script = document.createElement('script');
-          script.type = 'text/javascript';
-          script.src = url;
-          document.body.appendChild(script);
-        }
-      } else {
-        deferred.resolve(this.google);
-      }
-      return deferred.promise;
-    };
-
-    Google._ready = function(deferred) {
-      var def, _i, _len, _ref;
-      Google.loading = false;
-      if (Google.google === null) {
-        Google.google = window.google;
-      }
-      deferred.resolve(Google.google);
-      _ref = Google.promises;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        def = _ref[_i];
-        def.resolve(Google.google);
-      }
-      return Google.promises = [];
-    };
-
-    return Google;
-
-  }).call(this);
-
-  module.exports = Google;
-
-}).call(this);
-
-},{"q":73}],74:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            if (ev.source === window && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],73:[function(require,module,exports){
-(function(process){// vim:ts=4:sts=4:sw=4:
-/*!
- *
- * Copyright 2009-2012 Kris Kowal under the terms of the MIT
- * license found at http://github.com/kriskowal/q/raw/master/LICENSE
- *
- * With parts by Tyler Close
- * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
- * at http://www.opensource.org/licenses/mit-license.html
- * Forked at ref_send.js version: 2009-05-11
- *
- * With parts by Mark Miller
- * Copyright (C) 2011 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-(function (definition) {
-    // Turn off strict mode for this function so we can assign to global.Q
-    /* jshint strict: false */
-
-    // This file will function properly as a <script> tag, or a module
-    // using CommonJS and NodeJS or RequireJS module formats.  In
-    // Common/Node/RequireJS, the module exports the Q API and when
-    // executed as a simple <script>, it creates a Q global instead.
-
-    // Montage Require
-    if (typeof bootstrap === "function") {
-        bootstrap("promise", definition);
-
-    // CommonJS
-    } else if (typeof exports === "object") {
-        module.exports = definition();
-
-    // RequireJS
-    } else if (typeof define === "function" && define.amd) {
-        define(definition);
-
-    // SES (Secure EcmaScript)
-    } else if (typeof ses !== "undefined") {
-        if (!ses.ok()) {
-            return;
-        } else {
-            ses.makeQ = definition;
-        }
-
-    // <script>
-    } else {
-        Q = definition();
-    }
-
-})(function () {
-"use strict";
-
-var hasStacks = false;
-try {
-    throw new Error();
-} catch (e) {
-    hasStacks = !!e.stack;
-}
-
-// All code after this point will be filtered from stack traces reported
-// by Q.
-var qStartingLine = captureLine();
-var qFileName;
-
-// shims
-
-// used for fallback in "allResolved"
-var noop = function () {};
-
-// Use the fastest possible means to execute a task in a future turn
-// of the event loop.
-var nextTick =(function () {
-    // linked list of tasks (single, with head node)
-    var head = {task: void 0, next: null};
-    var tail = head;
-    var flushing = false;
-    var requestTick = void 0;
-    var isNodeJS = false;
-
-    function flush() {
-        while (head.next) {
-            head = head.next;
-            var task = head.task;
-            head.task = void 0;
-            var domain = head.domain;
-
-            if (domain) {
-                head.domain = void 0;
-                domain.enter();
-            }
-
-            try {
-                task();
-
-            } catch (e) {
-                if (isNodeJS) {
-                    // In node, uncaught exceptions are considered fatal errors.
-                    // Re-throw them synchronously to interrupt flushing!
-
-                    // Ensure continuation if the uncaught exception is suppressed
-                    // listening "uncaughtException" events (as domains does).
-                    // Continue in next event to avoid tick recursion.
-                    domain && domain.exit();
-                    setTimeout(flush, 0);
-                    domain && domain.enter();
-
-                    throw e;
-
-                } else {
-                    // In browsers, uncaught exceptions are not fatal.
-                    // Re-throw them asynchronously to avoid slow-downs.
-                    setTimeout(function() {
-                       throw e;
-                    }, 0);
-                }
-            }
-
-            if (domain) {
-                domain.exit();
-            }
-        }
-
-        flushing = false;
-    }
-
-    nextTick = function (task) {
-        tail = tail.next = {
-            task: task,
-            domain: isNodeJS && process.domain,
-            next: null
-        };
-
-        if (!flushing) {
-            flushing = true;
-            requestTick();
-        }
-    };
-
-    if (typeof process !== "undefined" && process.nextTick) {
-        // Node.js before 0.9. Note that some fake-Node environments, like the
-        // Mocha test runner, introduce a `process` global without a `nextTick`.
-        isNodeJS = true;
-
-        requestTick = function () {
-            process.nextTick(flush);
-        };
-
-    } else if (typeof setImmediate === "function") {
-        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
-        if (typeof window !== "undefined") {
-            requestTick = setImmediate.bind(window, flush);
-        } else {
-            requestTick = function () {
-                setImmediate(flush);
-            };
-        }
-
-    } else if (typeof MessageChannel !== "undefined") {
-        // modern browsers
-        // http://www.nonblocking.io/2011/06/windownexttick.html
-        var channel = new MessageChannel();
-        channel.port1.onmessage = flush;
-        requestTick = function () {
-            channel.port2.postMessage(0);
-        };
-
-    } else {
-        // old browsers
-        requestTick = function () {
-            setTimeout(flush, 0);
-        };
-    }
-
-    return nextTick;
-})();
-
-// Attempt to make generics safe in the face of downstream
-// modifications.
-// There is no situation where this is necessary.
-// If you need a security guarantee, these primordials need to be
-// deeply frozen anyway, and if you don’t need a security guarantee,
-// this is just plain paranoid.
-// However, this does have the nice side-effect of reducing the size
-// of the code by reducing x.call() to merely x(), eliminating many
-// hard-to-minify characters.
-// See Mark Miller’s explanation of what this does.
-// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
-function uncurryThis(f) {
-    var call = Function.call;
-    return function () {
-        return call.apply(f, arguments);
-    };
-}
-// This is equivalent, but slower:
-// uncurryThis = Function_bind.bind(Function_bind.call);
-// http://jsperf.com/uncurrythis
-
-var array_slice = uncurryThis(Array.prototype.slice);
-
-var array_reduce = uncurryThis(
-    Array.prototype.reduce || function (callback, basis) {
-        var index = 0,
-            length = this.length;
-        // concerning the initial value, if one is not provided
-        if (arguments.length === 1) {
-            // seek to the first value in the array, accounting
-            // for the possibility that is is a sparse array
-            do {
-                if (index in this) {
-                    basis = this[index++];
-                    break;
-                }
-                if (++index >= length) {
-                    throw new TypeError();
-                }
-            } while (1);
-        }
-        // reduce
-        for (; index < length; index++) {
-            // account for the possibility that the array is sparse
-            if (index in this) {
-                basis = callback(basis, this[index], index);
-            }
-        }
-        return basis;
-    }
-);
-
-var array_indexOf = uncurryThis(
-    Array.prototype.indexOf || function (value) {
-        // not a very good shim, but good enough for our one use of it
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-);
-
-var array_map = uncurryThis(
-    Array.prototype.map || function (callback, thisp) {
-        var self = this;
-        var collect = [];
-        array_reduce(self, function (undefined, value, index) {
-            collect.push(callback.call(thisp, value, index, self));
-        }, void 0);
-        return collect;
-    }
-);
-
-var object_create = Object.create || function (prototype) {
-    function Type() { }
-    Type.prototype = prototype;
-    return new Type();
-};
-
-var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
-
-var object_keys = Object.keys || function (object) {
-    var keys = [];
-    for (var key in object) {
-        if (object_hasOwnProperty(object, key)) {
-            keys.push(key);
-        }
-    }
-    return keys;
-};
-
-var object_toString = uncurryThis(Object.prototype.toString);
-
-function isObject(value) {
-    return value === Object(value);
-}
-
-// generator related shims
-
-// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
-function isStopIteration(exception) {
-    return (
-        object_toString(exception) === "[object StopIteration]" ||
-        exception instanceof QReturnValue
-    );
-}
-
-// FIXME: Remove this helper and Q.return once ES6 generators are in
-// SpiderMonkey.
-var QReturnValue;
-if (typeof ReturnValue !== "undefined") {
-    QReturnValue = ReturnValue;
-} else {
-    QReturnValue = function (value) {
-        this.value = value;
-    };
-}
-
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
-}
-
-// long stack traces
-
-var STACK_JUMP_SEPARATOR = "From previous event:";
-
-function makeStackTraceLong(error, promise) {
-    // If possible, transform the error stack trace by removing Node and Q
-    // cruft, then concatenating with the stack trace of `promise`. See #57.
-    if (hasStacks &&
-        promise.stack &&
-        typeof error === "object" &&
-        error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
-    ) {
-        var stacks = [];
-        for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
-                stacks.unshift(p.stack);
-            }
-        }
-        stacks.unshift(error.stack);
-
-        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
-    }
-}
-
-function filterStackString(stackString) {
-    var lines = stackString.split("\n");
-    var desiredLines = [];
-    for (var i = 0; i < lines.length; ++i) {
-        var line = lines[i];
-
-        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
-            desiredLines.push(line);
-        }
-    }
-    return desiredLines.join("\n");
-}
-
-function isNodeFrame(stackLine) {
-    return stackLine.indexOf("(module.js:") !== -1 ||
-           stackLine.indexOf("(node.js:") !== -1;
-}
-
-function getFileNameAndLineNumber(stackLine) {
-    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
-    // In IE10 function name can have spaces ("Anonymous function") O_o
-    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
-    if (attempt1) {
-        return [attempt1[1], Number(attempt1[2])];
-    }
-
-    // Anonymous functions: "at filename:lineNumber:columnNumber"
-    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
-    if (attempt2) {
-        return [attempt2[1], Number(attempt2[2])];
-    }
-
-    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
-    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
-    if (attempt3) {
-        return [attempt3[1], Number(attempt3[2])];
-    }
-}
-
-function isInternalFrame(stackLine) {
-    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
-
-    if (!fileNameAndLineNumber) {
-        return false;
-    }
-
-    var fileName = fileNameAndLineNumber[0];
-    var lineNumber = fileNameAndLineNumber[1];
-
-    return fileName === qFileName &&
-        lineNumber >= qStartingLine &&
-        lineNumber <= qEndingLine;
-}
-
-// discover own file name and line number range for filtering stack
-// traces
-function captureLine() {
-    if (!hasStacks) {
-        return;
-    }
-
-    try {
-        throw new Error();
-    } catch (e) {
-        var lines = e.stack.split("\n");
-        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
-        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
-        if (!fileNameAndLineNumber) {
-            return;
-        }
-
-        qFileName = fileNameAndLineNumber[0];
-        return fileNameAndLineNumber[1];
-    }
-}
-
-function deprecate(callback, name, alternative) {
-    return function () {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
-            console.warn(name + " is deprecated, use " + alternative +
-                         " instead.", new Error("").stack);
-        }
-        return callback.apply(callback, arguments);
-    };
-}
-
-// end of shims
-// beginning of real work
-
-/**
- * Creates fulfilled promises from non-thenables,
- * Passes Q promises through,
- * Coerces other thenables to Q promises.
- */
-function Q(value) {
-    return resolve(value);
-}
-
-/**
- * Performs a task in a future turn of the event loop.
- * @param {Function} task
- */
-Q.nextTick = nextTick;
-
-/**
- * Controls whether or not long stack traces will be on
- */
-Q.longStackSupport = false;
-
-/**
- * Constructs a {promise, resolve, reject} object.
- *
- * `resolve` is a callback to invoke with a more resolved value for the
- * promise. To fulfill the promise, invoke `resolve` with any value that is
- * not a thenable. To reject the promise, invoke `resolve` with a rejected
- * thenable, or invoke `reject` with the reason directly. To resolve the
- * promise to another thenable, thus putting it in the same state, invoke
- * `resolve` with that other thenable.
- */
-Q.defer = defer;
-function defer() {
-    // if "messages" is an "Array", that indicates that the promise has not yet
-    // been resolved.  If it is "undefined", it has been resolved.  Each
-    // element of the messages array is itself an array of complete arguments to
-    // forward to the resolved promise.  We coerce the resolution value to a
-    // promise using the `resolve` function because it handles both fully
-    // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
-
-    var deferred = object_create(defer.prototype);
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, operands) {
-        var args = array_slice(arguments);
-        if (messages) {
-            messages.push(args);
-            if (op === "when" && operands[1]) { // progress operand
-                progressListeners.push(operands[1]);
-            }
-        } else {
-            nextTick(function () {
-                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
-            });
-        }
-    };
-
-    // XXX deprecated
-    promise.valueOf = deprecate(function () {
-        if (messages) {
-            return promise;
-        }
-        var nearerValue = nearer(resolvedPromise);
-        if (isPromise(nearerValue)) {
-            resolvedPromise = nearerValue; // shorten chain
-        }
-        return nearerValue;
-    }, "valueOf", "inspect");
-
-    promise.inspect = function () {
-        if (!resolvedPromise) {
-            return { state: "pending" };
-        }
-        return resolvedPromise.inspect();
-    };
-
-    if (Q.longStackSupport && hasStacks) {
-        try {
-            throw new Error();
-        } catch (e) {
-            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
-            // accessor around; that causes memory leaks as per GH-111. Just
-            // reify the stack trace as a string ASAP.
-            //
-            // At the same time, cut off the first line; it's always just
-            // "[object Promise]\n", as per the `toString`.
-            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
-        }
-    }
-
-    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
-    // consolidating them into `become`, since otherwise we'd create new
-    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
-
-    function become(newPromise) {
-        resolvedPromise = newPromise;
-        promise.source = newPromise;
-
-        array_reduce(messages, function (undefined, message) {
-            nextTick(function () {
-                newPromise.promiseDispatch.apply(newPromise, message);
-            });
-        }, void 0);
-
-        messages = void 0;
-        progressListeners = void 0;
-    }
-
-    deferred.promise = promise;
-    deferred.resolve = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(resolve(value));
-    };
-
-    deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(fulfill(value));
-    };
-    deferred.reject = function (reason) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(reject(reason));
-    };
-    deferred.notify = function (progress) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        array_reduce(progressListeners, function (undefined, progressListener) {
-            nextTick(function () {
-                progressListener(progress);
-            });
-        }, void 0);
-    };
-
-    return deferred;
-}
-
-/**
- * Creates a Node-style callback that will resolve or reject the deferred
- * promise.
- * @returns a nodeback
- */
-defer.prototype.makeNodeResolver = function () {
-    var self = this;
-    return function (error, value) {
-        if (error) {
-            self.reject(error);
-        } else if (arguments.length > 2) {
-            self.resolve(array_slice(arguments, 1));
-        } else {
-            self.resolve(value);
-        }
-    };
-};
-
-/**
- * @param resolver {Function} a function that returns nothing and accepts
- * the resolve, reject, and notify functions for a deferred.
- * @returns a promise that may be resolved with the given resolve and reject
- * functions, or rejected by a thrown exception in resolver
- */
-Q.promise = promise;
-function promise(resolver) {
-    if (typeof resolver !== "function") {
-        throw new TypeError("resolver must be a function.");
-    }
-
-    var deferred = defer();
-    fcall(
-        resolver,
-        deferred.resolve,
-        deferred.reject,
-        deferred.notify
-    ).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Constructs a Promise with a promise descriptor object and optional fallback
- * function.  The descriptor contains methods like when(rejected), get(name),
- * set(name, value), post(name, args), and delete(name), which all
- * return either a value, a promise for a value, or a rejection.  The fallback
- * accepts the operation name, a resolver, and any further arguments that would
- * have been forwarded to the appropriate method above had a method been
- * provided with the proper name.  The API makes no guarantees about the nature
- * of the returned object, apart from that it is usable whereever promises are
- * bought and sold.
- */
-Q.makePromise = Promise;
-function Promise(descriptor, fallback, inspect) {
-    if (fallback === void 0) {
-        fallback = function (op) {
-            return reject(new Error(
-                "Promise does not support operation: " + op
-            ));
-        };
-    }
-    if (inspect === void 0) {
-        inspect = function () {
-            return {state: "unknown"};
-        };
-    }
-
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, args) {
-        var result;
-        try {
-            if (descriptor[op]) {
-                result = descriptor[op].apply(promise, args);
-            } else {
-                result = fallback.call(promise, op, args);
-            }
-        } catch (exception) {
-            result = reject(exception);
-        }
-        if (resolve) {
-            resolve(result);
-        }
-    };
-
-    promise.inspect = inspect;
-
-    // XXX deprecated `valueOf` and `exception` support
-    if (inspect) {
-        var inspected = inspect();
-        if (inspected.state === "rejected") {
-            promise.exception = inspected.reason;
-        }
-
-        promise.valueOf = deprecate(function () {
-            var inspected = inspect();
-            if (inspected.state === "pending" ||
-                inspected.state === "rejected") {
-                return promise;
-            }
-            return inspected.value;
-        });
-    }
-
-    return promise;
-}
-
-Promise.prototype.then = function (fulfilled, rejected, progressed) {
-    var self = this;
-    var deferred = defer();
-    var done = false;   // ensure the untrusted promise makes at most a
-                        // single call to one of the callbacks
-
-    function _fulfilled(value) {
-        try {
-            return typeof fulfilled === "function" ? fulfilled(value) : value;
-        } catch (exception) {
-            return reject(exception);
-        }
-    }
-
-    function _rejected(exception) {
-        if (typeof rejected === "function") {
-            makeStackTraceLong(exception, self);
-            try {
-                return rejected(exception);
-            } catch (newException) {
-                return reject(newException);
-            }
-        }
-        return reject(exception);
-    }
-
-    function _progressed(value) {
-        return typeof progressed === "function" ? progressed(value) : value;
-    }
-
-    nextTick(function () {
-        self.promiseDispatch(function (value) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_fulfilled(value));
-        }, "when", [function (exception) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_rejected(exception));
-        }]);
-    });
-
-    // Progress propagator need to be attached in the current tick.
-    self.promiseDispatch(void 0, "when", [void 0, function (value) {
-        var newValue;
-        var threw = false;
-        try {
-            newValue = _progressed(value);
-        } catch (e) {
-            threw = true;
-            if (Q.onerror) {
-                Q.onerror(e);
-            } else {
-                throw e;
-            }
-        }
-
-        if (!threw) {
-            deferred.notify(newValue);
-        }
-    }]);
-
-    return deferred.promise;
-};
-
-Promise.prototype.thenResolve = function (value) {
-    return when(this, function () { return value; });
-};
-
-Promise.prototype.thenReject = function (reason) {
-    return when(this, function () { throw reason; });
-};
-
-// Chainable methods
-array_reduce(
-    [
-        "isFulfilled", "isRejected", "isPending",
-        "dispatch",
-        "when", "spread",
-        "get", "set", "del", "delete",
-        "post", "send", "mapply", "invoke", "mcall",
-        "keys",
-        "fapply", "fcall", "fbind",
-        "all", "allResolved",
-        "timeout", "delay",
-        "catch", "finally", "fail", "fin", "progress", "done",
-        "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
-        "npost", "nsend", "nmapply", "ninvoke", "nmcall",
-        "nodeify"
-    ],
-    function (undefined, name) {
-        Promise.prototype[name] = function () {
-            return Q[name].apply(
-                Q,
-                [this].concat(array_slice(arguments))
-            );
-        };
-    },
-    void 0
-);
-
-Promise.prototype.toSource = function () {
-    return this.toString();
-};
-
-Promise.prototype.toString = function () {
-    return "[object Promise]";
-};
-
-/**
- * If an object is not a promise, it is as "near" as possible.
- * If a promise is rejected, it is as "near" as possible too.
- * If it’s a fulfilled promise, the fulfillment value is nearer.
- * If it’s a deferred promise and the deferred has been resolved, the
- * resolution is "nearer".
- * @param object
- * @returns most resolved (nearest) form of the object
- */
-
-// XXX should we re-do this?
-Q.nearer = nearer;
-function nearer(value) {
-    if (isPromise(value)) {
-        var inspected = value.inspect();
-        if (inspected.state === "fulfilled") {
-            return inspected.value;
-        }
-    }
-    return value;
-}
-
-/**
- * @returns whether the given object is a promise.
- * Otherwise it is a fulfilled value.
- */
-Q.isPromise = isPromise;
-function isPromise(object) {
-    return isObject(object) &&
-        typeof object.promiseDispatch === "function" &&
-        typeof object.inspect === "function";
-}
-
-Q.isPromiseAlike = isPromiseAlike;
-function isPromiseAlike(object) {
-    return isObject(object) && typeof object.then === "function";
-}
-
-/**
- * @returns whether the given object is a pending promise, meaning not
- * fulfilled or rejected.
- */
-Q.isPending = isPending;
-function isPending(object) {
-    return isPromise(object) && object.inspect().state === "pending";
-}
-
-/**
- * @returns whether the given object is a value or fulfilled
- * promise.
- */
-Q.isFulfilled = isFulfilled;
-function isFulfilled(object) {
-    return !isPromise(object) || object.inspect().state === "fulfilled";
-}
-
-/**
- * @returns whether the given object is a rejected promise.
- */
-Q.isRejected = isRejected;
-function isRejected(object) {
-    return isPromise(object) && object.inspect().state === "rejected";
-}
-
-//// BEGIN UNHANDLED REJECTION TRACKING
-
-// This promise library consumes exceptions thrown in handlers so they can be
-// handled by a subsequent promise.  The exceptions get added to this array when
-// they are created, and removed when they are handled.  Note that in ES6 or
-// shimmed environments, this would naturally be a `Set`.
-var unhandledReasons = [];
-var unhandledRejections = [];
-var unhandledReasonsDisplayed = false;
-var trackUnhandledRejections = true;
-function displayUnhandledReasons() {
-    if (
-        !unhandledReasonsDisplayed &&
-        typeof window !== "undefined" &&
-        !window.Touch &&
-        window.console
-    ) {
-        console.warn("[Q] Unhandled rejection reasons (should be empty):",
-                     unhandledReasons);
-    }
-
-    unhandledReasonsDisplayed = true;
-}
-
-function logUnhandledReasons() {
-    for (var i = 0; i < unhandledReasons.length; i++) {
-        var reason = unhandledReasons[i];
-        if (reason && typeof reason.stack !== "undefined") {
-            console.warn("Unhandled rejection reason:", reason.stack);
-        } else {
-            console.warn("Unhandled rejection reason (no stack):", reason);
-        }
-    }
-}
-
-function resetUnhandledRejections() {
-    unhandledReasons.length = 0;
-    unhandledRejections.length = 0;
-    unhandledReasonsDisplayed = false;
-
-    if (!trackUnhandledRejections) {
-        trackUnhandledRejections = true;
-
-        // Show unhandled rejection reasons if Node exits without handling an
-        // outstanding rejection.  (Note that Browserify presently produces a
-        // `process` global without the `EventEmitter` `on` method.)
-        if (typeof process !== "undefined" && process.on) {
-            process.on("exit", logUnhandledReasons);
-        }
-    }
-}
-
-function trackRejection(promise, reason) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    unhandledRejections.push(promise);
-    unhandledReasons.push(reason);
-    displayUnhandledReasons();
-}
-
-function untrackRejection(promise) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    var at = array_indexOf(unhandledRejections, promise);
-    if (at !== -1) {
-        unhandledRejections.splice(at, 1);
-        unhandledReasons.splice(at, 1);
-    }
-}
-
-Q.resetUnhandledRejections = resetUnhandledRejections;
-
-Q.getUnhandledReasons = function () {
-    // Make a copy so that consumers can't interfere with our internal state.
-    return unhandledReasons.slice();
-};
-
-Q.stopUnhandledRejectionTracking = function () {
-    resetUnhandledRejections();
-    if (typeof process !== "undefined" && process.on) {
-        process.removeListener("exit", logUnhandledReasons);
-    }
-    trackUnhandledRejections = false;
-};
-
-resetUnhandledRejections();
-
-//// END UNHANDLED REJECTION TRACKING
-
-/**
- * Constructs a rejected promise.
- * @param reason value describing the failure
- */
-Q.reject = reject;
-function reject(reason) {
-    var rejection = Promise({
-        "when": function (rejected) {
-            // note that the error has been handled
-            if (rejected) {
-                untrackRejection(this);
-            }
-            return rejected ? rejected(reason) : this;
-        }
-    }, function fallback() {
-        return this;
-    }, function inspect() {
-        return { state: "rejected", reason: reason };
-    });
-
-    // Note that the reason has not been handled.
-    trackRejection(rejection, reason);
-
-    return rejection;
-}
-
-/**
- * Constructs a fulfilled promise for an immediate reference.
- * @param value immediate reference
- */
-Q.fulfill = fulfill;
-function fulfill(value) {
-    return Promise({
-        "when": function () {
-            return value;
-        },
-        "get": function (name) {
-            return value[name];
-        },
-        "set": function (name, rhs) {
-            value[name] = rhs;
-        },
-        "delete": function (name) {
-            delete value[name];
-        },
-        "post": function (name, args) {
-            // Mark Miller proposes that post with no name should apply a
-            // promised function.
-            if (name === null || name === void 0) {
-                return value.apply(void 0, args);
-            } else {
-                return value[name].apply(value, args);
-            }
-        },
-        "apply": function (thisP, args) {
-            return value.apply(thisP, args);
-        },
-        "keys": function () {
-            return object_keys(value);
-        }
-    }, void 0, function inspect() {
-        return { state: "fulfilled", value: value };
-    });
-}
-
-/**
- * Constructs a promise for an immediate reference, passes promises through, or
- * coerces promises from different systems.
- * @param value immediate reference or promise
- */
-Q.resolve = resolve;
-function resolve(value) {
-    // If the object is already a Promise, return it directly.  This enables
-    // the resolve function to both be used to created references from objects,
-    // but to tolerably coerce non-promises to promises.
-    if (isPromise(value)) {
-        return value;
-    }
-
-    // assimilate thenables
-    if (isPromiseAlike(value)) {
-        return coerce(value);
-    } else {
-        return fulfill(value);
-    }
-}
-
-/**
- * Converts thenables to Q promises.
- * @param promise thenable promise
- * @returns a Q promise
- */
-function coerce(promise) {
-    var deferred = defer();
-    nextTick(function () {
-        try {
-            promise.then(deferred.resolve, deferred.reject, deferred.notify);
-        } catch (exception) {
-            deferred.reject(exception);
-        }
-    });
-    return deferred.promise;
-}
-
-/**
- * Annotates an object such that it will never be
- * transferred away from this process over any promise
- * communication channel.
- * @param object
- * @returns promise a wrapping of that object that
- * additionally responds to the "isDef" message
- * without a rejection.
- */
-Q.master = master;
-function master(object) {
-    return Promise({
-        "isDef": function () {}
-    }, function fallback(op, args) {
-        return dispatch(object, op, args);
-    }, function () {
-        return resolve(object).inspect();
-    });
-}
-
-/**
- * Registers an observer on a promise.
- *
- * Guarantees:
- *
- * 1. that fulfilled and rejected will be called only once.
- * 2. that either the fulfilled callback or the rejected callback will be
- *    called, but not both.
- * 3. that fulfilled and rejected will not be called in this turn.
- *
- * @param value      promise or immediate reference to observe
- * @param fulfilled  function to be called with the fulfilled value
- * @param rejected   function to be called with the rejection exception
- * @param progressed function to be called on any progress notifications
- * @return promise for the return value from the invoked callback
- */
-Q.when = when;
-function when(value, fulfilled, rejected, progressed) {
-    return Q(value).then(fulfilled, rejected, progressed);
-}
-
-/**
- * Spreads the values of a promised array of arguments into the
- * fulfillment callback.
- * @param fulfilled callback that receives variadic arguments from the
- * promised array
- * @param rejected callback that receives the exception if the promise
- * is rejected.
- * @returns a promise for the return value or thrown exception of
- * either callback.
- */
-Q.spread = spread;
-function spread(promise, fulfilled, rejected) {
-    return when(promise, function (valuesOrPromises) {
-        return all(valuesOrPromises).then(function (values) {
-            return fulfilled.apply(void 0, values);
-        }, rejected);
-    }, rejected);
-}
-
-/**
- * The async function is a decorator for generator functions, turning
- * them into asynchronous generators.  Although generators are only part
- * of the newest ECMAScript 6 drafts, this code does not cause syntax
- * errors in older engines.  This code should continue to work and will
- * in fact improve over time as the language improves.
- *
- * ES6 generators are currently part of V8 version 3.19 with the
- * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
- * for longer, but under an older Python-inspired form.  This function
- * works on both kinds of generators.
- *
- * Decorates a generator function such that:
- *  - it may yield promises
- *  - execution will continue when that promise is fulfilled
- *  - the value of the yield expression will be the fulfilled value
- *  - it returns a promise for the return value (when the generator
- *    stops iterating)
- *  - the decorated function returns a promise for the return value
- *    of the generator or the first rejected promise among those
- *    yielded.
- *  - if an error is thrown in the generator, it propagates through
- *    every following yield until it is caught, or until it escapes
- *    the generator function altogether, and is translated into a
- *    rejection for the promise returned by the decorated generator.
- */
-Q.async = async;
-function async(makeGenerator) {
-    return function () {
-        // when verb is "send", arg is a value
-        // when verb is "throw", arg is an exception
-        function continuer(verb, arg) {
-            var result;
-            if (hasES6Generators) {
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    return reject(exception);
-                }
-                if (result.done) {
-                    return result.value;
-                } else {
-                    return when(result.value, callback, errback);
-                }
-            } else {
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return exception.value;
-                    } else {
-                        return reject(exception);
-                    }
-                }
-                return when(result, callback, errback);
-            }
-        }
-        var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "send");
-        var errback = continuer.bind(continuer, "throw");
-        return callback();
-    };
-}
-
-/**
- * The spawn function is a small wrapper around async that immediately
- * calls the generator and also ends the promise chain, so that any
- * unhandled errors are thrown instead of forwarded to the error
- * handler. This is useful because it's extremely common to run
- * generators at the top-level to work with libraries.
- */
-Q.spawn = spawn;
-function spawn(makeGenerator) {
-    Q.done(Q.async(makeGenerator)());
-}
-
-// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
-/**
- * Throws a ReturnValue exception to stop an asynchronous generator.
- *
- * This interface is a stop-gap measure to support generator return
- * values in older Firefox/SpiderMonkey.  In browsers that support ES6
- * generators like Chromium 29, just use "return" in your generator
- * functions.
- *
- * @param value the return value for the surrounding generator
- * @throws ReturnValue exception with the value.
- * @example
- * // ES6 style
- * Q.async(function* () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      return foo + bar;
- * })
- * // Older SpiderMonkey style
- * Q.async(function () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      Q.return(foo + bar);
- * })
- */
-Q["return"] = _return;
-function _return(value) {
-    throw new QReturnValue(value);
-}
-
-/**
- * The promised function decorator ensures that any promise arguments
- * are settled and passed as values (`this` is also settled and passed
- * as a value).  It will also ensure that the result of a function is
- * always a promise.
- *
- * @example
- * var add = Q.promised(function (a, b) {
- *     return a + b;
- * });
- * add(Q.resolve(a), Q.resolve(B));
- *
- * @param {function} callback The function to decorate
- * @returns {function} a function that has been decorated.
- */
-Q.promised = promised;
-function promised(callback) {
-    return function () {
-        return spread([this, all(arguments)], function (self, args) {
-            return callback.apply(self, args);
-        });
-    };
-}
-
-/**
- * sends a message to a value in a future turn
- * @param object* the recipient
- * @param op the name of the message operation, e.g., "when",
- * @param args further arguments to be forwarded to the operation
- * @returns result {Promise} a promise for the result of the operation
- */
-Q.dispatch = dispatch;
-function dispatch(object, op, args) {
-    var deferred = defer();
-    nextTick(function () {
-        resolve(object).promiseDispatch(deferred.resolve, op, args);
-    });
-    return deferred.promise;
-}
-
-/**
- * Constructs a promise method that can be used to safely observe resolution of
- * a promise for an arbitrarily named method like "propfind" in a future turn.
- *
- * "dispatcher" constructs methods like "get(promise, name)" and "set(promise)".
- */
-Q.dispatcher = dispatcher;
-function dispatcher(op) {
-    return function (object) {
-        var args = array_slice(arguments, 1);
-        return dispatch(object, op, args);
-    };
-}
-
-/**
- * Gets the value of a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to get
- * @return promise for the property value
- */
-Q.get = dispatcher("get");
-
-/**
- * Sets the value of a property in a future turn.
- * @param object    promise or immediate reference for object object
- * @param name      name of property to set
- * @param value     new value of property
- * @return promise for the return value
- */
-Q.set = dispatcher("set");
-
-/**
- * Deletes a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to delete
- * @return promise for the return value
- */
-Q["delete"] = // XXX experimental
-Q.del = dispatcher("delete");
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param value     a value to post, typically an array of
- *                  invocation arguments for promises that
- *                  are ultimately backed with `resolve` values,
- *                  as opposed to those backed with URLs
- *                  wherein the posted value can be any
- *                  JSON serializable object.
- * @return promise for the return value
- */
-// bound locally because it is used by other methods
-var post = Q.post = dispatcher("post");
-Q.mapply = post; // experimental
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param ...args   array of invocation arguments
- * @return promise for the return value
- */
-Q.send = send;
-Q.invoke = send; // synonyms
-Q.mcall = send; // experimental
-function send(value, name) {
-    var args = array_slice(arguments, 2);
-    return post(value, name, args);
-}
-
-/**
- * Applies the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param args      array of application arguments
- */
-Q.fapply = fapply;
-function fapply(value, args) {
-    return dispatch(value, "apply", [void 0, args]);
-}
-
-/**
- * Calls the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q["try"] = fcall; // XXX experimental
-Q.fcall = fcall;
-function fcall(value) {
-    var args = array_slice(arguments, 1);
-    return fapply(value, args);
-}
-
-/**
- * Binds the promised function, transforming return values into a fulfilled
- * promise and thrown errors into a rejected one.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q.fbind = fbind;
-function fbind(value) {
-    var args = array_slice(arguments, 1);
-    return function fbound() {
-        var allArgs = args.concat(array_slice(arguments));
-        return dispatch(value, "apply", [this, allArgs]);
-    };
-}
-
-/**
- * Requests the names of the owned properties of a promised
- * object in a future turn.
- * @param object    promise or immediate reference for target object
- * @return promise for the keys of the eventually settled object
- */
-Q.keys = dispatcher("keys");
-
-/**
- * Turns an array of promises into a promise for an array.  If any of
- * the promises gets rejected, the whole array is rejected immediately.
- * @param {Array*} an array (or promise for an array) of values (or
- * promises for values)
- * @returns a promise for an array of the corresponding values
- */
-// By Mark Miller
-// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
-Q.all = all;
-function all(promises) {
-    return when(promises, function (promises) {
-        var countDown = 0;
-        var deferred = defer();
-        array_reduce(promises, function (undefined, promise, index) {
-            var snapshot;
-            if (
-                isPromise(promise) &&
-                (snapshot = promise.inspect()).state === "fulfilled"
-            ) {
-                promises[index] = snapshot.value;
-            } else {
-                ++countDown;
-                when(promise, function (value) {
-                    promises[index] = value;
-                    if (--countDown === 0) {
-                        deferred.resolve(promises);
-                    }
-                }, deferred.reject);
-            }
-        }, void 0);
-        if (countDown === 0) {
-            deferred.resolve(promises);
-        }
-        return deferred.promise;
-    });
-}
-
-/**
- * Waits for all promises to be settled, either fulfilled or
- * rejected.  This is distinct from `all` since that would stop
- * waiting at the first rejection.  The promise returned by
- * `allResolved` will never be rejected.
- * @param promises a promise for an array (or an array) of promises
- * (or values)
- * @return a promise for an array of promises
- */
-Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
-function allResolved(promises) {
-    return when(promises, function (promises) {
-        promises = array_map(promises, resolve);
-        return when(all(array_map(promises, function (promise) {
-            return when(promise, noop, noop);
-        })), function () {
-            return promises;
-        });
-    });
-}
-
-Q.allSettled = allSettled;
-function allSettled(values) {
-    return when(values, function (values) {
-        return all(array_map(values, function (value, i) {
-            return when(
-                value,
-                function (fulfillmentValue) {
-                    values[i] = { state: "fulfilled", value: fulfillmentValue };
-                    return values[i];
-                },
-                function (reason) {
-                    values[i] = { state: "rejected", reason: reason };
-                    return values[i];
-                }
-            );
-        })).thenResolve(values);
-    });
-}
-
-/**
- * Captures the failure of a promise, giving an oportunity to recover
- * with a callback.  If the given promise is fulfilled, the returned
- * promise is fulfilled.
- * @param {Any*} promise for something
- * @param {Function} callback to fulfill the returned promise if the
- * given promise is rejected
- * @returns a promise for the return value of the callback
- */
-Q["catch"] = // XXX experimental
-Q.fail = fail;
-function fail(promise, rejected) {
-    return when(promise, void 0, rejected);
-}
-
-/**
- * Attaches a listener that can respond to progress notifications from a
- * promise's originating deferred. This listener receives the exact arguments
- * passed to ``deferred.notify``.
- * @param {Any*} promise for something
- * @param {Function} callback to receive any progress notifications
- * @returns the given promise, unchanged
- */
-Q.progress = progress;
-function progress(promise, progressed) {
-    return when(promise, void 0, void 0, progressed);
-}
-
-/**
- * Provides an opportunity to observe the settling of a promise,
- * regardless of whether the promise is fulfilled or rejected.  Forwards
- * the resolution to the returned promise when the callback is done.
- * The callback can return a promise to defer completion.
- * @param {Any*} promise
- * @param {Function} callback to observe the resolution of the given
- * promise, takes no arguments.
- * @returns a promise for the resolution of the given promise when
- * ``fin`` is done.
- */
-Q["finally"] = // XXX experimental
-Q.fin = fin;
-function fin(promise, callback) {
-    return when(promise, function (value) {
-        return when(callback(), function () {
-            return value;
-        });
-    }, function (exception) {
-        return when(callback(), function () {
-            return reject(exception);
-        });
-    });
-}
-
-/**
- * Terminates a chain of promises, forcing rejections to be
- * thrown as exceptions.
- * @param {Any*} promise at the end of a chain of promises
- * @returns nothing
- */
-Q.done = done;
-function done(promise, fulfilled, rejected, progress) {
-    var onUnhandledError = function (error) {
-        // forward to a future turn so that ``when``
-        // does not catch it and turn it into a rejection.
-        nextTick(function () {
-            makeStackTraceLong(error, promise);
-
-            if (Q.onerror) {
-                Q.onerror(error);
-            } else {
-                throw error;
-            }
-        });
-    };
-
-    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
-    var promiseToHandle = fulfilled || rejected || progress ?
-        when(promise, fulfilled, rejected, progress) :
-        promise;
-
-    if (typeof process === "object" && process && process.domain) {
-        onUnhandledError = process.domain.bind(onUnhandledError);
-    }
-    fail(promiseToHandle, onUnhandledError);
-}
-
-/**
- * Causes a promise to be rejected if it does not get fulfilled before
- * some milliseconds time out.
- * @param {Any*} promise
- * @param {Number} milliseconds timeout
- * @param {String} custom error message (optional)
- * @returns a promise for the resolution of the given promise if it is
- * fulfilled before the timeout, otherwise rejected.
- */
-Q.timeout = timeout;
-function timeout(promise, ms, msg) {
-    var deferred = defer();
-    var timeoutId = setTimeout(function () {
-        deferred.reject(new Error(msg || "Timed out after " + ms + " ms"));
-    }, ms);
-
-    when(promise, function (value) {
-        clearTimeout(timeoutId);
-        deferred.resolve(value);
-    }, function (exception) {
-        clearTimeout(timeoutId);
-        deferred.reject(exception);
-    }, deferred.notify);
-
-    return deferred.promise;
-}
-
-/**
- * Returns a promise for the given value (or promised value) after some
- * milliseconds.
- * @param {Any*} promise
- * @param {Number} milliseconds
- * @returns a promise for the resolution of the given promise after some
- * time has elapsed.
- */
-Q.delay = delay;
-function delay(promise, timeout) {
-    if (timeout === void 0) {
-        timeout = promise;
-        promise = void 0;
-    }
-
-    var deferred = defer();
-
-    when(promise, undefined, undefined, deferred.notify);
-    setTimeout(function () {
-        deferred.resolve(promise);
-    }, timeout);
-
-    return deferred.promise;
-}
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided as an array, and returns a promise.
- *
- *      Q.nfapply(FS.readFile, [__filename])
- *      .then(function (content) {
- *      })
- *
- */
-Q.nfapply = nfapply;
-function nfapply(callback, args) {
-    var nodeArgs = array_slice(args);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-
-    fapply(callback, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided individually, and returns a promise.
- *
- *      Q.nfcall(FS.readFile, __filename)
- *      .then(function (content) {
- *      })
- *
- */
-Q.nfcall = nfcall;
-function nfcall(callback/*, ...args */) {
-    var nodeArgs = array_slice(arguments, 1);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-
-    fapply(callback, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- *
- *      Q.nfbind(FS.readFile, __filename)("utf-8")
- *      .then(console.log)
- *      .done()
- *
- */
-Q.nfbind = nfbind;
-Q.denodeify = Q.nfbind; // synonyms
-function nfbind(callback/*, ...args */) {
-    var baseArgs = array_slice(arguments, 1);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-
-        fapply(callback, nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-Q.nbind = nbind;
-function nbind(callback, thisArg /*, ... args*/) {
-    var baseArgs = array_slice(arguments, 2);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-
-        function bound() {
-            return callback.apply(thisArg, arguments);
-        }
-
-        fapply(bound, nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback with a given array of arguments, plus a provided callback.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param {Array} args arguments to pass to the method; the callback
- * will be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.npost = npost;
-Q.nmapply = npost; // synonyms
-function npost(object, name, args) {
-    var nodeArgs = array_slice(args || []);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-
-    post(object, name, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback, forwarding the given variadic arguments, plus a provided
- * callback argument.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param ...args arguments to pass to the method; the callback will
- * be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.nsend = nsend;
-Q.ninvoke = Q.nsend; // synonyms
-Q.nmcall = Q.nsend; // synonyms
-function nsend(object, name /*, ...args*/) {
-    var nodeArgs = array_slice(arguments, 2);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    post(object, name, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-Q.nodeify = nodeify;
-function nodeify(promise, nodeback) {
-    if (nodeback) {
-        promise.then(function (value) {
-            nextTick(function () {
-                nodeback(null, value);
-            });
-        }, function (error) {
-            nextTick(function () {
-                nodeback(error);
-            });
-        });
-    } else {
-        return promise;
-    }
-}
-
-// All code before this point will be filtered from stack traces.
-var qEndingLine = captureLine();
-
-return Q;
-
-});
-
-})(require("__browserify_process"))
-},{"__browserify_process":74}],56:[function(require,module,exports){
-var _ = require('underscore'),
-  PositionsView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = PositionsView;
-    this.modelContent = {};
-    this.positions = [];
-  },
-
-  {
-    OnDateHighlightedChange: function (time) {
-      this.highlightedTime = time;
-      if (this.view) {
-        this.view.onDateHighLighted(time);
-      }
-      if (this.detailedView) {
-        this.detailedView.highlightDate(this.highlightedTime);
-      }
-    },
-
-    _findEventToDisplay: function () {},
-
-    beforeRefreshModelView: function () {
-      // if (this.positions.length !== _.size(this.events)) {
-      this.positions = [];
-      _.each(this.events, function (event) {
-        this.positions.push(event);
-      }, this);
-      this.positions = this.positions.sort(function (a, b) {
-        return a.time <= b.time ? -1 : 1;
-      });
-      //  }
-      this.modelContent = {
-        positions: this.positions,
-        posWidth: this.width,
-        posHeight: this.height,
-        id: this.id,
-        eventsNbr: this.positions.length
-      };
-    }
-  }
-);
-},{"../common/Model.js":76,"./View.js":75,"underscore":8}],63:[function(require,module,exports){
-(function(){/* global $ */
-
-var _ = require('underscore'),
-  ChartView = require('./ChartView.js'),
-  SeriesModel = require('./SeriesModel.js');
-
-var NumericalsPlugin = module.exports = function (events, params, node) {
-  this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
-  }, 100);
-
-  this.events = {};
-  this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.view = null;
-  this.eventDisplayed = null;
-  this.container = null;
-  this.needToRender = null;
-  this.datas = {};
-  this.streamIds = {};
-  this.eventsNode = node;
-  this.sortedData = null;
-  this.hasDetailedView = false;
-  _.extend(this, params);
-  _.each(events, function (event) {
-    this.eventEnter(event);
-  }, this);
-
-};
-NumericalsPlugin.prototype.eventEnter = function (event) {
-  this.streamIds[event.streamId] = event;
-  this.events[event.id] = event;
-  if (!this.datas[event.streamId]) {
-    this.datas[event.streamId] = {};
-  }
-  if (!this.datas[event.streamId][event.type]) {
-    this.datas[event.streamId][event.type] = {};
-  }
-  this.datas[event.streamId][event.type][event.id] = event;
-  this.needToRender = true;
-  if (this.hasDetailedView) {
-    this.treeMap.addEventsDetailedView(event);
-  }
-  this.debounceRefresh();
-};
-
-NumericalsPlugin.prototype.eventLeave = function (event) {
-  if (this.events[event.id]) {
-    delete this.events[event.id];
-    delete this.datas[event.streamId][event.type][event.id];
-    this.needToRender = true;
-    if (this.hasDetailedView) {
-      this.treeMap.deleteEventDetailedView(event);
-    }
-
-    this.debounceRefresh();
-  }
-};
-
-NumericalsPlugin.prototype.eventChange = function (event) {
-  if (this.events[event.id]) {
-    this.events[event.id] = event;
-    this.datas[event.streamId][event.type][event.id] = event;
-    this.needToRender = true;
-    if (this.hasDetailedView) {
-      this.treeMap.updateEventDetailedView(event);
-    }
-    this.debounceRefresh();
-  }
-};
-
-NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
-  this.highlightedTime = time;
-  if (this.view) {
-    this.view.onDateHighLighted(time);
-  }
-  if (this.hasDetailedView) {
-    this.treeMap.highlightDateDetailedView(this.highlightedTime);
-  }
-};
-
-NumericalsPlugin.prototype.render = function (container) {
-  this.container = container;
-  if (this.view) {
-    this.resize();
-  } else {
-    this.needToRender = true;
-  }
-};
-NumericalsPlugin.prototype.refresh = function (object) {
-  _.extend(this, object);
-  this.needToRender = true;
-  this.debounceRefresh();
-};
-
-NumericalsPlugin.prototype.close = function () {
-  if (this.view) {
-    this.view.close();
-  }
-
-  delete this.modelView;
-  delete this.view;
-  this.view = null;
-  this.events = null;
-  this.datas = null;
-  this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.eventDisplayed = null;
-  this.needToRender = false;
-
-};
-NumericalsPlugin.prototype._refreshModelView = function () {
-  var serie = null;
-  var series = [];
-  for (var streams in this.datas) {
-    if (this.datas.hasOwnProperty(streams)) {
-      for (var types in this.datas[streams]) {
-        if (this.datas[streams].hasOwnProperty(types)) {
-          var elements = [];
-          var latest = null;
-          for (var el in this.datas[streams][types]) {
-            if (this.datas[streams][types].hasOwnProperty(el)) {
-              var elem = this.datas[streams][types][el];
-              if (elem) {
-                latest = elem;
-                elements.push({content: elem.content, time: elem.time});
-              }
-            }
-          }
-          if (elements.length !== 0) {
-            serie = {
-              connectionId: latest.stream.connection.id,
-              elements: elements,
-              id: latest.connection.id + '/' + latest.streamId + '/' + latest.type,
-              streamId: latest.streamId,
-              streamName: latest.stream.name,
-              style: 0,
-              tags: latest.tags,
-              trashed: false,
-              type: latest.type
-            };
-          }
-          if (serie) {
-            series.push(serie);
-          }
-          serie = null;
-          elements = [];
-        }
-      }
-    }
-  }
-
-  if ((!this.modelView || !this.view) && series.length !== 0) {
-    this.modelView = new SeriesModel({
-      events: series,
-      dimensions: null,
-      container: null,
-      onClick: true,
-      onHover: true,
-      onDnD: true,
-      xaxis: false
-    });
-    if (typeof(document) !== 'undefined')  {
-      this.view =
-        new ChartView({model: this.modelView});
-
-    }
-  } else {
-    if (this.modelView) {
-      this.modelView.set('events', series);
-    }
-    if (this.view) {
-      this.view.model.set('model', this.modelView);
-    }
-  }
-
-  this.view.off();
-  /* jshint -W083 */
-  this.view.on('nodeClicked', function () {
-    if (!this.hasDetailedView) {
-      this.hasDetailedView = true;
-      var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-        this.treeMap.closeDetailedView();
-        this.hasDetailedView = false;
-      }.bind(this));
-      this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-    }
-  }.bind(this));
-  this.view.on('chart:clicked', function () { return; });
-  this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
-  this.view.on('chart:resize', this.resize.bind(this));
-
-  if (this.needToRender && this.container) {
-    this.resize();
-    this.view.onDateHighLighted(this.highlightedTime);
-    this.needToRender = false;
-  }
-};
-
-NumericalsPlugin.prototype._findEventToDisplay = function () {
-  if (this.highlightedTime === Infinity) {
-    var oldestTime = 0;
-    _.each(this.events, function (event) {
-      if (event.time >= oldestTime) {
-        oldestTime = event.time;
-        this.eventDisplayed = event;
-      }
-    }, this);
-
-  } else {
-    var timeDiff = Infinity, debounceRefresh = 0;
-    _.each(this.events, function (event) {
-      debounceRefresh = Math.abs(event.time - this.highlightedTime);
-      if (debounceRefresh <= timeDiff) {
-        timeDiff = debounceRefresh;
-        this.eventDisplayed = event;
-      }
-    }, this);
-  }
-};
-
-
-/**
- * Propagates the drag and drop event further up to the TreeMap controller
- * @param nodeId
- * @param streamId
- * @param connectionId
- */
-NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectionId) {
-  this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
-};
-
-NumericalsPlugin.prototype.computeDimensions = function () {
-  var chartSizeWidth = null;
-  var chartSizeHeight = null;
-
-  if (this.width !== null) {
-    chartSizeWidth = this.width;
-  } else if ($('#' + this.container).length)  {
-    chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
-  } else if (this.model.get('width') !== null) {
-    chartSizeWidth = this.model.get('width');
-  }
-
-  if (this.height !== null) {
-    chartSizeHeight = this.height;
-  } else if ($('#' + this.container).length)  {
-    chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
-  } else if (this.model.get('height') !== null) {
-    chartSizeHeight = this.model.get('height');
-  }
-
-  return {width: chartSizeWidth, height: chartSizeHeight};
-};
-
-NumericalsPlugin.prototype.resize = function () {
-  this.modelView.set('dimensions', this.computeDimensions());
-  this.modelView.set('container', '#' + this.container);
-  this.view.render();
-};
-
-})()
-},{"./ChartView.js":44,"./SeriesModel.js":41,"underscore":8}],61:[function(require,module,exports){
-var _ = require('underscore'),
-  GenericsView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = GenericsView;
-    this.eventDisplayed = null;
-    this.modelContent = {};
-  },
-  {
-    beforeRefreshModelView: function () {
-      this.modelContent = {
-        content: this.eventDisplayed.content,
-        description: this.eventDisplayed.description,
-        id: this.eventDisplayed.id,
-        modified: this.eventDisplayed.modified,
-        streamId: this.eventDisplayed.streamId,
-        tags: this.eventDisplayed.tags,
-        time: this.eventDisplayed.time,
-        type: this.eventDisplayed.type,
-        eventsNbr: _.size(this.events)
-      };
-    }
-  }
-);
-},{"../common/Model.js":76,"./View.js":77,"underscore":8}],59:[function(require,module,exports){
-(function(){/* global $ */
-var _ = require('underscore'),
-  NotesView = require('./View.js'),
-  Backbone = require('backbone');
-var NotesPlugin = module.exports = function (events, params) {
-  this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
-  }, 100);
-  this.events = {};
-  _.each(events, function (event) {
-    this.events[event.id] = event;
-  }, this);
-
-  /** Addon multiple note per view        */
-  this.nbrDisplayW = -1;
-  this.nbrDisplayH = -1;
-  this.nbrDisplayCurrentW = -1;
-  this.nbrDisplayCurrentH = -1;
-  this.minWidth = 100;
-  this.minHeight = 100;
-  this.maxWidth = 500;
-  this.maxHeight = 500;
-  this.eventsDisplayed = [];
-  this.animationIn = null;
-  this.animationOut = null;
-  this.hasDetailedView = false;
-  this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.view = null;
-  this.eventDisplayed = null;
-  this.container = null;
-  this.needToRender = null;
-  this.rendered = null;
-  _.extend(this, params);
-  this.debounceRefresh();
-
-};
-NotesPlugin.prototype.eventEnter = function (event) {
-  this.events[event.id] = event;
-  if (this.hasDetailedView) {
-    this.treeMap.addEventsDetailedView(event);
-  }
-  this.debounceRefresh();
-};
-
-NotesPlugin.prototype.eventLeave = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventLeave: event id ' + event.id + ' dont exists');
-  } else {
-    if (this.hasDetailedView) {
-      this.treeMap.deleteEventDetailedView(event);
-    }
-    delete this.events[event.id];
-    this.debounceRefresh();
-  }
-};
-
-NotesPlugin.prototype.eventChange = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventChange: event id ' + event.id + ' dont exists');
-  }  else {
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.updateEventDetailedView(event);
-    }
-    this.debounceRefresh();
-  }
-};
-
-NotesPlugin.prototype.OnDateHighlightedChange = function (time) {
-  this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
-  this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
-  this.highlightedTime = time;
-  if (this.hasDetailedView) {
-    this.treeMap.highlightDateDetailedView(this.highlightedTime);
-  }
-  this.debounceRefresh();
-};
-
-NotesPlugin.prototype.render = function (container) {
-  this.container = container;
-  if (this.eventsDisplayed.length === 0) {
-    this.needToRender = true;
-  }
-  for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-    if (this.eventsDisplayed[j].view) {
-      this.eventsDisplayed[j].view.renderView(this.container, this.animationIn);
-      this.rendered = true;
-    } else {
-      this.needToRender = true;
-    }
-  }
-
-};
-NotesPlugin.prototype.refresh = function (object) {
-  _.extend(this, object);
-  /** Addon */
-  if (this.width < this.minWidth || this.height < this.minHeight) {
-    this.nbrDisplayW = 1;
-    this.nbrDisplayH = 1;
-  }
-  if (Math.floor(this.width / this.maxWidth) !== this.nbrDisplayW ||
-    Math.floor(this.height / this.maxHeight) !== this.nbrDisplayH) {
-    this.nbrDisplayW = Math.floor(this.width / this.maxWidth);
-    this.nbrDisplayH = Math.floor(this.height / this.maxHeight);
-    this.nbrDisplayW = this.nbrDisplayW === 0 ? 1 : this.nbrDisplayW;
-    this.nbrDisplayH = this.nbrDisplayH === 0 ? 1 : this.nbrDisplayH;
-    this.debounceRefresh();
-  }
-  /** */
-
-};
-
-NotesPlugin.prototype.close = function () {
-  this.rendered = false;
-  this.events = null;
-  this.highlightedTime = Infinity;
-  for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-    this.eventsDisplayed[j].view.close(this.animationOut);
-    this.eventsDisplayed[j].view = null;
-    this.eventsDisplayed[j].modelView = null;
-  }
-  this.eventsDisplayed = [];
-};
-NotesPlugin.prototype._refreshModelView = function () {
-  this._findEventToDisplay();
-  var BasicModel = Backbone.Model.extend({ });
-  for (var i = 0; i < this.eventsDisplayed.length; ++i) {
-    var denomW = i >= (this.nbrDisplayCurrentH - 1) * this.nbrDisplayCurrentW &&
-      this.eventsDisplayed.length % this.nbrDisplayCurrentW !== 0 ?
-      this.eventsDisplayed.length % this.nbrDisplayCurrentW:
-      this.nbrDisplayCurrentW;
-
-    var border = 0.5;
-    var width = (100 - (border * (denomW - 1))) / denomW;
-    var left = (Math.floor(i % this.nbrDisplayCurrentW)) * (width + border);
-    var height = (100 - (border * (this.nbrDisplayCurrentH - 1))) / this.nbrDisplayCurrentH;
-    var top = (Math.floor(i / this.nbrDisplayCurrentW)) * (height + border);
-    if (!this.eventsDisplayed[i].modelView || !this.eventsDisplayed[i].view) {
-      this.eventsDisplayed[i].modelView = new BasicModel({
-        content: this.eventsDisplayed[i].content,
-        description: this.eventsDisplayed[i].description,
-        id: this.eventsDisplayed[i].id,
-        modified: this.eventsDisplayed[i].modified,
-        streamId: this.eventsDisplayed[i].streamId,
-        tags: this.eventsDisplayed[i].tags,
-        time: this.eventsDisplayed[i].time,
-        type: this.eventsDisplayed[i].type,
-        top: top,
-        left: left,
-        height: height,
-        width: width,
-        eventsNbr: _.size(this.events)
-      });
-      if (typeof(document) !== 'undefined')  {
-        this.eventsDisplayed[i].view = new NotesView({model: this.eventsDisplayed[i].modelView});
-        /* jshint -W083 */
-        this.eventsDisplayed[i].view.on('nodeClicked', function () {
-          if (!this.hasDetailedView) {
-            this.hasDetailedView = true;
-            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-              this.treeMap.closeDetailedView();
-              this.hasDetailedView = false;
-            }.bind(this));
-            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-          }
-        }.bind(this));
-      }
-    }
-
-    this.eventsDisplayed[i].modelView.set('content', this.eventsDisplayed[i].content);
-    this.eventsDisplayed[i].modelView.set('id', this.eventsDisplayed[i].id);
-    this.eventsDisplayed[i].modelView.set('description', this.eventsDisplayed[i].description);
-    this.eventsDisplayed[i].modelView.set('type', this.eventsDisplayed[i].type);
-    this.eventsDisplayed[i].modelView.set('streamId', this.eventsDisplayed[i].streamId);
-    this.eventsDisplayed[i].modelView.set('tags', this.eventsDisplayed[i].tags);
-    this.eventsDisplayed[i].modelView.set('time', this.eventsDisplayed[i].time);
-    this.eventsDisplayed[i].modelView.set('modified', this.eventsDisplayed[i].modified);
-    this.eventsDisplayed[i].modelView.set('top', top);
-    this.eventsDisplayed[i].modelView.set('left',  left);
-    this.eventsDisplayed[i].modelView.set('height', height);
-    this.eventsDisplayed[i].modelView.set('width',  width);
-    this.eventsDisplayed[i].modelView.set('eventsNbr', _.size(this.events));
-  }
-  if (this.needToRender || this.rendered) {
-    for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-      if ($('#' + this.eventsDisplayed[j].id).length === 0) {
-        this.eventsDisplayed[j].view.renderView(this.container, this.animationIn);
-        this.rendered = true;
-      }
-    }
-    this.needToRender = false;
-  }
-};
-
-NotesPlugin.prototype._findEventToDisplay = function () {
-  var nearestEvents = [];
-  var sortedEvents = _.sortBy(this.events, function (e) { return e.time; });
-  _.each(this.eventsDisplayed, function (event) {
-    event.toRemove = true;
-  });
-  if (this.highlightedTime === Infinity) {
-    var oldestTime = 0;
-    _.each(sortedEvents, function (event) {
-      if (event.time >= oldestTime) {
-        oldestTime = event.time;
-        this.eventDisplayed = event;
-        nearestEvents.unshift(event);
-      }
-    }, this);
-
-  } else {
-    var timeDiff = Infinity, debounceRefresh = 0;
-    _.each(sortedEvents, function (event) {
-      debounceRefresh = Math.abs(event.time - this.highlightedTime);
-      if (debounceRefresh <= timeDiff) {
-        timeDiff = debounceRefresh;
-        this.eventDisplayed = event;
-        nearestEvents.unshift(event);
-      }
-    }, this);
-  }
-  this.nbrDisplayCurrentH = this.nbrDisplayH;
-  this.nbrDisplayCurrentW = this.nbrDisplayW;
-  var notEnoughtEvent = false;
-  if (nearestEvents.length < this.nbrDisplayH * this.nbrDisplayW) {
-    notEnoughtEvent = true;
-    this.nbrDisplayCurrentH = Math.floor(Math.sqrt(nearestEvents.length));
-    this.nbrDisplayCurrentW = Math.ceil(nearestEvents.length / this.nbrDisplayCurrentH);
-  }
-  for (var i = 0; i < this.nbrDisplayCurrentH * this.nbrDisplayCurrentW &&
-    i < nearestEvents.length; ++i) {
-    nearestEvents[i].toRemove = false;
-  }
-  _.each(this.eventsDisplayed, function (event) {
-    if (event.toRemove && event.view) {
-      event.view.close(this.animationOut);
-      event.view = null;
-    }
-  }, this);
-  // console.log(this.events, nearestEvents);
-  this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW)
-    .reverse();
-
-  /* console.log('note', notEnoughtEvent,
-   'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,
-   'calculated', this.nbrDisplayW, this.nbrDisplayH,
-   this.eventsDisplayed, this.width, this.height);  */
-};
-
-})()
-},{"./View.js":78,"backbone":23,"underscore":8}],65:[function(require,module,exports){
-(function(){/* global $ */
-var _ = require('underscore'),
-  PicturesView = require('./View.js'),
-  Backbone = require('backbone');
-var ACCEPTED_TYPE = 'picture/attached';
-var PicturesPlugin = module.exports = function (events, params) {
-  this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
-  }, 100);
-  this.events = {};
-  _.each(events, function (event) {
-    if (event.type === ACCEPTED_TYPE) {
-      this.events[event.id] = event;
-    }
-  }, this);
-
-  /** Addon multiple picture per view        */
-  this.nbrDisplayW = -1;
-  this.nbrDisplayH = -1;
-  this.nbrDisplayCurrentW = -1;
-  this.nbrDisplayCurrentH = -1;
-  this.minWidth = 50;
-  this.minHeight = 50;
-  this.maxWidth = 500;
-  this.maxHeight = 500;
-  this.eventsDisplayed = [];
-  this.animationIn = null;
-  this.animationOut = null;
-  this.hasDetailedView = false;
-  this.highlightedTime = Infinity;
-  this.view = null;
-  this.eventDisplayed = null;
-  this.container = null;
-  this.needToRender = null;
-  _.extend(this, params);
-  this.debounceRefresh();
-
-};
-PicturesPlugin.prototype.eventEnter = function (event) {
-  if (event.type === ACCEPTED_TYPE) {
-
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.addEventsDetailedView(event);
-    }
-    this.debounceRefresh();
-
-  } else {
-    console.log('eventEnter: This event type ' + event.type + ' is not accepted. ' +
-      'Type accepted is ' + ACCEPTED_TYPE);
-  }
-
-};
-
-PicturesPlugin.prototype.eventLeave = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventLeave: event id ' + event.id + ' dont exists');
-  } else {
-    if (this.hasDetailedView) {
-      this.treeMap.deleteEventDetailedView(event);
-    }
-    delete this.events[event.id];
-    this.debounceRefresh();
-  }
-};
-
-PicturesPlugin.prototype.eventChange = function (event) {
-  if (!this.events[event.id]) {
-    console.log('eventChange: event id ' + event.id + ' dont exists');
-  } else if (event.type !== ACCEPTED_TYPE) {
-    console.log('eventChange: This event type ' + event.type + ' is not accepted. ' +
-      'Type accepted is ' + ACCEPTED_TYPE);
-  } else {
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.updateEventDetailedView(event);
-    }
-    this.debounceRefresh();
-  }
-};
-
-PicturesPlugin.prototype.OnDateHighlightedChange = function (time) {
-  this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
-  this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
-  this.highlightedTime = time;
-  if (this.hasDetailedView) {
-    this.treeMap.highlightDateDetailedView(this.highlightedTime);
-  }
-  this.debounceRefresh();
-};
-
-PicturesPlugin.prototype.render = function (container) {
-  this.container = container;
-  if (this.eventsDisplayed.length === 0) {
-    this.needToRender = true;
-  }
-  for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-    if (this.eventsDisplayed[j].view) {
-      this.eventsDisplayed[j].view.renderView(this.container, this.animationIn);
-      this.rendered = true;
-    } else {
-      this.needToRender = true;
-    }
-  }
-
-};
-PicturesPlugin.prototype.refresh = function (object) {
-  _.extend(this, object);
-  /** Addon */
-  if (this.width < this.minWidth || this.height < this.minHeight) {
-    this.nbrDisplayW = 1;
-    this.nbrDisplayH = 1;
-  }
-  if (Math.floor(this.width / this.maxWidth) !== this.nbrDisplayW ||
-    Math.floor(this.height / this.maxHeight) !== this.nbrDisplayH) {
-    this.nbrDisplayW = Math.floor(this.width / this.maxWidth);
-    this.nbrDisplayH = Math.floor(this.height / this.maxHeight);
-    this.nbrDisplayW = this.nbrDisplayW === 0 ? 1 : this.nbrDisplayW;
-    this.nbrDisplayH = this.nbrDisplayH === 0 ? 1 : this.nbrDisplayH;
-    this.debounceRefresh();
-  }
-  /** */
-};
-PicturesPlugin.prototype.close = function () {
-  this.rendered = false;
-  this.events = null;
-  this.highlightedTime = Infinity;
-  for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-    this.eventsDisplayed[j].view.close(this.animationOut);
-    this.eventsDisplayed[j].view = null;
-    this.eventsDisplayed[j].modelView = null;
-  }
-  this.eventsDisplayed = [];
-
-};
-PicturesPlugin.prototype._refreshModelView = function () {
-  this._findEventToDisplay();
-  var BasicModel = Backbone.Model.extend({ });
-  for (var i = 0; i < this.eventsDisplayed.length; ++i) {
-    var denomW = i >= (this.nbrDisplayCurrentH - 1) * this.nbrDisplayCurrentW &&
-      this.eventsDisplayed.length % this.nbrDisplayCurrentW !== 0 ?
-      this.eventsDisplayed.length % this.nbrDisplayCurrentW:
-      this.nbrDisplayCurrentW;
-
-    var border = 0;
-    var width = (100 - (border * (denomW - 1))) / denomW;
-    var left = (Math.floor(i % this.nbrDisplayCurrentW)) * (width + border);
-    var height = (100 - (border * (this.nbrDisplayCurrentH - 1))) / this.nbrDisplayCurrentH;
-    var top = (Math.floor(i / this.nbrDisplayCurrentW)) * (height + border);
-
-
-    if (!this.eventsDisplayed[i].modelView || !this.eventsDisplayed[i].view) {
-
-      this.eventsDisplayed[i].modelView = new BasicModel({
-        description: this.eventsDisplayed[i].description,
-        id: this.eventsDisplayed[i].id,
-        picUrl: this.eventsDisplayed[i].attachmentsUrl,
-        modified: this.eventsDisplayed[i].modified,
-        streamId: this.eventsDisplayed[i].streamId,
-        tags: this.eventsDisplayed[i].tags,
-        time: this.eventsDisplayed[i].time,
-        type: this.eventsDisplayed[i].type,
-        eventsNbr: _.size(this.events),
-        top: top,
-        left: left,
-        height: height,
-        width: width
-      });
-      if (typeof(document) !== 'undefined')  {
-        this.eventsDisplayed[i].view = new PicturesView({model: this.eventsDisplayed[i].modelView});
-        /* jshint -W083 */
-        this.eventsDisplayed[i].view.on('nodeClicked', function () {
-          if (!this.hasDetailedView) {
-            this.hasDetailedView = true;
-            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-              this.treeMap.closeDetailedView();
-              this.hasDetailedView = false;
-            }.bind(this));
-            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-          }
-        }.bind(this));
-      }
-    } else {
-
-      this.eventsDisplayed[i].modelView.set('id', this.eventsDisplayed[i].id);
-      this.eventsDisplayed[i].modelView.set('picUrl', this.eventsDisplayed[i].attachmentsUrl);
-      this.eventsDisplayed[i].modelView.set('description', this.eventsDisplayed[i].description);
-      this.eventsDisplayed[i].modelView.set('type', this.eventsDisplayed[i].type);
-      this.eventsDisplayed[i].modelView.set('streamId', this.eventsDisplayed[i].streamId);
-      this.eventsDisplayed[i].modelView.set('tags', this.eventsDisplayed[i].tags);
-      this.eventsDisplayed[i].modelView.set('time', this.eventsDisplayed[i].time);
-      this.eventsDisplayed[i].modelView.set('modified', this.eventsDisplayed[i].modified);
-      this.eventsDisplayed[i].modelView.set('eventsNbr', _.size(this.events));
-      this.eventsDisplayed[i].modelView.set('top', top);
-      this.eventsDisplayed[i].modelView.set('left',  left);
-      this.eventsDisplayed[i].modelView.set('height', height);
-      this.eventsDisplayed[i].modelView.set('width',  width);
-    }
-
-  }
-  if (this.needToRender || this.rendered) {
-    for (var j = 0; j < this.eventsDisplayed.length; ++j) {
-      if ($('#' + this.eventsDisplayed[j].id).length === 0) {
-        this.eventsDisplayed[j].view.renderView(this.container, this.animationIn);
-        this.rendered = true;
-      }
-    }
-    this.needToRender = false;
-  }
-};
-
-PicturesPlugin.prototype._findEventToDisplay = function () {
-  var nearestEvents = [];
-  var sortedEvents = _.sortBy(this.events, function (e) { return e.time; });
-  _.each(this.eventsDisplayed, function (event) {
-    event.toRemove = true;
-  });
-  if (this.highlightedTime === Infinity) {
-    var oldestTime = 0;
-    _.each(sortedEvents, function (event) {
-      if (event.time >= oldestTime) {
-        oldestTime = event.time;
-        nearestEvents.unshift(event);
-      }
-    }, this);
-
-  } else {
-    var timeDiff = Infinity, temp = 0;
-    _.each(sortedEvents, function (event) {
-      temp = Math.abs(event.time - this.highlightedTime);
-      if (temp <= timeDiff) {
-        timeDiff = temp;
-        nearestEvents.unshift(event);
-      }
-    }, this);
-  }
-  this.nbrDisplayCurrentH = this.nbrDisplayH;
-  this.nbrDisplayCurrentW = this.nbrDisplayW;
-  var notEnoughtEvent = false;
-  if (nearestEvents.length < this.nbrDisplayH * this.nbrDisplayW) {
-    notEnoughtEvent = true;
-    this.nbrDisplayCurrentW = Math.floor(Math.sqrt(nearestEvents.length));
-    this.nbrDisplayCurrentH = Math.ceil(nearestEvents.length / this.nbrDisplayCurrentW);
-  }
-  for (var i = 0; i < this.nbrDisplayCurrentH * this.nbrDisplayCurrentW &&
-    i < nearestEvents.length; ++i) {
-    nearestEvents[i].toRemove = false;
-  }
-  _.each(this.eventsDisplayed, function (event) {
-    if (event.toRemove && event.view) {
-      event.view.close(this.animationOut);
-      event.view = null;
-    }
-  }, this);
-  // console.log(this.events, nearestEvents);
-  this.eventsDisplayed = nearestEvents.splice(0, this.nbrDisplayCurrentH * this.nbrDisplayCurrentW)
-    .reverse();
-
-  /* console.log('picture', notEnoughtEvent,
-   'current', this.nbrDisplayCurrentW, this.nbrDisplayCurrentH,
-   'calculated', this.nbrDisplayW, this.nbrDisplayH,
-   this.eventsDisplayed, this.width, this.height);   */
-};
-
-PicturesPlugin.acceptTheseEvents = function (events) {
-  var result = true;
-  _.each(events, function (event) {
-    if (event.type !== ACCEPTED_TYPE) {
-      result = false;
-    }
-  });
-  return result;
-};
-})()
-},{"./View.js":79,"backbone":23,"underscore":8}],66:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -21137,7 +20836,2825 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":23,"backbone.babysitter":81,"backbone.wreqr":80,"underscore":8}],75:[function(require,module,exports){
+},{"backbone":26,"backbone.babysitter":95,"backbone.wreqr":94,"underscore":8}],91:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  //Model = require('../../../numericals/TimeSeriesModel.js'),
+  ChartModel = require('../../../numericals/ChartModel.js'),
+  ChartView = require('../../../numericals/ChartView.js');
+
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Numerical',
+  template: '#template-detail-content-numerical-edit',
+  itemViewContainer: '#detail-content',
+  ui: {
+    selColor: '#detailed-view-chart-color',
+    selStyle: '#detailed-view-chart-style',
+    selOperation: '#detailed-view-chart-operation',
+    selInterval: '#detailed-view-chart-interval'
+  },
+  chartView: null,
+  chartViewModel: null,
+  rendered: false,
+  collection: null,
+  color: null,
+  style: null,
+  transform: null,
+  interval: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
+    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    if (this.chartView) {
+      this.chartView.model.set('collection', this.collection);
+    } else {
+      this.prepareCollection();
+      this.chartViewModel = new ChartModel({
+          container: '#detail-chart-container-edit',
+          view: null,
+          requiresDim: false,
+          collection: this.model.get('collection'),
+          highlighted: false,
+          highlightedTime: null,
+          allowPieChart: false,
+          singleNumberAsText: false,
+          dimensions: null,
+          legendStyle: 'list', // Legend style: 'list', 'table'
+          legendButton: true,  // A button in the legend
+          legendButtonContent: ['ready'],
+          legendShow: true,     // Show legend or not
+          legendContainer: '#legend-container-edit', //false or a a selector
+          legendExtras: true,   // use extras in the legend
+          onClick: false,
+          onHover: false,
+          onDnD: false,
+          allowPan: false,      // Allows navigation through the chart
+          allowZoom: false,     // Allows zooming on the chart
+          xaxis: true
+        });
+      this.chartView = new ChartView({model: this.chartViewModel});
+      this.ui.selColor.bind('change', this.editorChange.bind(this));
+      this.ui.selStyle.bind('change', this.editorChange.bind(this));
+      this.ui.selOperation.bind('change', this.editorChange.bind(this));
+      this.ui.selInterval.bind('change', this.editorChange.bind(this));
+      this.chartView.on('ready', function (m) {
+        this.trigger('ready', m);
+      }.bind(this));
+    }
+
+    if ($('#detail-chart-container-edit').length !== 0) {
+      this.updateEditor();
+      this.chartView.render();
+      this.highlightEvent();
+      this.rendered = true;
+    }
+  },
+  debounceRender: _.debounce(function () {
+    if (!this.rendered) {
+      this.render();
+      this.highlightEvent();
+    }
+  }, 1000),
+  editorChange: function () {
+    if (this.ui.selColor[0].selectedIndex > -1) {
+      this.color = this.ui.selColor[0].options[this.ui.selColor[0].selectedIndex].value;
+    }
+    if (this.ui.selStyle[0].selectedIndex > -1) {
+      this.style = this.ui.selStyle[0].options[this.ui.selStyle[0].selectedIndex].value;
+    }
+    if (this.ui.selOperation[0].selectedIndex > -1) {
+      this.transform = this.ui.selOperation[0].options[this.ui.selOperation[0].selectedIndex].value;
+    }
+    if (this.ui.selInterval[0].selectedIndex > -1) {
+      this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
+    }
+
+    this.collection.at(0).set('color', this.color);
+    this.collection.at(0).set('style', this.style);
+    this.collection.at(0).set('transform', this.transform);
+    this.collection.at(0).set('interval', this.interval);
+
+    this.chartView.render();
+  },
+  highlightEvent: function () {
+    if (this.chartView && this.model.get('event')) {
+      this.chartView.highlightEvent(this.model.get('event'));
+    }
+  },
+  prepareCollection: function () {
+    this.collection = this.model.get('collection');
+  },
+  onClose: function () {
+    this.chartView.close();
+    this.chartView = null;
+    $(this.itemViewContainer).empty();
+  },
+  updateEditor: function () {
+    var i;
+    var options = this.ui.selColor[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('color')) {
+        this.ui.selColor[0].selectedIndex = i;
+        break;
+      }
+    }
+    options = this.ui.selStyle[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('style')) {
+        this.ui.selStyle[0].selectedIndex = i;
+        break;
+      }
+    }
+    options = this.ui.selOperation[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('transform')) {
+        this.ui.selOperation[0].selectedIndex = i;
+        break;
+      }
+    }
+    options = this.ui.selInterval[0].options;
+    for (i = 0; i < options.length; ++i) {
+      if (options[i].value === this.model.get('collection').at(0).get('interval')) {
+        this.ui.selInterval[0].selectedIndex = i;
+        break;
+      }
+    }
+  }
+});
+})()
+},{"../../../numericals/ChartModel.js":67,"../../../numericals/ChartView.js":66,"backbone.marionette":70,"underscore":8}],92:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  //Model = require('../../../numericals/TimeSeriesModel.js'),
+  ChartModel = require('../../../numericals/ChartModel.js'),
+  ChartView = require('../../../numericals/ChartView.js');
+
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Numerical',
+  template: '#template-detail-content-numerical-general',
+  itemViewContainer: '#detail-content',
+  chartView: null,
+  rendered: false,
+  initialize: function () {
+    this.listenTo(this.model, 'change:collection', this.render.bind(this));
+    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+
+    if (this.chartView) {
+      this.chartView.model.set('collection', this.model.get('collection'));
+    } else {
+      this.chartView = new ChartView({model:
+        new ChartModel({
+          container: '#detail-chart-container-general',
+          view: null,
+          requiresDim: false,
+          collection: this.model.get('collection'),
+          highlighted: false,
+          highlightedTime: null,
+          allowPieChart: false,
+          singleNumberAsText: false,
+          dimensions: null,
+          legendStyle: 'list', // Legend style: 'list', 'table'
+          legendButton: true,  // A button in the legend
+          legendButtonContent: ['edit', 'duplicate', 'remove'],
+          legendShow: true,     // Show legend or not
+          legendContainer: '#legend-container-general', //false or a a selector
+          legendExtras: true,   // use extras in the legend
+          onClick: false,
+          onHover: false,
+          onDnD: false,
+          allowPan: false,      // Allows navigation through the chart
+          allowZoom: false,     // Allows zooming on the chart
+          xaxis: true
+        })});
+
+      this.chartView.on('remove', function (m) {
+        this.trigger('remove', m);
+      }.bind(this));
+
+      this.chartView.on('edit', function (m) {
+        this.trigger('edit', m);
+      }.bind(this));
+
+      this.chartView.on('duplicate', function (m) {
+        this.trigger('duplicate', m);
+      }.bind(this));
+    }
+
+    if ($('#detail-chart-container-general').length !== 0) {
+      this.chartView.render();
+      this.highlightEvent();
+      this.rendered = true;
+    }
+  },
+  debounceRender: _.debounce(function () {
+    if (!this.rendered) {
+      this.render();
+      this.highlightEvent();
+    }
+  }, 1000),
+
+  highlightEvent: function () {
+    if (this.chartView && this.model.get('event')) {
+      this.chartView.highlightEvent(this.model.get('event'));
+    }
+  },
+  onClose: function () {
+    this.chartView.close();
+    this.chartView = null;
+    $(this.itemViewContainer).empty();
+  }
+});
+})()
+},{"../../../numericals/ChartModel.js":67,"../../../numericals/ChartView.js":66,"backbone.marionette":70,"underscore":8}],90:[function(require,module,exports){
+// Generated by CoffeeScript 1.6.3
+(function() {
+  var Google, Q;
+
+  Q = require('q');
+
+  Google = (function() {
+    function Google() {}
+
+    Google.URL = 'https://maps.googleapis.com/maps/api/js?sensor=false';
+
+    Google.KEY = null;
+
+    Google.WINDOW_CALLBACK_NAME = '__google_maps_api_provider_initializator__';
+
+    Google.google = null;
+
+    Google.loading = false;
+
+    Google.promises = [];
+
+    Google.load = function() {
+      var deferred, script, url,
+        _this = this;
+      deferred = Q.defer();
+      if (this.google === null) {
+        if (this.loading === true) {
+          this.promises.push(deferred);
+        } else {
+          this.loading = true;
+          window[this.WINDOW_CALLBACK_NAME] = function() {
+            return _this._ready(deferred);
+          };
+          url = this.URL;
+          if (this.KEY !== null) {
+            url += "&key=" + this.KEY;
+          }
+          url += "&callback=" + this.WINDOW_CALLBACK_NAME;
+          script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.src = url;
+          document.body.appendChild(script);
+        }
+      } else {
+        deferred.resolve(this.google);
+      }
+      return deferred.promise;
+    };
+
+    Google._ready = function(deferred) {
+      var def, _i, _len, _ref;
+      Google.loading = false;
+      if (Google.google === null) {
+        Google.google = window.google;
+      }
+      deferred.resolve(Google.google);
+      _ref = Google.promises;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        def = _ref[_i];
+        def.resolve(Google.google);
+      }
+      return Google.promises = [];
+    };
+
+    return Google;
+
+  }).call(this);
+
+  module.exports = Google;
+
+}).call(this);
+
+},{"q":96}],97:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            var source = ev.source;
+            if ((source === window || source === null) && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
+},{}],96:[function(require,module,exports){
+(function(process){// vim:ts=4:sts=4:sw=4:
+/*!
+ *
+ * Copyright 2009-2012 Kris Kowal under the terms of the MIT
+ * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+ *
+ * With parts by Tyler Close
+ * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
+ * at http://www.opensource.org/licenses/mit-license.html
+ * Forked at ref_send.js version: 2009-05-11
+ *
+ * With parts by Mark Miller
+ * Copyright (C) 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+(function (definition) {
+    // Turn off strict mode for this function so we can assign to global.Q
+    /* jshint strict: false */
+
+    // This file will function properly as a <script> tag, or a module
+    // using CommonJS and NodeJS or RequireJS module formats.  In
+    // Common/Node/RequireJS, the module exports the Q API and when
+    // executed as a simple <script>, it creates a Q global instead.
+
+    // Montage Require
+    if (typeof bootstrap === "function") {
+        bootstrap("promise", definition);
+
+    // CommonJS
+    } else if (typeof exports === "object") {
+        module.exports = definition();
+
+    // RequireJS
+    } else if (typeof define === "function" && define.amd) {
+        define(definition);
+
+    // SES (Secure EcmaScript)
+    } else if (typeof ses !== "undefined") {
+        if (!ses.ok()) {
+            return;
+        } else {
+            ses.makeQ = definition;
+        }
+
+    // <script>
+    } else {
+        Q = definition();
+    }
+
+})(function () {
+"use strict";
+
+var hasStacks = false;
+try {
+    throw new Error();
+} catch (e) {
+    hasStacks = !!e.stack;
+}
+
+// All code after this point will be filtered from stack traces reported
+// by Q.
+var qStartingLine = captureLine();
+var qFileName;
+
+// shims
+
+// used for fallback in "allResolved"
+var noop = function () {};
+
+// Use the fastest possible means to execute a task in a future turn
+// of the event loop.
+var nextTick =(function () {
+    // linked list of tasks (single, with head node)
+    var head = {task: void 0, next: null};
+    var tail = head;
+    var flushing = false;
+    var requestTick = void 0;
+    var isNodeJS = false;
+
+    function flush() {
+        while (head.next) {
+            head = head.next;
+            var task = head.task;
+            head.task = void 0;
+            var domain = head.domain;
+
+            if (domain) {
+                head.domain = void 0;
+                domain.enter();
+            }
+
+            try {
+                task();
+
+            } catch (e) {
+                if (isNodeJS) {
+                    // In node, uncaught exceptions are considered fatal errors.
+                    // Re-throw them synchronously to interrupt flushing!
+
+                    // Ensure continuation if the uncaught exception is suppressed
+                    // listening "uncaughtException" events (as domains does).
+                    // Continue in next event to avoid tick recursion.
+                    domain && domain.exit();
+                    setTimeout(flush, 0);
+                    domain && domain.enter();
+
+                    throw e;
+
+                } else {
+                    // In browsers, uncaught exceptions are not fatal.
+                    // Re-throw them asynchronously to avoid slow-downs.
+                    setTimeout(function() {
+                       throw e;
+                    }, 0);
+                }
+            }
+
+            if (domain) {
+                domain.exit();
+            }
+        }
+
+        flushing = false;
+    }
+
+    nextTick = function (task) {
+        tail = tail.next = {
+            task: task,
+            domain: isNodeJS && process.domain,
+            next: null
+        };
+
+        if (!flushing) {
+            flushing = true;
+            requestTick();
+        }
+    };
+
+    if (typeof process !== "undefined" && process.nextTick) {
+        // Node.js before 0.9. Note that some fake-Node environments, like the
+        // Mocha test runner, introduce a `process` global without a `nextTick`.
+        isNodeJS = true;
+
+        requestTick = function () {
+            process.nextTick(flush);
+        };
+
+    } else if (typeof setImmediate === "function") {
+        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
+        if (typeof window !== "undefined") {
+            requestTick = setImmediate.bind(window, flush);
+        } else {
+            requestTick = function () {
+                setImmediate(flush);
+            };
+        }
+
+    } else if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        channel.port1.onmessage = flush;
+        requestTick = function () {
+            channel.port2.postMessage(0);
+        };
+
+    } else {
+        // old browsers
+        requestTick = function () {
+            setTimeout(flush, 0);
+        };
+    }
+
+    return nextTick;
+})();
+
+// Attempt to make generics safe in the face of downstream
+// modifications.
+// There is no situation where this is necessary.
+// If you need a security guarantee, these primordials need to be
+// deeply frozen anyway, and if you don’t need a security guarantee,
+// this is just plain paranoid.
+// However, this does have the nice side-effect of reducing the size
+// of the code by reducing x.call() to merely x(), eliminating many
+// hard-to-minify characters.
+// See Mark Miller’s explanation of what this does.
+// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
+function uncurryThis(f) {
+    var call = Function.call;
+    return function () {
+        return call.apply(f, arguments);
+    };
+}
+// This is equivalent, but slower:
+// uncurryThis = Function_bind.bind(Function_bind.call);
+// http://jsperf.com/uncurrythis
+
+var array_slice = uncurryThis(Array.prototype.slice);
+
+var array_reduce = uncurryThis(
+    Array.prototype.reduce || function (callback, basis) {
+        var index = 0,
+            length = this.length;
+        // concerning the initial value, if one is not provided
+        if (arguments.length === 1) {
+            // seek to the first value in the array, accounting
+            // for the possibility that is is a sparse array
+            do {
+                if (index in this) {
+                    basis = this[index++];
+                    break;
+                }
+                if (++index >= length) {
+                    throw new TypeError();
+                }
+            } while (1);
+        }
+        // reduce
+        for (; index < length; index++) {
+            // account for the possibility that the array is sparse
+            if (index in this) {
+                basis = callback(basis, this[index], index);
+            }
+        }
+        return basis;
+    }
+);
+
+var array_indexOf = uncurryThis(
+    Array.prototype.indexOf || function (value) {
+        // not a very good shim, but good enough for our one use of it
+        for (var i = 0; i < this.length; i++) {
+            if (this[i] === value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+);
+
+var array_map = uncurryThis(
+    Array.prototype.map || function (callback, thisp) {
+        var self = this;
+        var collect = [];
+        array_reduce(self, function (undefined, value, index) {
+            collect.push(callback.call(thisp, value, index, self));
+        }, void 0);
+        return collect;
+    }
+);
+
+var object_create = Object.create || function (prototype) {
+    function Type() { }
+    Type.prototype = prototype;
+    return new Type();
+};
+
+var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
+
+var object_keys = Object.keys || function (object) {
+    var keys = [];
+    for (var key in object) {
+        if (object_hasOwnProperty(object, key)) {
+            keys.push(key);
+        }
+    }
+    return keys;
+};
+
+var object_toString = uncurryThis(Object.prototype.toString);
+
+function isObject(value) {
+    return value === Object(value);
+}
+
+// generator related shims
+
+// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
+function isStopIteration(exception) {
+    return (
+        object_toString(exception) === "[object StopIteration]" ||
+        exception instanceof QReturnValue
+    );
+}
+
+// FIXME: Remove this helper and Q.return once ES6 generators are in
+// SpiderMonkey.
+var QReturnValue;
+if (typeof ReturnValue !== "undefined") {
+    QReturnValue = ReturnValue;
+} else {
+    QReturnValue = function (value) {
+        this.value = value;
+    };
+}
+
+// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+// engine that has a deployed base of browsers that support generators.
+// However, SM's generators use the Python-inspired semantics of
+// outdated ES6 drafts.  We would like to support ES6, but we'd also
+// like to make it possible to use generators in deployed browsers, so
+// we also support Python-style generators.  At some point we can remove
+// this block.
+var hasES6Generators;
+try {
+    /* jshint evil: true, nonew: false */
+    new Function("(function* (){ yield 1; })");
+    hasES6Generators = true;
+} catch (e) {
+    hasES6Generators = false;
+}
+
+// long stack traces
+
+var STACK_JUMP_SEPARATOR = "From previous event:";
+
+function makeStackTraceLong(error, promise) {
+    // If possible, transform the error stack trace by removing Node and Q
+    // cruft, then concatenating with the stack trace of `promise`. See #57.
+    if (hasStacks &&
+        promise.stack &&
+        typeof error === "object" &&
+        error !== null &&
+        error.stack &&
+        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+    ) {
+        var stacks = [];
+        for (var p = promise; !!p; p = p.source) {
+            if (p.stack) {
+                stacks.unshift(p.stack);
+            }
+        }
+        stacks.unshift(error.stack);
+
+        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
+        error.stack = filterStackString(concatedStacks);
+    }
+}
+
+function filterStackString(stackString) {
+    var lines = stackString.split("\n");
+    var desiredLines = [];
+    for (var i = 0; i < lines.length; ++i) {
+        var line = lines[i];
+
+        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
+            desiredLines.push(line);
+        }
+    }
+    return desiredLines.join("\n");
+}
+
+function isNodeFrame(stackLine) {
+    return stackLine.indexOf("(module.js:") !== -1 ||
+           stackLine.indexOf("(node.js:") !== -1;
+}
+
+function getFileNameAndLineNumber(stackLine) {
+    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
+    // In IE10 function name can have spaces ("Anonymous function") O_o
+    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
+    if (attempt1) {
+        return [attempt1[1], Number(attempt1[2])];
+    }
+
+    // Anonymous functions: "at filename:lineNumber:columnNumber"
+    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
+    if (attempt2) {
+        return [attempt2[1], Number(attempt2[2])];
+    }
+
+    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
+    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
+    if (attempt3) {
+        return [attempt3[1], Number(attempt3[2])];
+    }
+}
+
+function isInternalFrame(stackLine) {
+    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
+
+    if (!fileNameAndLineNumber) {
+        return false;
+    }
+
+    var fileName = fileNameAndLineNumber[0];
+    var lineNumber = fileNameAndLineNumber[1];
+
+    return fileName === qFileName &&
+        lineNumber >= qStartingLine &&
+        lineNumber <= qEndingLine;
+}
+
+// discover own file name and line number range for filtering stack
+// traces
+function captureLine() {
+    if (!hasStacks) {
+        return;
+    }
+
+    try {
+        throw new Error();
+    } catch (e) {
+        var lines = e.stack.split("\n");
+        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
+        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
+        if (!fileNameAndLineNumber) {
+            return;
+        }
+
+        qFileName = fileNameAndLineNumber[0];
+        return fileNameAndLineNumber[1];
+    }
+}
+
+function deprecate(callback, name, alternative) {
+    return function () {
+        if (typeof console !== "undefined" &&
+            typeof console.warn === "function") {
+            console.warn(name + " is deprecated, use " + alternative +
+                         " instead.", new Error("").stack);
+        }
+        return callback.apply(callback, arguments);
+    };
+}
+
+// end of shims
+// beginning of real work
+
+/**
+ * Creates fulfilled promises from non-thenables,
+ * Passes Q promises through,
+ * Coerces other thenables to Q promises.
+ */
+function Q(value) {
+    return resolve(value);
+}
+
+/**
+ * Performs a task in a future turn of the event loop.
+ * @param {Function} task
+ */
+Q.nextTick = nextTick;
+
+/**
+ * Controls whether or not long stack traces will be on
+ */
+Q.longStackSupport = false;
+
+/**
+ * Constructs a {promise, resolve, reject} object.
+ *
+ * `resolve` is a callback to invoke with a more resolved value for the
+ * promise. To fulfill the promise, invoke `resolve` with any value that is
+ * not a thenable. To reject the promise, invoke `resolve` with a rejected
+ * thenable, or invoke `reject` with the reason directly. To resolve the
+ * promise to another thenable, thus putting it in the same state, invoke
+ * `resolve` with that other thenable.
+ */
+Q.defer = defer;
+function defer() {
+    // if "messages" is an "Array", that indicates that the promise has not yet
+    // been resolved.  If it is "undefined", it has been resolved.  Each
+    // element of the messages array is itself an array of complete arguments to
+    // forward to the resolved promise.  We coerce the resolution value to a
+    // promise using the `resolve` function because it handles both fully
+    // non-thenable values and other thenables gracefully.
+    var messages = [], progressListeners = [], resolvedPromise;
+
+    var deferred = object_create(defer.prototype);
+    var promise = object_create(Promise.prototype);
+
+    promise.promiseDispatch = function (resolve, op, operands) {
+        var args = array_slice(arguments);
+        if (messages) {
+            messages.push(args);
+            if (op === "when" && operands[1]) { // progress operand
+                progressListeners.push(operands[1]);
+            }
+        } else {
+            nextTick(function () {
+                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
+            });
+        }
+    };
+
+    // XXX deprecated
+    promise.valueOf = deprecate(function () {
+        if (messages) {
+            return promise;
+        }
+        var nearerValue = nearer(resolvedPromise);
+        if (isPromise(nearerValue)) {
+            resolvedPromise = nearerValue; // shorten chain
+        }
+        return nearerValue;
+    }, "valueOf", "inspect");
+
+    promise.inspect = function () {
+        if (!resolvedPromise) {
+            return { state: "pending" };
+        }
+        return resolvedPromise.inspect();
+    };
+
+    if (Q.longStackSupport && hasStacks) {
+        try {
+            throw new Error();
+        } catch (e) {
+            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
+            // accessor around; that causes memory leaks as per GH-111. Just
+            // reify the stack trace as a string ASAP.
+            //
+            // At the same time, cut off the first line; it's always just
+            // "[object Promise]\n", as per the `toString`.
+            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+        }
+    }
+
+    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
+    // consolidating them into `become`, since otherwise we'd create new
+    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
+
+    function become(newPromise) {
+        resolvedPromise = newPromise;
+        promise.source = newPromise;
+
+        array_reduce(messages, function (undefined, message) {
+            nextTick(function () {
+                newPromise.promiseDispatch.apply(newPromise, message);
+            });
+        }, void 0);
+
+        messages = void 0;
+        progressListeners = void 0;
+    }
+
+    deferred.promise = promise;
+    deferred.resolve = function (value) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(resolve(value));
+    };
+
+    deferred.fulfill = function (value) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(fulfill(value));
+    };
+    deferred.reject = function (reason) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(reject(reason));
+    };
+    deferred.notify = function (progress) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        array_reduce(progressListeners, function (undefined, progressListener) {
+            nextTick(function () {
+                progressListener(progress);
+            });
+        }, void 0);
+    };
+
+    return deferred;
+}
+
+/**
+ * Creates a Node-style callback that will resolve or reject the deferred
+ * promise.
+ * @returns a nodeback
+ */
+defer.prototype.makeNodeResolver = function () {
+    var self = this;
+    return function (error, value) {
+        if (error) {
+            self.reject(error);
+        } else if (arguments.length > 2) {
+            self.resolve(array_slice(arguments, 1));
+        } else {
+            self.resolve(value);
+        }
+    };
+};
+
+/**
+ * @param resolver {Function} a function that returns nothing and accepts
+ * the resolve, reject, and notify functions for a deferred.
+ * @returns a promise that may be resolved with the given resolve and reject
+ * functions, or rejected by a thrown exception in resolver
+ */
+Q.promise = promise;
+function promise(resolver) {
+    if (typeof resolver !== "function") {
+        throw new TypeError("resolver must be a function.");
+    }
+
+    var deferred = defer();
+    fcall(
+        resolver,
+        deferred.resolve,
+        deferred.reject,
+        deferred.notify
+    ).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Constructs a Promise with a promise descriptor object and optional fallback
+ * function.  The descriptor contains methods like when(rejected), get(name),
+ * set(name, value), post(name, args), and delete(name), which all
+ * return either a value, a promise for a value, or a rejection.  The fallback
+ * accepts the operation name, a resolver, and any further arguments that would
+ * have been forwarded to the appropriate method above had a method been
+ * provided with the proper name.  The API makes no guarantees about the nature
+ * of the returned object, apart from that it is usable whereever promises are
+ * bought and sold.
+ */
+Q.makePromise = Promise;
+function Promise(descriptor, fallback, inspect) {
+    if (fallback === void 0) {
+        fallback = function (op) {
+            return reject(new Error(
+                "Promise does not support operation: " + op
+            ));
+        };
+    }
+    if (inspect === void 0) {
+        inspect = function () {
+            return {state: "unknown"};
+        };
+    }
+
+    var promise = object_create(Promise.prototype);
+
+    promise.promiseDispatch = function (resolve, op, args) {
+        var result;
+        try {
+            if (descriptor[op]) {
+                result = descriptor[op].apply(promise, args);
+            } else {
+                result = fallback.call(promise, op, args);
+            }
+        } catch (exception) {
+            result = reject(exception);
+        }
+        if (resolve) {
+            resolve(result);
+        }
+    };
+
+    promise.inspect = inspect;
+
+    // XXX deprecated `valueOf` and `exception` support
+    if (inspect) {
+        var inspected = inspect();
+        if (inspected.state === "rejected") {
+            promise.exception = inspected.reason;
+        }
+
+        promise.valueOf = deprecate(function () {
+            var inspected = inspect();
+            if (inspected.state === "pending" ||
+                inspected.state === "rejected") {
+                return promise;
+            }
+            return inspected.value;
+        });
+    }
+
+    return promise;
+}
+
+Promise.prototype.then = function (fulfilled, rejected, progressed) {
+    var self = this;
+    var deferred = defer();
+    var done = false;   // ensure the untrusted promise makes at most a
+                        // single call to one of the callbacks
+
+    function _fulfilled(value) {
+        try {
+            return typeof fulfilled === "function" ? fulfilled(value) : value;
+        } catch (exception) {
+            return reject(exception);
+        }
+    }
+
+    function _rejected(exception) {
+        if (typeof rejected === "function") {
+            makeStackTraceLong(exception, self);
+            try {
+                return rejected(exception);
+            } catch (newException) {
+                return reject(newException);
+            }
+        }
+        return reject(exception);
+    }
+
+    function _progressed(value) {
+        return typeof progressed === "function" ? progressed(value) : value;
+    }
+
+    nextTick(function () {
+        self.promiseDispatch(function (value) {
+            if (done) {
+                return;
+            }
+            done = true;
+
+            deferred.resolve(_fulfilled(value));
+        }, "when", [function (exception) {
+            if (done) {
+                return;
+            }
+            done = true;
+
+            deferred.resolve(_rejected(exception));
+        }]);
+    });
+
+    // Progress propagator need to be attached in the current tick.
+    self.promiseDispatch(void 0, "when", [void 0, function (value) {
+        var newValue;
+        var threw = false;
+        try {
+            newValue = _progressed(value);
+        } catch (e) {
+            threw = true;
+            if (Q.onerror) {
+                Q.onerror(e);
+            } else {
+                throw e;
+            }
+        }
+
+        if (!threw) {
+            deferred.notify(newValue);
+        }
+    }]);
+
+    return deferred.promise;
+};
+
+Promise.prototype.thenResolve = function (value) {
+    return when(this, function () { return value; });
+};
+
+Promise.prototype.thenReject = function (reason) {
+    return when(this, function () { throw reason; });
+};
+
+// Chainable methods
+array_reduce(
+    [
+        "isFulfilled", "isRejected", "isPending",
+        "dispatch",
+        "when", "spread",
+        "get", "set", "del", "delete",
+        "post", "send", "mapply", "invoke", "mcall",
+        "keys",
+        "fapply", "fcall", "fbind",
+        "all", "allResolved",
+        "timeout", "delay",
+        "catch", "finally", "fail", "fin", "progress", "done",
+        "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
+        "npost", "nsend", "nmapply", "ninvoke", "nmcall",
+        "nodeify"
+    ],
+    function (undefined, name) {
+        Promise.prototype[name] = function () {
+            return Q[name].apply(
+                Q,
+                [this].concat(array_slice(arguments))
+            );
+        };
+    },
+    void 0
+);
+
+Promise.prototype.toSource = function () {
+    return this.toString();
+};
+
+Promise.prototype.toString = function () {
+    return "[object Promise]";
+};
+
+/**
+ * If an object is not a promise, it is as "near" as possible.
+ * If a promise is rejected, it is as "near" as possible too.
+ * If it’s a fulfilled promise, the fulfillment value is nearer.
+ * If it’s a deferred promise and the deferred has been resolved, the
+ * resolution is "nearer".
+ * @param object
+ * @returns most resolved (nearest) form of the object
+ */
+
+// XXX should we re-do this?
+Q.nearer = nearer;
+function nearer(value) {
+    if (isPromise(value)) {
+        var inspected = value.inspect();
+        if (inspected.state === "fulfilled") {
+            return inspected.value;
+        }
+    }
+    return value;
+}
+
+/**
+ * @returns whether the given object is a promise.
+ * Otherwise it is a fulfilled value.
+ */
+Q.isPromise = isPromise;
+function isPromise(object) {
+    return isObject(object) &&
+        typeof object.promiseDispatch === "function" &&
+        typeof object.inspect === "function";
+}
+
+Q.isPromiseAlike = isPromiseAlike;
+function isPromiseAlike(object) {
+    return isObject(object) && typeof object.then === "function";
+}
+
+/**
+ * @returns whether the given object is a pending promise, meaning not
+ * fulfilled or rejected.
+ */
+Q.isPending = isPending;
+function isPending(object) {
+    return isPromise(object) && object.inspect().state === "pending";
+}
+
+/**
+ * @returns whether the given object is a value or fulfilled
+ * promise.
+ */
+Q.isFulfilled = isFulfilled;
+function isFulfilled(object) {
+    return !isPromise(object) || object.inspect().state === "fulfilled";
+}
+
+/**
+ * @returns whether the given object is a rejected promise.
+ */
+Q.isRejected = isRejected;
+function isRejected(object) {
+    return isPromise(object) && object.inspect().state === "rejected";
+}
+
+//// BEGIN UNHANDLED REJECTION TRACKING
+
+// This promise library consumes exceptions thrown in handlers so they can be
+// handled by a subsequent promise.  The exceptions get added to this array when
+// they are created, and removed when they are handled.  Note that in ES6 or
+// shimmed environments, this would naturally be a `Set`.
+var unhandledReasons = [];
+var unhandledRejections = [];
+var unhandledReasonsDisplayed = false;
+var trackUnhandledRejections = true;
+function displayUnhandledReasons() {
+    if (
+        !unhandledReasonsDisplayed &&
+        typeof window !== "undefined" &&
+        !window.Touch &&
+        window.console
+    ) {
+        console.warn("[Q] Unhandled rejection reasons (should be empty):",
+                     unhandledReasons);
+    }
+
+    unhandledReasonsDisplayed = true;
+}
+
+function logUnhandledReasons() {
+    for (var i = 0; i < unhandledReasons.length; i++) {
+        var reason = unhandledReasons[i];
+        if (reason && typeof reason.stack !== "undefined") {
+            console.warn("Unhandled rejection reason:", reason.stack);
+        } else {
+            console.warn("Unhandled rejection reason (no stack):", reason);
+        }
+    }
+}
+
+function resetUnhandledRejections() {
+    unhandledReasons.length = 0;
+    unhandledRejections.length = 0;
+    unhandledReasonsDisplayed = false;
+
+    if (!trackUnhandledRejections) {
+        trackUnhandledRejections = true;
+
+        // Show unhandled rejection reasons if Node exits without handling an
+        // outstanding rejection.  (Note that Browserify presently produces a
+        // `process` global without the `EventEmitter` `on` method.)
+        if (typeof process !== "undefined" && process.on) {
+            process.on("exit", logUnhandledReasons);
+        }
+    }
+}
+
+function trackRejection(promise, reason) {
+    if (!trackUnhandledRejections) {
+        return;
+    }
+
+    unhandledRejections.push(promise);
+    unhandledReasons.push(reason);
+    displayUnhandledReasons();
+}
+
+function untrackRejection(promise) {
+    if (!trackUnhandledRejections) {
+        return;
+    }
+
+    var at = array_indexOf(unhandledRejections, promise);
+    if (at !== -1) {
+        unhandledRejections.splice(at, 1);
+        unhandledReasons.splice(at, 1);
+    }
+}
+
+Q.resetUnhandledRejections = resetUnhandledRejections;
+
+Q.getUnhandledReasons = function () {
+    // Make a copy so that consumers can't interfere with our internal state.
+    return unhandledReasons.slice();
+};
+
+Q.stopUnhandledRejectionTracking = function () {
+    resetUnhandledRejections();
+    if (typeof process !== "undefined" && process.on) {
+        process.removeListener("exit", logUnhandledReasons);
+    }
+    trackUnhandledRejections = false;
+};
+
+resetUnhandledRejections();
+
+//// END UNHANDLED REJECTION TRACKING
+
+/**
+ * Constructs a rejected promise.
+ * @param reason value describing the failure
+ */
+Q.reject = reject;
+function reject(reason) {
+    var rejection = Promise({
+        "when": function (rejected) {
+            // note that the error has been handled
+            if (rejected) {
+                untrackRejection(this);
+            }
+            return rejected ? rejected(reason) : this;
+        }
+    }, function fallback() {
+        return this;
+    }, function inspect() {
+        return { state: "rejected", reason: reason };
+    });
+
+    // Note that the reason has not been handled.
+    trackRejection(rejection, reason);
+
+    return rejection;
+}
+
+/**
+ * Constructs a fulfilled promise for an immediate reference.
+ * @param value immediate reference
+ */
+Q.fulfill = fulfill;
+function fulfill(value) {
+    return Promise({
+        "when": function () {
+            return value;
+        },
+        "get": function (name) {
+            return value[name];
+        },
+        "set": function (name, rhs) {
+            value[name] = rhs;
+        },
+        "delete": function (name) {
+            delete value[name];
+        },
+        "post": function (name, args) {
+            // Mark Miller proposes that post with no name should apply a
+            // promised function.
+            if (name === null || name === void 0) {
+                return value.apply(void 0, args);
+            } else {
+                return value[name].apply(value, args);
+            }
+        },
+        "apply": function (thisP, args) {
+            return value.apply(thisP, args);
+        },
+        "keys": function () {
+            return object_keys(value);
+        }
+    }, void 0, function inspect() {
+        return { state: "fulfilled", value: value };
+    });
+}
+
+/**
+ * Constructs a promise for an immediate reference, passes promises through, or
+ * coerces promises from different systems.
+ * @param value immediate reference or promise
+ */
+Q.resolve = resolve;
+function resolve(value) {
+    // If the object is already a Promise, return it directly.  This enables
+    // the resolve function to both be used to created references from objects,
+    // but to tolerably coerce non-promises to promises.
+    if (isPromise(value)) {
+        return value;
+    }
+
+    // assimilate thenables
+    if (isPromiseAlike(value)) {
+        return coerce(value);
+    } else {
+        return fulfill(value);
+    }
+}
+
+/**
+ * Converts thenables to Q promises.
+ * @param promise thenable promise
+ * @returns a Q promise
+ */
+function coerce(promise) {
+    var deferred = defer();
+    nextTick(function () {
+        try {
+            promise.then(deferred.resolve, deferred.reject, deferred.notify);
+        } catch (exception) {
+            deferred.reject(exception);
+        }
+    });
+    return deferred.promise;
+}
+
+/**
+ * Annotates an object such that it will never be
+ * transferred away from this process over any promise
+ * communication channel.
+ * @param object
+ * @returns promise a wrapping of that object that
+ * additionally responds to the "isDef" message
+ * without a rejection.
+ */
+Q.master = master;
+function master(object) {
+    return Promise({
+        "isDef": function () {}
+    }, function fallback(op, args) {
+        return dispatch(object, op, args);
+    }, function () {
+        return resolve(object).inspect();
+    });
+}
+
+/**
+ * Registers an observer on a promise.
+ *
+ * Guarantees:
+ *
+ * 1. that fulfilled and rejected will be called only once.
+ * 2. that either the fulfilled callback or the rejected callback will be
+ *    called, but not both.
+ * 3. that fulfilled and rejected will not be called in this turn.
+ *
+ * @param value      promise or immediate reference to observe
+ * @param fulfilled  function to be called with the fulfilled value
+ * @param rejected   function to be called with the rejection exception
+ * @param progressed function to be called on any progress notifications
+ * @return promise for the return value from the invoked callback
+ */
+Q.when = when;
+function when(value, fulfilled, rejected, progressed) {
+    return Q(value).then(fulfilled, rejected, progressed);
+}
+
+/**
+ * Spreads the values of a promised array of arguments into the
+ * fulfillment callback.
+ * @param fulfilled callback that receives variadic arguments from the
+ * promised array
+ * @param rejected callback that receives the exception if the promise
+ * is rejected.
+ * @returns a promise for the return value or thrown exception of
+ * either callback.
+ */
+Q.spread = spread;
+function spread(promise, fulfilled, rejected) {
+    return when(promise, function (valuesOrPromises) {
+        return all(valuesOrPromises).then(function (values) {
+            return fulfilled.apply(void 0, values);
+        }, rejected);
+    }, rejected);
+}
+
+/**
+ * The async function is a decorator for generator functions, turning
+ * them into asynchronous generators.  Although generators are only part
+ * of the newest ECMAScript 6 drafts, this code does not cause syntax
+ * errors in older engines.  This code should continue to work and will
+ * in fact improve over time as the language improves.
+ *
+ * ES6 generators are currently part of V8 version 3.19 with the
+ * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
+ * for longer, but under an older Python-inspired form.  This function
+ * works on both kinds of generators.
+ *
+ * Decorates a generator function such that:
+ *  - it may yield promises
+ *  - execution will continue when that promise is fulfilled
+ *  - the value of the yield expression will be the fulfilled value
+ *  - it returns a promise for the return value (when the generator
+ *    stops iterating)
+ *  - the decorated function returns a promise for the return value
+ *    of the generator or the first rejected promise among those
+ *    yielded.
+ *  - if an error is thrown in the generator, it propagates through
+ *    every following yield until it is caught, or until it escapes
+ *    the generator function altogether, and is translated into a
+ *    rejection for the promise returned by the decorated generator.
+ */
+Q.async = async;
+function async(makeGenerator) {
+    return function () {
+        // when verb is "send", arg is a value
+        // when verb is "throw", arg is an exception
+        function continuer(verb, arg) {
+            var result;
+            if (hasES6Generators) {
+                try {
+                    result = generator[verb](arg);
+                } catch (exception) {
+                    return reject(exception);
+                }
+                if (result.done) {
+                    return result.value;
+                } else {
+                    return when(result.value, callback, errback);
+                }
+            } else {
+                // FIXME: Remove this case when SM does ES6 generators.
+                try {
+                    result = generator[verb](arg);
+                } catch (exception) {
+                    if (isStopIteration(exception)) {
+                        return exception.value;
+                    } else {
+                        return reject(exception);
+                    }
+                }
+                return when(result, callback, errback);
+            }
+        }
+        var generator = makeGenerator.apply(this, arguments);
+        var callback = continuer.bind(continuer, "send");
+        var errback = continuer.bind(continuer, "throw");
+        return callback();
+    };
+}
+
+/**
+ * The spawn function is a small wrapper around async that immediately
+ * calls the generator and also ends the promise chain, so that any
+ * unhandled errors are thrown instead of forwarded to the error
+ * handler. This is useful because it's extremely common to run
+ * generators at the top-level to work with libraries.
+ */
+Q.spawn = spawn;
+function spawn(makeGenerator) {
+    Q.done(Q.async(makeGenerator)());
+}
+
+// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
+/**
+ * Throws a ReturnValue exception to stop an asynchronous generator.
+ *
+ * This interface is a stop-gap measure to support generator return
+ * values in older Firefox/SpiderMonkey.  In browsers that support ES6
+ * generators like Chromium 29, just use "return" in your generator
+ * functions.
+ *
+ * @param value the return value for the surrounding generator
+ * @throws ReturnValue exception with the value.
+ * @example
+ * // ES6 style
+ * Q.async(function* () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      return foo + bar;
+ * })
+ * // Older SpiderMonkey style
+ * Q.async(function () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      Q.return(foo + bar);
+ * })
+ */
+Q["return"] = _return;
+function _return(value) {
+    throw new QReturnValue(value);
+}
+
+/**
+ * The promised function decorator ensures that any promise arguments
+ * are settled and passed as values (`this` is also settled and passed
+ * as a value).  It will also ensure that the result of a function is
+ * always a promise.
+ *
+ * @example
+ * var add = Q.promised(function (a, b) {
+ *     return a + b;
+ * });
+ * add(Q.resolve(a), Q.resolve(B));
+ *
+ * @param {function} callback The function to decorate
+ * @returns {function} a function that has been decorated.
+ */
+Q.promised = promised;
+function promised(callback) {
+    return function () {
+        return spread([this, all(arguments)], function (self, args) {
+            return callback.apply(self, args);
+        });
+    };
+}
+
+/**
+ * sends a message to a value in a future turn
+ * @param object* the recipient
+ * @param op the name of the message operation, e.g., "when",
+ * @param args further arguments to be forwarded to the operation
+ * @returns result {Promise} a promise for the result of the operation
+ */
+Q.dispatch = dispatch;
+function dispatch(object, op, args) {
+    var deferred = defer();
+    nextTick(function () {
+        resolve(object).promiseDispatch(deferred.resolve, op, args);
+    });
+    return deferred.promise;
+}
+
+/**
+ * Constructs a promise method that can be used to safely observe resolution of
+ * a promise for an arbitrarily named method like "propfind" in a future turn.
+ *
+ * "dispatcher" constructs methods like "get(promise, name)" and "set(promise)".
+ */
+Q.dispatcher = dispatcher;
+function dispatcher(op) {
+    return function (object) {
+        var args = array_slice(arguments, 1);
+        return dispatch(object, op, args);
+    };
+}
+
+/**
+ * Gets the value of a property in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of property to get
+ * @return promise for the property value
+ */
+Q.get = dispatcher("get");
+
+/**
+ * Sets the value of a property in a future turn.
+ * @param object    promise or immediate reference for object object
+ * @param name      name of property to set
+ * @param value     new value of property
+ * @return promise for the return value
+ */
+Q.set = dispatcher("set");
+
+/**
+ * Deletes a property in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of property to delete
+ * @return promise for the return value
+ */
+Q["delete"] = // XXX experimental
+Q.del = dispatcher("delete");
+
+/**
+ * Invokes a method in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of method to invoke
+ * @param value     a value to post, typically an array of
+ *                  invocation arguments for promises that
+ *                  are ultimately backed with `resolve` values,
+ *                  as opposed to those backed with URLs
+ *                  wherein the posted value can be any
+ *                  JSON serializable object.
+ * @return promise for the return value
+ */
+// bound locally because it is used by other methods
+var post = Q.post = dispatcher("post");
+Q.mapply = post; // experimental
+
+/**
+ * Invokes a method in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of method to invoke
+ * @param ...args   array of invocation arguments
+ * @return promise for the return value
+ */
+Q.send = send;
+Q.invoke = send; // synonyms
+Q.mcall = send; // experimental
+function send(value, name) {
+    var args = array_slice(arguments, 2);
+    return post(value, name, args);
+}
+
+/**
+ * Applies the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param args      array of application arguments
+ */
+Q.fapply = fapply;
+function fapply(value, args) {
+    return dispatch(value, "apply", [void 0, args]);
+}
+
+/**
+ * Calls the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param ...args   array of application arguments
+ */
+Q["try"] = fcall; // XXX experimental
+Q.fcall = fcall;
+function fcall(value) {
+    var args = array_slice(arguments, 1);
+    return fapply(value, args);
+}
+
+/**
+ * Binds the promised function, transforming return values into a fulfilled
+ * promise and thrown errors into a rejected one.
+ * @param object    promise or immediate reference for target function
+ * @param ...args   array of application arguments
+ */
+Q.fbind = fbind;
+function fbind(value) {
+    var args = array_slice(arguments, 1);
+    return function fbound() {
+        var allArgs = args.concat(array_slice(arguments));
+        return dispatch(value, "apply", [this, allArgs]);
+    };
+}
+
+/**
+ * Requests the names of the owned properties of a promised
+ * object in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @return promise for the keys of the eventually settled object
+ */
+Q.keys = dispatcher("keys");
+
+/**
+ * Turns an array of promises into a promise for an array.  If any of
+ * the promises gets rejected, the whole array is rejected immediately.
+ * @param {Array*} an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns a promise for an array of the corresponding values
+ */
+// By Mark Miller
+// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
+Q.all = all;
+function all(promises) {
+    return when(promises, function (promises) {
+        var countDown = 0;
+        var deferred = defer();
+        array_reduce(promises, function (undefined, promise, index) {
+            var snapshot;
+            if (
+                isPromise(promise) &&
+                (snapshot = promise.inspect()).state === "fulfilled"
+            ) {
+                promises[index] = snapshot.value;
+            } else {
+                ++countDown;
+                when(promise, function (value) {
+                    promises[index] = value;
+                    if (--countDown === 0) {
+                        deferred.resolve(promises);
+                    }
+                }, deferred.reject);
+            }
+        }, void 0);
+        if (countDown === 0) {
+            deferred.resolve(promises);
+        }
+        return deferred.promise;
+    });
+}
+
+/**
+ * Waits for all promises to be settled, either fulfilled or
+ * rejected.  This is distinct from `all` since that would stop
+ * waiting at the first rejection.  The promise returned by
+ * `allResolved` will never be rejected.
+ * @param promises a promise for an array (or an array) of promises
+ * (or values)
+ * @return a promise for an array of promises
+ */
+Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
+function allResolved(promises) {
+    return when(promises, function (promises) {
+        promises = array_map(promises, resolve);
+        return when(all(array_map(promises, function (promise) {
+            return when(promise, noop, noop);
+        })), function () {
+            return promises;
+        });
+    });
+}
+
+Q.allSettled = allSettled;
+function allSettled(values) {
+    return when(values, function (values) {
+        return all(array_map(values, function (value, i) {
+            return when(
+                value,
+                function (fulfillmentValue) {
+                    values[i] = { state: "fulfilled", value: fulfillmentValue };
+                    return values[i];
+                },
+                function (reason) {
+                    values[i] = { state: "rejected", reason: reason };
+                    return values[i];
+                }
+            );
+        })).thenResolve(values);
+    });
+}
+
+/**
+ * Captures the failure of a promise, giving an oportunity to recover
+ * with a callback.  If the given promise is fulfilled, the returned
+ * promise is fulfilled.
+ * @param {Any*} promise for something
+ * @param {Function} callback to fulfill the returned promise if the
+ * given promise is rejected
+ * @returns a promise for the return value of the callback
+ */
+Q["catch"] = // XXX experimental
+Q.fail = fail;
+function fail(promise, rejected) {
+    return when(promise, void 0, rejected);
+}
+
+/**
+ * Attaches a listener that can respond to progress notifications from a
+ * promise's originating deferred. This listener receives the exact arguments
+ * passed to ``deferred.notify``.
+ * @param {Any*} promise for something
+ * @param {Function} callback to receive any progress notifications
+ * @returns the given promise, unchanged
+ */
+Q.progress = progress;
+function progress(promise, progressed) {
+    return when(promise, void 0, void 0, progressed);
+}
+
+/**
+ * Provides an opportunity to observe the settling of a promise,
+ * regardless of whether the promise is fulfilled or rejected.  Forwards
+ * the resolution to the returned promise when the callback is done.
+ * The callback can return a promise to defer completion.
+ * @param {Any*} promise
+ * @param {Function} callback to observe the resolution of the given
+ * promise, takes no arguments.
+ * @returns a promise for the resolution of the given promise when
+ * ``fin`` is done.
+ */
+Q["finally"] = // XXX experimental
+Q.fin = fin;
+function fin(promise, callback) {
+    return when(promise, function (value) {
+        return when(callback(), function () {
+            return value;
+        });
+    }, function (exception) {
+        return when(callback(), function () {
+            return reject(exception);
+        });
+    });
+}
+
+/**
+ * Terminates a chain of promises, forcing rejections to be
+ * thrown as exceptions.
+ * @param {Any*} promise at the end of a chain of promises
+ * @returns nothing
+ */
+Q.done = done;
+function done(promise, fulfilled, rejected, progress) {
+    var onUnhandledError = function (error) {
+        // forward to a future turn so that ``when``
+        // does not catch it and turn it into a rejection.
+        nextTick(function () {
+            makeStackTraceLong(error, promise);
+
+            if (Q.onerror) {
+                Q.onerror(error);
+            } else {
+                throw error;
+            }
+        });
+    };
+
+    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
+    var promiseToHandle = fulfilled || rejected || progress ?
+        when(promise, fulfilled, rejected, progress) :
+        promise;
+
+    if (typeof process === "object" && process && process.domain) {
+        onUnhandledError = process.domain.bind(onUnhandledError);
+    }
+    fail(promiseToHandle, onUnhandledError);
+}
+
+/**
+ * Causes a promise to be rejected if it does not get fulfilled before
+ * some milliseconds time out.
+ * @param {Any*} promise
+ * @param {Number} milliseconds timeout
+ * @param {String} custom error message (optional)
+ * @returns a promise for the resolution of the given promise if it is
+ * fulfilled before the timeout, otherwise rejected.
+ */
+Q.timeout = timeout;
+function timeout(promise, ms, msg) {
+    var deferred = defer();
+    var timeoutId = setTimeout(function () {
+        deferred.reject(new Error(msg || "Timed out after " + ms + " ms"));
+    }, ms);
+
+    when(promise, function (value) {
+        clearTimeout(timeoutId);
+        deferred.resolve(value);
+    }, function (exception) {
+        clearTimeout(timeoutId);
+        deferred.reject(exception);
+    }, deferred.notify);
+
+    return deferred.promise;
+}
+
+/**
+ * Returns a promise for the given value (or promised value) after some
+ * milliseconds.
+ * @param {Any*} promise
+ * @param {Number} milliseconds
+ * @returns a promise for the resolution of the given promise after some
+ * time has elapsed.
+ */
+Q.delay = delay;
+function delay(promise, timeout) {
+    if (timeout === void 0) {
+        timeout = promise;
+        promise = void 0;
+    }
+
+    var deferred = defer();
+
+    when(promise, undefined, undefined, deferred.notify);
+    setTimeout(function () {
+        deferred.resolve(promise);
+    }, timeout);
+
+    return deferred.promise;
+}
+
+/**
+ * Passes a continuation to a Node function, which is called with the given
+ * arguments provided as an array, and returns a promise.
+ *
+ *      Q.nfapply(FS.readFile, [__filename])
+ *      .then(function (content) {
+ *      })
+ *
+ */
+Q.nfapply = nfapply;
+function nfapply(callback, args) {
+    var nodeArgs = array_slice(args);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    fapply(callback, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Passes a continuation to a Node function, which is called with the given
+ * arguments provided individually, and returns a promise.
+ *
+ *      Q.nfcall(FS.readFile, __filename)
+ *      .then(function (content) {
+ *      })
+ *
+ */
+Q.nfcall = nfcall;
+function nfcall(callback/*, ...args */) {
+    var nodeArgs = array_slice(arguments, 1);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    fapply(callback, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.nfbind(FS.readFile, __filename)("utf-8")
+ *      .then(console.log)
+ *      .done()
+ *
+ */
+Q.nfbind = nfbind;
+Q.denodeify = Q.nfbind; // synonyms
+function nfbind(callback/*, ...args */) {
+    var baseArgs = array_slice(arguments, 1);
+    return function () {
+        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        nodeArgs.push(deferred.makeNodeResolver());
+
+        fapply(callback, nodeArgs).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+Q.nbind = nbind;
+function nbind(callback, thisArg /*, ... args*/) {
+    var baseArgs = array_slice(arguments, 2);
+    return function () {
+        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        nodeArgs.push(deferred.makeNodeResolver());
+
+        function bound() {
+            return callback.apply(thisArg, arguments);
+        }
+
+        fapply(bound, nodeArgs).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+/**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback with a given array of arguments, plus a provided callback.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param {Array} args arguments to pass to the method; the callback
+ * will be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
+ */
+Q.npost = npost;
+Q.nmapply = npost; // synonyms
+function npost(object, name, args) {
+    var nodeArgs = array_slice(args || []);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    post(object, name, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback, forwarding the given variadic arguments, plus a provided
+ * callback argument.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param ...args arguments to pass to the method; the callback will
+ * be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
+ */
+Q.nsend = nsend;
+Q.ninvoke = Q.nsend; // synonyms
+Q.nmcall = Q.nsend; // synonyms
+function nsend(object, name /*, ...args*/) {
+    var nodeArgs = array_slice(arguments, 2);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+    post(object, name, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+Q.nodeify = nodeify;
+function nodeify(promise, nodeback) {
+    if (nodeback) {
+        promise.then(function (value) {
+            nextTick(function () {
+                nodeback(null, value);
+            });
+        }, function (error) {
+            nextTick(function () {
+                nodeback(error);
+            });
+        });
+    } else {
+        return promise;
+    }
+}
+
+// All code before this point will be filtered from stack traces.
+var qEndingLine = captureLine();
+
+return Q;
+
+});
+
+})(require("__browserify_process"))
+},{"__browserify_process":97}],76:[function(require,module,exports){
+var _ = require('underscore'),
+  NotesView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = NotesView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.modelContent = {
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        eventsNbr: _.size(this.events)
+      };
+    }
+  }
+);
+},{"../common/Model.js":99,"./View.js":98,"underscore":8}],79:[function(require,module,exports){
+var _ = require('underscore'),
+  PositionsView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = PositionsView;
+    this.modelContent = {};
+    this.positions = [];
+  },
+
+  {
+    OnDateHighlightedChange: function (time) {
+      this.highlightedTime = time;
+      if (this.view) {
+        this.view.onDateHighLighted(time);
+      }
+      if (this.detailedView) {
+        this.detailedView.highlightDate(this.highlightedTime);
+      }
+    },
+
+    _findEventToDisplay: function () {},
+
+    beforeRefreshModelView: function () {
+      // if (this.positions.length !== _.size(this.events)) {
+      this.positions = [];
+      _.each(this.events, function (event) {
+        this.positions.push(event);
+      }, this);
+      this.positions = this.positions.sort(function (a, b) {
+        return a.time <= b.time ? -1 : 1;
+      });
+      //  }
+      this.modelContent = {
+        positions: this.positions,
+        posWidth: this.width,
+        posHeight: this.height,
+        id: this.id,
+        eventsNbr: this.positions.length
+      };
+    }
+  }
+);
+},{"../common/Model.js":99,"./View.js":100,"underscore":8}],81:[function(require,module,exports){
+var _ = require('underscore'),
+  PicturesView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = PicturesView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.modelContent = {
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        picUrl: this.eventDisplayed.attachmentsUrl,
+        eventsNbr: _.size(this.events)
+      };
+    }
+  }
+);
+},{"../common/Model.js":99,"./View.js":101,"underscore":8}],83:[function(require,module,exports){
+(function(){/* global window, $ */
+
+var _ = require('underscore'),
+  DetailView = require('../detailed/Controller.js'),
+  ChartView = require('./ChartView.js'),
+  ChartModel = require('./ChartModel.js'),
+  TsCollection = require('./TimeSeriesCollection.js'),
+  TsModel = require('./TimeSeriesModel.js');
+
+
+var NumericalsPlugin = module.exports = function (events, params, node) {
+
+  this.seriesCollection = null;
+
+  /* Base event containers */
+  this.eventsToAdd = [];
+  this.eventsToRem = [];
+  this.eventsToCha = [];
+
+  this.debounceRefresh = _.debounce(function () {
+    this.refreshCollection();
+  }, 1000);
+
+  this.debounceResize = _.debounce(function () {
+    this.resize();
+  }, 1500);
+
+  this.events = {};
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.view = null;
+  this.eventDisplayed = null;
+  this.container = null;
+  this.needToRender = null;
+  this.datas = {};
+  this.streamIds = {};
+  this.eventsNode = node;
+  this.hasDetailedView = false;
+  this.$modal = $('#pryv-modal').on('hidden.bs.modal', function () {
+    if (this.detailedView) {
+      this.detailedView.close();
+      this.detailedView = null;
+    }
+  }.bind(this));
+  _.extend(this, params);
+
+  for (var e in events) {
+    if (events.hasOwnProperty(e)) {
+      this.eventEnter(events[e]);
+    }
+  }
+  $(window).resize(this.debounceRefresh.bind(this));
+
+};
+NumericalsPlugin.prototype.eventEnter = function (event) {
+  this.streamIds[event.streamId] = event;
+  this.events[event.id] = event;
+  if (!this.datas[event.streamId]) {
+    this.datas[event.streamId] = {};
+  }
+  if (!this.datas[event.streamId][event.type]) {
+    this.datas[event.streamId][event.type] = {};
+  }
+  this.datas[event.streamId][event.type][event.id] = event;
+  this.needToRender = true;
+  if (this.hasDetailedView) {
+    this.treeMap.addEventsDetailedView(event);
+  }
+  this.eventsToAdd.push(event);
+  this.debounceRefresh();
+};
+
+NumericalsPlugin.prototype.eventLeave = function (event) {
+  if (this.events[event.id]) {
+    delete this.events[event.id];
+    delete this.datas[event.streamId][event.type][event.id];
+    this.needToRender = true;
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
+    }
+    this.eventsToRem.push(event);
+    this.debounceRefresh();
+  }
+};
+
+NumericalsPlugin.prototype.eventChange = function (event) {
+  if (this.events[event.id]) {
+    this.events[event.id] = event;
+    this.datas[event.streamId][event.type][event.id] = event;
+    this.needToRender = true;
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
+    }
+    this.eventsToCha.push(event);
+    this.debounceRefresh();
+  }
+};
+
+NumericalsPlugin.prototype.OnDateHighlightedChange = function (time) {
+  if (time) {
+    this.highlightedTime = time;
+  }
+  if (this.view) {
+    this.view.onDateHighLighted(time);
+  }
+  if (this.hasDetailedView) {
+    this.treeMap.highlightDateDetailedView(this.highlightedTime);
+  }
+};
+
+NumericalsPlugin.prototype.render = function (container) {
+  this.container = container;
+  this.needToRender = true;
+  this.debounceRefresh();
+};
+NumericalsPlugin.prototype.refresh = function (object) {
+  _.extend(this, object);
+  this.needToRender = true;
+  this.debounceRefresh();
+};
+
+NumericalsPlugin.prototype.close = function () {
+  if (this.view) {
+    this.view.close();
+  }
+
+  delete this.modelView;
+  delete this.view;
+  this.view = null;
+  this.events = null;
+  this.datas = null;
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.eventDisplayed = null;
+  this.needToRender = false;
+
+};
+
+
+NumericalsPlugin.prototype.refreshCollection = function () {
+  if (this.seriesCollection === null) {
+    this.seriesCollection = new TsCollection([], {type: 'any'});
+  }
+
+  var eventsToAdd = this.eventsToAdd;
+  var eventsToRem = this.eventsToRem;
+  var eventsToCha = this.eventsToCha;
+
+  var eventsModel;
+  var events;
+  var matching;
+
+  this.eventsToAdd = [];
+  this.eventsToRem = [];
+  this.eventsToCha = [];
+
+  var i;
+  var eIter;
+
+  // Process those to add
+  for (i = 0; i < eventsToAdd.length; ++i) {
+    var filter = {
+      connectionId: eventsToAdd[i].connection.id,
+      streamId: eventsToAdd[i].streamId,
+      type: eventsToAdd[i].type
+    };
+
+
+      // find corresponding model
+    matching = this.seriesCollection.where(filter);
+    if (matching && matching.length !== 0) {
+      eventsModel = matching[0];
+      eventsModel.get('events').push(eventsToAdd[i]);
+    } else {
+      eventsModel = new TsModel({
+        events: [eventsToAdd[i]],
+        connectionId: eventsToAdd[i].connection.id,
+        streamId: eventsToAdd[i].streamId,
+        streamName: eventsToAdd[i].stream.name,
+        type: eventsToAdd[i].type,
+        category: 'any'
+      });
+      this.seriesCollection.add(eventsModel);
+    }
+
+  }
+/*
+  // Process those to remove
+  for (i = 0; i < eventsToRem.length; ++i) {
+      // find corresponding model
+    matching = this.seriesCollection.where({
+      connectionId: eventsToAdd[i].connection.id,
+      streamId: eventsToAdd[i].streamId,
+      type: eventsToAdd[i].type
+    });
+    if (matching && matching.length !== 0) {
+      eventsModel = matching[0];
+      events = eventsModel.get('events');
+      for (eIter = 0; eIter < events.length; ++eIter) {
+        if (events[eIter].id === eventsToRem[i].id) {
+          delete events[eIter];
+        }
+      }
+    }
+  }
+  */
+
+  // Process those to change
+  for (i = 0; i < eventsToCha.length; ++i) {
+    // find corresponding model
+    matching = this.seriesCollection.where({
+      connectionId: eventsToAdd[i].connection.id,
+      streamId: eventsToAdd[i].streamId,
+      type: eventsToAdd[i].type
+    });
+    if (matching && matching.length !== 0) {
+      eventsModel = matching[0];
+      events = eventsModel.get('events');
+      for (eIter = 0; eIter < events.length; ++eIter) {
+        if (events[eIter].id === eventsToRem[i].id) {
+          events[eIter] = eventsToRem[i];
+        }
+      }
+    }
+  }
+
+
+  if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0 && this.container) {
+    this.modelView = new ChartModel({
+        container: '#' + this.container,
+        view: null,
+        requiresDim: true,
+        collection: this.seriesCollection,
+        highlighted: false,
+        highlightedTime: null,
+        allowPieChart: false,
+        dimensions: this.computeDimensions(),
+        legendStyle: 'table', // Legend style: 'list', 'table'
+        legendButton: false,  // A button in the legend
+        legendShow: 'size',     // Show legend or not
+        legendExtras: true,   // use extras in the legend
+        onClick: true,
+        onHover: true,
+        onDnD: true,
+        allowPan: true,      // Allows navigation through the chart
+        allowZoom: true,     // Allows zooming on the chart
+        xaxis: false
+      });
+    if (typeof(document) !== 'undefined')  {
+      this.view = new ChartView({model: this.modelView});
+      this.modelView.set('dimensions', this.computeDimensions());
+      $('#' + this.container).resize(function () {
+        this.debounceResize.bind(this);
+      }.bind(this));
+      this.view.render();
+      this.view.onDateHighLighted(this.highlightedTime);
+      this.view.on('chart:dropped', this.onDragAndDrop.bind(this));
+      this.view.on('chart:resize', this.resize.bind(this));
+      this.view.on('nodeClicked', function () {
+        if (!this.detailedView) {
+          this.detailedView = new DetailView(this.$modal);
+        }
+        this.detailedView.addEvents(this.events);
+        this.detailedView.show();
+        this.detailedView.highlightDate(this.highlightedTime);
+      }.bind(this));
+    }
+  } else if (this.view) {
+    this.view.render();
+    this.view.onDateHighLighted(this.highlightedTime);
+    this.debounceResize();
+  }
+
+};
+
+
+NumericalsPlugin.prototype._findEventToDisplay = function () {
+  if (this.highlightedTime === Infinity) {
+    var oldestTime = 0;
+    _.each(this.events, function (event) {
+      if (event.time >= oldestTime) {
+        oldestTime = event.time;
+        this.eventDisplayed = event;
+      }
+    }, this);
+
+  } else {
+    var timeDiff = Infinity, debounceRefresh = 0;
+    _.each(this.events, function (event) {
+      debounceRefresh = Math.abs(event.time - this.highlightedTime);
+      if (debounceRefresh <= timeDiff) {
+        timeDiff = debounceRefresh;
+        this.eventDisplayed = event;
+      }
+    }, this);
+  }
+};
+
+
+/**
+ * Propagates the drag and drop event further up to the TreeMap controller
+ * @param nodeId
+ * @param streamId
+ * @param connectionId
+ */
+NumericalsPlugin.prototype.onDragAndDrop = function (nodeId, streamId, connectionId) {
+  this.eventsNode.dragAndDrop(nodeId, streamId, connectionId);
+};
+
+NumericalsPlugin.prototype.computeDimensions = function () {
+  var chartSizeWidth = null;
+  var chartSizeHeight = null;
+
+  if (this.width !== null) {
+    chartSizeWidth = this.width;
+  } else if ($('#' + this.container).length)  {
+    chartSizeWidth = $('#' + this.container).width();
+  } else if ($('#' + this.container).length)  {
+    chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+  }
+
+  if (this.height !== null) {
+    chartSizeHeight = this.height;
+  } else if ($('#' + this.container).length)  {
+    chartSizeHeight = $('#' + this.container).height();
+  } else if ($('#' + this.container).length)  {
+    chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+  }
+
+  return {width: chartSizeWidth, height: chartSizeHeight};
+};
+
+NumericalsPlugin.prototype.resize = function () {
+  this.modelView.set('dimensions', this.computeDimensions());
+  this.modelView.set('container', '#' + this.container);
+  this.view.resize();
+};
+
+})()
+},{"../detailed/Controller.js":19,"./ChartModel.js":67,"./ChartView.js":66,"./TimeSeriesCollection.js":68,"./TimeSeriesModel.js":69,"underscore":8}],85:[function(require,module,exports){
+var _ = require('underscore'),
+  GenericsView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = GenericsView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.modelContent = {
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        eventsNbr: _.size(this.events)
+      };
+    }
+  }
+);
+},{"../common/Model.js":99,"./View.js":102,"underscore":8}],98:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#notesView',
+  container: null,
+  animation: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node singleNote ');
+
+  },
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'tada';
+    this.$el.attr('id', this.model.get('id'));
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      this.$('.aggregated-nbr-events').bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":70}],99:[function(require,module,exports){
+(function(){/* global $*/
+var _ = require('underscore'),
+  Backbone = require('backbone');
+var Model = module.exports = function (events, params) {
+  this.verbose = false;
+  this.events = {};
+  this.modelContent = {};
+  _.each(events, function (event) {
+    this.events[event.id] = event;
+  }, this);
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.view = null;
+  this.eventDisplayed = null;
+  this.container = null;
+  this.needToRender = null;
+  this.typeView = null;
+  this.animationIn = null;
+  this.animationOut = null;
+  this.hasDetailedView = false;
+  _.extend(this, params);
+  this.debounceRefresh = _.debounce(function () {
+    this._refreshModelView();
+  }, 100);
+  this.debounceRefresh();
+};
+
+Model.implement = function (constructor, members) {
+  var newImplementation = constructor;
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+_.extend(Model.prototype, {
+  eventEnter: function (event) {
+    if (this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventEnter: this eventId already exist:', event.id,
+        'current:', this.events[event.id], 'new:', event);
+    }
+    this.events[event.id] = event;
+    if (this.hasDetailedView) {
+      this.treeMap.addEventsDetailedView(event);
+    }
+
+    this.debounceRefresh();
+  },
+  eventLeave: function (event) {
+    if (!this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventLeave: this eventId dont exist:', event.id,
+        'event:', event);
+    }
+    delete this.events[event.id];
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
+    }
+    if (_.size(this.events) !== 0) {
+      this.debounceRefresh();
+    }
+  },
+  eventChange: function (event) {
+    if (!this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventChange: this eventId dont exist:', event.id,
+        'event:', event);
+    }
+    this.events[event.id] = event;
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
+    }
+    this.debounceRefresh();
+  },
+  OnDateHighlightedChange: function (time) {
+    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
+    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
+    this.highlightedTime = time;
+    if (this.hasDetailedView) {
+      this.treeMap.highlightDateDetailedView(this.highlightedTime);
+    }
+    this.debounceRefresh();
+  },
+  render: function (container) {
+    this.container = container;
+    if (this.view) {
+      this.view.renderView(this.container, this.animationIn);
+    } else {
+      this.needToRender = true;
+    }
+  },
+  refresh: function (newParams) {
+    _.extend(this, newParams);
+    this.debounceRefresh();
+  },
+  close: function () {
+    if (this.view) {
+      this.view.close(this.animationOut);
+    }
+    this.view = null;
+    this.events = null;
+    this.highlightedTime = Infinity;
+    this.modelView = null;
+    this.eventDisplayed = null;
+  },
+  beforeRefreshModelView: function () {},
+  afterRefreshModelView: function () {},
+  _refreshModelView: function () {
+    this._findEventToDisplay();
+    this.beforeRefreshModelView();
+    if (!this.modelView) {
+      var BasicModel = Backbone.Model.extend({});
+      this.modelView = new BasicModel({});
+    }
+
+    // Update the model
+    _.each(_.keys(this.modelContent), function (key) {
+      this.modelView.set(key, this.modelContent[key]);
+    }, this);
+
+    if (!this.view) {
+      if (typeof(document) !== 'undefined')  {
+        this.view = new this.typeView({model: this.modelView});
+        this.view.on('nodeClicked', function () {
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
+          }
+        }.bind(this));
+      }
+    }
+    this.view.off('nodeClicked');
+    this.view.on('nodeClicked', function () {
+      if (!this.hasDetailedView) {
+        this.hasDetailedView = true;
+        var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+          this.treeMap.closeDetailedView();
+          this.hasDetailedView = false;
+        }.bind(this));
+        this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
+      }
+    }.bind(this));
+    if (this.needToRender) {
+      this.view.renderView(this.container, this.animationIn);
+      this.needToRender = false;
+    }
+    this.afterRefreshModelView();
+  },
+
+  _findEventToDisplay: function () {
+    if (this.highlightedTime === Infinity) {
+      var oldestTime = 0;
+      _.each(this.events, function (event) {
+        if (event.time >= oldestTime) {
+          oldestTime = event.time;
+          this.eventDisplayed = event;
+        }
+      }, this);
+
+    } else {
+      var timeDiff = Infinity, debounceRefresh = 0;
+      _.each(this.events, function (event) {
+        debounceRefresh = Math.abs(event.time - this.highlightedTime);
+        if (debounceRefresh <= timeDiff) {
+          timeDiff = debounceRefresh;
+          this.eventDisplayed = event;
+        }
+      }, this);
+    }
+  }
+
+});
+})()
+},{"backbone":26,"underscore":8}],100:[function(require,module,exports){
 (function(){/* global document, $ */
 var  Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
@@ -21314,180 +23831,58 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"./utility/markerclusterer.js":72,"backbone.marionette":66,"google-maps":71,"underscore":8}],76:[function(require,module,exports){
-(function(){/* global $*/
-var _ = require('underscore'),
-  Backbone = require('backbone');
-var Model = module.exports = function (events, params) {
-  this.verbose = true;
-  this.events = {};
-  this.modelContent = {};
-  _.each(events, function (event) {
-    this.events[event.id] = event;
-  }, this);
-  this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.view = null;
-  this.eventDisplayed = null;
-  this.container = null;
-  this.needToRender = null;
-  this.typeView = null;
-  this.animationIn = null;
-  this.animationOut = null;
-  this.hasDetailedView = false;
-  _.extend(this, params);
-  this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
-  }, 100);
-  this.debounceRefresh();
-};
+},{"./utility/markerclusterer.js":93,"backbone.marionette":70,"google-maps":90,"underscore":8}],101:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
 
-Model.implement = function (constructor, members) {
-  var newImplementation = constructor;
-  if (typeof Object.create === 'undefined') {
-    Object.create = function (prototype) {
-      function C() { }
-      C.prototype = prototype;
-      return new C();
-    };
-  }
-  newImplementation.prototype = Object.create(this.prototype);
-  _.extend(newImplementation.prototype, members);
-  newImplementation.implement = this.implement;
-  return newImplementation;
-};
+module.exports = Marionette.ItemView.extend({
+  template: '#picturesView',
+  container: null,
+  animation: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
 
-_.extend(Model.prototype, {
-  eventEnter: function (event) {
-    if (this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventEnter: this eventId already exist:', event.id,
-        'current:', this.events[event.id], 'new:', event);
-    }
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.addEventsDetailedView(event);
-    }
-
-    this.debounceRefresh();
   },
-  eventLeave: function (event) {
-    if (!this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventLeave: this eventId dont exist:', event.id,
-        'event:', event);
-    }
-    delete this.events[event.id];
-    if (this.hasDetailedView) {
-      this.treeMap.deleteEventDetailedView(event);
-    }
-    if (_.size(this.events) !== 0) {
-      this.debounceRefresh();
-    }
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'tada';
+    this.$el.attr('id', this.model.get('id'));
+    this.render();
   },
-  eventChange: function (event) {
-    if (!this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventChange: this eventId dont exist:', event.id,
-        'event:', event);
-    }
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.updateEventDetailedView(event);
-    }
-    this.debounceRefresh();
-  },
-  OnDateHighlightedChange: function (time) {
-    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
-    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
-    this.highlightedTime = time;
-    if (this.hasDetailedView) {
-      this.treeMap.highlightDateDetailedView(this.highlightedTime);
-    }
-    this.debounceRefresh();
-  },
-  render: function (container) {
+  renderView: function (container) {
     this.container = container;
-    if (this.view) {
-      this.view.renderView(this.container, this.animationIn);
-    } else {
-      this.needToRender = true;
-    }
+    this.animation = 'bounceIn';
+    this.render();
   },
-  refresh: function (newParams) {
-    _.extend(this, newParams);
-    this.debounceRefresh();
+  onRender: function () {
+    if (this.container) {
+      this.$el.css(
+        {'background': 'url(' + this.model.get('picUrl') + ') no-repeat center center',
+          '-webkit-background-size': 'cover',
+          '-moz-background-size': 'cover',
+          '-o-background-size': 'cover',
+          'background-size': 'cover'
+        });
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      this.$('.aggregated-nbr-events').bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+    }
   },
   close: function () {
-    if (this.view) {
-      this.view.close(this.animationOut);
-    }
-    this.view = null;
-    this.events = null;
-    this.highlightedTime = Infinity;
-    this.modelView = null;
-    this.eventDisplayed = null;
-  },
-  beforeRefreshModelView: function () {},
-  afterRefreshModelView: function () {},
-  _refreshModelView: function () {
-    this._findEventToDisplay();
-    this.beforeRefreshModelView();
-    if (!this.modelView) {
-      var BasicModel = Backbone.Model.extend({});
-      this.modelView = new BasicModel({});
-    }
-
-    // Update the model
-    _.each(_.keys(this.modelContent), function (key) {
-      this.modelView.set(key, this.modelContent[key]);
-    }, this);
-
-    if (!this.view) {
-      if (typeof(document) !== 'undefined')  {
-        this.view = new this.typeView({model: this.modelView});
-        this.view.on('nodeClicked', function () {
-          if (!this.hasDetailedView) {
-            this.hasDetailedView = true;
-            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-              this.treeMap.closeDetailedView();
-              this.hasDetailedView = false;
-            }.bind(this));
-            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-          }
-        }.bind(this));
-      }
-    }
-
-    if (this.needToRender) {
-      this.view.renderView(this.container, this.animationIn);
-      this.needToRender = false;
-    }
-    this.afterRefreshModelView();
-  },
-
-  _findEventToDisplay: function () {
-    if (this.highlightedTime === Infinity) {
-      var oldestTime = 0;
-      _.each(this.events, function (event) {
-        if (event.time >= oldestTime) {
-          oldestTime = event.time;
-          this.eventDisplayed = event;
-        }
-      }, this);
-
-    } else {
-      var timeDiff = Infinity, debounceRefresh = 0;
-      _.each(this.events, function (event) {
-        debounceRefresh = Math.abs(event.time - this.highlightedTime);
-        if (debounceRefresh <= timeDiff) {
-          timeDiff = debounceRefresh;
-          this.eventDisplayed = event;
-        }
-      }, this);
-    }
+    this.remove();
   }
-
 });
 })()
-},{"backbone":23,"underscore":8}],77:[function(require,module,exports){
+},{"backbone.marionette":70}],102:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
 
@@ -21528,275 +23923,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":66}],79:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#picturesView',
-  container: null,
-  imageWidth: null,
-  imageHeight: null,
-  $image: null,
-  width: null,
-  height: null,
-  rendered: false,
-  currentAnimation: 'bounceIn',
-  triggers: {
-    'click .aggregated-nbr-events': 'nodeClicked'
-  },
-  initialize: function () {
-   // this.listenTo(this.model, 'change:width', this.resizeImage);
-   // this.listenTo(this.model, 'change:height', this.resizeImage);
-    this.listenTo(this.model, 'change:top', this.change);
-    this.listenTo(this.model, 'change:left', this.change);
-    this.listenTo(this.model, 'change:width', this.change);
-    this.listenTo(this.model, 'change:height', this.change);
-    this.$el.css('position', 'absolute');
-    this.$el.addClass('animated node ' + this.currentAnimation);
-    this.$el.attr('id', this.model.get('id'));
-
-  },
-
-  change: function () {
- /*   this.$el.removeClass('animated bounceIn');
-    this.$el.addClass('animated  tada');
-    this.imageWidth = null;
-    this.imageHeight = null;      */
-
-    this.$el.css({
-      top: this.model.get('top') + '%',
-      left: this.model.get('left') + '%',
-      width: this.model.get('width') + '%',
-      height: this.model.get('height') + '%'
-    });
-   // this.adjustImage();
-    if (this.container && !this.rendered) {
-      this.render();
-    }
-  },
-
-  renderView: function (container, animation) {
-    this.rendered = false;
-    this.container = container;
-    this.$el.removeClass('animated ' + this.currentAnimation);
-    this.currentAnimation = animation ? animation : this.currentAnimation;
-    this.$el.addClass('animated ' + this.currentAnimation);
-    this.$el.css({
-      top: this.model.get('top') + '%',
-      left: this.model.get('left') + '%',
-      width: this.model.get('width') + '%',
-      height: this.model.get('height') + '%'
-    });
-    if (this.container && !this.rendered) {
-      this.render();
-    }
-
-  },
-
-  onRender: function () {
-    this.$el.css(
-      {'background': 'url(' + this.model.get('picUrl') + ') no-repeat center center',
-        '-webkit-background-size': 'cover',
-        '-moz-background-size': 'cover',
-        '-o-background-size': 'cover',
-        'background-size': 'cover'
-      });
-
-
-    if (this.container && !this.rendered) {
-      $('#' + this.container).append(this.el);
-      this.rendered = true;
-    }
-    /*  this.$image = this.$('img');
-      this.$image.load(function () {
-        if (!this.imageWidth && !this.imageHeight) {
-          this.imageWidth = this.$image.width();
-          this.imageHeight = this.$image.height();
-        }
-        this.resizeImage();
-      }.bind(this));
-      this.resizeImage();
-      if (this.container) {
-        $('#' + this.container).html(this.el);
-      }      */
-  },
-  resizeImage: function () {
-    if (!this.$image) {
-      return;
-    }
-    this.width = $('#' + this.container).width() * this.model.get('width') / 100;
-    this.height = $('#' + this.container).height() * this.model.get('height') / 100;
-    var aspectRatio = this.imageWidth / this.imageHeight;
-    console.log(this.container, this.width, this.height, this.imageWidth, this.imageHeight);
-    if ((this.width / this.height) < aspectRatio) {
-      this.$image
-        .removeClass()
-        .addClass('bgheight');
-    } else {
-      this.$image
-        .removeClass()
-        .addClass('bgwidth');
-    }
-    var currentWidth = this.$image.width();
-    var currentHeight = this.$image.height();
-    if (currentWidth >= this.width) {
-      this.$image.css('margin-left', -(currentWidth - this.width) / 2 + 'px');
-    }
-    if (currentHeight >= this.height) {
-      this.$image.css('margin-top', -(currentHeight - this.height) / 2 + 'px');
-    }
-  },
-  adjustImage: function () {
-    var that = this;
-    if (this.imageWidth > 0 ||  this.imageHeight > 0) {
-      _adjustCss();
-    }
-    function _adjustCss() {
-      var cssAdjust = _computeCss(
-        that.imageWidth,
-        that.imageHeight,
-        $('#' + that.container).width() * that.model.get('width') / 100,
-        $('#' + this.container).height() * this.model.get('height') / 100
-      );
-      if (cssAdjust) {
-        that.$image.css(cssAdjust);
-      }
-    }
-    function _computeCss(imgW, imgH, divW, divH) {
-
-      if (imgW <= 0 || imgH <= 0 || divW <= 0 || divH <= 0) {
-        return;
-      }
-      var maxW = imgW * 2.5,
-        maxH = imgH * 2.5,
-        width = imgW,
-        height = imgH,
-        marginTop = 0,
-        marginLeft = 0;
-
-      if (maxW < divW && maxH < divH) {
-        /* Image, even if stretched, is shorter in width and height. */
-        width = maxW;
-        height = maxH;
-        marginTop = (divH - maxH) / 2;
-
-      } else if (maxW < divW) {
-        /* Image is shorter in width. */
-        /* We have to adapt height to div. */
-        height = divH;
-        width = (imgW / imgH) * divH;
-
-      } else if (maxH < divH) {
-        /* Image is shorter in height. */
-        /* We have to adapt to div width. */
-        width = divW;
-        height = (imgH / imgW) * divW;
-        marginTop = (divH - height) / 2;
-
-      } else {
-        /* Stretched image is larger in width and height. */
-        var diffH = maxH / divH,
-          diffW = maxW / divW;
-
-        if (diffH < diffW) {
-          /* Resize to fit div height. */
-          height = divH;
-          width = (imgW / imgH) * divH;
-          marginLeft = (divW - width) / 2;
-
-        } else {
-          /* Resize to fit div width, center vertically. */
-          width = divW;
-          height = (imgH / imgW) * divW;
-          marginTop = (divH - height) / 2;
-
-        }
-      }
-
-      return {
-        'margin-top': marginTop,
-        'margin-left': marginLeft,
-        width: width,
-        height: height
-      };
-    }
-  },
-  close: function (animation) {
-    this.$el.removeClass('animated ' + this.currentAnimation);
-    this.currentAnimation = animation ? animation : this.currentAnimation;
-    this.$el.addClass('animated ' + this.currentAnimation);
-    this.rendered = false;
-    this.container = null;
-    setTimeout(function () {this.remove(); }.bind(this), 1000);
-  }
-});
-})()
-},{"backbone.marionette":66}],78:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#notesView',
-  container: null,
-  rendered: false,
-  currentAnimation: 'bounceIn',
-  triggers: {
-    'click .aggregated-nbr-events': 'nodeClicked'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    /* this.listenTo(this.model, 'change:left', this.change);
-     this.listenTo(this.model, 'change:width', this.change);
-     this.listenTo(this.model, 'change:height', this.change);    */
-    this.$el.css('position', 'absolute');
-    this.$el.addClass('animated node singleNote ' + this.currentAnimation);
-    this.$el.attr('id', this.model.get('id'));
-  },
-  change: function () {
-    this.render();
-  },
-  renderView: function (container, animation) {
-    this.rendered = false;
-    this.container = container;
-    this.$el.removeClass('animated ' + this.currentAnimation);
-    this.currentAnimation = animation ? animation : this.currentAnimation;
-    this.$el.addClass('animated ' + this.currentAnimation);
-    this.render();
-  },
-  onRender: function () {
-    /*  Mosaic code */
-    this.$el.css({
-      top: this.model.get('top') + '%',
-      left: this.model.get('left') + '%',
-      width: this.model.get('width') + '%',
-      height: this.model.get('height') + '%'
-    });
-    /* no mosaic
-     this.$el.css({
-     top: '0%',
-     left: '0%',
-     width: '100%',
-     height: '100%'
-     });  */
-    if (this.container && !this.rendered) {
-      $('#' + this.container).append(this.el);
-      this.rendered = true;
-
-    }
-  },
-  close: function (animation) {
-    this.$el.attr('id', '');
-    this.$el.removeClass('animated ' + this.currentAnimation);
-    this.currentAnimation = animation ? animation : this.currentAnimation;
-    this.$el.addClass('animated ' + this.currentAnimation);
-    this.rendered = false;
-    this.container = null;
-    setTimeout(function () {this.remove(); }.bind(this), 1000);
-  }
-});
-})()
-},{"backbone.marionette":66}],81:[function(require,module,exports){
+},{"backbone.marionette":70}],95:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -21976,7 +24103,7 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":23,"underscore":8}],80:[function(require,module,exports){
+},{"backbone":26,"underscore":8}],94:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -22256,5 +24383,5 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":23,"underscore":8}]},{},["X4tAXF"])
+},{"backbone":26,"underscore":8}]},{},["jR29ZW"])
 ;

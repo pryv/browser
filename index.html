@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<html xmlns:fb="http://ogp.me/ns/fb#">
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
@@ -10,7 +10,9 @@
   <meta property="og:description" content="Content available on Pryv only." />
   <meta property="og:image" content="http://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
   <meta property="og:image:secure_url" content="https://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
-  <link rel="stylesheet" type="text/css" href="styles/pryv.min.css">
+  <meta property="fb:app_id" content="589869207755296" />
+  <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
+  <link rel="stylesheet" type="text/css" href="styles/styles.css">
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
@@ -98,6 +100,9 @@
   <script type="text/html" id="template-detailListCompositeView">
     <ul id="detail-list"></ul>
   </script>
+  <script type="text/html" id="template-subscribeListCompositeView">
+    <ul id="subscribe-list"></ul>
+  </script>
   <script type="text/html" id="template-detailItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
@@ -105,36 +110,45 @@
       1000).toLocaleTimeString() %>
     </div>
   </script>
+  <script type="text/html" id="template-sharingListCompositeView">
+    <ul id="sharing-list"></ul>
+  </script>
+  <script type="text/html" id="template-sharingItemView">
 
-  <script type="text/html" id="template-DnD">
-    <div id="DnD-body">
-      <div id="DnD-panel-left">
-        <div id="DnD-left-content">
-          <div id="DnD-left-content-headerSingle">The Current Chart</div>
-          <div id="DnD-left-content-single"></div>
-          <div id="DnD-left-content-headerFinal">Preview</div>
-          <div id="DnD-left-content-final"></div>
-        </div>
-      </div>
-      <div id="DnD-panel-right">
-        <div id="DnD-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 id="modal-title" id="myModalLabel">Drag and Drop</h4>
-        </div>
-        <div id="DnD-right-content">
-          <ul id="DnD-right-content-lists" class="DnD-right-content-lists"></div>
-        </div>
-      </div>
+    <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= sharing.name %></td><td><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
+     <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
+      <a href="https://twitter.com/share" class="twitter-share-button" data-url="<%= sharing.url %>" data-via="pryv" data-count="none">Tweet</a>
+      <fb:share-button href="<%= sharing.url %>" type="button"></fb:share-button></td>
+
+  </script> <script type="text/html" id="template-subscriptionItemView">
+    <input type="checkbox" class="checkbox">
+    <div class="view">
+      <%= connection.id %>
+      <input type="text" placeholder="Name" required class="subscription-name">
+      <% if (error) {%>
+        <span class="glyphicon glyphicon-warning-sign"></span>
+      <% } %>
     </div>
   </script>
-  <script type="text/html" id="template-DnD-ListCompositeView">
-    <div class="detail-div"></div>
+  <script type="text/html" id="template-bookmarkListCompositeView">
+    <ul id="bookmark-list"></ul>
   </script>
-  <script type="text/html" id="template-DnD-ItemView">
-    <a>
-      <input class="DnD-itemView-checkbox" type="checkbox" name="chartSelector" value="isSelected">
-      <span class="DnD-itemView-text"><%= streamName %></span>
-    </a>
+  <script type="text/html" id="template-bookmarkItemView">
+    <td class="bookmark-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= bookmark.settings.name %></td><td><%= bookmark.settings.auth %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td>
+  </script>
+    
+  <script type="text/html" id="template-draganddrop">
+    <div id="dnd-body" class="dnd-body">
+      <div id="dnd-panel-list"></div>
+      <div id="dnd-panel-chart"></div>
+    </div>
+  </script>
+  <script type="text/template" id="template-draganddrop-itemview">
+    <a class="DnD-legend-button" href="javascript:;">+</a>
+    <span class="DnD-legend-text"><%= displayName() %></span>
+  </script>
+  <script type="text/template" id="template-chart-container">
+    <div id="chart-container"></div>
   </script>
   <script type="template" id="template-detail-content-position">
   </script>
@@ -175,6 +189,60 @@
     </ul>
     <% } %>
   </script>
+
+  <script type="template" id="template-detail-content-numerical-general">
+      <div class="legend-container" id="legend-container-general"></div>
+      <div class="detail-chart-container" id="detail-chart-container-general"></div>
+  </script>
+  <script type="template" id="template-detail-content-numerical-edit">
+      <div class="legend-container" id="legend-container-edit"></div>
+      <div class="detail-chart-container" id="detail-chart-container-edit"></div>
+      <div class="editor-container">
+        <div id="dc-editor-appearance">
+          <span>Appearance</span>
+          <ul>
+            <li>
+              <span>Color</span>
+                <select id="detailed-view-chart-color">
+                    <option value="#00FFFF" style="background-color: Aqua">Aqua</option>
+                    <option value="#000000" style="background-color: Black">Black</option>
+                    <option value="#0000FF" style="background-color: Blue">Blue</option>
+                    <option value="#FF00FF" style="background-color: Fuchsia">Fuchsia</option>
+                    <option value="#808080" style="background-color: Gray">Gray</option>
+                    <option value="#008000" style="background-color: Green">Green</option>
+                </select>
+            </li>
+            <li>
+              <span>Style</span>
+              <select id="detailed-view-chart-style">
+                <option value="line">Line</option>
+                <option value="point">Point</option>
+                <option value="bar">Bar</option>
+                </select>
+            </li>
+          </ul>
+        </div>
+        <div id="dc-editor-transform">
+          <span>Operation</span>
+          <select id="detailed-view-chart-operation" size="4">
+            <option value="none">None</option>
+            <option value="sum">Sum</option>
+            <option value="average">Average</option>
+          </select>
+        </div>
+        <div id="dc-editor-period">
+          <span>Interval</span>
+            <select id="detailed-view-chart-interval" size="4">
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+        </div>
+      </div>
+  </script>
+
   <script type="template" id="template-detail-full">
       <% if (event) {%>
       <ul>
@@ -208,13 +276,44 @@
     <div id="fusion-full">
     </div>
   </script>
+  <script id="node-template" type="text/template">
+    <li>
+    <div class="checkbox">
+      <label>
+        <input class="input-checkbox" type="checkbox"><%= name %>
+      </label>
+    </div>
+    </li>
+  </script>
 </head>
 
 <body>
 <span id="pryvButton"></span>
-<a href="#" id="logo-add">+</a>
-<a href="#" id="logo-reload" class="logo">Pryv</a>
+<div id="login">
+  <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
+  </div>
+  <div id="login-form" class="centered">
+    <form role="form">
+      <h3>Login</h3>
 
+      <div class="form-group">
+        <label class="sr-only" for="login-username">Username</label>
+        <input type="text" class="form-control" id="login-username" placeholder="Username">
+      </div>
+      <div class="form-group">
+        <label class="sr-only" for="login-password">Password</label>
+        <input type="password" class="form-control" id="login-password" placeholder="Password">
+      </div>
+      <button type="submit" class="btn btn-pryv-turquoise">Sign In</button>
+    </form>
+  </div>
+</div>
+<a href="javascript:void(0)" id="login-button" class="menu-button">Sign In</a>
+<a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
+<a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
+<a href="javascript:void(0)" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
+<a href="javascript:void(0)" id="logo-create-sharing" class="menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
   <div id="empty-events">
     <h1> No events to display </h1>
@@ -232,6 +331,17 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+<!-- Facebook -->
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1&appId=589869207755296";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+<!-- Twitter -->
+<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 <!-- Google Analytics -->
 <script>
   var _gaq=[['_setAccount','UA-36589447-3'],['_trackPageview']];

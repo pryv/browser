@@ -22,10 +22,12 @@ var _ = require('underscore');
  */
 
 var KEY = 'browser:virtualnode';
-
+var SERIAL = 0;
 var VirtualNode = module.exports = function VirtualNode(node, name) {
   this._node = node;
   this._name = name;
+  this.id = 'vn_' + SERIAL;
+  SERIAL++;
 
   this._createIfNotExist();
   //this._emptyData();
@@ -33,9 +35,9 @@ var VirtualNode = module.exports = function VirtualNode(node, name) {
 
 VirtualNode.prototype._emptyData = function () {
   if (this._node instanceof Pryv.Connection) {
-    delete this._node.privateProfile()[KEY];
+    this._node.privateProfile()[KEY] = [];
   } else if (this._node instanceof Pryv.Stream) {
-    delete this._node.clientData[KEY];
+    this._node.clientData[KEY] = [];
   }
   this._pushChanges();
 };
@@ -54,7 +56,7 @@ VirtualNode.prototype._createIfNotExist = function () {
     data = this._node.clientData;
   }
   if (!data[KEY]) {
-    data[KEY] = {};
+    data[KEY] = [];
   }
   data = data[KEY];
 
@@ -84,14 +86,14 @@ VirtualNode.prototype._pushChanges = function () {
   this._integrity();
   var changes = null;
   if (this._node instanceof Pryv.Connection) {
-    changes = {'browser:virtualnode': this._node._getDataPointer()};
-    console.log('Pushing these changes', changes);
+    changes = {'browser:virtualnode': this._getDataPointer()};
+    console.log('Pushing these changes in privateProfile', changes);
     this._node.profile.setPrivate(changes, function (error, result) {
-      console.log('clientData for', KEY, 'has been pushed:', error, result);
+      console.log('privateProfile for', KEY, 'has been pushed:', error, result);
     });
   } else if  (this._node instanceof Pryv.Stream) {
     changes = {id: this._node.id, clientData: this._node.clientData};
-    console.log('Pushing these changes', changes);
+    console.log('Pushing these changes in clientData', changes);
     this._node.connection.streams._updateWithData(changes, function (error, result) {
       console.log('clientData for', KEY, 'has been pushed:', error, result);
     });
@@ -145,9 +147,6 @@ Object.defineProperty(VirtualNode.prototype, 'parent', {
     throw new Error('Virtual nodes having connection as parent not supported.');
   }
 });
-
-
-
 
 VirtualNode.prototype.addFilters = function (filter) {
   this._integrity();

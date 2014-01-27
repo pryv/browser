@@ -76,17 +76,12 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
         // for each virtual node of stream
         _.each(vn, function (virtualNode) {
-          var id = '';
-          // create the virtual node's id
-          _.each(virtualNode.filters, function (s) {
-            id = id + s.streamId;
-          });
           // set the redirections to the children
           _.each(virtualNode.filters, function (s) {
-            this.addRedirections(s.streamId, id, s.type);
+            this.addRedirections(s.streamId, virtualNode.id, s.type);
           }.bind(this));
 
-          this.createVirtualStreamNode(this, null, id, virtualNode.name);
+          this.createVirtualStreamNode(this, null, virtualNode.id, virtualNode.name);
         }.bind(this));
       }
 
@@ -104,18 +99,13 @@ var ConnectionNode = module.exports = TreeNode.implement(
             var vn = VirtualNode.getNodes(stream);
             // for each virtual node of stream
             _.each(vn, function (virtualNode) {
-              var id = '';
-              // create the virtual node's id
-              _.each(virtualNode.filters, function (s) {
-                id = id + s.streamId;
-              });
               // set the redirections to the children
               _.each(virtualNode.filters, function (s) {
-                this.addRedirections(s.streamId, id, s.type);
+                this.addRedirections(s.streamId, virtualNode.id, s.type);
               }.bind(this));
 
               this.createVirtualStreamNode(this.streamNodes[stream.id],
-                stream, id, virtualNode.name);
+                stream, virtualNode.id, virtualNode.name);
             }.bind(this));
           }
           // check for event redirection for the current stream

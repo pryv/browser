@@ -141,8 +141,15 @@ var EventsNode = module.exports = TreeNode.implement(
      * @param connectionId
      */
     dragAndDrop: function (nodeId, streamId, connectionId) {
+
+
       var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
       var thisNode = this;
+
+      if (thisNode.parent.stream.isVirtual || otherNode.parent.stream.isVirtual) {
+        throw new Error('Creating virtual node out of virtual node currently not allowed.');
+      }
+
       if (otherNode !== thisNode) {
         this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
       }

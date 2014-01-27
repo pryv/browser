@@ -82,6 +82,11 @@ module.exports = Marionette.ItemView.extend({
     this.paths = {};
     this.mapOptions =  {
       zoom: 8,
+      zoomControl: false,
+      mapTypeControl: false,
+      scaleControl: false,
+      streetViewControl: false,
+      overviewMapControl: false,
       scrollwheel: true,
       mapTypeId: this.gmaps.MapTypeId.ROADMAP
     };

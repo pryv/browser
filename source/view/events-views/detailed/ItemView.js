@@ -17,17 +17,25 @@ module.exports = Marionette.ItemView.extend({
     checkbox: '.checkbox'
   },
   initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
+    //this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'change:highlighted', this.highlight);
+    this.listenTo(this.model, 'change:checked', this.check);
 
   },
-  onRender: function () {
+  check: function () {
     this.ui.checkbox[0].checked = this.model.get('checked');
+  },
+  highlight: function () {
     if (this.model.get('highlighted')) {
       this.$el.addClass('highlighted');
     } else {
       this.$el.removeClass('highlighted');
     }
-    this.$('.view').bind('click', function () {
+  },
+  onRender: function () {
+    this.check();
+    this.highlight();
+    this.$el.bind('click', function () {
       this.trigger('date:clicked', this.model);
     }.bind(this));
     this.$('input').bind('click', function () {

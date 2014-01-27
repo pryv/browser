@@ -1,5 +1,8 @@
+/* global window */
 var EventsNode = require('../EventsNode'),
-    EventsView = require('../../view/events-views/notes/Model.js');
+  EventsView = require('../../view/events-views/notes/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
 
 /**
  * Holder for EventsNode
@@ -13,7 +16,7 @@ var NotesEventsNode = module.exports = EventsNode.implement(
     className: 'NotesEventsNode',
     pluginView: EventsView,
     getWeight: function () {
-      return 1;
+      return DEFAULT_WEIGHT;
     }
 
   });
@@ -22,5 +25,23 @@ var NotesEventsNode = module.exports = EventsNode.implement(
 NotesEventsNode.acceptThisEventType = function (eventType) {
   return (eventType === 'note/txt' || eventType === 'note/text');
 };
-
+try {
+  Object.defineProperty(window.PryvBrowser, 'noteWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
 

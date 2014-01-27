@@ -89,7 +89,9 @@ var TreeMap = module.exports = function (model) {
       this.model.activeFilter.timeFrameST);
     }
   }.bind(this));
-  var refreshTree = _.throttle(function () {
+
+  //window.PryvBrowser = _.extend({}, window.PryvBrowser);
+  var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
     var start = new Date().getTime();
     this.root._generateChildrenTreemap(this.root.x,
       this.root.y,

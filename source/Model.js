@@ -1,17 +1,17 @@
 /* global $, window */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
-_ = require('underscore'),
-ConnectionsHandler = require('./model/ConnectionsHandler.js'),
-SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
-TreeMap = require('./tree/TreeMap.js'),
-Controller = require('./orchestrator/Controller.js'),
-Pryv = require('pryv'),
-TimeLine = require('./timeframe-selector/timeframe-selector.js'),
-PUBLIC_TOKEN = 'public',
-STAGING = true,
-toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
-toShowSubscribe = ['#logo-subscribe'];
-var Model = module.exports = function (DEVMODE) {
+  _ = require('underscore'),
+  ConnectionsHandler = require('./model/ConnectionsHandler.js'),
+  SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
+  TreeMap = require('./tree/TreeMap.js'),
+  Controller = require('./orchestrator/Controller.js'),
+  Pryv = require('pryv'),
+  TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+  PUBLIC_TOKEN = 'public',
+  STAGING = true,
+  toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
+  toShowSubscribe = ['#logo-subscribe'];
+var Model = module.exports = function () {
   window.Pryv = Pryv;
   this.urlUsername = Pryv.utility.getUsernameFromUrl();
   this.urlSharings = Pryv.utility.getSharingsFromUrl();
@@ -64,7 +64,7 @@ var Model = module.exports = function (DEVMODE) {
     this.timeView.on('dateMasked', this.onDateMasked, this);
 
     this.onDateMasked = function () {
-     // console.log('onDateMasked', arguments);
+      // console.log('onDateMasked', arguments);
     };
 
     Pryv.eventTypes.loadExtras(function () {});
@@ -79,7 +79,7 @@ var Model = module.exports = function (DEVMODE) {
   // ----------------------- //
 
   // Singin
-  Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
+  //Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
 
   var settings = {
     appId : 'pryv-browser',
@@ -128,53 +128,43 @@ var Model = module.exports = function (DEVMODE) {
       }
     }
   };
-  if (!DEVMODE) {
-    if (this.publicConnection) {
-      this.addConnection(this.publicConnection);
-    } else if (this.sharingsConnections) {
-      this.sharingsConnections.forEach(function (connection) {
-        this.addConnection(connection);
-      }.bind(this));
-    }
-    Pryv.Auth.whoAmI(settings);
-    $('#login-button').click(function (e) {
-      if (this.loggedConnection) {
-        e.stopPropagation();
-        Pryv.Auth.logout();
-      } else {
-        $('#login').css('display', 'block');
-        $('#login').removeClass('animated slideOutRight');
-        $('#tree').removeClass('animated slideInLeft');
-        $('#login').addClass('animated slideInRight');
-        $('#tree').addClass('animated slideOutLeft');
-      }
+  if (this.publicConnection) {
+    this.addConnection(this.publicConnection);
+  } else if (this.sharingsConnections) {
+    this.sharingsConnections.forEach(function (connection) {
+      this.addConnection(connection);
     }.bind(this));
-    $('#login-caret').click(function () {
-      $('#login').removeClass('animated slideInRight');
-      $('#tree').removeClass('animated slideOutLeft');
-      $('#login').addClass('animated slideOutRight');
-      $('#tree').addClass('animated slideInLeft');
-    });
-    $('#login form').submit(function (e) {
-      e.preventDefault();
-      if (this.loggedConnection) {
-        console.warn('You are already logged in, please log out');
-        return;
-      }
-      settings.username = $('#login-username').val();
-      settings.password = $('#login-password').val();
-      Pryv.Auth.login(settings);
-    }.bind(this));
-  }  else {
-    // for dev env only
-    // add connections here, you mut set the loggedConnection with a staging connection
-    var defaultConnection = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: STAGING});
-    this.loggedConnection = defaultConnection;
-    this.addConnection(defaultConnection);
-    this.addConnection(new Pryv.Connection('fredos71',
-      'chq6k6jfk000b52w4bf86thgv', {staging: STAGING}));
-    this.showLoggedInElement();
   }
+  Pryv.Auth.whoAmI(settings);
+  $('#login-button').click(function (e) {
+    if (this.loggedConnection) {
+      e.stopPropagation();
+      Pryv.Auth.logout();
+    } else {
+      $('#login').css('display', 'block');
+      $('#login').removeClass('animated slideOutRight');
+      $('#tree').removeClass('animated slideInLeft');
+      $('#login').addClass('animated slideInRight');
+      $('#tree').addClass('animated slideOutLeft');
+    }
+  }.bind(this));
+  $('#login-caret').click(function () {
+    $('#login').removeClass('animated slideInRight');
+    $('#tree').removeClass('animated slideOutLeft');
+    $('#login').addClass('animated slideOutRight');
+    $('#tree').addClass('animated slideInLeft');
+  });
+  $('#login form').submit(function (e) {
+    e.preventDefault();
+    if (this.loggedConnection) {
+      console.warn('You are already logged in, please log out');
+      return;
+    }
+    settings.username = $('#login-username').val();
+    settings.password = $('#login-password').val();
+    Pryv.Auth.login(settings);
+  }.bind(this));
+
 
 
 };
@@ -190,7 +180,7 @@ Model.prototype.addConnection = function (connection) {
     connection.privateProfile();
   }
   var userConnection = this.connections.add(connection),
-  batch = this.activeFilter.startBatch('adding connections');
+    batch = this.activeFilter.startBatch('adding connections');
   this.activeFilter.addConnection(userConnection, batch);
   batch.done();
 };

@@ -87,6 +87,7 @@ var StreamNode = module.exports = TreeNode.implement(
     },
     getWeight: function () {
       var children = [];
+      var weight = 0;
       // Streams
       _.each(this.stream.children, function (child) {
         var childTemp =  this.connectionNode.streamNodes[child.id];
@@ -98,7 +99,6 @@ var StreamNode = module.exports = TreeNode.implement(
         children.push(eventNode);
       });
 
-      var weight = 0;
       children.forEach(function (child) {
         weight += child.getWeight();
       });
@@ -111,10 +111,16 @@ var StreamNode = module.exports = TreeNode.implement(
 
       if (this.aggregated) {
         var weight = this.getWeight();
-        var size = _.size(this.eventsNodesAggregated);
+        var aggregatedWeight = 0;
+        _.each(this.eventsNodesAggregated, function (node) {
+          if (!node.originalWeight) {
+            node.originalWeight = node.getWeight;
+          }
+          aggregatedWeight += node.originalWeight();
+        });
         _.each(this.eventsNodesAggregated, function (node) {
           node.getWeight = function () {
-            return weight / size;
+            return (node.originalWeight() / aggregatedWeight) * weight;
           };
           children.push(node);
         });
@@ -293,5 +299,6 @@ StreamNode.registeredEventNodeTypes = {
   'PositionsEventsNode' : require('./eventsNode/PositionsEventsNode.js'),
   'PicturesEventsNode' : require('./eventsNode/PicturesEventsNode.js'),
   'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),
+  'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };

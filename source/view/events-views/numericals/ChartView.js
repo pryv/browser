@@ -57,7 +57,8 @@ module.exports = Marionette.CompositeView.extend({
       this.model.get('collection').at(0).get('events').length === 1 &&
       this.model.get('singleNumberAsText')) {
       var m = this.model.get('collection').at(0);
-      $(this.container).html('<div class="content Center-Container is-Table">' +
+      $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
+        '<div class="content Center-Container is-Table">' +
         '<div class="Table-Cell">' +
         '<div class="Center-Block">' +
         '<span class="value"> ' +

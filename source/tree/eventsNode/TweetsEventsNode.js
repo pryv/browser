@@ -1,21 +1,20 @@
-/*global window */
+/* global window */
 var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/pictures/Model.js'),
+  EventsView = require('../../view/events-views/tweet/Model.js'),
   _ = require('underscore'),
   DEFAULT_WEIGHT = 1;
 
 /**
- * Holder for EventsNode
+ * Holder for TweetsNode
  * @type {*}
  */
-var PicturesEventsNode = module.exports = EventsNode.implement(
+var TweetsEventsNode = module.exports = EventsNode.implement(
   function (parentStreamNode) {
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'PicturesEventsNode',
+    className: 'TweetsEventsNode',
     pluginView: EventsView,
-
     getWeight: function () {
       return DEFAULT_WEIGHT;
     }
@@ -23,11 +22,11 @@ var PicturesEventsNode = module.exports = EventsNode.implement(
   });
 
 // we accept all kind of events
-PicturesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'picture/attached');
+TweetsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'message/twitter');
 };
 try {
-  Object.defineProperty(window.PryvBrowser, 'pictureWeight', {
+  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
     set: function (value) {
       value = +value;
       if (_.isFinite(value)) {

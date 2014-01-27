@@ -5,6 +5,7 @@ var _ = require('underscore'),
   ListView = require('./ListView.js'),
   CommonView = require('./CommonView.js'),
   GenericContentView = require('./contentView/Generic.js'),
+  TweetContentView = require('./contentView/Tweet.js'),
   NoteContentView = require('./contentView/Note.js'),
   NumericalContentView = require('./contentView/numercial/Controller.js'),
   PictureContentView = require('./contentView/Picture.js'),
@@ -188,6 +189,8 @@ _.extend(Controller.prototype, {
       return {type: 'Picture', view: PictureContentView};
     } else if (eventType === 'position/wgs84') {
       return {type: 'Position', view: PositionContentView};
+    } else if (eventType === 'message/twitter') {
+      return {type: 'Tweet', view: TweetContentView};
     } else if (eventType === 'Creation') {
       return {type: 'Creation', view: CreationView};
     } else if (this.eventIsNumerical(eventType)) {

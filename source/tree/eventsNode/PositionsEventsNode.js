@@ -1,5 +1,8 @@
+/* global window */
 var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/positions/Model.js');
+  EventsView = require('../../view/events-views/positions/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
 
 /**
  * Holder for EventsNode
@@ -13,7 +16,7 @@ var PositionsEventsNode = module.exports = EventsNode.implement(
     className: 'PositionsEventsNode',
     pluginView: EventsView,
     getWeight: function () {
-      return 1;
+      return DEFAULT_WEIGHT;
     }
 
   });
@@ -22,5 +25,23 @@ var PositionsEventsNode = module.exports = EventsNode.implement(
 PositionsEventsNode.acceptThisEventType = function (eventType) {
   return (eventType === 'position/wgs84');
 };
-
+try {
+  Object.defineProperty(window.PryvBrowser, 'positionWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
 

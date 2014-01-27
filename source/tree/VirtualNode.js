@@ -80,9 +80,6 @@ VirtualNode.prototype._getDataPointer = function () {
   return data;
 };
 
-
-
-
 VirtualNode.prototype._pushChanges = function () {
   this._integrity();
   var changes = null;
@@ -103,17 +100,19 @@ VirtualNode.prototype._pushChanges = function () {
 
 Object.defineProperty(VirtualNode.prototype, 'filters', {
   get: function () {
-    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
-      if (this._node.clientData[KEY][i].name === this._name) {
-        return this._node.clientData[KEY][i].filters;
+    var d = this._getDataPointer();
+    for (var i = 0; i < d.length; ++i) {
+      if (d[i].name === this._name) {
+        return d[i].filters;
       }
     }
     return [];
   },
   set: function (filters) {
-    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
-      if (this._node.clientData[KEY][i].name === this._name) {
-        this._node.clientData[KEY][i].filters = filters;
+    var d = this._getDataPointer();
+    for (var i = 0; i < d.length; ++i) {
+      if (d[i].name === this._name) {
+        d[i].filters = filters;
         this._pushChanges();
         break;
       }
@@ -126,9 +125,10 @@ Object.defineProperty(VirtualNode.prototype, 'name', {
     return this._name;
   },
   set: function (name) {
-    for (var i = 0; i < this._node.clientData[KEY].length; ++i) {
-      if (this._node.clientData[KEY][i].name === this._name) {
-        this._node.clientData[KEY][i].name = name;
+    var d = this._getDataPointer();
+    for (var i = 0; i < d.length; ++i) {
+      if (d[i].name === this._name) {
+        d[i].name = name;
         this._name = name;
         this._pushChanges();
         break;
@@ -151,27 +151,27 @@ Object.defineProperty(VirtualNode.prototype, 'parent', {
 
 VirtualNode.prototype.addFilters = function (filter) {
   this._integrity();
-  this._clientData();
+  var d = this._getDataPointer();
   if (filter && filter.length !== 0) {
     var found = false;
     filter = (filter instanceof Array) ? filter : [filter];
-    for (var i = 0, n = this._node.clientData[KEY].length; i < n; ++i) {
-      if (this.parent.clientData[KEY][i].name === this._name) {
+    for (var i = 0, n = d.length; i < n; ++i) {
+      if (d[i].name === this._name) {
         found = true;
         break;
       }
     }
 
     if (found) {
-      if (!this.parent.clientData[KEY][i].filters) {
-        this.parent.clientData[KEY][i].filters = [filter];
+      if (!d[i].filters) {
+        d[i].filters = [filter];
       } else {
         for (var j = 0; j < filter.length; ++j) {
-          this.parent.clientData[KEY][i].filters.push(filter[j]);
+          d[i].filters.push(filter[j]);
         }
       }
     } else {
-      this.parent.clientData[KEY].push({name: this._name, filters: filter});
+      d.push({name: this._name, filters: filter});
     }
     this._pushChanges();
   }

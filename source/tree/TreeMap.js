@@ -101,6 +101,23 @@ var TreeMap = module.exports = function (model) {
     this.model.updateTimeFrameLimits();
     var end = new Date().getTime();
     var time = end - start;
+    /*var $StreamNode = $('.StreamNode');
+    $StreamNode.off('mouseenter');
+    $StreamNode.off('mouseleave');
+    $StreamNode.on('mouseenter', function (e) {
+      e.stopPropagation();
+      $(this).css({
+        'background-color': 'white',
+        'outline': '#fff solid 5px'
+      });
+    });
+    $StreamNode.on('mouseleave', function (e) {
+      e.stopPropagation();
+      $(this).css({
+        'background-color': '',
+        'outline': 'none'
+      });
+    });  */
     console.log('refreshTree execution:', time);
   }.bind(this), 10);
 

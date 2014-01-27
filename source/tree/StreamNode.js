@@ -11,13 +11,16 @@ var StreamNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentNode.treeMap, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
-    if (this.stream.clientData && this.stream.clientData['pryv-browser:bgColor']) {
-      this.stream.color = this.stream.clientData['pryv-browser:bgColor'];
-    } else if (parentNode.stream && parentNode.stream.clientData &&
-      parentNode.stream.clientData['pryv-browser:bgColor']) {
-      this.stream.color = parentNode.stream.clientData['pryv-browser:bgColor'];
-    } else if (parentNode.stream && parentNode.stream.color) {
-      this.stream.color = parentNode.stream.color;
+    if (this.connectionNode.connection.accessInfo().type === 'personal') {
+
+      if (this.stream.clientData && this.stream.clientData['pryv-browser:bgColor']) {
+        this.stream.color = this.stream.clientData['pryv-browser:bgColor'];
+      } else if (parentNode.stream && parentNode.stream.clientData &&
+        parentNode.stream.clientData['pryv-browser:bgColor']) {
+        this.stream.color = parentNode.stream.clientData['pryv-browser:bgColor'];
+      } else if (parentNode.stream && parentNode.stream.color) {
+        this.stream.color = parentNode.stream.color;
+      }
     }
 
     /**
@@ -33,11 +36,11 @@ var StreamNode = module.exports = TreeNode.implement(
     _needToAggregate: function () {
       if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
         /* we don't need to aggregate if all the events are in the same stream
-           so we need to walk all the child of this stream with 3 stop condition:
-           - if a stream has more than one stream we aggregate it
-           - if a stream has one stream and one or more eventsNode we aggregate it
-           - if a stream has only eventsNode we don't aggregate it
-        */
+         so we need to walk all the child of this stream with 3 stop condition:
+         - if a stream has more than one stream we aggregate it
+         - if a stream has one stream and one or more eventsNode we aggregate it
+         - if a stream has only eventsNode we don't aggregate it
+         */
         var node = this, currentAggregated;
         var numberOfStreamNode, numberOfEventsNode;
         while (true) {

@@ -4,6 +4,15 @@ module.exports = Marionette.ItemView.extend({
 
   tagName: 'li',
   template: '#template-detailItemView',
+  templateHelpers: {
+    getPreview: function () {
+      var type = this.event.type;
+      if (type.indexOf('picture') === 0) {
+        return '<img src=" ' + this.event.attachmentsUrl + '">';
+      }
+      return '';
+    }
+  },
   ui: {
     checkbox: '.checkbox'
   },

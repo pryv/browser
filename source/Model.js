@@ -7,7 +7,8 @@ TreeMap = require('./tree/TreeMap.js'),
 Controller = require('./orchestrator/Controller.js'),
 Pryv = require('pryv'),
 TimeLine = require('./timeframe-selector/timeframe-selector.js'),
-PUBLIC_TOKEN = 'TeVY2x0kgq',
+PUBLIC_TOKEN = 'public',
+STAGING = true,
 toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
 toShowSubscribe = ['#logo-subscribe'];
 var Model = module.exports = function (DEVMODE) {
@@ -22,10 +23,12 @@ var Model = module.exports = function (DEVMODE) {
   if (this.urlSharings.length > 0) {
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
-      this.sharingsConnections.push(new Pryv.Connection(this.urlUsername, token, {staging: true}));
+      this.sharingsConnections.push(new Pryv.Connection(
+        this.urlUsername, token, {staging: STAGING}));
     }.bind(this));
   } else if (this.urlUsername) {
-    this.publicConnection =  new Pryv.Connection(this.urlUsername, PUBLIC_TOKEN, {staging: true});
+    this.publicConnection =  new Pryv.Connection(
+      this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
   }
   // create connection handler and filter
   this.onFiltersChanged = function () {
@@ -165,11 +168,11 @@ var Model = module.exports = function (DEVMODE) {
   }  else {
     // for dev env only
     // add connections here, you mut set the loggedConnection with a staging connection
-    var defaultConnection = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: true});
+    var defaultConnection = new Pryv.Connection('liveat', 'VPMy6VFfU9', {staging: STAGING});
     this.loggedConnection = defaultConnection;
     this.addConnection(defaultConnection);
     this.addConnection(new Pryv.Connection('fredos71',
-      'chq6k6jfk000b52w4bf86thgv', {staging: true}));
+      'chq6k6jfk000b52w4bf86thgv', {staging: STAGING}));
     this.showLoggedInElement();
   }
 

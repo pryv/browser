@@ -90,8 +90,6 @@ var ConnectionNode = module.exports = TreeNode.implement(
               stream.childrenIds.push(virtualStream.id);
 
               console.log('Set up new virtual node as VirtualStream:', virtualStream);
-              console.log('The virtual node\'s parent has the following children',
-                stream.children);
             }.bind(this));
           }
           // check for event redirection

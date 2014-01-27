@@ -43,15 +43,18 @@ var ConnectionNode = module.exports = TreeNode.implement(
           if (stream.parent) {   // if not parent, this connection node is the parent
             parentNode = this.streamNodes[stream.parent.id];
           }
-
+          stream.isVirtual = false;
           this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
+
+          // AND HERE we get the wrongly constructed virtual stream.
+
 
           if (VirtualNode.nodeHas(stream)) {
             var vn = VirtualNode.getNodes(stream);
-            console.log('The stream', stream.id, 'has virtual nodes:', vn);
 
             // for each virtual node of stream
             _.each(vn, function (virtualNode) {
+
               var id = '';
               // create the virtual node's id
               _.each(virtualNode.filters, function (s) {
@@ -60,11 +63,13 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
               // set the redirections to the children
               _.each(virtualNode.filters, function (s) {
+
+                // if the source is already in the list:
                 if (this.streamNodes[s.streamId]) {
                   if (this.streamNodes[s.streamId].redirect) {
-                    this.streamNodes[s.streamId].push({to: id, type: s.type});
+                    this.streamNodes[s.streamId].redirect.push({to: id, type: s.type});
                   } else {
-                    this.streamNodes[s.streamId] = [{to: id, type: s.type}];
+                    this.streamNodes[s.streamId].redirect = [{to: id, type: s.type}];
                   }
                 } else {
                   if (virtNodeWaiting[s.streamId]) {
@@ -77,7 +82,8 @@ var ConnectionNode = module.exports = TreeNode.implement(
               var connectionNode =  this;
               var virtualStreamNode = this.streamNodes[stream.id];
               var virtualStream = new Pryv.Stream(this.connection, {_parent: stream,
-                parentId: stream.id, childrenIds: [], id: id});
+                parentId: stream.id, childrenIds: [], id: id, name: virtualNode.name,
+                isVirtual: true});
               this.streamNodes[id] = new StreamNode(connectionNode,
                 virtualStreamNode, virtualStream);
               this.connection.datastore.streamsIndex[virtualStream.id] = virtualStream;
@@ -92,11 +98,15 @@ var ConnectionNode = module.exports = TreeNode.implement(
           if (virtNodeWaiting[stream.id]) {
             if (this.streamNodes[stream.id].redirect) {
               // for loop to add them all ?
-              this.streamNodes[stream.id].redirect.push(virtNodeWaiting[stream.id]);
+              for (var i = 0, n = virtNodeWaiting[stream.id].length; i < n; ++i) {
+                this.streamNodes[stream.id].redirect.push(virtNodeWaiting[stream.id][i]);
+              }
             } else {
               this.streamNodes[stream.id].redirect = virtNodeWaiting[stream.id];
             }
+            delete virtNodeWaiting[stream.id];
           }
+
         }.bind(this),
         function (error) {   // done
           if (error) { error = 'ConnectionNode failed to init structure - ' + error; }

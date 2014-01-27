@@ -29,7 +29,14 @@ var VirtualNode = module.exports = function VirtualNode(node, name) {
 
   this._clientData();
   this._createIfNotExist();
+  //this._emptyStream();
+};
 
+VirtualNode.prototype._emptyStream = function () {
+  if (this._node.clientData) {
+    delete this._node.clientData;
+  }
+  this._pushChanges();
 };
 
 VirtualNode.prototype._integrity = function () {

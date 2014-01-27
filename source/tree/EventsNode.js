@@ -146,6 +146,20 @@ var EventsNode = module.exports = TreeNode.implement(
       if (otherNode !== thisNode) {
         this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
       }
+
+      var thisStreams = this.treeMap.getFiltersFromNode(thisNode);
+      thisStreams = [thisStreams];
+      var streams = this.treeMap.getFiltersFromNode(otherNode);
+      streams = [streams];
+
+      for (var i = 0, n = thisStreams.length; i < n; ++i) {
+        streams.push(thisStreams[i]);
+      }
+      console.log(streams);
+      this.treeMap.createVirtualNode(streams);
+
+
+
     }
 
   });

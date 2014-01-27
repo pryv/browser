@@ -22,6 +22,7 @@ var StreamNode = module.exports = TreeNode.implement(
         this.stream.color = parentNode.stream.color;
       }
     }
+
     /**
      * eventsNodes are stored by their key
      **/
@@ -163,6 +164,15 @@ var StreamNode = module.exports = TreeNode.implement(
       if (eventNode === null) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
       }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventEnterScope(event, reason, callback);
+          }
+        }
+      }
       eventNode.eventEnterScope(event, reason, callback);
       var aggregatedParent = this._findAggregatedParent();
       if (aggregatedParent) {
@@ -179,6 +189,15 @@ var StreamNode = module.exports = TreeNode.implement(
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventLeaveScope(event, reason, callback);
+          }
+        }
       }
       eventNode.eventLeaveScope(event, reason, callback);
       if (_.size(eventNode.events) === 0) {
@@ -197,13 +216,21 @@ var StreamNode = module.exports = TreeNode.implement(
           delete aggregatedParent.eventsNodesAggregated[key];
         }
       }
-
     },
 
     eventChange: function (event, reason, callback) {
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
         throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventChange(event, reason, callback);
+          }
+        }
       }
       eventNode.eventChange(event, reason, callback);
       var aggregatedParent = this._findAggregatedParent();

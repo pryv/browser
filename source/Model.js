@@ -186,6 +186,9 @@ Model.prototype.addConnection = function (connection) {
   if (!connection._accessInfo) {
     connection.accessInfo();
   }
+  if (!connection._privateProfile) {
+    connection.privateProfile();
+  }
   var userConnection = this.connections.add(connection),
   batch = this.activeFilter.startBatch('adding connections');
   this.activeFilter.addConnection(userConnection, batch);

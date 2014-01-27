@@ -2,6 +2,9 @@
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
 var StreamNode = require('./StreamNode');
+var VirtualNode = require('./VirtualNode.js');
+var Pryv = require('pryv');
+
 var STREAM_MARGIN = 20;
 var SERIAL = 0;
 var STREAM_COLORS = ['#1abc9c', '#2ecc71', '#3498db', '#9b59b6',
@@ -33,10 +36,10 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
       options = options || {};
       this.streamNodes = {};
+
+      /* Set color to root stream is none and connection is mine (i.e type=personal) */
       var usedColor = [];
       if (this.connection.accessInfo().type && this.connection.accessInfo().type === 'personal') {
-
-
         this.connection.streams.walkTree(options, function (stream) {
           if (!stream.parentId && stream.clientData && stream.clientData['pryv-browser:bgColor']) {
             usedColor.push(stream.clientData['pryv-browser:bgColor']);
@@ -64,13 +67,68 @@ var ConnectionNode = module.exports = TreeNode.implement(
           }
         }.bind(this));
       }
+
+      var virtNodeWaiting = {};
       this.connection.streams.walkTree(options,
         function (stream) {  // eachNode
           var parentNode = this;
           if (stream.parent) {   // if not parent, this connection node is the parent
             parentNode = this.streamNodes[stream.parent.id];
           }
+
           this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
+
+          if (VirtualNode.nodeHas(stream)) {
+            var vn = VirtualNode.getNodes(stream);
+            console.log('The stream', stream.id, 'has virtual nodes:', vn);
+
+            // for each virtual node of stream
+            _.each(vn, function (virtualNode) {
+              var id = '';
+              // create the virtual node's id
+              _.each(virtualNode.filters, function (s) {
+                id = id + s.streamId;
+              });
+
+              // set the redirections to the children
+              _.each(virtualNode.filters, function (s) {
+                if (this.streamNodes[s.streamId]) {
+                  if (this.streamNodes[s.streamId].redirect) {
+                    this.streamNodes[s.streamId].push({to: id, type: s.type});
+                  } else {
+                    this.streamNodes[s.streamId] = [{to: id, type: s.type}];
+                  }
+                } else {
+                  if (virtNodeWaiting[s.streamId]) {
+                    virtNodeWaiting[s.streamId].push({to: id, type: s.type});
+                  } else {
+                    virtNodeWaiting[s.streamId] = [{to: id, type: s.type}];
+                  }
+                }
+              }.bind(this));
+              var connectionNode =  this;
+              var virtualStreamNode = this.streamNodes[stream.id];
+              var virtualStream = new Pryv.Stream(this.connection, {_parent: stream,
+                parentId: stream.id, childrenIds: [], id: id});
+              this.streamNodes[id] = new StreamNode(connectionNode,
+                virtualStreamNode, virtualStream);
+              this.connection.datastore.streamsIndex[virtualStream.id] = virtualStream;
+              stream.childrenIds.push(virtualStream.id);
+
+              console.log('Set up new virtual node as VirtualStream:', virtualStream);
+              console.log('The virtual node\'s parent has the following children',
+                stream.children);
+            }.bind(this));
+          }
+          // check for event redirection
+          if (virtNodeWaiting[stream.id]) {
+            if (this.streamNodes[stream.id].redirect) {
+              // for loop to add them all ?
+              this.streamNodes[stream.id].redirect.push(virtNodeWaiting[stream.id]);
+            } else {
+              this.streamNodes[stream.id].redirect = virtNodeWaiting[stream.id];
+            }
+          }
         }.bind(this),
         function (error) {   // done
           if (error) { error = 'ConnectionNode failed to init structure - ' + error; }

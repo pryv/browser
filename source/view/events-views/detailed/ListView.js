@@ -18,7 +18,7 @@ module.exports = Marionette.CompositeView.extend({
       $(this.container).append(
         '<div class="modal-panel-right"> ' +
         '    <div id="modal-right-content"> ' +
-        '        <ul id="detail-list"></ul> ' +
+        '        <div id="detail-list"></div> ' +
         '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
           '      <button id ="trash-selected" type="button" class="btn btn-danger">Trash Selected</button></div>' +
         '    </div> ' +

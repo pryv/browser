@@ -57,10 +57,15 @@ module.exports = Marionette.CompositeView.extend({
       this.model.get('collection').at(0).get('events').length === 1 &&
       this.model.get('singleNumberAsText')) {
       var m = this.model.get('collection').at(0);
-      $(this.container).html('<span class="single-number">' + m.get('events')[0].content + ' ' +
+      $(this.container).html('<div class="content Center-Container is-Table">' +
+        '<div class="Table-Cell">' +
+        '<div class="Center-Block">' +
+        '<span class="value"> ' +
+        m.get('events')[0].content + ' ' +
+        '</span><span class="unity">' +
         (this.useExtras ?
           Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
-        '</span>');
+        '</span></div></div></div>');
     } else {
       this.makePlot();
       this.onDateHighLighted();

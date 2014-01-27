@@ -112,7 +112,7 @@
   </script>
 
   <script type="text/html" id="template-detailListCompositeView">
-    <ul id="detail-list"></ul>
+    <div id="detail-list"></div>
   </script>
   <script type="text/html" id="template-subscribeListCompositeView">
     <ul id="subscribe-list"></ul>
@@ -120,8 +120,9 @@
   <script type="text/html" id="template-detailItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= new Date(event.time * 1000).toLocaleDateString() %> <%= new Date(event.time *
-      1000).toLocaleTimeString() %>
+      <span class="preview"><%= getPreview() %></span>
+      <span class="date"><%= new Date(event.time * 1000).toLocaleDateString() %></span>
+      <span class="time"><%= new Date(event.time * 1000).toLocaleTimeString() %></span>
     </div>
   </script>
   <script type="text/html" id="template-sharingListCompositeView">

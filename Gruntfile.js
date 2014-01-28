@@ -31,6 +31,7 @@ module.exports = function (grunt) {
           'dist/styles/vendor.min.css': ['source/styles/bootstrap.min.css',
             'source/styles/bootstrap-responsive.min.css',
             'source/styles/animate.css',
+            'source/styles/font-awesome.min.css',
             'source/timeframe-selector/styles/main.css']
         }
       }

@@ -13,7 +13,7 @@ var PositionsEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'PositionsEventsNode',
+    className: 'PositionsEventsNode EventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return DEFAULT_WEIGHT;

@@ -11,7 +11,6 @@ module.exports = CommonModel.implement(
   },
   {
     beforeRefreshModelView: function () {
-      console.log('tweet', this);
       this.modelContent = {
         content: this.eventDisplayed.content,
         description: this.eventDisplayed.description,

@@ -42,6 +42,7 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:posHeight', this.resize);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
   },
   resize: function () {
     if (this.map && this.bounds) {

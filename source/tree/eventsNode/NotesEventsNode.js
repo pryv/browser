@@ -13,7 +13,7 @@ var NotesEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'NotesEventsNode',
+    className: 'NotesEventsNode EventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return DEFAULT_WEIGHT;

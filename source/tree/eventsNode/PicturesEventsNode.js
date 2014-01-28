@@ -13,7 +13,7 @@ var PicturesEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'PicturesEventsNode',
+    className: 'PicturesEventsNode EventsNode',
     pluginView: EventsView,
 
     getWeight: function () {

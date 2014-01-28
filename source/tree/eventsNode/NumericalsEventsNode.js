@@ -13,7 +13,7 @@ var NumericalsEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'NumericalsEventsNode',
+    className: 'NumericalsEventsNode EventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return DEFAULT_WEIGHT;

@@ -13,7 +13,7 @@ var TweetsEventsNode = module.exports = EventsNode.implement(
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'TweetsEventsNode',
+    className: 'TweetsEventsNode EventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return DEFAULT_WEIGHT;

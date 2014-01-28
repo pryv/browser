@@ -18,6 +18,7 @@ module.exports = Marionette.ItemView.extend({
     this.listenTo(this.model, 'change:content', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
   },
   change: function () {
     $('#' + this.container).removeClass('animated ' + this.animation);

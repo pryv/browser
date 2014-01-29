@@ -10,10 +10,10 @@ var RootNode = require('./RootNode.js'),
  FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
  VirtualNode = require('./VirtualNode.js'),
  Pryv = require('pryv');
-var MARGIN_TOP = 20;
-var MARGIN_RIGHT = 20;
-var MARGIN_BOTTOM = 30;
-var MARGIN_LEFT = 20;
+var MARGIN_TOP = 40;
+var MARGIN_RIGHT = 40;
+var MARGIN_BOTTOM = 60;
+var MARGIN_LEFT = 40;
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
@@ -93,8 +93,8 @@ var TreeMap = module.exports = function (model) {
   //window.PryvBrowser = _.extend({}, window.PryvBrowser);
   var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
     var start = new Date().getTime();
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
+    this.root._generateChildrenTreemap(0,
+      0,
       this.root.width,
       this.root.height,
       true);

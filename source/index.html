@@ -4,10 +4,10 @@
 <head>
   <!-- ENV example -->
   <!-- @if NODE_ENV == 'DEVELOPMENT' -->
-  <title>Browser atglance DEV</title>
+  <title>Pryv @ Glance || DEVMODE</title>
   <base href="">
   <!-- @endif -->
-  <!-- @if NODE_ENV == 'STAGING' -->
+  <!-- @if NODE_ENV != 'DEVELOPMENT' -->
   <title>Pryv @ Glance</title>
   <base href="{browser-source}/">
   <!-- @endif -->
@@ -27,10 +27,10 @@
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');
-      <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
-      sampleApp.main();
+      <!-- @if NODE_ENV == 'PRODUCTION'  -->
+      sampleApp.main(false);
         <!-- @endif -->
-      <!-- @if NODE_ENV == 'DEVELOPMENT' -->
+      <!-- @if NODE_ENV != 'PRODUCTION' -->
       sampleApp.main(true);
       <!-- @endif -->
     });
@@ -231,11 +231,12 @@
   </script>
   <script type="template" id="template-detail-content-picture">
     <% if (event) { %>
-    <ul>
-      <li class="event-structure" id="current-picture"><img src="<%= getSrc() %>" alt="<%= getAlt()%>">
-        <div class="event-structure" id="add-attachment"></div>
-      </li>
-    </ul>
+      <div class="event-structure" id="current-picture">
+        <span class="fa fa-angle-left picture-icon"></span>
+        <span class="fa fa-angle-right picture-icon"></span>
+            <img src="<%= getSrc() %>" alt="<%= getAlt()%>">
+            <!--<div class="event-structure" id="add-attachment"></div> -->
+      </div>
     <% } %>
   </script>
 
@@ -341,7 +342,6 @@
 </head>
 
 <body>
-<!-- @if NODE_ENV != 'DEVELOPMENT' -->
 <span id="pryvButton"></span>
 <div id="login">
   <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
@@ -362,7 +362,6 @@
     </form>
   </div>
 </div>
-<!-- @endif -->
 <a href="javascript:void(0)" id="login-button" class="menu-button">Sign In</a>
 <a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>

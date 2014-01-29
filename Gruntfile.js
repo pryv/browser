@@ -112,11 +112,11 @@ module.exports = function (grunt) {
       dev: {
         NODE_ENV : 'DEVELOPMENT'
       },
+      prod: {
+        NODE_ENV : 'PRODUCTION'
+      },
       staging : {
         NODE_ENV : 'STAGING'
-      },
-      localStaging: {
-        NODE_ENV : 'LOCAL_STAGING'
       }
     },
     preprocess : {
@@ -170,7 +170,12 @@ module.exports = function (grunt) {
   grunt.registerTask('staging',
     ['jshint', 'env:staging', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:staging']);
-  grunt.registerTask('local',
-    ['jshint', 'env:localStaging', 'browserify',
+  grunt.registerTask('production',
+    ['jshint', 'env:prod', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:staging']);
+
+  // Deprecated
+  grunt.registerTask('local',
+    ['jshint', 'env:dev', 'browserify',
+      'cssmin', 'concat', 'copy', 'preprocess:dev']);
 };

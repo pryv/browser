@@ -139,9 +139,16 @@ _.extend(Controller.prototype, {
       if (this.contentView === null || this.contentView.type !== newContentView.type) {
         if (this.contentView !== null) {
           this.contentView.close();
+          this.contentView.off();
         }
         this.contentView = new newContentView.view({model: new Model({collection:
           this.collection})});
+        this.contentView.on('previous', function () {
+          this.updateSingleView(this.collection.prev().getCurrentElement());
+        }.bind(this));
+        this.contentView.on('next', function () {
+          this.updateSingleView(this.collection.next().getCurrentElement());
+        }.bind(this));
         if (newContentView.type === 'Creation') {
           $('.modal-panel-right').hide();
           this.contentView.connection = this.connection;

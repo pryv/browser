@@ -11,7 +11,8 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   STAGING = true,
   toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
   toShowSubscribe = ['#logo-subscribe'];
-var Model = module.exports = function () {
+var Model = module.exports = function (staging) {  //setup env with grunt
+  STAGING = staging || STAGING;
   window.Pryv = Pryv;
   this.urlUsername = Pryv.utility.getUsernameFromUrl();
   this.urlSharings = Pryv.utility.getSharingsFromUrl();

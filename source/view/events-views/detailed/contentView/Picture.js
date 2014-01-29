@@ -4,6 +4,7 @@ var Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.ItemView.extend({
   type: 'Picture',
+  tagName: 'div',
   template: '#template-detail-content-picture',
   itemViewContainer: '#detail-content',
   addAttachmentContainer: '#add-attachment',
@@ -28,6 +29,12 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
+    $('#current-picture .fa-angle-left').click(function () {
+      this.trigger('previous');
+    }.bind(this));
+    $('#current-picture .fa-angle-right').click(function () {
+      this.trigger('next');
+    }.bind(this));
     this.addAttachment();
   },
   addAttachment: function () {

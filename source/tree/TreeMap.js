@@ -130,8 +130,8 @@ var TreeMap = module.exports = function (model) {
     this.root.x =  MARGIN_LEFT;
     this.root.y =  MARGIN_TOP;
     this.root._createView();
-    this.root._generateChildrenTreemap(this.root.x,
-      this.root.y,
+    this.root._generateChildrenTreemap(0,
+      0,
       this.root.width,
       this.root.height,
       true);

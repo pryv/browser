@@ -531,6 +531,10 @@ text-align: center;*/
 #detail-list li:hover{
   background-color: #bdc3c7;
 }
+#detail-list .view div{
+  float: left;
+  padding: 5px;
+}
 #modal-left-content li.editing {
   border-bottom: none;
   padding: 0;
@@ -592,10 +596,32 @@ text-align: center;*/
 #current-picture img {
   max-height: 100%;
   max-width: 100%;
-  float: left;
+}
+#current-picture {
+  text-align: center;
+  background-color: black;
 }
 #current-picture #add-attachment {
   float: left;
+}
+#current-picture .picture-icon {
+  display: block;
+  height: 80px;
+  margin-top: -40px;
+  opacity: 1;
+  position: absolute;
+  top: 50%;
+  width: 27px;
+  z-index: 11;
+  color: #fff;
+  font-size: 80px;
+  cursor: pointer;
+}
+#current-picture .fa-angle-right {
+  right: 20px;
+}
+#current-picture .fa-angle-left {
+  left: 20px;
 }
 #map_canvas {
   width: 100%;
@@ -734,39 +760,4 @@ ul#DnD-legend > li {
 .btn-pryv-turquoise {
   background-color: #1abc9c;
   color: white;
-}
-
-@media (max-width: 100px), (max-height: 50px) {
-  .EventsNode .content, .EventsNode .chartContainer, .EventsNode .mapView {
-    display: none;
-  }
-  .EventsNode {
-    display: inline-block;
-    font-family: FontAwesome;
-    font-style: normal;
-    font-weight: normal;
-    line-height: 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-size: 50px;
-    text-align: center;
-  }
-  .NotesEventsNode:after {
-    content: '\f0f6';
-  }
-  .NumericalsEventsNode:after {
-    content: '\f080';
-  }
-  .PositionsEventsNode:after {
-    content: '\f041';
-  }
-  .PicturesEventsNode:after {
-    content: '\f03e';
-  }
-  .GenericEventsNode:after {
-    content: '\f15b';
-  }
-  .TweetsEventsNode:after {
-    content: '\f081';
-  }
 }

@@ -149,20 +149,20 @@ padding: 0px 15px;
 }
 
 /*-----------------theme Connection*/
-#node_connection_0 .NotesEventsNode{background-color: #1BBC9D;}
-#node_connection_0 .GenericEventsNode{background-color: #16A086;}
+#node_connection_0 .NotesEventsNode{background-color: #00896E;}
+#node_connection_0 .GenericEventsNode{background-color: #00896E;}
 #node_connection_0 .PositionsEventsNode{background-color: #00896E;}
 #node_connection_0 .NumericalsEventsNode{background-color: #00896E;}
 /*#node_connection_0 > .nodeHeader {border-left:20px solid #1BBC9D;}*/
 
-#node_connection_1 .NotesEventsNode{background-color: #3598DC;}
-#node_connection_1 .GenericEventsNode{background-color: #2A80B9;}
+#node_connection_1 .NotesEventsNode{background-color: #266A9C;}
+#node_connection_1 .GenericEventsNode{background-color: #266A9C;}
 #node_connection_1 .PositionsEventsNode{background-color: #266A9C;}
 #node_connection_1 .NumericalsEventsNode{background-color: #266A9C;}
 /*#node_connection_1 > .nodeHeader {border-left:20px solid #3598DC;}*/
 
-#node_connection_2 .NotesEventsNode{background-color: #F1C40F;}
-#node_connection_2 .GenericEventsNode{background-color: #F49C14;}
+#node_connection_2 .NotesEventsNode{background-color: #D68912;}
+#node_connection_2 .GenericEventsNode{background-color: #D68912;}
 #node_connection_2 .PositionsEventsNode{background-color: #D68912;}
 #node_connection_2 .NumericalsEventsNode{background-color: #D68912;}
 /*#node_connection_2 > .nodeHeader {border-left:20px solid #F1C40F;}*/
@@ -531,6 +531,10 @@ text-align: center;*/
 #detail-list li:hover{
   background-color: #bdc3c7;
 }
+#detail-list .view div{
+  float: left;
+  padding: 5px;
+}
 #modal-left-content li.editing {
   border-bottom: none;
   padding: 0;
@@ -592,10 +596,32 @@ text-align: center;*/
 #current-picture img {
   max-height: 100%;
   max-width: 100%;
-  float: left;
+}
+#current-picture {
+  text-align: center;
+  background-color: black;
 }
 #current-picture #add-attachment {
   float: left;
+}
+#current-picture .picture-icon {
+  display: block;
+  height: 80px;
+  margin-top: -40px;
+  opacity: 1;
+  position: absolute;
+  top: 50%;
+  width: 27px;
+  z-index: 11;
+  color: #fff;
+  font-size: 80px;
+  cursor: pointer;
+}
+#current-picture .fa-angle-right {
+  right: 20px;
+}
+#current-picture .fa-angle-left {
+  left: 20px;
 }
 #map_canvas {
   width: 100%;
@@ -734,39 +760,4 @@ ul#DnD-legend > li {
 .btn-pryv-turquoise {
   background-color: #1abc9c;
   color: white;
-}
-
-@media (max-width: 100px), (max-height: 50px) {
-  .EventsNode .content, .EventsNode .chartContainer, .EventsNode .mapView {
-    display: none;
-  }
-  .EventsNode {
-    display: inline-block;
-    font-family: FontAwesome;
-    font-style: normal;
-    font-weight: normal;
-    line-height: 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-size: 50px;
-    text-align: center;
-  }
-  .NotesEventsNode:after {
-    content: '\f0f6';
-  }
-  .NumericalsEventsNode:after {
-    content: '\f080';
-  }
-  .PositionsEventsNode:after {
-    content: '\f041';
-  }
-  .PicturesEventsNode:after {
-    content: '\f03e';
-  }
-  .GenericEventsNode:after {
-    content: '\f15b';
-  }
-  .TweetsEventsNode:after {
-    content: '\f081';
-  }
 }

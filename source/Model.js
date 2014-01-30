@@ -8,11 +8,11 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   Pryv = require('pryv'),
   TimeLine = require('./timeframe-selector/timeframe-selector.js'),
   PUBLIC_TOKEN = 'public',
-  STAGING = true,
+  STAGING,
   toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
   toShowSubscribe = ['#logo-subscribe'];
 var Model = module.exports = function (staging) {  //setup env with grunt
-  STAGING = staging || STAGING;
+  STAGING = !!staging;
   window.Pryv = Pryv;
   this.urlUsername = Pryv.utility.getUsernameFromUrl();
   this.urlSharings = Pryv.utility.getSharingsFromUrl();

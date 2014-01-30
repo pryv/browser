@@ -531,6 +531,10 @@ text-align: center;*/
 #detail-list li:hover{
   background-color: #bdc3c7;
 }
+#detail-list .view div{
+  float: left;
+  padding: 5px;
+}
 #modal-left-content li.editing {
   border-bottom: none;
   padding: 0;
@@ -595,6 +599,7 @@ text-align: center;*/
 }
 #current-picture {
   text-align: center;
+  background-color: black;
 }
 #current-picture #add-attachment {
   float: left;
@@ -608,7 +613,7 @@ text-align: center;*/
   top: 50%;
   width: 27px;
   z-index: 11;
-  color: black;
+  color: #fff;
   font-size: 80px;
   cursor: pointer;
 }

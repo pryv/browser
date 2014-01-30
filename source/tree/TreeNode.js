@@ -126,7 +126,6 @@ _.extend(TreeNode.prototype, {
             h = squarified[child.uniqueId].height;
         child.x = squarified[child.uniqueId].x;
         child.y = squarified[child.uniqueId].y;
-        console.log('TREEMAP before', child.uniqueId, child.x, child.y, w, h);
         child.width = w;
         child.height = h;
         if (w !== this.width) {
@@ -143,7 +142,6 @@ _.extend(TreeNode.prototype, {
         }
         if (child.x !== 0) { child.x += this.margin / 2; }
         if (child.y !== this.offset) { child.y += this.margin / 2; }
-        console.log('TREEMAP after', child.uniqueId, child.x, child.y, child.width, child.height);
       }, this);
 
       _.each(children, function (child) {
@@ -190,6 +188,9 @@ _.extend(TreeNode.prototype, {
         this.view.on('headerClicked', function () {
           if (this.stream) {
             this.treeMap.focusOnStreams(this.stream);
+          }
+          else if (this.connection) {
+            this.treeMap.focusOnConnections(this.connection);
           }
         }, this);
       }

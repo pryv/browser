@@ -186,6 +186,10 @@ var TreeMap = module.exports = function (model) {
   this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
 };
+TreeMap.prototype.focusOnConnections = function (connection) {
+  this.model.activeFilter.focusOnConnections(connection);
+};
+
 TreeMap.prototype.focusOnStreams = function (stream) {
   this.model.activeFilter.focusOnStreams(stream);
   this.setFocusedStreams(stream);

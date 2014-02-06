@@ -1,8 +1,9 @@
 /* global $, FB, twttr */
 var Backbone = require('backbone'),
-  Marionette = require('backbone.marionette');
+    Marionette = require('backbone.marionette'),
+    _ = require('underscore');
 // The recursive tree view
-function slugMe(value) {
+var slugMe = function (value) {
   var rExps = [
     {re: /[\xC0-\xC6]/g, ch: 'A'},
     {re: /[\xE0-\xE6]/g, ch: 'a'},
@@ -25,7 +26,17 @@ function slugMe(value) {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/\-{2,}/g, '-');
-}
+};
+var eachStream = function (collection, callback) {
+  collection.each(function (model) {
+    if (_.isFunction(callback)) {
+      callback(model);
+    }
+    if (model.children) {
+      eachStream(model.children, callback);
+    }
+  });
+};
 var TreeView = Marionette.CompositeView.extend({
   template: '#node-template',
   tagName: 'ul',
@@ -131,7 +142,12 @@ var TreeRoot = Marionette.CollectionView.extend({
       }
       access.name = name;
       access.token = token;
-      access.permissions = [{streamId : '*', level: permission}];
+      access.permissions = [];
+      eachStream(this.collection, function (model) {
+        if (model.get('checked')) {
+          access.permissions.push({streamId : model.get('id'), level: permission});
+        }
+      });
       this.options.connection.accesses.create(access, function (error, result) {
         if (error || result.message) {
           $btn.removeClass('btn-primary');

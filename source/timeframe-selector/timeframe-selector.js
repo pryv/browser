@@ -9,7 +9,7 @@ var Backbone = require('backbone'),
  */
 /* jshint -W101 */
 var customTimeModalTpl = '<div id="custom_time_modal" class="modal hide fade"> <div class="modal-header">   <button type="button" class="close" data-dismiss="modal">&times;</button>   <h3>Custom Timeframe</h3> </div> <div class="modal-body">   <form class="form-horizontal center">     <div id="from_ctrl" class="control-group">       <label class="control-label" for="from_selected">From:</label>       <div class="controls">         <input type="text" id="from_selected" class="input-medium">         <span id="from_helper" class="help-block"></span>       </div>     </div>     <div id="to_ctrl" class="control-group">       <label class="control-label" for="to_selected">To:</label>       <div class="controls">         <input type="text" id="to_selected" class="input-medium">         <span id="to_helper" class="help-block"></span>       </div>     </div>   </form> </div> <div class="modal-footer">   <button id="ok_btn" class="btn btn-primary">OK</button>   <a class="btn" data-dismiss="modal">Cancel</a> </div></div>';
-var timeViewTpl = '<span id="start-marker-label" class="marker-label">	<span id="start-marker-year"></span>	<span id="start-marker-month"></span>	<span id="start-marker-day"></span>	<span id="start-marker-dash" class="label-dash">-</span>	<span id="start-marker-hour"></span>	<span id="start-marker-dots" class="label-dots">:</span>	<span id="start-marker-minute"></span></span><span id="start-marker-arrow" class="tooltip-arrow"></span><span id="end-marker-label" class="marker-label">	<span id="end-marker-year"></span>	<span id="end-marker-month"></span>	<span id="end-marker-day"></span>	<span id="end-marker-dash" class="label-dash">-</span>	<span id="end-marker-hour"></span>	<span id="end-marker-dots" class="label-dots">:</span>	<span id="end-marker-minute"></span></span><span id="end-marker-arrow" class="tooltip-arrow"></span><span id="focus-marker-label" class="marker-label">	<span id="focus-marker-year"></span>	<span id="focus-marker-month"></span>	<span id="focus-marker-day"></span>	<span id="focus-marker-dash" class="label-dash">-</span>	<span id="focus-marker-hour"></span>	<span id="focus-marker-dots" class="label-dots">:</span>	<span id="focus-marker-minute"></span></span><span id="focus-marker-arrow" class="tooltip-arrow"></span><form class="form center">	<span id="arrow-left" class="nav-arrow prev"></span>	<div id="timeline-menu">		<span id="menu-arrow"></span>		<ul id="menu-items">			<!--<li id="settings" class="menu-item">settings</li>-->			<li id="today" class="menu-item">today</li>			<li id="custom" class="menu-item">custom</li>			<!--<li id="all" class="menu-item">all</li>-->			<li id="year" class="menu-item">year</li>			<li id="month" class="menu-item">month</li>			<li id="day" class="menu-item">day</li>						</ul>	</div>	<div id="timeline-scroll-wrapper">		<div id="timeline-content"></div>	</div>	<span id="arrow-right" class="nav-arrow next"></span></form>';
+var timeViewTpl = '<span id="start-marker-label" class="marker-label">	<span id="start-marker-year"></span>	<span id="start-marker-month"></span>	<span id="start-marker-day"></span>	<span id="start-marker-dash" class="label-dash">-</span>	<span id="start-marker-hour"></span>	<span id="start-marker-dots" class="label-dots">:</span>	<span id="start-marker-minute"></span></span><span id="start-marker-arrow" class="tooltip-arrow"></span><span id="end-marker-label" class="marker-label">	<span id="end-marker-year"></span>	<span id="end-marker-month"></span>	<span id="end-marker-day"></span>	<span id="end-marker-dash" class="label-dash">-</span>	<span id="end-marker-hour"></span>	<span id="end-marker-dots" class="label-dots">:</span>	<span id="end-marker-minute"></span></span><span id="end-marker-arrow" class="tooltip-arrow"></span><span id="focus-marker-label" class="marker-label">	<span id="focus-marker-year"></span>	<span id="focus-marker-month"></span>	<span id="focus-marker-day"></span>	<span id="focus-marker-dash" class="label-dash">-</span>	<span id="focus-marker-hour"></span>	<span id="focus-marker-dots" class="label-dots">:</span>	<span id="focus-marker-minute"></span></span><span id="focus-marker-arrow" class="tooltip-arrow"></span><form class="form center">	<span id="arrow-left" class="nav-arrow prev"></span><div id="timeline-scroll-wrapper">		<div id="timeline-content"></div>	</div>	<span id="arrow-right" class="nav-arrow next"></span></form>';
 
 var _keywords = {
   english: {
@@ -126,9 +126,12 @@ module.exports = Backbone.View.extend({
   frameTo: null,
   limitFrom: 0,
   limitTo: Infinity,
+  labelWidth: 225,
+  labelTipWidth: 14,
+  markerOffset: 0.05,
   arrowPressLongspeed: 3,
   arrowPressDuration: 1500,
-  proportionTimeFrame: 0.6666,
+  proportionTimeFrame: 0.6667,
   span: null,
   spanStep: null,
   spanName: null,
@@ -146,7 +149,9 @@ module.exports = Backbone.View.extend({
     'click #day': 'onClickTimeSpan',
     'click #month': 'onClickTimeSpan',
     'click #year': 'onClickTimeSpan',
+    'click #all': 'onClickAll',
     'click #timeline-menu': 'onClickMenu',
+    'click #frame-interval-label': 'onClickMenu',
     'click #custom': 'onClickCustomTime'
   },
   modals: {
@@ -173,8 +178,7 @@ module.exports = Backbone.View.extend({
 
     function resizedw() {
       self.setInitialWidth();
-      self.triggerFilter($('#start-marker').data('currentDate'),
-        $('#end-marker').data('currentDate'), true);
+      self.triggerFilter(self.frameFrom, self.frameTo, true);
     }
 
     $(window).resize(_.debounce(function () {
@@ -206,10 +210,11 @@ module.exports = Backbone.View.extend({
     return this;
   },
   setInitialWidth: function () {
-    var visibleWidth = $('#timeframe').width() - 2 *
-      ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
+    var visibleWidth = $('#timeframe').width();
+    /*  var visibleWidth = $('#timeframe').width() - 2 *
+    ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
       30 - $('#timeline-menu').outerWidth() -
-      parseInt($('#timeline-menu').css('marginRight'), null);
+      parseInt($('#timeline-menu').css('marginRight'), null); */
     $('#timeline-scroll-wrapper').width(visibleWidth);
     var initialLeftPosition = -visibleWidth;
     this.$timeline.width(3 * visibleWidth).css('left', initialLeftPosition + 'px').data({
@@ -281,9 +286,10 @@ module.exports = Backbone.View.extend({
       this.trigger('dateHighlighted', highlightedDate);
     }
   },
-  getIntervalLabel: function () {
-    var startDate = $('#start-marker').data('currentDate');
-    var endDate = $('#end-marker').data('currentDate');
+  // try to fix
+  setIntervalLabel: function (from, to) {
+    var startDate = from;
+    var endDate = to;
     var duration = endDate - startDate;
     var duration_in_sec = parseInt(duration / 1000, null);
     var interval_label = '';
@@ -330,6 +336,7 @@ module.exports = Backbone.View.extend({
       }
       interval_label += res === 1 ? '' : 's';
     }
+    interval_label = interval_label.toUpperCase();
     $('#frame-interval-label').text(interval_label);
     $('#frame-interval-label-value').text(interval_label);
     this.intervalLabelWidth = $('#frame-interval-label-value').width();
@@ -337,9 +344,20 @@ module.exports = Backbone.View.extend({
   fillTimeline: function () {
     this.setSpan();
     this.setMarkers();
+    var $startMarker = $('#start-marker');
+    var $startLabel = $('#start-marker-label');
+    var $startArrow = $('#start-marker-arrow');
+    var $endMarker = $('#end-marker');
+    var $endLabel = $('#end-marker-label');
+    var $endArrow = $('#end-marker-arrow');
+    var $focusMarker = $('#focus-marker');
+    var $focusLabel = $('#focus-marker-label');
+    var $focusArrow = $('#focus-marker-arrow');
+    var $selectedFrame = $('#selected-frame');
+    var $timeline = $('#timeline-scroll-wrapper');
     var self = this;
     if (!this.$timeline.hasClass('ui-draggable')) {
-      this.$timeline.draggable({axis: 'x',
+      /*this.$timeline.draggable({axis: 'x',
         start: function () {
           clearTimeout(self.focusTimeout);
           $('#focus-marker-label, #focus-marker-arrow').fadeOut();
@@ -378,298 +396,244 @@ module.exports = Backbone.View.extend({
           self.triggerFilter($('#start-marker').data('currentDate'),
             $('#end-marker').data('currentDate'));
         }
-      });
+      });*/
+      // Try to fix timelime
+      var delta = 0;
+      var startedLeft = 0;
+      var startedLeftFollow;
+      var startedSelectedFrameLeft;
+      var startedSelectedFrameWidth;
+      var startedFrom = self.frameFrom;
+      var startedTo = self.frameTo;
+      var currentFrom = self.frameFrom;
+      var currentTo = self.frameTo;
+      var showFocus = false;
 
-      $('#selected-frame').draggable({axis: 'x', grid: [ this.graduationStep, 0 ],
-        start: function (event) {
-          $(this).css('opacity', 0.4);
-          $(this).data('mouseLeft', event.pageX);
-          clearTimeout(self.focusTimeout);
-          $('#focus-marker-label, #focus-marker-arrow').fadeOut();
-        },
-        drag: function (event, ui) {
-          var startPosition = $(this).data('mouseLeft');
-          var currentLeft = event.pageX;
-          var diff = ui.position.left - $(this).data('leftPosition');
-          var nextStartDate = null, nextEndDate = null;
-          var currentStartDate = new Date($('#start-marker').data('currentDate'));
-          var currentEndDate = new Date($('#end-marker').data('currentDate'));
-
-          nextStartDate = currentLeft < startPosition ?
-            new Date(currentStartDate.getTime() - (self.spanStep * self.span)) :
-            new Date(currentStartDate.getTime() + (self.spanStep * self.span));
-          nextEndDate = currentLeft < startPosition ?
-            new Date(currentEndDate.getTime() - (self.spanStep * self.span)) :
-            new Date(currentEndDate.getTime() + (self.spanStep * self.span));
-          var startMarkerPosition = $('#start-marker').data('leftPosition') + diff;
-          $('#start-marker').data({
-            'leftPosition': startMarkerPosition,
-            'currentDate': nextStartDate.getTime()
-          }).css('left', startMarkerPosition);
-          self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
-          $('#start-marker-label').css({
-            'left': (startMarkerPosition - $('#start-marker-label').width() / 2) + 'px'
-          });
-          $('#start-marker-arrow').css({
-            'left': ($('#start-marker-arrow').position().left + diff) + 'px'
-          });
-          var endMarkerPosition = $('#end-marker').data('leftPosition') + diff;
-          $('#end-marker').data({
-            'leftPosition': endMarkerPosition,
-            'currentDate': nextEndDate.getTime()
-          }).css('left', endMarkerPosition);
-          self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
-          $('#end-marker-label').css({
-            'left': (endMarkerPosition - $('#start-marker-label').width() / 2) + 'px'
-          });
-          $('#end-marker-arrow').css({
-            'left': ($('#end-marker-arrow').position().left + diff) + 'px'
-          });
-          $('#frame-interval-label').css({
-            'left': ($('#frame-interval-label').position().left + diff) + 'px'
-          });
-          $(this).data({'mouseLeft': currentLeft, 'leftPosition': ui.position.left});
-        },
-        stop: function () {
-          $(this).css('opacity', 0.7);
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          self.triggerFilter($('#start-marker').data('currentDate'),
-            $('#end-marker').data('currentDate'));
+      var calculateDelta = function () {
+        return (self.frameTo - self.frameFrom) /
+               ($endMarker.position().left - $startMarker.position().left);
+      };
+      delta = calculateDelta();
+      var showFocusLabel = function () {
+        showFocus = true;
+        $focusLabel.fadeIn();
+      };
+      var hideFocusLabel = _.debounce(function () {
+        if (!showFocus) {
+          $focusLabel.fadeOut();
         }
-      });
+      }, 3000);
+      var startDragFocus = function (event, ui) {
+        startedLeft = ui.position.left;
+        startedLeftFollow = null;
+      };
+      var dragFocus = function ($arrToFollow, event, ui) {
+        if ($arrToFollow && !_.isArray($arrToFollow)) {
+          $arrToFollow = [$arrToFollow];
+        }
+        var xDiff = ui.position.left - startedLeft;
 
-      $('#start-marker,' +
-        ' #end-marker,' +
-        ' #focus-marker,' +
-        ' #start-marker-label,' +
-        ' #end-marker-label,' +
-        ' #focus-marker-label').draggable({axis: 'x', grid: [ this.graduationStep, 0 ],
-        start: function (event, ui) {
-          ui.helper.css({'zIndex': 20});
-          var markerId = ui.helper.attr('id').replace('-marker', '');
-          markerId = markerId.replace('-label', '');
-          if (markerId === 'focus') {
-            clearTimeout(self.focusTimeout);
-          } else {
-            $('#focus-marker-label, #focus-marker-arrow').fadeIn();
-          }
-          $('#focus-marker-label, #focus-marker-arrow').fadeIn();
-        },
-        drag: function (event, ui) {
-          var markerId = ui.helper.attr('id').replace('-marker', '');
-          markerId = markerId.replace('-label', '');
-          var siblingsMarkerSuffix = ui.helper.attr('id').indexOf('-label') > -1 ?
-            '-marker' : '-marker-label';
-          var currentDate = new Date($('#' + markerId + '-marker').data('currentDate'));
-          var left = ui.helper.data('leftPosition');
-          var currentLeft = ui.position.left;
-          var diff = currentLeft - left;
-          var nextDate = null;
-          if (diff !== 0) {
-            var numOfSteps = parseInt(Math.abs(currentLeft - left) / self.graduationStep, null);
-            nextDate = diff > 0 ?
-              new Date(currentDate.getTime() + (numOfSteps * self.spanStep * self.span)) :
-              new Date(currentDate.getTime() - (numOfSteps * self.spanStep * self.span));
-            ui.helper.data({'leftPosition': currentLeft});
-            $('#' + markerId + '-marker').data({'currentDate': nextDate.getTime()});
-          }
+        if (isNaN(delta)) {
+          delta = calculateDelta();
+        }
+        if ($arrToFollow) {
+          showFocusLabel();
+          var i = 0;
+          if (!startedLeftFollow) {
+            startedLeftFollow = [];
+            for (i = 0; i < $arrToFollow.length; i++) {
+              startedLeftFollow[i] = $arrToFollow[i].position().left;
 
-          if (nextDate !== null) {
-            var initDate = markerId === 'start' ?
-              self.frameFrom :
-              (markerId === 'end' ?
-                self.frameTo : $('#' + markerId + '-marker').data('initialDate'));
-            self.getMarkerLabelText(nextDate, markerId + '-marker', true, new Date(initDate));
+            }
           }
-          var positionStep = currentLeft - left;
-          var markerLeftPosition = ($('#' + markerId + siblingsMarkerSuffix).position()
-            .left + positionStep);
-          $('#' + markerId + siblingsMarkerSuffix).data({
-            'leftPosition': markerLeftPosition
-          }).css({ 'left': markerLeftPosition + 'px', 'zIndex': 20});
-          $('#' + markerId + '-marker-arrow').css({
-            'left': ($('#' + markerId + '-marker-arrow').position().left + positionStep) + 'px'
-          });
-
-          if (markerId === 'start' || markerId === 'end') {
-            self.getIntervalLabel();
-          }
-          var frameLeft = $('#selected-frame').position().left;
-          var frameWidth = $('#selected-frame').width();
-
-          switch (markerId) {
-          case 'start':
-            $('#selected-frame').css({
-              'left': (frameLeft + positionStep) + 'px',
-              'width': (frameWidth - positionStep) + 'px'
-            });
-            $('#frame-interval-label').css({
-              'left': (frameLeft + frameWidth / 2 - $('#frame-interval-label').width() / 2) + 'px'
-            });
-            break;
-          case 'end':
-            $('#selected-frame').css({
-              'left': frameLeft + 'px',
-              'width': (frameWidth + positionStep) + 'px'
-            });
-            $('#frame-interval-label').css({
-              'left': (frameLeft + frameWidth / 2 - $('#frame-interval-label').width() / 2) + 'px'
-            });
-            break;
-          case 'focus':
-            self.triggerHighlight(ui.helper.data('currentDate'));
-            break;
-          }
-          if (frameWidth < self.intervalLabelWidth &&
-            (markerId === 'start' || markerId === 'end')) {
-            $('#frame-interval-label').width($('#selected-frame').width());
-          } else {
-            $('#frame-interval-label').width(self.intervalLabelWidth);
-          }
-        },
-        stop: function (event, ui) {
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          ui.helper.css({'zIndex': 15});
-          var markerId = ui.helper.attr('id').replace('-marker', '');
-          markerId = markerId.replace('-label', '');
-          var siblingsMarkerSuffix = ui.helper.attr('id').indexOf('-label') > -1 ?
-            '-marker' : '-marker-label';
-          $('#' + markerId + siblingsMarkerSuffix).css({'zIndex': 15});
-          if (markerId === 'focus') {
-            self.focusTimeout = setTimeout(
-              $('#focus-marker-label', '#focus-marker-arrow').fadeOut(), 10000);
-          } else {
-            self.triggerFilter($('#start-marker').data('currentDate'),
-              $('#end-marker').data('currentDate'));
+          for (i = 0; i < $arrToFollow.length; i++) {
+            $arrToFollow[i].css({left: startedLeftFollow[i] + xDiff + 'px'});
           }
         }
+        var highlightedTime = self.frameFrom +
+            ($focusMarker.position().left -  $startMarker.position().left) *
+            delta;
+        self.setLabelText($focusLabel, highlightedTime);
+        self.triggerHighlight(highlightedTime);
+      };
+      var stopDragFocus = function () {
+        showFocus = false;
+        hideFocusLabel();
+      };
+      var startDragLimit = function (event, ui) {
+        delta = calculateDelta();
+        startedLeft = ui.position.left;
+        startedLeftFollow = null;
+        startedSelectedFrameLeft = $selectedFrame.position().left;
+        startedSelectedFrameWidth = $selectedFrame.width();
+        startedFrom = self.frameFrom;
+        startedTo = self.frameTo;
+        currentFrom = self.frameFrom;
+        currentTo = self.frameTo;
+      };
+      var stopDragLimit = function () {
+        self.triggerFilter(currentFrom, currentTo);
+      };
+      var dragLimit = function (start, $arrToFollow, $label, event, ui) {
+        if ($arrToFollow && !_.isArray($arrToFollow)) {
+          $arrToFollow = [$arrToFollow];
+        }
+        var xDiff = ui.position.left - startedLeft;
+        if (isNaN(delta)) {
+          delta = calculateDelta();
+        }
 
+        var currentTime;
+        if (start) {
+          currentFrom = currentTime = startedFrom + (xDiff * delta);
+          currentFrom = currentTime = currentFrom > currentTo ? currentTo: currentFrom;
+        } else {
+          currentTo = currentTime = startedTo + (xDiff * delta);
+          currentTo = currentTime = currentTo < currentFrom ? currentFrom : currentTo;
+        }
+        if ($arrToFollow) {
+          var i = 0;
+          if (!startedLeftFollow) {
+            startedLeftFollow = [];
+            for (i = 0; i < $arrToFollow.length; i++) {
+              startedLeftFollow[i] = $arrToFollow[i].position().left;
+            }
+          }
+          for (i = 0; i < $arrToFollow.length; i++) {
+            $arrToFollow[i].css({left: startedLeftFollow[i] + xDiff + 'px'});
+          }
+        }
+        if ($label) {
+          self.setLabelText($label, currentTime);
+        }
+        self.setIntervalLabel(currentFrom, currentTo);
+
+        // update selected frame position and width
+        if (start) {
+          $selectedFrame.css({
+            'left': (startedSelectedFrameLeft + xDiff) + 'px',
+            'width': (startedSelectedFrameWidth - xDiff) + 'px'
+          });
+        } else {
+          $selectedFrame.css({
+            'left': startedSelectedFrameLeft + 'px',
+            'width': (startedSelectedFrameWidth + xDiff) + 'px'
+          });
+        }
+      };
+      $startMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, true, [$startArrow, $startLabel], $startLabel),
+        stop: stopDragLimit.bind(self)
+      });
+      $startLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, true, [$startArrow, $startMarker], $startLabel),
+        stop: stopDragLimit.bind(self)
+      });
+      $endMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, false, [$endArrow, $endLabel], $endLabel),
+        stop: stopDragLimit.bind(self)
+      });
+      $endLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, false, [$endArrow, $endMarker], $endLabel),
+        stop: stopDragLimit.bind(self)
+      });
+      $focusMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragFocus.bind(self),
+        drag: dragFocus.bind(self, [$focusArrow, $focusLabel]),
+        stop: stopDragFocus.bind(self)
+      });
+      $focusLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragFocus.bind(self),
+        drag: dragFocus.bind(self, [$focusArrow, $focusMarker]),
+        stop: stopDragFocus.bind(self)
       });
     }
-
-    var timeline_position = $('#timeline-scroll-wrapper').position();
-    var constraint_top = timeline_position.top - 2;
-    var constraint_bottom = constraint_top + $('#start-marker').height();
-
-    $('#start-marker').draggable('option', 'containment',
-      [timeline_position.left - $('#start-marker').width() / 2 +
-        $('#start-marker-bg').width() / 2, constraint_top,
-        $('#end-marker').position().left, constraint_bottom]);
-    $('#start-marker-label').draggable('option', 'containment',
-      [timeline_position.left - $('#start-marker-label').width() / 2,
-        $('#start-marker-label').position().top, $('#end-marker-label').position().left,
-        $('#start-marker-label').position().top + $('#start-marker-label').height()]);
-    $('#end-marker').draggable('option', 'containment', [$('#start-marker').position().left,
-      constraint_top, timeline_position.left +
-        $('#timeline-scroll-wrapper').width() - $('#start-marker').width() / 2, constraint_bottom]);
-    $('#end-marker-label').draggable('option', 'containment',
-      [$('#start-marker-label').position().left, $('#start-marker-label').position().top,
-        timeline_position.left + $('#timeline-scroll-wrapper').width() -
-          $('#end-marker-label').width() / 2,
-        $('#start-marker-label').position().top + $('#start-marker-label').height()]);
-    $('#focus-marker').draggable('option', 'containment',
-      [$('#start-marker').position().left + $('#start-marker').width() / 2 -
-        $('#focus-marker').width() / 2, $('#focus-marker').position().top,
-        $('#end-marker').position().left + $('#start-marker').width() / 2 -
-          $('#focus-marker').width() / 2, timeline_position.top + $('#focus-marker').height()]);
-    $('#focus-marker-label').draggable('option', 'containment',
-      [$('#start-marker-label').position().left, $('#focus-marker-label').position().top,
-        $('#end-marker-label').position().left,
-        $('#focus-marker-label').position().top + $('#focus-marker-label').height()]);
-    $('#selected-frame').draggable('option', 'containment',
-      [timeline_position.left + $('#start-marker-bg').width() / 2,
-        timeline_position.top,
-        timeline_position.left + $('#timeline-scroll-wrapper').width() -
-          $('#selected-frame').width() - $('#start-marker-bg').width() / 2,
-        timeline_position.top + $('#start-marker').height()]);
+    var markerWidth = $startMarker.width();
+    var leftConstraint =  -$timeline.width() * 0.5;
+    var rightConstraint = $timeline.width() * 1.5;
+    var startConstraint = $startMarker.position().left + (markerWidth / 2);
+    var endConstraint = $endMarker.position().left + (markerWidth / 2);
+    $startMarker.draggable('option', 'containment',
+      [leftConstraint, 0, endConstraint - (markerWidth / 2), 0]);
+    $startLabel.draggable('option', 'containment',
+      [leftConstraint, 0, endConstraint - (this.labelWidth + this.labelTipWidth), 0]);
+    $endMarker.draggable('option', 'containment',
+      [startConstraint - (markerWidth / 2), 0, rightConstraint, 0]);
+    $endLabel.draggable('option', 'containment',
+      [startConstraint + this.labelTipWidth, 0, rightConstraint, 0]);
+    $focusMarker.draggable('option', 'containment',
+      [startConstraint  - (markerWidth / 2), 0, endConstraint  - (markerWidth / 2), 0]);
+    $focusLabel.draggable('option', 'containment',
+      [startConstraint - (this.labelWidth / 2), 0, endConstraint - (this.labelWidth / 2), 0]);
   },
   setMarkers: function () {
     if ($('#timeframe #start-marker').length === 0) {
       /*jshint -W101 */
-      $('#timeframe').append('<span id="start-marker"><span id="start-marker-bg"></span></span><span id="focus-marker"></span><span id="end-marker"><span id="end-marker-bg"></span></span><span id="selected-frame"></span><span id="frame-interval-label"></span><span id="frame-interval-label-value"></span>');
+      $('#timeframe').append('<span id="start-marker"><span id="start-marker-bg"></span></span><span id="focus-marker"></span><span id="end-marker"><span id="end-marker-bg"></span></span><span id="selected-frame"><span id="frame-interval-label"></span><div id="timeline-menu"><span id="menu-arrow"></span><ul id="menu-items"><!--<li id="settings" class="menu-item">settings</li>--><li id="today" class="menu-item">today</li><li id="custom" class="menu-item">custom</li><li id="all" class="menu-item">all</li><li id="year" class="menu-item">year</li><li id="month" class="menu-item">month</li><li id="day" class="menu-item">day</li></ul></div></span><span id="frame-interval-label-value"></span>');
     }
-    var timeframePositionLeft = $('#timeline-scroll-wrapper').position().left;
-    var timelineWidth = $('#timeline-scroll-wrapper').width();
-    var timelineProportion = this.proportionTimeFrame;
-    var timelineStart = (1 - this.proportionTimeFrame) / 2;
-    var timelineEnd = 1 - timelineStart;
+    var $startMarker = $('#start-marker');
+    var $startLabel = $('#start-marker-label');
+    var $startArrow =  $('#start-marker-arrow');
+    var $endMarker = $('#end-marker');
+    var $endLabel = $('#end-marker-label');
+    var $endArrow =  $('#end-marker-arrow');
+    var $focusMarker = $('#focus-marker');
+    var $focusLabel = $('#focus-marker-label');
+    var $focusArrow = $('#focus-marker-arrow');
+    var $selectedFrame = $('#selected-frame');
+    var $timeline = $('#timeline-scroll-wrapper');
 
-    var startPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineStart -
-      $('#start-marker').width() / 2, null);
-    $('#start-marker').css({
-      'left': startPositionLeft + 'px'
-    });
-    $('#start-marker').data({
-      'leftPosition': startPositionLeft,
-      'currentDate': this.frameFrom
-    });
-    $('#start-marker-arrow').css({
-      'left': (startPositionLeft + $('#start-marker').width() / 2 - 4) + 'px'
-    });
-    var startDate = new Date(this.frameFrom);
-    this.getMarkerLabelText(startDate, 'start-marker', false);
-    var startLabelPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineStart -
-      $('#start-marker-label').width() / 2, null) -
-      parseInt($('#start-marker-label').css('paddingLeft'), null);
-    $('#start-marker-label').data({
-      'leftPosition': startLabelPositionLeft
-    }).css({
-        'left': startLabelPositionLeft + 'px'
-      }).fadeIn();
-    var endPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineEnd -
-      $('#end-marker').width() / 2, null);
-    $('#end-marker').css({
-      'left': endPositionLeft + 'px'
-    });
-    $('#end-marker').data({
-      'leftPosition': endPositionLeft,
-      'currentDate': this.frameTo
-    });
-    $('#end-marker-arrow').css({
-      'left': (endPositionLeft + $('#end-marker').width() / 2 - 4) + 'px'
-    });
-    var endDate = new Date(this.frameTo);
-    this.getMarkerLabelText(endDate, 'end-marker', false);
-    var endLabelPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineEnd -
-      $('#end-marker-label').width() / 2, null) -
-      parseInt($('#end-marker-label').css('paddingLeft'), null);
-    $('#end-marker-label').data({
-      'leftPosition': endLabelPositionLeft
-    }).css({
-        'left': endLabelPositionLeft + 'px'
-      }).fadeIn();
-    var framePositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineStart, null);
-    $('#selected-frame').data('leftPosition', framePositionLeft);
-    $('#selected-frame').css({
-      'left': framePositionLeft + 'px',
-      'width': parseInt(timelineWidth * timelineProportion, null) + 'px'
-    }).fadeIn();
-    var focusPositionLeft = parseInt(framePositionLeft + $('#selected-frame').width() / 2 -
-      $('#focus-marker').width() / 2, null);
-    $('#focus-marker').css({
-      'left': focusPositionLeft + 'px'
-    });
-    var focusDate = new Date(this.frameFrom + (this.frameTo - this.frameFrom) / 2);
-    this.getMarkerLabelText(focusDate, 'focus-marker', false);
-    $('#focus-marker').data({
-      'leftPosition': focusPositionLeft,
-      'currentDate': focusDate.getTime(),
-      'initialDate': focusDate.getTime()
-    });
-    $('#focus-marker-arrow').css({
-      'left': (focusPositionLeft + $('#focus-marker').width() / 2 - 4) + 'px'
-    });
-    $('#focus-marker-label').css({
-      'left': (focusPositionLeft + $('#focus-marker').width() / 2 -
-        $('#focus-marker-label').width() / 2 -
-        parseInt($('#focus-marker-label').css('paddingLeft'), null)) + 'px'
-    });
+    $startLabel.css('width', this.labelWidth);
+    $endLabel.css('width', this.labelWidth);
+    $focusLabel.css('width', this.labelWidth);
 
-    this.getIntervalLabel();
-    $('#frame-interval-label').css({
-      'left': (framePositionLeft + $('#selected-frame').width() / 2 -
-        $('#frame-interval-label').width() / 2) + 'px'
-    });
+    var markerWidth = $startMarker.width();
+    var focusMarkerWidth = $focusMarker.width();
+    var labelWidth = this.labelWidth + this.labelTipWidth;
+    var timelineWidth = $timeline.width();
+
+    var startMarkerLeft = (this.markerOffset * timelineWidth) + labelWidth - (markerWidth / 2);
+    var endMarkerLeft = timelineWidth - startMarkerLeft - markerWidth;
+
+    var startArrowLeft = startMarkerLeft + (markerWidth / 2) - 4;
+    var endArrowLeft = endMarkerLeft + (markerWidth / 2) - 4;
+
+    var startLabelLeft =  (this.markerOffset * timelineWidth);
+    var endLabelLeft = timelineWidth - startLabelLeft - this.labelWidth;
+
+    var focusMarkerLeft = (timelineWidth / 2) - (focusMarkerWidth / 2);
+    var focusLabelLeft = (timelineWidth / 2) - (this.labelWidth / 2);
+    var focusArrowLeft = (timelineWidth / 2) - 4;
+
+    var selectedFrameLeft = startMarkerLeft + (markerWidth / 2);
+    var selectedFrameWidth = endMarkerLeft + (markerWidth / 2) - selectedFrameLeft;
+    $startMarker.css('left', startMarkerLeft + 'px').show();
+    $startLabel.css('left', startLabelLeft + 'px').show();
+    $startArrow.css('left', startArrowLeft + 'px').show();
+    $endMarker.css('left', endMarkerLeft + 'px').show();
+    $endLabel.css('left', endLabelLeft + 'px').show();
+    $endArrow.css('left', endArrowLeft + 'px').show();
+    $focusMarker.css('left', focusMarkerLeft + 'px').show();
+    $focusLabel.css('left', focusLabelLeft + 'px');
+    $focusArrow.css('left', focusArrowLeft + 'px').show();
+    $selectedFrame.css('left', selectedFrameLeft);
+    $selectedFrame.css('width', selectedFrameWidth).show();
+    this.setLabelText($startLabel, this.frameFrom);
+    this.setLabelText($endLabel, this.frameTo);
+    this.setIntervalLabel(this.frameFrom, this.frameTo);
+  },
+  setLabelText: function ($label, time) {
+    var date = new Date(time);
+    var year = date.getFullYear();
+    var month = this.translate('mon_' + date.getMonth());
+    var day = date.getDate();
+    var hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
+    var minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
+    $label.text(year + ' ' + month + ' ' + day + ' - ' + hours + ':' + minutes);
   },
   getMarkerLabelText: function (date, elementId, setDifference, initialDate) {
     var year = date.getFullYear();
@@ -737,6 +701,12 @@ module.exports = Backbone.View.extend({
       $('#timeline-scroll-wrapper').width() / this.graduationStep).toFixed(), null);
     this.spanStep = 1;
     this.span = parseInt((frame_duration / (numOfGraduations * this.spanStep)).toFixed(), null);
+  },
+  onClickAll: function () {
+    if (this.limitFrom !== 0 && this.limitTo !== Infinity) {
+      this.triggerFilter(this.limitFrom, this.limitTo);
+    }
+
   },
   onClickTimeSpan: function (spanName, updateTimeline, from, to) {
     /* Check if we received the spanName or a click event. */

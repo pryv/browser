@@ -1,19 +1,21 @@
 
- /* global $, window */
+/* global $, window */
 var RootNode = require('./RootNode.js'),
- SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
- _ = require('underscore'),
- DetailView = require('../view/events-views/detailed/Controller.js'),
- SharingView = require('../view/sharings/Controller.js'),
- CreateSharingView = require('../view/sharings/create/Controller.js'),
- SubscribeView = require('../view/subscribe/Controller.js'),
- FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
- VirtualNode = require('./VirtualNode.js'),
- Pryv = require('pryv');
+  SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
+  _ = require('underscore'),
+  DetailView = require('../view/events-views/detailed/Controller.js'),
+  SharingView = require('../view/sharings/Controller.js'),
+  CreateSharingView = require('../view/sharings/create/Controller.js'),
+  SubscribeView = require('../view/subscribe/Controller.js'),
+  FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
+  VirtualNode = require('./VirtualNode.js'),
+  Pryv = require('pryv');
 var MARGIN_TOP = 40;
 var MARGIN_RIGHT = 40;
 var MARGIN_BOTTOM = 60;
 var MARGIN_LEFT = 40;
+var IGNORE_TRASHED_EVENT  = true;
+var IGNORE_PARAM_CHANGED = false;
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
@@ -22,6 +24,8 @@ var TreeMap = module.exports = function (model) {
   this.subscribeView = null;
   this.createSharingView = null;
   this.focusedStreams = null;
+  this.trashedEvents = {};
+  this.events = {};
   var $tree = $('#tree');
   this.root = new RootNode(this, $tree.width() - MARGIN_LEFT - MARGIN_RIGHT,
     $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
@@ -86,13 +90,31 @@ var TreeMap = module.exports = function (model) {
     }
     if (streams.length !== 0) {
       this.showCreateSharingView($modal, this.model.loggedConnection, streams,
-      this.model.activeFilter.timeFrameST);
+        this.model.activeFilter.timeFrameST);
     }
   }.bind(this));
-
+  this._onIgnoreParamChanged = function () {
+    IGNORE_PARAM_CHANGED = false;
+    if (IGNORE_TRASHED_EVENT) {
+      var e = [];
+      _.each(this.events, function (event) {
+        if (event.trashed) {
+          e.push(event);
+          this.trashedEvents[event.id] = event;
+        }
+      }.bind(this));
+      this.eventLeaveScope({events: e});
+    } else {
+      this.eventEnterScope({events: this.trashedEvents});
+      this.trashedEvents = {};
+    }
+  };
   //window.PryvBrowser = _.extend({}, window.PryvBrowser);
   var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
     var start = new Date().getTime();
+    if (IGNORE_PARAM_CHANGED) {
+      this._onIgnoreParamChanged();
+    }
     this.root._generateChildrenTreemap(0,
       0,
       this.root.width,
@@ -103,23 +125,6 @@ var TreeMap = module.exports = function (model) {
     this.model.updateTimeFrameLimits();
     var end = new Date().getTime();
     var time = end - start;
-    /*var $StreamNode = $('.StreamNode');
-    $StreamNode.off('mouseenter');
-    $StreamNode.off('mouseleave');
-    $StreamNode.on('mouseenter', function (e) {
-      e.stopPropagation();
-      $(this).css({
-        'background-color': 'white',
-        'outline': '#fff solid 5px'
-      });
-    });
-    $StreamNode.on('mouseleave', function (e) {
-      e.stopPropagation();
-      $(this).css({
-        'background-color': '',
-        'outline': 'none'
-      });
-    });  */
     console.log('refreshTree execution:', time);
   }.bind(this), 10);
 
@@ -145,7 +150,12 @@ var TreeMap = module.exports = function (model) {
     console.log('eventEnter', content);
     var start = new Date().getTime();
     _.each(content.events, function (event) {
-      this.root.eventEnterScope(event, content.reason, function () {});
+      if (!IGNORE_TRASHED_EVENT || !event.trashed) {
+        this.events[event.id] = event;
+        this.root.eventEnterScope(event, content.reason, function () {});
+      } else {
+        this.trashedEvents[event.id] = event;
+      }
     }, this);
     this.root._createView();
     var end = new Date().getTime();
@@ -155,6 +165,7 @@ var TreeMap = module.exports = function (model) {
   }.bind(this);
 
   this.eventLeaveScope = function (content) {
+    console.log('eventLeave', content);
     var start = new Date().getTime();
     _.each(content.events, function (event) {
       this.root.eventLeaveScope(event, content.reason, function () {});
@@ -168,7 +179,12 @@ var TreeMap = module.exports = function (model) {
   this.eventChange = function (content) {
     var start = new Date().getTime();
     _.each(content.events, function (event) {
-      this.root.eventChange(event, content.reason, function () {});
+      if (!IGNORE_TRASHED_EVENT || !event.trashed) {
+        this.root.eventChange(event, content.reason, function () {});
+      } else {
+        this.trashedEvents[event.id] = event;
+        this.root.eventLeaveScope(event, content.reason, function () {});
+      }
     }, this);
     var end = new Date().getTime();
     var time = end - start;
@@ -216,15 +232,15 @@ TreeMap.prototype.destroy = function () {
 };
 
 
- /** The treemap's utility functions **/
+/** The treemap's utility functions **/
 
- /**
-  * Search for the node matching the arguments and returns it.
-  * @param nodeId the unique id in the DOM of the node
-  * @param streamId  the unique id of the stream associated with the node
-  * @param connectionId the unique id of the connection associated with the node
-  * @returns {find|*} returns the uniquely identifiable by the passed arguments
-  */
+/**
+ * Search for the node matching the arguments and returns it.
+ * @param nodeId the unique id in the DOM of the node
+ * @param streamId  the unique id of the stream associated with the node
+ * @param connectionId the unique id of the connection associated with the node
+ * @returns {find|*} returns the uniquely identifiable by the passed arguments
+ */
 TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   var node = this.root;
   node = node.connectionNodes[connectionId];
@@ -247,11 +263,11 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
 };
 
 
- /**
-  * Sets up all the controlling to aggregate two nodes.
-  * @param node1 the first node
-  * @param node2 the second node
-  */
+/**
+ * Sets up all the controlling to aggregate two nodes.
+ * @param node1 the first node
+ * @param node2 the second node
+ */
 TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
   var events = { };
   var attrname = null;
@@ -294,7 +310,7 @@ TreeMap.prototype.getFiltersFromNode = function (node) {
 
 
 
-   //======== Detailed View ========\\
+//======== Detailed View ========\\
 TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
   if (!this.hasDetailedView()) {
     this.detailedView = new DetailView($modal, this.model.connections);
@@ -360,7 +376,7 @@ TreeMap.prototype.closeSharingView = function () {
     this.sharingView = null;
   }
 };
- /*=================================*/
+/*=================================*/
 //========== CREATE SHARING VIEW =========\\
 TreeMap.prototype.hasCreateSharingView = function () {
   return typeof this.createSharingView !== 'undefined' && this.createSharingView !== null;
@@ -380,8 +396,8 @@ TreeMap.prototype.closeCreateSharingView = function () {
     this.createSharingView = null;
   }
 };
- /*=================================*/
- //========== SUBSCRIBE VIEW =========\\
+/*=================================*/
+//========== SUBSCRIBE VIEW =========\\
 TreeMap.prototype.hasSubscribeView = function () {
   return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
 };
@@ -398,13 +414,13 @@ TreeMap.prototype.closeSubscribeView = function () {
     this.subscribeView = null;
   }
 };
- /*=================================*/
+/*=================================*/
 /* jshint -W098 */
 
- /**
-  * Creates a virtual node from a certain number of events.
-  * @param eventsNodes is an array of events nodes you want to aggregate permanently.
-  */
+/**
+ * Creates a virtual node from a certain number of events.
+ * @param eventsNodes is an array of events nodes you want to aggregate permanently.
+ */
 TreeMap.prototype.createVirtualNode = function (filters) {
   var streams = [];
   var f = [];
@@ -426,10 +442,10 @@ TreeMap.prototype.createVirtualNode = function (filters) {
 
 TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
 
-   /* TODO:
-    * create the node, don't remove the already existing
-    * make sure the update follows at both places
-    */
+  /* TODO:
+   * create the node, don't remove the already existing
+   * make sure the update follows at both places
+   */
 
   // Depth first search for goal, starting from parent
   var hasChild = function (parent, goal) {
@@ -472,12 +488,33 @@ TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
 };
 
 
- /**
-  * Remove a existing virtual node.
-  * @param node the virtual node you want to remove
-  */
+/**
+ * Remove a existing virtual node.
+ * @param node the virtual node you want to remove
+ */
 TreeMap.prototype.removeVirtualNode = function (node) {
   /* TODO:
    * just remove the indicated node
    */
 };
+
+try {
+  Object.defineProperty(window.PryvBrowser, 'hideTrashedEvents', {
+    set: function (value) {
+      value = !!value;
+      if (_.isBoolean(value)) {
+        this.customConfig = true;
+        IGNORE_TRASHED_EVENT = value;
+        IGNORE_PARAM_CHANGED = true;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return IGNORE_TRASHED_EVENT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}

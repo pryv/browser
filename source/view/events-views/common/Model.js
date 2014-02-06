@@ -20,7 +20,9 @@ var Model = module.exports = function (events, params) {
   this.hasDetailedView = false;
   _.extend(this, params);
   this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
+    if (!_.isEmpty(this.events)) {
+      this._refreshModelView();
+    }
   }, 100);
   this.debounceRefresh();
 };
@@ -62,9 +64,9 @@ _.extend(Model.prototype, {
     if (this.hasDetailedView) {
       this.treeMap.deleteEventDetailedView(event);
     }
-    if (_.size(this.events) !== 0) {
-      this.debounceRefresh();
-    }
+    //if (!_.isEmpty(this.events)) {
+    this.debounceRefresh();
+    //}
   },
   eventChange: function (event) {
     if (!this.events[event.id] && this.verbose) {

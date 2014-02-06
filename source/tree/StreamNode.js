@@ -23,6 +23,7 @@ var StreamNode = module.exports = TreeNode.implement(
       }
     }
 
+
     /**
      * eventsNodes are stored by their key
      **/
@@ -194,7 +195,9 @@ var StreamNode = module.exports = TreeNode.implement(
     eventLeaveScope: function (event, reason, callback) {
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
-        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+        if (_.isFunction(callback)) {
+          return callback();
+        }
       }
       if (this.redirect) {
         for (var i = 0, n = this.redirect.length; i < n; ++i) {
@@ -206,7 +209,7 @@ var StreamNode = module.exports = TreeNode.implement(
         }
       }
       eventNode.eventLeaveScope(event, reason, callback);
-      if (_.size(eventNode.events) === 0) {
+      if (eventNode.size === 0) {
         eventNode._closeView();
         delete this.eventsNodes[key];
       }
@@ -217,10 +220,11 @@ var StreamNode = module.exports = TreeNode.implement(
           throw new Error('EventLeaveScore: did not find an eventView for the aggregated stream');
         }
         eventNode.eventLeaveScope(event, reason, callback);
-        if (_.size(eventNode.events) === 0) {
+        if (eventNode.size === 0) {
           eventNode._closeView();
           delete aggregatedParent.eventsNodesAggregated[key];
         }
+
       }
     },
 

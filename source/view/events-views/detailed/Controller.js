@@ -55,7 +55,7 @@ _.extend(Controller.prototype, {
       '    </div>      ' +
       '<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
-    if (_.size(this.events) > 0) {
+    if (!_.isEmpty(this.events)) {
       this.commonView.render();
     }
     this.resizeModal();

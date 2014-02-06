@@ -1,6 +1,6 @@
 #timeframe {
   height: 60px;
-  margin-bottom: -35px;
+  /*margin-bottom: -35px;*/
 }
 @font-face {
   font-family: MuseoSans-300;
@@ -200,7 +200,7 @@ padding: 0px 15px;
   /*box-sizing:border-box;
   -moz-box-sizing:border-box;
   -webkit-box-sizing:border-box;  */
-  /*overflow: hidden; */
+  overflow: hidden;
   word-break: break-all;
 }
 .GenericEventsNode .content, .GenericEventsNode a {
@@ -759,5 +759,9 @@ ul#DnD-legend > li {
 }
 .btn-pryv-turquoise {
   background-color: #1abc9c;
+  color: white;
+}
+.btn-pryv-alizarin {
+  background-color: #e74c3c;
   color: white;
 }

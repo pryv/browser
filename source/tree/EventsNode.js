@@ -19,10 +19,11 @@ var EventsNode = module.exports = TreeNode.implement(
   function (parentStreamNode) {
     TreeNode.call(this, parentStreamNode.treeMap, parentStreamNode);
     this.events = {};
+    this.trashedEvents = {};
     this.eventDisplayed = null;
     this.eventView = null;
     this.model  = null;
-
+    this.size = 0;
   },
   {
     className: 'EventsNode',
@@ -32,6 +33,7 @@ var EventsNode = module.exports = TreeNode.implement(
     },
 
     eventEnterScope: function (event, reason, callback) {
+      this.size++;
       event.streamName =
         this.parent.connectionNode.connection.datastore.getStreamById(event.streamId).name;
       this.events[event.id] = event;
@@ -46,9 +48,12 @@ var EventsNode = module.exports = TreeNode.implement(
       }
     },
     eventLeaveScope: function (event, reason, callback) {
-      delete this.events[event.id];
-      if (this.eventView) {
-        this.eventView.eventLeave(event);
+      if (this.events[event.id]) {
+        this.size--;
+        delete this.events[event.id];
+        if (this.eventView) {
+          this.eventView.eventLeave(event);
+        }
       }
     },
     onDateHighLighted: function (time) {
@@ -133,7 +138,6 @@ var EventsNode = module.exports = TreeNode.implement(
         stream: this.parent.stream
       }, this);
     },
-
     /**
      * Called on drag and drop
      * @param nodeId
@@ -175,6 +179,7 @@ var EventsNode = module.exports = TreeNode.implement(
 EventsNode.acceptThisEventType = function () {
   throw new Error('EventsNode.acceptThisEventType nust be overriden');
 };
+
 
 
 

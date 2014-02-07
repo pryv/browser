@@ -112,7 +112,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   resize: function () {
-
     if (!this.model.get('dimensions')) {
       return;
     }

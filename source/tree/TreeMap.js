@@ -286,7 +286,7 @@ TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
       this.dialog.close();
       this.dialog = null;
     }
-  }.bind(this)), events);
+  }.bind(this)), events, this);
   this.dialog.show();
 };
 
@@ -421,7 +421,7 @@ TreeMap.prototype.closeSubscribeView = function () {
  * Creates a virtual node from a certain number of events.
  * @param eventsNodes is an array of events nodes you want to aggregate permanently.
  */
-TreeMap.prototype.createVirtualNode = function (filters) {
+TreeMap.prototype.createVirtualNode = function (filters, name) {
   var streams = [];
   var f = [];
   for (var i = 0, n = filters.length; i < n; ++i) {
@@ -429,14 +429,14 @@ TreeMap.prototype.createVirtualNode = function (filters) {
     f.push({streamId: filters[i].stream.id, type: filters[i].type});
   }
   var parent = this.getFirstCommonParent(_.uniq(streams));
+  console.log('parent', parent);
 
-  var vn = new VirtualNode(parent, 'Virtual Node');
+  var vn = new VirtualNode(parent, name);
   vn.addFilters(f);
   if (parent instanceof Pryv.Connection) {
     console.log('Setting new Virtual node in connection', parent, 'with filters', f);
   } else if (parent instanceof Pryv.Stream) {
     console.log('Setting new Virtual node in stream', parent, 'with filters', f);
-    // parent.clientData['browser:virtualnode'] = [{name: 'test aggr', filters: filters}];
   }
 };
 
@@ -481,6 +481,7 @@ TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
 
   // start contains the common parent of all arguments in the end.
   var start = eventsNodes[0];
+  console.log(start);
   for (var i = 1, n = eventsNodes.length; i < n; ++i) {
     start = matchChild(start, eventsNodes[i]);
   }

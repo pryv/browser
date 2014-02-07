@@ -81,7 +81,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
             this.addRedirections(s.streamId, virtualNode.id, s.type);
           }.bind(this));
 
-          this.createVirtualStreamNode(this, null, virtualNode.id, virtualNode.name);
+          this.createVirtualStreamNode(this, null, virtualNode.id, virtualNode.name, virtualNode);
         }.bind(this));
       }
 
@@ -105,7 +105,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
               }.bind(this));
 
               this.createVirtualStreamNode(this.streamNodes[stream.id],
-                stream, virtualNode.id, virtualNode.name);
+                stream, virtualNode.id, virtualNode.name, virtualNode);
             }.bind(this));
           }
           // check for event redirection for the current stream
@@ -224,11 +224,11 @@ var ConnectionNode = module.exports = TreeNode.implement(
      * @param id the virtual node's id
      * @param name the virtual node's name
      */
-    createVirtualStreamNode: function (parentNode, parent, id, name) {
+    createVirtualStreamNode: function (parentNode, parent, id, name, vn) {
       var connectionNode =  this;
       var virtualStream = new Pryv.Stream(this.connection, {_parent: parent,
         parentId: parent ? parent.id : null, childrenIds: [], id: id, name: name,
-        isVirtual: true});
+        virtual: vn});
 
       this.streamNodes[id] = new StreamNode(connectionNode,
         parentNode, virtualStream);

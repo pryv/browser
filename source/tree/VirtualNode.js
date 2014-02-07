@@ -52,9 +52,14 @@ VirtualNode.prototype._createIfNotExist = function () {
   var data = null;
   if (this._node instanceof Pryv.Connection) {
     data = this._node.privateProfile();
+    console.log('Pryv.Connection', data);
   } else if (this._node instanceof Pryv.Stream) {
     data = this._node.clientData;
+    console.log('Pryv.Stream', data);
   }
+
+  console.log('node', this._node);
+
   if (!data[KEY]) {
     data[KEY] = [];
   }

@@ -14,7 +14,9 @@ module.exports = Backbone.Model.extend({
     color: null,
     style: null,
     transform: null,
-    interval: null
+    interval: null,
+
+    virtual: null
   },
   sortData: function () {
     this.get('events').sort(function (a, b) {
@@ -37,6 +39,9 @@ module.exports = Backbone.Model.extend({
   },
   get: function (attr) {
     var r = Backbone.Model.prototype.get.call(this, attr);
+    if (this.attributes.virtual) {
+      console.log('get', this.attributes.virtual);
+    }
     if (this.supports_html5_storage() && (attr === 'color' ||
         attr === 'style' ||
         attr === 'transform' ||

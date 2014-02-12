@@ -133,7 +133,6 @@ NumericalsPlugin.prototype.close = function () {
   this.modelView = null;
   this.eventDisplayed = null;
   this.needToRender = false;
-
 };
 
 
@@ -178,7 +177,8 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         streamId: eventsToAdd[i].streamId,
         streamName: eventsToAdd[i].stream.name,
         type: eventsToAdd[i].type,
-        category: 'any'
+        category: 'any',
+        virtual: this.eventsNode.getSettings()
       });
       this.seriesCollection.add(eventsModel);
     }

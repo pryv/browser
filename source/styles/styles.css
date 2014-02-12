@@ -729,9 +729,19 @@ text-align: center;*/
 #dnd-body {
     height: 100%;
 }
-#dnd-panel-chart, #dnd-panel-list{
+#dnd-panel-chart {
     width: 100%;
     height: 50%;
+}
+
+#dnd-panel-list {
+    width: 100%;
+}
+
+#dnd-panel-create {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
 }
 
 #dnd-panel-chart > .chartContainer {
@@ -741,6 +751,7 @@ text-align: center;*/
 
 #dnd-panel-chart .legend {
     position: absolute;
+    bottom: 0px;
 }
 
 #DnD-legend div {

@@ -146,32 +146,34 @@ var EventsNode = module.exports = TreeNode.implement(
      */
     dragAndDrop: function (nodeId, streamId, connectionId) {
 
+      if (!nodeId || !streamId || !connectionId) {
+        return this;
+      }
 
       var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
       var thisNode = this;
 
-      if (thisNode.parent.stream.isVirtual || otherNode.parent.stream.isVirtual) {
-        throw new Error('Creating virtual node out of virtual node currently not allowed.');
+      if (thisNode.isVirtual() || otherNode.isVirtual()) {
+        throw new Error('Creating virtual node out of virtual nodes currently not allowed.');
+      }
+      if (otherNode === thisNode) {
+        throw new Error('Creating virtual node with the same node not allowed.');
       }
 
-      if (otherNode !== thisNode) {
-        this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
-      }
+      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+    },
+    isVirtual: function () {
+      return (true && this.parent.stream.virtual);
+    },
+    getVirtual: function () {
+      console.log('getVirtual', this.parent.stream.virtual);
+      return this.parent.stream.virtual;
+    },
 
-      var thisStreams = this.treeMap.getFiltersFromNode(thisNode);
-      thisStreams = [thisStreams];
-      var streams = this.treeMap.getFiltersFromNode(otherNode);
-      streams = [streams];
-
-      for (var i = 0, n = thisStreams.length; i < n; ++i) {
-        streams.push(thisStreams[i]);
-      }
-      console.log(streams);
-      this.treeMap.createVirtualNode(streams);
-
-
-
+    getSettings: function () {
+      console.log('getSettings');
     }
+
 
   });
 

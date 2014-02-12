@@ -55,6 +55,7 @@ VirtualNode.prototype._createIfNotExist = function () {
   } else if (this._node instanceof Pryv.Stream) {
     data = this._node.clientData;
   }
+
   if (!data[KEY]) {
     data[KEY] = [];
   }

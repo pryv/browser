@@ -173,8 +173,18 @@
     
   <script type="text/html" id="template-draganddrop">
     <div id="dnd-body" class="dnd-body">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
+        <div class="modal-close"></div>
+      </div>
       <div id="dnd-panel-list"></div>
       <div id="dnd-panel-chart"></div>
+      <div id="dnd-panel-create">
+        <span class="dnd-node-text">Node's name:</span>
+        <input type="text" id="name-dnd" class="dnd-node-name" name="node-name">
+        <button id="submit-dnd" type="button" class="btn btn-pryv-turquoise">Create!</button>
+      </div>
     </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">

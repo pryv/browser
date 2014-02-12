@@ -6,9 +6,10 @@ var _ = require('underscore'),
   TimeSeriesCollection = require('./../numericals/TimeSeriesCollection.js'),
   TimeSeriesModel = require('./../numericals/TimeSeriesModel.js');
 
-var Controller = module.exports = function ($modal, events) {
+var Controller = module.exports = function ($modal, events, treemap) {
   this.$modal = $modal;
   this.events = events;
+  this.treemap = treemap;
   this.datas = {};
   this.chartView = null;
 
@@ -147,6 +148,33 @@ _.extend(Controller.prototype, {
 
     this.eventCollectionsViews.numerical.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+    }.bind(this));
+
+    $('#submit-dnd').on('click', function () {
+      var errors = 0;
+      var vn_filters = [];
+      var vn_name = $('#name-dnd').val();
+
+      this.chartCollection.each(function (e) {
+        vn_filters.push({stream: e.get('events')[0].stream, type: e.get('type')});
+      });
+
+      if (!vn_name) {
+        $('#name-dnd').attr('style', 'border:1px solid #ff0000');
+        errors++;
+      }
+
+      if (vn_filters.length === 0) {
+        errors++;
+      }
+
+      if (errors > 0) {
+        return;
+      } else {
+        this.treemap.createVirtualNode(vn_filters, vn_name);
+        this.close();
+        this.$modal.modal('hide');
+      }
     }.bind(this));
   },
 

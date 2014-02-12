@@ -15,11 +15,11 @@
     "backbone": "~1.0.0",
     "d3": "~3.3.8",
     "socket.io-client": "~0.9.16",
-    "google-maps": "~1.0.0",
-    "grunt-contrib-copy": "~0.4.1"
+    "google-maps": "~1.0.0"
   },
   "devDependencies": {
     "blanket": "latest",
+    "grunt": "~0.4.1",
     "grunt-contrib-uglify": "~0.2.7",
     "grunt-contrib-jshint": "~0.7.2",
     "grunt-contrib-watch": "~0.4.0",
@@ -27,7 +27,7 @@
     "grunt-contrib-concat": "~0.3.0",
     "grunt-env": "~0.4.0",
     "grunt-preprocess": "~3.0.1",
-    "grunt": "~0.4.1",
+    "grunt-contrib-copy": "~0.4.1",
     "grunt-browserify": "~1.0.0",
     "grunt-shell": "~0.2.2",
     "grunt-cli": "~0.1.8",

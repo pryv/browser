@@ -15,6 +15,7 @@ html{
 
 }
 body{
+  position: fixed;
   height: 100%;
   width: 100%;
   padding: 0;
@@ -425,6 +426,7 @@ text-align: center;*/
 .sharings, #create-sharing {
   overflow-y: auto;
   height: 100%;
+  max-width: 100%;
 }
 #form-create-sharing .form-group {
   margin-right: 0px !important;
@@ -509,7 +511,7 @@ text-align: center;*/
   border-bottom: silver solid 1px;
   list-style: none;
 }
-#detail-list .preview img {
+.preview img {
   max-width: 80px;
   max-height: 80px;
 }
@@ -593,6 +595,57 @@ text-align: center;*/
   content: '✖';
   color: #d2322d;
 }
+.full-height {
+  height: 100%;
+}
+#creation-content {
+  height: 100%;
+  margin-bottom: -60px;
+  padding-bottom: 60px;
+}
+#creation-typed {
+  border-right: silver solid 1px;
+  overflow: auto;
+}
+#creation-select-stream {
+  overflow: auto;
+}
+.td-preview {
+  width: 100px;
+}
+.td-progress {
+  vertical-align: middle !important;
+}
+.progress {
+  margin-bottom: 0;
+}
+.progress-bar {
+  background-color: #2980b9;
+}
+#creation-picture {
+  height: 100%;
+  margin-bottom: -150px;
+  padding-bottom: 150px;
+  text-align: center;
+  z-index: -1;
+}
+#creation-form {
+  z-index: 10;
+}
+#creation-picture img {
+  max-height: 100%;
+  max-width: 100%;
+}
+#creation-footer {
+  height: 60px;
+  border-top: silver solid 1px;
+}
+#creation-footer button {
+  margin: 12px;
+  float: right;
+  font-weight: bold;
+  color: white;
+}
 #current-picture img {
   max-height: 100%;
   max-width: 100%;
@@ -616,6 +669,51 @@ text-align: center;*/
   color: #fff;
   font-size: 80px;
   cursor: pointer;
+}
+#modal-content {
+  overflow: auto;
+  height: 100%;
+  padding-bottom: 60px;
+}
+
+#type-select {
+  text-align: center;
+  margin: 70px auto;
+}
+.type-select {
+  display: inline-block;
+  float: none;
+}
+.type-select i {
+  width: 100%;
+  height: 100%;
+  background-color: #bdc3c7;
+  text-align: center;
+  font-size: 5em;
+  padding: 20px;
+  color: #fff;
+}
+.type-select:hover i {
+  background-color: #ecf0f1;
+}
+.type-select:hover {
+  cursor: pointer;
+}
+#select-picture-container {
+  margin: 30px;
+  height: 250px;
+  border: gray dashed;
+  text-align: center;
+}
+#select-picture-container #fileSelect{
+  display: inline-block;
+  margin-top: 104px;
+}
+
+#select-picture-container #fileElem {
+  visibility: hidden;
+  width: 0;
+  height: 0;
 }
 #current-picture .fa-angle-right {
   right: 20px;

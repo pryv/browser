@@ -23,7 +23,7 @@ module.exports = Marionette.ItemView.extend({
   },
   itemViewContainer: '#detail-content',
   ui: {
-    type: 'ul#type-select',
+    type: '#type-select',
     stream: 'ul#stream-select'
   },
   initialize: function () {
@@ -47,8 +47,9 @@ module.exports = Marionette.ItemView.extend({
     return true;
   },
   onTypeClick: function (e) {
-    var typeSelected = $(e.target).attr('data-type'),
-    event = this.model.get('event');
+    var typeSelected =  $(e.target).attr('data-type') || $(e.target).parent().attr('data-type'),
+        event = this.model.get('event');
+
     if (validType.indexOf(typeSelected) !== -1) {
       event.type = typeSelected;
       this.step = creationStep.streamSelect;

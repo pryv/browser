@@ -194,16 +194,27 @@
     <% } %>
   </script>
   <script type="template" id="template-detail-creation-type">
-    <h1>Choose an event type</h1>
-    <ul id="type-select">
-      <li class="type-select" data-type="note/txt">Add a note</li>
-      <li class="type-select" data-type="picture/attached">Add a picture</li>
-      <li class="type-select" data-type="position/wgs84">Add a position</li>
-    </ul>
+    <div class="container">
+    <h1>Select type of event</h1>
+    <div class="row" id="type-select">
+      <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span>Add note</span></div>
+      <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span>Add picture</span></div>
+      <div class="type-select col-md-2" data-type="position/wgs84"><i class="fa fa-map-marker  fa-3"></i><span>Add position</span></div>
+    </div>
+    </div>
   </script>
   <script type="template" id="template-detail-creation-stream">
     <h1>Choose a stream</h1>
     <%= getStream() %>
+  </script>
+  <script type="template" id="template-detail-picture-select">
+    <div class="container">
+    <h1>Upload photo</h1>
+    <div id="select-picture-container">
+      <input type="file" id="fileElem" name="file" accept="image/*" multiple>
+      <button id="fileSelect" class="btn btn-default">Select Picture</button>
+    </div>
+    </div>
   </script>
   <script type="template" id="template-detail-content-tweet">
     <div class="content Center-Container is-Table">
@@ -219,6 +230,15 @@
         </div>
       </div>
     </div>
+  </script>
+  <script type="template" id="template-detail-creation-event">
+    <div id="creation-content">
+    <div id="creation-typed" class="full-height col-md-9">
+      <%= getTypedView() %>
+    </div>
+    <div id="creation-select-stream" class="full-height col-md-3"><h3>Select a Stream</h3><%= getStream() %></div>
+    </div>
+    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise">Publish</button><button id="cancel" class="btn">Cancel</button></div>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>

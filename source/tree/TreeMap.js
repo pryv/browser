@@ -5,6 +5,7 @@ var RootNode = require('./RootNode.js'),
   _ = require('underscore'),
   DetailView = require('../view/events-views/detailed/Controller.js'),
   SharingView = require('../view/sharings/Controller.js'),
+  CreateEventView = require('../view/create/Controller.js'),
   CreateSharingView = require('../view/sharings/create/Controller.js'),
   SubscribeView = require('../view/subscribe/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
@@ -23,6 +24,7 @@ var TreeMap = module.exports = function (model) {
   this.sharingView = null;
   this.subscribeView = null;
   this.createSharingView = null;
+  this.createEventView = null;
   this.focusedStreams = null;
   this.trashedEvents = {};
   this.events = {};
@@ -51,10 +53,9 @@ var TreeMap = module.exports = function (model) {
   $('#logo-add').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-      this.closeDetailedView();
+      this.closeCreateEventView();
     }.bind(this));
-    this.initDetailedView($modal);
-    this.detailedView.createNewEvent();
+    this.showCreateEventView($modal, this.model.connections);
   }.bind(this));
   $('#logo-sharing').click(function (e) {
     e.preventDefault();
@@ -75,7 +76,6 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateSharingView();
     }.bind(this));
-    console.log(this.model);
     var streams = [],
       loggedUsername = this.model.loggedConnection.username;
     this.model.activeFilter.getStreams().forEach(function (stream) {
@@ -326,6 +326,7 @@ TreeMap.prototype.hasDetailedView = function () {
 TreeMap.prototype.showDetailedView = function () {
   this.closeSharingView();
   this.closeCreateSharingView();
+  this.closeCreateEventView();
   if (this.hasDetailedView()) {
     this.detailedView.show();
   }
@@ -357,6 +358,26 @@ TreeMap.prototype.highlightDateDetailedView = function (time) {
   }
 };
 /*=================================*/
+//======= CREATE EVENT VIEW ======\\
+TreeMap.prototype.hasCreateEventView = function () {
+  return typeof this.createEventView !== 'undefined' && this.createEventView !== null;
+};
+TreeMap.prototype.showCreateEventView = function ($modal, connection) {
+  this.closeSharingView();
+  this.closeCreateSharingView();
+  this.closeDetailedView();
+  if ($modal && connection && !this.hasCreateEventView()) {
+    this.createEventView = new CreateEventView($modal, connection);
+    this.createEventView.show();
+  }
+};
+TreeMap.prototype.closeCreateEventView = function () {
+  if (this.hasCreateEventView()) {
+    this.createEventView.close();
+    this.createEventView = null;
+  }
+};
+/*=================================*/
 //========== SHARING VIEW =========\\
 TreeMap.prototype.hasSharingView = function () {
   return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
@@ -365,6 +386,7 @@ TreeMap.prototype.showSharingView = function ($modal, connection) {
   this.closeSharingView();
   this.closeCreateSharingView();
   this.closeDetailedView();
+  this.closeCreateEventView();
   if ($modal && connection) {
     this.sharingView = new SharingView($modal, connection);
     this.sharingView.show();
@@ -385,6 +407,7 @@ TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilt
   this.closeCreateSharingView();
   this.closeDetailedView();
   this.closeSharingView();
+  this.closeCreateEventView();
   if ($modal && timeFilter && streams) {
     this.createSharingView = new CreateSharingView($modal, connection, timeFilter, streams);
     this.createSharingView.show();

@@ -171,10 +171,19 @@ var TreeNode = Backbone.Model.extend({
     checked: true
   },
   initialize: function () {
+    console.log('SHARING', this);
     var children = this.get('children');
+    var c = [];
+    if (!children && this.get('connection') && this.get('childrenIds')) {
+      _.each(this.get('childrenIds'), function (childId) {
+        c.push(this.get('connection').streams.getById(childId));
+      }.bind(this));
+      children = c;
+      console.log('CHILDREN', children);
+    }
     if (children) {
       this.children = new TreeNodeCollection(children);
-      this.unset('children');
+      //this.unset('children');
     }
   }
 });
@@ -192,6 +201,7 @@ var Controller = module.exports = function ($modal, connection, streams, timeFil
 };
 Controller.prototype.show = function () {
   this.$modal.modal();
+  console.log('INIT SHARING', this.streams);
   var tree = new TreeNodeCollection(this.streams);
   this.treeView = new TreeRoot({
     collection: tree,

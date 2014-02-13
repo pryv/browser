@@ -709,7 +709,21 @@ text-align: center;*/
   display: inline-block;
   margin-top: 104px;
 }
-
+details details {
+  margin-left: 20px;
+}
+summary {
+  cursor: pointer;
+}
+details.focused {
+  outline: #e74c3c auto 5px;
+}
+summary.connection {
+  font-weight: bold;
+}
+details summary::-webkit-details-marker {
+  color: #3498db;
+}
 #select-picture-container #fileElem {
   visibility: hidden;
   width: 0;

@@ -14,11 +14,15 @@
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
+  <script src="script/airbrake-shim.js" data-airbrake-project-id="browser" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="staging"></script>
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');
-      sampleApp.main(true);
+      var wrapped = Airbrake.wrap(function() {
+        sampleApp.main(true);
+      });
+      wrapped();
     });
   </script>
   <script id="super-condensed-view" type="template">

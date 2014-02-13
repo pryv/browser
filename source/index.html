@@ -9,7 +9,7 @@
   <!-- @endif -->
   <!-- @if NODE_ENV != 'DEVELOPMENT' -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}/">
+  <base href="{browser-source}_<!-- @echo version -->/">
   <!-- @endif -->
 
   <meta property="og:title" content="Slice of life" />
@@ -23,14 +23,29 @@
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
+  <!-- @if NODE_ENV == 'PRODUCTION' -->
+  <script src="script/airbrake-shim.js" data-airbrake-project-id="browser" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="production"></script>
+  <!-- @endif -->
+  <!-- @if NODE_ENV == 'STAGING' -->
+  <script src="script/airbrake-shim.js" data-airbrake-project-id="browser" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="staging"></script>
+  <!-- @endif -->
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');
       <!-- @if NODE_ENV == 'PRODUCTION'  -->
-      sampleApp.main(false);
+      var wrapped = Airbrake.wrap(function() {
+        sampleApp.main(false);
+      });
+      wrapped();
         <!-- @endif -->
-      <!-- @if NODE_ENV != 'PRODUCTION' -->
+      <!-- @if NODE_ENV == 'STAGING' -->
+      var wrapped = Airbrake.wrap(function() {
+        sampleApp.main(true);
+      });
+      wrapped();
+      <!-- @endif -->
+      <!-- @if NODE_ENV == 'DEVELOPMENT' -->
       sampleApp.main(true);
       <!-- @endif -->
     });

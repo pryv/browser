@@ -32,7 +32,6 @@ module.exports = Backbone.Model.extend({
     data.append(file.name.split('.')[0], file);
     this.get('event').file = data;
     this.get('event').previewFile = file;
-    console.log('addAttachment', data, this);
   },
   removeAttachment: function (fileName, callback) {
     this.get('event').removeAttachment(fileName, callback);

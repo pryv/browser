@@ -15,7 +15,8 @@
     "backbone": "~1.0.0",
     "d3": "~3.3.8",
     "socket.io-client": "~0.9.16",
-    "google-maps": "~1.0.0"
+    "google-maps": "~1.0.0",
+    "airbrake": "~0.3.8"
   },
   "devDependencies": {
     "blanket": "latest",

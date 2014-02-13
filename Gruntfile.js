@@ -81,6 +81,13 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             filter: 'isFile',
+            src: 'source/vendor/airbrake-shim.js',
+            dest: 'dist/script/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            filter: 'isFile',
             src: 'source/timeframe-selector/images/**',
             dest: 'dist/images/'
           }
@@ -133,6 +140,9 @@ module.exports = function (grunt) {
           context : {
            name : 'foo'
            }   */
+          context: {
+            version: 'v<%= pkg.version %>'
+          }
         }
       }
     },

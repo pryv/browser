@@ -5,7 +5,7 @@ var _ = require('underscore'),
 
 var Controller = module.exports = function ($modal, connection, focusedStream) {
   this.connection = connection;
-  this.focusedStreams = focusedStream;
+  this.focusedStream = focusedStream;
   this.$modal = $modal;
   this.container = '.modal-content';
   this.view = null;

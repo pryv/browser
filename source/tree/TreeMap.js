@@ -55,7 +55,7 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateEventView();
     }.bind(this));
-    this.showCreateEventView($modal, this.model.connections);
+    this.showCreateEventView($modal, this.model.connections, this.focusedStreams);
   }.bind(this));
   $('#logo-sharing').click(function (e) {
     e.preventDefault();
@@ -150,6 +150,9 @@ var TreeMap = module.exports = function (model) {
     console.log('eventEnter', content);
     var start = new Date().getTime();
     _.each(content.events, function (event) {
+      if (!event.streamId) {
+        return;
+      }
       if (!IGNORE_TRASHED_EVENT || !event.trashed) {
         this.events[event.id] = event;
         this.root.eventEnterScope(event, content.reason, function () {});
@@ -204,6 +207,7 @@ var TreeMap = module.exports = function (model) {
 };
 TreeMap.prototype.focusOnConnections = function (connection) {
   this.model.activeFilter.focusOnConnections(connection);
+  this.setFocusedStreams(null);
 };
 
 TreeMap.prototype.focusOnStreams = function (stream) {
@@ -362,12 +366,12 @@ TreeMap.prototype.highlightDateDetailedView = function (time) {
 TreeMap.prototype.hasCreateEventView = function () {
   return typeof this.createEventView !== 'undefined' && this.createEventView !== null;
 };
-TreeMap.prototype.showCreateEventView = function ($modal, connection) {
+TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStream) {
   this.closeSharingView();
   this.closeCreateSharingView();
   this.closeDetailedView();
   if ($modal && connection && !this.hasCreateEventView()) {
-    this.createEventView = new CreateEventView($modal, connection);
+    this.createEventView = new CreateEventView($modal, connection, focusedStream);
     this.createEventView.show();
   }
 };

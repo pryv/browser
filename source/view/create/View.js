@@ -11,6 +11,7 @@ module.exports = Marionette.ItemView.extend({
   step: creationStep.typeSelect,
   className: 'full-height',
   pictureFile: null,
+  focusedStream: null,
   newEvents: null,
   eventTime: null,
   eventType: null,
@@ -118,7 +119,7 @@ module.exports = Marionette.ItemView.extend({
     type: '#type-select',
     fileElem: '#fileElem',
     fileSelect: '#fileSelect',
-    stream: 'ul#stream-select',
+    stream: '#stream-select',
     publish: '#publish',
     cancel: '#cancel'
   },
@@ -159,7 +160,7 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this),
         function (e) {
           $progressBar.find('.progress-bar').css(
-            {'width' : Math.ceil(e.loaded / e.total) * 100 + '%'}
+            {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
           );
         });
     };
@@ -251,25 +252,52 @@ module.exports = Marionette.ItemView.extend({
     }
   },
   getStream: function () {
-    var result = '<ul id="stream-select">',
-      connections  = this.connection._connections;
+    this.streamSelected  = this.focusedStream ? this.focusedStream.id : null;
+    this.connectionSelected  = this.focusedStream ? this.focusedStream.connection : null;
+    var result = '<div id="stream-select">',
+      connections  = this.connection._connections,
+      open = '';
+    if (this.focusedStream) {
+      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream);
+    }
     _.each(connections, function (c) {
       if (!this._isWritePermission(c)) {
         return;
       }
-      result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
+      if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
+        this.focusedStream.ancestor[0].serialId === c.serialId) {
+        open = 'open';
+        this.focusedStream.ancestor.shift();
+      } else {
+        open = '';
+      }
+      result += '<details ' + open + '><summary class="connection">' +
+        c.username + ' / ' + c._accessInfo.name + '</summary>';
       result += this.getStreamStructure(c);
-      result += '</ul>';
+      result += '</details>';
 
     }.bind(this));
-    return result + '</ul>';
+    return result + '</div>';
   },
   getStreamStructure: function (connection) {
     var rootStreams = connection.datastore.getStreams(),
-      result = '';
+      result = '', open = '', focused = '';
     for (var i = 0; i < rootStreams.length; i++) {
       if (this._isWritePermission(connection, rootStreams[i])) {
-        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+        if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
+          this.focusedStream.ancestor[0].id === rootStreams[i].id) {
+          open = 'open';
+          this.focusedStream.ancestor.shift();
+          if (this.focusedStream.ancestor.length === 0) {
+            focused = 'focused';
+          }
+        } else {
+          focused = '';
+          open = '';
+        }
+        result += '<details ' + open + ' class="' + focused + '">' +
+          this._walkStreamStructure(rootStreams[i]) +
+          '</details>';
       }
     }
     return result;
@@ -278,12 +306,27 @@ module.exports = Marionette.ItemView.extend({
   _walkStreamStructure: function (stream) {
     var preSelected = this.connectionId === stream.connection.serialId &&
       this.streamId === stream.id ? 'preSelected-stream' : '';
-    var result = '<li class="' + preSelected + '" data-connection="' +
+    var result = '<summary class="' + preSelected + '" data-connection="' +
       stream.connection.serialId + '" data-stream="' +
-      stream.id + '">' + stream.name + '</li>';
+      stream.id + '">' + stream.name + '</summary>';
+    var open = '';
+    var focused = '';
     for (var j = 0; j < stream.children.length; j++) {
       if (this._isWritePermission(stream.connection, stream.children[j])) {
-        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+        if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
+          this.focusedStream.ancestor[0].id === stream.children[j].id) {
+          open = 'open';
+          this.focusedStream.ancestor.shift();
+          if (this.focusedStream.ancestor.length === 0) {
+            focused = 'focused';
+          }
+        } else {
+          open = '';
+          focused = '';
+        }
+        result += '<details ' + open + ' class="' + focused + '">' +
+          this._walkStreamStructure(stream.children[j]) +
+          '</details>';
       }
     }
     return result;
@@ -311,5 +354,16 @@ module.exports = Marionette.ItemView.extend({
       });
     }
     return false;
+  },
+  _getStreamAncestor: function (stream) {
+    var result = [];
+    var ancestor = stream.parent;
+    result.unshift(stream);
+    while (ancestor) {
+      result.unshift(ancestor);
+      ancestor = ancestor.parent;
+    }
+    result.unshift(stream.connection);
+    return result;
   }
 });

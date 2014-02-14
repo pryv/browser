@@ -237,6 +237,8 @@ var ConnectionNode = module.exports = TreeNode.implement(
         parent.childrenIds.push(virtualStream.id);
       }
       console.log('Set up new virtual node as VirtualStream:', virtualStream);
+
+      return {virtStream: virtualStream, virtStreamNode: this.streamNodes[id]};
     },
 
 //----------- debug ------------//

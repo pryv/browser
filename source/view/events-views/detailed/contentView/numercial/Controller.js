@@ -143,6 +143,22 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
   removeSeriesEvent: function (m) {
+    var virtual = this.model.get('virtual');
+    console.log('virtualvirtualvirtualvirtualvirtualvirtual', virtual);
+    var streamId = m.get('streamId');
+    var type = m.get('type');
+    var filters = virtual.filters;
+    var newFilter = [];
+    for (var i = 0; i < filters.length; ++i) {
+      if (!(filters[i].streamId === streamId &&
+        filters[i].type === type)) {
+        newFilter.push(filters[i]);
+      }
+    }
+    virtual.filters = newFilter;
+
+
+
     this.closeChild();
     this.viewType = Gcv;
     this.collection.remove(m);
@@ -167,7 +183,8 @@ module.exports = Marionette.ItemView.extend({
   },
   prepareGeneralConfigModel: function () {
     this.viewModel = new Model({
-      collection: this.collection
+      collection: this.collection,
+      virtual: this.model.get('virtual')
     });
   },
   closeChild: function () {

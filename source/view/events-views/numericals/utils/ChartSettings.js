@@ -31,6 +31,7 @@ var Settings = module.exports = function Setting(stream, type, virtualNode, offs
   this._ptr = null;
 
   this._createIfNotExist();
+  //this._emptyData();
 };
 
 
@@ -67,6 +68,17 @@ Settings.prototype._createIfNotExist = function () {
     this._ptr = this._stream.clientData['pryv-browser:charts'][this._type].settings;
   }
 };
+
+
+Settings.prototype._emptyData = function () {
+  if (!this._virtualNode) {
+    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
+    this._stream.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for has been pushed:', error, result);
+    });
+  }
+};
+
 
 
 Settings.prototype._pushChanges = function () {

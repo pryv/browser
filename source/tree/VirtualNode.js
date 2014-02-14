@@ -123,6 +123,7 @@ Object.defineProperty(VirtualNode.prototype, 'filters', {
   }
 });
 
+
 Object.defineProperty(VirtualNode.prototype, 'name', {
   get: function () {
     return this._name;
@@ -176,6 +177,9 @@ VirtualNode.prototype.addFilters = function (filter) {
     this._pushChanges();
   }
 };
+
+
+
 
 
 /*

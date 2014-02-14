@@ -3,6 +3,7 @@ var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   Model = require('../../../numericals/TimeSeriesModel.js'),
   Collection = require('../../../numericals/TimeSeriesCollection.js'),
+  Settings = require('../../../numericals/utils/ChartSettings.js'),
   Sev = require('./SingleEditView.js'),
   Gcv = require('./GeneralConfigView.js');
 
@@ -20,6 +21,7 @@ module.exports = Marionette.ItemView.extend({
   rendered: false,
   needToRender: null,
   firstRender: null,
+  virtual: null,
   initialize: function () {
     this.firstRender = true;
     this.listenTo(this.model, 'change:collection', this.collectionChanged.bind(this));
@@ -75,17 +77,25 @@ module.exports = Marionette.ItemView.extend({
           }
         }
       } else {
+        var s = new Settings(ev.stream, ev.type, this.model.get('virtual'));
+        console.log('settings', s);
         c.add(new Model({
             events: [ev],
             connectionId: connectionId,
+            stream: ev.stream,
             streamId: streamId,
             streamName: streamName,
             type: type,
-            category: 'any'
+            category: 'any',
+            virtual: this.model.get('virtual'),
+            color: s.get('color'),
+            style: s.get('style'),
+            transform: s.get('transform'),
+            interval: s.get('interval')
           })
         );
       }
-    });
+    }.bind(this));
   },
   onClose: function () {
     this.view.close();
@@ -104,9 +114,13 @@ module.exports = Marionette.ItemView.extend({
     this.prepareSingleEditModel(m);
     this.render();
   },
-  readySeriesEvent: function () {
+  readySeriesEvent: function (m) {
+    var s = new Settings(m.get('stream'), m.get('type'), m.get('virtual'));
+    s.set('color', m.get('color'));
+    s.set('style', m.get('style'));
+    s.set('transform', m.get('transform'));
+    s.set('interval', m.get('interval'));
 
-    // TODO: save model changes in stream's storage and virtual node's storage
     this.closeChild();
     this.viewType = Gcv;
     this.prepareGeneralConfigModel();

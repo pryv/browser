@@ -142,7 +142,7 @@ _.extend(Controller.prototype, {
           this.contentView.off();
         }
         this.contentView = new newContentView.view({model: new Model({collection:
-          this.collection})});
+          this.collection, virtual: this.virtual})});
         this.contentView.on('previous', function () {
           this.updateSingleView(this.collection.prev().getCurrentElement());
         }.bind(this));

@@ -85,7 +85,6 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
       return;
     }
     var connectionIndex = this.connectionToRemove.indexOf(connection.serialId);
-    console.log('Add connection', this.connectionToRemove, connection, connectionIndex);
     if (connectionIndex !== -1) {
       this.connectionToRemove[connectionIndex] = null;
       if (batchWaitForMe) { batchWaitForMe.done(); }
@@ -126,7 +125,6 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
 
     var monitor = this._monitors[connectionId];
     if (! monitor) {
-      console.log('REMOVE CONNECTION', connectionSerialId, 'shush');
       if (this.connectionToRemove.indexOf(connectionId) === -1) {
         this.connectionToRemove.push(connectionId);
       }

@@ -4,7 +4,7 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.2/">
+  <base href="{browser-source}_v0.0.3/">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="Content available on Pryv only." />
@@ -139,7 +139,9 @@
   </script>
   <script type="text/html" id="template-sharingItemView">
 
-    <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= sharing.name %></td><td><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
+    <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td class="sharing-name col-md-4"><span class="sharing-edit-name"><%= sharing.name %></span><i class="fa fa-edit sharing-edit-name"></i><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
+        <button class="btn btn-default" type="button">Save</button>
+      </span></div></td><td class="sharing-url"><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
      <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
       <a href="https://twitter.com/share" class="twitter-share-button" data-url="<%= sharing.url %>" data-via="pryv" data-count="none">Tweet</a>
       <fb:share-button href="<%= sharing.url %>" type="button"></fb:share-button></td>
@@ -178,7 +180,9 @@
     </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
-    <a class="DnD-legend-button" href="javascript:;">+</a>
+    <a class="btn btn-primary btn-xs DnD-legend-button" href="javascript:;">
+      <span class="glyphicon glyphicon-plus"></span>
+    </a>
     <span class="DnD-legend-text"><%= displayName() %></span>
   </script>
   <script type="text/template" id="template-chart-container">
@@ -323,12 +327,12 @@
 
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
-        </li>
-        <li class="event-structure editable" id="current-time">time: <label><%= new Date(event.time *
+        </li> -->
+        <li class="event-structure editable" id="current-time">Time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
           %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
-        </li>
+        </li> <!--
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">
         </li> -->

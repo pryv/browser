@@ -715,8 +715,8 @@ details details {
 summary {
   cursor: pointer;
 }
-details.focused {
-  outline: #e74c3c auto 5px;
+summary.focused {
+  background-color: #95a5a6;
 }
 summary.connection {
   font-weight: bold;

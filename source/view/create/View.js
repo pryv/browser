@@ -135,6 +135,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.publish.bind('click', this.onPublishClick.bind(this));
     this.ui.cancel.bind('click', this.onCancelClick.bind(this));
     $('.td-progress').hide();
+    $('details').details();
   },
   onPublishClick: function () {
     if (!this.canPublish) {
@@ -295,22 +296,20 @@ module.exports = Marionette.ItemView.extend({
           focused = '';
           open = '';
         }
-        result += '<details ' + open + ' class="' + focused + '">' +
-          this._walkStreamStructure(rootStreams[i]) +
+        result += '<details ' + open + ' ">' +
+          this._walkStreamStructure(rootStreams[i], focused) +
           '</details>';
       }
     }
     return result;
 
   },
-  _walkStreamStructure: function (stream) {
-    var preSelected = this.connectionId === stream.connection.serialId &&
-      this.streamId === stream.id ? 'preSelected-stream' : '';
-    var result = '<summary class="' + preSelected + '" data-connection="' +
+  _walkStreamStructure: function (stream, focused) {
+    var result = '<summary class="' + focused + '" data-connection="' +
       stream.connection.serialId + '" data-stream="' +
       stream.id + '">' + stream.name + '</summary>';
     var open = '';
-    var focused = '';
+    focused = '';
     for (var j = 0; j < stream.children.length; j++) {
       if (this._isWritePermission(stream.connection, stream.children[j])) {
         if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
@@ -324,8 +323,8 @@ module.exports = Marionette.ItemView.extend({
           open = '';
           focused = '';
         }
-        result += '<details ' + open + ' class="' + focused + '">' +
-          this._walkStreamStructure(stream.children[j]) +
+        result += '<details ' + open + ' ">' +
+          this._walkStreamStructure(stream.children[j], focused) +
           '</details>';
       }
     }

@@ -33,7 +33,6 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   }
   // create connection handler and filter
   this.onFiltersChanged = function () {
-    console.log('onFiltersChanged', arguments);
     this.activeFilter.timeFrameLT = [arguments[0].from, arguments[0].to];
   };
 
@@ -140,7 +139,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   $('#login-button').click(function (e) {
     if (this.loggedConnection) {
       e.stopPropagation();
-      Pryv.Auth.logout();
+      Pryv.Auth.trustedLogout();
     } else {
       $('#login').css('display', 'block');
       $('#login').removeClass('animated slideOutRight');
@@ -204,9 +203,7 @@ Model.prototype.removeConnections = function (connections) {
  */
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
-    var stats = this.activeFilter.stats(),
-      currentLimit = {from: this.timeView.limitFrom - 3600, to: this.timeView.limitTo + 3600};
-    console.log('updateLimits', stats, currentLimit);
+    var stats = this.activeFilter.stats();
     this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
   }.bind(this), 100))();
 };

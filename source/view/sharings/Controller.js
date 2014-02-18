@@ -35,6 +35,7 @@ _.extend(Controller.prototype, {
       this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
       this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
       this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
+      this.sharingListView.on('itemview:sharing:update', this._onUpdateSharingClick.bind(this));
     }
     this.sharingListView.render();
     this.bookmarkListView.render();
@@ -126,5 +127,8 @@ _.extend(Controller.prototype, {
         this.sharingCollection.remove(sharingModel);
       }
     }.bind(this));
+  },
+  _onUpdateSharingClick: function (e, view) {
+    this.connection.accesses.update(view.model.get('sharing'), view.endUpdateSharing.bind(view));
   }
 });

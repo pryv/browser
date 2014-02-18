@@ -231,10 +231,14 @@ module.exports = Backbone.View.extend({
   },
   _checkLimitDates: function (dateFrom, dateTo) {
     console.log('From:', this.limitFrom, dateFrom, 'To:', this.limitTo, dateTo);
-    dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
+   /*dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
     dateFrom = dateFrom >= this.limitTo ? this.frameFrom : dateFrom;
     dateTo = dateTo > this.limitTo ? this.limitTo : dateTo;
-    dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo;
+    dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo; */
+    if (dateFrom > dateTo) {
+      dateFrom = this.frameFrom;
+      dateTo = this.frameTo;
+    }
     console.log('After', dateFrom, dateTo);
     return {from: dateFrom, to: dateTo};
   },

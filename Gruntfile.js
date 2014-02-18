@@ -45,6 +45,7 @@ module.exports = function (grunt) {
       dist: {
         src: ['source/vendor/jquery-1.9.1.js',
           'source/vendor/jquery-ui-1.10.3.custom.min.js',
+          'source/vendor/jquery.details.min.js',
           'source/vendor/bootstrap.min.js',
           'source/vendor/require.js',
           'source/vendor/jquery.flot.js',

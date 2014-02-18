@@ -156,16 +156,20 @@ module.exports = Marionette.CompositeView.extend({
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
           case 'ready':
-            legend = legend + '<a class="DnD-legend-button-ready" href="javascript:;">ok</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-ready" ' +
+              'href="javascript:;"><span class="glyphicon glyphicon-ok"></span></a>';
             break;
           case 'duplicate':
-            legend = legend + '<a class="DnD-legend-button-duplicate" href="javascript:;">2</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-duplicate" ' +
+              'href="javascript:;"><span class="glyphicon glyphicon-magnet"></span></a>';
             break;
           case 'remove':
-            legend = legend + '<a class="DnD-legend-button-remove" href="javascript:;">x</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-remove" ' +
+              'href="javascript:;"><span class="glyphicon glyphicon-trash"></span></a>';
             break;
           case 'edit':
-            legend = legend + '<a class="DnD-legend-button-edit" href="javascript:;">e</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-edit" ' +
+              'href="javascript:;"><span class="glyphicon glyphicon-pencil"></span></a>';
             break;
           }
         }

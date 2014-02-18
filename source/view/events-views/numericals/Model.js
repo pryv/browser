@@ -5,7 +5,8 @@ var _ = require('underscore'),
   ChartView = require('./ChartView.js'),
   ChartModel = require('./ChartModel.js'),
   TsCollection = require('./TimeSeriesCollection.js'),
-  TsModel = require('./TimeSeriesModel.js');
+  TsModel = require('./TimeSeriesModel.js'),
+  Settings = require('./utils/ChartSettings.js');
 
 
 var NumericalsPlugin = module.exports = function (events, params, node) {
@@ -171,6 +172,8 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       eventsModel = matching[0];
       eventsModel.get('events').push(eventsToAdd[i]);
     } else {
+      var s = new Settings(eventsToAdd[i].stream,
+        eventsToAdd[i].type, this.eventsNode.parent.stream.virtual);
       eventsModel = new TsModel({
         events: [eventsToAdd[i]],
         connectionId: eventsToAdd[i].connection.id,
@@ -178,11 +181,14 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         streamName: eventsToAdd[i].stream.name,
         type: eventsToAdd[i].type,
         category: 'any',
-        virtual: this.eventsNode.getSettings()
+        virtual: this.eventsNode.parent.stream.virtual,
+        color: s.get('color'),
+        style: s.get('style'),
+        transform: s.get('transform'),
+        interval: s.get('interval')
       });
       this.seriesCollection.add(eventsModel);
     }
-
   }
 /*
   // Process those to remove
@@ -263,6 +269,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         this.detailedView.addEvents(this.events);
         this.detailedView.show();
         this.detailedView.highlightDate(this.highlightedTime);
+        this.detailedView.virtual = this.eventsNode.parent.stream.virtual;
       }.bind(this));
     }
   } else if (this.view) {

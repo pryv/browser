@@ -748,8 +748,20 @@ details summary::-webkit-details-marker {
     height: 50%;
 }
 
-#dnd-panel-list {
-    width: 100%;
+#dnd-panel-list > ul  {
+    list-style-type: none;
+}
+
+#dnd-panel-list > ul > li > ul {
+    list-style-type: none;
+    margin-top: 5px;
+}
+
+#dnd-panel-list > ul > li > ul > li{
+    float: left;
+    margin-right: 10px;
+    border: 1px solid #C2C2C2;
+    padding: 3px 5px 3px 0;
 }
 
 #dnd-panel-create {
@@ -768,16 +780,33 @@ details summary::-webkit-details-marker {
     bottom: 0px;
 }
 
-#DnD-legend div {
-
+.legend-container ul {
+    list-style-type: none;
+    margin-top: 5px;
 }
 
-#DnD-legend button {
-
+#DnD-legend ul {
+    list-style-type: none;
+    margin-bottom: 5px;
 }
 
-#DnD-legend span {
+.legend-container li, #DnD-legend li{
+    float: left;
+    margin-right: 10px;
+    border: 1px solid #C2C2C2;
+    padding: 3px 5px 3px 0;
+}
 
+.legend-container .btn {
+    margin-right: 3px;
+}
+
+.DnD-legend-color {
+    display: inline;
+}
+
+.DnD-legend-text {
+    margin-left: 5px;
 }
 
 ul#DnD-legend {

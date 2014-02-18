@@ -18,6 +18,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
+    console.log('this.model', this.model);
 
     if (this.chartView) {
       this.chartView.model.set('collection', this.model.get('collection'));
@@ -35,7 +36,7 @@ module.exports = Marionette.ItemView.extend({
           dimensions: null,
           legendStyle: 'list', // Legend style: 'list', 'table'
           legendButton: true,  // A button in the legend
-          legendButtonContent: ['edit', 'duplicate', 'remove'],
+          legendButtonContent: this.model.get('virtual') ? ['edit', 'remove'] : ['edit'],
           legendShow: true,     // Show legend or not
           legendContainer: '#legend-container-general', //false or a a selector
           legendExtras: true,   // use extras in the legend

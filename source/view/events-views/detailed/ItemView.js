@@ -8,7 +8,7 @@ module.exports = Marionette.ItemView.extend({
     getPreview: function () {
       var type = this.event.type;
       if (type.indexOf('picture') === 0) {
-        return '<img src=" ' + this.event.attachmentsUrl + '">';
+        return '<img src=" ' + this.event.getPicturePreview() + '">';
       }
       return '';
     }

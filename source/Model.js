@@ -114,6 +114,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       signedOut: function (connection) {
         this.hideLoggedInElement();
         this.removeConnection(connection);
+        this.removeConnections(this.bookmakrsConnections);
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
@@ -185,7 +186,7 @@ Model.prototype.addConnection = function (connection) {
   batch.done();
 };
 Model.prototype.addConnections = function (connections) {
-  connections.forEach(function (conn) {
+  _.each(connections, function (conn) {
     this.addConnection(conn);
   }.bind(this));
 };
@@ -194,7 +195,7 @@ Model.prototype.removeConnection = function (connection) {
 };
 
 Model.prototype.removeConnections = function (connections) {
-  connections.forEach(function (conn) {
+  _.each(connections, function (conn) {
     this.removeConnection(conn);
   }.bind(this));
 };

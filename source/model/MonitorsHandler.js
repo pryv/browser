@@ -119,7 +119,6 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
  */
 MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batch) {
   var myBatch = this.startBatch('removeConnections', batch);
-
   if (! _.isArray(connectionSerialId)) { connectionSerialId = [connectionSerialId];  }
   _.each(connectionSerialId, function (connectionId) {
 
@@ -132,14 +131,14 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
       return;
     }
 
-    this.focusOnStreams([]);
+   // this.focusOnStreams([]);
     var self = this;
     var maxCloseTry = 100;
     var closeMonitor = function () {
       if (monitor.getEvents().length > 0) {
         self._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
           monitor.getEvents(), myBatch);
-        delete self._monitors[connectionSerialId];
+        delete self._monitors[connectionId];
         monitor.destroy();
         myBatch.done();
       } else if (maxCloseTry > 0) {

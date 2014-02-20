@@ -44,6 +44,9 @@ module.exports = Marionette.ItemView.extend({
         if (this.eventType === validType[1]) {
           return this._getPictureView();
         }
+        if (this.eventType === validType[0]) {
+          return this._getNoteView();
+        }
       }.bind(this)
     };
   },
@@ -71,33 +74,59 @@ module.exports = Marionette.ItemView.extend({
     $('details').details();
   },
   onPublishClick: function () {
-    if (this.eventType === validType[2]) {
-      this._publishPosition();
-    }
-    else if (this.eventType === validType[1]) {
-      this._publishPicture();
+    if (this.streamSelected && this.connectionSelected) {
+      if (this.eventType === validType[2]) {
+        this._publishPosition();
+      }
+      else if (this.eventType === validType[1]) {
+        this._publishPicture();
+      }
+      else if (this.eventType === validType[0]) {
+        this._publishNote();
+      }
     }
   },
+  _publishNote: function () {
+
+    var event = this.newEvents.get('event');
+    var tags = $('#tags-0').val().trim().split(',');
+    var description = $('#description-0').val().trim();
+    var content = $('#content-0').val().trim();
+    var time = new Date($('#edit-time-0').val()).getTime() / 1000;
+    event.content = content;
+    event.tags = tags;
+    event.description = description;
+    event.time = time;
+    event.streamId = this.streamSelected;
+    event.connection = this.connectionSelected;
+    this.newEvents.create(function (err) {
+      if (err) {
+        console.warn(err);
+        this.ui.publish.css({'background-color': '#e74c3c'});
+      } else {
+        this.ui.publish.css({'background-color': '#2ecc71'});
+      }
+    }.bind(this));
+  },
   _publishPosition: function () {
-    if (this.streamSelected && this.connectionSelected) {
-      var event = this.newEvents.get('event');
-      var tags = $('#tags-0').val().trim().split(',');
-      var description = $('#description-0').val().trim();
-      var time = new Date($('#edit-time-0').val()).getTime() / 1000;
-      event.tags = tags;
-      event.description = description;
-      event.time = time;
-      event.streamId = this.streamSelected;
-      event.connection = this.connectionSelected;
-      this.newEvents.create(function (err) {
-        if (err) {
-          console.warn(err);
-          this.ui.publish.css({'background-color': '#e74c3c'});
-        } else {
-          this.ui.publish.css({'background-color': '#2ecc71'});
-        }
-      }.bind(this));
-    }
+    var event = this.newEvents.get('event');
+    var tags = $('#tags-0').val().trim().split(',');
+    var description = $('#description-0').val().trim();
+    var time = new Date($('#edit-time-0').val()).getTime() / 1000;
+    event.tags = tags;
+    event.description = description;
+    event.time = time;
+    event.streamId = this.streamSelected;
+    event.connection = this.connectionSelected;
+    this.newEvents.create(function (err) {
+      if (err) {
+        console.warn(err);
+        this.ui.publish.css({'background-color': '#e74c3c'});
+      } else {
+        this.ui.publish.css({'background-color': '#2ecc71'});
+      }
+    }.bind(this));
+
   },
   _publishPicture: function () {
     if (!this.canPublish) {
@@ -127,26 +156,24 @@ module.exports = Marionette.ItemView.extend({
           );
         });
     };
-    if (this.streamSelected && this.connectionSelected) {
-      var tags, description, time, event, $progressBar;
-      $('.td-tags, .td-time, .td-description').hide();
-      $('.td-progress').show();
-      for (var i = 0; i < this.newEvents.length; i++) {
-        if (!this.newEvents[i].get('published')) {
-          event = this.newEvents[i].get('event');
-          $progressBar = $('#progress-' + i);
-          $progressBar.addClass('progress-striped', 'active');
-          $progressBar.find('.progress-bar').css({'background-color': '#2980b9', 'width' : '0%'});
-          tags = $('#tags-' + i).val().trim().split(',');
-          description = $('#description-' + i).val().trim();
-          time = new Date($('#edit-time-' + i).val()).getTime() / 1000;
-          event.tags = tags;
-          event.description = description;
-          event.time = time;
-          event.streamId = this.streamSelected;
-          event.connection = this.connectionSelected;
-          create(this.newEvents[i], $progressBar);
-        }
+    var tags, description, time, event, $progressBar;
+    $('.td-tags, .td-time, .td-description').hide();
+    $('.td-progress').show();
+    for (var i = 0; i < this.newEvents.length; i++) {
+      if (!this.newEvents[i].get('published')) {
+        event = this.newEvents[i].get('event');
+        $progressBar = $('#progress-' + i);
+        $progressBar.addClass('progress-striped', 'active');
+        $progressBar.find('.progress-bar').css({'background-color': '#2980b9', 'width' : '0%'});
+        tags = $('#tags-' + i).val().trim().split(',');
+        description = $('#description-' + i).val().trim();
+        time = new Date($('#edit-time-' + i).val()).getTime() / 1000;
+        event.tags = tags;
+        event.description = description;
+        event.time = time;
+        event.streamId = this.streamSelected;
+        event.connection = this.connectionSelected;
+        create(this.newEvents[i], $progressBar);
       }
     }
   },
@@ -175,6 +202,8 @@ module.exports = Marionette.ItemView.extend({
         MapLoader.load().then(function (google) {
           this.google = google;
         }.bind(this));
+        this.step = creationStep.eventEdit;
+      } else {
         this.step = creationStep.eventEdit;
       }
       this.render();
@@ -376,6 +405,40 @@ module.exports = Marionette.ItemView.extend({
       marker.setMap(map);
     }
   },
+  _getNoteView: function () {
+    this.newEvents = new Model({event: {
+      time: new Date().getTime() / 1000,
+      type: this.eventType,
+      tags: [],
+      content: null,
+      description: ''
+    }});
+    var result = '';
+    result += '<form id="creation-form" role="form">' +
+      '      <div class="form-group td-content">' +
+      '        <label class="sr-only" for="content">Content</label>' +
+      '        <textarea rows="15" class="form-control" id="content-0" ' +
+      'placeholder="Enter your note..."></textarea>' +
+      '      </div>' +
+      '  <div class="form-group td-tags">' +
+      '    <label class="sr-only" for="tags">Tags</label>' +
+      '    <input type="text" class="form-control" id="tags-0" ' +
+      'placeholder="Enter tags (comma separated)">' +
+      '    </div>' +
+      '    <div class="form-group td-time">' +
+      '      <label class="sr-only" for="edit-time">Time</label>' +
+      '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+      'value="' + new Date().toISOString().slice(0, -5) +
+      '">' +
+      '      </div>' +
+      '      <div class="form-group td-description">' +
+      '        <label class="sr-only" for="description">Description</label>' +
+      '        <textarea rows="3" class="form-control" id="description-0" ' +
+      'placeholder="Description"></textarea>' +
+      '      </div>' +
+      '    </form>';
+    return result;
+  },
   _getPositionView: function () {
     var result = '';
     result += '<div id="creation-picture" class="col-md-12"></div>';
@@ -393,7 +456,7 @@ module.exports = Marionette.ItemView.extend({
       '      </div>' +
       '      <div class="form-group td-description">' +
       '        <label class="sr-only" for="description">Description</label>' +
-      '        <textarea row="3" class="form-control" id="description-0" ' +
+      '        <textarea rows="3" class="form-control" id="description-0" ' +
       'placeholder="Description"></textarea>' +
       '      </div>' +
       '    </form>';
@@ -437,7 +500,7 @@ module.exports = Marionette.ItemView.extend({
         '      </div>' +
         '      <div class="form-group td-description">' +
         '        <label class="sr-only" for="description">Description</label>' +
-        '        <textarea row="3" class="form-control" id="description-0" ' +
+        '        <textarea rows="3" class="form-control" id="description-0" ' +
         'placeholder="Description"></textarea>' +
         '      </div>' +
         '    </form>';

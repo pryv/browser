@@ -67,6 +67,10 @@ module.exports = Marionette.CompositeView.extend({
         (this.useExtras ?
           Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
         '</span></div></div></div>');
+      $(this.container + ' .aggregated-nbr-events').bind('click',
+        function () {
+          this.trigger('nodeClicked');
+        }.bind(this));
     } else {
       this.makePlot();
       this.onDateHighLighted();

@@ -56,21 +56,10 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('collection').length === 1 &&
       this.model.get('collection').at(0).get('events').length === 1 &&
       this.model.get('singleNumberAsText')) {
-      var m = this.model.get('collection').at(0);
-      $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
-        '<div class="content Center-Container is-Table">' +
-        '<div class="Table-Cell">' +
-        '<div class="Center-Block">' +
-        '<span class="value"> ' +
-        m.get('events')[0].content + ' ' +
-        '</span><span class="unity">' +
-        (this.useExtras ?
-          Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
-        '</span></div></div></div>');
-      $(this.container + ' .aggregated-nbr-events').bind('click',
-        function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
+
+
+      this.singleEventSetup();
+
     } else {
       this.makePlot();
       this.onDateHighLighted();
@@ -474,11 +463,12 @@ module.exports = Marionette.CompositeView.extend({
       $(this.container).bind('dragleave', this.onDragLeave.bind(this));
       $(this.container).bind('drop', this.onDrop.bind(this));
       $(this.container).bind('dragend', this.onDragEnd.bind(this));
-      $(this.container + ' .aggregated-nbr-events').bind('click',
-        function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
     }
+
+    $(this.container + ' .aggregated-nbr-events').bind('click',
+      function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
 
     if (this.model.get('allowPan')) {
       $(this.chartContainer).bind('plotpan', this.onPlotPan.bind(this));
@@ -560,8 +550,10 @@ module.exports = Marionette.CompositeView.extend({
     var droppedNodeID = data.nodeId;
     if ($(e.currentTarget).attr('id') !== droppedNodeID) {
       $('.chartContainer', $(e.currentTarget)).not(this.container).addClass('animated shake');
+      $('.NumericalsEventsNode  > div').not(this.container).addClass('animated shake');
       setTimeout(function () {
         $('.chartContainer', $(e.currentTarget)).removeClass('animated shake');
+        $('.NumericalsEventsNode  > div', $(e.currentTarget)).removeClass('animated shake');
       }, 1000);
     }
   },
@@ -576,8 +568,11 @@ module.exports = Marionette.CompositeView.extend({
     var data = DND_TRANSFER_DATA;
     var droppedNodeID = data.nodeId;
     $('.chartContainer').not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
+    $('.NumericalsEventsNode  > div')
+      .not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
     setTimeout(function () {
       $('.chartContainer').removeClass('animated shake');
+      $('.NumericalsEventsNode > div').removeClass('animated shake');
     }, 1000);
   },
 
@@ -614,5 +609,39 @@ module.exports = Marionette.CompositeView.extend({
       }
       this.legendButtonBindings();
     }
+  },
+
+  singleEventSetup: function () {
+    var m = this.model.get('collection').at(0);
+    $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
+      '<div class="content Center-Container is-Table">' +
+      '<div class="Table-Cell">' +
+      '<div class="Center-Block">' +
+      '<span class="value"> ' +
+      m.get('events')[0].content + ' ' +
+      '</span><span class="unity">' +
+      (this.useExtras ?
+        Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
+      '</span></div></div></div>');
+
+    $(this.container).unbind();
+
+    $(this.container).bind('resize', function () {
+      this.trigger('chart:resize', this.model);
+    });
+
+    if (this.model.get('onDnD')) {
+      $(this.container).attr('draggable', true);
+      $(this.container).bind('dragstart', this.onDragStart.bind(this));
+      $(this.container).bind('dragenter', this.onDragEnter.bind(this));
+      $(this.container).bind('dragover', this.onDragOver.bind(this));
+      $(this.container).bind('dragleave', this.onDragLeave.bind(this));
+      $(this.container).bind('drop', this.onDrop.bind(this));
+      $(this.container).bind('dragend', this.onDragEnd.bind(this));
+    }
+    $(this.container + ' .aggregated-nbr-events').bind('click',
+      function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
   }
 });

@@ -306,39 +306,39 @@ module.exports = Backbone.View.extend({
     } else if (duration_in_sec < 60 * 60) {
       var min = Math.floor(duration_in_sec / 60);
       res = duration_in_sec % 60;
-      interval_label = min + ' min' + (min === 1 ? '' : 's') +
+      interval_label = min + ' min' + (min > 1 ? 's' : '') +
         (res === 0 ? '' : (' ' + res + ' sec'));
     } else if (duration_in_sec < 60 * 60 * 24) {
       var hrs = Math.floor(duration_in_sec / (60 * 60));
       res = parseInt((duration_in_sec % (60 * 60)) / 60, null);
-      interval_label = hrs + ' hr' + (hrs === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' min') + (res === 1 ? '' : 's'));
+      interval_label = hrs + ' hr' + (hrs > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' min') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 7) {
       var days = Math.floor(duration_in_sec / (60 * 60 * 24));
       res = parseInt((duration_in_sec % (60 * 60 * 24)) / (60 * 60), null);
-      interval_label = days + ' day' + (days === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' hr') + (res === 1 ? '' : 's'));
+      interval_label = days + ' day' + (days > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' hr') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 30) {
       var weeks = Math.floor(duration_in_sec / (60 * 60 * 24 * 7));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 7)) / (60 * 60 * 24), null);
-      interval_label = weeks + ' week' + (weeks === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' day') + (res === 1 ? '' : 's'));
+      interval_label = weeks + ' week' + (weeks > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 365) {
       var months = Math.floor(duration_in_sec / (60 * 60 * 24 * 30));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 30)) / (60 * 60 * 24), null);
-      interval_label = months + ' month' + (months === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' day') + (res === 1 ? '' : 's'));
+      interval_label = months + ' month' + (months > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
     } else {
       var years = Math.floor(duration_in_sec / (60 * 60 * 24 * 365));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 365)) / (60 * 60 * 24), null);
-      interval_label = years + ' year' + (years === 1 ? '' : 's');
+      interval_label = years + ' year' + (years > 1 ? 's' : '');
       if (res <= 30) {
         interval_label += (res === 0 ? '' : (' ' + res + ' day'));
       } else {
         res = parseInt(res / 30, null);
         interval_label += (res === 0 ? '' : (' ' + res + ' month'));
       }
-      interval_label += res === 1 ? '' : 's';
+      interval_label += res > 1 ? 's' : '';
     }
     interval_label = interval_label.toUpperCase();
     $('#frame-interval-label').text(interval_label);

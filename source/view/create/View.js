@@ -1,7 +1,8 @@
-/* global $, FileReader*/
+/* global $, FileReader, document*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   Model = require('./EventModel.js'),
+  MapLoader = require('google-maps'),
   creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect',
     pictureSelect: 'pictureSelect', eventEdit: 'eventEdit'},
   validType = ['note/txt', 'picture/attached', 'position/wgs84'];
@@ -15,6 +16,7 @@ module.exports = Marionette.ItemView.extend({
   newEvents: null,
   eventTime: null,
   eventType: null,
+  google: null,
   connectionSelected: null,
   streamSelected: null,
   canPublish : true,
@@ -35,81 +37,12 @@ module.exports = Marionette.ItemView.extend({
         return this.getStream();
       }.bind(this),
       getTypedView: function () {
-        var result = '';
-        var reader = new FileReader();
-        var toRead = [];
-        var  readFile = function (elems) {
-          var elem = elems.shift(), file, selector;
-          if (elem) {
-            file = elem.file;
-            selector = elem.selector;
-            reader.onload = function (e) {
-              $(selector).attr('src', e.target.result);
-              readFile(elems);
-            };
-            reader.readAsDataURL(file);
-          }
-        };
+        if (this.eventType === validType[2]) {
+          this._initPositionView();
+          return this._getPositionView();
+        }
         if (this.eventType === validType[1]) {
-          if (this.newEvents.length === 1) {
-            var event = this.newEvents[0].get('event');
-            result += '<div id="creation-picture" class="col-md-12">' +
-              '<img src="#" id="preview-0"></div>';
-            result += '<form id="creation-form" role="form">' +
-              '<div id="progress-0' +
-                '" class="td-progress progress progress-striped active" >' +
-              '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
-                'aria-valuemax="100" style="width: 0%"></div></div>' +
-              '  <div class="form-group td-tags">' +
-              '    <label class="sr-only" for="tags">Tags</label>' +
-              '    <input type="text" class="form-control" id="tags-0" ' +
-              'placeholder="Enter tags (comma separated)">' +
-              '    </div>' +
-              '    <div class="form-group td-time">' +
-              '      <label class="sr-only" for="edit-time">Time</label>' +
-              '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
-              'value="' + new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) +
-              '">' +
-              '      </div>' +
-              '      <div class="form-group td-description">' +
-              '        <label class="sr-only" for="description">Description</label>' +
-              '        <textarea row="3" class="form-control" id="description-0" ' +
-              'placeholder="Description"></textarea>' +
-              '      </div>' +
-              '    </form>';
-            toRead.push({file: event.previewFile, selector: '#preview-0'});
-          } else {
-            result = '<table id="creation-picture-table" class="table table-striped">';
-            for (var i = 0; i < this.newEvents.length; i++) {
-              var model = this.newEvents[i];
-              result += '<tr>' +
-                '<td class="td-preview"><div class="preview"><img src="#" id="preview-' + i +
-                '"></div></td>' +
-                '<td class="td-progress"><div id="progress-' + i +
-                '" class="progress progress-striped active" >' +
-                '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
-                'aria-valuemax="100" style="width: 0%"></div></div></td>' +
-                '<td class="td-tags"><div class="form-group"><label class="sr-only" ' +
-                'for="tags">Tags</label>' +
-                '<input type="text" class="form-control" id="tags-' + i +
-                '" placeholder="Enter tags (comma separated)">' +
-                '</div></td>' +
-                '<td class="td-time"><div class="form-group"><label class="sr-only" ' +
-                'for="edit-time">Time</label>' +
-                '<input type="datetime-local" class="edit" id="edit-time-' + i + '" value="' +
-                new Date(Math.round(model.get('event').time * 1000)).toISOString().slice(0, -5) +
-                '"></div></td>' +
-                '<td class="td-description"><div class="form-group"><label class="sr-only" ' +
-                'for="description">Description' +
-                '</label><textarea row="3" class="form-control" id="description-' + i + '" ' +
-                'placeholder="Description"></textarea></div></td>' +
-                '</tr>';
-              toRead.push({file: model.get('event').previewFile, selector: '#preview-' + i});
-            }
-            result += '</table>';
-          }
-          readFile(toRead);
-          return result;
+          return this._getPictureView();
         }
       }.bind(this)
     };
@@ -138,6 +71,35 @@ module.exports = Marionette.ItemView.extend({
     $('details').details();
   },
   onPublishClick: function () {
+    if (this.eventType === validType[2]) {
+      this._publishPosition();
+    }
+    else if (this.eventType === validType[1]) {
+      this._publishPicture();
+    }
+  },
+  _publishPosition: function () {
+    if (this.streamSelected && this.connectionSelected) {
+      var event = this.newEvents.get('event');
+      var tags = $('#tags-0').val().trim().split(',');
+      var description = $('#description-0').val().trim();
+      var time = new Date($('#edit-time-0').val()).getTime() / 1000;
+      event.tags = tags;
+      event.description = description;
+      event.time = time;
+      event.streamId = this.streamSelected;
+      event.connection = this.connectionSelected;
+      this.newEvents.create(function (err) {
+        if (err) {
+          console.warn(err);
+          this.ui.publish.css({'background-color': '#e74c3c'});
+        } else {
+          this.ui.publish.css({'background-color': '#2ecc71'});
+        }
+      }.bind(this));
+    }
+  },
+  _publishPicture: function () {
     if (!this.canPublish) {
       return;
     }
@@ -197,8 +159,6 @@ module.exports = Marionette.ItemView.extend({
     this.streamSelected = streamSelected;
     if (connectionSelected) {
       this.connectionSelected = connectionSelected;
-      //event.connection = connectionSelected;
-      //this.trigger('endOfSelection');
     }
     return true;
   },
@@ -210,10 +170,13 @@ module.exports = Marionette.ItemView.extend({
       event.type = this.eventType =  typeSelected;
       if (typeSelected === validType[1]) {
         this.step = creationStep.pictureSelect;
-      } else {
-        this.step = creationStep.streamSelect;
+      } else  if (typeSelected === validType[2]) {
+        MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
+        MapLoader.load().then(function (google) {
+          this.google = google;
+        }.bind(this));
+        this.step = creationStep.eventEdit;
       }
-
       this.render();
     }
     return true;
@@ -363,6 +326,153 @@ module.exports = Marionette.ItemView.extend({
       ancestor = ancestor.parent;
     }
     result.unshift(stream.connection);
+    return result;
+  },
+  _initPositionView: function () {
+    if (!this.google) {
+      _.delay(this._initPositionView.bind(this), 100);
+      return;
+    }
+    var map, elevator, marker, lat, lng;
+    this.newEvents = new Model({event: {
+      time: new Date().getTime() / 1000,
+      type: this.eventType,
+      tags: [],
+      content: {},
+      description: ''
+    }});
+    if (this.newEvents.get('event')) {
+      lat = 46.51759;
+      lng = 6.56267;
+      map = new this.google.maps.Map(document.getElementById('creation-picture'), {
+        zoom: 16,
+        center: new this.google.maps.LatLng(lat, lng),
+        mapTypeId: this.google.maps.MapTypeId.ROADMAP
+      });
+      elevator = new this.google.maps.ElevationService();
+      marker = new this.google.maps.Marker({
+        position: new this.google.maps.LatLng(lat, lng),
+        draggable: true
+      });
+
+      this.google.maps.event.addListener(marker, 'dragend', function (evt) {
+        var event = this.newEvents.get('event');
+        event.content.latitude = evt.latLng.lat();
+        event.content.longitude = evt.latLng.lng();
+        var positionalRequest = {
+          'locations': [evt.latLng]
+        };
+        elevator.getElevationForLocations(positionalRequest, function (results, status) {
+          if (status === this.google.maps.ElevationStatus.OK) {
+            // Retrieve the first result
+            if (results[0]) {
+              var event = this.newEvents.get('event');
+              event.content.altitude = results[0].elevation;
+            }
+          }
+        }.bind(this));
+      }.bind(this));
+      map.setCenter(marker.position);
+      marker.setMap(map);
+    }
+  },
+  _getPositionView: function () {
+    var result = '';
+    result += '<div id="creation-picture" class="col-md-12"></div>';
+    result += '<form id="creation-form" role="form">' +
+      '  <div class="form-group td-tags">' +
+      '    <label class="sr-only" for="tags">Tags</label>' +
+      '    <input type="text" class="form-control" id="tags-0" ' +
+      'placeholder="Enter tags (comma separated)">' +
+      '    </div>' +
+      '    <div class="form-group td-time">' +
+      '      <label class="sr-only" for="edit-time">Time</label>' +
+      '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+      'value="' + new Date().toISOString().slice(0, -5) +
+      '">' +
+      '      </div>' +
+      '      <div class="form-group td-description">' +
+      '        <label class="sr-only" for="description">Description</label>' +
+      '        <textarea row="3" class="form-control" id="description-0" ' +
+      'placeholder="Description"></textarea>' +
+      '      </div>' +
+      '    </form>';
+    return result;
+  },
+  _getPictureView: function () {
+    var reader = new FileReader();
+    var toRead = [];
+    var  readFile = function (elems) {
+      var elem = elems.shift(), file, selector;
+      if (elem) {
+        file = elem.file;
+        selector = elem.selector;
+        reader.onload = function (e) {
+          $(selector).attr('src', e.target.result);
+          readFile(elems);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    var result = '';
+    if (this.newEvents.length === 1) {
+      var event = this.newEvents[0].get('event');
+      result += '<div id="creation-picture" class="col-md-12">' +
+        '<img src="#" id="preview-0"></div>';
+      result += '<form id="creation-form" role="form">' +
+        '<div id="progress-0' +
+        '" class="td-progress progress progress-striped active" >' +
+        '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
+        'aria-valuemax="100" style="width: 0%"></div></div>' +
+        '  <div class="form-group td-tags">' +
+        '    <label class="sr-only" for="tags">Tags</label>' +
+        '    <input type="text" class="form-control" id="tags-0" ' +
+        'placeholder="Enter tags (comma separated)">' +
+        '    </div>' +
+        '    <div class="form-group td-time">' +
+        '      <label class="sr-only" for="edit-time">Time</label>' +
+        '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+        'value="' + new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) +
+        '">' +
+        '      </div>' +
+        '      <div class="form-group td-description">' +
+        '        <label class="sr-only" for="description">Description</label>' +
+        '        <textarea row="3" class="form-control" id="description-0" ' +
+        'placeholder="Description"></textarea>' +
+        '      </div>' +
+        '    </form>';
+      toRead.push({file: event.previewFile, selector: '#preview-0'});
+    } else {
+      result = '<table id="creation-picture-table" class="table table-striped">';
+      for (var i = 0; i < this.newEvents.length; i++) {
+        var model = this.newEvents[i];
+        result += '<tr>' +
+          '<td class="td-preview"><div class="preview"><img src="#" id="preview-' + i +
+          '"></div></td>' +
+          '<td class="td-progress"><div id="progress-' + i +
+          '" class="progress progress-striped active" >' +
+          '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
+          'aria-valuemax="100" style="width: 0%"></div></div></td>' +
+          '<td class="td-tags"><div class="form-group"><label class="sr-only" ' +
+          'for="tags">Tags</label>' +
+          '<input type="text" class="form-control" id="tags-' + i +
+          '" placeholder="Enter tags (comma separated)">' +
+          '</div></td>' +
+          '<td class="td-time"><div class="form-group"><label class="sr-only" ' +
+          'for="edit-time">Time</label>' +
+          '<input type="datetime-local" class="edit" id="edit-time-' + i + '" value="' +
+          new Date(Math.round(model.get('event').time * 1000)).toISOString().slice(0, -5) +
+          '"></div></td>' +
+          '<td class="td-description"><div class="form-group"><label class="sr-only" ' +
+          'for="description">Description' +
+          '</label><textarea row="3" class="form-control" id="description-' + i + '" ' +
+          'placeholder="Description"></textarea></div></td>' +
+          '</tr>';
+        toRead.push({file: model.get('event').previewFile, selector: '#preview-' + i});
+      }
+      result += '</table>';
+    }
+    _.delay(readFile(toRead), 1000);
     return result;
   }
 });

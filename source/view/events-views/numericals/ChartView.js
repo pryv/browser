@@ -3,7 +3,7 @@ var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
   _ = require('underscore'),
   ChartTransform = require('./utils/ChartTransform.js');
-
+var DND_TRANSFER_DATA = null;
 module.exports = Marionette.CompositeView.extend({
   template: '#template-chart-container',
   container: null,
@@ -229,7 +229,6 @@ module.exports = Marionette.CompositeView.extend({
       }
 
     });
-    console.log('getExtremeTimes', [min * 1000, max * 1000]);
     return [min * 1000, max * 1000];
   },
 
@@ -549,15 +548,15 @@ module.exports = Marionette.CompositeView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    var data = '{ "nodeId": "' + this.container.substr(1) + '", ' +
+    DND_TRANSFER_DATA = '{ "nodeId": "' + this.container.substr(1) + '", ' +
       '"streamId": "' + $(this.container).attr('data-streamid') + '", ' +
       '"connectionId": "' + $(this.container).attr('data-connectionid') + '"}';
-    e.originalEvent.dataTransfer.setData('text', data);
+    e.originalEvent.dataTransfer.setData('text', DND_TRANSFER_DATA);
   },
 
   /* Fires when a dragged element enters this' scope */
   onDragEnter: function (e) {
-    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var data = DND_TRANSFER_DATA;
     var droppedNodeID = data.nodeId;
     if ($(e.currentTarget).attr('id') !== droppedNodeID) {
       $('.chartContainer', $(e.currentTarget)).not(this.container).addClass('animated shake');
@@ -573,8 +572,8 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   /* Fires when a dragged element leaves this' scope */
-  onDragLeave: function (e) {
-    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+  onDragLeave: function () {
+    var data = DND_TRANSFER_DATA;
     var droppedNodeID = data.nodeId;
     $('.chartContainer').not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
     setTimeout(function () {

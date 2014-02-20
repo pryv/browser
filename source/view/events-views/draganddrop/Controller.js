@@ -267,14 +267,14 @@ _.extend(Controller.prototype, {
 
     // Process those to remove
     for (i = 0; i < eventsToRem.length; ++i) {
-      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
-      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      eventsCategory = this.getEventsCategory(eventsToRem[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToRem[i]);
       if (eventsCollection) {
         // find corresponding model
         matching = eventsCollection.where({
-          connectionId: eventsToAdd[i].connection.id,
-          streamId: eventsToAdd[i].streamId,
-          type: eventsToAdd[i].type
+          connectionId: eventsToRem[i].connection.id,
+          streamId: eventsToRem[i].streamId,
+          type: eventsToRem[i].type
         });
         if (matching && matching.length !== 0) {
           eventsModel = matching[0];
@@ -290,21 +290,21 @@ _.extend(Controller.prototype, {
 
     // Process those to change
     for (i = 0; i < eventsToCha.length; ++i) {
-      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
-      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      eventsCategory = this.getEventsCategory(eventsToCha[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToCha[i]);
       if (eventsCollection) {
         // find corresponding model
         matching = eventsCollection.where({
-          connectionId: eventsToAdd[i].connection.id,
-          streamId: eventsToAdd[i].streamId,
-          type: eventsToAdd[i].type
+          connectionId: eventsToCha[i].connection.id,
+          streamId: eventsToCha[i].streamId,
+          type: eventsToCha[i].type
         });
         if (matching && matching.length !== 0) {
           eventsModel = matching[0];
           events = eventsModel.get('events');
           for (eIter = 0; eIter < events.length; ++eIter) {
-            if (events[eIter].id === eventsToRem[i].id) {
-              events[eIter] = eventsToRem[i];
+            if (events[eIter].id === eventsToCha[i].id) {
+              events[eIter] = eventsToCha[i];
             }
           }
         }
@@ -313,7 +313,21 @@ _.extend(Controller.prototype, {
 
     if (this.initial) {
       this.initial = false;
+      this.eventCollections.note.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+      this.eventCollections.numerical.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+      this.eventCollections.picture.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+      this.eventCollections.position.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+
       if (this.called) {
+
         this.show();
       }
     }

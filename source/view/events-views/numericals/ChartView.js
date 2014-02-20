@@ -223,9 +223,13 @@ module.exports = Marionette.CompositeView.extend({
     var min = Infinity, max = 0;
     collection.each(function (s) {
       var events = s.get('events');
-      min = (events[events.length - 1].time < min) ? events[events.length - 1].time : min;
-      max = (events[0].time > max) ? events[0].time : max;
+      for (var i = 0, l = events.length; i < l; ++i) {
+        min = (events[i].time < min) ? events[i].time : min;
+        max = (events[i].time > max) ? events[i].time : max;
+      }
+
     });
+    console.log('getExtremeTimes', [min * 1000, max * 1000]);
     return [min * 1000, max * 1000];
   },
 

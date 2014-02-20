@@ -190,26 +190,32 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       this.seriesCollection.add(eventsModel);
     }
   }
-/*
+
   // Process those to remove
   for (i = 0; i < eventsToRem.length; ++i) {
       // find corresponding model
     matching = this.seriesCollection.where({
-      connectionId: eventsToAdd[i].connection.id,
-      streamId: eventsToAdd[i].streamId,
-      type: eventsToAdd[i].type
+      connectionId: eventsToRem[i].connection.id,
+      streamId: eventsToRem[i].streamId,
+      type: eventsToRem[i].type
     });
     if (matching && matching.length !== 0) {
       eventsModel = matching[0];
       events = eventsModel.get('events');
+      var events_new = [];
       for (eIter = 0; eIter < events.length; ++eIter) {
-        if (events[eIter].id === eventsToRem[i].id) {
-          delete events[eIter];
+        if (events[eIter].id !== eventsToRem[i].id) {
+          events_new.push(events[eIter]);
         }
+      }
+      if (events_new.length === 0) {
+        this.seriesCollection.remove(eventsModel);
+      } else {
+        eventsModel.set('events', events_new);
       }
     }
   }
-  */
+
 
   // Process those to change
   for (i = 0; i < eventsToCha.length; ++i) {

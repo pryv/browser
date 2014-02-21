@@ -56,6 +56,7 @@ module.exports = Marionette.ItemView.extend({
     fileElem: '#fileElem',
     fileSelect: '#fileSelect',
     stream: '#stream-select',
+    inputStream: '.create-stream input',
     publish: '#publish',
     cancel: '#cancel'
   },
@@ -70,8 +71,14 @@ module.exports = Marionette.ItemView.extend({
     this.ui.fileElem.bind('change', this.onFileSelected.bind(this));
     this.ui.publish.bind('click', this.onPublishClick.bind(this));
     this.ui.cancel.bind('click', this.onCancelClick.bind(this));
+    this.ui.inputStream.bind('keypress past', this.onInputStreamChange.bind(this));
     $('.td-progress').hide();
     $('details').details();
+  },
+  onInputStreamChange: function (e) {
+    var currentValue = e.target.value;
+    this.ui.inputStream.val('');
+    e.target.value = currentValue;
   },
   onPublishClick: function () {
     if (this.streamSelected && this.connectionSelected) {
@@ -83,6 +90,27 @@ module.exports = Marionette.ItemView.extend({
       }
       else if (this.eventType === validType[0]) {
         this._publishNote();
+      }
+    } else if (this.connectionSelected) {
+      var input, parentId, name;
+      /*jshint -W083 */
+      for (var i = 0; i < this.ui.inputStream.length; i++) {
+        input = $(this.ui.inputStream[i]);
+        if (input.val().length > 0) {
+          name = input.val().trim();
+          parentId = input.attr('data-parentId') || null;
+          this.connectionSelected.streams.create({parentId: parentId, name: name},
+          function (err, res) {
+            if (err) {
+              console.warn(err);
+              this.ui.publish.css({'background-color': '#e74c3c'});
+            } else {
+              this.streamSelected = res.id;
+              this.onPublishClick();
+            }
+          }.bind(this));
+          break;
+        }
       }
     }
   },
@@ -293,6 +321,13 @@ module.exports = Marionette.ItemView.extend({
           '</details>';
       }
     }
+    result +=
+      '<summary><div class="input-group">' +
+        '<form role="form" class="create-stream">' +
+        '<i class="fa fa-plus fa-2"></i>' +
+        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        ' data-parentId="">' +
+        '</form></div></summary>';
     return result;
 
   },
@@ -320,6 +355,13 @@ module.exports = Marionette.ItemView.extend({
           '</details>';
       }
     }
+    result +=
+      '<summary><div class="input-group">' +
+        '<form role="form" class="create-stream">' +
+        '<i class="fa fa-plus fa-2"></i>' +
+        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        ' data-parentId="' + stream.id + '">' +
+        '</form></div></summary>';
     return result;
   },
   _isWritePermission: function (connection, streamId) {
@@ -371,8 +413,9 @@ module.exports = Marionette.ItemView.extend({
       description: ''
     }});
     if (this.newEvents.get('event')) {
-      lat = 46.51759;
-      lng = 6.56267;
+      this.newEvents.get('event').content.latitude = lat = 46.51759;
+      this.newEvents.get('event').content.longitude = lng = 6.56267;
+
       map = new this.google.maps.Map(document.getElementById('creation-picture'), {
         zoom: 16,
         center: new this.google.maps.LatLng(lat, lng),

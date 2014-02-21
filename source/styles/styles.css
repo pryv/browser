@@ -321,44 +321,6 @@ padding: 0px 15px;
   width: 100%;
   height: 100%;
 }
-/*.nodeHeader.color_0,.nodeHeader.color_1,.nodeHeader.color_2,.nodeHeader.color_3,.nodeHeader.color_4
-,.nodeHeader.color_5,.nodeHeader.color_6,.nodeHeader.color_7,.nodeHeader.color_8,.nodeHeader.color_9
-,.nodeHeader.color_10,.nodeHeader.color_11,.nodeHeader.color_12,.nodeHeader.color_13,.nodeHeader.color_14{background-color: transparent;}*/
-
-
-/* This are the only colors founded in the last browser template
-   but client data color goes over */
-/*.color_0{background-color: #4d6791;}
-.color_1{background-color: #808285;}
-.color_2{background-color: #5E5750;}
-.color_3{background-color: #384666;}
-.color_4{background-color: #AA9E88;}
-.color_5{background-color: #910E00;}
-.color_6{background-color: #A09990;}
-.color_7{background-color: #5B554D;}
-.color_8{background-color: #4F433D;}
-.color_9{background-color: #C1B9B0;}
-.color_10{background-color: #5B6F4D;}
-.color_11{background-color: #5E5750;}
-.color_12{background-color: #5E5750;}
-.color_13{background-color: #384666;}
-.color_14{background-color: #AA9E88;}*/
-/* added color */
-/*.color_15{background-color: #4d6791;}
-.color_16{background-color: #808285;}
-.color_17{background-color: #5E5750;}
-.color_18{background-color: #384666;}
-.color_19{background-color: #AA9E88;}
-.color_20{background-color: #910E00;}
-.color_21{background-color: #A09990;}
-.color_22{background-color: #5B554D;}
-.color_23{background-color: #4F433D;}
-.color_24{background-color: #C1B9B0;}
-.color_25{background-color: #5B6F4D;}
-.color_26{background-color: #5E5750;}
-.color_27{background-color: #5E5750;}
-.color_28{background-color: #384666;}
-.color_29{background-color: #AA9E88;}*/
 
 
 .axis path,
@@ -724,6 +686,15 @@ summary.connection {
 }
 details summary::-webkit-details-marker {
   color: #3498db;
+}
+.create-stream {
+  display: inline-flex;
+}
+.create-stream i {
+  margin-top: 10px;
+}
+.create-stream input {
+  width: 80% !important;
 }
 #select-picture-container #fileElem {
   visibility: hidden;

@@ -89,6 +89,20 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             filter: 'isFile',
+            src: 'source/favicon.ico',
+            dest: 'dist/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            filter: 'isFile',
+            src: 'source/robots.txt',
+            dest: 'dist/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            filter: 'isFile',
             src: 'source/timeframe-selector/images/**',
             dest: 'dist/images/'
           }

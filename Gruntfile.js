@@ -103,6 +103,13 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             filter: 'isFile',
+            src: 'source/apple-touch-icon.png',
+            dest: 'dist/'
+          },
+          {
+            expand: true,
+            flatten: true,
+            filter: 'isFile',
             src: 'source/timeframe-selector/images/**',
             dest: 'dist/images/'
           }

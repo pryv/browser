@@ -56,7 +56,8 @@ module.exports = Marionette.ItemView.extend({
           editPoint: true,
           allowPan: false,      // Allows navigation through the chart
           allowZoom: false,     // Allows zooming on the chart
-          xaxis: true
+          xaxis: true,
+          showNodeCount: false
         });
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));

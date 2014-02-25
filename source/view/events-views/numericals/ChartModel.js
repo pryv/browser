@@ -39,7 +39,10 @@ module.exports = Backbone.Model.extend({
     xaxis: null,
 
     // Editable point mode
-    editPoint: false
+    editPoint: false,
+
+    // Show node count
+    showNodeCount: true
   },
 
   initialize: function () {

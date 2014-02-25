@@ -14,6 +14,8 @@ module.exports = Marionette.CompositeView.extend({
   useExtras: null,
   waitExtras: null,
 
+  currentlyEdited: null,
+
 
   initialize: function () {
     _.extend(this, ChartTransform);
@@ -387,7 +389,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   highlightEvent: function (event) {
-    // TODO: Support multiple series containing the same event.
     if (!this.plot) {
       return;
     }
@@ -448,6 +449,10 @@ module.exports = Marionette.CompositeView.extend({
     $(this.container).bind('resize', function () {
       this.trigger('chart:resize', this.model);
     });
+
+    if (this.model.get('editPoint')) {
+      $(this.container).bind('plotclick', this.onEdit.bind(this));
+    }
 
     if (this.model.get('onClick')) {
       $(this.container).bind('plotclick', this.onClick.bind(this));
@@ -520,6 +525,37 @@ module.exports = Marionette.CompositeView.extend({
     } else {
       this.removeTooltip();
     }
+  },
+
+  onEdit: function (event, pos, item) {
+    if ($('#chart-tooltip')) {
+      $('#chart-tooltip').remove();
+    }
+    if (this.model.get('editPoint') && item) {
+      var tc = this.model.get('collection').at(0);
+      if (!tc.get('transform') && !tc.get('interval')) {
+        this.currentlyEdited = [{time: item.datapoint[0], value: item.datapoint[1]}];
+        this.showPointEditor(item.pageY + 5, item.pageX + 5);
+      }
+
+    }
+  },
+
+  showPointEditor: function (x, y) {
+    $('body').append('<div id="chart-tooltip" class="tooltip">' +
+      '<input type="text" name="editPointVal" id="editPointVal">' +
+      '<button type="button" id="editPointBut">Ok!</button>' +
+      '</div>');
+
+    $('#chart-tooltip').css({
+      top: x,
+      left: y
+    }).fadeIn(200);
+
+    $('#editPointBut').bind('click', function () {
+      this.currentlyEdited.push({value: $('editPointVal').val});
+    }.bind(this));
+
   },
 
   computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {

@@ -3,5 +3,11 @@ var Marionette = require('backbone.marionette'),
 
 module.exports = Marionette.CollectionView.extend({
   tagName: 'ul',
-  itemView: ItemView
+  itemView: ItemView,
+
+  onRender: function () {
+    if (this.children.length === 0) {
+      this.$el.parent().css({visibility: 'hidden'});
+    }
+  }
 });

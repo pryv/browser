@@ -117,14 +117,18 @@ _.extend(Controller.prototype, {
     function (error) {
       if (!error) {
         this.bookmarkCollection.remove(bookmarkModel);
+      } else {
+        console.warn(error);
       }
     }.bind(this));
   },
   _onDeleteSharingClick: function (e, sharingModel) {
-    this.connection.accesses.delete(sharingModel.get('sharing').token,
+    this.connection.accesses.delete(sharingModel.get('sharing').id,
     function (error) {
       if (!error) {
         this.sharingCollection.remove(sharingModel);
+      } else {
+        console.warn(error);
       }
     }.bind(this));
   },

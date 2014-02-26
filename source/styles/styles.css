@@ -378,9 +378,7 @@ text-align: center;*/
 .tooltip {
   position: absolute;
   display: none;
-  border: 1px solid #fdd;
   padding: 2px;
-  background-color: #dfe400;
   opacity: 1;
   z-index: 9999;
 }

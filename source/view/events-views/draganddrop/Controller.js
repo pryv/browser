@@ -88,8 +88,8 @@ _.extend(Controller.prototype, {
         onClick: false,
         onHover: true,
         onDnD: false,
-        allowPan: true,      // Allows navigation through the chart
-        allowZoom: true,     // Allows zooming on the chart
+        allowPan: false,      // Allows navigation through the chart
+        allowZoom: false,     // Allows zooming on the chart
         xaxis: true
       })});
 
@@ -97,38 +97,51 @@ _.extend(Controller.prototype, {
 
     this.chartView.on('remove', function (m) {
       this.chartCollection.remove(m);
+      var e = {type: m.get('type')};
+      var c = this.getTimeSeriesCollectionByEvent(e);
+      c.add(m);
+
+      this.eventCollectionsViews.note.render();
+      this.eventCollectionsViews.position.render();
+      this.eventCollectionsViews.picture.render();
+      this.eventCollectionsViews.numerical.render();
+
     }.bind(this));
 
     var $ul = $('#dnd-panel-list ul');
     var el;
 
-    if (this.eventCollections.note.length !== 0) {
+    if (this.eventCollections.note.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Notes');
+      this.eventCollectionsViews.note.ul = $('li:last', $ul);
       this.eventCollectionsViews.note.render();
       el = this.eventCollectionsViews.note.el;
       $('li:last', $ul).append(el);
     }
 
-    if (this.eventCollections.picture.length !== 0) {
+    if (this.eventCollections.picture.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Pictures');
+      this.eventCollectionsViews.picture.ul = $('li:last', $ul);
       this.eventCollectionsViews.picture.render();
       el = this.eventCollectionsViews.picture.el;
       $('li:last', $ul).append(el);
     }
 
-    if (this.eventCollections.position.length !== 0) {
+    if (this.eventCollections.position.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Positions');
+      this.eventCollectionsViews.position.ul = $('li:last', $ul);
       this.eventCollectionsViews.position.render();
       el = this.eventCollectionsViews.position.el;
       $('li:last', $ul).append(el);
     }
 
-    if (this.eventCollections.numerical.length !== 0) {
+    if (this.eventCollections.numerical.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Numericals');
+      this.eventCollectionsViews.numerical.ul = $('li:last', $ul);
       this.eventCollectionsViews.numerical.render();
       el = this.eventCollectionsViews.numerical.el;
       $('li:last', $ul).append(el);
@@ -136,18 +149,22 @@ _.extend(Controller.prototype, {
 
     this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.note.remove(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.picture.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.picture.remove(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.position.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.position.remove(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.numerical.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.numerical.remove(evt.model);
     }.bind(this));
 
     $('#submit-dnd').on('click', function () {
@@ -177,6 +194,8 @@ _.extend(Controller.prototype, {
       }
     }.bind(this));
   },
+
+
 
   /* Base event functions */
   eventEnter: function (event) {
@@ -326,6 +345,27 @@ _.extend(Controller.prototype, {
         this.addSerieToChart(m);
       }.bind(this));
 
+      var m = null;
+      while (this.eventCollections.note.length !== 0) {
+        this.eventCollections.note.notNull = true;
+        m = this.eventCollections.note.at(0);
+        this.eventCollections.note.remove(m);
+      }
+      while (this.eventCollections.numerical.length !== 0) {
+        this.eventCollections.numerical.notNull = true;
+        m = this.eventCollections.numerical.at(0);
+        this.eventCollections.numerical.remove(m);
+      }
+      while (this.eventCollections.picture.length !== 0) {
+        this.eventCollections.picture.notNull = true;
+        m = this.eventCollections.picture.at(0);
+        this.eventCollections.picture.remove(m);
+      }
+      while (this.eventCollections.position.length !== 0) {
+        this.eventCollections.position.notNull = true;
+        m = this.eventCollections.position.at(0);
+        this.eventCollections.position.remove(m);
+      }
       if (this.called) {
 
         this.show();

@@ -53,9 +53,11 @@ module.exports = Marionette.ItemView.extend({
           onClick: false,
           onHover: false,
           onDnD: false,
+          editPoint: true,
           allowPan: false,      // Allows navigation through the chart
           allowZoom: false,     // Allows zooming on the chart
-          xaxis: true
+          xaxis: true,
+          showNodeCount: false
         });
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
@@ -110,6 +112,11 @@ module.exports = Marionette.ItemView.extend({
     this.collection = this.model.get('collection');
   },
   onClose: function () {
+    if ($('#chart-tooltip')) {
+      $('#editPointVal').unbind();
+      $('#editPointBut').unbind();
+      $('#chart-tooltip').remove();
+    }
     this.chartView.close();
     this.chartView = null;
     $(this.itemViewContainer).empty();

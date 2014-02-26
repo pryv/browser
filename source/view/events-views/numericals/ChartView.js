@@ -14,6 +14,8 @@ module.exports = Marionette.CompositeView.extend({
   useExtras: null,
   waitExtras: null,
 
+  currentlyEdited: null,
+
 
   initialize: function () {
     _.extend(this, ChartTransform);
@@ -85,7 +87,9 @@ module.exports = Marionette.CompositeView.extend({
     _.each(this.data, function (d) {
       eventsNbr += d.data.length;
     });
-    $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+    if (this.model.get('showNodeCount')) {
+      $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+    }
 
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
@@ -387,7 +391,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   highlightEvent: function (event) {
-    // TODO: Support multiple series containing the same event.
     if (!this.plot) {
       return;
     }
@@ -449,6 +452,10 @@ module.exports = Marionette.CompositeView.extend({
       this.trigger('chart:resize', this.model);
     });
 
+    if (this.model.get('editPoint')) {
+      $(this.container).bind('plotclick', this.onEdit.bind(this));
+    }
+
     if (this.model.get('onClick')) {
       $(this.container).bind('plotclick', this.onClick.bind(this));
     }
@@ -465,10 +472,12 @@ module.exports = Marionette.CompositeView.extend({
       $(this.container).bind('dragend', this.onDragEnd.bind(this));
     }
 
-    $(this.container + ' .aggregated-nbr-events').bind('click',
+    if (this.model.get('showNodeCount')) {
+      $(this.container + ' .aggregated-nbr-events').bind('click',
       function () {
         this.trigger('nodeClicked');
       }.bind(this));
+    }
 
     if (this.model.get('allowPan')) {
       $(this.chartContainer).bind('plotpan', this.onPlotPan.bind(this));
@@ -520,6 +529,68 @@ module.exports = Marionette.CompositeView.extend({
     } else {
       this.removeTooltip();
     }
+  },
+
+  onEdit: function (event, pos, item) {
+    if ($('#chart-tooltip')) {
+      $('#editPointVal').unbind();
+      $('#editPointBut').unbind();
+      $('#chart-tooltip').remove();
+    }
+    if (this.model.get('editPoint') && item) {
+      var tc = this.model.get('collection').at(0);
+      if (!tc.get('transform') && !tc.get('interval')) {
+        this.currentlyEdited = [{time: item.datapoint[0], value: item.datapoint[1]}];
+        this.showPointEditor(item.pageY + 5, item.pageX + 5);
+      }
+
+    }
+  },
+
+  showPointEditor: function (x, y) {
+    $('.modal-content').append(
+      '<div id="chart-tooltip" class="tooltip has-feedback">' +
+      '  <div class="input-group">' +
+      '    <input type="text" class="form-control" id="editPointVal">' +
+      '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
+      '    <span class="input-group-btn">' +
+      '      <button class="btn" id="editPointBut" type="button">Ok!</button>' +
+      '    </span>' +
+      '  </div>' +
+      '</div>');
+
+    var os = $('.modal-content').offset();
+    $('#chart-tooltip').css({
+      color: 'none',
+      'background-color': 'none',
+      width: '20%',
+      top: x - os.top,
+      left: y - os.left
+    }).fadeIn(200);
+
+    $('#editPointVal').bind('input', function () {
+      if ($(this).val().length < 1) {
+        $('#chart-tooltip').removeClass('has-success');
+        $('#chart-tooltip').removeClass('has-warning');
+        $('#editPointBut').removeClass('btn-success');
+        $('#editPointBut').removeClass('btn-danger');
+      } else if (isNaN($(this).val())) {
+        $('#chart-tooltip').removeClass('has-success');
+        $('#chart-tooltip').addClass('has-warning');
+        $('#editPointBut').removeClass('btn-success');
+        $('#editPointBut').addClass('btn-danger');
+      } else {
+        $('#chart-tooltip').removeClass('has-warning');
+        $('#chart-tooltip').addClass('has-success');
+        $('#editPointBut').removeClass('btn-danger');
+        $('#editPointBut').addClass('btn-success');
+      }
+    });
+
+    $('#editPointBut').bind('click', function () {
+      this.currentlyEdited.push({value: $('editPointVal').val});
+    }.bind(this));
+
   },
 
   computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
@@ -613,7 +684,8 @@ module.exports = Marionette.CompositeView.extend({
 
   singleEventSetup: function () {
     var m = this.model.get('collection').at(0);
-    $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
+    if (this.model.get('showNodeCount')) {
+      $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
       '<div class="content Center-Container is-Table">' +
       '<div class="Table-Cell">' +
       '<div class="Center-Block">' +
@@ -623,6 +695,7 @@ module.exports = Marionette.CompositeView.extend({
       (this.useExtras ?
         Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
       '</span></div></div></div>');
+    }
 
     $(this.container).unbind();
 
@@ -639,9 +712,11 @@ module.exports = Marionette.CompositeView.extend({
       $(this.container).bind('drop', this.onDrop.bind(this));
       $(this.container).bind('dragend', this.onDragEnd.bind(this));
     }
-    $(this.container + ' .aggregated-nbr-events').bind('click',
+    if (this.model.get('showNodeCount')) {
+      $(this.container + ' .aggregated-nbr-events').bind('click',
       function () {
         this.trigger('nodeClicked');
       }.bind(this));
+    }
   }
 });

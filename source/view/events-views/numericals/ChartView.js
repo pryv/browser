@@ -533,6 +533,8 @@ module.exports = Marionette.CompositeView.extend({
 
   onEdit: function (event, pos, item) {
     if ($('#chart-tooltip')) {
+      $('#editPointVal').unbind();
+      $('#editPointBut').unbind();
       $('#chart-tooltip').remove();
     }
     if (this.model.get('editPoint') && item) {
@@ -546,15 +548,44 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   showPointEditor: function (x, y) {
-    $('body').append('<div id="chart-tooltip" class="tooltip">' +
-      '<input type="text" name="editPointVal" id="editPointVal">' +
-      '<button type="button" id="editPointBut">Ok!</button>' +
+    $('.modal-content').append(
+      '<div id="chart-tooltip" class="tooltip has-feedback">' +
+      '  <div class="input-group">' +
+      '    <input type="text" class="form-control" id="editPointVal">' +
+      '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
+      '    <span class="input-group-btn">' +
+      '      <button class="btn" id="editPointBut" type="button">Ok!</button>' +
+      '    </span>' +
+      '  </div>' +
       '</div>');
 
+    var os = $('.modal-content').offset();
     $('#chart-tooltip').css({
-      top: x,
-      left: y
+      color: 'none',
+      'background-color': 'none',
+      width: '20%',
+      top: x - os.top,
+      left: y - os.left
     }).fadeIn(200);
+
+    $('#editPointVal').bind('input', function () {
+      if ($(this).val().length < 1) {
+        $('#chart-tooltip').removeClass('has-success');
+        $('#chart-tooltip').removeClass('has-warning');
+        $('#editPointBut').removeClass('btn-success');
+        $('#editPointBut').removeClass('btn-danger');
+      } else if (isNaN($(this).val())) {
+        $('#chart-tooltip').removeClass('has-success');
+        $('#chart-tooltip').addClass('has-warning');
+        $('#editPointBut').removeClass('btn-success');
+        $('#editPointBut').addClass('btn-danger');
+      } else {
+        $('#chart-tooltip').removeClass('has-warning');
+        $('#chart-tooltip').addClass('has-success');
+        $('#editPointBut').removeClass('btn-danger');
+        $('#editPointBut').addClass('btn-success');
+      }
+    });
 
     $('#editPointBut').bind('click', function () {
       this.currentlyEdited.push({value: $('editPointVal').val});

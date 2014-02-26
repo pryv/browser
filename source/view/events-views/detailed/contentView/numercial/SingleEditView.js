@@ -113,6 +113,8 @@ module.exports = Marionette.ItemView.extend({
   },
   onClose: function () {
     if ($('#chart-tooltip')) {
+      $('#editPointVal').unbind();
+      $('#editPointBut').unbind();
       $('#chart-tooltip').remove();
     }
     this.chartView.close();

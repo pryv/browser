@@ -15,7 +15,17 @@ var Controller = module.exports = function ($modal, connection) {
   this.bookmarkCollection =  new BookmarkCollection();
   this.bookmarkListView = null;
   this.$modal = $modal;
-  $('.modal-content').append('<div class="sharings"></div>');
+  $('.modal-content').prepend('<div class="modal-header">  ' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+    '&times;</button> ' +
+    '<h4 class="modal-title" id="myModalLabel">Slices</h4>' +
+    '<div class="modal-close"></div> ' +
+    '</div><div id="modal-content"><div id="creation-content">' +
+    '<div class="sharings container"></div></div>' +
+    '<div id="creation-footer" class="col-md-12">' +
+    '<button id="ok" class="btn btn-pryv-turquoise" ' +
+    'data-dismiss="modal">Ok</button>' +
+    '</div></div>');
   this.container = '.sharings';
 
 };

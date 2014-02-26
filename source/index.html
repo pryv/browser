@@ -164,12 +164,20 @@
   </script>
   <script type="text/html" id="template-sharingItemView">
 
-    <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td class="sharing-name col-md-4"><span class="sharing-edit-name"><%= sharing.name %></span><i class="fa fa-edit sharing-edit-name"></i><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
+    <td class="sharing-name col-md-4"><i class="fa fa-edit sharing-edit-name fa-lg"></i> <span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
         <button class="btn btn-default" type="button">Save</button>
       </span></div></td><td class="sharing-url"><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
-     <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
-      <a href="https://twitter.com/share" class="twitter-share-button" data-url="<%= sharing.url %>" data-via="pryv" data-count="none">Tweet</a>
-      <fb:share-button href="<%= sharing.url %>" type="button"></fb:share-button></td>
+     <td class="share share-small">
+
+      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<%= sharing.url.replace(/#/g, '%23') %>&t="
+       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;">
+      <i class="fa fa-facebook"></i></a>
+       <a target="_blank" href="https://twitter.com/share?url=<%= sharing.url.replace(/#/g, '%23') %>&via=pryv"
+       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;">
+      <i class="fa fa-twitter"></i></a>
+       <a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><i class="fa fa-envelope"></i></a>
+     </td>
+    <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
     <input type="checkbox" class="checkbox">
@@ -185,7 +193,7 @@
     <ul id="bookmark-list"></ul>
   </script>
   <script type="text/html" id="template-bookmarkItemView">
-    <td class="bookmark-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= bookmark.settings.name %></td><td><%= bookmark.settings.auth %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td>
+   <td><%= bookmark.settings.name %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td><td class="bookmark-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
   </script>
     
   <script type="text/html" id="template-draganddrop">
@@ -224,11 +232,10 @@
   </script>
   <script type="template" id="template-detail-creation-type">
     <div class="container">
-    <h1>Select type of event</h1>
     <div class="row" id="type-select">
-      <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span>Add note</span></div>
-      <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span>Add picture</span></div>
-      <div class="type-select col-md-2" data-type="position/wgs84"><i class="fa fa-map-marker  fa-3"></i><span>Add position</span></div>
+      <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span>Note</span></div>
+      <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span>Picture</span></div>
+      <div class="type-select col-md-2" data-type="position/wgs84"><i class="fa fa-map-marker  fa-3"></i><span>Position</span></div>
     </div>
     </div>
   </script>
@@ -380,13 +387,13 @@
     </div>
   </script>
   <script id="node-template" type="text/template">
-    <li>
-    <div class="checkbox">
+    <summary>
+    <div class="checkbox inline-block">
       <label>
         <input class="input-checkbox" type="checkbox"><%= name %>
       </label>
     </div>
-    </li>
+    </summary>
   </script>
 </head>
 

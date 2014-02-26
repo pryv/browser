@@ -1,9 +1,9 @@
-/* global $, FB, twttr */
+/* global $ */
 var Backbone = require('backbone'),
     Marionette = require('backbone.marionette'),
     _ = require('underscore');
 // The recursive tree view
-var slugMe = function (value) {
+/*var slugMe = function (value) {
   var rExps = [
     {re: /[\xC0-\xC6]/g, ch: 'A'},
     {re: /[\xE0-\xE6]/g, ch: 'a'},
@@ -26,7 +26,7 @@ var slugMe = function (value) {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/\-{2,}/g, '-');
-};
+};  */
 var eachStream = function (collection, callback) {
   collection.each(function (model) {
     if (_.isFunction(callback)) {
@@ -39,7 +39,7 @@ var eachStream = function (collection, callback) {
 };
 var TreeView = Marionette.CompositeView.extend({
   template: '#node-template',
-  tagName: 'ul',
+  tagName: 'details',
   ui: {
     checkbox: '.input-checkbox'
   },
@@ -53,7 +53,7 @@ var TreeView = Marionette.CompositeView.extend({
   appendHtml: function (collectionView, itemView) {
     // ensure we nest the child list inside of 
     // the current list item
-    collectionView.$('li:first').append(itemView.el);
+    collectionView.$('summary:first').after(itemView.el);
   },
   onRender: function () {
     this.ui.checkbox[0].checked = this.model.get('checked');
@@ -72,8 +72,8 @@ var TreeView = Marionette.CompositeView.extend({
 // a recursive tree structure for each item in the collection
 var TreeRoot = Marionette.CollectionView.extend({
   itemView: TreeView,
-  id: 'create-sharing',
-  className: 'container',
+  id: '',
+  className: 'create-sharing full-height',
   onRender: function () {
     var dateFrom = new Date(this.options.timeFrom * 1000);
     var dateTo = new Date(this.options.timeTo * 1000);
@@ -82,7 +82,9 @@ var TreeRoot = Marionette.CollectionView.extend({
       local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
       return local.toJSON().slice(0, 10);
     }
-    this.$el.prepend('<h1>Create sharing</h1>' +
+
+    this.$el.prepend(
+      '<h1>Settings</h1>' +
       '<form role="form" id="form-create-sharing"' +
       '<div class="form-horizontal">' +
       '<div class="form-group">' +
@@ -92,20 +94,33 @@ var TreeRoot = Marionette.CollectionView.extend({
       '</div>' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<div class="col-sm-5">' +
       '<select class="form-control" id="input-global-permission">' +
-      '  <option value ="">Permission for all stream</option>' +
-      '  <option value="read">Read</option>' +
-      '  <option value="contribute">Contribute</option>' +
-      '  <option value="manage">Manage</option>' +
+      '  <option value ="" selected="selected" style="display:none;">Permission</option>' +
+      '  <option value="read">Allow read only</option>' +
+      '  <option value="contribute">Allow contributing events</option>' +
+      '  <option value="manage">Allow managing events and streams</option>' +
       '</select>' +
       '</div>' +
       '</div>' +
       '</div>' +
+      '<div class="col-sm-5 panel panel-default advanced-settings">' +
+      '  <div class="panel-heading">' +
+      '    <h4 class="panel-title">' +
+      '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
+      '       Advanced settings ' +
+      '       </a>' +
+      '     </h4>' +
+      '   </div>' +
+      '   <div id="collapseOne" class="panel-collapse collapse">' +
+      '     <div class="panel-body">' +
+      '<div class="form-horizontal">' +
+      '<div class="form-group">' +
+      '<div class="col-sm-12">' +
+      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+
       '<div class="form-inline">' +
       '<div class="form-group">' +
       '<input type="date" class="form-control" id="input-from-date" ' +
@@ -125,46 +140,46 @@ var TreeRoot = Marionette.CollectionView.extend({
       'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
       '</div>' +
       '</div>' +
+      '      </div>' +
+      ' </div> ' +
+      '  </div> ' +
+      '<h1>Select streams</h1>' +
       '');
-    this.$el.append('<div class="form-group">' +
-      '<button type="submit" class="btn btn-primary">Create</button>' +
-      '</div>' +
-      '</form>');
     var $form = $('#form-create-sharing', this.$el),
-      $name = $('#input-name', this.$el),
-      $token = $('#input-token', this.$el),
-      $permission = $('#input-global-permission', this.$el),
-      $btn = $('button', this.$el);
-    function createSharing(e) {
-      e.preventDefault();
-      var access = {}, name = $name.val(), token = $token.val(), permission = $permission.val();
-      if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
-        permission = 'read';
-      }
-      access.name = name;
-      access.token = token;
-      access.permissions = [];
-      eachStream(this.collection, function (model) {
-        if (model.get('checked')) {
-          access.permissions.push({streamId : model.get('id'), level: permission});
-        }
-      });
-      this.options.connection.accesses.create(access, function (error, result) {
-        if (error || result.message) {
-          $btn.removeClass('btn-primary');
-          $btn.addClass('btn-danger');
-        } else {
-          $btn.removeClass('btn-primary');
-          $btn.addClass('btn-success');
-          this.trigger('sharing:createSuccess', result.token);
-        }
-      }.bind(this));
-    }
-    $form.submit(createSharing.bind(this));
-    $btn.click(createSharing.bind(this));
+      $name = $('#input-name', this.$el);
+    $form.submit(this.createSharing.bind(this));
     $name.bind('change paste keyup', function () {
-      $token.val(slugMe($name.val()));
+      //$token.val(slugMe($name.val()));
     });
+  },
+  createSharing: function (e, $btn) {
+    e.preventDefault();
+    $btn = $btn || $('#publish');
+    var $name = $('#input-name', this.$el),
+      $token = $('#input-token', this.$el),
+      $permission = $('#input-global-permission', this.$el);
+    var access = {}, name = $name.val(), token = $token.val(), permission = $permission.val();
+    if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
+      permission = 'read';
+    }
+    access.name = name;
+    access.token = token;
+    access.permissions = [];
+    eachStream(this.collection, function (model) {
+      if (model.get('checked')) {
+        access.permissions.push({streamId : model.get('id'), level: permission});
+      }
+    });
+    this.options.connection.accesses.create(access, function (error, result) {
+      if (error || result.message) {
+        $btn.removeClass('btn-primary');
+        $btn.addClass('btn-danger');
+      } else {
+        $btn.removeClass('btn-primary');
+        $btn.addClass('btn-success');
+        this.trigger('sharing:createSuccess', result.token);
+      }
+    }.bind(this));
   }
 });
 var TreeNode = Backbone.Model.extend({
@@ -208,25 +223,45 @@ Controller.prototype.show = function () {
     connection: this.connection
   });
   this.treeView.render();
-  $(this.container).html(this.treeView.el);
+  $(this.container).prepend('<div class="modal-header">  ' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+    '&times;</button> ' +
+    '<h4 class="modal-title" id="myModalLabel">Share a slice of life</h4>' +
+    '<div class="modal-close"></div> ' +
+    '</div><div id="modal-content"><div id="creation-content"></div>' +
+    '<div id="creation-footer" class="col-md-12">' +
+    '<button id="publish" class="btn btn-pryv-turquoise">Publish</button>' +
+    '<button id="cancel" class="btn">Cancel</button>' +
+    '</div></div>');
+  $('#creation-content').html(this.treeView.el);
+  $('#publish').click(function (e) {
+    this.treeView.createSharing(e, $('#publish'));
+  }.bind(this));
   this.treeView.on('sharing:createSuccess', function (token) {
-    $(this.container).empty();
+    $('#creation-content').empty();
     var url = this.connection.id.replace(/\?auth.*$/, '');
     url += '#/sharings/' + token;
-    $(this.container).html('<div class="container"><h1>Share</h1>' +
-      '<p>Your sharing was successfully created, share it or give this url: </p>' +
-      '<p><a href="' + url + '">' + url + '</a></p>' +
+    $('#creation-content').html('<div class="container">' +
+      '<h4>Your sharing was successfully created, share it via ' +
+      'Facebook, Twitter, mail or this link: </h4>' +
+      '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
       '<p class="text-center share">' +
+      '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +
+      url.replace(/#/g, '%23') + '&t=" ' +
+      'onclick="javascript:window.open(this.href, \'\', ' +
+      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
+      'return false;">' +
+      '<i class="fa fa-facebook"></i></a>' +
+      '<a target="_blank" href="https://twitter.com/share?url=' +
+      url.replace(/#/g, '%23') + '&via=pryv" ' +
+      'onclick="javascript:window.open(this.href, \'\', ' +
+      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
+      'return false;">' +
+      '<i class="fa fa-twitter"></i></a>' +
       '<a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: ' + url +
       '" title="Share by Email">' +
-      '<img src="./images/mail-24.png"/></a>' +
-      '<a href="https://twitter.com/share" class="twitter-share-button"' +
-      ' data-url="' + url + '" data-via="pryv" data-count="none">Tweet</a>' +
-      '<fb:share-button href="' + url + '" ' +
-      ' type="button"></fb:share-button></p></div>');
-    FB.XFBML.parse($('.share').get(0));
-    twttr.widgets.load();
-
+      '<i class="fa fa-envelope"></i></a>' +
+      '</p></div>');
   }.bind(this));
 };
 Controller.prototype.close = function () {

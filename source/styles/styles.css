@@ -385,22 +385,46 @@ text-align: center;*/
   z-index: 9999;
 }
 /** detail view modal **/
-.sharings, #create-sharing {
+.sharings {
   overflow-y: auto;
   height: 100%;
   max-width: 100%;
+}
+.create-sharing {
+  overflow: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 15px;
 }
 #form-create-sharing .form-group {
   margin-right: 0px !important;
   margin-left: 0px !important;
 }
-.share img {
-  margin-top: -12px;
-  padding: 5px;
+.share a {
+  display: inline-block;
+  margin: 10px;
+  font-size: 2em;
+  background-color: #2c3e50;
+  border-radius: 100%;
 }
-.share iframe {
-  margin-right: 5px;
+#sharing-list td {
+  vertical-align: middle;
 }
+.share-small a {
+  margin: 0 !important;
+  font-size: 1.2em !important;
+}
+.share i {
+  width: 50px;
+  line-height: 50px;
+  color: #fff;
+  text-align: center;
+}
+.share-small i {
+  width: 30px !important;
+  line-height: 30px !important;
+}
+
 .modal, .modal-backdrop, .modal-content {
   position: fixed;
   top: 0;
@@ -888,4 +912,27 @@ ul#DnD-legend > li {
 .btn-pryv-alizarin {
   background-color: #e74c3c;
   color: white;
+}
+.advanced-settings {
+  float: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 15px !important;
+  border: none !important;
+  display: none !important;
+}
+.inline-block {
+  display: inline-block !important;
+}
+.btn:focus {
+  outline: none;
+}
+.share-link a {
+  text-decoration: none;
+  color: #fff;
+}
+.share-link {
+  background-color: #4EAAE7;
+  padding: 15px;
+  text-align: center;
 }

@@ -75,6 +75,9 @@ module.exports = Marionette.ItemView.extend({
     $('.td-progress').hide();
     $('details').details();
   },
+  _close: function () {
+    this.trigger('close');
+  },
   onInputStreamChange: function (e) {
     var currentValue = e.target.value;
     this.ui.inputStream.val('');
@@ -133,6 +136,7 @@ module.exports = Marionette.ItemView.extend({
         this.ui.publish.css({'background-color': '#e74c3c'});
       } else {
         this.ui.publish.css({'background-color': '#2ecc71'});
+        this._close();
       }
     }.bind(this));
   },
@@ -152,11 +156,13 @@ module.exports = Marionette.ItemView.extend({
         this.ui.publish.css({'background-color': '#e74c3c'});
       } else {
         this.ui.publish.css({'background-color': '#2ecc71'});
+        this._close();
       }
     }.bind(this));
 
   },
   _publishPicture: function () {
+    var self = this;
     if (!this.canPublish) {
       return;
     }
@@ -175,9 +181,11 @@ module.exports = Marionette.ItemView.extend({
           model.set('published', true);
         }
         if (error && asyncCount === 0) {
-          this.canPublish = true;
+          self.canPublish = true;
+        } else if (!error && asyncCount === 0) {
+          self._close();
         }
-      }.bind(this),
+      },
         function (e) {
           $progressBar.find('.progress-bar').css(
             {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
@@ -205,9 +213,11 @@ module.exports = Marionette.ItemView.extend({
       }
     }
   },
-  onCancelClick: function () {
 
+  onCancelClick: function () {
+    this._close();
   },
+
   onStreamClick: function (e) {
     var streamSelected = $(e.target).attr('data-stream'),
       connectionSelected = this.connection.get($(e.target).attr('data-connection'));

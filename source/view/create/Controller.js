@@ -26,13 +26,17 @@ _.extend(Controller.prototype, {
     this.view.connection = this.connection;
     this.view.focusedStream = this.focusedStream;
     this.view.render();
+    this.view.on('close', this.close.bind(this));
 
   },
   close: function () {
-    this.view.close();
-    this.view = null;
+    if (this.view) {
+      this.view.close();
+      this.view = null;
+    }
     this.newEvent = null;
     $(this.container).empty();
+    this.$modal.modal('hide');
   },
   _defaultEvent: function () {
     var result = {};

@@ -126,7 +126,7 @@ module.exports = Backbone.View.extend({
   frameTo: null,
   limitFrom: 0,
   limitTo: Infinity,
-  labelWidth: 225,
+  labelWidth: 200,
   labelTipWidth: 14,
   markerOffset: 0.05,
   arrowPressLongspeed: 3,
@@ -361,46 +361,7 @@ module.exports = Backbone.View.extend({
     var $timeline = $('#timeline-scroll-wrapper');
     var self = this;
     if (!this.$timeline.hasClass('ui-draggable')) {
-      /*this.$timeline.draggable({axis: 'x',
-        start: function () {
-          clearTimeout(self.focusTimeout);
-          $('#focus-marker-label, #focus-marker-arrow').fadeOut();
-        },
-        drag: function (event, ui) {
-          var startPosition = $(this).data('leftPosition');
-          var currentLeft = ui.position.left;
-          var diff = currentLeft - startPosition;
-          var nextStartDate = null, nextEndDate = null, nextFocusDate = null;
-          var currentStartDate = new Date($('#start-marker').data('currentDate'));
-          var currentEndDate = new Date($('#end-marker').data('currentDate'));
-          var currentFocusDate = new Date($('#focus-marker').data('currentDate'));
-          if (diff !== 0) {
-            nextStartDate = currentLeft > startPosition ?
-              new Date(currentStartDate.getTime() - (self.spanStep * self.span)) :
-              new Date(currentStartDate.getTime() + (self.spanStep * self.span));
-            nextEndDate = currentLeft > startPosition ?
-              new Date(currentEndDate.getTime() - (self.spanStep * self.span)) :
-              new Date(currentEndDate.getTime() + (self.spanStep * self.span));
-            nextFocusDate = currentLeft > startPosition ?
-              new Date(currentFocusDate.getTime() - (self.spanStep * self.span)) :
-              new Date(currentFocusDate.getTime() + (self.spanStep * self.span));
-            self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
-            self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
-            $('#start-marker').data('currentDate', nextStartDate.getTime());
-            $('#end-marker').data('currentDate', nextEndDate.getTime());
-            $('#focus-marker').data('currentDate', nextFocusDate.getTime());
-            $(this).data('leftPosition', currentLeft);
-          }
-        },
-        stop: function () {
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          var initialLeftPosition = $(this).data('initialLeftPosition');
-          self.$timeline.css({'left': initialLeftPosition + 'px'});
-          self.timeframeChanged = true;
-          self.triggerFilter($('#start-marker').data('currentDate'),
-            $('#end-marker').data('currentDate'));
-        }
-      });*/
+
       // Try to fix timelime
       var delta = 0;
       var startedLeft = 0;
@@ -615,17 +576,18 @@ module.exports = Backbone.View.extend({
 
     var selectedFrameLeft = startMarkerLeft + (markerWidth / 2);
     var selectedFrameWidth = endMarkerLeft + (markerWidth / 2) - selectedFrameLeft;
-    $startMarker.css('left', startMarkerLeft + 'px').show();
-    $startLabel.css('left', startLabelLeft + 'px').show();
-    $startArrow.css('left', startArrowLeft + 'px').show();
-    $endMarker.css('left', endMarkerLeft + 'px').show();
-    $endLabel.css('left', endLabelLeft + 'px').show();
-    $endArrow.css('left', endArrowLeft + 'px').show();
-    $focusMarker.css('left', focusMarkerLeft + 'px').show();
-    $focusLabel.css('left', focusLabelLeft + 'px');
-    $focusArrow.css('left', focusArrowLeft + 'px').show();
-    $selectedFrame.css('left', selectedFrameLeft);
-    $selectedFrame.css('width', selectedFrameWidth).show();
+    $startMarker.show().animate({'left': startMarkerLeft + 'px'});
+    $startLabel.show().animate({'left': startLabelLeft + 'px'});
+    $startArrow.show().animate({'left': startArrowLeft + 'px'});
+    $endMarker.show().animate({'left': endMarkerLeft + 'px'});
+    $endLabel.show().animate({'left': endLabelLeft + 'px'});
+    $endArrow.show().animate({'left': endArrowLeft + 'px'});
+    $focusMarker.show().animate({'left': focusMarkerLeft + 'px'});
+    $focusLabel.animate({'left': focusLabelLeft + 'px'}, function () {
+      $focusLabel.css('left', focusLabelLeft + 'px');
+    });
+    $focusArrow.show().animate({'left': focusArrowLeft + 'px'});
+    $selectedFrame.show().animate({'left': selectedFrameLeft, 'width': selectedFrameWidth});
     this.setLabelText($startLabel, this.frameFrom);
     this.setLabelText($endLabel, this.frameTo);
     this.setIntervalLabel(this.frameFrom, this.frameTo);

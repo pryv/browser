@@ -733,65 +733,97 @@ details summary::-webkit-details-marker {
   width: 100%;
   height: 100%;
 }
+
+
 /** CSS for Drag and Drop Dialog using the modal **/
-#dnd-body {
-    height: 100%;
-}
-#dnd-panel-chart {
+.modal-dnd-middle {
+    position: absolute;
+    top: 60px;
+    bottom: 60px;
     width: 100%;
-    height: 50%;
 }
 
-#dnd-panel-list > ul  {
-    list-style-type: none;
-}
-
-#dnd-panel-list > ul > li > ul {
-    list-style-type: none;
-    margin-top: 5px;
-}
-
-#dnd-panel-list > ul > li > ul > li{
-    float: left;
-    margin-right: 10px;
-    border: 1px solid #C2C2C2;
-    padding: 3px 5px 3px 0;
-}
-
-#dnd-panel-create {
+.modal-dnd-footer {
     position: absolute;
     bottom: 0px;
+    width: 100%;
+    height: 60px;
+    padding: 7px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.modal-dnd-left {
+    position: absolute;
+    float: left;
+    right: 240px;
+    left: 0px;
+    top: 0px;
+    bottom: 0px;
+    width: 100%;
+    margin-right: 240px;
+}
+
+.modal-dnd-right {
+    position: absolute;
+    float: right;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    width: 240px;
+    border-left: 1px solid #e5e5e5;
+    padding: 7px;
+}
+
+
+.modal-dnd-chart {
+    position: absolute;
+    top: 0px;
+    bottom: 60px;
+    right: 240px;
     left: 0px;
 }
 
-#dnd-panel-chart > .chartContainer {
-    width: 100%;
-    height: 100%;
-}
-
-#dnd-panel-chart .legend {
+.modal-dnd-legend {
     position: absolute;
+    height: 60px;
     bottom: 0px;
+    right: 240px;
+    left: 0px;
 }
 
-.legend-container ul {
+.modal-dnd-values {
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    height: 100px;
+}
+
+.modal-dnd-list {
+    position: absolute;
+    top: 100px;
+    bottom: 0px;
+    width: 100%;
+}
+
+.legend-container ul, .modal-dnd-legend ul {
     list-style-type: none;
     margin-top: 5px;
-}
-
-#DnD-legend ul {
-    list-style-type: none;
     margin-bottom: 5px;
 }
 
-.legend-container li, #DnD-legend li{
+#modal-dnd-legend ul {
+    list-style-type: none;
+
+}
+
+.legend-container li, .modal-dnd-legend li{
     float: left;
     margin-right: 10px;
     border: 1px solid #C2C2C2;
     padding: 3px 5px 3px 0;
 }
 
-.legend-container .btn {
+.modal-dnd-legend .btn {
     margin-right: 3px;
 }
 
@@ -803,18 +835,22 @@ details summary::-webkit-details-marker {
     margin-left: 5px;
 }
 
-ul#DnD-legend {
+ul.modal-dnd-legend {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-ul#DnD-legend > li {
+ul.modal-dnd-legend > li {
     position: relative;
     padding: 10px 5px;
     border-bottom: 1px solid #474747;
     cursor: pointer;
 }
+
+
+
+/** CSS for detailed view for charts using the modal **/
 
 #detail-chart-container-general {
     position: absolute;

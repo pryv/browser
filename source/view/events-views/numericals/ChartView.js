@@ -435,6 +435,9 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onClose: function () {
+    $('#editPointVal').unbind();
+    $('#editPointBut').unbind();
+    $('#chart-pt-editor').remove();
     $(this.chartContainer).empty();
     $(this.container).unbind();
     $(this.container).empty();
@@ -532,10 +535,10 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onEdit: function (event, pos, item) {
-    if ($('#chart-tooltip')) {
+    if ($('#chart-pt-editor')) {
       $('#editPointVal').unbind();
       $('#editPointBut').unbind();
-      $('#chart-tooltip').remove();
+      $('#chart-pt-editor').remove();
     }
     if (this.model.get('editPoint') && item) {
       var tc = this.model.get('collection').at(0);
@@ -549,7 +552,7 @@ module.exports = Marionette.CompositeView.extend({
 
   showPointEditor: function (x, y) {
     $('.modal-content').append(
-      '<div id="chart-tooltip" class="tooltip has-feedback">' +
+      '<div id="chart-pt-editor" class="tooltip has-feedback">' +
       '  <div class="input-group">' +
       '    <input type="text" class="form-control" id="editPointVal">' +
       '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
@@ -560,7 +563,7 @@ module.exports = Marionette.CompositeView.extend({
       '</div>');
 
     var os = $('.modal-content').offset();
-    $('#chart-tooltip').css({
+    $('#chart-pt-editor').css({
       color: 'none',
       'background-color': 'none',
       width: '20%',
@@ -570,18 +573,18 @@ module.exports = Marionette.CompositeView.extend({
 
     $('#editPointVal').bind('input', function () {
       if ($(this).val().length < 1) {
-        $('#chart-tooltip').removeClass('has-success');
-        $('#chart-tooltip').removeClass('has-warning');
+        $('#chart-pt-editor').removeClass('has-success');
+        $('#chart-pt-editor').removeClass('has-warning');
         $('#editPointBut').removeClass('btn-success');
         $('#editPointBut').removeClass('btn-danger');
       } else if (isNaN($(this).val())) {
-        $('#chart-tooltip').removeClass('has-success');
-        $('#chart-tooltip').addClass('has-warning');
+        $('#chart-pt-editor').removeClass('has-success');
+        $('#chart-pt-editor').addClass('has-warning');
         $('#editPointBut').removeClass('btn-success');
         $('#editPointBut').addClass('btn-danger');
       } else {
-        $('#chart-tooltip').removeClass('has-warning');
-        $('#chart-tooltip').addClass('has-success');
+        $('#chart-pt-editor').removeClass('has-warning');
+        $('#chart-pt-editor').addClass('has-success');
         $('#editPointBut').removeClass('btn-danger');
         $('#editPointBut').addClass('btn-success');
       }

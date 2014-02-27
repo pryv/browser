@@ -49,7 +49,7 @@ var Controller = module.exports = function ($modal, events, treemap) {
   this.$content.html($('#template-draganddrop').html());
   this.resizeModal();
 
-  $('#dnd-panel-list').append('<ul></ul>');
+  $('.modal-dnd-list').append('<ul></ul>');
   $(window).resize(this.resizeModal.bind(this));
 };
 
@@ -72,7 +72,7 @@ _.extend(Controller.prototype, {
 
     this.chartView = new ChartView({model:
       new Model({
-        container: '#dnd-panel-chart',
+        container: '.modal-dnd-chart',
         view: null,
         requiresDim: false,
         collection: this.chartCollection,
@@ -80,6 +80,7 @@ _.extend(Controller.prototype, {
         highlightedTime: null,
         allowPieChart: false,
         dimensions: null,
+        legendContainer: '.modal-dnd-legend',
         legendStyle: 'list', // Legend style: 'list', 'table'
         legendButton: true,  // A button in the legend
         legendButtonContent: ['remove'],
@@ -90,7 +91,8 @@ _.extend(Controller.prototype, {
         onDnD: false,
         allowPan: false,      // Allows navigation through the chart
         allowZoom: false,     // Allows zooming on the chart
-        xaxis: true
+        xaxis: true,
+        showNodeCount: false
       })});
 
     this.chartView.render();
@@ -108,7 +110,7 @@ _.extend(Controller.prototype, {
 
     }.bind(this));
 
-    var $ul = $('#dnd-panel-list ul');
+    var $ul = $('.modal-dnd-list ul');
     var el;
 
     if (this.eventCollections.note.notNull) {
@@ -167,17 +169,32 @@ _.extend(Controller.prototype, {
       this.eventCollections.numerical.remove(evt.model);
     }.bind(this));
 
-    $('#submit-dnd').on('click', function () {
+    $('#dnd-btn-cancel').bind('click', function () {
+      this.close();
+      this.$modal.modal('hide');
+    }.bind(this));
+
+    $('#dnd-field-name').bind('input', function () {
+      var val = $('#dnd-field-name').val();
+      if (val.length > 0) {
+        $('.modal-dnd-footer').removeClass('has-error');
+        $('.modal-dnd-footer').addClass('has-success');
+      } else {
+        $('.modal-dnd-footer').removeClass('has-success');
+        $('.modal-dnd-footer').addClass('has-error');
+      }
+    });
+
+    $('#dnd-btn-create').bind('click', function () {
       var errors = 0;
       var vn_filters = [];
-      var vn_name = $('#name-dnd').val();
+      var vn_name = $('#dnd-field-name').val();
 
       this.chartCollection.each(function (e) {
         vn_filters.push({stream: e.get('events')[0].stream, type: e.get('type')});
       });
 
       if (!vn_name) {
-        $('#name-dnd').attr('style', 'border:1px solid #ff0000');
         errors++;
       }
 
@@ -453,7 +470,7 @@ _.extend(Controller.prototype, {
 
   close: function () {
     this.chartView.close();
-    this.$modal.find('#dnd-body').remove();
+    this.$modal.find('.modal-content').empty();
   },
 
 

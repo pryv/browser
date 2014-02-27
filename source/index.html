@@ -197,20 +197,32 @@
   </script>
     
   <script type="text/html" id="template-draganddrop">
-    <div id="dnd-body" class="dnd-body">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
-        <div class="modal-close"></div>
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+      <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
+      <div class="modal-close"></div>
+    </div>
+    <div class="modal-dnd-middle">
+      <div class="modal-dnd-left">
+        <div class="modal-dnd-chart"></div>
+        <div class="modal-dnd-legend">legend</div>
       </div>
-      <div id="dnd-panel-list"></div>
-      <div id="dnd-panel-chart"></div>
-      <div id="dnd-panel-create">
-        <span class="dnd-node-text">Node's name:</span>
-        <input type="text" id="name-dnd" class="dnd-node-name" name="node-name">
-        <button id="submit-dnd" type="button" class="btn btn-pryv-turquoise">Create!</button>
+      <div class="modal-dnd-right">
+        <div class="modal-dnd-values">
+          <span><h2>Your Values</h2></span>
+          <span><h4>Add your value and create your node</h4></span>
+        </div>
+        <div class="modal-dnd-list"></div>
       </div>
     </div>
+    <div class="modal-dnd-footer">
+      <div class="input-group input-group-lg">
+        <input type="text" class="form-control " id="dnd-field-name" placeholder="Enter the Node's name here">
+        <span class="input-group-btn">
+          <button class="btn btn-success" id="dnd-btn-create" type="button">Create!</button>
+          <button class="btn btn-danger" id="dnd-btn-cancel" type="button">Cancel</button>
+        </span>
+      </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
     <a class="btn btn-primary btn-xs DnD-legend-button" href="javascript:;">

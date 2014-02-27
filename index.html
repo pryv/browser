@@ -4,7 +4,7 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.5/">
+  <base href="{browser-source}_v0.0.6/">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="Content available on Pryv only." />
@@ -24,6 +24,26 @@
       });
       wrapped();
     });
+  </script>
+  <script id="onboardingView" type="template">
+    <div class="container">
+    <div class="row onboarding">
+      <div class="col-md-4"><h1>What matters in your life ?</h1>
+        <div class="ob_text">
+          <p>Your life is made of streams.
+            <span class="stream_color_1">Travel</span>,<span class="stream_color_2"> Friends</span>,<span class="stream_color_3"> Family</span>,<span class="stream_color_4"> Sports...</span></p>
+          <p>To get started, create streams that matter to you:</p>
+          <form class="form-inline" role="form" id="onboarding-form">
+            <div class="form-group">
+              <input type="text" id='onboarding-input-name' class="form-control" placeholder="Create Your Stream" style="width: 152px;">
+            </div>
+            <button type="submit" class="btn btn-primary">START</button>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-8"><img src="/images/onboarding_image.png"/></div>
+    </div>
+    </div>
   </script>
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
@@ -157,7 +177,7 @@
   </script> <script type="text/html" id="template-subscriptionItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= connection.id %>
+      <%= connection.url %>
       <input type="text" placeholder="Name" required class="subscription-name">
       <% if (error) {%>
         <span class="glyphicon glyphicon-warning-sign"></span>
@@ -172,20 +192,32 @@
   </script>
     
   <script type="text/html" id="template-draganddrop">
-    <div id="dnd-body" class="dnd-body">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
-        <div class="modal-close"></div>
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+      <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
+      <div class="modal-close"></div>
+    </div>
+    <div class="modal-dnd-middle">
+      <div class="modal-dnd-left">
+        <div class="modal-dnd-chart"></div>
+        <div class="modal-dnd-legend">legend</div>
       </div>
-      <div id="dnd-panel-list"></div>
-      <div id="dnd-panel-chart"></div>
-      <div id="dnd-panel-create">
-        <span class="dnd-node-text">Node's name:</span>
-        <input type="text" id="name-dnd" class="dnd-node-name" name="node-name">
-        <button id="submit-dnd" type="button" class="btn btn-pryv-turquoise">Create!</button>
+      <div class="modal-dnd-right">
+        <div class="modal-dnd-values">
+          <span><h2>Your Values</h2></span>
+          <span><h4>Add your value and create your node</h4></span>
+        </div>
+        <div class="modal-dnd-list"></div>
       </div>
     </div>
+    <div class="modal-dnd-footer">
+      <div class="input-group input-group-lg">
+        <input type="text" class="form-control " id="dnd-field-name" placeholder="Enter the Node's name here">
+        <span class="input-group-btn">
+          <button class="btn btn-success" id="dnd-btn-create" type="button">Create!</button>
+          <button class="btn btn-danger" id="dnd-btn-cancel" type="button">Cancel</button>
+        </span>
+      </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
     <a class="btn btn-primary btn-xs DnD-legend-button" href="javascript:;">

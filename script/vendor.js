@@ -1,4 +1,4 @@
-/*! browser - v0.0.5 - 2014-02-26 *//*!
+/*! browser - v0.0.6 - 2014-02-27 *//*!
  * jQuery JavaScript Library v1.9.1
  * http://jquery.com/
  *

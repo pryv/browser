@@ -78,6 +78,8 @@ _.extend(Controller.prototype, {
     sharings.forEach(function (sharing) {
       if (sharing.type === 'shared') {
         var url = connection.id.replace(/\?auth.*$/, '');
+        url = url.replace(/\.in/, '.li');
+        url = url.replace(/\.io/, '.me');
         url += '#/sharings/' + sharing.token;
         sharing.url = url;
         var m = new SharingModel({
@@ -93,6 +95,10 @@ _.extend(Controller.prototype, {
       bookmarks = [bookmarks];
     }
     bookmarks.forEach(function (bookmark) {
+      var url = bookmark.settings.url;
+      url = url.replace(/\.in/, '.li');
+      url = url.replace(/\.io/, '.me');
+      bookmark.settings.url = url;
       var m = new BookmarkModel({
         bookmark: bookmark
       });

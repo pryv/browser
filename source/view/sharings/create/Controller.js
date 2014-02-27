@@ -240,6 +240,8 @@ Controller.prototype.show = function () {
   this.treeView.on('sharing:createSuccess', function (token) {
     $('#creation-content').empty();
     var url = this.connection.id.replace(/\?auth.*$/, '');
+    url = url.replace(/\.in/, '.li');
+    url = url.replace(/\.io/, '.me');
     url += '#/sharings/' + token;
     $('#creation-content').html('<div class="container">' +
       '<h4>Your sharing was successfully created, share it via ' +

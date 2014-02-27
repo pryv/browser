@@ -50,6 +50,26 @@
       <!-- @endif -->
     });
   </script>
+  <script id="onboardingView" type="template">
+    <div class="container">
+    <div class="row onboarding">
+      <div class="col-md-4"><h1>What matters in your life ?</h1>
+        <div class="ob_text">
+          <p>Your life is made of streams.
+            <span class="stream_color_1">Travel</span>,<span class="stream_color_2"> Friends</span>,<span class="stream_color_3"> Family</span>,<span class="stream_color_4"> Sports...</span></p>
+          <p>To get started, create streams that matter to you:</p>
+          <form class="form-inline" role="form" id="onboarding-form">
+            <div class="form-group">
+              <input type="text" id='onboarding-input-name' class="form-control" placeholder="Create Your Stream" style="width: 152px;">
+            </div>
+            <button type="submit" class="btn btn-primary">START</button>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-8"><img src="/images/onboarding_image.png"/></div>
+    </div>
+    </div>
+  </script>
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
@@ -182,7 +202,7 @@
   </script> <script type="text/html" id="template-subscriptionItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= connection.id %>
+      <%= connection.url %>
       <input type="text" placeholder="Name" required class="subscription-name">
       <% if (error) {%>
         <span class="glyphicon glyphicon-warning-sign"></span>

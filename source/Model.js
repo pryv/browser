@@ -1,4 +1,4 @@
-/* global $, window */
+/* global $, window, location */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
   _ = require('underscore'),
   ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -7,6 +7,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   Controller = require('./orchestrator/Controller.js'),
   Pryv = require('pryv'),
   TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+  OnboardingView = require('./view/onboarding/View.js'),
   PUBLIC_TOKEN = 'public',
   STAGING,
   toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
@@ -85,32 +86,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     appId : 'pryv-browser',
     username: this.urlUsername,
     callbacks : {
-      signedIn: function (connection) {
-        console.log('Successfully signed in', connection);
-        this.loggedConnection = connection;
-        $('#login-button').text(connection.username);
-        if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
-          this.showLoggedInElement();
-          if (!this.sharingsConnections) {
-            this.addConnection(connection);
-            if (this.publicConnection) {
-              this.removeConnection(this.publicConnection);
-            }
-            connection.bookmarks.get(function (error, result) {
-              if (!error) {
-                this.bookmakrsConnections = result;
-                this.addConnections(this.bookmakrsConnections);
-              }
-            }.bind(this));
-          }
-        } else {
-          this.showSubscribeElement();
-        }
-        $('#login').removeClass('animated slideInRight');
-        $('#tree').removeClass('animated slideOutLeft');
-        $('#login').addClass('animated slideOutRight');
-        $('#tree').addClass('animated slideInLeft');
-      }.bind(this),
+      signedIn: this.signedIn.bind(this),
       signedOut: function (connection) {
         this.hideLoggedInElement();
         this.removeConnection(connection);
@@ -169,7 +145,51 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
 
 };
-
+Model.prototype.signedIn = function (connection) {
+  console.log('Successfully signed in', connection);
+  this.loggedConnection = connection;
+  this.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+    if (!error && result.length === 0) {
+      this.showOnboarding();
+    }
+  }.bind(this));
+  $('#login-button').text(connection.username);
+  if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
+    this.showLoggedInElement();
+    if (!this.sharingsConnections) {
+      this.addConnection(connection);
+      if (this.publicConnection) {
+        this.removeConnection(this.publicConnection);
+      }
+      connection.bookmarks.get(function (error, result) {
+        if (!error) {
+          this.bookmakrsConnections = result;
+          this.addConnections(this.bookmakrsConnections);
+        }
+      }.bind(this));
+    }
+  } else {
+    this.showSubscribeElement();
+  }
+  $('#login').removeClass('animated slideInRight');
+  $('#tree').removeClass('animated slideOutLeft');
+  $('#login').addClass('animated slideOutRight');
+  $('#tree').addClass('animated slideInLeft');
+};
+Model.prototype.showOnboarding = function () {
+  this.hideLoggedInElement();
+  var view = new OnboardingView();
+  view.connection = this.loggedConnection;
+  view.render();
+  view.on('done', function () {
+    $('#tree').empty();
+    this.removeConnection(this.loggedConnection);
+    this.signedIn(this.loggedConnection);
+    if (location) {
+      location.reload();
+    }
+  }.bind(this));
+};
 Model.prototype.addConnection = function (connection) {
   if (!this.treemap) {
     this.initBrowser();

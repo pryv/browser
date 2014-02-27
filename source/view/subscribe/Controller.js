@@ -35,6 +35,10 @@ _.extend(Controller.prototype, {
       sharings = [sharings];
     }
     sharings.forEach(function (sharing) {
+      sharing.url = sharing.id.replace(/\?auth.*$/, '')
+        .replace(/\.in/, '.li')
+        .replace(/\.io/, '.me');
+      sharing.url += '#/sharings/' + sharing.auth;
       var m = new Model({
         connection: sharing
       });
@@ -45,9 +49,9 @@ _.extend(Controller.prototype, {
     var subNumber = subscriptions.length;
     subscriptions.forEach(function (model) {
       var connection = model.get('connection');
-      if (connection.name && connection.auth && connection.id) {
+      if (connection.name && connection.auth && connection.url) {
         this.loggedConnection.bookmarks.create(
-          {url: connection.id, accessToken: connection.auth, name: connection.name},
+          {url: connection.url, accessToken: connection.auth, name: connection.name},
           function (error) {
           if (!error) {
             subNumber -= 1;

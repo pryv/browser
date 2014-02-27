@@ -934,3 +934,35 @@ ul#DnD-legend > li {
   padding: 15px;
   text-align: center;
 }
+.onboarding {
+  padding-top: 20px;
+}
+.onboarding h1{
+  color:#000000;
+  text-align:left;
+  font-weight: 100;
+  padding: 30px;
+  background-color: #ffffff;
+  color:#000000;}
+.onboarding .ob_text{
+  background-color: #ffffff;
+  color:#000000;
+  padding: 30px;
+}
+.onboarding .ob_text p{
+  text-align:left;
+  font-weight: 100;
+  font-size:20px;
+  margin-bottom:40px;
+}
+.onboarding .ob_text form{
+  text-align:left;
+}
+.onboarding img{
+  width:100%;
+}
+.onboarding span {font-weight: 300;}
+.onboarding .stream_color_1{color:#16A086;}
+.onboarding .stream_color_2{color:#E77E23;}
+.onboarding .stream_color_3{color:#9C59B8;}
+.onboarding .stream_color_4{color:#E84C3D;}

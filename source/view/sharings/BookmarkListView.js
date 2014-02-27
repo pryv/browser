@@ -41,7 +41,7 @@ module.exports = Marionette.CompositeView.extend({
         ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="Link">' +
       '</div> ' +
       '<div class="form-group">' +
-        ' <label class="sr-only" for="add-bookmark-auth">url</label>' +
+        ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
         ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
       '</div> ' +
       ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">Follow</button>  ' +

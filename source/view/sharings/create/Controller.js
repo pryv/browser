@@ -89,14 +89,13 @@ var TreeRoot = Marionette.CollectionView.extend({
       '<div class="form-horizontal">' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-name" placeholder="Name">' +
+      '<input type="text" class="form-control" id="input-name" placeholder="Name" required>' +
       '</div>' +
       '</div>' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
       '<select class="form-control" id="input-global-permission">' +
-      '  <option value ="" selected="selected" style="display:none;">Permission</option>' +
-      '  <option value="read">Allow read only</option>' +
+      '  <option value="read" selected="selected">Allow read only</option>' +
       '  <option value="contribute">Allow contributing events</option>' +
       '  <option value="manage">Allow managing events and streams</option>' +
       '</select>' +
@@ -158,7 +157,8 @@ var TreeRoot = Marionette.CollectionView.extend({
     var $name = $('#input-name', this.$el),
       $token = $('#input-token', this.$el),
       $permission = $('#input-global-permission', this.$el);
-    var access = {}, name = $name.val(), token = $token.val(), permission = $permission.val();
+    var access = {}, name = $name.val().trim(), token = $token.val().trim(),
+      permission = $permission.val();
     if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
       permission = 'read';
     }
@@ -230,14 +230,16 @@ Controller.prototype.show = function () {
     '<div class="modal-close"></div> ' +
     '</div><div id="modal-content"><div id="creation-content"></div>' +
     '<div id="creation-footer" class="col-md-12">' +
-    '<button id="publish" class="btn btn-pryv-turquoise">Publish</button>' +
-    '<button id="cancel" class="btn">Cancel</button>' +
+    '<button id="publish" class="btn btn-pryv-turquoise">Share</button>' +
+    '<button id="cancel" class="btn" data-dismiss="modal">Cancel</button>' +
     '</div></div>');
   $('#creation-content').html(this.treeView.el);
   $('#publish').click(function (e) {
     this.treeView.createSharing(e, $('#publish'));
   }.bind(this));
   this.treeView.on('sharing:createSuccess', function (token) {
+    $('#publish').remove();
+    $('#cancel').text('Ok').addClass('btn-pryv-turquoise');
     $('#creation-content').empty();
     var url = this.connection.id.replace(/\?auth.*$/, '');
     url = url.replace(/\.in/, '.li');
@@ -260,7 +262,8 @@ Controller.prototype.show = function () {
       '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
       'return false;">' +
       '<i class="fa fa-twitter"></i></a>' +
-      '<a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: ' + url +
+      '<a href="mailto:?subject=Slice of life&amp;body=' +
+      'I just shared a slice of life with you: ' + url +
       '" title="Share by Email">' +
       '<i class="fa fa-envelope"></i></a>' +
       '</p></div>');

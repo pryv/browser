@@ -174,13 +174,11 @@ module.exports = Marionette.CompositeView.extend({
             break;
           }
         }
-        console.log('first case', legend);
         return legend;
       };
     } else {
       this.options.legend.labelFormatter = function (label) {
         var legend = '<span class="DnD-legend-text">' + label + '</span>';
-        console.log('this case', legend);
         return legend;
       };
     }
@@ -325,11 +323,11 @@ module.exports = Marionette.CompositeView.extend({
       var colorBox;
       var buttonBox;
       var textBox;
-
       $(this).children().map(function (/*index2*/) {
         if ($(this) && $(this).length > 0) {
           var child = $($(this).get(0));
           if (child.hasClass('legendColorBox')) {
+            $('div > div', child).addClass('DnD-legend-color');
             colorBox = $('div > div', child)[0].outerHTML;
           }
           if (child.hasClass('legendLabel')) {
@@ -346,31 +344,6 @@ module.exports = Marionette.CompositeView.extend({
         }
 
       });
-
-      console.log('Elements after iteration');
-      console.log('colorBox', colorBox);
-      console.log('buttonBox', buttonBox);
-      console.log('textBox', textBox);
-
-
-/*
-
-        if (index2 === 0) {
-          console.log('index2=0', $(this));
-          if ($('div > div', $(this)).length !== 0) {
-            $('div > div', $(this)).addClass('DnD-legend-color');
-            return $('div > div', $(this))[0].outerHTML;
-          }
-        }
-
-        if (index2 === 1) {
-          console.log('index2=1', $(this));
-          if ($('a', $(this)).length !== 0) {
-            $('a', $(this)).attr('id', 'series-' + index);
-            return $(this).html();
-          }
-        }
-        */
       var toAppend = '';
       if (colorBox) {
         toAppend += colorBox;

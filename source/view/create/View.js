@@ -94,7 +94,7 @@ module.exports = Marionette.ItemView.extend({
       else if (this.eventType === validType[0]) {
         this._publishNote();
       }
-    } else if (this.connectionSelected) {
+    } else {
       var input, parentId, name;
       /*jshint -W083 */
       for (var i = 0; i < this.ui.inputStream.length; i++) {
@@ -102,6 +102,8 @@ module.exports = Marionette.ItemView.extend({
         if (input.val().length > 0) {
           name = input.val().trim();
           parentId = input.attr('data-parentId') || null;
+          this.connectionSelected = this.connection.get(input.attr('data-connection'));
+          console.log(name, parentId);
           this.connectionSelected.streams.create({parentId: parentId, name: name},
           function (err, res) {
             if (err) {
@@ -336,7 +338,7 @@ module.exports = Marionette.ItemView.extend({
         '<form role="form" class="create-stream">' +
         '<i class="fa fa-plus fa-2"></i>' +
         '<input type="text" class="form-control" placeholder="Create new stream"' +
-        ' data-parentId="">' +
+        ' data-parentId=""  data-connection="' + connection.serialId + '">' +
         '</form></div></summary>';
     return result;
 
@@ -370,7 +372,7 @@ module.exports = Marionette.ItemView.extend({
         '<form role="form" class="create-stream">' +
         '<i class="fa fa-plus fa-2"></i>' +
         '<input type="text" class="form-control" placeholder="Create new stream"' +
-        ' data-parentId="' + stream.id + '">' +
+        ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
         '</form></div></summary>';
     return result;
   },

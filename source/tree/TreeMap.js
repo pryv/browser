@@ -1,5 +1,5 @@
 
-/* global $, window */
+/* global $, window, location */
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
   _ = require('underscore'),
@@ -9,6 +9,7 @@ var RootNode = require('./RootNode.js'),
   CreateSharingView = require('../view/sharings/create/Controller.js'),
   SubscribeView = require('../view/subscribe/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
+  OnboardingView = require('../view/onboarding/View.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
 var MARGIN_TOP = 40;
@@ -33,6 +34,8 @@ var TreeMap = module.exports = function (model) {
     $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
   this.root.x =  MARGIN_LEFT;
   this.root.y =  MARGIN_TOP;
+
+
   $('#logo-reload').click(function (e) {
     e.preventDefault();
     if (this.model.sharingsConnections &&
@@ -204,6 +207,14 @@ var TreeMap = module.exports = function (model) {
     this.eventLeaveScope);
   this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
     this.eventChange);
+};
+TreeMap.prototype.isOnboarding = function () {
+  this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+    if (!error && result.length === 0 &&
+      this.model.urlUsername === this.model.loggedConnection.username) {
+      this.showOnboarding();
+    }
+  }.bind(this));
 };
 TreeMap.prototype.focusOnConnections = function (connection) {
   this.model.activeFilter.focusOnConnections(connection);
@@ -441,6 +452,24 @@ TreeMap.prototype.closeSubscribeView = function () {
     this.subscribeView = null;
   }
 };
+/*=================================*/
+//========== ONBOARDING VIEW =========\\
+TreeMap.prototype.showOnboarding = function () {
+  this.model.hideLoggedInElement();
+  var view = new OnboardingView();
+  view.connection = this.model.loggedConnection;
+  view.render();
+  view.on('done', function () {
+    $('#logo-add').click();
+    $('#tree').empty();
+    this.createEventView.view.on('close', function () {
+      if (location) {
+        location.reload();
+      }
+    });
+  }.bind(this));
+};
+
 /*=================================*/
 /* jshint -W098 */
 

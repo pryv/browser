@@ -154,19 +154,19 @@ module.exports = Marionette.CompositeView.extend({
           switch (buttons[i]) {
           case 'ready':
             legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-ready" ' +
-              'href="javascript:;"><span class="glyphicon glyphicon-ok"></span></a>';
+              'href="javascript:;"><span class="fa fa-check"></span></a>';
             break;
           case 'duplicate':
             legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-duplicate" ' +
-              'href="javascript:;"><span class="glyphicon glyphicon-magnet"></span></a>';
+              'href="javascript:;"><span class="fa fa-files-o"></span></a>';
             break;
           case 'remove':
             legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-remove" ' +
-              'href="javascript:;"><span class="glyphicon glyphicon-trash"></span></a>';
+              'href="javascript:;"><span class="fa fa-minus"></span></a>';
             break;
           case 'edit':
             legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-edit" ' +
-              'href="javascript:;"><span class="glyphicon glyphicon-pencil"></span></a>';
+              'href="javascript:;"><span class="fa fa-pencil-square-o"></span></a>';
             break;
           }
         }

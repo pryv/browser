@@ -246,7 +246,7 @@
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
     <a class="btn btn-primary btn-xs DnD-legend-button" href="javascript:;">
-      <span class="glyphicon glyphicon-plus"></span>
+      <span class="fa fa-plus"></span>
     </a>
     <span class="DnD-legend-text"><%= displayName() %></span>
   </script>
@@ -337,46 +337,75 @@
       <div class="detail-chart-container" id="detail-chart-container-edit"></div>
       <div class="editor-container">
         <div id="dc-editor-appearance">
-          <span>Appearance</span>
           <ul>
             <li>
-              <span>Color</span>
-                <select id="detailed-view-chart-color">
-                    <option value="#00FFFF" style="background-color: Aqua">Aqua</option>
-                    <option value="#000000" style="background-color: Black">Black</option>
-                    <option value="#0000FF" style="background-color: Blue">Blue</option>
-                    <option value="#FF00FF" style="background-color: Fuchsia">Fuchsia</option>
-                    <option value="#808080" style="background-color: Gray">Gray</option>
-                    <option value="#008000" style="background-color: Green">Green</option>
-                </select>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Color</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-color" class="form-control">
+                    <option value="#1abc9c" style="background-color: #1abc9c">&nbsp;</option>
+                    <option value="#2ecc71" style="background-color: #2ecc71">&nbsp;</option>
+                    <option value="#16a085" style="background-color: #16a085">&nbsp;</option>
+                    <option value="#27ae60" style="background-color: #27ae60">&nbsp;</option>
+                    <option value="#3498db" style="background-color: #3498db">&nbsp;</option>
+                    <option value="#2980b9" style="background-color: #2980b9">&nbsp;</option>
+                    <option value="#9b59b6" style="background-color: #9b59b6">&nbsp;</option>
+                    <option value="#8e44ad" style="background-color: #8e44ad">&nbsp;</option>
+                    <option value="#34495e" style="background-color: #34495e">&nbsp;</option>
+                    <option value="#2c3e50" style="background-color: #2c3e50">&nbsp;</option>
+                    <option value="#f1c40f" style="background-color: #f1c40f">&nbsp;</option>
+                    <option value="#f39c12" style="background-color: #f39c12">&nbsp;</option>
+                    <option value="#e67e22" style="background-color: #e67e22">&nbsp;</option>
+                    <option value="#d35400" style="background-color: #d35400">&nbsp;</option>
+                    <option value="#e74c3c" style="background-color: #e74c3c">&nbsp;</option>
+                    <option value="#c0392b" style="background-color: #c0392b">&nbsp;</option>
+                    <option value="#ecf0f1" style="background-color: #ecf0f1">&nbsp;</option>
+                    <option value="#bdc3c7" style="background-color: #bdc3c7">&nbsp;</option>
+                    <option value="#95a5a6" style="background-color: #95a5a6">&nbsp;</option>
+                    <option value="#7f8c8d" style="background-color: #7f8c8d">&nbsp;</option>
+                  </select>
+                </div>
+              </div>
             </li>
             <li>
-              <span>Style</span>
-              <select id="detailed-view-chart-style">
-                <option value="line">Line</option>
-                <option value="point">Point</option>
-                <option value="bar">Bar</option>
-                </select>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Style</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-style" class="form-control">
+                    <option value="line">Line</option>
+                    <option value="point">Point</option>
+                    <option value="bar">Bar</option>
+                  </select>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Operation</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-operation" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sum">Sum</option>
+                    <option value="average">Average</option>
+                  </select>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Interval</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-interval" class="form-control">
+                    <option value="none">None</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+              </div>
             </li>
           </ul>
-        </div>
-        <div id="dc-editor-transform">
-          <span>Operation</span>
-          <select id="detailed-view-chart-operation" size="4">
-            <option value="none">None</option>
-            <option value="sum">Sum</option>
-            <option value="average">Average</option>
-          </select>
-        </div>
-        <div id="dc-editor-period">
-          <span>Interval</span>
-            <select id="detailed-view-chart-interval" size="4">
-              <option value="none">None</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
         </div>
       </div>
   </script>

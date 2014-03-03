@@ -156,7 +156,8 @@ var TreeRoot = Marionette.CollectionView.extend({
     $btn = $btn || $('#publish');
     var $name = $('#input-name', this.$el),
       $token = $('#input-token', this.$el),
-      $permission = $('#input-global-permission', this.$el);
+      $permission = $('#input-global-permission', this.$el),
+      $spin = $('.fa-spin', $btn);
     var access = {}, name = $name.val().trim(), token = $token.val().trim(),
       permission = $permission.val();
     if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
@@ -165,12 +166,18 @@ var TreeRoot = Marionette.CollectionView.extend({
     access.name = name;
     access.token = token;
     access.permissions = [];
+    if ($spin) {
+      $spin.show();
+    }
     eachStream(this.collection, function (model) {
       if (model.get('checked')) {
         access.permissions.push({streamId : model.get('id'), level: permission});
       }
     });
     this.options.connection.accesses.create(access, function (error, result) {
+      if ($spin) {
+        $spin.hide();
+      }
       if (error || result.message) {
         $btn.removeClass('btn-primary');
         $btn.addClass('btn-danger');
@@ -230,7 +237,8 @@ Controller.prototype.show = function () {
     '<div class="modal-close"></div> ' +
     '</div><div id="modal-content"><div id="creation-content"></div>' +
     '<div id="creation-footer" class="col-md-12">' +
-    '<button id="publish" class="btn btn-pryv-turquoise">Share</button>' +
+    '<button id="publish" class="btn btn-pryv-turquoise">Share  ' +
+    '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
     '<button id="cancel" class="btn" data-dismiss="modal">Cancel</button>' +
     '</div></div>');
   $('#creation-content').html(this.treeView.el);

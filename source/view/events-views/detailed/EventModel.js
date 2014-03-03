@@ -16,26 +16,21 @@ module.exports = Backbone.Model.extend({
   setHighlighted: function (highlight) {
     this.set('highlighted', highlight);
   },
-  save: function () {
+  save: function (callback) {
     var event = this.get('event'),
       file = event.file;
     if (file) {
-      this.get('event').addAttachment(file, function () {
-        //  console.log('trash event callback', arguments);
-      });
+      this.get('event').addAttachment(file, callback);
     }
-    event.update(function () {
-      //  console.log('update event callback', arguments);
-    });
+    event.update(callback);
   },
-  create: function () {
-    console.log('CREATE', this);
+  create: function (callback) {
     var event = this.get('event'),
       file = event.file;
     if (file) {
-      event.connection.events.createWithAttachment(event, file);
+      event.connection.events.createWithAttachment(event, file, callback);
     }  else {
-      event.connection.events.create(event);
+      event.connection.events.create(event, callback);
     }
   },
   addAttachment: function (file) {
@@ -45,9 +40,7 @@ module.exports = Backbone.Model.extend({
   removeAttachment: function (fileName, callback) {
     this.get('event').removeAttachment(fileName, callback);
   },
-  trash: function () {
-    this.get('event').trash(function () {
-    //  console.log('trash event callback', arguments);
-    });
+  trash: function (callback) {
+    this.get('event').trash(callback);
   }
 });

@@ -12,9 +12,11 @@ module.exports = Marionette.ItemView.extend({
     $(this.container).html(this.$el);
     $('#onboarding-form').submit(function (e) {
       e.preventDefault();
+      $('#onboarding-form .fa-spin').show();
       var streamName = $('#onboarding-input-name').val().trim();
       if (streamName && streamName.length > 0 && this.connection) {
         this.connection.streams.create({name: streamName}, function (error) {
+          $('#onboarding-form .fa-spin').hide();
           if (!error) {
             this.trigger('done');
           }

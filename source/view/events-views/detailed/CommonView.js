@@ -15,7 +15,9 @@ module.exports = Marionette.ItemView.extend({
     li: 'li.editable',
     edit: '.edit',
     submit: '#submit-edit',
-    trash: '#trash-edit'
+    submitSpin: '#submit-edit .fa-spin',
+    trash: '#trash-edit',
+    trashSpin: '#trash-edit .fa-spin'
   },
   templateHelpers: function () {
     return {
@@ -134,18 +136,26 @@ module.exports = Marionette.ItemView.extend({
       return;
     }
     var event = this.model.get('event');
+    this.ui.submitSpin.show();
     if (event.id) {
-      this.model.set('event', event).save();
+      this.model.set('event', event).save(function () {
+        this.ui.submitSpin.hide();
+      }.bind(this));
     } else if (event.connection && event.type && event.streamId) {
-      this.model.set('event', event).create();
+      this.model.set('event', event).create(function () {
+        this.ui.submitSpin.hide();
+      }.bind(this));
     } else {
-      //TODO error handling
+
       console.err('Creation event failed, missing valid properties', event);
     }
   }, 5 * 1000),
 
   trash: function () {
-    this.model.trash();
+    this.ui.trashSpin.show();
+    this.model.trash(function () {
+      this.ui.trashSpin.hide();
+    }.bind(this));
   },
   completeEdit: function ($elem) {
     $($elem).removeClass('editing');

@@ -538,7 +538,7 @@ text-align: center;*/
   position: absolute;
   bottom: 0;
   width: inherit;
-  height: 160px;
+  height: 200px;
   overflow-y: auto;
   border-top: 1px solid #e5e5e5;
   padding: 10px 0px 0px 0px;
@@ -547,7 +547,7 @@ text-align: center;*/
   position: absolute;
   top: 0;
   width: inherit;
-  bottom: 160px;
+  bottom: 200px;
   top: 60px;
 }
 .preSelected-stream {
@@ -581,9 +581,17 @@ text-align: center;*/
   margin-bottom: -60px;
   padding-bottom: 60px;
 }
-#creation-typed {
+.creation-typed {
   border-right: silver solid 1px;
   overflow: auto;
+}
+.creation-typed-note {
+  padding-top: 15px;
+}
+.creation-typed-position {
+  padding-left: 0;
+  padding-right: 0;
+  overflow: hidden;
 }
 #creation-select-stream {
   overflow: auto;
@@ -996,3 +1004,8 @@ ul.modal-dnd-legend > li {
 .onboarding .stream_color_2{color:#E77E23;}
 .onboarding .stream_color_3{color:#9C59B8;}
 .onboarding .stream_color_4{color:#E84C3D;}
+
+
+#add-bookmark-auth {
+  display: none;
+}

@@ -175,10 +175,9 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
   prepareSingleEditModel: function (m) {
-    var c = new Collection([], {type: 'All'});
-    c.add(m);
     this.viewModel = new Model({
-      collection: c
+      collection: this.collection,
+      edited: m
     });
   },
   prepareGeneralConfigModel: function () {

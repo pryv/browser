@@ -59,6 +59,7 @@ module.exports = Marionette.ItemView.extend({
           xaxis: true,
           showNodeCount: false
         });
+      this.ui.selColor.css({'background-color': this.collection.at(0).get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
       this.ui.selStyle.bind('change', this.editorChange.bind(this));
@@ -85,6 +86,7 @@ module.exports = Marionette.ItemView.extend({
   editorChange: function () {
     if (this.ui.selColor[0].selectedIndex > -1) {
       this.color = this.ui.selColor[0].options[this.ui.selColor[0].selectedIndex].value;
+      this.ui.selColor.css({'background-color': this.color});
     }
     if (this.ui.selStyle[0].selectedIndex > -1) {
       this.style = this.ui.selStyle[0].options[this.ui.selStyle[0].selectedIndex].value;

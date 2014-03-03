@@ -884,27 +884,26 @@ ul.modal-dnd-legend > li {
 }
 
 #dc-editor-appearance {
-    width: 33.33%;
+    width:100%;
     padding-left: 5px;
     height: 120px;
     float: left;
-    border-right: 1px solid #e5e5e5;
 }
 
-#dc-editor-transform {
-    width: 33.33%;
-    padding-left: 5px;
-    height: 120px;
-    float: left;
-    border-right: 1px solid #e5e5e5;
+#dc-editor-appearance > ul {
+    list-style-type: none;
 }
 
-#dc-editor-period {
-    width: 16.66%;
-    padding-left: 5px;
-    height: 120px;
-    float: left;
+#dc-editor-appearance > ul > li {
+    list-style-type: none;
 }
+
+
+#dc-editor-appearance .form-control {
+    width: 30%;
+}
+
+
 
 /** END of CSS for Drag and Drop Dialog using the modal **/
 

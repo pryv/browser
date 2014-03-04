@@ -53,8 +53,8 @@
   <script id="onboardingView" type="template">
     <div class="container">
     <div class="row onboarding">
-      <div class="col-md-4"><h1>What matters in your life ?</h1>
-        <div class="ob_text">
+      <div class="col-md-4"><h1 class="hidden-xs">What matters in your life ?</h1>
+        <div class="ob_text hidden-xs">
           <p>Your life is made of streams.
             <span class="stream_color_1">Travel</span>,<span class="stream_color_2"> Friends</span>,<span class="stream_color_3"> Family</span>,<span class="stream_color_4"> Sports...</span></p>
           <p>To get started, create streams that matter to you:</p>
@@ -65,8 +65,15 @@
             <button type="submit" class="btn btn-primary">START  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
           </form>
         </div>
+
+        <div class="ob_text visible-xs">
+        <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
+          <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong></p>
+          <p style="font-size: 16px;">You will shortly receive an invitation to download Pryv iOS on Testflight, our partner during the beta testing phase.</p>
+        </div>
+
       </div>
-      <div class="col-md-8"><img src="images/onboarding_image.png"/></div>
+      <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
     </div>
     </div>
   </script>

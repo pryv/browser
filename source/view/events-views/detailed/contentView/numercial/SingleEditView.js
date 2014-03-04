@@ -15,14 +15,15 @@ module.exports = Marionette.ItemView.extend({
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
     selInterval: '#detailed-view-chart-interval',
-    butOk: 'detailed-view-chart-ok',
-    butCancel: 'detailed-view-chart-cancel'
+    butOk: '#detailed-view-chart-ok',
+    butCancel: '#detailed-view-chart-cancel'
   },
   chartView: null,
   chartViewModel: null,
   rendered: false,
   collection: null,
   edited: null,
+  old: null,
   color: null,
   style: null,
   transform: null,
@@ -30,6 +31,13 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+    this.edited = this.model.get('edited');
+    this.old = {
+      color: this.edited.get('color'),
+      style: this.edited.get('style'),
+      transform: this.edited.get('transform'),
+      interval: this.edited.get('interval')
+    };
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
@@ -69,9 +77,15 @@ module.exports = Marionette.ItemView.extend({
       this.ui.selOperation.bind('change', this.editorChange.bind(this));
       this.ui.selInterval.bind('change', this.editorChange.bind(this));
       this.ui.butOk.on('click', function () {
+        console.log('SEV: OK');
         this.trigger('ready', this.edited);
       }.bind(this));
       this.ui.butCancel.on('click', function () {
+        console.log('SEV: cancel');
+        this.edited.set('color', this.old.color);
+        this.edited.set('style', this.old.style);
+        this.edited.set('transform', this.old.transform);
+        this.edited.set('interval', this.old.interval);
         this.trigger('cancel');
       }.bind(this));
     }
@@ -117,7 +131,6 @@ module.exports = Marionette.ItemView.extend({
     }
   },
   prepareCollection: function () {
-    this.edited = this.model.get('edited');
     this.collection = this.model.get('collection');
   },
   onClose: function () {

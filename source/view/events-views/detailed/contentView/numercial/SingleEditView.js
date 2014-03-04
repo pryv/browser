@@ -14,12 +14,15 @@ module.exports = Marionette.ItemView.extend({
     selColor: '#detailed-view-chart-color',
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
-    selInterval: '#detailed-view-chart-interval'
+    selInterval: '#detailed-view-chart-interval',
+    butOk: 'detailed-view-chart-ok',
+    butCancel: 'detailed-view-chart-cancel'
   },
   chartView: null,
   chartViewModel: null,
   rendered: false,
   collection: null,
+  edited: null,
   color: null,
   style: null,
   transform: null,
@@ -59,14 +62,17 @@ module.exports = Marionette.ItemView.extend({
           xaxis: true,
           showNodeCount: false
         });
-      this.ui.selColor.css({'background-color': this.collection.at(0).get('color')});
+      this.ui.selColor.css({'background-color': this.edited.get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
       this.ui.selStyle.bind('change', this.editorChange.bind(this));
       this.ui.selOperation.bind('change', this.editorChange.bind(this));
       this.ui.selInterval.bind('change', this.editorChange.bind(this));
-      this.chartView.on('ready', function (m) {
-        this.trigger('ready', m);
+      this.ui.butOk.on('click', function () {
+        this.trigger('ready', this.edited);
+      }.bind(this));
+      this.ui.butCancel.on('click', function () {
+        this.trigger('cancel');
       }.bind(this));
     }
 
@@ -98,10 +104,10 @@ module.exports = Marionette.ItemView.extend({
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
     }
 
-    this.collection.at(0).set('color', this.color);
-    this.collection.at(0).set('style', this.style);
-    this.collection.at(0).set('transform', this.transform);
-    this.collection.at(0).set('interval', this.interval);
+    this.edited.set('color', this.color);
+    this.edited.set('style', this.style);
+    this.edited.set('transform', this.transform);
+    this.edited.set('interval', this.interval);
 
     this.chartView.render();
   },
@@ -111,6 +117,7 @@ module.exports = Marionette.ItemView.extend({
     }
   },
   prepareCollection: function () {
+    this.edited = this.model.get('edited');
     this.collection = this.model.get('collection');
   },
   onClose: function () {
@@ -122,28 +129,28 @@ module.exports = Marionette.ItemView.extend({
     var i;
     var options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('color')) {
+      if (options[i].value === this.model.get('edited').get('color')) {
         this.ui.selColor[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selStyle[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('style')) {
+      if (options[i].value === this.model.get('edited').get('style')) {
         this.ui.selStyle[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selOperation[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('transform')) {
+      if (options[i].value === this.model.get('edited').get('transform')) {
         this.ui.selOperation[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selInterval[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('interval')) {
+      if (options[i].value === this.model.get('edited').get('interval')) {
         this.ui.selInterval[0].selectedIndex = i;
         break;
       }

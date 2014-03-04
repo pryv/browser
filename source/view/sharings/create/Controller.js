@@ -211,8 +211,9 @@ var TreeNode = Backbone.Model.extend({
 var TreeNodeCollection = Backbone.Collection.extend({
   model: TreeNode
 });
-var Controller = module.exports = function ($modal, connection, streams, timeFilter) {
+var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {
   this.$modal = $modal;
+  this.target = target;
   this.connection = connection;
   this.streams = streams;
   this.timeFrom = timeFilter[1];
@@ -221,7 +222,11 @@ var Controller = module.exports = function ($modal, connection, streams, timeFil
   this.treeView = null;
 };
 Controller.prototype.show = function () {
-  this.$modal.modal();
+  this.$modal.modal({currentTarget: this.target});
+  $(this.container).hide();
+  setTimeout(function () {
+    $(this.container).fadeIn();
+  }.bind(this), 500);
   var tree = new TreeNodeCollection(this.streams);
   this.treeView = new TreeRoot({
     collection: tree,

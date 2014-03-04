@@ -135,7 +135,7 @@ _.extend(Model.prototype, {
               this.treeMap.closeDetailedView();
               this.hasDetailedView = false;
             }.bind(this));
-            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
           }
         }.bind(this));
       }
@@ -148,7 +148,7 @@ _.extend(Model.prototype, {
           this.treeMap.closeDetailedView();
           this.hasDetailedView = false;
         }.bind(this));
-        this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
+        this.treeMap.initDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
       }
     }.bind(this));
     if (this.needToRender) {

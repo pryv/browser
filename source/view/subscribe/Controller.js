@@ -1,20 +1,25 @@
-
+/* global $ */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
   Model = require('./Model.js'),
   ListView = require('./ListView.js');
-var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections) {
+var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections, target) {
   this.loggedConnection = loggedConnection;
   this.collection =  new Collection();
   this.listView = null;
   this.$modal = $modal;
+  this.target = target;
   this.container = '.modal-content';
   this.addSharings(sharingsConnections);
 };
 
 _.extend(Controller.prototype, {
   show: function () {
-    this.$modal.modal();
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
     if (!this.listView) {
       this.listView = new ListView({
         collection: this.collection

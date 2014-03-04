@@ -93,7 +93,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login-button').text('Sign In');
+        $('#login-button').html('<i class="fa fa-sign-in"></i> Sign In');
         this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
@@ -147,7 +147,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 Model.prototype.signedIn = function (connection) {
   console.log('Successfully signed in', connection);
   this.loggedConnection = connection;
-  $('#login-button').text(connection.username);
+  $('#login-button').html(connection.username + ' <i class="fa fa-sign-out"></i>');
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
     if (!this.sharingsConnections) {

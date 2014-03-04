@@ -11,7 +11,7 @@ var _ = require('underscore'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
-var Controller = module.exports = function ($modal, connections) {
+var Controller = module.exports = function ($modal, connections, target) {
   this.events = {};
   this.eventsToAdd = [];
   this.connection = connections;
@@ -22,6 +22,7 @@ var Controller = module.exports = function ($modal, connections) {
   this.commonView = null;
   this.contentView = null;
   this.$modal = $modal;
+  this.target = target;
   this.container = '.modal-content';
   this.debounceAdd = _.debounce(function () {
     this.collection.add(this.eventsToAdd, {sort: false});
@@ -36,7 +37,11 @@ var Controller = module.exports = function ($modal, connections) {
 
 _.extend(Controller.prototype, {
   show: function () {
-    this.$modal.modal();
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
     if (!this.listView) {
       this.commonView = new CommonView({model: new Model({})});
       this.listView = new ListView({

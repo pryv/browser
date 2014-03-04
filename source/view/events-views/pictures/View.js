@@ -41,7 +41,7 @@ module.exports = Marionette.ItemView.extend({
         });
       $('#' + this.container).removeClass('animated fadeIn');
       $('#' + this.container).html(this.el);
-      this.$('.aggregated-nbr-events').bind('click', function () {
+      $('#' + this.container).bind('click', function () {
         this.trigger('nodeClicked');
       }.bind(this));
       if (this.animation) {

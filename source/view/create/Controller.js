@@ -3,10 +3,11 @@ var _ = require('underscore'),
   View = require('./View.js'),
   Model = require('./EventModel.js');
 
-var Controller = module.exports = function ($modal, connection, focusedStream) {
+var Controller = module.exports = function ($modal, connection, focusedStream, target) {
   this.connection = connection;
   this.focusedStream = focusedStream;
   this.$modal = $modal;
+  this.target = target;
   this.container = '.modal-content';
   this.view = null;
   this.newEvent = null;
@@ -14,7 +15,11 @@ var Controller = module.exports = function ($modal, connection, focusedStream) {
 _.extend(Controller.prototype, {
   show: function () {
     this.newEvent = new Model({event: this._defaultEvent()});
-    this.$modal.modal();
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
     $(this.container).append('<div class="modal-header">  ' +
       '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
       '&times;</button> ' +

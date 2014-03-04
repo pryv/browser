@@ -72,7 +72,9 @@
   </script>
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+    <% } %>
 
     <div class="aggregated-icon-page"></div>
     <div class="content Center-Container is-Table">
@@ -88,19 +90,23 @@
   </script>
   <script id="positionsView" type="template">
     <div class="aggregated-icon Positions"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+    <% } %>
 
     <div id="map-canvas-<%=id%>" class="mapView"></div>
   </script>
   <script id="picturesView" type="template">
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
   </script>
 
   <script id="notesView" type="template">
     <div class="aggregated-icon Notes"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
@@ -113,9 +119,9 @@
   </script>
   <script id="genericsView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="aggregated-icon-page"></div>
 
 
@@ -131,11 +137,12 @@
       </div>
     </div>
 
-  </script>  <script id="tweetView" type="template">
+  </script>
+  <script id="tweetView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="aggregated-icon-page"></div>
 
 
@@ -479,7 +486,7 @@
     </form>
   </div>
 </div>
-<a href="javascript:void(0)" id="login-button" class="menu-button">Sign In</a>
+<a href="javascript:void(0)" id="login-button" class="menu-button"><i class="fa fa-sign-in"></i> Sign In</a>
 <a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
 <a href="javascript:void(0)" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
@@ -494,9 +501,9 @@
   </div>
 </div>
 <div id="timeframe"></div>
-<div class="modal node" id="pryv-modal" tabindex="-1" role="dialog"
+<div class="modal" id="pryv-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-animation">
     <div class="modal-content">
 
     </div>

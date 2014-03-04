@@ -42,6 +42,7 @@ module.exports = Marionette.ItemView.extend({
       this.view.bind('remove', this.removeSeriesEvent.bind(this));
     } else if (this.viewType === Sev) {
       this.view.bind('ready', this.readySeriesEvent.bind(this));
+      this.view.bind('cancel', this.cancelSeriesEvent.bind(this));
     }
     if (this.firstRender) {
       this.firstRender = false;
@@ -78,7 +79,6 @@ module.exports = Marionette.ItemView.extend({
         }
       } else {
         var s = new Settings(ev.stream, ev.type, this.model.get('virtual'));
-        console.log('settings', s);
         c.add(new Model({
             events: [ev],
             connectionId: connectionId,
@@ -114,6 +114,12 @@ module.exports = Marionette.ItemView.extend({
     this.prepareSingleEditModel(m);
     this.render();
   },
+  cancelSeriesEvent: function () {
+    this.closeChild();
+    this.viewType = Gcv;
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
   readySeriesEvent: function (m) {
     var s = new Settings(m.get('stream'), m.get('type'), m.get('virtual'));
     s.set('color', m.get('color'));
@@ -144,7 +150,6 @@ module.exports = Marionette.ItemView.extend({
   },
   removeSeriesEvent: function (m) {
     var virtual = this.model.get('virtual');
-    console.log('virtualvirtualvirtualvirtualvirtualvirtual', virtual);
     var streamId = m.get('streamId');
     var type = m.get('type');
     var filters = virtual.filters;
@@ -175,10 +180,9 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
   prepareSingleEditModel: function (m) {
-    var c = new Collection([], {type: 'All'});
-    c.add(m);
     this.viewModel = new Model({
-      collection: c
+      collection: this.collection,
+      edited: m
     });
   },
   prepareGeneralConfigModel: function () {

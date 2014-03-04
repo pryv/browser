@@ -14,12 +14,16 @@ module.exports = Marionette.ItemView.extend({
     selColor: '#detailed-view-chart-color',
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
-    selInterval: '#detailed-view-chart-interval'
+    selInterval: '#detailed-view-chart-interval',
+    butOk: '#detailed-view-chart-ok',
+    butCancel: '#detailed-view-chart-cancel'
   },
   chartView: null,
   chartViewModel: null,
   rendered: false,
   collection: null,
+  edited: null,
+  old: null,
   color: null,
   style: null,
   transform: null,
@@ -27,6 +31,13 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+    this.edited = this.model.get('edited');
+    this.old = {
+      color: this.edited.get('color'),
+      style: this.edited.get('style'),
+      transform: this.edited.get('transform'),
+      interval: this.edited.get('interval')
+    };
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
@@ -46,7 +57,7 @@ module.exports = Marionette.ItemView.extend({
           dimensions: null,
           legendStyle: 'list', // Legend style: 'list', 'table'
           legendButton: true,  // A button in the legend
-          legendButtonContent: ['ready'],
+          legendButtonContent: [],
           legendShow: true,     // Show legend or not
           legendContainer: '#legend-container-edit', //false or a a selector
           legendExtras: true,   // use extras in the legend
@@ -59,14 +70,23 @@ module.exports = Marionette.ItemView.extend({
           xaxis: true,
           showNodeCount: false
         });
-      this.ui.selColor.css({'background-color': this.collection.at(0).get('color')});
+      this.ui.selColor.css({'background-color': this.edited.get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
       this.ui.selStyle.bind('change', this.editorChange.bind(this));
       this.ui.selOperation.bind('change', this.editorChange.bind(this));
       this.ui.selInterval.bind('change', this.editorChange.bind(this));
-      this.chartView.on('ready', function (m) {
-        this.trigger('ready', m);
+      this.ui.butOk.on('click', function () {
+        console.log('SEV: OK');
+        this.trigger('ready', this.edited);
+      }.bind(this));
+      this.ui.butCancel.on('click', function () {
+        console.log('SEV: cancel');
+        this.edited.set('color', this.old.color);
+        this.edited.set('style', this.old.style);
+        this.edited.set('transform', this.old.transform);
+        this.edited.set('interval', this.old.interval);
+        this.trigger('cancel');
       }.bind(this));
     }
 
@@ -98,10 +118,10 @@ module.exports = Marionette.ItemView.extend({
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
     }
 
-    this.collection.at(0).set('color', this.color);
-    this.collection.at(0).set('style', this.style);
-    this.collection.at(0).set('transform', this.transform);
-    this.collection.at(0).set('interval', this.interval);
+    this.edited.set('color', this.color);
+    this.edited.set('style', this.style);
+    this.edited.set('transform', this.transform);
+    this.edited.set('interval', this.interval);
 
     this.chartView.render();
   },
@@ -122,28 +142,28 @@ module.exports = Marionette.ItemView.extend({
     var i;
     var options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('color')) {
+      if (options[i].value === this.model.get('edited').get('color')) {
         this.ui.selColor[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selStyle[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('style')) {
+      if (options[i].value === this.model.get('edited').get('style')) {
         this.ui.selStyle[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selOperation[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('transform')) {
+      if (options[i].value === this.model.get('edited').get('transform')) {
         this.ui.selOperation[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selInterval[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('interval')) {
+      if (options[i].value === this.model.get('edited').get('interval')) {
         this.ui.selInterval[0].selectedIndex = i;
         break;
       }

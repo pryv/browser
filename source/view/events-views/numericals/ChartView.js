@@ -153,23 +153,32 @@ module.exports = Marionette.CompositeView.extend({
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
           case 'ready':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-ready" ' +
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-ready" ' +
               'href="javascript:;"><span class="fa fa-check"></span></a>';
             break;
           case 'duplicate':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-duplicate" ' +
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-duplicate" ' +
               'href="javascript:;"><span class="fa fa-files-o"></span></a>';
             break;
           case 'remove':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-remove" ' +
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-remove" ' +
               'href="javascript:;"><span class="fa fa-minus"></span></a>';
             break;
           case 'edit':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button-edit" ' +
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-edit" ' +
               'href="javascript:;"><span class="fa fa-pencil-square-o"></span></a>';
             break;
           }
         }
+        return legend;
+      };
+    } else {
+      this.options.legend.labelFormatter = function (label) {
+        var legend = '<span class="DnD-legend-text">' + label + '</span>';
         return legend;
       };
     }
@@ -311,21 +320,41 @@ module.exports = Marionette.CompositeView.extend({
   rebuildLegend: function (element) {
     var list = $('<ul/>');
     $(element).find('tr').each(function (index) {
-      var p = $(this).children().map(function (index2) {
-        if (index2 === 0) {
-          if ($('div > div', $(this)).length !== 0) {
-            $('div > div', $(this)).addClass('DnD-legend-color');
-            return $('div > div', $(this))[0].outerHTML;
+      var colorBox;
+      var buttonBox;
+      var textBox;
+      $(this).children().map(function (/*index2*/) {
+        if ($(this) && $(this).length > 0) {
+          var child = $($(this).get(0));
+          if (child.hasClass('legendColorBox')) {
+            $('div > div', child).addClass('DnD-legend-color');
+            colorBox = $('div > div', child)[0].outerHTML;
+          }
+          if (child.hasClass('legendLabel')) {
+            for (var i = 0; i < child[0].childElementCount; i++) {
+              var c = child[0].childNodes[i];
+              if ($(c).hasClass('DnD-legend-text')) {
+                textBox = $(c)[0].outerHTML;
+              } else if ($(c).hasClass('DnD-legend-button')) {
+                $('a', $(c)).attr('id', 'series-' + index);
+                buttonBox = $(c)[0].outerHTML;
+              }
+            }
           }
         }
-        if (index2 === 1) {
-          if ($('a', $(this)).length !== 0) {
-            $('a', $(this)).attr('id', 'series-' + index);
-            return $(this).html();
-          }
-        }
+
       });
-      list.append('<li>' + $.makeArray(p).join('') + '</li>');
+      var toAppend = '';
+      if (colorBox) {
+        toAppend += colorBox;
+      }
+      if (textBox) {
+        toAppend += textBox;
+      }
+      if (buttonBox) {
+        toAppend += buttonBox;
+      }
+      list.append('<li>' + toAppend + '</li>');
     });
     $('div', $(element).parent()).remove();
     $(element).replaceWith(list);

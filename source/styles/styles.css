@@ -934,9 +934,14 @@ ul.modal-dnd-legend > li {
 }
 
 
-#dc-editor-appearance .form-control {
-    width: 30%;
+#dc-editor-appearance .col-sm-10 {
+    width:33%;
 }
+#dc-editor-appearance .form-control {
+    width: 100%;
+}
+
+
 
 
 

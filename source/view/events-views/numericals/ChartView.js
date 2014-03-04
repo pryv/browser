@@ -150,6 +150,7 @@ module.exports = Marionette.CompositeView.extend({
       this.options.legend.labelFormatter = function (label) {
         var buttons = model.get('legendButtonContent');
         var legend = '<span class="DnD-legend-text">' + label + '</span>';
+        console.log('buttons', buttons, buttons.length);
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
           case 'ready':
@@ -174,6 +175,7 @@ module.exports = Marionette.CompositeView.extend({
             break;
           }
         }
+        console.log('legend', legend);
         return legend;
       };
     } else {
@@ -320,9 +322,9 @@ module.exports = Marionette.CompositeView.extend({
   rebuildLegend: function (element) {
     var list = $('<ul/>');
     $(element).find('tr').each(function (index) {
-      var colorBox;
-      var buttonBox;
-      var textBox;
+      var colorBox = '';
+      var buttonBox = '';
+      var textBox = '';
       $(this).children().map(function (/*index2*/) {
         if ($(this) && $(this).length > 0) {
           var child = $($(this).get(0));
@@ -337,7 +339,7 @@ module.exports = Marionette.CompositeView.extend({
                 textBox = $(c)[0].outerHTML;
               } else if ($(c).hasClass('DnD-legend-button')) {
                 $('a', $(c)).attr('id', 'series-' + index);
-                buttonBox = $(c)[0].outerHTML;
+                buttonBox += $(c)[0].outerHTML;
               }
             }
           }

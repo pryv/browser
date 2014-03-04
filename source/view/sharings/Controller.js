@@ -68,6 +68,7 @@ _.extend(Controller.prototype, {
     this.sharingListView.close();
     this.sharingCollection.reset();
     $(this.container).remove();
+    $('.modal-content').empty();
     this.sharingCollection = null;
     this.sharings = {};
   },

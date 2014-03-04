@@ -30,24 +30,25 @@ module.exports = Marionette.CompositeView.extend({
     this.listenTo(this.collection, 'change', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
     $(this.container).append('<h1>Followed slices</h1>' +
-      '<details><summary>Follow a new slice</summary>' +
+      '<button class="btn btn-primary" id="add-slice">Add a new slice</button>' +
       '<form class="form-inline" id="add-bookmark" role="form">' +
       '<div class="form-group">' +
-        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
-        '<input type="text" class="form-control" id="add-bookmark-name" placeholder="Name">' +
-      '</div>' +
-      '<div class="form-group">' +
-        ' <label class="sr-only" for="add-bookmark-url">url</label>' +
-        ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="Link">' +
+      ' <label class="sr-only" for="add-bookmark-url">url</label>' +
+      ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="Link">' +
       '</div> ' +
+      '<div class="form-group">' +
+        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
+        '<input type="text" class="form-control" id="add-bookmark-name" ' +
+      'placeholder="Name this slice">' +
+      '</div>' +
       '<div class="form-group">' +
         ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
         ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
       '</div> ' +
-      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">Follow</button>  ' +
+      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">Add  ' +
+      '<i class="fa fa-spinner fa-spin"></i></button>  ' +
       '' +
      ' </form>' +
-      '</details>' +
       '<table class="table table-striped" >' +
       '<thead><tr><th>Name</th><th>Link</th><th></th></tr></thead>' +
       '<tbody id="bookmark-list"></tbody>' +
@@ -57,8 +58,16 @@ module.exports = Marionette.CompositeView.extend({
     this.$name = $('#add-bookmark-name');
     this.$btn = $('#add-bookmark-btn');
     this.$form = $('#add-bookmark');
+    this.$spin = $('#add-bookmark-btn .fa-spin');
+    this.$spin.hide();
+    this.$form.toggle();
+    this.$addSlice = $('#add-slice');
+    this.$addSlice.click(function () {
+      this.$form.toggle();
+      this.$addSlice.toggle();
+    }.bind(this));
     this.$form.bind('change paste keyup', function () {
-      this.$btn.removeClass('btn-danger').addClass('btn-default');
+      this.$btn.removeClass('btn-danger btn-success').addClass('btn-default');
     }.bind(this));
     this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
     this.$form.submit(function (e) {
@@ -68,6 +77,7 @@ module.exports = Marionette.CompositeView.extend({
         name = this.$name.val(),
         sameNameExtension = '',
         i = 0;
+      this.$spin.show();
       auths.forEach(function (auth) {
         this.trigger('bookmark:add', url, auth, name + sameNameExtension);
         i += 1;
@@ -76,6 +86,7 @@ module.exports = Marionette.CompositeView.extend({
     }.bind(this));
   },
   endAddBookmark: function (error) {
+    this.$spin.hide();
     if (error) {
       this.$btn.removeClass('btn-default btn-success').addClass('btn-danger');
     } else {

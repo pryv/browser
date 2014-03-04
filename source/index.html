@@ -62,7 +62,7 @@
             <div class="form-group">
               <input type="text" id='onboarding-input-name' class="form-control" placeholder="Create Your Stream" style="width: 152px;">
             </div>
-            <button type="submit" class="btn btn-primary">START</button>
+            <button type="submit" class="btn btn-primary">START  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
           </form>
         </div>
       </div>
@@ -185,7 +185,7 @@
   <script type="text/html" id="template-sharingItemView">
 
     <td class="sharing-name col-md-4"><i class="fa fa-edit sharing-edit-name fa-lg"></i> <span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
-        <button class="btn btn-default" type="button">Save</button>
+        <button class="btn btn-default" type="button">Save <i class="fa fa-spinner fa-spin"></i></button>
       </span></div></td><td class="sharing-url"><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
      <td class="share share-small">
 
@@ -301,12 +301,12 @@
   </script>
   <script type="template" id="template-detail-creation-event">
     <div id="creation-content">
-    <div id="creation-typed" class="full-height col-md-9">
+    <div class="creation-typed creation-typed-<%= getEventType() %> full-height col-md-9">
       <%= getTypedView() %>
     </div>
     <div id="creation-select-stream" class="full-height col-md-3"><h3>Select a Stream</h3><%= getStream() %></div>
     </div>
-    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise">Publish</button><button id="cancel" class="btn">Cancel</button></div>
+    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise">Publish <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn">Cancel</button></div>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
@@ -440,8 +440,8 @@
           <% }) %>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
 
-        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise">Submit</button>
-        <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
+        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise">Submit <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+        <button id ="trash-edit" type="button" class="btn btn-danger">Trash <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
       </ul>
       <% } %>
   </script>

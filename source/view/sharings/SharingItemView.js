@@ -9,6 +9,7 @@ module.exports = Marionette.ItemView.extend({
     editNameInput: '.sharing-name .input-group input',
     editNameSpan: '.sharing-name .input-group span',
     editNameButton: '.sharing-name .input-group button',
+    editNameSpinner: '.sharing-name .fa-spin'
   },
   events: {
     'click .sharing-trash': '_onTrashClick',
@@ -22,6 +23,7 @@ module.exports = Marionette.ItemView.extend({
   onRender: function () {
     this.ui.editNameInput.hide();
     this.ui.editNameSpan.hide();
+    this.ui.editNameSpinner.hide();
     this.ui.editNameButton.click(this._onSaveClick.bind(this));
   },
   _onTrashClick: function () {
@@ -29,6 +31,8 @@ module.exports = Marionette.ItemView.extend({
   },
   _onEditNameClick: function () {
     this.ui.editName.hide();
+    this.ui.editNameSpinner.hide();
+    this.ui.editNameButton.removeClass('btn-danger').addClass('btn-default');
     this.ui.editNameInput.show();
     this.ui.editNameSpan.show();
   },
@@ -37,15 +41,20 @@ module.exports = Marionette.ItemView.extend({
     if (val.length > 0) {
       this.model.get('sharing').oldName = this.model.get('sharing').name;
       this.model.get('sharing').name = val;
+      this.ui.editNameSpinner.show();
       this.trigger('sharing:update', this);
     }
   },
   endUpdateSharing: function (error) {
+    this.ui.editNameSpinner.hide();
     if (error) {
       this.ui.editNameButton.removeClass('btn-default').addClass('btn-danger');
       this.model.get('sharing').name = this.model.get('sharing').oldName;
     } else {
-      this.ui.editNameButton.removeClass('btn-default').addClass('btn-success');
+      this.ui.editNameInput.hide();
+      this.ui.editNameSpan.hide();
+      this.ui.editName.show();
+      this.render();
     }
   }
 });

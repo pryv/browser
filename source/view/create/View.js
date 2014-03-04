@@ -36,6 +36,9 @@ module.exports = Marionette.ItemView.extend({
       getStream: function () {
         return this.getStream();
       }.bind(this),
+      getEventType: function () {
+        return this.eventType.split('/')[0] || '';
+      }.bind(this),
       getTypedView: function () {
         if (this.eventType === validType[2]) {
           this._initPositionView();
@@ -58,7 +61,8 @@ module.exports = Marionette.ItemView.extend({
     stream: '#stream-select',
     inputStream: '.create-stream input',
     publish: '#publish',
-    cancel: '#cancel'
+    cancel: '#cancel',
+    spin: '.fa-spin'
   },
   initialize: function () {
     this.step = creationStep.typeSelect;
@@ -72,6 +76,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.publish.bind('click', this.onPublishClick.bind(this));
     this.ui.cancel.bind('click', this.onCancelClick.bind(this));
     this.ui.inputStream.bind('keypress past', this.onInputStreamChange.bind(this));
+    this.ui.spin.hide();
     $('.td-progress').hide();
     $('details').details();
   },
@@ -85,6 +90,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onPublishClick: function () {
     if (this.streamSelected && this.connectionSelected) {
+      this.ui.spin.show();
       if (this.eventType === validType[2]) {
         this._publishPosition();
       }
@@ -100,10 +106,10 @@ module.exports = Marionette.ItemView.extend({
       for (var i = 0; i < this.ui.inputStream.length; i++) {
         input = $(this.ui.inputStream[i]);
         if (input.val().length > 0) {
+          this.ui.spin.show();
           name = input.val().trim();
           parentId = input.attr('data-parentId') || null;
           this.connectionSelected = this.connection.get(input.attr('data-connection'));
-          console.log(name, parentId);
           this.connectionSelected.streams.create({parentId: parentId, name: name},
           function (err, res) {
             if (err) {
@@ -133,6 +139,7 @@ module.exports = Marionette.ItemView.extend({
     event.streamId = this.streamSelected;
     event.connection = this.connectionSelected;
     this.newEvents.create(function (err) {
+      this.ui.spin.hide();
       if (err) {
         console.warn(err);
         this.ui.publish.css({'background-color': '#e74c3c'});
@@ -153,6 +160,7 @@ module.exports = Marionette.ItemView.extend({
     event.streamId = this.streamSelected;
     event.connection = this.connectionSelected;
     this.newEvents.create(function (err) {
+      this.ui.spin.hide();
       if (err) {
         console.warn(err);
         this.ui.publish.css({'background-color': '#e74c3c'});
@@ -183,8 +191,10 @@ module.exports = Marionette.ItemView.extend({
           model.set('published', true);
         }
         if (error && asyncCount === 0) {
+          self.ui.spin.hide();
           self.canPublish = true;
         } else if (!error && asyncCount === 0) {
+          self.ui.spin.hide();
           self._close();
         }
       },
@@ -235,6 +245,7 @@ module.exports = Marionette.ItemView.extend({
 
     if (validType.indexOf(typeSelected) !== -1) {
       event.type = this.eventType =  typeSelected;
+      $('#myModalLabel').text('Add ' + this.eventType.split('/')[0]);
       if (typeSelected === validType[1]) {
         this.step = creationStep.pictureSelect;
       } else  if (typeSelected === validType[2]) {

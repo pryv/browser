@@ -16,6 +16,7 @@ var Controller = module.exports = function ($modal, connection, target) {
   this.bookmarkListView = null;
   this.$modal = $modal;
   this.target = target;
+  $('.modal-content').empty();
   $('.modal-content').prepend('<div class="modal-header">  ' +
     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
     '&times;</button> ' +

@@ -223,7 +223,7 @@ var Controller = module.exports = function ($modal, connection, streams, timeFil
 };
 Controller.prototype.show = function () {
   this.$modal.modal({currentTarget: this.target});
-  $(this.container).hide();
+  $(this.container).empty().hide();
   setTimeout(function () {
     $(this.container).fadeIn();
   }.bind(this), 500);

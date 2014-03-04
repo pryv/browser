@@ -38,7 +38,7 @@ var Controller = module.exports = function ($modal, connections, target) {
 _.extend(Controller.prototype, {
   show: function () {
     this.$modal.modal({currentTarget: this.target});
-    $(this.container).hide();
+    $(this.container).empty().hide();
     setTimeout(function () {
       $(this.container).fadeIn();
     }.bind(this), 500);
@@ -83,10 +83,10 @@ _.extend(Controller.prototype, {
     }.bind(this));
   },
   close: function () {
-    this.commonView.close();
-    this.contentView.close();
-    $('div').remove('.modal-panel-left, .modal-panel-right, .modal-header');
-    this.collection.reset();
+    if (this.commonView) {this.commonView.close(); }
+    if (this.contentView) {this.contentView.close(); }
+    $(this.container).empty();
+    if (this.collection) {this.collection.reset(); }
     this.collection = null;
     this.events = {};
     $(this.$modal).unbind('keydown');

@@ -132,7 +132,6 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   }
   // create connection handler and filter
   this.onFiltersChanged = function () {
-    console.log('onFiltersChanged', arguments);
     this.activeFilter.timeFrameLT = [arguments[0].from, arguments[0].to];
   };
 
@@ -185,39 +184,15 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     appId : 'pryv-browser',
     username: this.urlUsername,
     callbacks : {
-      signedIn: function (connection) {
-        console.log('Successfully signed in', connection);
-        this.loggedConnection = connection;
-        $('#login-button').text(connection.username);
-        if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
-          this.showLoggedInElement();
-          if (!this.sharingsConnections) {
-            this.addConnection(connection);
-            if (this.publicConnection) {
-              this.removeConnection(this.publicConnection);
-            }
-            connection.bookmarks.get(function (error, result) {
-              if (!error) {
-                this.bookmakrsConnections = result;
-                this.addConnections(this.bookmakrsConnections);
-              }
-            }.bind(this));
-          }
-        } else {
-          this.showSubscribeElement();
-        }
-        $('#login').removeClass('animated slideInRight');
-        $('#tree').removeClass('animated slideOutLeft');
-        $('#login').addClass('animated slideOutRight');
-        $('#tree').addClass('animated slideInLeft');
-      }.bind(this),
+      signedIn: this.signedIn.bind(this),
       signedOut: function (connection) {
         this.hideLoggedInElement();
         this.removeConnection(connection);
+        this.removeConnections(this.bookmakrsConnections);
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login-button').text('Sign In');
+        $('#login-button').html('<i class="fa fa-sign-in"></i> Sign In');
         this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
@@ -239,7 +214,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   $('#login-button').click(function (e) {
     if (this.loggedConnection) {
       e.stopPropagation();
-      Pryv.Auth.logout();
+      Pryv.Auth.trustedLogout();
     } else {
       $('#login').css('display', 'block');
       $('#login').removeClass('animated slideOutRight');
@@ -268,6 +243,33 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
 
 };
+Model.prototype.signedIn = function (connection) {
+  console.log('Successfully signed in', connection);
+  this.loggedConnection = connection;
+  $('#login-button').html(connection.username + ' <i class="fa fa-sign-out"></i>');
+  if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
+    this.showLoggedInElement();
+    if (!this.sharingsConnections) {
+      this.addConnection(connection);
+      if (this.publicConnection) {
+        this.removeConnection(this.publicConnection);
+      }
+      connection.bookmarks.get(function (error, result) {
+        if (!error) {
+          this.bookmakrsConnections = result;
+          this.addConnections(this.bookmakrsConnections);
+        }
+      }.bind(this));
+    }
+    this.treemap.isOnboarding();
+  } else {
+    this.showSubscribeElement();
+  }
+  $('#login').removeClass('animated slideInRight');
+  $('#tree').removeClass('animated slideOutLeft');
+  $('#login').addClass('animated slideOutRight');
+  $('#tree').addClass('animated slideInLeft');
+};
 
 Model.prototype.addConnection = function (connection) {
   if (!this.treemap) {
@@ -285,7 +287,7 @@ Model.prototype.addConnection = function (connection) {
   batch.done();
 };
 Model.prototype.addConnections = function (connections) {
-  connections.forEach(function (conn) {
+  _.each(connections, function (conn) {
     this.addConnection(conn);
   }.bind(this));
 };
@@ -294,7 +296,7 @@ Model.prototype.removeConnection = function (connection) {
 };
 
 Model.prototype.removeConnections = function (connections) {
-  connections.forEach(function (conn) {
+  _.each(connections, function (conn) {
     this.removeConnection(conn);
   }.bind(this));
 };
@@ -303,9 +305,7 @@ Model.prototype.removeConnections = function (connections) {
  */
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
-    var stats = this.activeFilter.stats(),
-      currentLimit = {from: this.timeView.limitFrom - 3600, to: this.timeView.limitTo + 3600};
-    console.log('updateLimits', stats, currentLimit);
+    var stats = this.activeFilter.stats();
     this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
   }.bind(this), 100))();
 };
@@ -332,7 +332,7 @@ function initTimeAndFilter(timeView, filter) {
   var toTime = new Date(start.getTime() + spanTime - 1);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
-    limit: 500
+    limit: 5000
   });
 
   timeView.onFiltersChanged({
@@ -343,7 +343,7 @@ function initTimeAndFilter(timeView, filter) {
 
 
 })()
-},{"./model/ConnectionsHandler.js":2,"./model/Messages":7,"./model/MonitorsHandler.js":4,"./orchestrator/Controller.js":3,"./timeframe-selector/timeframe-selector.js":6,"./tree/TreeMap.js":5,"pryv":9,"underscore":8}],8:[function(require,module,exports){
+},{"./model/ConnectionsHandler.js":2,"./model/Messages":6,"./model/MonitorsHandler.js":4,"./orchestrator/Controller.js":3,"./timeframe-selector/timeframe-selector.js":7,"./tree/TreeMap.js":5,"pryv":9,"underscore":8}],8:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -1630,13 +1630,12 @@ module.exports = {
   Event: require('./Event.js'),
   Stream: require('./Stream.js'),
   Filter: require('./Filter.js'),
-  system: require('./system/system.js'),
-  utility: require('./utility/utility.js'),
 
-  eventTypes: require('./eventTypes.js')
+  eventTypes: require('./eventTypes.js'),
+  utility: require('./utility/utility.js')
 };
 
-},{"./Connection.js":12,"./Event.js":11,"./Filter.js":13,"./Stream.js":17,"./auth/Auth.js":10,"./eventTypes.js":16,"./system/system.js":14,"./utility/utility.js":15}],4:[function(require,module,exports){
+},{"./Connection.js":16,"./Event.js":11,"./Filter.js":14,"./Stream.js":12,"./auth/Auth.js":10,"./eventTypes.js":13,"./utility/utility.js":15}],4:[function(require,module,exports){
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
@@ -1758,7 +1757,6 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
  */
 MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batch) {
   var myBatch = this.startBatch('removeConnections', batch);
-
   if (! _.isArray(connectionSerialId)) { connectionSerialId = [connectionSerialId];  }
   _.each(connectionSerialId, function (connectionId) {
 
@@ -1767,16 +1765,30 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
       if (this.connectionToRemove.indexOf(connectionId) === -1) {
         this.connectionToRemove.push(connectionId);
       }
+      myBatch.done();
       return;
     }
-    this.focusOnStreams([]);
-    this._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
-      monitor.getEvents(), myBatch);
-    delete this._monitors[connectionSerialId];
-    monitor.destroy();
+
+   // this.focusOnStreams([]);
+    var self = this;
+    var maxCloseTry = 100;
+    var closeMonitor = function () {
+      if (monitor.getEvents().length > 0) {
+        self._eventsLeaveScope(MSGs.REASON.EVENT_SCOPE_LEAVE_REMOVE_CONNECTION,
+          monitor.getEvents(), myBatch);
+        delete self._monitors[connectionId];
+        monitor.destroy();
+        myBatch.done();
+      } else if (maxCloseTry > 0) {
+        maxCloseTry--;
+        _.delay(closeMonitor, 100);
+      }
+    };
+    closeMonitor();
+
   }.bind(this));
 
-  myBatch.done();
+
 };
 
 /**
@@ -1950,7 +1962,590 @@ MonitorsHandler.prototype.stats = function () {
   });
   return result;
 };
-},{"./Messages":7,"pryv":9,"underscore":8}],6:[function(require,module,exports){
+},{"./Messages":6,"pryv":9,"underscore":8}],5:[function(require,module,exports){
+(function(){
+/* global $, window, location */
+var RootNode = require('./RootNode.js'),
+  SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
+  _ = require('underscore'),
+  DetailView = require('../view/events-views/detailed/Controller.js'),
+  SharingView = require('../view/sharings/Controller.js'),
+  CreateEventView = require('../view/create/Controller.js'),
+  CreateSharingView = require('../view/sharings/create/Controller.js'),
+  SubscribeView = require('../view/subscribe/Controller.js'),
+  FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
+  OnboardingView = require('../view/onboarding/View.js'),
+  VirtualNode = require('./VirtualNode.js'),
+  Pryv = require('pryv');
+var MARGIN_TOP = 40;
+var MARGIN_RIGHT = 40;
+var MARGIN_BOTTOM = 60;
+var MARGIN_LEFT = 40;
+var IGNORE_TRASHED_EVENT  = true;
+var IGNORE_PARAM_CHANGED = false;
+var TreeMap = module.exports = function (model) {
+  this.model = model;
+  this.dialog = null;
+  this.detailedView = null;
+  this.sharingView = null;
+  this.subscribeView = null;
+  this.createSharingView = null;
+  this.createEventView = null;
+  this.focusedStreams = null;
+  this.trashedEvents = {};
+  this.events = {};
+  var $tree = $('#tree');
+  this.root = new RootNode(this, $tree.width() - MARGIN_LEFT - MARGIN_RIGHT,
+    $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
+  this.root.x =  MARGIN_LEFT;
+  this.root.y =  MARGIN_TOP;
+
+
+  $('#logo-reload').click(function (e) {
+    e.preventDefault();
+    if (this.model.sharingsConnections &&
+      this.model.urlUsername === this.model.loggedConnection.username) {
+      this.model.removeConnections(this.model.sharingsConnections);
+      this.model.sharingsConnections = null;
+      this.model.loggedConnection.bookmarks.get(function (error, result) {
+        if (!error) {
+          this.model.bookmarksConnections = result;
+          this.model.addConnections(this.model.bookmarksConnections);
+        }
+      }.bind(this));
+      this.model.addConnection(this.model.loggedConnection);
+    } else {
+      this.focusOnStreams(null);
+    }
+  }.bind(this));
+  $('#logo-add').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeCreateEventView();
+    }.bind(this));
+    this.showCreateEventView($modal, this.model.connections, this.focusedStreams, e.currentTarget);
+  }.bind(this));
+  $('#logo-sharing').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeSharingView();
+    }.bind(this));
+    this.showSharingView($modal, this.model.loggedConnection, e.currentTarget);
+  }.bind(this));
+  $('#logo-subscribe').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeSubscribeView();
+    }.bind(this));
+    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
+      e.currentTarget);
+  }.bind(this));
+  $('#logo-create-sharing').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeCreateSharingView();
+    }.bind(this));
+    var streams = [],
+      loggedUsername = this.model.loggedConnection.username;
+    this.model.activeFilter.getStreams().forEach(function (stream) {
+      if (stream.connection.username === loggedUsername) {
+        streams.push({id: stream.id, name: stream.name, children: stream.children});
+      }
+    });
+    if (streams.length === 0) {
+      this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
+        streams.push({id: stream.id, name: stream.name, children: stream.children});
+      });
+    }
+    if (streams.length !== 0) {
+      this.showCreateSharingView($modal, this.model.loggedConnection, streams,
+        this.model.activeFilter.timeFrameST, e.currentTarget);
+    }
+  }.bind(this));
+  this._onIgnoreParamChanged = function () {
+    IGNORE_PARAM_CHANGED = false;
+    if (IGNORE_TRASHED_EVENT) {
+      var e = [];
+      _.each(this.events, function (event) {
+        if (event.trashed) {
+          e.push(event);
+          this.trashedEvents[event.id] = event;
+        }
+      }.bind(this));
+      this.eventLeaveScope({events: e});
+    } else {
+      this.eventEnterScope({events: this.trashedEvents});
+      this.trashedEvents = {};
+    }
+  };
+  //window.PryvBrowser = _.extend({}, window.PryvBrowser);
+  var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
+    var start = new Date().getTime();
+    if (IGNORE_PARAM_CHANGED) {
+      this._onIgnoreParamChanged();
+    }
+    this.root._generateChildrenTreemap(0,
+      0,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+    this.root.renderView(true);
+    this.model.updateTimeFrameLimits();
+    var end = new Date().getTime();
+    var time = end - start;
+    console.log('refreshTree execution:', time);
+  }.bind(this), 10);
+
+  $(window).resize(_.debounce(function () {
+    var $tree = $('#tree');
+    this.root.width = $tree.width() - MARGIN_LEFT - MARGIN_RIGHT;
+    this.root.height = $tree.height() - MARGIN_BOTTOM - MARGIN_TOP;
+    this.root.x =  MARGIN_LEFT;
+    this.root.y =  MARGIN_TOP;
+    this.root._createView();
+    this.root._generateChildrenTreemap(0,
+      0,
+      this.root.width,
+      this.root.height,
+      true);
+    this.root._refreshViewModel(true);
+    this.root.renderView(true);
+  }.bind(this), 100));
+
+
+  //----------- init the model with all events --------//
+  this.eventEnterScope = function (content) {
+    console.log('eventEnter', content);
+    var start = new Date().getTime();
+    _.each(content.events, function (event) {
+      if (!event.streamId) {
+        return;
+      }
+      if (!IGNORE_TRASHED_EVENT || !event.trashed) {
+        this.events[event.id] = event;
+        this.root.eventEnterScope(event, content.reason, function () {});
+      } else {
+        this.trashedEvents[event.id] = event;
+      }
+    }, this);
+    this.root._createView();
+    var end = new Date().getTime();
+    var time = end - start;
+    console.log('eventEnter execution:', time);
+    refreshTree();
+  }.bind(this);
+
+  this.eventLeaveScope = function (content) {
+    console.log('eventLeave', content);
+    var start = new Date().getTime();
+    _.each(content.events, function (event) {
+      this.root.eventLeaveScope(event, content.reason, function () {});
+    }, this);
+    var end = new Date().getTime();
+    var time = end - start;
+    console.log('eventLeave execution:', time);
+    refreshTree();
+  }.bind(this);
+
+  this.eventChange = function (content) {
+    var start = new Date().getTime();
+    _.each(content.events, function (event) {
+      if (!IGNORE_TRASHED_EVENT || !event.trashed) {
+        this.root.eventChange(event, content.reason, function () {});
+      } else {
+        this.trashedEvents[event.id] = event;
+        this.root.eventLeaveScope(event, content.reason, function () {});
+      }
+    }, this);
+    var end = new Date().getTime();
+    var time = end - start;
+    console.log('eventChange execution:', time);
+    refreshTree();
+  }.bind(this);
+
+  this.model.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
+  //--------- register the TreeMap event Listener ----------//
+  this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+    this.eventEnterScope
+  );
+  this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+    this.eventLeaveScope);
+  this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
+    this.eventChange);
+};
+TreeMap.prototype.isOnboarding = function () {
+  this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+    if (!error && result.length === 0 &&
+      this.model.urlUsername === this.model.loggedConnection.username) {
+      this.showOnboarding();
+    }
+  }.bind(this));
+};
+TreeMap.prototype.focusOnConnections = function (connection) {
+  this.model.activeFilter.focusOnConnections(connection);
+  this.setFocusedStreams(null);
+};
+
+TreeMap.prototype.focusOnStreams = function (stream) {
+  this.model.activeFilter.focusOnStreams(stream);
+  this.setFocusedStreams(stream);
+};
+TreeMap.prototype.setFocusedStreams = function (stream) {
+  this.focusedStreams = stream;
+};
+TreeMap.prototype.getFocusedStreams = function () {
+  return this.focusedStreams;
+};
+TreeMap.prototype.onDateHighLighted = function (time) {
+  if (this.root) {
+    this.root.onDateHighLighted(time);
+  }
+};
+
+TreeMap.prototype.destroy = function () {
+  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
+    this.eventEnterScope);
+  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
+    this.eventLeaveScope);
+  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
+    this.eventChange);
+};
+
+
+/** The treemap's utility functions **/
+
+/**
+ * Search for the node matching the arguments and returns it.
+ * @param nodeId the unique id in the DOM of the node
+ * @param streamId  the unique id of the stream associated with the node
+ * @param connectionId the unique id of the connection associated with the node
+ * @returns {find|*} returns the uniquely identifiable by the passed arguments
+ */
+TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
+  var node = this.root;
+  node = node.connectionNodes[connectionId];
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by connection' +
+      connectionId);
+  }
+  node = node.streamNodes[streamId];
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by stream' +
+      connectionId + streamId);
+  }
+  var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
+
+  if (node === 'undefined') {
+    throw new Error('RootNode: can\'t find path to requested event by nodeId' +
+      connectionId + ' ' + streamId + ' ' + nodeId);
+  }
+  return that;
+};
+
+
+/**
+ * Sets up all the controlling to aggregate two nodes.
+ * @param node1 the first node
+ * @param node2 the second node
+ */
+TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
+  var events = { };
+  var attrname = null;
+  for (attrname in node1.events) {
+    if (node1.events.hasOwnProperty(attrname)) {
+      events[attrname] = node1.events[attrname];
+    }
+  }
+  for (attrname in node2.events) {
+    if (node2.events.hasOwnProperty(attrname)) {
+      events[attrname] = node2.events[attrname];
+    }
+  }
+  this.dialog = new FusionDialog($('#pryv-modal').on('hidden.bs.modal', function () {
+    if (this.dialog) {
+      this.dialog.close();
+      this.dialog = null;
+    }
+  }.bind(this)), events, this);
+  this.dialog.show();
+};
+
+TreeMap.prototype.getFiltersFromNode = function (node) {
+  var streams = [];
+  var u = {}, s;
+  for (var attribute in node.events) {
+    if (node.events.hasOwnProperty(attribute)) {
+      s = {stream: node.events[attribute].stream, type: node.events[attribute].type};
+      if (!u.hasOwnProperty(s.streamId)) {
+        u[s.streamId] = {};
+        if (!u[s.streamId].hasOwnProperty(s.type)) {
+          u[s.streamId][s.type] = 1;
+          streams.push(s);
+        }
+      }
+    }
+  }
+  return s;
+};
+
+
+
+//======== Detailed View ========\\
+TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime, target) {
+  if (!this.hasDetailedView()) {
+    this.detailedView = new DetailView($modal, this.model.connections, target);
+    this.addEventsDetailedView(events);
+    this.showDetailedView();
+    this.highlightDateDetailedView(highlightedTime);
+  }
+};
+
+TreeMap.prototype.hasDetailedView = function () {
+  return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
+};
+TreeMap.prototype.showDetailedView = function () {
+  this.closeSharingView();
+  this.closeCreateSharingView();
+  this.closeCreateEventView();
+  if (this.hasDetailedView()) {
+    this.detailedView.show();
+  }
+};
+TreeMap.prototype.closeDetailedView = function () {
+  if (this.hasDetailedView()) {
+    this.detailedView.close();
+    this.detailedView = null;
+  }
+};
+TreeMap.prototype.addEventsDetailedView = function (events) {
+  if (this.hasDetailedView()) {
+    this.detailedView.addEvents(events);
+  }
+};
+TreeMap.prototype.deleteEventDetailedView = function (event) {
+  if (this.hasDetailedView()) {
+    this.detailedView.deleteEvent(event);
+  }
+};
+TreeMap.prototype.updateEventDetailedView = function (event) {
+  if (this.hasDetailedView()) {
+    this.detailedView.updateEvent(event);
+  }
+};
+TreeMap.prototype.highlightDateDetailedView = function (time) {
+  if (this.hasDetailedView()) {
+    this.detailedView.highlightDate(time);
+  }
+};
+/*=================================*/
+//======= CREATE EVENT VIEW ======\\
+TreeMap.prototype.hasCreateEventView = function () {
+  return typeof this.createEventView !== 'undefined' && this.createEventView !== null;
+};
+TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStream, target) {
+  this.closeSharingView();
+  this.closeCreateSharingView();
+  this.closeDetailedView();
+  if ($modal && connection && !this.hasCreateEventView()) {
+    this.createEventView = new CreateEventView($modal, connection, focusedStream, target);
+    this.createEventView.show();
+  }
+};
+TreeMap.prototype.closeCreateEventView = function () {
+  if (this.hasCreateEventView()) {
+    this.createEventView.close();
+    this.createEventView = null;
+  }
+};
+/*=================================*/
+//========== SHARING VIEW =========\\
+TreeMap.prototype.hasSharingView = function () {
+  return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
+};
+TreeMap.prototype.showSharingView = function ($modal, connection, target) {
+  this.closeSharingView();
+  this.closeCreateSharingView();
+  this.closeDetailedView();
+  this.closeCreateEventView();
+  if ($modal && connection) {
+    this.sharingView = new SharingView($modal, connection, target);
+    this.sharingView.show();
+  }
+};
+TreeMap.prototype.closeSharingView = function () {
+  if (this.hasSharingView()) {
+    this.sharingView.close();
+    this.sharingView = null;
+  }
+};
+/*=================================*/
+//========== CREATE SHARING VIEW =========\\
+TreeMap.prototype.hasCreateSharingView = function () {
+  return typeof this.createSharingView !== 'undefined' && this.createSharingView !== null;
+};
+TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilter, streams,
+                                                    target) {
+  this.closeCreateSharingView();
+  this.closeDetailedView();
+  this.closeSharingView();
+  this.closeCreateEventView();
+  if ($modal && timeFilter && streams) {
+    this.createSharingView = new CreateSharingView($modal, connection, timeFilter, streams, target);
+    this.createSharingView.show();
+  }
+};
+TreeMap.prototype.closeCreateSharingView = function () {
+  if (this.hasCreateSharingView()) {
+    this.createSharingView.close();
+    this.createSharingView = null;
+  }
+};
+/*=================================*/
+//========== SUBSCRIBE VIEW =========\\
+TreeMap.prototype.hasSubscribeView = function () {
+  return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
+};
+TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections,
+                                                target) {
+  this.closeSubscribeView();
+  if ($modal && loggedConnection) {
+    this.subscribeView = new SubscribeView($modal, loggedConnection, sharingsConnections, target);
+    this.subscribeView.show();
+  }
+};
+TreeMap.prototype.closeSubscribeView = function () {
+  if (this.hasSubscribeView()) {
+    this.subscribeView.close();
+    this.subscribeView = null;
+  }
+};
+/*=================================*/
+//========== ONBOARDING VIEW =========\\
+TreeMap.prototype.showOnboarding = function () {
+  this.model.hideLoggedInElement();
+  var view = new OnboardingView();
+  view.connection = this.model.loggedConnection;
+  view.render();
+  view.on('done', function () {
+    $('#logo-add').click();
+    $('#tree').empty();
+    this.createEventView.view.on('close', function () {
+      if (location) {
+        location.reload();
+      }
+    });
+  }.bind(this));
+};
+
+/*=================================*/
+/* jshint -W098 */
+
+/**
+ * Creates a virtual node from a certain number of events.
+ * @param eventsNodes is an array of events nodes you want to aggregate permanently.
+ */
+TreeMap.prototype.createVirtualNode = function (filters, name) {
+  var streams = [];
+  var f = [];
+  for (var i = 0, n = filters.length; i < n; ++i) {
+    streams.push(filters[i].stream);
+    f.push({streamId: filters[i].stream.id, type: filters[i].type});
+  }
+  var parent = this.getFirstCommonParent(_.uniq(streams));
+  console.log('parent', parent);
+
+  var vn = new VirtualNode(parent, name);
+  vn.addFilters(f);
+  if (parent instanceof Pryv.Connection) {
+    console.log('Setting new Virtual node in connection', parent, 'with filters', f);
+  } else if (parent instanceof Pryv.Stream) {
+    console.log('Setting new Virtual node in stream', parent, 'with filters', f);
+  }
+};
+
+TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
+
+  /* TODO:
+   * create the node, don't remove the already existing
+   * make sure the update follows at both places
+   */
+
+  // Depth first search for goal, starting from parent
+  var hasChild = function (parent, goal) {
+    var found = false;
+    if (parent.id === goal.id) {
+      found = true;
+    } else if (parent.children.length !== 0) {
+      _.each(parent.children, function (c) {
+        found = found || hasChild(c, goal);
+      });
+    }
+    return found;
+  };
+
+
+  // returns common parent of start and goal
+  var matchChild = function (start, goal) {
+    var found = false;
+    var depth = start;
+    while (found === false) {
+      found = hasChild(depth, goal);
+      if (!found) {
+        if (depth.parent) {
+          depth = depth.parent;
+        } else {
+          return depth.connection;
+        }
+      }
+    }
+    return depth;
+  };
+
+
+  // start contains the common parent of all arguments in the end.
+  var start = eventsNodes[0];
+  console.log(start);
+  for (var i = 1, n = eventsNodes.length; i < n; ++i) {
+    start = matchChild(start, eventsNodes[i]);
+  }
+  return start;
+};
+
+
+/**
+ * Remove a existing virtual node.
+ * @param node the virtual node you want to remove
+ */
+TreeMap.prototype.removeVirtualNode = function (node) {
+  /* TODO:
+   * just remove the indicated node
+   */
+};
+
+try {
+  Object.defineProperty(window.PryvBrowser, 'hideTrashedEvents', {
+    set: function (value) {
+      value = !!value;
+      if (_.isBoolean(value)) {
+        this.customConfig = true;
+        IGNORE_TRASHED_EVENT = value;
+        IGNORE_PARAM_CHANGED = true;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return IGNORE_TRASHED_EVENT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
+
+})()
+},{"../model/Messages":6,"../view/create/Controller.js":21,"../view/events-views/detailed/Controller.js":18,"../view/events-views/draganddrop/Controller.js":23,"../view/onboarding/View.js":24,"../view/sharings/Controller.js":19,"../view/sharings/create/Controller.js":22,"../view/subscribe/Controller.js":20,"./RootNode.js":17,"./VirtualNode.js":25,"pryv":9,"underscore":8}],7:[function(require,module,exports){
 (function(){
 /* global $, navigator, window, document */
 var Backbone = require('backbone'),
@@ -1962,7 +2557,7 @@ var Backbone = require('backbone'),
  */
 /* jshint -W101 */
 var customTimeModalTpl = '<div id="custom_time_modal" class="modal hide fade"> <div class="modal-header">   <button type="button" class="close" data-dismiss="modal">&times;</button>   <h3>Custom Timeframe</h3> </div> <div class="modal-body">   <form class="form-horizontal center">     <div id="from_ctrl" class="control-group">       <label class="control-label" for="from_selected">From:</label>       <div class="controls">         <input type="text" id="from_selected" class="input-medium">         <span id="from_helper" class="help-block"></span>       </div>     </div>     <div id="to_ctrl" class="control-group">       <label class="control-label" for="to_selected">To:</label>       <div class="controls">         <input type="text" id="to_selected" class="input-medium">         <span id="to_helper" class="help-block"></span>       </div>     </div>   </form> </div> <div class="modal-footer">   <button id="ok_btn" class="btn btn-primary">OK</button>   <a class="btn" data-dismiss="modal">Cancel</a> </div></div>';
-var timeViewTpl = '<span id="start-marker-label" class="marker-label">	<span id="start-marker-year"></span>	<span id="start-marker-month"></span>	<span id="start-marker-day"></span>	<span id="start-marker-dash" class="label-dash">-</span>	<span id="start-marker-hour"></span>	<span id="start-marker-dots" class="label-dots">:</span>	<span id="start-marker-minute"></span></span><span id="start-marker-arrow" class="tooltip-arrow"></span><span id="end-marker-label" class="marker-label">	<span id="end-marker-year"></span>	<span id="end-marker-month"></span>	<span id="end-marker-day"></span>	<span id="end-marker-dash" class="label-dash">-</span>	<span id="end-marker-hour"></span>	<span id="end-marker-dots" class="label-dots">:</span>	<span id="end-marker-minute"></span></span><span id="end-marker-arrow" class="tooltip-arrow"></span><span id="focus-marker-label" class="marker-label">	<span id="focus-marker-year"></span>	<span id="focus-marker-month"></span>	<span id="focus-marker-day"></span>	<span id="focus-marker-dash" class="label-dash">-</span>	<span id="focus-marker-hour"></span>	<span id="focus-marker-dots" class="label-dots">:</span>	<span id="focus-marker-minute"></span></span><span id="focus-marker-arrow" class="tooltip-arrow"></span><form class="form center">	<span id="arrow-left" class="nav-arrow prev"></span>	<div id="timeline-menu">		<span id="menu-arrow"></span>		<ul id="menu-items">			<!--<li id="settings" class="menu-item">settings</li>-->			<li id="today" class="menu-item">today</li>			<li id="custom" class="menu-item">custom</li>			<!--<li id="all" class="menu-item">all</li>-->			<li id="year" class="menu-item">year</li>			<li id="month" class="menu-item">month</li>			<li id="day" class="menu-item">day</li>						</ul>	</div>	<div id="timeline-scroll-wrapper">		<div id="timeline-content"></div>	</div>	<span id="arrow-right" class="nav-arrow next"></span></form>';
+var timeViewTpl = '<span id="start-marker-label" class="marker-label">	<span id="start-marker-year"></span>	<span id="start-marker-month"></span>	<span id="start-marker-day"></span>	<span id="start-marker-dash" class="label-dash">-</span>	<span id="start-marker-hour"></span>	<span id="start-marker-dots" class="label-dots">:</span>	<span id="start-marker-minute"></span></span><span id="start-marker-arrow" class="tooltip-arrow"></span><span id="end-marker-label" class="marker-label">	<span id="end-marker-year"></span>	<span id="end-marker-month"></span>	<span id="end-marker-day"></span>	<span id="end-marker-dash" class="label-dash">-</span>	<span id="end-marker-hour"></span>	<span id="end-marker-dots" class="label-dots">:</span>	<span id="end-marker-minute"></span></span><span id="end-marker-arrow" class="tooltip-arrow"></span><span id="focus-marker-label" class="marker-label">	<span id="focus-marker-year"></span>	<span id="focus-marker-month"></span>	<span id="focus-marker-day"></span>	<span id="focus-marker-dash" class="label-dash">-</span>	<span id="focus-marker-hour"></span>	<span id="focus-marker-dots" class="label-dots">:</span>	<span id="focus-marker-minute"></span></span><span id="focus-marker-arrow" class="tooltip-arrow"></span><form class="form center">	<span id="arrow-left" class="nav-arrow prev"></span><div id="timeline-scroll-wrapper">		<div id="timeline-content"></div>	</div>	<span id="arrow-right" class="nav-arrow next"></span></form>';
 
 var _keywords = {
   english: {
@@ -2079,9 +2674,12 @@ module.exports = Backbone.View.extend({
   frameTo: null,
   limitFrom: 0,
   limitTo: Infinity,
+  labelWidth: 200,
+  labelTipWidth: 14,
+  markerOffset: 0.05,
   arrowPressLongspeed: 3,
   arrowPressDuration: 1500,
-  proportionTimeFrame: 0.6666,
+  proportionTimeFrame: 0.6667,
   span: null,
   spanStep: null,
   spanName: null,
@@ -2099,7 +2697,9 @@ module.exports = Backbone.View.extend({
     'click #day': 'onClickTimeSpan',
     'click #month': 'onClickTimeSpan',
     'click #year': 'onClickTimeSpan',
+    'click #all': 'onClickAll',
     'click #timeline-menu': 'onClickMenu',
+    'click #frame-interval-label': 'onClickMenu',
     'click #custom': 'onClickCustomTime'
   },
   modals: {
@@ -2126,8 +2726,7 @@ module.exports = Backbone.View.extend({
 
     function resizedw() {
       self.setInitialWidth();
-      self.triggerFilter($('#start-marker').data('currentDate'),
-        $('#end-marker').data('currentDate'), true);
+      self.triggerFilter(self.frameFrom, self.frameTo, true);
     }
 
     $(window).resize(_.debounce(function () {
@@ -2159,10 +2758,11 @@ module.exports = Backbone.View.extend({
     return this;
   },
   setInitialWidth: function () {
-    var visibleWidth = $('#timeframe').width() - 2 *
-      ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
+    var visibleWidth = $('#timeframe').width();
+    /*  var visibleWidth = $('#timeframe').width() - 2 *
+    ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
       30 - $('#timeline-menu').outerWidth() -
-      parseInt($('#timeline-menu').css('marginRight'), null);
+      parseInt($('#timeline-menu').css('marginRight'), null); */
     $('#timeline-scroll-wrapper').width(visibleWidth);
     var initialLeftPosition = -visibleWidth;
     this.$timeline.width(3 * visibleWidth).css('left', initialLeftPosition + 'px').data({
@@ -2179,10 +2779,14 @@ module.exports = Backbone.View.extend({
   },
   _checkLimitDates: function (dateFrom, dateTo) {
     console.log('From:', this.limitFrom, dateFrom, 'To:', this.limitTo, dateTo);
-    dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
+   /*dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
     dateFrom = dateFrom >= this.limitTo ? this.frameFrom : dateFrom;
     dateTo = dateTo > this.limitTo ? this.limitTo : dateTo;
-    dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo;
+    dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo; */
+    if (dateFrom > dateTo) {
+      dateFrom = this.frameFrom;
+      dateTo = this.frameTo;
+    }
     console.log('After', dateFrom, dateTo);
     return {from: dateFrom, to: dateTo};
   },
@@ -2234,9 +2838,10 @@ module.exports = Backbone.View.extend({
       this.trigger('dateHighlighted', highlightedDate);
     }
   },
-  getIntervalLabel: function () {
-    var startDate = $('#start-marker').data('currentDate');
-    var endDate = $('#end-marker').data('currentDate');
+  // try to fix
+  setIntervalLabel: function (from, to) {
+    var startDate = from;
+    var endDate = to;
     var duration = endDate - startDate;
     var duration_in_sec = parseInt(duration / 1000, null);
     var interval_label = '';
@@ -2249,40 +2854,41 @@ module.exports = Backbone.View.extend({
     } else if (duration_in_sec < 60 * 60) {
       var min = Math.floor(duration_in_sec / 60);
       res = duration_in_sec % 60;
-      interval_label = min + ' min' + (min === 1 ? '' : 's') +
+      interval_label = min + ' min' + (min > 1 ? 's' : '') +
         (res === 0 ? '' : (' ' + res + ' sec'));
     } else if (duration_in_sec < 60 * 60 * 24) {
       var hrs = Math.floor(duration_in_sec / (60 * 60));
       res = parseInt((duration_in_sec % (60 * 60)) / 60, null);
-      interval_label = hrs + ' hr' + (hrs === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' min') + (res === 1 ? '' : 's'));
+      interval_label = hrs + ' hr' + (hrs > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' min') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 7) {
       var days = Math.floor(duration_in_sec / (60 * 60 * 24));
       res = parseInt((duration_in_sec % (60 * 60 * 24)) / (60 * 60), null);
-      interval_label = days + ' day' + (days === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' hr') + (res === 1 ? '' : 's'));
+      interval_label = days + ' day' + (days > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' hr') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 30) {
       var weeks = Math.floor(duration_in_sec / (60 * 60 * 24 * 7));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 7)) / (60 * 60 * 24), null);
-      interval_label = weeks + ' week' + (weeks === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' day') + (res === 1 ? '' : 's'));
+      interval_label = weeks + ' week' + (weeks > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 365) {
       var months = Math.floor(duration_in_sec / (60 * 60 * 24 * 30));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 30)) / (60 * 60 * 24), null);
-      interval_label = months + ' month' + (months === 1 ? '' : 's') +
-        (res === 0 ? '' : (' ' + res + ' day') + (res === 1 ? '' : 's'));
+      interval_label = months + ' month' + (months > 1 ? 's' : '') +
+        (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
     } else {
       var years = Math.floor(duration_in_sec / (60 * 60 * 24 * 365));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 365)) / (60 * 60 * 24), null);
-      interval_label = years + ' year' + (years === 1 ? '' : 's');
+      interval_label = years + ' year' + (years > 1 ? 's' : '');
       if (res <= 30) {
         interval_label += (res === 0 ? '' : (' ' + res + ' day'));
       } else {
         res = parseInt(res / 30, null);
         interval_label += (res === 0 ? '' : (' ' + res + ' month'));
       }
-      interval_label += res === 1 ? '' : 's';
+      interval_label += res > 1 ? 's' : '';
     }
+    interval_label = interval_label.toUpperCase();
     $('#frame-interval-label').text(interval_label);
     $('#frame-interval-label-value').text(interval_label);
     this.intervalLabelWidth = $('#frame-interval-label-value').width();
@@ -2290,339 +2896,258 @@ module.exports = Backbone.View.extend({
   fillTimeline: function () {
     this.setSpan();
     this.setMarkers();
+    var $startMarker = $('#start-marker');
+    var $startLabel = $('#start-marker-label');
+    var $startArrow = $('#start-marker-arrow');
+    var $endMarker = $('#end-marker');
+    var $endLabel = $('#end-marker-label');
+    var $endArrow = $('#end-marker-arrow');
+    var $focusMarker = $('#focus-marker');
+    var $focusLabel = $('#focus-marker-label');
+    var $focusArrow = $('#focus-marker-arrow');
+    var $selectedFrame = $('#selected-frame');
+    var $timeline = $('#timeline-scroll-wrapper');
     var self = this;
     if (!this.$timeline.hasClass('ui-draggable')) {
-      this.$timeline.draggable({axis: 'x',
-        start: function () {
-          clearTimeout(self.focusTimeout);
-          $('#focus-marker-label, #focus-marker-arrow').fadeOut();
-        },
-        drag: function (event, ui) {
-          var startPosition = $(this).data('leftPosition');
-          var currentLeft = ui.position.left;
-          var diff = currentLeft - startPosition;
-          var nextStartDate = null, nextEndDate = null, nextFocusDate = null;
-          var currentStartDate = new Date($('#start-marker').data('currentDate'));
-          var currentEndDate = new Date($('#end-marker').data('currentDate'));
-          var currentFocusDate = new Date($('#focus-marker').data('currentDate'));
-          if (diff !== 0) {
-            nextStartDate = currentLeft > startPosition ?
-              new Date(currentStartDate.getTime() - (self.spanStep * self.span)) :
-              new Date(currentStartDate.getTime() + (self.spanStep * self.span));
-            nextEndDate = currentLeft > startPosition ?
-              new Date(currentEndDate.getTime() - (self.spanStep * self.span)) :
-              new Date(currentEndDate.getTime() + (self.spanStep * self.span));
-            nextFocusDate = currentLeft > startPosition ?
-              new Date(currentFocusDate.getTime() - (self.spanStep * self.span)) :
-              new Date(currentFocusDate.getTime() + (self.spanStep * self.span));
-            self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
-            self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
-            $('#start-marker').data('currentDate', nextStartDate.getTime());
-            $('#end-marker').data('currentDate', nextEndDate.getTime());
-            $('#focus-marker').data('currentDate', nextFocusDate.getTime());
-            $(this).data('leftPosition', currentLeft);
-          }
-        },
-        stop: function () {
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          var initialLeftPosition = $(this).data('initialLeftPosition');
-          self.$timeline.css({'left': initialLeftPosition + 'px'});
-          self.timeframeChanged = true;
-          self.triggerFilter($('#start-marker').data('currentDate'),
-            $('#end-marker').data('currentDate'));
+
+      // Try to fix timelime
+      var delta = 0;
+      var startedLeft = 0;
+      var startedLeftFollow;
+      var startedSelectedFrameLeft;
+      var startedSelectedFrameWidth;
+      var startedFrom = self.frameFrom;
+      var startedTo = self.frameTo;
+      var currentFrom = self.frameFrom;
+      var currentTo = self.frameTo;
+      var showFocus = false;
+
+      var calculateDelta = function () {
+        return (self.frameTo - self.frameFrom) /
+               ($endMarker.position().left - $startMarker.position().left);
+      };
+      delta = calculateDelta();
+      var showFocusLabel = function () {
+        showFocus = true;
+        $focusLabel.fadeIn();
+      };
+      var hideFocusLabel = _.debounce(function () {
+        if (!showFocus) {
+          $focusLabel.fadeOut();
         }
+      }, 3000);
+      var startDragFocus = function (event, ui) {
+        startedLeft = ui.position.left;
+        startedLeftFollow = null;
+      };
+      var dragFocus = function ($arrToFollow, event, ui) {
+        if ($arrToFollow && !_.isArray($arrToFollow)) {
+          $arrToFollow = [$arrToFollow];
+        }
+        var xDiff = ui.position.left - startedLeft;
+
+        if (isNaN(delta)) {
+          delta = calculateDelta();
+        }
+        if ($arrToFollow) {
+          showFocusLabel();
+          var i = 0;
+          if (!startedLeftFollow) {
+            startedLeftFollow = [];
+            for (i = 0; i < $arrToFollow.length; i++) {
+              startedLeftFollow[i] = $arrToFollow[i].position().left;
+
+            }
+          }
+          for (i = 0; i < $arrToFollow.length; i++) {
+            $arrToFollow[i].css({left: startedLeftFollow[i] + xDiff + 'px'});
+          }
+        }
+        var highlightedTime = self.frameFrom +
+            ($focusMarker.position().left -  $startMarker.position().left) *
+            delta;
+        self.setLabelText($focusLabel, highlightedTime);
+        self.triggerHighlight(highlightedTime);
+      };
+      var stopDragFocus = function () {
+        showFocus = false;
+        hideFocusLabel();
+      };
+      var startDragLimit = function (event, ui) {
+        delta = calculateDelta();
+        startedLeft = ui.position.left;
+        startedLeftFollow = null;
+        startedSelectedFrameLeft = $selectedFrame.position().left;
+        startedSelectedFrameWidth = $selectedFrame.width();
+        startedFrom = self.frameFrom;
+        startedTo = self.frameTo;
+        currentFrom = self.frameFrom;
+        currentTo = self.frameTo;
+      };
+      var stopDragLimit = function () {
+        self.triggerFilter(currentFrom, currentTo);
+      };
+      var dragLimit = function (start, $arrToFollow, $label, event, ui) {
+        if ($arrToFollow && !_.isArray($arrToFollow)) {
+          $arrToFollow = [$arrToFollow];
+        }
+        var xDiff = ui.position.left - startedLeft;
+        if (isNaN(delta)) {
+          delta = calculateDelta();
+        }
+
+        var currentTime;
+        if (start) {
+          currentFrom = currentTime = startedFrom + (xDiff * delta);
+          currentFrom = currentTime = currentFrom > currentTo ? currentTo: currentFrom;
+        } else {
+          currentTo = currentTime = startedTo + (xDiff * delta);
+          currentTo = currentTime = currentTo < currentFrom ? currentFrom : currentTo;
+        }
+        if ($arrToFollow) {
+          var i = 0;
+          if (!startedLeftFollow) {
+            startedLeftFollow = [];
+            for (i = 0; i < $arrToFollow.length; i++) {
+              startedLeftFollow[i] = $arrToFollow[i].position().left;
+            }
+          }
+          for (i = 0; i < $arrToFollow.length; i++) {
+            $arrToFollow[i].css({left: startedLeftFollow[i] + xDiff + 'px'});
+          }
+        }
+        if ($label) {
+          self.setLabelText($label, currentTime);
+        }
+        self.setIntervalLabel(currentFrom, currentTo);
+
+        // update selected frame position and width
+        if (start) {
+          $selectedFrame.css({
+            'left': (startedSelectedFrameLeft + xDiff) + 'px',
+            'width': (startedSelectedFrameWidth - xDiff) + 'px'
+          });
+        } else {
+          $selectedFrame.css({
+            'left': startedSelectedFrameLeft + 'px',
+            'width': (startedSelectedFrameWidth + xDiff) + 'px'
+          });
+        }
+      };
+      $startMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, true, [$startArrow, $startLabel], $startLabel),
+        stop: stopDragLimit.bind(self)
       });
-
-      $('#selected-frame').draggable({axis: 'x', grid: [ this.graduationStep, 0 ],
-        start: function (event) {
-          $(this).css('opacity', 0.4);
-          $(this).data('mouseLeft', event.pageX);
-          clearTimeout(self.focusTimeout);
-          $('#focus-marker-label, #focus-marker-arrow').fadeOut();
-        },
-        drag: function (event, ui) {
-          var startPosition = $(this).data('mouseLeft');
-          var currentLeft = event.pageX;
-          var diff = ui.position.left - $(this).data('leftPosition');
-          var nextStartDate = null, nextEndDate = null;
-          var currentStartDate = new Date($('#start-marker').data('currentDate'));
-          var currentEndDate = new Date($('#end-marker').data('currentDate'));
-
-          nextStartDate = currentLeft < startPosition ?
-            new Date(currentStartDate.getTime() - (self.spanStep * self.span)) :
-            new Date(currentStartDate.getTime() + (self.spanStep * self.span));
-          nextEndDate = currentLeft < startPosition ?
-            new Date(currentEndDate.getTime() - (self.spanStep * self.span)) :
-            new Date(currentEndDate.getTime() + (self.spanStep * self.span));
-          var startMarkerPosition = $('#start-marker').data('leftPosition') + diff;
-          $('#start-marker').data({
-            'leftPosition': startMarkerPosition,
-            'currentDate': nextStartDate.getTime()
-          }).css('left', startMarkerPosition);
-          self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
-          $('#start-marker-label').css({
-            'left': (startMarkerPosition - $('#start-marker-label').width() / 2) + 'px'
-          });
-          $('#start-marker-arrow').css({
-            'left': ($('#start-marker-arrow').position().left + diff) + 'px'
-          });
-          var endMarkerPosition = $('#end-marker').data('leftPosition') + diff;
-          $('#end-marker').data({
-            'leftPosition': endMarkerPosition,
-            'currentDate': nextEndDate.getTime()
-          }).css('left', endMarkerPosition);
-          self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
-          $('#end-marker-label').css({
-            'left': (endMarkerPosition - $('#start-marker-label').width() / 2) + 'px'
-          });
-          $('#end-marker-arrow').css({
-            'left': ($('#end-marker-arrow').position().left + diff) + 'px'
-          });
-          $('#frame-interval-label').css({
-            'left': ($('#frame-interval-label').position().left + diff) + 'px'
-          });
-          $(this).data({'mouseLeft': currentLeft, 'leftPosition': ui.position.left});
-        },
-        stop: function () {
-          $(this).css('opacity', 0.7);
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          self.triggerFilter($('#start-marker').data('currentDate'),
-            $('#end-marker').data('currentDate'));
-        }
+      $startLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, true, [$startArrow, $startMarker], $startLabel),
+        stop: stopDragLimit.bind(self)
       });
-
-      $('#start-marker,' +
-        ' #end-marker,' +
-        ' #focus-marker,' +
-        ' #start-marker-label,' +
-        ' #end-marker-label,' +
-        ' #focus-marker-label').draggable({axis: 'x', grid: [ this.graduationStep, 0 ],
-        start: function (event, ui) {
-          ui.helper.css({'zIndex': 20});
-          var markerId = ui.helper.attr('id').replace('-marker', '');
-          markerId = markerId.replace('-label', '');
-          if (markerId === 'focus') {
-            clearTimeout(self.focusTimeout);
-          } else {
-            $('#focus-marker-label, #focus-marker-arrow').fadeIn();
-          }
-          $('#focus-marker-label, #focus-marker-arrow').fadeIn();
-        },
-        drag: function (event, ui) {
-          var markerId = ui.helper.attr('id').replace('-marker', '');
-          markerId = markerId.replace('-label', '');
-          var siblingsMarkerSuffix = ui.helper.attr('id').indexOf('-label') > -1 ?
-            '-marker' : '-marker-label';
-          var currentDate = new Date($('#' + markerId + '-marker').data('currentDate'));
-          var left = ui.helper.data('leftPosition');
-          var currentLeft = ui.position.left;
-          var diff = currentLeft - left;
-          var nextDate = null;
-          if (diff !== 0) {
-            var numOfSteps = parseInt(Math.abs(currentLeft - left) / self.graduationStep, null);
-            nextDate = diff > 0 ?
-              new Date(currentDate.getTime() + (numOfSteps * self.spanStep * self.span)) :
-              new Date(currentDate.getTime() - (numOfSteps * self.spanStep * self.span));
-            ui.helper.data({'leftPosition': currentLeft});
-            $('#' + markerId + '-marker').data({'currentDate': nextDate.getTime()});
-          }
-
-          if (nextDate !== null) {
-            var initDate = markerId === 'start' ?
-              self.frameFrom :
-              (markerId === 'end' ?
-                self.frameTo : $('#' + markerId + '-marker').data('initialDate'));
-            self.getMarkerLabelText(nextDate, markerId + '-marker', true, new Date(initDate));
-          }
-          var positionStep = currentLeft - left;
-          var markerLeftPosition = ($('#' + markerId + siblingsMarkerSuffix).position()
-            .left + positionStep);
-          $('#' + markerId + siblingsMarkerSuffix).data({
-            'leftPosition': markerLeftPosition
-          }).css({ 'left': markerLeftPosition + 'px', 'zIndex': 20});
-          $('#' + markerId + '-marker-arrow').css({
-            'left': ($('#' + markerId + '-marker-arrow').position().left + positionStep) + 'px'
-          });
-
-          if (markerId === 'start' || markerId === 'end') {
-            self.getIntervalLabel();
-          }
-          var frameLeft = $('#selected-frame').position().left;
-          var frameWidth = $('#selected-frame').width();
-
-          switch (markerId) {
-          case 'start':
-            $('#selected-frame').css({
-              'left': (frameLeft + positionStep) + 'px',
-              'width': (frameWidth - positionStep) + 'px'
-            });
-            $('#frame-interval-label').css({
-              'left': (frameLeft + frameWidth / 2 - $('#frame-interval-label').width() / 2) + 'px'
-            });
-            break;
-          case 'end':
-            $('#selected-frame').css({
-              'left': frameLeft + 'px',
-              'width': (frameWidth + positionStep) + 'px'
-            });
-            $('#frame-interval-label').css({
-              'left': (frameLeft + frameWidth / 2 - $('#frame-interval-label').width() / 2) + 'px'
-            });
-            break;
-          case 'focus':
-            self.triggerHighlight(ui.helper.data('currentDate'));
-            break;
-          }
-          if (frameWidth < self.intervalLabelWidth &&
-            (markerId === 'start' || markerId === 'end')) {
-            $('#frame-interval-label').width($('#selected-frame').width());
-          } else {
-            $('#frame-interval-label').width(self.intervalLabelWidth);
-          }
-        },
-        stop: function (event, ui) {
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          ui.helper.css({'zIndex': 15});
-          var markerId = ui.helper.attr('id').replace('-marker', '');
-          markerId = markerId.replace('-label', '');
-          var siblingsMarkerSuffix = ui.helper.attr('id').indexOf('-label') > -1 ?
-            '-marker' : '-marker-label';
-          $('#' + markerId + siblingsMarkerSuffix).css({'zIndex': 15});
-          if (markerId === 'focus') {
-            self.focusTimeout = setTimeout(
-              $('#focus-marker-label', '#focus-marker-arrow').fadeOut(), 10000);
-          } else {
-            self.triggerFilter($('#start-marker').data('currentDate'),
-              $('#end-marker').data('currentDate'));
-          }
-        }
-
+      $endMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, false, [$endArrow, $endLabel], $endLabel),
+        stop: stopDragLimit.bind(self)
+      });
+      $endLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragLimit.bind(self),
+        drag: dragLimit.bind(self, false, [$endArrow, $endMarker], $endLabel),
+        stop: stopDragLimit.bind(self)
+      });
+      $focusMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragFocus.bind(self),
+        drag: dragFocus.bind(self, [$focusArrow, $focusLabel]),
+        stop: stopDragFocus.bind(self)
+      });
+      $focusLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
+        start: startDragFocus.bind(self),
+        drag: dragFocus.bind(self, [$focusArrow, $focusMarker]),
+        stop: stopDragFocus.bind(self)
       });
     }
-
-    var timeline_position = $('#timeline-scroll-wrapper').position();
-    var constraint_top = timeline_position.top - 2;
-    var constraint_bottom = constraint_top + $('#start-marker').height();
-
-    $('#start-marker').draggable('option', 'containment',
-      [timeline_position.left - $('#start-marker').width() / 2 +
-        $('#start-marker-bg').width() / 2, constraint_top,
-        $('#end-marker').position().left, constraint_bottom]);
-    $('#start-marker-label').draggable('option', 'containment',
-      [timeline_position.left - $('#start-marker-label').width() / 2,
-        $('#start-marker-label').position().top, $('#end-marker-label').position().left,
-        $('#start-marker-label').position().top + $('#start-marker-label').height()]);
-    $('#end-marker').draggable('option', 'containment', [$('#start-marker').position().left,
-      constraint_top, timeline_position.left +
-        $('#timeline-scroll-wrapper').width() - $('#start-marker').width() / 2, constraint_bottom]);
-    $('#end-marker-label').draggable('option', 'containment',
-      [$('#start-marker-label').position().left, $('#start-marker-label').position().top,
-        timeline_position.left + $('#timeline-scroll-wrapper').width() -
-          $('#end-marker-label').width() / 2,
-        $('#start-marker-label').position().top + $('#start-marker-label').height()]);
-    $('#focus-marker').draggable('option', 'containment',
-      [$('#start-marker').position().left + $('#start-marker').width() / 2 -
-        $('#focus-marker').width() / 2, $('#focus-marker').position().top,
-        $('#end-marker').position().left + $('#start-marker').width() / 2 -
-          $('#focus-marker').width() / 2, timeline_position.top + $('#focus-marker').height()]);
-    $('#focus-marker-label').draggable('option', 'containment',
-      [$('#start-marker-label').position().left, $('#focus-marker-label').position().top,
-        $('#end-marker-label').position().left,
-        $('#focus-marker-label').position().top + $('#focus-marker-label').height()]);
-    $('#selected-frame').draggable('option', 'containment',
-      [timeline_position.left + $('#start-marker-bg').width() / 2,
-        timeline_position.top,
-        timeline_position.left + $('#timeline-scroll-wrapper').width() -
-          $('#selected-frame').width() - $('#start-marker-bg').width() / 2,
-        timeline_position.top + $('#start-marker').height()]);
+    var markerWidth = $startMarker.width();
+    var leftConstraint =  -$timeline.width() * 0.5;
+    var rightConstraint = $timeline.width() * 1.5;
+    var startConstraint = $startMarker.position().left + (markerWidth / 2);
+    var endConstraint = $endMarker.position().left + (markerWidth / 2);
+    $startMarker.draggable('option', 'containment',
+      [leftConstraint, 0, endConstraint - (markerWidth / 2), 0]);
+    $startLabel.draggable('option', 'containment',
+      [leftConstraint, 0, endConstraint - (this.labelWidth + this.labelTipWidth), 0]);
+    $endMarker.draggable('option', 'containment',
+      [startConstraint - (markerWidth / 2), 0, rightConstraint, 0]);
+    $endLabel.draggable('option', 'containment',
+      [startConstraint + this.labelTipWidth, 0, rightConstraint, 0]);
+    $focusMarker.draggable('option', 'containment',
+      [startConstraint  - (markerWidth / 2), 0, endConstraint  - (markerWidth / 2), 0]);
+    $focusLabel.draggable('option', 'containment',
+      [startConstraint - (this.labelWidth / 2), 0, endConstraint - (this.labelWidth / 2), 0]);
   },
   setMarkers: function () {
     if ($('#timeframe #start-marker').length === 0) {
       /*jshint -W101 */
-      $('#timeframe').append('<span id="start-marker"><span id="start-marker-bg"></span></span><span id="focus-marker"></span><span id="end-marker"><span id="end-marker-bg"></span></span><span id="selected-frame"></span><span id="frame-interval-label"></span><span id="frame-interval-label-value"></span>');
+      $('#timeframe').append('<span id="start-marker"><span id="start-marker-bg"></span></span><span id="focus-marker"></span><span id="end-marker"><span id="end-marker-bg"></span></span><span id="selected-frame"><span id="frame-interval-label"></span><div id="timeline-menu"><span id="menu-arrow"></span><ul id="menu-items"><!--<li id="settings" class="menu-item">settings</li>--><li id="today" class="menu-item">today</li><li id="custom" class="menu-item">custom</li><li id="all" class="menu-item">all</li><li id="year" class="menu-item">year</li><li id="month" class="menu-item">month</li><li id="day" class="menu-item">day</li></ul></div></span><span id="frame-interval-label-value"></span>');
     }
-    var timeframePositionLeft = $('#timeline-scroll-wrapper').position().left;
-    var timelineWidth = $('#timeline-scroll-wrapper').width();
-    var timelineProportion = this.proportionTimeFrame;
-    var timelineStart = (1 - this.proportionTimeFrame) / 2;
-    var timelineEnd = 1 - timelineStart;
+    var $startMarker = $('#start-marker');
+    var $startLabel = $('#start-marker-label');
+    var $startArrow =  $('#start-marker-arrow');
+    var $endMarker = $('#end-marker');
+    var $endLabel = $('#end-marker-label');
+    var $endArrow =  $('#end-marker-arrow');
+    var $focusMarker = $('#focus-marker');
+    var $focusLabel = $('#focus-marker-label');
+    var $focusArrow = $('#focus-marker-arrow');
+    var $selectedFrame = $('#selected-frame');
+    var $timeline = $('#timeline-scroll-wrapper');
 
-    var startPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineStart -
-      $('#start-marker').width() / 2, null);
-    $('#start-marker').css({
-      'left': startPositionLeft + 'px'
-    });
-    $('#start-marker').data({
-      'leftPosition': startPositionLeft,
-      'currentDate': this.frameFrom
-    });
-    $('#start-marker-arrow').css({
-      'left': (startPositionLeft + $('#start-marker').width() / 2 - 4) + 'px'
-    });
-    var startDate = new Date(this.frameFrom);
-    this.getMarkerLabelText(startDate, 'start-marker', false);
-    var startLabelPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineStart -
-      $('#start-marker-label').width() / 2, null) -
-      parseInt($('#start-marker-label').css('paddingLeft'), null);
-    $('#start-marker-label').data({
-      'leftPosition': startLabelPositionLeft
-    }).css({
-        'left': startLabelPositionLeft + 'px'
-      }).fadeIn();
-    var endPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineEnd -
-      $('#end-marker').width() / 2, null);
-    $('#end-marker').css({
-      'left': endPositionLeft + 'px'
-    });
-    $('#end-marker').data({
-      'leftPosition': endPositionLeft,
-      'currentDate': this.frameTo
-    });
-    $('#end-marker-arrow').css({
-      'left': (endPositionLeft + $('#end-marker').width() / 2 - 4) + 'px'
-    });
-    var endDate = new Date(this.frameTo);
-    this.getMarkerLabelText(endDate, 'end-marker', false);
-    var endLabelPositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineEnd -
-      $('#end-marker-label').width() / 2, null) -
-      parseInt($('#end-marker-label').css('paddingLeft'), null);
-    $('#end-marker-label').data({
-      'leftPosition': endLabelPositionLeft
-    }).css({
-        'left': endLabelPositionLeft + 'px'
-      }).fadeIn();
-    var framePositionLeft = parseInt(timeframePositionLeft + timelineWidth * timelineStart, null);
-    $('#selected-frame').data('leftPosition', framePositionLeft);
-    $('#selected-frame').css({
-      'left': framePositionLeft + 'px',
-      'width': parseInt(timelineWidth * timelineProportion, null) + 'px'
-    }).fadeIn();
-    var focusPositionLeft = parseInt(framePositionLeft + $('#selected-frame').width() / 2 -
-      $('#focus-marker').width() / 2, null);
-    $('#focus-marker').css({
-      'left': focusPositionLeft + 'px'
-    });
-    var focusDate = new Date(this.frameFrom + (this.frameTo - this.frameFrom) / 2);
-    this.getMarkerLabelText(focusDate, 'focus-marker', false);
-    $('#focus-marker').data({
-      'leftPosition': focusPositionLeft,
-      'currentDate': focusDate.getTime(),
-      'initialDate': focusDate.getTime()
-    });
-    $('#focus-marker-arrow').css({
-      'left': (focusPositionLeft + $('#focus-marker').width() / 2 - 4) + 'px'
-    });
-    $('#focus-marker-label').css({
-      'left': (focusPositionLeft + $('#focus-marker').width() / 2 -
-        $('#focus-marker-label').width() / 2 -
-        parseInt($('#focus-marker-label').css('paddingLeft'), null)) + 'px'
-    });
+    $startLabel.css('width', this.labelWidth);
+    $endLabel.css('width', this.labelWidth);
+    $focusLabel.css('width', this.labelWidth);
 
-    this.getIntervalLabel();
-    $('#frame-interval-label').css({
-      'left': (framePositionLeft + $('#selected-frame').width() / 2 -
-        $('#frame-interval-label').width() / 2) + 'px'
+    var markerWidth = $startMarker.width();
+    var focusMarkerWidth = $focusMarker.width();
+    var labelWidth = this.labelWidth + this.labelTipWidth;
+    var timelineWidth = $timeline.width();
+
+    var startMarkerLeft = (this.markerOffset * timelineWidth) + labelWidth - (markerWidth / 2);
+    var endMarkerLeft = timelineWidth - startMarkerLeft - markerWidth;
+
+    var startArrowLeft = startMarkerLeft + (markerWidth / 2) - 4;
+    var endArrowLeft = endMarkerLeft + (markerWidth / 2) - 4;
+
+    var startLabelLeft =  (this.markerOffset * timelineWidth);
+    var endLabelLeft = timelineWidth - startLabelLeft - this.labelWidth;
+
+    var focusMarkerLeft = (timelineWidth / 2) - (focusMarkerWidth / 2);
+    var focusLabelLeft = (timelineWidth / 2) - (this.labelWidth / 2);
+    var focusArrowLeft = (timelineWidth / 2) - 4;
+
+    var selectedFrameLeft = startMarkerLeft + (markerWidth / 2);
+    var selectedFrameWidth = endMarkerLeft + (markerWidth / 2) - selectedFrameLeft;
+    $startMarker.show().animate({'left': startMarkerLeft + 'px'});
+    $startLabel.show().animate({'left': startLabelLeft + 'px'});
+    $startArrow.show().animate({'left': startArrowLeft + 'px'});
+    $endMarker.show().animate({'left': endMarkerLeft + 'px'});
+    $endLabel.show().animate({'left': endLabelLeft + 'px'});
+    $endArrow.show().animate({'left': endArrowLeft + 'px'});
+    $focusMarker.show().animate({'left': focusMarkerLeft + 'px'});
+    $focusLabel.animate({'left': focusLabelLeft + 'px'}, function () {
+      $focusLabel.css('left', focusLabelLeft + 'px');
     });
+    $focusArrow.show().animate({'left': focusArrowLeft + 'px'});
+    $selectedFrame.show().animate({'left': selectedFrameLeft, 'width': selectedFrameWidth});
+    this.setLabelText($startLabel, this.frameFrom);
+    this.setLabelText($endLabel, this.frameTo);
+    this.setIntervalLabel(this.frameFrom, this.frameTo);
+  },
+  setLabelText: function ($label, time) {
+    var date = new Date(time);
+    var year = date.getFullYear();
+    var month = this.translate('mon_' + date.getMonth());
+    var day = date.getDate();
+    var hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
+    var minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
+    $label.text(year + ' ' + month + ' ' + day + ' - ' + hours + ':' + minutes);
   },
   getMarkerLabelText: function (date, elementId, setDifference, initialDate) {
     var year = date.getFullYear();
@@ -2690,6 +3215,12 @@ module.exports = Backbone.View.extend({
       $('#timeline-scroll-wrapper').width() / this.graduationStep).toFixed(), null);
     this.spanStep = 1;
     this.span = parseInt((frame_duration / (numOfGraduations * this.spanStep)).toFixed(), null);
+  },
+  onClickAll: function () {
+    if (this.limitFrom !== 0 && this.limitTo !== Infinity) {
+      this.triggerFilter(this.limitFrom, this.limitTo);
+    }
+
   },
   onClickTimeSpan: function (spanName, updateTimeline, from, to) {
     /* Check if we received the spanName or a click event. */
@@ -2921,492 +3452,7 @@ module.exports = Backbone.View.extend({
 });
 
 })()
-},{"./modal.js":18,"backbone":19,"underscore":8}],5:[function(require,module,exports){
-(function(){
- /* global $, window */
-var RootNode = require('./RootNode.js'),
- SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
- _ = require('underscore'),
- DetailView = require('../view/events-views/detailed/Controller.js'),
- SharingView = require('../view/sharings/Controller.js'),
- CreateSharingView = require('../view/sharings/create/Controller.js'),
- SubscribeView = require('../view/subscribe/Controller.js'),
- FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
- VirtualNode = require('./VirtualNode.js'),
- Pryv = require('pryv');
-var MARGIN_TOP = 40;
-var MARGIN_RIGHT = 40;
-var MARGIN_BOTTOM = 60;
-var MARGIN_LEFT = 40;
-var TreeMap = module.exports = function (model) {
-  this.model = model;
-  this.dialog = null;
-  this.detailedView = null;
-  this.sharingView = null;
-  this.subscribeView = null;
-  this.createSharingView = null;
-  this.focusedStreams = null;
-  var $tree = $('#tree');
-  this.root = new RootNode(this, $tree.width() - MARGIN_LEFT - MARGIN_RIGHT,
-    $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
-  this.root.x =  MARGIN_LEFT;
-  this.root.y =  MARGIN_TOP;
-  $('#logo-reload').click(function (e) {
-    e.preventDefault();
-    if (this.model.sharingsConnections &&
-      this.model.urlUsername === this.model.loggedConnection.username) {
-      this.model.removeConnections(this.model.sharingsConnections);
-      this.model.sharingsConnections = null;
-      this.model.loggedConnection.bookmarks.get(function (error, result) {
-        if (!error) {
-          this.model.bookmarksConnections = result;
-          this.model.addConnections(this.model.bookmarksConnections);
-        }
-      }.bind(this));
-      this.model.addConnection(this.model.loggedConnection);
-    } else {
-      this.focusOnStreams(null);
-    }
-  }.bind(this));
-  $('#logo-add').click(function (e) {
-    e.preventDefault();
-    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-      this.closeDetailedView();
-    }.bind(this));
-    this.initDetailedView($modal);
-    this.detailedView.createNewEvent();
-  }.bind(this));
-  $('#logo-sharing').click(function (e) {
-    e.preventDefault();
-    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-      this.closeSharingView();
-    }.bind(this));
-    this.showSharingView($modal, this.model.loggedConnection);
-  }.bind(this));
-  $('#logo-subscribe').click(function (e) {
-    e.preventDefault();
-    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-      this.closeSubscribeView();
-    }.bind(this));
-    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections);
-  }.bind(this));
-  $('#logo-create-sharing').click(function (e) {
-    e.preventDefault();
-    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-      this.closeCreateSharingView();
-    }.bind(this));
-    console.log(this.model);
-    var streams = [],
-      loggedUsername = this.model.loggedConnection.username;
-    this.model.activeFilter.getStreams().forEach(function (stream) {
-      if (stream.connection.username === loggedUsername) {
-        streams.push({id: stream.id, name: stream.name, children: stream.children});
-      }
-    });
-    if (streams.length === 0) {
-      this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
-        streams.push({id: stream.id, name: stream.name, children: stream.children});
-      });
-    }
-    if (streams.length !== 0) {
-      this.showCreateSharingView($modal, this.model.loggedConnection, streams,
-      this.model.activeFilter.timeFrameST);
-    }
-  }.bind(this));
-
-  //window.PryvBrowser = _.extend({}, window.PryvBrowser);
-  var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
-    var start = new Date().getTime();
-    this.root._generateChildrenTreemap(0,
-      0,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-    this.root.renderView(true);
-    this.model.updateTimeFrameLimits();
-    var end = new Date().getTime();
-    var time = end - start;
-    /*var $StreamNode = $('.StreamNode');
-    $StreamNode.off('mouseenter');
-    $StreamNode.off('mouseleave');
-    $StreamNode.on('mouseenter', function (e) {
-      e.stopPropagation();
-      $(this).css({
-        'background-color': 'white',
-        'outline': '#fff solid 5px'
-      });
-    });
-    $StreamNode.on('mouseleave', function (e) {
-      e.stopPropagation();
-      $(this).css({
-        'background-color': '',
-        'outline': 'none'
-      });
-    });  */
-    console.log('refreshTree execution:', time);
-  }.bind(this), 10);
-
-  $(window).resize(_.debounce(function () {
-    var $tree = $('#tree');
-    this.root.width = $tree.width() - MARGIN_LEFT - MARGIN_RIGHT;
-    this.root.height = $tree.height() - MARGIN_BOTTOM - MARGIN_TOP;
-    this.root.x =  MARGIN_LEFT;
-    this.root.y =  MARGIN_TOP;
-    this.root._createView();
-    this.root._generateChildrenTreemap(0,
-      0,
-      this.root.width,
-      this.root.height,
-      true);
-    this.root._refreshViewModel(true);
-    this.root.renderView(true);
-  }.bind(this), 100));
-
-
-  //----------- init the model with all events --------//
-  this.eventEnterScope = function (content) {
-    console.log('eventEnter', content);
-    var start = new Date().getTime();
-    _.each(content.events, function (event) {
-      this.root.eventEnterScope(event, content.reason, function () {});
-    }, this);
-    this.root._createView();
-    var end = new Date().getTime();
-    var time = end - start;
-    console.log('eventEnter execution:', time);
-    refreshTree();
-  }.bind(this);
-
-  this.eventLeaveScope = function (content) {
-    var start = new Date().getTime();
-    _.each(content.events, function (event) {
-      this.root.eventLeaveScope(event, content.reason, function () {});
-    }, this);
-    var end = new Date().getTime();
-    var time = end - start;
-    console.log('eventLeave execution:', time);
-    refreshTree();
-  }.bind(this);
-
-  this.eventChange = function (content) {
-    var start = new Date().getTime();
-    _.each(content.events, function (event) {
-      this.root.eventChange(event, content.reason, function () {});
-    }, this);
-    var end = new Date().getTime();
-    var time = end - start;
-    console.log('eventChange execution:', time);
-    refreshTree();
-  }.bind(this);
-
-  this.model.activeFilter.triggerForAllCurrentEvents(this.eventEnterScope);
-  //--------- register the TreeMap event Listener ----------//
-  this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_ENTER,
-    this.eventEnterScope
-  );
-  this.model.activeFilter.addEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
-    this.eventLeaveScope);
-  this.model.activeFilter.addEventListener(SIGNAL.EVENT_CHANGE,
-    this.eventChange);
-};
-TreeMap.prototype.focusOnConnections = function (connection) {
-  this.model.activeFilter.focusOnConnections(connection);
-};
-
-TreeMap.prototype.focusOnStreams = function (stream) {
-  this.model.activeFilter.focusOnStreams(stream);
-  this.setFocusedStreams(stream);
-};
-TreeMap.prototype.setFocusedStreams = function (stream) {
-  this.focusedStreams = stream;
-};
-TreeMap.prototype.getFocusedStreams = function () {
-  return this.focusedStreams;
-};
-TreeMap.prototype.onDateHighLighted = function (time) {
-  if (this.root) {
-    this.root.onDateHighLighted(time);
-  }
-};
-
-TreeMap.prototype.destroy = function () {
-  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_ENTER,
-    this.eventEnterScope);
-  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_SCOPE_LEAVE,
-    this.eventLeaveScope);
-  this.model.activeFilter.removeEventListener(SIGNAL.EVENT_CHANGE,
-    this.eventChange);
-};
-
-
- /** The treemap's utility functions **/
-
- /**
-  * Search for the node matching the arguments and returns it.
-  * @param nodeId the unique id in the DOM of the node
-  * @param streamId  the unique id of the stream associated with the node
-  * @param connectionId the unique id of the connection associated with the node
-  * @returns {find|*} returns the uniquely identifiable by the passed arguments
-  */
-TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
-  var node = this.root;
-  node = node.connectionNodes[connectionId];
-  if (node === 'undefined') {
-    throw new Error('RootNode: can\'t find path to requested event by connection' +
-      connectionId);
-  }
-  node = node.streamNodes[streamId];
-  if (node === 'undefined') {
-    throw new Error('RootNode: can\'t find path to requested event by stream' +
-      connectionId + streamId);
-  }
-  var that = _.find(node.getChildren(), function (node) { return node.uniqueId === nodeId; });
-
-  if (node === 'undefined') {
-    throw new Error('RootNode: can\'t find path to requested event by nodeId' +
-      connectionId + ' ' + streamId + ' ' + nodeId);
-  }
-  return that;
-};
-
-
- /**
-  * Sets up all the controlling to aggregate two nodes.
-  * @param node1 the first node
-  * @param node2 the second node
-  */
-TreeMap.prototype.requestAggregationOfNodes = function (node1, node2) {
-  var events = { };
-  var attrname = null;
-  for (attrname in node1.events) {
-    if (node1.events.hasOwnProperty(attrname)) {
-      events[attrname] = node1.events[attrname];
-    }
-  }
-  for (attrname in node2.events) {
-    if (node2.events.hasOwnProperty(attrname)) {
-      events[attrname] = node2.events[attrname];
-    }
-  }
-  this.dialog = new FusionDialog($('#pryv-modal').on('hidden.bs.modal', function () {
-    if (this.dialog) {
-      this.dialog.close();
-      this.dialog = null;
-    }
-  }.bind(this)), events);
-  this.dialog.show();
-};
-
-TreeMap.prototype.getFiltersFromNode = function (node) {
-  var streams = [];
-  var u = {}, s;
-  for (var attribute in node.events) {
-    if (node.events.hasOwnProperty(attribute)) {
-      s = {stream: node.events[attribute].stream, type: node.events[attribute].type};
-      if (!u.hasOwnProperty(s.streamId)) {
-        u[s.streamId] = {};
-        if (!u[s.streamId].hasOwnProperty(s.type)) {
-          u[s.streamId][s.type] = 1;
-          streams.push(s);
-        }
-      }
-    }
-  }
-  return s;
-};
-
-
-
-   //======== Detailed View ========\\
-TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
-  if (!this.hasDetailedView()) {
-    this.detailedView = new DetailView($modal, this.model.connections);
-    this.addEventsDetailedView(events);
-    this.showDetailedView();
-    this.highlightDateDetailedView(highlightedTime);
-  }
-};
-
-TreeMap.prototype.hasDetailedView = function () {
-  return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
-};
-TreeMap.prototype.showDetailedView = function () {
-  this.closeSharingView();
-  this.closeCreateSharingView();
-  if (this.hasDetailedView()) {
-    this.detailedView.show();
-  }
-};
-TreeMap.prototype.closeDetailedView = function () {
-  if (this.hasDetailedView()) {
-    this.detailedView.close();
-    this.detailedView = null;
-  }
-};
-TreeMap.prototype.addEventsDetailedView = function (events) {
-  if (this.hasDetailedView()) {
-    this.detailedView.addEvents(events);
-  }
-};
-TreeMap.prototype.deleteEventDetailedView = function (event) {
-  if (this.hasDetailedView()) {
-    this.detailedView.deleteEvent(event);
-  }
-};
-TreeMap.prototype.updateEventDetailedView = function (event) {
-  if (this.hasDetailedView()) {
-    this.detailedView.updateEvent(event);
-  }
-};
-TreeMap.prototype.highlightDateDetailedView = function (time) {
-  if (this.hasDetailedView()) {
-    this.detailedView.highlightDate(time);
-  }
-};
-/*=================================*/
-//========== SHARING VIEW =========\\
-TreeMap.prototype.hasSharingView = function () {
-  return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
-};
-TreeMap.prototype.showSharingView = function ($modal, connection) {
-  this.closeSharingView();
-  this.closeCreateSharingView();
-  this.closeDetailedView();
-  if ($modal && connection) {
-    this.sharingView = new SharingView($modal, connection);
-    this.sharingView.show();
-  }
-};
-TreeMap.prototype.closeSharingView = function () {
-  if (this.hasSharingView()) {
-    this.sharingView.close();
-    this.sharingView = null;
-  }
-};
- /*=================================*/
-//========== CREATE SHARING VIEW =========\\
-TreeMap.prototype.hasCreateSharingView = function () {
-  return typeof this.createSharingView !== 'undefined' && this.createSharingView !== null;
-};
-TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilter, streams) {
-  this.closeCreateSharingView();
-  this.closeDetailedView();
-  this.closeSharingView();
-  if ($modal && timeFilter && streams) {
-    this.createSharingView = new CreateSharingView($modal, connection, timeFilter, streams);
-    this.createSharingView.show();
-  }
-};
-TreeMap.prototype.closeCreateSharingView = function () {
-  if (this.hasCreateSharingView()) {
-    this.createSharingView.close();
-    this.createSharingView = null;
-  }
-};
- /*=================================*/
- //========== SUBSCRIBE VIEW =========\\
-TreeMap.prototype.hasSubscribeView = function () {
-  return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
-};
-TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections) {
-  this.closeSubscribeView();
-  if ($modal && loggedConnection) {
-    this.subscribeView = new SubscribeView($modal, loggedConnection, sharingsConnections);
-    this.subscribeView.show();
-  }
-};
-TreeMap.prototype.closeSubscribeView = function () {
-  if (this.hasSubscribeView()) {
-    this.subscribeView.close();
-    this.subscribeView = null;
-  }
-};
- /*=================================*/
-/* jshint -W098 */
-
- /**
-  * Creates a virtual node from a certain number of events.
-  * @param eventsNodes is an array of events nodes you want to aggregate permanently.
-  */
-TreeMap.prototype.createVirtualNode = function (filters) {
-  var streams = [];
-  var f = [];
-  for (var i = 0, n = filters.length; i < n; ++i) {
-    streams.push(filters[i].stream);
-    f.push({streamId: filters[i].stream.id, type: filters[i].type});
-  }
-  var parent = this.getFirstCommonParent(_.uniq(streams));
-
-  var vn = new VirtualNode(parent, 'Virtual Node');
-  vn.addFilters(f);
-  if (parent instanceof Pryv.Connection) {
-    console.log('Setting new Virtual node in connection', parent, 'with filters', f);
-  } else if (parent instanceof Pryv.Stream) {
-    console.log('Setting new Virtual node in stream', parent, 'with filters', f);
-    // parent.clientData['browser:virtualnode'] = [{name: 'test aggr', filters: filters}];
-  }
-};
-
-TreeMap.prototype.getFirstCommonParent = function (eventsNodes) {
-
-   /* TODO:
-    * create the node, don't remove the already existing
-    * make sure the update follows at both places
-    */
-
-  // Depth first search for goal, starting from parent
-  var hasChild = function (parent, goal) {
-    var found = false;
-    if (parent.id === goal.id) {
-      found = true;
-    } else if (parent.children.length !== 0) {
-      _.each(parent.children, function (c) {
-        found = found || hasChild(c, goal);
-      });
-    }
-    return found;
-  };
-
-
-  // returns common parent of start and goal
-  var matchChild = function (start, goal) {
-    var found = false;
-    var depth = start;
-    while (found === false) {
-      found = hasChild(depth, goal);
-      if (!found) {
-        if (depth.parent) {
-          depth = depth.parent;
-        } else {
-          return depth.connection;
-        }
-      }
-    }
-    return depth;
-  };
-
-
-  // start contains the common parent of all arguments in the end.
-  var start = eventsNodes[0];
-  for (var i = 1, n = eventsNodes.length; i < n; ++i) {
-    start = matchChild(start, eventsNodes[i]);
-  }
-  return start;
-};
-
-
- /**
-  * Remove a existing virtual node.
-  * @param node the virtual node you want to remove
-  */
-TreeMap.prototype.removeVirtualNode = function (node) {
-  /* TODO:
-   * just remove the indicated node
-   */
-};
-})()
-},{"../model/Messages":7,"../view/events-views/detailed/Controller.js":21,"../view/events-views/draganddrop/Controller.js":23,"../view/sharings/Controller.js":26,"../view/sharings/create/Controller.js":22,"../view/subscribe/Controller.js":24,"./RootNode.js":20,"./VirtualNode.js":25,"pryv":9,"underscore":8}],7:[function(require,module,exports){
+},{"./modal.js":26,"backbone":27,"underscore":8}],6:[function(require,module,exports){
 
 var Messages = module.exports = { };
 
@@ -3437,9 +3483,15 @@ Messages.MonitorsHandler = {
     FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };
-},{"pryv":9}],16:[function(require,module,exports){
+},{"pryv":9}],10:[function(require,module,exports){
+var utility = require('../utility/utility.js');
 
-var system = require('./system/system.js');
+module.exports =  utility.isBrowser() ?
+    require('./Auth-browser.js') : require('./Auth-node.js');
+
+},{"../utility/utility.js":15,"./Auth-browser.js":28,"./Auth-node.js":29}],13:[function(require,module,exports){
+
+var utility = require('./utility/utility');
 var eventTypes = module.exports = { };
 
 // staging cloudfront https://d1kp76srklnnah.cloudfront.net/dist/data-types/event-extras.json
@@ -3455,7 +3507,7 @@ var PATH = '/dist/data-types/';
  * @param callback
  */
 function _getFile(fileName, callback) {
-  system.request({
+  utility.request({
     method : 'GET',
     host : HOSTNAME,
     path : PATH + fileName,
@@ -3525,13 +3577,7 @@ eventTypes.extras = function (eventType) {
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./system/system.js":14}],10:[function(require,module,exports){
-var utility = require('../utility/utility.js');
-
-module.exports =  utility.isBrowser() ?
-    require('./Auth-browser.js') : require('./Auth-node.js');
-
-},{"../utility/utility.js":15,"./Auth-browser.js":27,"./Auth-node.js":28}],29:[function(require,module,exports){
+},{"./utility/utility":15}],30:[function(require,module,exports){
 var apiPathPrivateProfile = '/profile/private';
 var apiPathPublicProfile = '/profile/app';
 
@@ -3555,6 +3601,8 @@ function Profile(connection) {
 Profile.prototype._get = function (path, key, callback) {
 
   function myCallBack(error, result) {
+    console.warn(result);
+    result = result.profile || null;
     if (key !== null && result) {
       result = result[key];
     }
@@ -3590,734 +3638,10 @@ Profile.prototype.setPublic = function (key, callback) {
 
 
 module.exports = Profile;
-},{}],30:[function(require,module,exports){
-var apiPathAccesses = '/accesses';
-
-/**
- * @class Accesses
- * @link http://api.pryv.com/reference.html#methods-accesses
- * @link http://api.pryv.com/reference.html#data-structure-access
- * @param {Connection} connection
- * @constructor
- */
-function Accesses(connection) {
-  this.connection = connection;
-}
-/**
- * @param {Connection~requestCallback} callback
- */
-Accesses.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathAccesses, callback);
-};
-
-Accesses.prototype.create = function (access, callback) {
-  this.connection.request('POST', apiPathAccesses, callback, access);
-};
-
-Accesses.prototype.delete = function (sharingId, callback) {
-  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
-    var error = err;
-    if (result && result.message) {
-      error = result;
-    }
-    callback(error, result);
-  });
-};
-module.exports = Accesses;
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 
 module.exports = {};
-},{}],31:[function(require,module,exports){
-(function(){/* global document, navigator */
-/* jshint -W101*/
-
-/*
- return error, was used only by getURLContent() and  loadURLContentInElementId() but never used outside the lib
- var system = require('../system/system.js');
- */
-
-/**
- * Browser only utils
- */
-var utility = module.exports = {};
-
-/* Regular expressions. */
-
-
-/**
- * Test if hostname is a *.rec.la or pryv.li if yes. it assumes that the client
- * runs on a staging version
- */
-utility.testIfStagingFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return utility.endsWith(location.hostname, 'pryv.li') ||
-         utility.endsWith(location.hostname, 'pryv.in') ||
-         utility.endsWith(location.hostname, 'rec.la');
-};
-
-utility.getUsernameFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  var hostname = location.hostname.split('.'),
-    recIndex = hostname.indexOf('rec'),
-    pryvIndex = hostname.indexOf('pryv');
-  if (recIndex <= 0 && pryvIndex <= 0) {
-    console.log('getUsernameFromUrl:', 'unknown hostname:', hostname);
-    return null;
-  }
-  var usernameIndex = pryvIndex > 0 ? pryvIndex - 1: recIndex - 1;
-  if (hostname[usernameIndex].match(utility.regex.username)) {
-    return hostname[usernameIndex];
-  } else {
-    console.log('getUsernameFromUrl:', 'invalid username:', hostname[usernameIndex]);
-    return null;
-  }
-};
-
-utility.getSharingsFromUrl = function (url) {
-  var username = utility.getUsernameFromUrl(url);
-  if (!username) {
-    return [];
-  }
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  var path = location.hash.split('/'),
-    sharingsIndex = path.indexOf('sharings');
-  if (sharingsIndex !== -1) {
-    return path.splice(sharingsIndex + 1).filter(function (el) { return el.length > 0; });
-  } else {
-    return [];
-  }
-};
-
-utility.getParamsFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  var str = location.search;
-  var objURL = {};
-  str.replace(new RegExp('([^?=&]+)(=([^&]*))?', 'g'), function ($0, $1, $2, $3) {
-    objURL[$1] = $3;
-  });
-  return objURL;
-};
-utility.getPathFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.pathname === '/' ? '' : location.pathname;
-};
-utility.getHostFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.hostname;
-};
-utility.getPortFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.port === '' ? null : location.port;
-};
-utility.isUrlSsl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.protocol === 'https:';
-};
-/**
- *  return true if browser is seen as a mobile or tablet
- *  list grabbed from https://github.com/codefuze/js-mobile-tablet-redirect/blob/master/mobile-redirect.js
- */
-utility.browserIsMobileOrTablet = function () {
-  return (/iphone|ipod|android|blackberry|opera mini|opera mobi|skyfire|maemo|windows phone|palm|iemobile|symbian|symbianos|fennec|ipad|android 3|sch-i800|playbook|tablet|kindle|gt-p1000|sgh-t849|shw-m180s|a510|a511|a100|dell streak|silk/i.test(navigator.userAgent.toLowerCase()));
-};
-
-/**
- * Method to get the preferred language, either from desiredLanguage or from the browser settings
- * @method getPreferredLanguage
- * @param {Array} supportedLanguages an array of supported languages encoded on 2characters
- * @param {String} desiredLanguage (optional) get this language if supported
- */
-utility.getPreferredLanguage = function (supportedLanguages, desiredLanguage) {
-  if (desiredLanguage) {
-    if (supportedLanguages.indexOf(desiredLanguage) >= 0) { return desiredLanguage; }
-  }
-  var lct = null;
-  if (navigator.language) {
-    lct = navigator.language.toLowerCase().substring(0, 2);
-  } else if (navigator.userLanguage) {
-    lct = navigator.userLanguage.toLowerCase().substring(0, 2);
-  } else if (navigator.userAgent.indexOf('[') !== -1) {
-    var start = navigator.userAgent.indexOf('[');
-    var end = navigator.userAgent.indexOf(']');
-    lct = navigator.userAgent.substring(start + 1, end).toLowerCase();
-  }
-  if (desiredLanguage) {
-    if (lct.indexOf(desiredLanguage) >= 0) { return lct; }
-  }
-
-  return supportedLanguages[0];
-};
-
-
-/**
- * //TODO check if it's robust
- * Method to check the browser supports CSS3.
- * @method supportCSS3
- * @return boolean
- */
-utility.supportCSS3 = function ()  {
-  var stub = document.createElement('div'),
-    testProperty = 'textShadow';
-
-  if (testProperty in stub.style) { return true; }
-
-  testProperty = testProperty.replace(/^[a-z]/, function (val) {
-    return val.toUpperCase();
-  });
-
-  return false;
-};
-
-/**
- * Method to load external files like javascript and stylesheet. this version
- * of method only support to file types - js|javascript and css|stylesheet.
- * @method loadExternalFiles
- * @param {String} string filename
- * @param {String} type -- 'js' or 'css'
- */
-utility.loadExternalFiles = function (filename, type)  {
-  var tag = null;
-
-  type = type.toLowerCase();
-
-  if (type === 'js' || type === 'javascript') {
-    tag = document.createElement('script');
-    tag.setAttribute('type', 'text/javascript');
-    tag.setAttribute('src', filename);
-  } else if (type === 'css' || type === 'stylesheet')  {
-    tag = document.createElement('link');
-    tag.setAttribute('rel', 'stylesheet');
-    tag.setAttribute('type', 'text/css');
-    tag.setAttribute('href', filename);
-  }
-
-  if (tag !== null || tag !== undefined) {
-    document.getElementsByTagName('head')[0].appendChild(tag);
-  }
-};
-
-/**
- * Get the content on an URL as a String ,
- * Mainly designed to load HTML ressources
- * @param {String} url
- * @param {Function} callBack  function(error,content,xhr)
- * @return {Object} xhr request
- */
-/*  UNUSED function
-utility.getURLContent = function (url, callback) {
-
-  function onSuccess(result, xhr) {
-    callback(null, result, xhr);
-  }
-
-  function onError(error) {
-    callback(error, null, error.xhr);
-  }
-
-  return system.request({
-    method : 'GET',
-    url : url,
-    parseResult : 'text',
-    success: onSuccess,
-    error: onError
-  });
-};
-*/
-/**
- * Load the content of a URL into a div
- * !! No error will go to the console.
- */
-/*  UNUSED function
-utility.loadURLContentInElementId = function (url, elementId, next) {
-  next = next || function () {};
-  var content = document.getElementById(elementId);
-  utility.getURLContent(url,
-    function (error, result) {
-      content.innerHTML = result;
-      next();
-      if (error) {
-        console.error(error);
-      }
-    }
-  );
-};
-*/
-
-
-
-
-/* jshint ignore:start */
-/*\
- |*|
- |*|  :: cookies.js ::
- |*|
- |*|  A complete cookies reader/writer framework with full unicode support.
- |*|
- |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
- |*|
- |*|  Syntaxes:
- |*|
- |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
- |*|  * docCookies.getItem(name)
- |*|  * docCookies.removeItem(name[, path])
- |*|  * docCookies.hasItem(name)
- |*|  * docCookies.keys()
- |*|
- \*/
-utility.docCookies = {
-  getItem: function (sKey) {
-    if (!sKey || !this.hasItem(sKey)) { return null; }
-    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
-      escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
-  },
-  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
-    var sExpires = "";
-    if (vEnd) {
-      switch (vEnd.constructor) {
-        case Number:
-          sExpires = vEnd === Infinity ?
-            "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
-          break;
-        case String:
-          sExpires = "; expires=" + vEnd;
-          break;
-        case Date:
-          sExpires = "; expires=" + vEnd.toGMTString();
-          break;
-      }
-    }
-    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
-  },
-  removeItem: function (sKey, sPath) {
-    if (!sKey || !this.hasItem(sKey)) { return; }
-    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
-  },
-  hasItem: function (sKey) {
-    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
-  },
-  keys: /* optional method: you can safely remove it! */ function () {
-    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
-    return aKeys;
-  }
-};
-
-/* jshint ignore:end */
-
-
-//----------- DomReady ----------//
-
-
-/*!
- * domready (c) Dustin Diaz 2012 - License MIT
- */
-
-/* jshint ignore:start */
-utility.domReady = function (ready) {
-
-
-  var fns = [], fn, f = false,
-    doc = document,
-    testEl = doc.documentElement,
-    hack = testEl.doScroll,
-    domContentLoaded = 'DOMContentLoaded',
-    addEventListener = 'addEventListener',
-    onreadystatechange = 'onreadystatechange',
-    readyState = 'readyState',
-    loaded = /^loade|c/.test(doc[readyState]);
-
-  function flush(f) {
-    loaded = 1;
-    while (f = fns.shift()) { 
-      f()
-    }
-  }
-
-  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
-    doc.removeEventListener(domContentLoaded, fn, f);
-    flush();
-  }, f);
-
-
-  hack && doc.attachEvent(onreadystatechange, fn = function () {
-    if (/^c/.test(doc[readyState])) {
-      doc.detachEvent(onreadystatechange, fn);
-      flush();
-    }
-  });
-
-  return (ready = hack ?
-    function (fn) {
-      self != top ?
-        loaded ? fn() : fns.push(fn) :
-        function () {
-          console.log("on dom ready 2");
-          try {
-            testEl.doScroll('left')
-          } catch (e) {
-            return setTimeout(function() { ready(fn) }, 50)
-          }
-          fn()
-        }()
-    } :
-    function (fn) {
-      loaded ? fn() : fns.push(fn)
-    })
-}();
-
-/* jshint ignore:end */
-
-
-
-})()
-},{}],32:[function(require,module,exports){
-//file: system node
-
-//TODO align with XHR error
-
-//TODO: sort out the callback convention
-
-/**
- *
- * @param {Object} pack json with
- * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
- * @param {String} pack.host : fully qualified host name
- * @param {Number} pack.port : port to use
- * @param {String} pack.path : the request PATH
- * @param {Object} [pack.headers] : key / value map of headers
- * @param {Object} [pack.params] : the payload -- only with POST/PUT
- * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
- * @param {Function} pack.success : function (result, requestInfos)
- * @param {Function} pack.error : function (error, requestInfos)
- * @param {String} [pack.info] : a text
- * @param {Boolean} [pack.async = true]
- * @param {Number} [pack.expectedStatus] : http result code
- * @param {Boolean} [pack.ssl = true]
- */
-exports.request = function (pack)  {
-  if (pack.payload) {
-    pack.headers['Content-Length'] = pack.payload.length;
-  }
-
-
-  var httpOptions = {
-    host: pack.host,
-    port: pack.port,
-    path: pack.path,
-    method: pack.method,
-    rejectUnauthorized: false,
-    headers : pack.headers
-  };
-
-  var parseResult = pack.parseResult || 'json';
-  var httpMode = pack.ssl ? 'https' : 'http';
-  var http = require(httpMode);
-
-
-
-  var detail = 'Request: ' + httpOptions.method + ' ' +
-    httpMode + '://' + httpOptions.host + ':' + httpOptions.port + '' + httpOptions.path;
-
-
-
-
-  var onError = function (reason) {
-    return pack.error(reason + '\n' + detail, null);
-  };
-
-
-  var req = http.request(httpOptions, function (res) {
-    var bodyarr = [];
-    res.on('data', function (chunk) {  bodyarr.push(chunk); });
-    res.on('end', function () {
-      var requestInfo = {
-        code : res.statusCode,
-        headers : res.headers
-      };
-      var result = null;
-      if (parseResult === 'json') {
-        try {
-          result = JSON.parse(bodyarr.join(''));
-        } catch (error) {
-          return onError('system-node.request failed to parse JSON in response' +
-            bodyarr.join('')
-          );
-        }
-      }
-      return pack.success(result, requestInfo);
-    });
-
-  }).on('error', function (e) {
-      return onError('Error: ' + e.message);
-    });
-
-
-  req.on('socket', function (socket) {
-    socket.setTimeout(5000);
-    socket.on('timeout', function () {
-      req.abort();
-      return pack.error('Timeout');
-    });
-  });
-
-  if (pack.payload) { req.write(pack.payload); }
-  req.end();
-
-  return req;
-};
-
-},{}],33:[function(require,module,exports){
-
-module.exports = {};
-},{}],34:[function(require,module,exports){
-//file: system browser
-
-
-
-/**
- *
- * @param {Object} pack json with
- * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
- * @param {String} pack.host : fully qualified host name
- * @param {Number} pack.port : port to use
- * @param {String} pack.path : the request PATH
- * @param {Object} [pack.headers] : key / value map of headers
- * @param {Object} [pack.params] : the payload -- only with POST/PUT
- * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
- * @param {Function} pack.success : function (result, requestInfos)
- * @param {Function} pack.error : function (error, requestInfos)
- * @param {String} [pack.info] : a text
- * @param {Boolean} [pack.async = true]
- * @param {Number} [pack.expectedStatus] : http result code
- * @param {Boolean} [pack.ssl = true]
- * @param {Boolean} [pack.withoutCredentials = false]
- */
-exports.request = function (pack)  {
-  pack.info = pack.info || '';
-  var parseResult = pack.parseResult || 'json';
-
-  if (!pack.hasOwnProperty('async')) {
-    pack.async = true;
-  }
-
-  // ------------ request TYPE
-  pack.method = pack.method || 'POST';
-  // method override test
-  if (false && pack.method === 'DELETE') {
-    pack.method = 'POST';
-    pack.params =  pack.params || {};
-    pack.params._method = 'DELETE';
-  }
-
-  // ------------- request HEADERS
-
-
-  pack.headers = pack.headers || {};
-
-  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
-
-    if (pack.headers['Content-Type'] === 'multipart/form-data') {
-      delete pack.headers['Content-Type'];
-    } else {
-      pack.headers['Content-Type'] =
-        pack.headers['Content-Type'] || 'application/json; charset=utf-8';
-    }
-
-    //if (pack.method === 'POST') {
-    if (pack.params) {
-      pack.params = JSON.stringify(pack.params);
-    } else {
-      pack.params = pack.payload || {};
-    }
-  }
-
-
-
-  // -------------- error
-  pack.error = pack.error || function (error) {
-    throw new Error(JSON.stringify(error, function (key, value) {
-      if (value === null) { return; }
-      if (value === '') { return; }
-      return value;
-    }, 2));
-  };
-
-  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
-
-  // --------------- request
-  var xhr = _initXHR(),
-    httpMode = pack.ssl ? 'https://' : 'http://',
-    url = httpMode + pack.host + pack.path;
-  xhr.open(pack.method, url, pack.async);
-  xhr.withCredentials = pack.withoutCredentials ? false : true;
-
-
-  xhr.onreadystatechange = function () {
-    detail += ' xhrstatus:' + xhr.statusText;
-    if (xhr.readyState === 0) {
-      pack.error({
-        message: 'pryvXHRCall unsent',
-        detail: detail,
-        id: 'INTERNAL_ERROR',
-        xhr: xhr
-      });
-    } else if (xhr.readyState === 4) {
-      var result = null;
-
-      if (parseResult === 'json') {
-        try { result = JSON.parse(xhr.responseText); } catch (e) {
-          return pack.error({
-            message: 'Data is not JSON',
-            detail: xhr.responseText + '\n' + detail,
-            id: 'RESULT_NOT_JSON',
-            xhr: xhr
-          });
-        }
-      }
-      var requestInfo = {
-        xhr : xhr,
-        code : xhr.status,
-        headers : xhr.getAllResponseHeaders()
-      };
-
-      pack.success(result, requestInfo);
-    }
-  };
-
-  for (var key in pack.headers) {
-    if (pack.headers.hasOwnProperty(key)) {
-      xhr.setRequestHeader(key, pack.headers[key]);
-    }
-  }
-  //--- prepare the params
-  /*var sentParams = null;
-   if (pack.params)  {
-   try {
-   sentParams = JSON.stringify(pack.params);
-   } catch (e) {
-   return pack.error({message: 'Parameters are not JSON', detail: 'params: '+pack.params+'\n
-   '+detail, id: 'INTERNAL_ERROR', error: e}, pack.context);
-   }
-   }
-   */
-  //--- sending the request
-  try {
-    xhr.send(pack.params);
-  } catch (e) {
-    return pack.error({
-      message: 'pryvXHRCall unsent',
-      detail: detail,
-      id: 'INTERNAL_ERROR',
-      error: e,
-      xhr: xhr
-    });
-  }
-  return xhr;
-};
-
-/**
- * Method to initialize XMLHttpRequest.
- * @method _initXHR
- * @access private
- * @return object
- */
-/* jshint -W117 */
-var _initXHR = function () {
-  var XHR = null;
-
-  try { XHR = new XMLHttpRequest(); }
-  catch (e) {
-    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
-    catch (e2) {
-      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
-      catch (e3) {
-        console.log('XMLHttpRequest implementation not found.');
-      }
-      console.log('XMLHttpRequest implementation not found.');
-    }
-    console.log('XMLHttpRequest implementation not found.');
-  }
-  return XHR;
-};
-
-
-
-
-
-
-},{}],18:[function(require,module,exports){
-
-var Backbone = require('backbone');
-
-module.exports = Backbone.View.extend({
-  /* Variables */
-  id: '#modal',
-  $modal: null,
-  /* Methods */
-  render: function () {
-    this.setElement(this.id);
-    this.$el.html(this.template());
-    this.$modal = this.$(this.modalId).modal();
-    this.delegateEvents();
-    return this;
-  },
-  close: function () {
-    this.undelegateEvents();
-    this.$modal.modal('hide');
-  }
-});
-
-
-},{"backbone":19}],20:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
@@ -4405,7 +3729,17 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":36,"./TreeNode":35,"underscore":8}],25:[function(require,module,exports){
+},{"./ConnectionNode":31,"./TreeNode":32,"underscore":8}],33:[function(require,module,exports){
+/**
+ * Common regexps
+ * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
+ */
+module.exports = {
+  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
+  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
+};
+
+},{}],25:[function(require,module,exports){
 var Pryv = require('pryv');
 var _ = require('underscore');
 
@@ -4463,6 +3797,7 @@ VirtualNode.prototype._createIfNotExist = function () {
   } else if (this._node instanceof Pryv.Stream) {
     data = this._node.clientData;
   }
+
   if (!data[KEY]) {
     data[KEY] = [];
   }
@@ -4530,6 +3865,7 @@ Object.defineProperty(VirtualNode.prototype, 'filters', {
   }
 });
 
+
 Object.defineProperty(VirtualNode.prototype, 'name', {
   get: function () {
     return this._name;
@@ -4585,6 +3921,9 @@ VirtualNode.prototype.addFilters = function (filter) {
 };
 
 
+
+
+
 /*
  * Static testing and accessing functions
  */
@@ -4636,7 +3975,466 @@ VirtualNode.nodeHas = function (node) {
   }
 };
 
-},{"pryv":9,"underscore":8}],11:[function(require,module,exports){
+},{"pryv":9,"underscore":8}],26:[function(require,module,exports){
+
+var Backbone = require('backbone');
+
+module.exports = Backbone.View.extend({
+  /* Variables */
+  id: '#modal',
+  $modal: null,
+  /* Methods */
+  render: function () {
+    this.setElement(this.id);
+    this.$el.html(this.template());
+    this.$modal = this.$(this.modalId).modal();
+    this.delegateEvents();
+    return this;
+  },
+  close: function () {
+    this.undelegateEvents();
+    this.$modal.modal('hide');
+  }
+});
+
+
+},{"backbone":27}],34:[function(require,module,exports){
+
+/* Definition of a virtual node attached to a stream as its child
+ *  stream: <streamId>, // the node where it's attached to
+ *  name: <my name>,    // the name of that virtual node
+ *  filters: [          // an array of filter/setting pairs contained in this virtual node
+ *    { filter: f1,
+ *      settings:             // settings of that filter, such as color,
+ *        [{ color: 'green', // style, ... (especially for charts)
+ *        style: 'bar',
+ *         ... }, {}]
+ *    },
+ *    { filter: f2, settings: {...}},
+ *    ...
+ *   ]
+ *   Note:
+ *   The filters are ofa special kind. Each filter concerns exactly one type.
+ *   The settings override the stream/type pair's default one. Numerical data
+ *   would contain style (line, bar, ..), color, transform.
+ */
+
+
+
+var Settings = module.exports = function Setting(stream, type, virtualNode, offset) {
+  this._stream = stream;
+  this._type = type;
+  this._virtualNode = virtualNode;
+
+  this._offset = offset ? offset : 0;
+  this._cnt = offset ? offset : 0;
+
+  this._ptr = null;
+
+  this._createIfNotExist();
+  //this._emptyData();
+};
+
+
+Settings.prototype._createIfNotExist = function () {
+  if (this._virtualNode) {
+    var found = false;
+    for (var i = 0; i < this._virtualNode.filters.length; ++i) {
+      if (this._virtualNode.filters[i].streamId === this._stream.id &&
+        this._virtualNode.filters[i].type === this._type) {
+        if (this._cnt === 0) {
+          found = true;
+          break;
+        } else {
+          this._cnt--;
+        }
+      }
+    }
+    if (found) {
+      if (!this._virtualNode.filters[i].settings) {
+        this._virtualNode.filters[i].settings = {};
+      }
+      this._ptr = this._virtualNode.filters[i].settings;
+    }
+  } else {
+    if (!this._stream.clientData) {
+      this._stream.clientData = {};
+    }
+    if (!this._stream.clientData['pryv-browser:charts']) {
+      this._stream.clientData['pryv-browser:charts'] = {};
+    }
+    if (!this._stream.clientData['pryv-browser:charts'][this._type]) {
+      this._stream.clientData['pryv-browser:charts'][this._type] = {settings: {}};
+    }
+    this._ptr = this._stream.clientData['pryv-browser:charts'][this._type].settings;
+  }
+};
+
+
+Settings.prototype._emptyData = function () {
+  if (!this._virtualNode) {
+    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
+    this._stream.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for has been pushed:', error, result);
+    });
+  }
+};
+
+
+
+Settings.prototype._pushChanges = function () {
+  var changes = null;
+  if (this._virtualNode) {
+    changes = {'browser:virtualnode': this._virtualNode._getDataPointer()};
+    console.log('Pushing these changes in privateProfile', changes);
+    this._stream.connection.profile.setPrivate(changes, function (error, result) {
+      console.log('privateProfile for', 'browser:virtualnode', 'has been pushed:', error, result);
+    });
+  } else {
+    changes = {id: this._stream.id, clientData: this._stream.clientData};
+    console.log('Pushing these changes in clientData', changes);
+    this._stream.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for has been pushed:', error, result);
+    });
+  }
+
+};
+
+
+Settings.prototype.set = function (key, value) {
+  this._ptr[key] = value;
+  this._pushChanges();
+};
+
+Settings.prototype.get = function (key) {
+  return this._ptr[key];
+};
+
+},{}],20:[function(require,module,exports){
+(function(){/* global $ */
+var _ = require('underscore'),
+  Collection = require('./Collection.js'),
+  Model = require('./Model.js'),
+  ListView = require('./ListView.js');
+var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections, target) {
+  this.loggedConnection = loggedConnection;
+  this.collection =  new Collection();
+  this.listView = null;
+  this.$modal = $modal;
+  this.target = target;
+  this.container = '.modal-content';
+  this.addSharings(sharingsConnections);
+};
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).empty().hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
+    if (!this.listView) {
+      this.listView = new ListView({
+        collection: this.collection
+      });
+      this.listView.on('subscription:add', this._createSubscription.bind(this));
+    }
+    this.listView.render();
+  },
+  close: function () {
+    this.listView.close();
+    if (this.collection) {
+      this.collection.reset();
+      this.collection = null;
+    }
+  },
+  addSharings: function (sharings) {
+    if (!Array.isArray(sharings)) {
+      sharings = [sharings];
+    }
+    sharings.forEach(function (sharing) {
+      sharing.url = sharing.id.replace(/\?auth.*$/, '')
+        .replace(/\.in/, '.li')
+        .replace(/\.io/, '.me');
+      sharing.url += '#/sharings/' + sharing.auth;
+      var m = new Model({
+        connection: sharing
+      });
+      this.collection.add(m);
+    }.bind(this));
+  },
+  _createSubscription: function (subscriptions) {
+    var subNumber = subscriptions.length;
+    subscriptions.forEach(function (model) {
+      var connection = model.get('connection');
+      if (connection.name && connection.auth && connection.url) {
+        this.loggedConnection.bookmarks.create(
+          {url: connection.url, accessToken: connection.auth, name: connection.name},
+          function (error) {
+          if (!error) {
+            subNumber -= 1;
+            if (subNumber === 0) {
+              this.close();
+              this.$modal.modal('hide');
+            }
+          } else {
+            model.set('error', error);
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+  }
+});
+})()
+},{"./Collection.js":37,"./ListView.js":35,"./Model.js":36,"underscore":8}],19:[function(require,module,exports){
+(function(){/* global $ */
+var _ = require('underscore'),
+  SharingCollection = require('./SharingCollection.js'),
+  SharingModel = require('./SharingModel.js'),
+  SharingListView = require('./SharingListView.js'),
+  BookmarkCollection = require('./BookmarkCollection.js'),
+  BookmarkModel = require('./BookmarkModel.js'),
+  BookmarkListView = require('./BookmarkListView.js'),
+  Pryv = require('pryv');
+var Controller = module.exports = function ($modal, connection, target) {
+  this.sharings = {};
+  this.connection = connection;
+  this.sharingCollection =  new SharingCollection();
+  this.sharingListView = null;
+  this.bookmarkCollection =  new BookmarkCollection();
+  this.bookmarkListView = null;
+  this.$modal = $modal;
+  this.target = target;
+  $('.modal-content').empty();
+  $('.modal-content').prepend('<div class="modal-header">  ' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+    '&times;</button> ' +
+    '<h4 class="modal-title" id="myModalLabel">Slices</h4>' +
+    '<div class="modal-close"></div> ' +
+    '</div><div id="modal-content"><div id="creation-content">' +
+    '<div class="sharings container"></div></div>' +
+    '<div id="creation-footer" class="col-md-12">' +
+    '<button id="ok" class="btn btn-pryv-turquoise" ' +
+    'data-dismiss="modal">Ok</button>' +
+    '</div></div>');
+  this.container = '.sharings';
+
+};
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    $('.modal-content').hide();
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
+    if (!this.sharingListView) {
+      this.sharingListView = new SharingListView({
+        collection: this.sharingCollection
+      });
+    }
+    if (!this.bookmarkListView) {
+      this.bookmarkListView = new BookmarkListView({
+        collection: this.bookmarkCollection
+      });
+      this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
+      this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
+      this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
+      this.sharingListView.on('itemview:sharing:update', this._onUpdateSharingClick.bind(this));
+    }
+    this.sharingListView.render();
+    this.bookmarkListView.render();
+    this.connection.accesses.get(function (error, result) {
+      if (error) {
+        console.error('GET ACCESSES:', error);
+      } else {
+        this.addSharings(result, this.connection);
+      }
+    }.bind(this));
+    this.connection.bookmarks.get(function (error, result) {
+      if (error) {
+        console.error('GET ACCESSES:', error);
+      } else {
+        this.addBookmarks(result);
+      }
+    }.bind(this));
+  },
+  close: function () {
+    this.sharingListView.close();
+    this.sharingCollection.reset();
+    $(this.container).remove();
+    $('.modal-content').empty();
+    this.sharingCollection = null;
+    this.sharings = {};
+  },
+  addSharings: function (sharings, connection) {
+    if (!Array.isArray(sharings)) {
+      sharings = [sharings];
+    }
+    sharings.forEach(function (sharing) {
+      if (sharing.type === 'shared') {
+        var url = connection.id.replace(/\?auth.*$/, '');
+        url = url.replace(/\.in/, '.li');
+        url = url.replace(/\.io/, '.me');
+        url += '#/sharings/' + sharing.token;
+        sharing.url = url;
+        var m = new SharingModel({
+          sharing: sharing
+        });
+        this.sharingCollection.add(m);
+      }
+    }.bind(this));
+  },
+  addBookmarks: function (bookmarks) {
+    console.log('addBookmarks', bookmarks);
+    if (!Array.isArray(bookmarks)) {
+      bookmarks = [bookmarks];
+    }
+    bookmarks.forEach(function (bookmark) {
+      var url = bookmark.settings.url;
+      url = url.replace(/\.in/, '.li');
+      url = url.replace(/\.io/, '.me');
+      bookmark.settings.url = url;
+      var m = new BookmarkModel({
+        bookmark: bookmark
+      });
+      this.bookmarkCollection.add(m);
+    }.bind(this));
+  },
+  _createBookmark: function (url, auth, name) {
+    if (url && auth && name) {
+      var conn = new Pryv.Connection({url: url, auth: auth});
+      conn.accessInfo(function (error) {
+        if (!error) {
+          console.log('Bookmark exist!');
+          this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
+          function (error, result) {
+            if (!error && result) {
+              this.addBookmarks(result);
+            }
+            if (error) {
+              console.error('Bookmarks creation error:', error);
+            }
+            this.bookmarkListView.endAddBookmark(error);
+          }.bind(this));
+        } else {
+          this.bookmarkListView.endAddBookmark(error);
+          console.warn('Bookmark dont exist', url, auth);
+        }
+      }.bind(this));
+    }
+  },
+  _onDeleteBookmarkClick: function (e, bookmarkModel) {
+    this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
+    function (error) {
+      if (!error) {
+        this.bookmarkCollection.remove(bookmarkModel);
+      } else {
+        console.warn(error);
+      }
+    }.bind(this));
+  },
+  _onDeleteSharingClick: function (e, sharingModel) {
+    this.connection.accesses.delete(sharingModel.get('sharing').id,
+    function (error) {
+      if (!error) {
+        this.sharingCollection.remove(sharingModel);
+      } else {
+        console.warn(error);
+      }
+    }.bind(this));
+  },
+  _onUpdateSharingClick: function (e, view) {
+    this.connection.accesses.update(view.model.get('sharing'), view.endUpdateSharing.bind(view));
+  }
+});
+})()
+},{"./BookmarkCollection.js":41,"./BookmarkListView.js":42,"./BookmarkModel.js":39,"./SharingCollection.js":38,"./SharingListView.js":40,"./SharingModel.js":43,"pryv":9,"underscore":8}],21:[function(require,module,exports){
+(function(){/* global $ */
+var _ = require('underscore'),
+  View = require('./View.js'),
+  Model = require('./EventModel.js');
+
+var Controller = module.exports = function ($modal, connection, focusedStream, target) {
+  this.connection = connection;
+  this.focusedStream = focusedStream;
+  this.$modal = $modal;
+  this.target = target;
+  this.container = '.modal-content';
+  this.view = null;
+  this.newEvent = null;
+};
+_.extend(Controller.prototype, {
+  show: function () {
+    this.newEvent = new Model({event: this._defaultEvent()});
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).empty().hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
+    $(this.container).append('<div class="modal-header">  ' +
+      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+      '&times;</button> ' +
+      '<h4 class="modal-title" id="myModalLabel">Add Event</h4>' +
+      '<div class="modal-close"></div> ' +
+      '</div>' +
+      '<div id="modal-content"></div>');
+    this.view = new View({model: this.newEvent});
+    this.view.connection = this.connection;
+    this.view.focusedStream = this.focusedStream;
+    this.view.render();
+    this.view.on('close', this.close.bind(this));
+
+  },
+  close: function () {
+    if (this.view) {
+      this.view.close();
+      this.view = null;
+    }
+    this.newEvent = null;
+    $(this.container).empty();
+    this.$modal.modal('hide');
+  },
+  _defaultEvent: function () {
+    var result = {};
+    result.time = new Date().getTime() / 1000;
+    result.tags = [];
+    result.content = null;
+    result.desctiption = '';
+    return result;
+  }
+});
+})()
+},{"./EventModel.js":44,"./View.js":45,"underscore":8}],24:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+/* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
+module.exports = Marionette.ItemView.extend({
+  template: '#onboardingView',
+  container: '#tree',
+  connection: null,
+  onRender: function () {
+    $(this.container).html(this.$el);
+    $('#onboarding-form').submit(function (e) {
+      e.preventDefault();
+      $('#onboarding-form .fa-spin').show();
+      var streamName = $('#onboarding-input-name').val().trim();
+      if (streamName && streamName.length > 0 && this.connection) {
+        this.connection.streams.create({name: streamName}, function (error) {
+          $('#onboarding-form .fa-spin').hide();
+          if (!error) {
+            this.trigger('done');
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+  }
+});
+})()
+},{"backbone.marionette":46}],11:[function(require,module,exports){
 
 var _ = require('underscore');
 
@@ -4693,6 +4491,14 @@ Event.prototype.removeAttachment = function (fileName, callback) {
 Event.prototype.trash = function (callback) {
   this.connection.events.trash(this, callback);
 };
+Event.prototype.getPicturePreview = function (width, height) {
+  width = width ? '&w=' + width : '';
+  height = height ? '&h=' + height : '';
+  var url = this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
+    this.id + '?auth=' + this.connection.auth + width + height;
+  return url;
+};
 Object.defineProperty(Event.prototype, 'timeLT', {
   get: function () {
     return this.connection.getLocalTime(this.time);
@@ -4725,15 +4531,6 @@ Object.defineProperty(Event.prototype, 'url', {
   set: function () { throw new Error('Event.url property is read only'); }
 });
 
-Object.defineProperty(Event.prototype, 'attachmentsUrl', {
-  get: function () {
-    var url = this.connection.settings.ssl ? 'https://' : 'http://';
-    url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
-      this.id + '.jpg?auth=' + this.connection.auth;
-    return url;
-  },
-  set: function () { throw new Error('Event.attachmentsUrl property is read only'); }
-});
 
 /**
  * An newly created Event (no id, not synched with API)
@@ -4744,7 +4541,78 @@ Object.defineProperty(Event.prototype, 'attachmentsUrl', {
  * @property {number} [time]
  */
 
-},{"underscore":37}],13:[function(require,module,exports){
+},{"underscore":47}],12:[function(require,module,exports){
+
+var _ = require('underscore');
+
+var Stream = module.exports = function Stream(connection, data) {
+  this.connection = connection;
+
+  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this.parentId = null;
+  this._children = [];
+  _.extend(this, data);
+};
+
+/**
+ * Set or erase clientData properties
+ * @example // set x=25 and delete y
+ * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValueMap
+ * @param {Connection~requestCallback} callback
+ */
+Stream.prototype.setClientData = function (keyValueMap, callback) {
+  return this.connection.streams.setClientData(this, keyValueMap, callback);
+};
+
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (! this.parentId) { return null; }
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      var child = this.connection.datastore.getStreamById(childrenId);
+      children.push(child);
+    }.bind(this));
+    return children;
+  }
+});
+
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    if (! this.parentId || this.parent === null) { return []; }
+    var result = this.parent.ancestors;
+    result.push(this.parent);
+    return result;
+  },
+  set: function () { throw new Error('Stream.ancestors property is read only'); }
+});
+
+
+
+
+
+
+
+},{"underscore":47}],14:[function(require,module,exports){
 var _ = require('underscore'),
     SignalEmitter = require('./utility/SignalEmitter.js');
 
@@ -4891,7 +4759,7 @@ Filter.prototype.compareToFilterData = function (filterDataTest) {
 /**
  * Create a clone of this filter and changes some properties
  * @param properties
- * @returns Pryv.Filter
+ * @returns pryv.Filter
  */
 Filter.prototype.cloneWithDelta = function (properties) {
   var newProps = _.clone(this._settings);
@@ -5070,88 +4938,16 @@ Filter.prototype.focusedOnSingleStream = function () {
  */
 
 
-},{"./utility/SignalEmitter.js":38,"underscore":37}],17:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var Stream = module.exports = function Stream(connection, data) {
-  this.connection = connection;
-
-  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
-  /** those are only used when no datastore **/
-  this._parent = null;
-  this._children = [];
-  _.extend(this, data);
-};
-
-/**
- * Set or erase clientData properties
- * @example // set x=25 and delete y
- * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValueMap
- * @param {Connection~requestCallback} callback
- */
-Stream.prototype.setClientData = function (keyValueMap, callback) {
-  return this.connection.streams.setClientData(this, keyValueMap, callback);
-};
-
-Object.defineProperty(Stream.prototype, 'parent', {
-  get: function () {
-
-    if (! this.parentId) { return null; }
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._parent;
-    }
-
-    return this.connection.datastore.getStreamById(this.parentId);
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._children;
-    }
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      var child = this.connection.datastore.getStreamById(childrenId);
-      children.push(child);
-    }.bind(this));
-    return children;
-  }
-});
-
-// TODO write test
-Object.defineProperty(Stream.prototype, 'ancestors', {
-  get: function () {
-    if (! this.parentId || this.parent === null) { return []; }
-    var result = this.parent.ancestors;
-    result.push(this.parent);
-    return result;
-  },
-  set: function () { throw new Error('Stream.ancestors property is read only'); }
-});
-
-
-
-
-
-
-
-},{"underscore":37}],12:[function(require,module,exports){
+},{"./utility/SignalEmitter.js":48,"underscore":47}],16:[function(require,module,exports){
 var _ = require('underscore'),
-  system = require('./system/system.js'),
-  utility = require('./utility/utility.js'),
-  ConnectionEvents = require('./connection/ConnectionEvents.js'),
-  ConnectionStreams = require('./connection/ConnectionStreams.js'),
-  ConnectionProfile = require('./connection/ConnectionProfile.js'),
-  ConnectionBookmarks = require('./connection/ConnectionBookmarks.js'),
-  ConnectionAccesses = require('./connection/ConnectionAccesses.js'),
-  ConnectionMonitors = require('./connection/ConnectionMonitors.js'),
-  Datastore = require('./Datastore.js');
+    utility = require('./utility/utility.js'),
+    ConnectionEvents = require('./connection/ConnectionEvents.js'),
+    ConnectionStreams = require('./connection/ConnectionStreams.js'),
+    ConnectionProfile = require('./connection/ConnectionProfile.js'),
+    ConnectionBookmarks = require('./connection/ConnectionBookmarks.js'),
+    ConnectionAccesses = require('./connection/ConnectionAccesses.js'),
+    ConnectionMonitors = require('./connection/ConnectionMonitors.js'),
+    Datastore = require('./Datastore.js');
 
 /**
  * @class Connection
@@ -5161,7 +4957,7 @@ var _ = require('underscore'),
  *
  * @example
  * // create a connection for the user 'perkikiki' with the token 'TTZycvBTiq'
- * var conn = new Pryv.Connection('perkikiki', 'TTZycvBTiq');
+ * var conn = new pryv.Connection('perkikiki', 'TTZycvBTiq');
  *
  * @constructor
  * @this {Connection}
@@ -5288,10 +5084,7 @@ Connection.prototype.accessInfo = function (callback) {
   if (this._accessInfo) { return this._accessInfo; }
   var url = '/access-info';
   this.request('GET', url, function (error, result) {
-    if (result && result.id) {
-      error = result;
-    }
-    if (! error && !result.message) {
+    if (! error) {
       this._accessInfo = result;
     }
     if (typeof(callback) === 'function') {
@@ -5369,13 +5162,14 @@ Connection.prototype.monitor = function (filter) {
  * @param {Connection~requestCallback} callback
  * @param {Object} jsonData - data to POST or PUT
  */
-Connection.prototype.request = function (method, path, callback, jsonData, isFile) {
+Connection.prototype.request = function (method, path, callback, jsonData, isFile,
+                                         progressCallback) {
   if (! callback || ! _.isFunction(callback)) {
     throw new Error('request\'s callback must be a function');
   }
   var headers =  { 'authorization': this.auth };
   var withoutCredentials = false;
-  var payload = null;
+  var payload = JSON.stringify({});
   if (jsonData && !isFile) {
     payload = JSON.stringify(jsonData);
     headers['Content-Type'] = 'application/json; charset=utf-8';
@@ -5387,7 +5181,7 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
     withoutCredentials = true;
   }
 
-  var request = system.request({
+  var request = utility.request({
     method : method,
     host : this._getDomain(),
     port : this.settings.port,
@@ -5395,6 +5189,7 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
     path : this.settings.extraPath + path,
     headers : headers,
     payload : payload,
+    progressCallback: progressCallback,
     //TODO: decide what callback convention to use (Node or jQuery)
     success : onSuccess.bind(this),
     error : onError.bind(this),
@@ -5424,6 +5219,7 @@ Connection.prototype.request = function (method, path, callback, jsonData, isFil
   }
 
   function onError(error /*, requestInfo*/) {
+    console.log('ONERROR', arguments);
     callback(error, null);
   }
   return request;
@@ -5468,8 +5264,8 @@ Object.defineProperty(Connection.prototype, 'displayId', {
 });
 
 /**
- * @property {string} Connection.serialId a unique id for this instance of {Pryv}. This can be
- * also see as a **clientSideId**
+ * @property {String} Connection.serialId A locally-unique id for the connection; can also be
+ *                                        used as a client-side id
  */
 Object.defineProperty(Connection.prototype, 'serialId', {
   get: function () { return 'C' + this._serialId; }
@@ -5493,205 +5289,234 @@ Object.defineProperty(Connection.prototype, 'serialId', {
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./Datastore.js":40,"./connection/ConnectionAccesses.js":30,"./connection/ConnectionBookmarks.js":41,"./connection/ConnectionEvents.js":39,"./connection/ConnectionMonitors.js":43,"./connection/ConnectionProfile.js":29,"./connection/ConnectionStreams.js":42,"./system/system.js":14,"./utility/utility.js":15,"underscore":37}],26:[function(require,module,exports){
-(function(){/* global $ */
-var _ = require('underscore'),
-  SharingCollection = require('./SharingCollection.js'),
-  SharingModel = require('./SharingModel.js'),
-  SharingListView = require('./SharingListView.js'),
-  BookmarkCollection = require('./BookmarkCollection.js'),
-  BookmarkModel = require('./BookmarkModel.js'),
-  BookmarkListView = require('./BookmarkListView.js'),
-  Pryv = require('pryv');
-var Controller = module.exports = function ($modal, connection) {
-  this.sharings = {};
-  this.connection = connection;
-  this.sharingCollection =  new SharingCollection();
-  this.sharingListView = null;
-  this.bookmarkCollection =  new BookmarkCollection();
-  this.bookmarkListView = null;
-  this.$modal = $modal;
-  $('.modal-content').append('<div class="sharings"></div>');
-  this.container = '.sharings';
+},{"./Datastore.js":52,"./connection/ConnectionAccesses.js":51,"./connection/ConnectionBookmarks.js":53,"./connection/ConnectionEvents.js":50,"./connection/ConnectionMonitors.js":54,"./connection/ConnectionProfile.js":30,"./connection/ConnectionStreams.js":49,"./utility/utility.js":15,"underscore":47}],55:[function(require,module,exports){
+(function(){/* global document, navigator */
+/* jshint -W101*/
 
+/**
+ * Browser-only utils
+ */
+var utility = module.exports = {};
+
+
+/**
+ * Test if hostname is a *.rec.la or pryv.li if yes. it assumes that the client
+ * runs on a staging version
+ */
+utility.testIfStagingFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return utility.endsWith(location.hostname, 'pryv.li') ||
+         utility.endsWith(location.hostname, 'pryv.in') ||
+         utility.endsWith(location.hostname, 'rec.la');
 };
 
-_.extend(Controller.prototype, {
-  show: function () {
-    this.$modal.modal();
-    if (!this.sharingListView) {
-      this.sharingListView = new SharingListView({
-        collection: this.sharingCollection
-      });
-    }
-    if (!this.bookmarkListView) {
-      this.bookmarkListView = new BookmarkListView({
-        collection: this.bookmarkCollection
-      });
-      this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
-      this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
-      this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
-    }
-    this.sharingListView.render();
-    this.bookmarkListView.render();
-    this.connection.accesses.get(function (error, result) {
-      if (error) {
-        console.error('GET ACCESSES:', error);
-      } else {
-        this.addSharings(result, this.connection);
-      }
-    }.bind(this));
-    this.connection.bookmarks.get(function (error, result) {
-      if (error) {
-        console.error('GET ACCESSES:', error);
-      } else {
-        this.addBookmarks(result);
-      }
-    }.bind(this));
-  },
-  close: function () {
-    this.sharingListView.close();
-    this.sharingCollection.reset();
-    $(this.container).remove();
-    this.sharingCollection = null;
-    this.sharings = {};
-  },
-  addSharings: function (sharings, connection) {
-    if (!Array.isArray(sharings)) {
-      sharings = [sharings];
-    }
-    sharings.forEach(function (sharing) {
-      if (sharing.type === 'shared') {
-        var url = connection.id.replace(/\?auth.*$/, '');
-        url += '#/sharings/' + sharing.token;
-        sharing.url = url;
-        var m = new SharingModel({
-          sharing: sharing
-        });
-        this.sharingCollection.add(m);
-      }
-    }.bind(this));
-  },
-  addBookmarks: function (bookmarks) {
-    console.log('addBookmarks', bookmarks);
-    if (!Array.isArray(bookmarks)) {
-      bookmarks = [bookmarks];
-    }
-    bookmarks.forEach(function (bookmark) {
-      var m = new BookmarkModel({
-        bookmark: bookmark
-      });
-      this.bookmarkCollection.add(m);
-    }.bind(this));
-  },
-  _createBookmark: function (url, auth, name) {
-    if (url && auth && name) {
-      var conn = new Pryv.Connection({url: url, auth: auth});
-      conn.accessInfo(function (error) {
-        if (!error) {
-          console.log('Bookmark exist!');
-          this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
-          function (error, result) {
-            if (!error && result) {
-              this.addBookmarks(result);
-            }
-            if (error) {
-              console.error('Bookmarks creation error:', error);
-            }
-            this.bookmarkListView.endAddBookmark(error);
-          }.bind(this));
-        } else {
-          this.bookmarkListView.endAddBookmark(error);
-          console.warn('Bookmark dont exist', url, auth);
-        }
-      }.bind(this));
-    }
-  },
-  _onDeleteBookmarkClick: function (e, bookmarkModel) {
-    this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
-    function (error) {
-      if (!error) {
-        this.bookmarkCollection.remove(bookmarkModel);
-      }
-    }.bind(this));
-  },
-  _onDeleteSharingClick: function (e, sharingModel) {
-    this.connection.accesses.delete(sharingModel.get('sharing').token,
-    function (error) {
-      if (!error) {
-        this.sharingCollection.remove(sharingModel);
-      }
-    }.bind(this));
+utility.getUsernameFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
   }
-});
+  var hostname = location.hostname.split('.'),
+    recIndex = hostname.indexOf('rec'),
+    pryvIndex = hostname.indexOf('pryv');
+  if (recIndex <= 0 && pryvIndex <= 0) {
+    console.log('getUsernameFromUrl:', 'unknown hostname:', hostname);
+    return null;
+  }
+  var usernameIndex = pryvIndex > 0 ? pryvIndex - 1: recIndex - 1;
+  if (hostname[usernameIndex].match(utility.regex.username)) {
+    return hostname[usernameIndex];
+  } else {
+    console.log('getUsernameFromUrl:', 'invalid username:', hostname[usernameIndex]);
+    return null;
+  }
+};
+
+utility.getSharingsFromUrl = function (url) {
+  var username = utility.getUsernameFromUrl(url);
+  if (!username) {
+    return [];
+  }
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  var path = location.hash.split('/'),
+    sharingsIndex = path.indexOf('sharings');
+  if (sharingsIndex !== -1) {
+    return path.splice(sharingsIndex + 1).filter(function (el) { return el.length > 0; });
+  } else {
+    return [];
+  }
+};
+
+utility.getParamsFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  var str = location.search;
+  var objURL = {};
+  str.replace(new RegExp('([^?=&]+)(=([^&]*))?', 'g'), function ($0, $1, $2, $3) {
+    objURL[$1] = $3;
+  });
+  return objURL;
+};
+utility.getPathFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.pathname === '/' ? '' : location.pathname;
+};
+utility.getHostFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.hostname;
+};
+utility.getPortFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.port === '' ? null : location.port;
+};
+utility.isUrlSsl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.protocol === 'https:';
+};
+
+/**
+ *  return true if browser is seen as a mobile or tablet
+ *  list grabbed from https://github.com/codefuze/js-mobile-tablet-redirect/blob/master/mobile-redirect.js
+ */
+utility.browserIsMobileOrTablet = function () {
+  return (/iphone|ipod|android|blackberry|opera mini|opera mobi|skyfire|maemo|windows phone|palm|iemobile|symbian|symbianos|fennec|ipad|android 3|sch-i800|playbook|tablet|kindle|gt-p1000|sgh-t849|shw-m180s|a510|a511|a100|dell streak|silk/i.test(navigator.userAgent.toLowerCase()));
+};
+
+/**
+ * Method to get the preferred language, either from desiredLanguage or from the browser settings
+ * @method getPreferredLanguage
+ * @param {Array} supportedLanguages an array of supported languages encoded on 2characters
+ * @param {String} desiredLanguage (optional) get this language if supported
+ */
+utility.getPreferredLanguage = function (supportedLanguages, desiredLanguage) {
+  if (desiredLanguage) {
+    if (supportedLanguages.indexOf(desiredLanguage) >= 0) { return desiredLanguage; }
+  }
+  var lct = null;
+  if (navigator.language) {
+    lct = navigator.language.toLowerCase().substring(0, 2);
+  } else if (navigator.userLanguage) {
+    lct = navigator.userLanguage.toLowerCase().substring(0, 2);
+  } else if (navigator.userAgent.indexOf('[') !== -1) {
+    var start = navigator.userAgent.indexOf('[');
+    var end = navigator.userAgent.indexOf(']');
+    lct = navigator.userAgent.substring(start + 1, end).toLowerCase();
+  }
+  if (desiredLanguage) {
+    if (lct.indexOf(desiredLanguage) >= 0) { return lct; }
+  }
+
+  return supportedLanguages[0];
+};
+
+
+/**
+ * //TODO check if it's robust
+ * Method to check the browser supports CSS3.
+ * @method supportCSS3
+ * @return boolean
+ */
+utility.supportCSS3 = function ()  {
+  var stub = document.createElement('div'),
+    testProperty = 'textShadow';
+
+  if (testProperty in stub.style) { return true; }
+
+  testProperty = testProperty.replace(/^[a-z]/, function (val) {
+    return val.toUpperCase();
+  });
+
+  return false;
+};
+
+/**
+ * Method to load external files like javascript and stylesheet. this version
+ * of method only support to file types - js|javascript and css|stylesheet.
+ *
+ * @method loadExternalFiles
+ * @param {String} filename
+ * @param {String} type 'js' or 'css'
+ */
+utility.loadExternalFiles = function (filename, type)  {
+  var tag = null;
+
+  type = type.toLowerCase();
+
+  if (type === 'js' || type === 'javascript') {
+    tag = document.createElement('script');
+    tag.setAttribute('type', 'text/javascript');
+    tag.setAttribute('src', filename);
+  } else if (type === 'css' || type === 'stylesheet')  {
+    tag = document.createElement('link');
+    tag.setAttribute('rel', 'stylesheet');
+    tag.setAttribute('type', 'text/css');
+    tag.setAttribute('href', filename);
+  }
+
+  if (tag !== null || tag !== undefined) {
+    document.getElementsByTagName('head')[0].appendChild(tag);
+  }
+};
+
+utility.docCookies = require('./docCookies');
+
+utility.domReady = require('./domReady');
+
+utility.request = require('./request-browser');
+
 })()
-},{"./BookmarkCollection.js":46,"./BookmarkListView.js":49,"./BookmarkModel.js":48,"./SharingCollection.js":44,"./SharingListView.js":47,"./SharingModel.js":45,"pryv":9,"underscore":8}],24:[function(require,module,exports){
+},{"./docCookies":56,"./domReady":57,"./request-browser":58}],59:[function(require,module,exports){
+/**
+ * Browser-only utils
+ */
+var utility = module.exports = {};
 
-var _ = require('underscore'),
-  Collection = require('./Collection.js'),
-  Model = require('./Model.js'),
-  ListView = require('./ListView.js');
-var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections) {
-  this.loggedConnection = loggedConnection;
-  this.collection =  new Collection();
-  this.listView = null;
-  this.$modal = $modal;
-  this.container = '.modal-content';
-  this.addSharings(sharingsConnections);
-};
+utility.request = require('./request-node');
 
-_.extend(Controller.prototype, {
-  show: function () {
-    this.$modal.modal();
-    if (!this.listView) {
-      this.listView = new ListView({
-        collection: this.collection
-      });
-      this.listView.on('subscription:add', this._createSubscription.bind(this));
-    }
-    this.listView.render();
-  },
-  close: function () {
-    this.listView.close();
-    if (this.collection) {
-      this.collection.reset();
-      this.collection = null;
-    }
-  },
-  addSharings: function (sharings) {
-    if (!Array.isArray(sharings)) {
-      sharings = [sharings];
-    }
-    sharings.forEach(function (sharing) {
-      var m = new Model({
-        connection: sharing
-      });
-      this.collection.add(m);
-    }.bind(this));
-  },
-  _createSubscription: function (subscriptions) {
-    var subNumber = subscriptions.length;
-    subscriptions.forEach(function (model) {
-      var connection = model.get('connection');
-      if (connection.name && connection.auth && connection.id) {
-        this.loggedConnection.bookmarks.create(
-          {url: connection.id, accessToken: connection.auth, name: connection.name},
-          function (error) {
-          if (!error) {
-            subNumber -= 1;
-            if (subNumber === 0) {
-              this.close();
-              this.$modal.modal('hide');
-            }
-          } else {
-            model.set('error', error);
-          }
-        }.bind(this));
-      }
-    }.bind(this));
-  }
-});
-},{"./Collection.js":51,"./ListView.js":52,"./Model.js":50,"underscore":8}],37:[function(require,module,exports){
+},{"./request-node":60}],47:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -6970,7 +6795,381 @@ _.extend(Controller.prototype, {
 }).call(this);
 
 })()
-},{}],19:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
+/**
+ *
+ * @param {Object} pack json with
+ * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
+ * @param {String} pack.host : fully qualified host name
+ * @param {Number} pack.port : port to use
+ * @param {String} pack.path : the request PATH
+ * @param {Object} [pack.headers] : key / value map of headers
+ * @param {Object} [pack.params] : the payload -- only with POST/PUT
+ * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
+ * @param {Function} pack.success : function (result, requestInfos)
+ * @param {Function} pack.error : function (error, requestInfos)
+ * @param {String} [pack.info] : a text
+ * @param {Boolean} [pack.async = true]
+ * @param {Number} [pack.expectedStatus] : http result code
+ * @param {Boolean} [pack.ssl = true]
+ * @param {Boolean} [pack.withoutCredentials = false]
+ */
+module.exports = function (pack)  {
+  pack.info = pack.info || '';
+  var parseResult = pack.parseResult || 'json';
+
+  if (!pack.hasOwnProperty('async')) {
+    pack.async = true;
+  }
+
+  // ------------ request TYPE
+  pack.method = pack.method || 'POST';
+  // method override test
+  if (false && pack.method === 'DELETE') {
+    pack.method = 'POST';
+    pack.params =  pack.params || {};
+    pack.params._method = 'DELETE';
+  }
+
+  // ------------- request HEADERS
+
+
+  pack.headers = pack.headers || {};
+
+  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
+
+    if (pack.headers['Content-Type'] === 'multipart/form-data') {
+      delete pack.headers['Content-Type'];
+    } else {
+      pack.headers['Content-Type'] =
+          pack.headers['Content-Type'] || 'application/json; charset=utf-8';
+    }
+
+    //if (pack.method === 'POST') {
+    if (pack.params) {
+      pack.params = JSON.stringify(pack.params);
+    } else {
+      pack.params = pack.payload || {};
+    }
+  }
+
+
+
+  // -------------- error
+  pack.error = pack.error || function (error) {
+    throw new Error(JSON.stringify(error, function (key, value) {
+      if (value === null) { return; }
+      if (value === '') { return; }
+      return value;
+    }, 2));
+  };
+
+  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
+
+  // --------------- request
+  var xhr = _initXHR(),
+      httpMode = pack.ssl ? 'https://' : 'http://',
+      url = httpMode + pack.host + pack.path;
+  xhr.open(pack.method, url, pack.async);
+  xhr.withCredentials = pack.withoutCredentials ? false : true;
+
+
+  xhr.onreadystatechange = function () {
+    detail += ' xhrstatus:' + xhr.statusText;
+    if (xhr.readyState === 0) {
+      pack.error({
+        message: 'pryvXHRCall unsent',
+        detail: detail,
+        id: 'INTERNAL_ERROR',
+        xhr: xhr
+      });
+    } else if (xhr.readyState === 4) {
+      var result = null;
+
+      if (parseResult === 'json') {
+        var response = xhr.responseText;
+        response = response.trim() === '' ? '{}' : response;
+        try { result = JSON.parse(response); } catch (e) {
+          return pack.error({
+            message: 'Data is not JSON',
+            detail: xhr.responseText + '\n' + detail,
+            id: 'RESULT_NOT_JSON',
+            xhr: xhr
+          });
+        }
+      }
+      var requestInfo = {
+        xhr : xhr,
+        code : xhr.status,
+        headers : xhr.getAllResponseHeaders()
+      };
+
+      pack.success(result, requestInfo);
+    }
+  };
+  if (pack.progressCallback && typeof(pack.progressCallback) === 'function') {
+    xhr.upload.addEventListener('progress', function (e) {
+      return pack.progressCallback(e);
+    }, false);
+  }
+  for (var key in pack.headers) {
+    if (pack.headers.hasOwnProperty(key)) {
+      xhr.setRequestHeader(key, pack.headers[key]);
+    }
+  }
+
+  //--- sending the request
+  try {
+    xhr.send(pack.params);
+  } catch (e) {
+    return pack.error({
+      message: 'pryvXHRCall unsent',
+      detail: detail,
+      id: 'INTERNAL_ERROR',
+      error: e,
+      xhr: xhr
+    });
+  }
+  return xhr;
+};
+
+/**
+ * Method to initialize XMLHttpRequest.
+ * @method _initXHR
+ * @access private
+ * @return object
+ */
+/* jshint -W117 */
+var _initXHR = function () {
+  var XHR = null;
+
+  try { XHR = new XMLHttpRequest(); }
+  catch (e) {
+    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
+    catch (e2) {
+      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
+      catch (e3) {
+        console.log('XMLHttpRequest implementation not found.');
+      }
+      console.log('XMLHttpRequest implementation not found.');
+    }
+    console.log('XMLHttpRequest implementation not found.');
+  }
+  return XHR;
+};
+
+},{}],57:[function(require,module,exports){
+/* jshint ignore:start */
+
+/*!
+ * domready (c) Dustin Diaz 2012 - License MIT
+ */
+module.exports = function (ready) {
+
+
+  var fns = [], fn, f = false,
+      doc = document,
+      testEl = doc.documentElement,
+      hack = testEl.doScroll,
+      domContentLoaded = 'DOMContentLoaded',
+      addEventListener = 'addEventListener',
+      onreadystatechange = 'onreadystatechange',
+      readyState = 'readyState',
+      loaded = /^loade|c/.test(doc[readyState]);
+
+  function flush(f) {
+    loaded = 1;
+    while (f = fns.shift()) {
+      f()
+    }
+  }
+
+  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
+    doc.removeEventListener(domContentLoaded, fn, f);
+    flush();
+  }, f);
+
+
+  hack && doc.attachEvent(onreadystatechange, fn = function () {
+    if (/^c/.test(doc[readyState])) {
+      doc.detachEvent(onreadystatechange, fn);
+      flush();
+    }
+  });
+
+  return (ready = hack ?
+      function (fn) {
+        self != top ?
+            loaded ? fn() : fns.push(fn) :
+            function () {
+              console.log("on dom ready 2");
+              try {
+                testEl.doScroll('left')
+              } catch (e) {
+                return setTimeout(function() { ready(fn) }, 50)
+              }
+              fn()
+            }()
+      } :
+      function (fn) {
+        loaded ? fn() : fns.push(fn)
+      })
+}();
+
+},{}],56:[function(require,module,exports){
+/* jshint ignore:start */
+
+/*\
+ |*|
+ |*|  :: cookies.js ::
+ |*|
+ |*|  A complete cookies reader/writer framework with full unicode support.
+ |*|
+ |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
+ |*|
+ |*|  Syntaxes:
+ |*|
+ |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
+ |*|  * docCookies.getItem(name)
+ |*|  * docCookies.removeItem(name[, path])
+ |*|  * docCookies.hasItem(name)
+ |*|  * docCookies.keys()
+ |*|
+ \*/
+module.exports = {
+  getItem: function (sKey) {
+    if (!sKey || !this.hasItem(sKey)) { return null; }
+    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
+        escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+  },
+  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
+    var sExpires = "";
+    if (vEnd) {
+      switch (vEnd.constructor) {
+        case Number:
+          sExpires = vEnd === Infinity ?
+              "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
+          break;
+        case String:
+          sExpires = "; expires=" + vEnd;
+          break;
+        case Date:
+          sExpires = "; expires=" + vEnd.toGMTString();
+          break;
+      }
+    }
+    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
+  },
+  removeItem: function (sKey, sPath) {
+    if (!sKey || !this.hasItem(sKey)) { return; }
+    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
+  },
+  hasItem: function (sKey) {
+    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+  },
+  keys: /* optional method: you can safely remove it! */ function () {
+    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
+    return aKeys;
+  }
+};
+
+},{}],60:[function(require,module,exports){
+//TODO align with XHR error
+
+//TODO: sort out the callback convention
+
+/**
+ *
+ * @param {Object} pack json with
+ * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
+ * @param {String} pack.host : fully qualified host name
+ * @param {Number} pack.port : port to use
+ * @param {String} pack.path : the request PATH
+ * @param {Object} [pack.headers] : key / value map of headers
+ * @param {Object} [pack.params] : the payload -- only with POST/PUT
+ * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
+ * @param {Function} pack.success : function (result, requestInfos)
+ * @param {Function} pack.error : function (error, requestInfos)
+ * @param {String} [pack.info] : a text
+ * @param {Boolean} [pack.async = true]
+ * @param {Number} [pack.expectedStatus] : http result code
+ * @param {Boolean} [pack.ssl = true]
+ */
+module.exports = function (pack)  {
+  if (pack.payload) {
+    pack.headers['Content-Length'] = pack.payload.length;
+  }
+
+
+  var httpOptions = {
+    host: pack.host,
+    port: pack.port,
+    path: pack.path,
+    method: pack.method,
+    rejectUnauthorized: false,
+    headers : pack.headers
+  };
+
+  var parseResult = pack.parseResult || 'json';
+  var httpMode = pack.ssl ? 'https' : 'http';
+  var http = require(httpMode);
+
+
+
+  var detail = 'Request: ' + httpOptions.method + ' ' +
+      httpMode + '://' + httpOptions.host + ':' + httpOptions.port + '' + httpOptions.path;
+
+
+
+
+  var onError = function (reason) {
+    return pack.error(reason + '\n' + detail, null);
+  };
+
+
+  var req = http.request(httpOptions, function (res) {
+    var bodyarr = [];
+    res.on('data', function (chunk) {  bodyarr.push(chunk); });
+    res.on('end', function () {
+      var requestInfo = {
+        code : res.statusCode,
+        headers : res.headers
+      };
+      var result = null;
+      if (parseResult === 'json') {
+        try {
+          result = JSON.parse(bodyarr.join(''));
+        } catch (error) {
+          return onError('request failed to parse JSON in response' +
+              bodyarr.join('')
+          );
+        }
+      }
+      return pack.success(result, requestInfo);
+    });
+
+  }).on('error', function (e) {
+        return onError('Error: ' + e.message);
+      });
+
+
+  req.on('socket', function (socket) {
+    socket.setTimeout(5000);
+    socket.on('timeout', function () {
+      req.abort();
+      return pack.error('Timeout');
+    });
+  });
+
+  if (pack.payload) { req.write(pack.payload); }
+  req.end();
+
+  return req;
+};
+
+},{}],27:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -8544,108 +8743,7 @@ _.extend(Controller.prototype, {
 }).call(this);
 
 })()
-},{"underscore":8}],14:[function(require,module,exports){
-//TODO: consider merging system into utility
-
-var utility = require('../utility/utility.js');
-
-
-var socketIO = require('socket.io-client');
-
-
-var system =
-  module.exports =  utility.isBrowser() ?
-    require('./system-browser.js') : require('./system-node.js');
-
-system.ioConnect = function (settings) {
-  var httpMode = settings.ssl ? 'https' : 'http';
-  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
-    settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
-
-  return socketIO.connect(url, {'force new connection': true});
-};
-
-
-},{"../utility/utility.js":15,"./system-browser.js":34,"./system-node.js":32,"socket.io-client":53}],15:[function(require,module,exports){
-var _ = require('underscore');
-
-var isBrowser = function () {
-  return typeof(window) !== 'undefined';
-};
-
-
-var utility = module.exports = isBrowser() ?
-  require('./utility-browser.js') : require('./utility-node.js');
-
-/**
- * return true if environment is a web browser
- * @returns {boolean}
- */
-utility.isBrowser = isBrowser;
-
-
-utility.SignalEmitter = require('./SignalEmitter.js');
-
-/**
- * Merge two object (key/value map) and remove "null" properties
- * @param {Object} sourceA
- * @param {Object} sourceB
- * @returns {*|Block|Node|Tag}
- */
-utility.mergeAndClean = function (sourceA, sourceB) {
-  sourceA = sourceA || {};
-  sourceB = sourceB || {};
-  var result = _.clone(sourceA);
-  _.extend(result, sourceB);
-  _.each(_.keys(result), function (key) {
-    if (result[key] === null) { delete result[key]; }
-  });
-  return result;
-};
-
-/**
- * Create a query string from an object (key/value map)
- * @param {Object} data
- * @returns {String} key1=value1&key2=value2....
- */
-utility.getQueryParametersString = function (data) {
-  data = this.mergeAndClean(data);
-  return Object.keys(data).map(function (key) {
-    if (data[key] !== null) {
-      if (_.isArray(data[key])) {
-        data[key] = this.mergeAndClean(data[key]);
-        var keyE = encodeURIComponent(key + '[]');
-        return data[key].map(function (subData) {
-          return keyE + '=' + encodeURIComponent(subData);
-        }).join('&');
-      } else {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
-      }
-    }
-  }, this).join('&');
-};
-
-/**
- * Common regexp
- * @type {{username: RegExp, email: RegExp}}
- */
-utility.regex = {
-  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
-  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
-};
-
-/**
- * Cross platform string endsWith
- * @param {String} str
- * @param {String} suffix
- * @returns {boolean}
- */
-utility.endsWith = function (str, suffix) {
-  return str.indexOf(suffix, str.length - suffix.length) !== -1;
-};
-
-
-},{"./SignalEmitter.js":38,"./utility-browser.js":31,"./utility-node.js":33,"underscore":37}],35:[function(require,module,exports){
+},{"underscore":8}],32:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -9037,7 +9135,7 @@ try {
 }
 
 })()
-},{"../utility/treemap.js":55,"../view/NodeView.js":54,"backbone":19,"underscore":8}],36:[function(require,module,exports){
+},{"../utility/treemap.js":62,"../view/NodeView.js":61,"backbone":27,"underscore":8}],31:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -9121,7 +9219,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
             this.addRedirections(s.streamId, virtualNode.id, s.type);
           }.bind(this));
 
-          this.createVirtualStreamNode(this, null, virtualNode.id, virtualNode.name);
+          this.createVirtualStreamNode(this, null, virtualNode.id, virtualNode.name, virtualNode);
         }.bind(this));
       }
 
@@ -9145,7 +9243,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
               }.bind(this));
 
               this.createVirtualStreamNode(this.streamNodes[stream.id],
-                stream, virtualNode.id, virtualNode.name);
+                stream, virtualNode.id, virtualNode.name, virtualNode);
             }.bind(this));
           }
           // check for event redirection for the current stream
@@ -9264,11 +9362,11 @@ var ConnectionNode = module.exports = TreeNode.implement(
      * @param id the virtual node's id
      * @param name the virtual node's name
      */
-    createVirtualStreamNode: function (parentNode, parent, id, name) {
+    createVirtualStreamNode: function (parentNode, parent, id, name, vn) {
       var connectionNode =  this;
       var virtualStream = new Pryv.Stream(this.connection, {_parent: parent,
         parentId: parent ? parent.id : null, childrenIds: [], id: id, name: name,
-        isVirtual: true});
+        virtual: vn});
 
       this.streamNodes[id] = new StreamNode(connectionNode,
         parentNode, virtualStream);
@@ -9277,6 +9375,8 @@ var ConnectionNode = module.exports = TreeNode.implement(
         parent.childrenIds.push(virtualStream.id);
       }
       console.log('Set up new virtual node as VirtualStream:', virtualStream);
+
+      return {virtStream: virtualStream, virtStreamNode: this.streamNodes[id]};
     },
 
 //----------- debug ------------//
@@ -9295,7 +9395,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
-},{"./StreamNode":56,"./TreeNode":35,"./VirtualNode.js":25,"pryv":9,"underscore":8}],21:[function(require,module,exports){
+},{"./StreamNode":63,"./TreeNode":32,"./VirtualNode.js":25,"pryv":9,"underscore":8}],18:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
@@ -9309,7 +9409,7 @@ var _ = require('underscore'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
-var Controller = module.exports = function ($modal, connections) {
+var Controller = module.exports = function ($modal, connections, target) {
   this.events = {};
   this.eventsToAdd = [];
   this.connection = connections;
@@ -9320,6 +9420,7 @@ var Controller = module.exports = function ($modal, connections) {
   this.commonView = null;
   this.contentView = null;
   this.$modal = $modal;
+  this.target = target;
   this.container = '.modal-content';
   this.debounceAdd = _.debounce(function () {
     this.collection.add(this.eventsToAdd, {sort: false});
@@ -9334,7 +9435,11 @@ var Controller = module.exports = function ($modal, connections) {
 
 _.extend(Controller.prototype, {
   show: function () {
-    this.$modal.modal();
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).empty().hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
     if (!this.listView) {
       this.commonView = new CommonView({model: new Model({})});
       this.listView = new ListView({
@@ -9353,7 +9458,7 @@ _.extend(Controller.prototype, {
       '    </div>      ' +
       '<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
-    if (_.size(this.events) > 0) {
+    if (!_.isEmpty(this.events)) {
       this.commonView.render();
     }
     this.resizeModal();
@@ -9376,10 +9481,10 @@ _.extend(Controller.prototype, {
     }.bind(this));
   },
   close: function () {
-    this.commonView.close();
-    this.contentView.close();
-    $('div').remove('.modal-panel-left, .modal-panel-right, .modal-header');
-    this.collection.reset();
+    if (this.commonView) {this.commonView.close(); }
+    if (this.contentView) {this.contentView.close(); }
+    $(this.container).empty();
+    if (this.collection) {this.collection.reset(); }
     this.collection = null;
     this.events = {};
     $(this.$modal).unbind('keydown');
@@ -9440,7 +9545,7 @@ _.extend(Controller.prototype, {
           this.contentView.off();
         }
         this.contentView = new newContentView.view({model: new Model({collection:
-          this.collection})});
+          this.collection, virtual: this.virtual})});
         this.contentView.on('previous', function () {
           this.updateSingleView(this.collection.prev().getCurrentElement());
         }.bind(this));
@@ -9544,7 +9649,7 @@ _.extend(Controller.prototype, {
   }
 });
 })()
-},{"./CommonView.js":65,"./EventCollection.js":57,"./EventModel.js":58,"./ListView.js":59,"./contentView/Creation.js":67,"./contentView/Generic.js":61,"./contentView/Note.js":62,"./contentView/Picture.js":63,"./contentView/Position.js":66,"./contentView/Tweet.js":60,"./contentView/numercial/Controller.js":64,"underscore":8}],23:[function(require,module,exports){
+},{"./CommonView.js":66,"./EventCollection.js":65,"./EventModel.js":74,"./ListView.js":64,"./contentView/Creation.js":70,"./contentView/Generic.js":71,"./contentView/Note.js":67,"./contentView/Picture.js":69,"./contentView/Position.js":73,"./contentView/Tweet.js":72,"./contentView/numercial/Controller.js":68,"underscore":8}],23:[function(require,module,exports){
 (function(){/* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
@@ -9553,9 +9658,10 @@ var _ = require('underscore'),
   TimeSeriesCollection = require('./../numericals/TimeSeriesCollection.js'),
   TimeSeriesModel = require('./../numericals/TimeSeriesModel.js');
 
-var Controller = module.exports = function ($modal, events) {
+var Controller = module.exports = function ($modal, events, treemap) {
   this.$modal = $modal;
   this.events = events;
+  this.treemap = treemap;
   this.datas = {};
   this.chartView = null;
 
@@ -9595,7 +9701,7 @@ var Controller = module.exports = function ($modal, events) {
   this.$content.html($('#template-draganddrop').html());
   this.resizeModal();
 
-  $('#dnd-panel-list').append('<ul></ul>');
+  $('.modal-dnd-list').append('<ul></ul>');
   $(window).resize(this.resizeModal.bind(this));
 };
 
@@ -9618,7 +9724,7 @@ _.extend(Controller.prototype, {
 
     this.chartView = new ChartView({model:
       new Model({
-        container: '#dnd-panel-chart',
+        container: '.modal-dnd-chart',
         view: null,
         requiresDim: false,
         collection: this.chartCollection,
@@ -9626,6 +9732,7 @@ _.extend(Controller.prototype, {
         highlightedTime: null,
         allowPieChart: false,
         dimensions: null,
+        legendContainer: '.modal-dnd-legend',
         legendStyle: 'list', // Legend style: 'list', 'table'
         legendButton: true,  // A button in the legend
         legendButtonContent: ['remove'],
@@ -9634,47 +9741,61 @@ _.extend(Controller.prototype, {
         onClick: false,
         onHover: true,
         onDnD: false,
-        allowPan: true,      // Allows navigation through the chart
-        allowZoom: true,     // Allows zooming on the chart
-        xaxis: true
+        allowPan: false,      // Allows navigation through the chart
+        allowZoom: false,     // Allows zooming on the chart
+        xaxis: true,
+        showNodeCount: false
       })});
 
     this.chartView.render();
 
     this.chartView.on('remove', function (m) {
       this.chartCollection.remove(m);
+      var e = {type: m.get('type')};
+      var c = this.getTimeSeriesCollectionByEvent(e);
+      c.add(m);
+
+      this.eventCollectionsViews.note.render();
+      this.eventCollectionsViews.position.render();
+      this.eventCollectionsViews.picture.render();
+      this.eventCollectionsViews.numerical.render();
+
     }.bind(this));
 
-    var $ul = $('#dnd-panel-list ul');
+    var $ul = $('.modal-dnd-list ul');
     var el;
 
-    if (this.eventCollections.note.length !== 0) {
+    if (this.eventCollections.note.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Notes');
+      this.eventCollectionsViews.note.ul = $('li:last', $ul);
       this.eventCollectionsViews.note.render();
       el = this.eventCollectionsViews.note.el;
       $('li:last', $ul).append(el);
     }
 
-    if (this.eventCollections.picture.length !== 0) {
+    if (this.eventCollections.picture.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Pictures');
+      this.eventCollectionsViews.picture.ul = $('li:last', $ul);
       this.eventCollectionsViews.picture.render();
       el = this.eventCollectionsViews.picture.el;
       $('li:last', $ul).append(el);
     }
 
-    if (this.eventCollections.position.length !== 0) {
+    if (this.eventCollections.position.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Positions');
+      this.eventCollectionsViews.position.ul = $('li:last', $ul);
       this.eventCollectionsViews.position.render();
       el = this.eventCollectionsViews.position.el;
       $('li:last', $ul).append(el);
     }
 
-    if (this.eventCollections.numerical.length !== 0) {
+    if (this.eventCollections.numerical.notNull) {
       $ul.append('<li>');
       $('li:last', $ul).text('Numericals');
+      this.eventCollectionsViews.numerical.ul = $('li:last', $ul);
       this.eventCollectionsViews.numerical.render();
       el = this.eventCollectionsViews.numerical.el;
       $('li:last', $ul).append(el);
@@ -9682,20 +9803,68 @@ _.extend(Controller.prototype, {
 
     this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.note.remove(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.picture.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.picture.remove(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.position.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.position.remove(evt.model);
     }.bind(this));
 
     this.eventCollectionsViews.numerical.on('itemview:series:click', function (evt) {
       this.addSerieToChart(evt.model);
+      this.eventCollections.numerical.remove(evt.model);
+    }.bind(this));
+
+    $('#dnd-btn-cancel').bind('click', function () {
+      this.close();
+      this.$modal.modal('hide');
+    }.bind(this));
+
+    $('#dnd-field-name').bind('input', function () {
+      var val = $('#dnd-field-name').val();
+      if (val.length > 0) {
+        $('.modal-dnd-footer').removeClass('has-error');
+        $('.modal-dnd-footer').addClass('has-success');
+      } else {
+        $('.modal-dnd-footer').removeClass('has-success');
+        $('.modal-dnd-footer').addClass('has-error');
+      }
+    });
+
+    $('#dnd-btn-create').bind('click', function () {
+      var errors = 0;
+      var vn_filters = [];
+      var vn_name = $('#dnd-field-name').val();
+
+      this.chartCollection.each(function (e) {
+        vn_filters.push({stream: e.get('events')[0].stream, type: e.get('type')});
+      });
+
+      if (!vn_name) {
+        errors++;
+      }
+
+      if (vn_filters.length === 0) {
+        errors++;
+      }
+
+      if (errors > 0) {
+        return;
+      } else {
+        this.treemap.createVirtualNode(vn_filters, vn_name);
+        this.close();
+        this.$modal.modal('hide');
+      }
     }.bind(this));
   },
+
+
 
   /* Base event functions */
   eventEnter: function (event) {
@@ -9786,14 +9955,14 @@ _.extend(Controller.prototype, {
 
     // Process those to remove
     for (i = 0; i < eventsToRem.length; ++i) {
-      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
-      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      eventsCategory = this.getEventsCategory(eventsToRem[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToRem[i]);
       if (eventsCollection) {
         // find corresponding model
         matching = eventsCollection.where({
-          connectionId: eventsToAdd[i].connection.id,
-          streamId: eventsToAdd[i].streamId,
-          type: eventsToAdd[i].type
+          connectionId: eventsToRem[i].connection.id,
+          streamId: eventsToRem[i].streamId,
+          type: eventsToRem[i].type
         });
         if (matching && matching.length !== 0) {
           eventsModel = matching[0];
@@ -9809,21 +9978,21 @@ _.extend(Controller.prototype, {
 
     // Process those to change
     for (i = 0; i < eventsToCha.length; ++i) {
-      eventsCategory = this.getEventsCategory(eventsToAdd[i]);
-      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToAdd[i]);
+      eventsCategory = this.getEventsCategory(eventsToCha[i]);
+      eventsCollection = this.getTimeSeriesCollectionByEvent(eventsToCha[i]);
       if (eventsCollection) {
         // find corresponding model
         matching = eventsCollection.where({
-          connectionId: eventsToAdd[i].connection.id,
-          streamId: eventsToAdd[i].streamId,
-          type: eventsToAdd[i].type
+          connectionId: eventsToCha[i].connection.id,
+          streamId: eventsToCha[i].streamId,
+          type: eventsToCha[i].type
         });
         if (matching && matching.length !== 0) {
           eventsModel = matching[0];
           events = eventsModel.get('events');
           for (eIter = 0; eIter < events.length; ++eIter) {
-            if (events[eIter].id === eventsToRem[i].id) {
-              events[eIter] = eventsToRem[i];
+            if (events[eIter].id === eventsToCha[i].id) {
+              events[eIter] = eventsToCha[i];
             }
           }
         }
@@ -9832,7 +10001,42 @@ _.extend(Controller.prototype, {
 
     if (this.initial) {
       this.initial = false;
+      this.eventCollections.note.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+      this.eventCollections.numerical.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+      this.eventCollections.picture.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+      this.eventCollections.position.each(function (m) {
+        this.addSerieToChart(m);
+      }.bind(this));
+
+      var m = null;
+      while (this.eventCollections.note.length !== 0) {
+        this.eventCollections.note.notNull = true;
+        m = this.eventCollections.note.at(0);
+        this.eventCollections.note.remove(m);
+      }
+      while (this.eventCollections.numerical.length !== 0) {
+        this.eventCollections.numerical.notNull = true;
+        m = this.eventCollections.numerical.at(0);
+        this.eventCollections.numerical.remove(m);
+      }
+      while (this.eventCollections.picture.length !== 0) {
+        this.eventCollections.picture.notNull = true;
+        m = this.eventCollections.picture.at(0);
+        this.eventCollections.picture.remove(m);
+      }
+      while (this.eventCollections.position.length !== 0) {
+        this.eventCollections.position.notNull = true;
+        m = this.eventCollections.position.at(0);
+        this.eventCollections.position.remove(m);
+      }
       if (this.called) {
+
         this.show();
       }
     }
@@ -9918,7 +10122,7 @@ _.extend(Controller.prototype, {
 
   close: function () {
     this.chartView.close();
-    this.$modal.find('#dnd-body').remove();
+    this.$modal.find('.modal-content').empty();
   },
 
 
@@ -9936,12 +10140,94 @@ _.extend(Controller.prototype, {
 });
 
 })()
-},{"./../numericals/ChartModel.js":71,"./../numericals/ChartView.js":72,"./../numericals/TimeSeriesCollection.js":69,"./../numericals/TimeSeriesModel.js":70,"./ListView.js":68,"underscore":8}],22:[function(require,module,exports){
-(function(){/* global $, FB, twttr */
+},{"./../numericals/ChartModel.js":75,"./../numericals/ChartView.js":77,"./../numericals/TimeSeriesCollection.js":78,"./../numericals/TimeSeriesModel.js":79,"./ListView.js":76,"underscore":8}],15:[function(require,module,exports){
+var socketIO = require('socket.io-client'),
+    _ = require('underscore');
+
+function isBrowser() {
+  return typeof(window) !== 'undefined';
+}
+
+var utility = module.exports = isBrowser() ?
+  require('./utility-browser.js') : require('./utility-node.js');
+
+/**
+ * @returns {Boolean} `true` if we're in a web browser environment
+ */
+utility.isBrowser = isBrowser;
+
+utility.SignalEmitter = require('./SignalEmitter.js');
+
+/**
+ * Merges two object (key/value map) and remove "null" properties
+ *
+ * @param {Object} sourceA
+ * @param {Object} sourceB
+ * @returns {*|Block|Node|Tag}
+ */
+utility.mergeAndClean = function (sourceA, sourceB) {
+  sourceA = sourceA || {};
+  sourceB = sourceB || {};
+  var result = _.clone(sourceA);
+  _.extend(result, sourceB);
+  _.each(_.keys(result), function (key) {
+    if (result[key] === null) { delete result[key]; }
+  });
+  return result;
+};
+
+/**
+ * Creates a query string from an object (key/value map)
+ *
+ * @param {Object} data
+ * @returns {String} key1=value1&key2=value2....
+ */
+utility.getQueryParametersString = function (data) {
+  data = this.mergeAndClean(data);
+  return Object.keys(data).map(function (key) {
+    if (data[key] !== null) {
+      if (_.isArray(data[key])) {
+        data[key] = this.mergeAndClean(data[key]);
+        var keyE = encodeURIComponent(key + '[]');
+        return data[key].map(function (subData) {
+          return keyE + '=' + encodeURIComponent(subData);
+        }).join('&');
+      } else {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+      }
+    }
+  }, this).join('&');
+};
+
+utility.regex = require('./regex');
+
+/**
+ * Cross-platform string endsWith
+ *
+ * @param {String} string
+ * @param {String} suffix
+ * @returns {Boolean}
+ */
+utility.endsWith = function (string, suffix) {
+  return string.indexOf(suffix, string.length - suffix.length) !== -1;
+};
+
+utility.ioConnect = function (settings) {
+  var httpMode = settings.ssl ? 'https' : 'http';
+  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
+      settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
+
+  return socketIO.connect(url, {'force new connection': true});
+};
+
+
+},{"./SignalEmitter.js":48,"./regex":33,"./utility-browser.js":55,"./utility-node.js":59,"socket.io-client":80,"underscore":47}],22:[function(require,module,exports){
+(function(){/* global $ */
 var Backbone = require('backbone'),
-  Marionette = require('backbone.marionette');
+    Marionette = require('backbone.marionette'),
+    _ = require('underscore');
 // The recursive tree view
-function slugMe(value) {
+/*var slugMe = function (value) {
   var rExps = [
     {re: /[\xC0-\xC6]/g, ch: 'A'},
     {re: /[\xE0-\xE6]/g, ch: 'a'},
@@ -9964,10 +10250,20 @@ function slugMe(value) {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
     .replace(/\-{2,}/g, '-');
-}
+};  */
+var eachStream = function (collection, callback) {
+  collection.each(function (model) {
+    if (_.isFunction(callback)) {
+      callback(model);
+    }
+    if (model.children) {
+      eachStream(model.children, callback);
+    }
+  });
+};
 var TreeView = Marionette.CompositeView.extend({
   template: '#node-template',
-  tagName: 'ul',
+  tagName: 'details',
   ui: {
     checkbox: '.input-checkbox'
   },
@@ -9981,17 +10277,18 @@ var TreeView = Marionette.CompositeView.extend({
   appendHtml: function (collectionView, itemView) {
     // ensure we nest the child list inside of 
     // the current list item
-    collectionView.$('li:first').append(itemView.el);
+    collectionView.$('summary:first').after(itemView.el);
   },
   onRender: function () {
     this.ui.checkbox[0].checked = this.model.get('checked');
     this.ui.checkbox.click(this.toggleCheck.bind(this));
   },
   toggleCheck: function () {
-    this.model.set('checked', !this.model.get('checked'));
-    this.collection.each(function (model) {
-      model.set('checked', this.model.get('checked'));
-    }.bind(this));
+    var checked = !this.model.get('checked');
+    this.model.set('checked', checked);
+    eachStream(this.collection, function (model) {
+      model.set('checked', checked);
+    });
   }
 });
 
@@ -9999,8 +10296,8 @@ var TreeView = Marionette.CompositeView.extend({
 // a recursive tree structure for each item in the collection
 var TreeRoot = Marionette.CollectionView.extend({
   itemView: TreeView,
-  id: 'create-sharing',
-  className: 'container',
+  id: '',
+  className: 'create-sharing full-height',
   onRender: function () {
     var dateFrom = new Date(this.options.timeFrom * 1000);
     var dateTo = new Date(this.options.timeTo * 1000);
@@ -10009,30 +10306,44 @@ var TreeRoot = Marionette.CollectionView.extend({
       local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
       return local.toJSON().slice(0, 10);
     }
-    this.$el.prepend('<h1>Create sharing</h1>' +
+
+    this.$el.prepend(
+      '<h1>Settings</h1>' +
       '<form role="form" id="form-create-sharing"' +
       '<div class="form-horizontal">' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-name" placeholder="Name">' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
+      '<input type="text" class="form-control" id="input-name" placeholder="Name" required>' +
       '</div>' +
       '</div>' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
       '<select class="form-control" id="input-global-permission">' +
-      '  <option value ="">Permission for all stream</option>' +
-      '  <option value="read">Read</option>' +
-      '  <option value="contribute">Contribute</option>' +
-      '  <option value="manage">Manage</option>' +
+      '  <option value="read" selected="selected">Allow read only</option>' +
+      '  <option value="contribute">Allow contributing events</option>' +
+      '  <option value="manage">Allow managing events and streams</option>' +
       '</select>' +
       '</div>' +
       '</div>' +
       '</div>' +
+      '<div class="col-sm-5 panel panel-default advanced-settings">' +
+      '  <div class="panel-heading">' +
+      '    <h4 class="panel-title">' +
+      '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
+      '       Advanced settings ' +
+      '       </a>' +
+      '     </h4>' +
+      '   </div>' +
+      '   <div id="collapseOne" class="panel-collapse collapse">' +
+      '     <div class="panel-body">' +
+      '<div class="form-horizontal">' +
+      '<div class="form-group">' +
+      '<div class="col-sm-12">' +
+      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+
       '<div class="form-inline">' +
       '<div class="form-group">' +
       '<input type="date" class="form-control" id="input-from-date" ' +
@@ -10052,41 +10363,54 @@ var TreeRoot = Marionette.CollectionView.extend({
       'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
       '</div>' +
       '</div>' +
+      '      </div>' +
+      ' </div> ' +
+      '  </div> ' +
+      '<h1>Select streams</h1>' +
       '');
-    this.$el.append('<div class="form-group">' +
-      '<button type="submit" class="btn btn-primary">Create</button>' +
-      '</div>' +
-      '</form>');
     var $form = $('#form-create-sharing', this.$el),
-      $name = $('#input-name', this.$el),
+      $name = $('#input-name', this.$el);
+    $form.submit(this.createSharing.bind(this));
+    $name.bind('change paste keyup', function () {
+      //$token.val(slugMe($name.val()));
+    });
+  },
+  createSharing: function (e, $btn) {
+    e.preventDefault();
+    $btn = $btn || $('#publish');
+    var $name = $('#input-name', this.$el),
       $token = $('#input-token', this.$el),
       $permission = $('#input-global-permission', this.$el),
-      $btn = $('button', this.$el);
-    function createSharing(e) {
-      e.preventDefault();
-      var access = {}, name = $name.val(), token = $token.val(), permission = $permission.val();
-      if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
-        permission = 'read';
-      }
-      access.name = name;
-      access.token = token;
-      access.permissions = [{streamId : '*', level: permission}];
-      this.options.connection.accesses.create(access, function (error, result) {
-        if (error || result.message) {
-          $btn.removeClass('btn-primary');
-          $btn.addClass('btn-danger');
-        } else {
-          $btn.removeClass('btn-primary');
-          $btn.addClass('btn-success');
-          this.trigger('sharing:createSuccess', result.token);
-        }
-      }.bind(this));
+      $spin = $('.fa-spin', $btn);
+    var access = {}, name = $name.val().trim(), token = $token.val().trim(),
+      permission = $permission.val();
+    if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
+      permission = 'read';
     }
-    $form.submit(createSharing.bind(this));
-    $btn.click(createSharing.bind(this));
-    $name.bind('change paste keyup', function () {
-      $token.val(slugMe($name.val()));
+    access.name = name;
+    access.token = token;
+    access.permissions = [];
+    if ($spin) {
+      $spin.show();
+    }
+    eachStream(this.collection, function (model) {
+      if (model.get('checked')) {
+        access.permissions.push({streamId : model.get('id'), level: permission});
+      }
     });
+    this.options.connection.accesses.create(access, function (error, result) {
+      if ($spin) {
+        $spin.hide();
+      }
+      if (error || result.message) {
+        $btn.removeClass('btn-primary');
+        $btn.addClass('btn-danger');
+      } else {
+        $btn.removeClass('btn-primary');
+        $btn.addClass('btn-success');
+        this.trigger('sharing:createSuccess', result.token);
+      }
+    }.bind(this));
   }
 });
 var TreeNode = Backbone.Model.extend({
@@ -10095,17 +10419,25 @@ var TreeNode = Backbone.Model.extend({
   },
   initialize: function () {
     var children = this.get('children');
+    var c = [];
+    if (!children && this.get('connection') && this.get('childrenIds')) {
+      _.each(this.get('childrenIds'), function (childId) {
+        c.push(this.get('connection').streams.getById(childId));
+      }.bind(this));
+      children = c;
+    }
     if (children) {
       this.children = new TreeNodeCollection(children);
-      this.unset('children');
+      //this.unset('children');
     }
   }
 });
 var TreeNodeCollection = Backbone.Collection.extend({
   model: TreeNode
 });
-var Controller = module.exports = function ($modal, connection, streams, timeFilter) {
+var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {
   this.$modal = $modal;
+  this.target = target;
   this.connection = connection;
   this.streams = streams;
   this.timeFrom = timeFilter[1];
@@ -10114,7 +10446,11 @@ var Controller = module.exports = function ($modal, connection, streams, timeFil
   this.treeView = null;
 };
 Controller.prototype.show = function () {
-  this.$modal.modal();
+  this.$modal.modal({currentTarget: this.target});
+  $(this.container).empty().hide();
+  setTimeout(function () {
+    $(this.container).fadeIn();
+  }.bind(this), 500);
   var tree = new TreeNodeCollection(this.streams);
   this.treeView = new TreeRoot({
     collection: tree,
@@ -10123,25 +10459,51 @@ Controller.prototype.show = function () {
     connection: this.connection
   });
   this.treeView.render();
-  $(this.container).html(this.treeView.el);
+  $(this.container).prepend('<div class="modal-header">  ' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+    '&times;</button> ' +
+    '<h4 class="modal-title" id="myModalLabel">Share a slice of life</h4>' +
+    '<div class="modal-close"></div> ' +
+    '</div><div id="modal-content"><div id="creation-content"></div>' +
+    '<div id="creation-footer" class="col-md-12">' +
+    '<button id="publish" class="btn btn-pryv-turquoise">Share  ' +
+    '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
+    '<button id="cancel" class="btn" data-dismiss="modal">Cancel</button>' +
+    '</div></div>');
+  $('#creation-content').html(this.treeView.el);
+  $('#publish').click(function (e) {
+    this.treeView.createSharing(e, $('#publish'));
+  }.bind(this));
   this.treeView.on('sharing:createSuccess', function (token) {
-    $(this.container).empty();
+    $('#publish').remove();
+    $('#cancel').text('Ok').addClass('btn-pryv-turquoise');
+    $('#creation-content').empty();
     var url = this.connection.id.replace(/\?auth.*$/, '');
+    url = url.replace(/\.in/, '.li');
+    url = url.replace(/\.io/, '.me');
     url += '#/sharings/' + token;
-    $(this.container).html('<div class="container"><h1>Share</h1>' +
-      '<p>Your sharing was successfully created, share it or give this url: </p>' +
-      '<p><a href="' + url + '">' + url + '</a></p>' +
+    $('#creation-content').html('<div class="container">' +
+      '<h4>Your sharing was successfully created, share it via ' +
+      'Facebook, Twitter, mail or this link: </h4>' +
+      '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
       '<p class="text-center share">' +
-      '<a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: ' + url +
+      '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +
+      url.replace(/#/g, '%23') + '&t=" ' +
+      'onclick="javascript:window.open(this.href, \'\', ' +
+      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
+      'return false;">' +
+      '<i class="fa fa-facebook"></i></a>' +
+      '<a target="_blank" href="https://twitter.com/share?url=' +
+      url.replace(/#/g, '%23') + '&via=pryv" ' +
+      'onclick="javascript:window.open(this.href, \'\', ' +
+      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
+      'return false;">' +
+      '<i class="fa fa-twitter"></i></a>' +
+      '<a href="mailto:?subject=Slice of life&amp;body=' +
+      'I just shared a slice of life with you: ' + url +
       '" title="Share by Email">' +
-      '<img src="./images/mail-24.png"/></a>' +
-      '<a href="https://twitter.com/share" class="twitter-share-button"' +
-      ' data-url="' + url + '" data-via="pryv" data-count="none">Tweet</a>' +
-      '<fb:share-button href="' + url + '" ' +
-      ' type="button"></fb:share-button></p></div>');
-    FB.XFBML.parse($('.share').get(0));
-    twttr.widgets.load();
-
+      '<i class="fa fa-envelope"></i></a>' +
+      '</p></div>');
   }.bind(this));
 };
 Controller.prototype.close = function () {
@@ -10149,7 +10511,7 @@ Controller.prototype.close = function () {
   $(this.container).empty();
 };
 })()
-},{"backbone":19,"backbone.marionette":73}],53:[function(require,module,exports){
+},{"backbone":27,"backbone.marionette":46,"underscore":8}],80:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -14024,7 +14386,7 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 })()
-},{}],40:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 var _ = require('underscore');
 
 function Datastore(connection) {
@@ -14053,14 +14415,17 @@ Datastore.prototype._rebuildStreamIndex = function (streamArray) {
 
 Datastore.prototype._indexStreamArray = function (streamArray) {
   _.each(streamArray, function (stream) {
-    this.streamsIndex[stream.id] = stream;
-    if (! stream._parent) { this.rootStreams.push(stream); }
-    this._indexStreamArray(stream._children);
-    delete stream._children; // cleanup when in datastore mode
-    delete stream._parent;
+    this.indexStream(stream);
   }.bind(this));
 };
 
+Datastore.prototype.indexStream = function (stream) {
+  this.streamsIndex[stream.id] = stream;
+  if (! stream.parentId) { this.rootStreams.push(stream); }
+  this._indexStreamArray(stream._children);
+  delete stream._children; // cleanup when in datastore mode
+  delete stream._parent;
+};
 
 /**
  *
@@ -14089,79 +14454,7 @@ Datastore.prototype.getStreamById = function (streamId, test) {
 module.exports = Datastore;
 
 
-},{"underscore":37}],45:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    sharing: null,
-    collection: null
-  }
-});
-},{"backbone":19}],46:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./BookmarkModel.js');
-
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model
-});
-},{"./BookmarkModel.js":48,"backbone":19}],47:[function(require,module,exports){
-(function(){/* global $, FB, twttr */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./SharingItemView.js'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-sharingListCompositeView',
-  container: '.sharings',
-  itemView: ItemView,
-  itemViewContainer: '#sharing-list',
-
-  initialize: function () {
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h1>Sharings</h1>' +
-    '<table class="table table-striped" >' +
-      '<thead><tr><th></th><th>Name</th><th>Url</th><th>Share</th></tr></thead>' +
-      '<tbody id="sharing-list"></tbody>' +
-    '</table>');
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
-  onRender: function () {
-    FB.XFBML.parse($('.share').getAll);
-    twttr.widgets.load();
-  },
-  onBeforeClose: function () {
-    $(this.container).empty();
-    return true;
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-})()
-},{"./SharingItemView.js":74,"backbone.marionette":73,"underscore":8}],48:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    bookmark: null,
-    collection: null
-  }
-});
-},{"backbone":19}],44:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./SharingModel.js');
-
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model
-});
-},{"./SharingModel.js":45,"backbone":19}],52:[function(require,module,exports){
+},{"underscore":47}],35:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -14207,7 +14500,15 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./ItemView.js":75,"backbone.marionette":73,"underscore":8}],50:[function(require,module,exports){
+},{"./ItemView.js":81,"backbone.marionette":46,"underscore":8}],37:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./Model.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./Model.js":36,"backbone":27}],36:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -14218,7 +14519,60 @@ module.exports = Backbone.Model.extend({
     error: null
   }
 });
-},{"backbone":19}],49:[function(require,module,exports){
+},{"backbone":27}],38:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./SharingModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./SharingModel.js":43,"backbone":27}],40:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./SharingItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-sharingListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#sharing-list',
+
+  initialize: function () {
+    this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h1>Shared slices</h1>' +
+    '<table class="table table-striped" >' +
+      '<thead><tr><th>Name</th><th>Link</th><th>Share</th><th></th></tr></thead>' +
+      '<tbody id="sharing-list"></tbody>' +
+    '</table>');
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./SharingItemView.js":82,"backbone.marionette":46,"underscore":8}],43:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    sharing: null,
+    collection: null
+  }
+});
+},{"backbone":27}],42:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./BookmarkItemView.js'),
@@ -14250,35 +14604,45 @@ module.exports = Marionette.CompositeView.extend({
   initialize: function () {
     this.listenTo(this.collection, 'change', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h1>Bookmarks</h1>' +
+    $(this.container).append('<h1>Followed slices</h1>' +
+      '<button class="btn btn-primary" id="add-slice">Add a new slice</button>' +
       '<form class="form-inline" id="add-bookmark" role="form">' +
       '<div class="form-group">' +
+      ' <label class="sr-only" for="add-bookmark-url">url</label>' +
+      ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="Link">' +
+      '</div> ' +
+      '<div class="form-group">' +
         '<label class="sr-only" for="add-bookmark-name">Name</label>' +
-        '<input type="text" class="form-control" id="add-bookmark-name" placeholder="name">' +
+        '<input type="text" class="form-control" id="add-bookmark-name" ' +
+      'placeholder="Name this slice">' +
       '</div>' +
       '<div class="form-group">' +
-        ' <label class="sr-only" for="add-bookmark-url">url</label>' +
-        ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="url">' +
+        ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
+        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
       '</div> ' +
-      '<div class="form-group">' +
-        ' <label class="sr-only" for="add-bookmark-auth">url</label>' +
-        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="token">' +
-      '</div> ' +
-      ' <button type="submit" class="btn btn-default">Add</button>  ' +
-      '<span id ="add-bookmark-tick">&#10004</span>' +
+      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">Add  ' +
+      '<i class="fa fa-spinner fa-spin"></i></button>  ' +
+      '' +
      ' </form>' +
       '<table class="table table-striped" >' +
-      '<thead><tr><th></th><th>Name</th><th>Token</th><th>Url</th></tr></thead>' +
+      '<thead><tr><th>Name</th><th>Link</th><th></th></tr></thead>' +
       '<tbody id="bookmark-list"></tbody>' +
       '</table>');
     this.$url = $('#add-bookmark-url');
     this.$auth = $('#add-bookmark-auth');
     this.$name = $('#add-bookmark-name');
-    this.$tick = $('#add-bookmark-tick');
+    this.$btn = $('#add-bookmark-btn');
     this.$form = $('#add-bookmark');
-    this.$tick.hide();
+    this.$spin = $('#add-bookmark-btn .fa-spin');
+    this.$spin.hide();
+    this.$form.toggle();
+    this.$addSlice = $('#add-slice');
+    this.$addSlice.click(function () {
+      this.$form.toggle();
+      this.$addSlice.toggle();
+    }.bind(this));
     this.$form.bind('change paste keyup', function () {
-      this.$tick.hide();
+      this.$btn.removeClass('btn-danger btn-success').addClass('btn-default');
     }.bind(this));
     this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
     this.$form.submit(function (e) {
@@ -14288,6 +14652,7 @@ module.exports = Marionette.CompositeView.extend({
         name = this.$name.val(),
         sameNameExtension = '',
         i = 0;
+      this.$spin.show();
       auths.forEach(function (auth) {
         this.trigger('bookmark:add', url, auth, name + sameNameExtension);
         i += 1;
@@ -14296,17 +14661,18 @@ module.exports = Marionette.CompositeView.extend({
     }.bind(this));
   },
   endAddBookmark: function (error) {
-    this.$tick.show();
+    this.$spin.hide();
     if (error) {
-      this.$tick.css('color', 'red');
+      this.$btn.removeClass('btn-default btn-success').addClass('btn-danger');
     } else {
-      this.$tick.css('color', 'limegreen');
+      this.$btn.removeClass('btn-default btn-danger').addClass('btn-success');
     }
   },
   appendHtml: function (collectionView, itemView) {
     $(this.itemViewContainer).append(itemView.el);
   },
   onRender: function () {
+    $('details').details();
   },
   onBeforeClose: function () {
     $(this.container).empty();
@@ -14318,384 +14684,681 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./BookmarkItemView.js":76,"backbone.marionette":73,"pryv":9,"underscore":8}],51:[function(require,module,exports){
+},{"./BookmarkItemView.js":83,"backbone.marionette":46,"pryv":9,"underscore":8}],41:[function(require,module,exports){
 var Backbone = require('backbone'),
-  Model = require('./Model.js');
+  Model = require('./BookmarkModel.js');
 
 module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./Model.js":50,"backbone":19}],38:[function(require,module,exports){
-(function(){/**
- * (event)Emitter renamed to avoid confusion with prvy's events
- */
+},{"./BookmarkModel.js":39,"backbone":27}],39:[function(require,module,exports){
+var Backbone = require('backbone');
 
-
-var _ = require('underscore');
-
-var SignalEmitter = module.exports = function (messagesMap) {
-  SignalEmitter.extend(this, messagesMap);
-};
-
-
-SignalEmitter.extend = function (object, messagesMap, name) {
-  if (! name) {
-    throw new Error('"name" parameter must be set');
+module.exports = Backbone.Model.extend({
+  defaults: {
+    bookmark: null,
+    collection: null
   }
-  object._signalEmitterEvents = {};
-  _.each(_.values(messagesMap), function (value) {
-    object._signalEmitterEvents[value] = [];
-  });
-  _.extend(object, SignalEmitter.prototype);
-  object._signalEmitterName = name;
-};
+});
+},{"backbone":27}],44:[function(require,module,exports){
+(function(){/* global FormData */
+var Backbone = require('backbone');
 
-
-SignalEmitter.Messages = {
-  /** called when a batch of changes is expected, content: <batchId> unique**/
-  BATCH_BEGIN : 'beginBatch',
-  /** called when a batch of changes is done, content: <batchId> unique**/
-  BATCH_DONE : 'doneBatch',
-  /** if an eventListener return this string, it will be removed automatically **/
-  UNREGISTER_LISTENER : 'unregisterMePlease'
-};
-
-/**
- * Add an event listener
- * @param signal one of  Messages.SIGNAL.*.*
- * @param callback function(content) .. content vary on each signal.
- * If the callback returns SignalEmitter.Messages.UNREGISTER_LISTENER it will be removed
- * @return the callback function for further reference
- */
-SignalEmitter.prototype.addEventListener = function (signal, callback) {
-  this._signalEmitterEvents[signal].push(callback);
-  return callback;
-};
-
-
-/**
- * remove the callback matching this signal
- */
-SignalEmitter.prototype.removeEventListener = function (signal, callback) {
-  for (var i = 0; i < this._signalEmitterEvents[signal].length; i++) {
-    if (this._signalEmitterEvents[signal][i] === callback) {
-      this._signalEmitterEvents[signal][i] = null;
+module.exports = Backbone.Model.extend({
+  defaults: {
+    event: null
+  },
+  save: function () {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      this.get('event').addAttachment(file, function () {
+        //  console.log('trash event callback', arguments);
+      });
     }
-  }
-};
-
-
-/**
- * A changes occurred on the filter
- * @param signal
- * @param content
- * @param batch
- * @private
- */
-SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
-  var batchId = batch ? batch.id : null;
-  if (! signal) { throw new Error(); }
-
-  var batchStr = batchId ? ' batch: ' + batchId + ', ' + batch.batchName : '';
-  console.log('FireEvent-' + this._signalEmitterName  + ' : ' + signal + batchStr);
-
-  _.each(this._signalEmitterEvents[signal], function (callback) {
-    if (callback !== null &&
-      SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batchId, batch)) {
-      this.removeEventListener(signal, callback);
-    }
-  }, this);
-};
-
-
-SignalEmitter.batchSerial = 0;
-/**
- * start a batch process
- * @param eventual superBatch you can hook on. In this case it will call superBatch.waitForMe(..)
- * @return an object where you have to call stop when done
- */
-SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
-  if (orHookOnBatch && orHookOnBatch.sender === this) { // test if this batch comes form me
-    return orHookOnBatch.waitForMeToFinish();
-  }
-  var batch = {
-    sender : this,
-    batchName : batchName || '',
-    id : this._signalEmitterName + SignalEmitter.batchSerial++,
-    filter : this,
-    waitFor : 1,
-    doneCallbacks : {},
-
-    waitForMeToFinish : function () {
-      batch.waitFor++;
-      return this;
-    },
-
-    /**
-     * listener are stored in key/map fashion, so addOnDoneListener('bob',..)
-     * may be called several time, callback 'bob', will be done just once
-     * @param key a unique key per callback
-     * @param callback
-     */
-    addOnDoneListener : function (key, callback) {
-      this.doneCallbacks[key] = callback;
-    },
-    done : function (name) {
-      this.waitFor--;
-      if (this.waitFor === 0) {
-        _.each(this.doneCallbacks, function (callback) { callback(); });
-        this.filter._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
-      }
-      if (this.waitFor < 0) {
-        console.error('This batch has been done() to much :' + name);
-      }
-    }
-  };
-  this._fireEvent(SignalEmitter.Messages.BATCH_BEGIN, batch.id, batch);
-  return batch;
-};
-
-})()
-},{"underscore":37}],39:[function(require,module,exports){
-var utility = require('../utility/utility.js'),
-  _ = require('underscore'),
-  Filter = require('../Filter'),
-  Event = require('../Event');
-
-/**
- * @class ConnectionEvents
- *
- * Coverage of the API
- *  GET /events -- 100%
- *  POST /events -- only data (no object)
- *  POST /events/start -- 0%
- *  POST /events/stop -- 0%
- *  PUT /events/{event-id} -- 100%
- *  DELETE /events/{event-id} -- only data (no object)
- *  POST /events/batch -- only data (no object)
- *
- *  attached files manipulations are covered by Event
- *
- *
- * @param {Connection} connection
- * @constructor
- */
-function ConnectionEvents(connection) {
-  this.connection = connection;
-}
-
-
-/**
- * @example
- * // get events from the Diary stream
- * conn.events.get({streamId : 'diary'},
- *  function(events) {
- *    console.log('got ' + events.length + ' events)
- *  }
- * );
- * @param {FilterLike} filter
- * @param {ConnectionEvents~getCallback} doneCallback
- * @param {ConnectionEvents~partialResultCallback} partialResultCallback
- */
-ConnectionEvents.prototype.get = function (filter, doneCallback, partialResultCallback) {
-  //TODO handle caching
-  var result = [];
-  this._get(filter, function (error, eventList) {
-    _.each(eventList, function (eventData) {
-      result.push(new Event(this.connection, eventData));
-    }.bind(this));
-    doneCallback(error, result);
-    if (partialResultCallback) { partialResultCallback(result); }
-  }.bind(this));
-};
-
-/**
- * @param {Event} event
- * @param {Connection~requestCallback} callback
- */
-ConnectionEvents.prototype.update = function (event, callback) {
-  this._updateWithIdAndData(event.id, event.getData(), callback);
-};
-
-/**
- * @param {Event | eventId} event
- * @param {Connection~requestCallback} callback
- */
-ConnectionEvents.prototype.trash = function (event, callback) {
-  this.trashWithId(event.id, callback);
-};
-
-/**
- * @param {String} eventId
- * @param {Connection~requestCallback} callback
- */
-ConnectionEvents.prototype.trashWithId = function (eventId, callback) {
-  var url = '/events/' + eventId;
-  this.connection.request('DELETE', url, callback, null);
-};
-
-/**
- * This is the preferred method to create an event, or to create it on the API.
- * The function return the newly created object.. It will be updated when posted on the API.
- * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
- * the same connection and not exists on the API.
- * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
- * @return {Event} event
- */
-ConnectionEvents.prototype.create = function (newEventlike, callback) {
-  var event = null;
-  if (newEventlike instanceof Event) {
-    if (newEventlike.connection !== this.connection) {
-      return callback(new Error('event.connection does not match current connection'));
-    }
-    if (newEventlike.id) {
-      return callback(new Error('cannot create an event already existing on the API'));
-    }
-    event = newEventlike;
-  } else {
-    event = new Event(this.connection, newEventlike);
-  }
-
-  var url = '/events';
-  this.connection.request('POST', url, function (err, result) {
-    if (result) {
-      _.extend(event, result);
-    }
-    callback(err, event);
-  }, event.getData());
-  return event;
-};
-ConnectionEvents.prototype.createWithAttachment = function (newEventLike, file, callback) {
-  var event = null;
-  if (newEventLike instanceof Event) {
-    if (newEventLike.connection !== this.connection) {
-      return callback(new Error('event.connection does not match current connection'));
-    }
-    if (newEventLike.id) {
-      return callback(new Error('cannot create an event already existing on the API'));
-    }
-    event = newEventLike;
-  } else {
-    event = new Event(this.connection, newEventLike);
-  }
-  file.append('event', JSON.stringify(event.getData()));
-  var url = '/events';
-  this.connection.request('POST', url, function (err, result) {
-    if (result) {
-      _.extend(event, result);
-    }
-    callback(err, event);
-  }, file, true);
-};
-ConnectionEvents.prototype.addAttachment = function (eventId, file, callback) {
-  var url = '/events/' + eventId;
-  this.connection.request('POST', url, callback, file, true);
-};
-ConnectionEvents.prototype.removeAttachment = function (eventId, fileName, callback) {
-  var url = '/events/' + eventId + '/' + fileName;
-  this.connection.request('DELETE', url, callback);
-};
-/**
- * //TODO make it NewEventLike compatible
- * This is the prefered method to create events in batch
- * @param {Object[]} eventsData -- minimum {streamId, type }
- * @param {ConnectionEvents~eventBatchCreatedOnTheAPI}
- * @param {function} [callBackWithEventsBeforeRequest] mostly for testing purposes
- * @return {Event[]} events
- */
-ConnectionEvents.prototype.batchWithData =
-  function (eventsData, callback, callBackWithEventsBeforeRequest) {
-  if (!_.isArray(eventsData)) { eventsData = [eventsData]; }
-
-  var createdEvents = [];
-  var eventMap = {};
-
-  var url = '/events/batch';
-  // use the serialId as a temporary Id for the batch
-  _.each(eventsData, function (eventData) {
-    var event =  new Event(this.connection, eventData);
-    createdEvents.push(event);
-    eventMap[event.serialId] = event;
-    eventData.tempRefId = event.serialId;
-  }.bind(this));
-
-  if (callBackWithEventsBeforeRequest) {
-    callBackWithEventsBeforeRequest(createdEvents);
-  }
-
-  this.connection.request('POST', url, function (err, result) {
-    _.each(result, function (eventData, tempRefId) {
-      _.extend(eventMap[tempRefId], eventData); // add the data to the event
+    event.update(function () {
+      //  console.log('update event callback', arguments);
     });
-    callback(err, createdEvents);
-  }, eventsData);
-
-  return createdEvents;
-};
-
-// --- raw access to the API
-
-/**
- * @param {FilterLike} filter
- * @param {Connection~requestCallback} callback
- * @private
- */
-ConnectionEvents.prototype._get = function (filter, callback) {
-  var tParams = filter;
-  if (filter instanceof Filter) { tParams = filter.getData(true); }
-  if (_.has(tParams, 'streams') && tParams.streams.length === 0) { // dead end filter..
-    return callback(null, []);
+  },
+  create: function (callback, progressCallback) {
+    console.log('CREATE', this);
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      event.connection.events.createWithAttachment(event, file, callback, progressCallback);
+    }  else {
+      event.connection.events.create(event, callback);
+    }
+  },
+  addAttachment: function (file) {
+    var data = new FormData();
+    data.append(file.name.split('.')[0], file);
+    this.get('event').file = data;
+    this.get('event').previewFile = file;
+  },
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
   }
-  var url = '/events?' + utility.getQueryParametersString(tParams);
-  this.connection.request('GET', url, callback, null);
-};
+});
+})()
+},{"backbone":27}],45:[function(require,module,exports){
+(function(){/* global $, FileReader, document*/
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  Model = require('./EventModel.js'),
+  MapLoader = require('google-maps'),
+  creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect',
+    pictureSelect: 'pictureSelect', eventEdit: 'eventEdit'},
+  validType = ['note/txt', 'picture/attached', 'position/wgs84'],
+  UNIQUE_ID = 0;
 
+module.exports = Marionette.ItemView.extend({
+  type: 'Creation',
+  step: creationStep.typeSelect,
+  className: 'full-height',
+  pictureFile: null,
+  focusedStream: null,
+  newEvents: null,
+  eventTime: null,
+  eventType: null,
+  google: null,
+  connectionSelected: null,
+  streamSelected: null,
+  canPublish : true,
+  getTemplate: function () {
+    if (this.step === creationStep.typeSelect) {
+      return '#template-detail-creation-type';
+    } else if (this.step === creationStep.streamSelect) {
+      return '#template-detail-creation-stream';
+    } else if (this.step === creationStep.pictureSelect) {
+      return '#template-detail-picture-select';
+    } else if (this.step === creationStep.eventEdit) {
+      return '#template-detail-creation-event';
+    }
+  },
+  templateHelpers: function () {
+    return {
+      getStream: function () {
+        return this.getStream();
+      }.bind(this),
+      getEventType: function () {
+        return this.eventType.split('/')[0] || '';
+      }.bind(this),
+      getTypedView: function () {
+        if (this.eventType === validType[2]) {
+          this._initPositionView();
+          return this._getPositionView();
+        }
+        if (this.eventType === validType[1]) {
+          return this._getPictureView();
+        }
+        if (this.eventType === validType[0]) {
+          return this._getNoteView();
+        }
+      }.bind(this)
+    };
+  },
+  itemViewContainer: '#modal-content',
+  ui: {
+    type: '#type-select',
+    fileElem: '#fileElem',
+    fileSelect: '#fileSelect',
+    stream: '#stream-select',
+    inputStream: '.create-stream input',
+    publish: '#publish',
+    cancel: '#cancel',
+    spin: '.fa-spin'
+  },
+  initialize: function () {
+    this.step = creationStep.typeSelect;
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html($(this.el).fadeIn());
+    this.ui.type.bind('click', this.onTypeClick.bind(this));
+    this.ui.stream.bind('click', this.onStreamClick.bind(this));
+    this.ui.fileSelect.bind('click', this.onFileSelectClick.bind(this));
+    this.ui.fileElem.bind('change', this.onFileSelected.bind(this));
+    this.ui.publish.bind('click', this.onPublishClick.bind(this));
+    this.ui.cancel.bind('click', this.onCancelClick.bind(this));
+    this.ui.inputStream.bind('keypress past', this.onInputStreamChange.bind(this));
+    this.ui.spin.hide();
+    $('.td-progress').hide();
+    $('details').details();
+  },
+  _close: function () {
+    this.trigger('close');
+  },
+  onInputStreamChange: function (e) {
+    var currentValue = e.target.value;
+    this.ui.inputStream.val('');
+    e.target.value = currentValue;
+  },
+  onPublishClick: function () {
+    if (this.streamSelected && this.connectionSelected) {
+      this.ui.spin.show();
+      if (this.eventType === validType[2]) {
+        this._publishPosition();
+      }
+      else if (this.eventType === validType[1]) {
+        this._publishPicture();
+      }
+      else if (this.eventType === validType[0]) {
+        this._publishNote();
+      }
+    } else {
+      var input, parentId, name;
+      /*jshint -W083 */
+      for (var i = 0; i < this.ui.inputStream.length; i++) {
+        input = $(this.ui.inputStream[i]);
+        if (input.val().length > 0) {
+          this.ui.spin.show();
+          name = input.val().trim();
+          parentId = input.attr('data-parentId') || null;
+          this.connectionSelected = this.connection.get(input.attr('data-connection'));
+          this.connectionSelected.streams.create({parentId: parentId, name: name},
+          function (err, res) {
+            if (err) {
+              console.warn(err);
+              this.ui.publish.css({'background-color': '#e74c3c'});
+            } else {
+              this.streamSelected = res.id;
+              this.onPublishClick();
+            }
+          }.bind(this));
+          break;
+        }
+      }
+    }
+  },
+  _publishNote: function () {
 
-/**
- * @param {String} eventId
- * @param {Object} data
- * @param  {Connection~requestCallback} callback
- * @private
- */
-ConnectionEvents.prototype._updateWithIdAndData = function (eventId, data, callback) {
-  var url = '/events/' + eventId;
-  this.connection.request('PUT', url, callback, data);
-};
+    var event = this.newEvents.get('event');
+    var tags = $('#tags-0').val().trim().split(',');
+    var description = $('#description-0').val().trim();
+    var content = $('#content-0').val().trim();
+    var time = new Date($('#edit-time-0').val()).getTime() / 1000;
+    event.content = content;
+    event.tags = tags;
+    event.description = description;
+    event.time = time;
+    event.streamId = this.streamSelected;
+    event.connection = this.connectionSelected;
+    this.newEvents.create(function (err) {
+      this.ui.spin.hide();
+      if (err) {
+        console.warn(err);
+        this.ui.publish.css({'background-color': '#e74c3c'});
+      } else {
+        this.ui.publish.css({'background-color': '#2ecc71'});
+        this._close();
+      }
+    }.bind(this));
+  },
+  _publishPosition: function () {
+    var event = this.newEvents.get('event');
+    var tags = $('#tags-0').val().trim().split(',');
+    var description = $('#description-0').val().trim();
+    var time = new Date($('#edit-time-0').val()).getTime() / 1000;
+    event.tags = tags;
+    event.description = description;
+    event.time = time;
+    event.streamId = this.streamSelected;
+    event.connection = this.connectionSelected;
+    this.newEvents.create(function (err) {
+      this.ui.spin.hide();
+      if (err) {
+        console.warn(err);
+        this.ui.publish.css({'background-color': '#e74c3c'});
+      } else {
+        this.ui.publish.css({'background-color': '#2ecc71'});
+        this._close();
+      }
+    }.bind(this));
 
+  },
+  _publishPicture: function () {
+    var self = this;
+    if (!this.canPublish) {
+      return;
+    }
+    this.canPublish = false;
+    var asyncCount = this.newEvents.length;
+    var create = function (model, $progressBar) {
+      var error = false;
+      model.create(function (err) {
+        asyncCount--;
+        $progressBar.removeClass('progress-striped', 'active');
+        if (err) {
+          error = true;
+          $progressBar.find('.progress-bar').css({'background-color': '#e74c3c', 'width' : '100%'});
+        } else {
+          $progressBar.find('.progress-bar').css({'background-color': '#2ecc71', 'width' : '100%'});
+          model.set('published', true);
+        }
+        if (error && asyncCount === 0) {
+          self.ui.spin.hide();
+          self.canPublish = true;
+        } else if (!error && asyncCount === 0) {
+          self.ui.spin.hide();
+          self._close();
+        }
+      },
+        function (e) {
+          $progressBar.find('.progress-bar').css(
+            {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
+          );
+        });
+    };
+    var tags, description, time, event, $progressBar;
+    $('.td-tags, .td-time, .td-description').hide();
+    $('.td-progress').show();
+    for (var i = 0; i < this.newEvents.length; i++) {
+      if (!this.newEvents[i].get('published')) {
+        event = this.newEvents[i].get('event');
+        $progressBar = $('#progress-' + i);
+        $progressBar.addClass('progress-striped', 'active');
+        $progressBar.find('.progress-bar').css({'background-color': '#2980b9', 'width' : '0%'});
+        tags = $('#tags-' + i).val().trim().split(',');
+        description = $('#description-' + i).val().trim();
+        time = new Date($('#edit-time-' + i).val()).getTime() / 1000;
+        event.tags = tags;
+        event.description = description;
+        event.time = time;
+        event.streamId = this.streamSelected;
+        event.connection = this.connectionSelected;
+        create(this.newEvents[i], $progressBar);
+      }
+    }
+  },
 
-module.exports = ConnectionEvents;
+  onCancelClick: function () {
+    this._close();
+  },
 
-/**
- * Called with the desired Events as result.
- * @callback ConnectionEvents~getCallback
- * @param {Object} error - eventual error
- * @param {Event[]} result
- */
+  onStreamClick: function (e) {
+    var streamSelected = $(e.target).attr('data-stream') ||
+        $(e.target).parent().attr('data-stream'),
+      connectionSelected = this.connection.get($(e.target).attr('data-connection') ||
+        $(e.target).parent().attr('data-connection'));
+    this.streamSelected = streamSelected;
+    if (connectionSelected) {
+      this.connectionSelected = connectionSelected;
+    }
+    return true;
+  },
+  onTypeClick: function (e) {
+    var typeSelected =  $(e.target).attr('data-type') || $(e.target).parent().attr('data-type'),
+      event = this.model.get('event');
 
+    if (validType.indexOf(typeSelected) !== -1) {
+      event.type = this.eventType =  typeSelected;
+      $('#myModalLabel').text('Add ' + this.eventType.split('/')[0]);
+      if (typeSelected === validType[1]) {
+        this.step = creationStep.pictureSelect;
+      } else  if (typeSelected === validType[2]) {
+        MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
+        MapLoader.load().then(function (google) {
+          this.google = google;
+        }.bind(this));
+        this.step = creationStep.eventEdit;
+      } else {
+        this.step = creationStep.eventEdit;
+      }
+      this.render();
+    }
+    return true;
+  },
+  onFileSelectClick: function () {
+    this.ui.fileElem.click();
+  },
+  onFileSelected: function (e) {
+    var files = e.target.files;
+    if (!files) {
+      return false;
+    }
+    this.newEvents = [];
+    _.each(files, function (file) {
+      if (file.type.indexOf('image') !== -1) {
+        var time = new Date().getTime() / 1000;
+        if (file.lastModifiedDate) {
+          time = file.lastModifiedDate.getTime() / 1000;
+        }
+        var model = new Model({event: {
+          time: time,
+          type: this.eventType,
+          tags: [],
+          content: null,
+          description: ''
+        }});
+        model.addAttachment(file);
+        this.newEvents.push(model);
+      }
+    }.bind(this));
+    if (this.newEvents.length > 0) {
+      this.step = creationStep.eventEdit;
+      this.render();
+      return true;
+    } else {
+      return false;
+    }
+  },
+  getStream: function () {
+    this.streamSelected  = this.focusedStream ? this.focusedStream.id : null;
+    this.connectionSelected  = this.focusedStream ? this.focusedStream.connection : null;
+    var result = '<div id="stream-select">',
+      connections  = this.connection._connections,
+      open = '';
+    if (this.focusedStream) {
+      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream);
+    }
+    _.each(connections, function (c) {
+      if (!this._isWritePermission(c)) {
+        return;
+      }
+      if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
+        this.focusedStream.ancestor[0].serialId === c.serialId) {
+        open = 'open';
+        this.focusedStream.ancestor.shift();
+      } else {
+        open = '';
+      }
+      result += '<details ' + open + '><summary class="connection">' +
+        c.username + ' / ' + c._accessInfo.name + '</summary>';
+      result += this.getStreamStructure(c);
+      result += '</details>';
 
-/**
- * Called each time a "part" of the result is received
- * @callback ConnectionEvents~partialResultCallback
- * @param {Event[]} result
- */
+    }.bind(this));
+    return result + '</div>';
+  },
+  getStreamStructure: function (connection) {
+    var rootStreams = connection.datastore.getStreams(),
+      result = '', open = '', checked = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (this._isWritePermission(connection, rootStreams[i])) {
+        if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
+          this.focusedStream.ancestor[0].id === rootStreams[i].id) {
+          open = 'open';
+          this.focusedStream.ancestor.shift();
+          if (this.focusedStream.ancestor.length === 0) {
+            checked = 'checked';
+          }
+        } else {
+          checked = '';
+          open = '';
+        }
+        result += '<details ' + open + ' ">' +
+          this._walkStreamStructure(rootStreams[i], checked) +
+          '</details>';
+      }
+    }
+    result +=
+      '<summary><div class="input-group">' +
+        '<form role="form" class="create-stream">' +
+        '<i class="fa fa-plus fa-2"></i>' +
+        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        ' data-parentId=""  data-connection="' + connection.serialId + '">' +
+        '</form></div></summary>';
+    return result;
 
+  },
+  _walkStreamStructure: function (stream, checked) {
+    var result = '<summary data-connection="' +
+      stream.connection.serialId + '" data-stream="' +
+      stream.id + '"><input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
+      '" class="select-stream" ' +
+      checked + '><label for="selectStream' + UNIQUE_ID + '">' +
+      stream.name + '</label></summary>';
+    UNIQUE_ID++;
+    var open = '';
+    checked = '';
+    for (var j = 0; j < stream.children.length; j++) {
+      if (this._isWritePermission(stream.connection, stream.children[j])) {
+        if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
+          this.focusedStream.ancestor[0].id === stream.children[j].id) {
+          open = 'open';
+          this.focusedStream.ancestor.shift();
+          if (this.focusedStream.ancestor.length === 0) {
+            checked = 'checked';
+          }
+        } else {
+          open = '';
+          checked = '';
+        }
+        result += '<details ' + open + ' ">' +
+          this._walkStreamStructure(stream.children[j], checked) +
+          '</details>';
+      }
+    }
+    result +=
+      '<summary><div class="input-group">' +
+        '<form role="form" class="create-stream">' +
+        '<i class="fa fa-plus fa-2"></i>' +
+        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
+        '</form></div></summary>';
+    return result;
+  },
+  _isWritePermission: function (connection, streamId) {
+    if (!connection._accessInfo) {
+      return false;
+    }
+    if (connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId !== 'read') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId === 'read') {
+      return false;
+    }
+    if (streamId) {
+      return !!_.find(connection._accessInfo.permissions, function (p) {
+        return p.streamId === streamId && p.level !== 'read';
+      });
+    }
+    return false;
+  },
+  _getStreamAncestor: function (stream) {
+    var result = [];
+    var ancestor = stream.parent;
+    result.unshift(stream);
+    while (ancestor) {
+      result.unshift(ancestor);
+      ancestor = ancestor.parent;
+    }
+    result.unshift(stream.connection);
+    return result;
+  },
+  _initPositionView: function () {
+    if (!this.google) {
+      _.delay(this._initPositionView.bind(this), 100);
+      return;
+    }
+    var map, elevator, marker, lat, lng;
+    this.newEvents = new Model({event: {
+      time: new Date().getTime() / 1000,
+      type: this.eventType,
+      tags: [],
+      content: {},
+      description: ''
+    }});
+    if (this.newEvents.get('event')) {
+      this.newEvents.get('event').content.latitude = lat = 46.51759;
+      this.newEvents.get('event').content.longitude = lng = 6.56267;
 
-/**
- * Called when an event is created on the API
- * @callback ConnectionEvents~eventCreatedOnTheAPI
- * @param {Object} error - eventual error
- * @param {Event} event
- */
+      map = new this.google.maps.Map(document.getElementById('creation-picture'), {
+        zoom: 16,
+        center: new this.google.maps.LatLng(lat, lng),
+        mapTypeId: this.google.maps.MapTypeId.ROADMAP
+      });
+      elevator = new this.google.maps.ElevationService();
+      marker = new this.google.maps.Marker({
+        position: new this.google.maps.LatLng(lat, lng),
+        draggable: true
+      });
 
-/**
- * Called when batch create an array of events on the API
- * @callback ConnectionEvents~eventBatchCreatedOnTheAPI
- * @param {Object} error - eventual error
- * @param {Event[]} events
- */
-
-},{"../Event":11,"../Filter":13,"../utility/utility.js":15,"underscore":37}],42:[function(require,module,exports){
+      this.google.maps.event.addListener(marker, 'dragend', function (evt) {
+        var event = this.newEvents.get('event');
+        event.content.latitude = evt.latLng.lat();
+        event.content.longitude = evt.latLng.lng();
+        var positionalRequest = {
+          'locations': [evt.latLng]
+        };
+        elevator.getElevationForLocations(positionalRequest, function (results, status) {
+          if (status === this.google.maps.ElevationStatus.OK) {
+            // Retrieve the first result
+            if (results[0]) {
+              var event = this.newEvents.get('event');
+              event.content.altitude = results[0].elevation;
+            }
+          }
+        }.bind(this));
+      }.bind(this));
+      map.setCenter(marker.position);
+      marker.setMap(map);
+    }
+  },
+  _getNoteView: function () {
+    this.newEvents = new Model({event: {
+      time: new Date().getTime() / 1000,
+      type: this.eventType,
+      tags: [],
+      content: null,
+      description: ''
+    }});
+    var result = '';
+    result += '<form id="creation-form" role="form">' +
+      '      <div class="form-group td-content">' +
+      '        <label class="sr-only" for="content">Content</label>' +
+      '        <textarea rows="15" class="form-control" id="content-0" ' +
+      'placeholder="Enter your note..."></textarea>' +
+      '      </div>' +
+      '  <div class="form-group td-tags">' +
+      '    <label class="sr-only" for="tags">Tags</label>' +
+      '    <input type="text" class="form-control" id="tags-0" ' +
+      'placeholder="Enter tags (comma separated)">' +
+      '    </div>' +
+      '    <div class="form-group td-time">' +
+      '      <label class="sr-only" for="edit-time">Time</label>' +
+      '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+      'value="' + new Date().toISOString().slice(0, -5) +
+      '">' +
+      '      </div>' +
+      '      <div class="form-group td-description">' +
+      '        <label class="sr-only" for="description">Description</label>' +
+      '        <textarea rows="3" class="form-control" id="description-0" ' +
+      'placeholder="Description"></textarea>' +
+      '      </div>' +
+      '    </form>';
+    return result;
+  },
+  _getPositionView: function () {
+    var result = '';
+    result += '<div id="creation-picture" class="col-md-12"></div>';
+    result += '<form id="creation-form" role="form">' +
+      '  <div class="form-group td-tags">' +
+      '    <label class="sr-only" for="tags">Tags</label>' +
+      '    <input type="text" class="form-control" id="tags-0" ' +
+      'placeholder="Enter tags (comma separated)">' +
+      '    </div>' +
+      '    <div class="form-group td-time">' +
+      '      <label class="sr-only" for="edit-time">Time</label>' +
+      '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+      'value="' + new Date().toISOString().slice(0, -5) +
+      '">' +
+      '      </div>' +
+      '      <div class="form-group td-description">' +
+      '        <label class="sr-only" for="description">Description</label>' +
+      '        <textarea rows="3" class="form-control" id="description-0" ' +
+      'placeholder="Description"></textarea>' +
+      '      </div>' +
+      '    </form>';
+    return result;
+  },
+  _getPictureView: function () {
+    var reader = new FileReader();
+    var toRead = [];
+    var  readFile = function (elems) {
+      var elem = elems.shift(), file, selector;
+      if (elem) {
+        file = elem.file;
+        selector = elem.selector;
+        reader.onload = function (e) {
+          $(selector).attr('src', e.target.result);
+          readFile(elems);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    var result = '';
+    if (this.newEvents.length === 1) {
+      var event = this.newEvents[0].get('event');
+      result += '<div id="creation-picture" class="col-md-12">' +
+        '<img src="#" id="preview-0"></div>';
+      result += '<form id="creation-form" role="form">' +
+        '<div id="progress-0' +
+        '" class="td-progress progress progress-striped active" >' +
+        '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
+        'aria-valuemax="100" style="width: 0%"></div></div>' +
+        '  <div class="form-group td-tags">' +
+        '    <label class="sr-only" for="tags">Tags</label>' +
+        '    <input type="text" class="form-control" id="tags-0" ' +
+        'placeholder="Enter tags (comma separated)">' +
+        '    </div>' +
+        '    <div class="form-group td-time">' +
+        '      <label class="sr-only" for="edit-time">Time</label>' +
+        '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+        'value="' + new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) +
+        '">' +
+        '      </div>' +
+        '      <div class="form-group td-description">' +
+        '        <label class="sr-only" for="description">Description</label>' +
+        '        <textarea rows="3" class="form-control" id="description-0" ' +
+        'placeholder="Description"></textarea>' +
+        '      </div>' +
+        '    </form>';
+      toRead.push({file: event.previewFile, selector: '#preview-0'});
+    } else {
+      result = '<table id="creation-picture-table" class="table table-striped">';
+      for (var i = 0; i < this.newEvents.length; i++) {
+        var model = this.newEvents[i];
+        result += '<tr>' +
+          '<td class="td-preview"><div class="preview"><img src="#" id="preview-' + i +
+          '"></div></td>' +
+          '<td class="td-progress"><div id="progress-' + i +
+          '" class="progress progress-striped active" >' +
+          '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
+          'aria-valuemax="100" style="width: 0%"></div></div></td>' +
+          '<td class="td-tags"><div class="form-group"><label class="sr-only" ' +
+          'for="tags">Tags</label>' +
+          '<input type="text" class="form-control" id="tags-' + i +
+          '" placeholder="Enter tags (comma separated)">' +
+          '</div></td>' +
+          '<td class="td-time"><div class="form-group"><label class="sr-only" ' +
+          'for="edit-time">Time</label>' +
+          '<input type="datetime-local" class="edit" id="edit-time-' + i + '" value="' +
+          new Date(Math.round(model.get('event').time * 1000)).toISOString().slice(0, -5) +
+          '"></div></td>' +
+          '<td class="td-description"><div class="form-group"><label class="sr-only" ' +
+          'for="description">Description' +
+          '</label><textarea row="3" class="form-control" id="description-' + i + '" ' +
+          'placeholder="Description"></textarea></div></td>' +
+          '</tr>';
+        toRead.push({file: model.get('event').previewFile, selector: '#preview-' + i});
+      }
+      result += '</table>';
+    }
+    _.delay(readFile(toRead), 1000);
+    return result;
+  }
+});
+})()
+},{"./EventModel.js":44,"backbone.marionette":46,"google-maps":84,"underscore":8}],49:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('../utility/utility.js'),
     Stream = require('../Stream.js');
@@ -14741,7 +15404,11 @@ ConnectionStreams.prototype.get = function (options, callback) {
     } else {
       resultTree = this.connection.datastore.getStreams();
     }
-    callback(null, resultTree);
+    if (resultTree.length > 0) {
+      callback(null, resultTree);
+    } else {
+      this._getObjects(options, callback);
+    }
   } else {
     this._getObjects(options, callback);
   }
@@ -14795,6 +15462,11 @@ ConnectionStreams.prototype._getData = function (opts, callback) {
   this.connection.request('GET', url, callback, null);
 };
 
+ConnectionStreams.prototype.create = function (streamData, callback) {
+  streamData = _.pick(streamData, 'id', 'name', 'parentId', 'singleActivity',
+    'clientData', 'trashed');
+  this._createWithData(streamData, callback);
+};
 /**
  * Create a stream on the API with a jsonObject
  * @private
@@ -14805,9 +15477,17 @@ ConnectionStreams.prototype._getData = function (opts, callback) {
 ConnectionStreams.prototype._createWithData = function (streamData, callback) {
   var url = '/streams';
   this.connection.request('POST', url, function (err, resultData) {
-    streamData.id = resultData.id;
-    callback(err, resultData);
-  }, streamData);
+    if (resultData) {
+      streamData.id = resultData.stream.id;
+      var stream = new Stream(this.connection, resultData.stream);
+      if (this.connection.datastore) {
+        this.connection.datastore.indexStream(stream);
+      }
+    }
+    if (_.isFunction(callback)) {
+      return callback(err, resultData.stream);
+    }
+  }.bind(this), streamData);
 };
 
 /**
@@ -14833,8 +15513,9 @@ ConnectionStreams.prototype._getObjects = function (options, callback) {
   options.parentId = options.parentId || null;
   var streamsIndex = {};
   var resultTree = [];
-  this._getData(options, function (error, treeData) {
+  this._getData(options, function (error, result) {
     if (error) { return callback('Stream.get failed: ' + error); }
+    var treeData = result.streams || result.stream;
     ConnectionStreams.Utils.walkDataTree(treeData, function (streamData) {
       var stream = new Stream(this.connection, streamData);
       streamsIndex[streamData.id] = stream;
@@ -14985,75 +15666,383 @@ module.exports = ConnectionStreams;
  */
 
 
-},{"../Stream.js":17,"../utility/utility.js":15,"underscore":37}],41:[function(require,module,exports){
-var apiPathBookmarks = '/bookmarks',
-  Connection = require('../Connection.js'),
-  _ = require('underscore');
+},{"../Stream.js":12,"../utility/utility.js":15,"underscore":47}],50:[function(require,module,exports){
+var utility = require('../utility/utility.js'),
+  _ = require('underscore'),
+  Filter = require('../Filter'),
+  Event = require('../Event');
 
 /**
- * @class Bookmarks
- * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
+ * @class ConnectionEvents
+ *
+ * Coverage of the API
+ *  GET /events -- 100%
+ *  POST /events -- only data (no object)
+ *  POST /events/start -- 0%
+ *  POST /events/stop -- 0%
+ *  PUT /events/{event-id} -- 100%
+ *  DELETE /events/{event-id} -- only data (no object)
+ *  POST /events/batch -- only data (no object)
+ *
+ *  attached files manipulations are covered by Event
+ *
+ *
  * @param {Connection} connection
  * @constructor
  */
-function Bookmarks(connection, Conn) {
+function ConnectionEvents(connection) {
   this.connection = connection;
-  Connection = Conn;
 }
+
+
 /**
+ * @example
+ * // get events from the Diary stream
+ * conn.events.get({streamId : 'diary'},
+ *  function(events) {
+ *    console.log('got ' + events.length + ' events)
+ *  }
+ * );
+ * @param {FilterLike} filter
+ * @param {ConnectionEvents~getCallback} doneCallback
+ * @param {ConnectionEvents~partialResultCallback} partialResultCallback
+ */
+ConnectionEvents.prototype.get = function (filter, doneCallback, partialResultCallback) {
+  //TODO handle caching
+  var result = [];
+  this._get(filter, function (error, res) {
+    var eventList = res.events || res.event;
+    _.each(eventList, function (eventData) {
+      result.push(new Event(this.connection, eventData));
+    }.bind(this));
+    doneCallback(error, result);
+    if (partialResultCallback) { partialResultCallback(result); }
+  }.bind(this));
+};
+
+/**
+ * @param {Event} event
  * @param {Connection~requestCallback} callback
  */
-Bookmarks.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathBookmarks, function (error, bookmarks) {
-    var result = [];
-    _.each(bookmarks, function (bookmark) {
-      var conn =  new Connection({
-        auth: bookmark.accessToken,
-        url: bookmark.url,
-        name: bookmark.name,
-        bookmarkId: bookmark.id
-      });
-      result.push(conn);
-    });
-    callback(error, result);
-  });
+ConnectionEvents.prototype.update = function (event, callback) {
+  this._updateWithIdAndData(event.id, event.getData(), callback);
 };
 
-Bookmarks.prototype.create = function (bookmark, callback) {
-  if (bookmark.name && bookmark.url && bookmark.accessToken) {
-    this.connection.request('POST', apiPathBookmarks, function (err, result) {
-      var error = err;
-      if (result && result.message) {
-        error = result;
-      } else if (result) {
-        var conn =  new Connection({
-          auth: bookmark.accessToken,
-          url: bookmark.url,
-          name: bookmark.name,
-          bookmarkId: result.id
-        });
-        bookmark = conn;
-      }
-      callback(error, bookmark);
-    }, bookmark);
-    return bookmark;
+/**
+ * @param {Event | eventId} event
+ * @param {Connection~requestCallback} callback
+ */
+ConnectionEvents.prototype.trash = function (event, callback) {
+  this.trashWithId(event.id, callback);
+};
+
+/**
+ * @param {String} eventId
+ * @param {Connection~requestCallback} callback
+ */
+ConnectionEvents.prototype.trashWithId = function (eventId, callback) {
+  var url = '/events/' + eventId;
+  this.connection.request('DELETE', url, callback, null);
+};
+
+/**
+ * This is the preferred method to create an event, or to create it on the API.
+ * The function return the newly created object.. It will be updated when posted on the API.
+ * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
+ * the same connection and not exists on the API.
+ * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
+ * @return {Event} event
+ */
+ConnectionEvents.prototype.create = function (newEventlike, callback) {
+  var event = null;
+  if (newEventlike instanceof Event) {
+    if (newEventlike.connection !== this.connection) {
+      return callback(new Error('event.connection does not match current connection'));
+    }
+    if (newEventlike.id) {
+      return callback(new Error('cannot create an event already existing on the API'));
+    }
+    event = newEventlike;
+  } else {
+    event = new Event(this.connection, newEventlike);
+  }
+
+  var url = '/events';
+  this.connection.request('POST', url, function (err, result) {
+    if (result) {
+      _.extend(event, result.event);
+    }
+    if (_.isFunction(callback)) {
+      callback(err, event);
+    }
+  }, event.getData());
+  return event;
+};
+ConnectionEvents.prototype.createWithAttachment = function (newEventLike, file, callback,
+                                                            progressCallback) {
+  var event = null;
+  if (newEventLike instanceof Event) {
+    if (newEventLike.connection !== this.connection) {
+      return callback(new Error('event.connection does not match current connection'));
+    }
+    if (newEventLike.id) {
+      return callback(new Error('cannot create an event already existing on the API'));
+    }
+    event = newEventLike;
+  } else {
+    event = new Event(this.connection, newEventLike);
+  }
+  file.append('event', JSON.stringify(event.getData()));
+  var url = '/events';
+  this.connection.request('POST', url, function (err, result) {
+    if (result) {
+      _.extend(event, result.event);
+    }
+    callback(err, event);
+  }, file, true, progressCallback);
+};
+ConnectionEvents.prototype.addAttachment = function (eventId, file, callback, progressCallback) {
+  var url = '/events/' + eventId;
+  this.connection.request('POST', url, callback, file, true, progressCallback);
+};
+ConnectionEvents.prototype.removeAttachment = function (eventId, fileName, callback) {
+  var url = '/events/' + eventId + '/' + fileName;
+  this.connection.request('DELETE', url, callback);
+};
+/**
+ * //TODO make it NewEventLike compatible
+ * This is the prefered method to create events in batch
+ * @param {Object[]} eventsData -- minimum {streamId, type }
+ * @param {ConnectionEvents~eventBatchCreatedOnTheAPI}
+ * @param {function} [callBackWithEventsBeforeRequest] mostly for testing purposes
+ * @return {Event[]} events
+ */
+ConnectionEvents.prototype.batchWithData =
+  function (eventsData, callback, callBackWithEventsBeforeRequest) {
+  if (!_.isArray(eventsData)) { eventsData = [eventsData]; }
+
+  var createdEvents = [];
+  var eventMap = {};
+
+  var url = '/events/batch';
+  // use the serialId as a temporary Id for the batch
+  _.each(eventsData, function (eventData) {
+    var event =  new Event(this.connection, eventData);
+    createdEvents.push(event);
+    eventMap[event.serialId] = event;
+    eventData.tempRefId = event.serialId;
+  }.bind(this));
+
+  if (callBackWithEventsBeforeRequest) {
+    callBackWithEventsBeforeRequest(createdEvents);
+  }
+
+  this.connection.request('POST', url, function (err, result) {
+    _.each(result, function (eventData, tempRefId) {
+      _.extend(eventMap[tempRefId], eventData); // add the data to the event
+    });
+    callback(err, createdEvents);
+  }, eventsData);
+
+  return createdEvents;
+};
+
+// --- raw access to the API
+
+/**
+ * @param {FilterLike} filter
+ * @param {Connection~requestCallback} callback
+ * @private
+ */
+ConnectionEvents.prototype._get = function (filter, callback) {
+  var tParams = filter;
+  if (filter instanceof Filter) { tParams = filter.getData(true); }
+  if (_.has(tParams, 'streams') && tParams.streams.length === 0) { // dead end filter..
+    return callback(null, []);
+  }
+  var url = '/events?' + utility.getQueryParametersString(tParams);
+  this.connection.request('GET', url, callback, null);
+};
+
+
+/**
+ * @param {String} eventId
+ * @param {Object} data
+ * @param  {Connection~requestCallback} callback
+ * @private
+ */
+ConnectionEvents.prototype._updateWithIdAndData = function (eventId, data, callback) {
+  var url = '/events/' + eventId;
+  this.connection.request('PUT', url, callback, data);
+};
+
+
+module.exports = ConnectionEvents;
+
+/**
+ * Called with the desired Events as result.
+ * @callback ConnectionEvents~getCallback
+ * @param {Object} error - eventual error
+ * @param {Event[]} result
+ */
+
+
+/**
+ * Called each time a "part" of the result is received
+ * @callback ConnectionEvents~partialResultCallback
+ * @param {Event[]} result
+ */
+
+
+/**
+ * Called when an event is created on the API
+ * @callback ConnectionEvents~eventCreatedOnTheAPI
+ * @param {Object} error - eventual error
+ * @param {Event} event
+ */
+
+/**
+ * Called when batch create an array of events on the API
+ * @callback ConnectionEvents~eventBatchCreatedOnTheAPI
+ * @param {Object} error - eventual error
+ * @param {Event[]} events
+ */
+
+},{"../Event":11,"../Filter":14,"../utility/utility.js":15,"underscore":47}],48:[function(require,module,exports){
+(function(){/**
+ * (event)Emitter renamed to avoid confusion with prvy's events
+ */
+
+
+var _ = require('underscore');
+
+var SignalEmitter = module.exports = function (messagesMap) {
+  SignalEmitter.extend(this, messagesMap);
+};
+
+
+SignalEmitter.extend = function (object, messagesMap, name) {
+  if (! name) {
+    throw new Error('"name" parameter must be set');
+  }
+  object._signalEmitterEvents = {};
+  _.each(_.values(messagesMap), function (value) {
+    object._signalEmitterEvents[value] = [];
+  });
+  _.extend(object, SignalEmitter.prototype);
+  object._signalEmitterName = name;
+};
+
+
+SignalEmitter.Messages = {
+  /** called when a batch of changes is expected, content: <batchId> unique**/
+  BATCH_BEGIN : 'beginBatch',
+  /** called when a batch of changes is done, content: <batchId> unique**/
+  BATCH_DONE : 'doneBatch',
+  /** if an eventListener return this string, it will be removed automatically **/
+  UNREGISTER_LISTENER : 'unregisterMePlease'
+};
+
+/**
+ * Add an event listener
+ * @param signal one of  Messages.SIGNAL.*.*
+ * @param callback function(content) .. content vary on each signal.
+ * If the callback returns SignalEmitter.Messages.UNREGISTER_LISTENER it will be removed
+ * @return the callback function for further reference
+ */
+SignalEmitter.prototype.addEventListener = function (signal, callback) {
+  this._signalEmitterEvents[signal].push(callback);
+  return callback;
+};
+
+
+/**
+ * remove the callback matching this signal
+ */
+SignalEmitter.prototype.removeEventListener = function (signal, callback) {
+  for (var i = 0; i < this._signalEmitterEvents[signal].length; i++) {
+    if (this._signalEmitterEvents[signal][i] === callback) {
+      this._signalEmitterEvents[signal][i] = null;
+    }
   }
 };
-Bookmarks.prototype.delete = function (bookmarkId, callback) {
-  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
-    var error = err;
-    if (result && result.message) {
-      error = result;
+
+
+/**
+ * A changes occurred on the filter
+ * @param signal
+ * @param content
+ * @param batch
+ * @private
+ */
+SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
+  var batchId = batch ? batch.id : null;
+  if (! signal) { throw new Error(); }
+
+  var batchStr = batchId ? ' batch: ' + batchId + ', ' + batch.batchName : '';
+  console.log('FireEvent-' + this._signalEmitterName  + ' : ' + signal + batchStr);
+
+  _.each(this._signalEmitterEvents[signal], function (callback) {
+    if (callback !== null &&
+      SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batchId, batch)) {
+      this.removeEventListener(signal, callback);
     }
-    callback(error, result);
-  });
+  }, this);
 };
 
-module.exports = Bookmarks;
-},{"../Connection.js":12,"underscore":37}],43:[function(require,module,exports){
+
+SignalEmitter.batchSerial = 0;
+/**
+ * start a batch process
+ * @param eventual superBatch you can hook on. In this case it will call superBatch.waitForMe(..)
+ * @return an object where you have to call stop when done
+ */
+SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
+  if (orHookOnBatch && orHookOnBatch.sender === this) { // test if this batch comes form me
+    return orHookOnBatch.waitForMeToFinish();
+  }
+  var batch = {
+    sender : this,
+    batchName : batchName || '',
+    id : this._signalEmitterName + SignalEmitter.batchSerial++,
+    filter : this,
+    waitFor : 1,
+    doneCallbacks : {},
+
+    waitForMeToFinish : function () {
+      batch.waitFor++;
+      return this;
+    },
+
+    /**
+     * listener are stored in key/map fashion, so addOnDoneListener('bob',..)
+     * may be called several time, callback 'bob', will be done just once
+     * @param key a unique key per callback
+     * @param callback
+     */
+    addOnDoneListener : function (key, callback) {
+      this.doneCallbacks[key] = callback;
+    },
+    done : function (name) {
+      this.waitFor--;
+      if (this.waitFor === 0) {
+        _.each(this.doneCallbacks, function (callback) { callback(); });
+        this.filter._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
+      }
+      if (this.waitFor < 0) {
+        console.error('This batch has been done() to much :' + name);
+      }
+    }
+  };
+  this._fireEvent(SignalEmitter.Messages.BATCH_BEGIN, batch.id, batch);
+  return batch;
+};
+
+})()
+},{"underscore":47}],54:[function(require,module,exports){
 var _ = require('underscore'),
-  system = require('../system/system.js'),
-  Monitor = require('../Monitor.js');
+    utility = require('../utility/utility'),
+    Monitor = require('../Monitor');
 
 /**
  * @class ConnectionMonitors
@@ -15116,7 +16105,7 @@ ConnectionMonitors.prototype._startMonitoring = function (callback) {
     auth : this.connection.auth
   };
 
-  this.ioSocket = system.ioConnect(settings);
+  this.ioSocket = utility.ioConnect(settings);
 
   this.ioSocket.on('connect', function () {
     _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
@@ -15137,11 +16126,401 @@ module.exports = ConnectionMonitors;
 
 
 
-},{"../Monitor.js":77,"../system/system.js":14,"underscore":37}],27:[function(require,module,exports){
+},{"../Monitor":85,"../utility/utility":15,"underscore":47}],53:[function(require,module,exports){
+var apiPathBookmarks = '/followed-slices',
+  Connection = require('../Connection.js'),
+  _ = require('underscore');
+
+/**
+ * @class Bookmarks
+ * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
+ * @param {Connection} connection
+ * @constructor
+ */
+function Bookmarks(connection, Conn) {
+  this.connection = connection;
+  Connection = Conn;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Bookmarks.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathBookmarks, function (error, res) {
+    var result = [],
+      bookmarks = res.followedSlices || res.followedSlice;
+    _.each(bookmarks, function (bookmark) {
+      bookmark.url = bookmark.url.replace(/\.li/, '.in');
+      bookmark.url = bookmark.url.replace(/\.me/, '.io');
+      var conn =  new Connection({
+        auth: bookmark.accessToken,
+        url: bookmark.url,
+        name: bookmark.name,
+        bookmarkId: bookmark.id
+      });
+      result.push(conn);
+    });
+    callback(error, result);
+  });
+};
+
+Bookmarks.prototype.create = function (bookmark, callback) {
+  if (bookmark.name && bookmark.url && bookmark.accessToken) {
+    this.connection.request('POST', apiPathBookmarks, function (err, result) {
+      var error = err;
+      if (!error) {
+        var conn =  new Connection({
+          auth: bookmark.accessToken,
+          url: bookmark.url,
+          name: bookmark.name,
+          bookmarkId: result.followedSlice.id
+        });
+        bookmark = conn;
+      }
+      callback(error, bookmark);
+    }, bookmark);
+    return bookmark;
+  }
+};
+Bookmarks.prototype.delete = function (bookmarkId, callback) {
+  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+
+module.exports = Bookmarks;
+},{"../Connection.js":16,"underscore":47}],51:[function(require,module,exports){
+var apiPathAccesses = '/accesses';
+var _ = require('underscore');
+
+/**
+ * @class Accesses
+ * @link http://api.pryv.com/reference.html#methods-accesses
+ * @link http://api.pryv.com/reference.html#data-structure-access
+ * @param {Connection} connection
+ * @constructor
+ */
+function Accesses(connection) {
+  this.connection = connection;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Accesses.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathAccesses, function (err, res) {
+    var accesses = res.accesses || res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, accesses);
+    }
+  });
+};
+
+Accesses.prototype.create = function (access, callback) {
+  this.connection.request('POST', apiPathAccesses, function (err, res) {
+    var access = res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, access);
+    }
+  }, access);
+};
+Accesses.prototype.update = function (access, callback) {
+  if (access.id) {
+    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
+      _.pick(access, 'name', 'deviceName', 'permissions'));
+  } else {
+    if (callback && _.isFunction(callback)) {
+      return callback('No access id found');
+    }
+
+  }
+};
+
+Accesses.prototype.delete = function (sharingId, callback) {
+  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+module.exports = Accesses;
+},{"underscore":47}],61:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+ /* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
+module.exports = Marionette.ItemView.extend({
+  template: '#nodeView',
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+
+    this.$el.attr('id', this.model.get('id'));
+    this.$el.attr('data-streamId', this.model.get('streamId'));
+    this.$el.attr('data-streamName', this.model.get('streamName'));
+    this.$el.attr('data-connectionId', this.model.get('connectionId'));
+    this.$el.addClass('node animated  fadeIn');
+    this.$el.addClass(this.model.get('className'));
+
+  },
+  triggers: {
+    'click .nodeHeader': 'headerClicked'
+  },
+  change: function () {
+
+    this._refreshStyle();
+  },
+
+  renderView: function () {
+
+    this.render();
+  },
+  render: function () {
+    if (this.beforeRender) { this.beforeRender(); }
+    this.trigger('before:render', this);
+    this.trigger('item:before:render', this);
+    this._refreshStyle();
+    var data = this.serializeData();
+    var template = this.getTemplate();
+    var html = Marionette.Renderer.render(template, data);
+    this.$el.html(html);
+
+    $('#' + this.model.get('containerId')).prepend(this.$el);
+    if (this.model.get('eventView')) {
+      this.model.get('eventView').render(this.model.get('id'));
+    }
+    this.bindUIElements();
+
+    if (this.onRender) { this.onRender(); }
+    this.trigger('render', this);
+    this.trigger('item:rendered', this);
+    return this;
+
+  },
+  _refreshStyle: function () {
+    if (this.model.get('weight') === 0) {
+      this.close();
+      return;
+    }
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('className'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+    if (this.model.get('color')) {
+      this.$el.css('background-color', this.model.get('color'));
+    }
+  },
+  close: function () {
+
+    this.$el.removeClass('animated  fadeIn');
+    this.$el.addClass('animated  fadeOut');
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":46}],62:[function(require,module,exports){
+
+var _ = require('underscore');
+var TreemapUtils = module.exports = TreemapUtils || {};
+TreemapUtils.sumArray = function (nodes) {
+  // Use one adding function rather than create a new one each
+  // time sumArray is called.
+  return _.reduce(TreemapUtils._extractWeight(nodes), function (memo, num) {
+    return memo + num;
+  }, 0);
+
+};
+TreemapUtils._getMaxWeight = function (nodes) {
+  return Math.max.apply(null, TreemapUtils._extractWeight(nodes));
+};
+TreemapUtils._getMinWeight = function (nodes) {
+  return Math.min.apply(null, TreemapUtils._extractWeight(nodes));
+};
+TreemapUtils._extractWeight = function (nodes) {
+  var result = [];
+  _.each(nodes, function (node) {
+    result.push(node.normalizedWeight);
+  });
+  return result;
+};
+//
+// Treemap squarify layout function.
+//  rect - containing rectangle; an array of 4 values x, y, width, height
+//  vals - array of (normalized) float values each representing percent contribution to
+//  total area of containing rectangle
+//
+// Non-recursive implementation of the squarify treemap layout algorithm published in:
+// "Squarified Treemaps" by Mark Bruls, Kees Huizing and Jarke J. van Wijk
+// http://www.win.tue.nl/~vanwijk/stm.pdf
+//
+// Includes tips and tricks from:
+// http://ejohn.org/blog/fast-javascript-maxmin/#postcomment
+//
+TreemapUtils.squarify = function (rect, vals) {
+  // console.log('squrify begin');
+
+  var Subrectangle = function (rect) {
+    this.setX = function (x) {
+      rect.width -= x - rect.x;
+      rect.x = x;
+    };
+    this.setY = function (y) {
+      rect.height -= y - rect.y;
+      rect.y = y;
+    };
+    this.getX = function () {
+      return rect.x;
+    };
+    this.getY = function () {
+      return rect.y;
+    };
+    this.getW = function () {
+      return rect.width;
+    };
+    this.getH = function () {
+      return rect.height;
+    };
+    this.getWidth = function () {
+      return Math.min(rect.width, rect.height);
+    };
+  };
+  //
+  // The function worst() gives the highest aspect ratio of a list
+  // of rectangles, given the length of the side along which they are to
+  // be laid out.
+  // Let a list of areas R be given and let s be their total sum. Then the function worst is
+  // defined by:
+  // worst(R,w) = max(max(w^2r=s^2; s^2=(w^2r)))
+  //              for all r in R
+  // Since one term is increasing in r and the other is decreasing, this is equal to
+  //              max(w^2r+=(s^2); s^2=(w^2r-))
+  // where r+ and r- are the maximum and minimum of R.
+  // Hence, the current maximum and minimum of the row that is being laid out.
+  //
+  var worst = function (r, w) {
+    var rMax = TreemapUtils._getMaxWeight(r);
+    var rMin = TreemapUtils._getMinWeight(r);
+
+    var s = TreemapUtils.sumArray(r);
+    var sSqr = s * s;
+    var wSqr = w * w;
+    return Math.max((wSqr * rMax) / sSqr, sSqr / (wSqr * rMin));
+  };
+
+  // Take row of values and calculate the set of rectangles
+  // that will fit in the current subrectangle.
+  var layoutrow = function (row) {
+    var x = subrect.getX(),
+      y = subrect.getY(),
+      maxX = x + subrect.getW(),
+      maxY = y + subrect.getH(),
+      rowHeight,
+      i,
+      w;
+
+    if (subrect.getW() < subrect.getH()) {
+      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getW());
+      if (y + rowHeight >= maxY) { rowHeight = maxY - y; }
+      for (i = 0; i < row.length; i++) {
+        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
+        if (x + w > maxX || i + 1 === row.length) { w = maxX - x; }
+        layout[row[i].uniqueId] = {x: x, y: y, width: w, height: rowHeight};
+
+        x = (x + w);
+      }
+      subrect.setY(y + rowHeight);
+    } else {
+      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getH());
+      if (x + rowHeight >= maxX) { rowHeight = maxX - x; }
+      for (i = 0; i < row.length; i++) {
+        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
+        if (y + w > maxY || i + 1 === row.length) { w = maxY - y; }
+        // layout.push({x: x, y: y, width: rowHeight, height: w});
+        layout[row[i].uniqueId] = {x: x, y: y, width: rowHeight, height: w};
+
+        y = (y + w);
+      }
+      subrect.setX(x + rowHeight);
+    }
+  };
+
+  // Pull values from input array until the aspect ratio of rectangles in row
+  // under construction degrades.
+  var buildRow = function (children) {
+    var row = [];
+    row.push(children.shift()); // descending input
+    //row.push(children.pop()); // ascending input
+    if (children.length === 0) {
+      return row;
+    }
+    var newRow = row.slice();
+    var w = subrect.getWidth();
+    do {
+      newRow.push(children[0]); // descending input
+      //newRow.push(children[children.length-1]); // ascending input
+      //  console.log('worst');
+//      console.log(worst(row, w));
+      if (worst(row, w) > worst(newRow, w)) {
+        row = newRow.slice();
+        children.shift(); // descending input
+        //children.pop(); // ascending input
+      }
+      else {
+        break;
+      }
+    } while (children.length > 0);
+    return row;
+  };
+
+  // Non recursive version of Bruls, Huizing and van Wijk
+  // squarify layout algorithim.
+  // While values exist in input array, make a row with good aspect
+  // ratios for its values then caclulate the row's geometry, repeat.
+  var nrSquarify = function (children) {
+    do {
+      layoutrow(buildRow(children));
+    } while (children.length > 0);
+  };
+
+
+  var layout = {};
+  var newVals;
+
+  newVals =  _.clone(_.sortBy(vals, function (num) {
+    return num.normalizedWeight;
+  }).reverse());
+
+  var i;
+
+  // if either height or width of containing rect are <= 0
+  // simply copy containing rect to layout rects
+  if (rect.width <= 0 || rect.height <= 0) {
+    for (i = 0; i < vals.length; i++) {
+      layout[vals[i].uniqueId] = rect;
+    }
+  } else { // else compute squarified layout
+    _.each(newVals, function (val) {
+      val.normalizedWeight = Math.round(val.normalizedWeight * rect.width * rect.height);
+
+    });
+    // vals come in normalized. convert them here to make them relative to containing rect
+    // newVals = vals.map(function(item){return item*(rect.width*rect.height);});
+    var subrect = new Subrectangle(rect);
+    nrSquarify(newVals);
+  }
+  return layout;
+};
+},{"underscore":8}],28:[function(require,module,exports){
 (function(){/* global confirm, document, navigator, location, window */
 
 var utility = require('../utility/utility.js');
-var system = require('../system/system.js');
 var Connection = require('../Connection.js');
 var _ = require('underscore');
 
@@ -15160,7 +16539,7 @@ _.extend(Auth.prototype, {
     registerURL: {ssl: true, host: 'reg.pryv.io'},
     registerStagingURL: {ssl: true, host: 'reg.pryv.in'},
     localDevel : false,
-    sdkFullPath: 'https://dlw0lofo79is5.cloudfront.net/lib-javascript/dist'
+    sdkFullPath: 'https://dlw0lofo79is5.cloudfront.net/lib-javascript/latest'
   },
   state: null,  // actual state
   window: null,  // popup window reference (if any)
@@ -15190,7 +16569,7 @@ Auth._init = function (i) {
   }
 
   utility.loadExternalFiles(
-    Auth.prototype.config.sdkFullPath + '/media/buttonSigninPryv.css', 'css');
+    Auth.prototype.config.sdkFullPath + '/assets/buttonSigninPryv.css', 'css');
 
   if (utility.testIfStagingFromUrl()) {
     console.log('staging mode');
@@ -15219,7 +16598,7 @@ Auth.prototype.uiButton = function (onClick, buttonText) {
   } else   {
     return '<a href="#" id ="pryv-access-btn" data-onclick-action="' + onClick +
       '" class="pryv-access-btn-signinImage" ' +
-      'src="' + this.config.sdkFullPath + '/media/btnSignIn.png" >' + buttonText + '</a>';
+      'src="' + this.config.sdkFullPath + '/assets/btnSignIn.png" >' + buttonText + '</a>';
   }
 };
 
@@ -15487,7 +16866,20 @@ Auth.prototype.login = function (settings) {
     }.bind(this)
   };
 
-  system.request(_.extend(pack, this.config.registerURL));
+  utility.request(_.extend(pack, this.config.registerURL));
+};
+Auth.prototype.trustedLogout = function () {
+  var path = '/auth/logout';
+  if (this.connection) {
+    this.connection.request('POST', path, function (error) {
+      if (error && typeof(this.settings.callbacks.error) === 'function') {
+        return this.settings.callbacks.error(error);
+      }
+      if (!error && typeof(this.settings.callbacks.signedOut) === 'function') {
+        return this.settings.callbacks.signedOut(this.connection);
+      }
+    }.bind(this));
+  }
 };
 Auth.prototype.whoAmI = function (settings) {
   this.settings = settings;
@@ -15532,7 +16924,7 @@ Auth.prototype.whoAmI = function (settings) {
     }.bind(this)
   };
 
-  system.request(_.extend(pack, this.config.registerURL));
+  utility.request(_.extend(pack, this.config.registerURL));
 
 };
 Auth.prototype.loginWithCookie = function (settings) {
@@ -15582,7 +16974,7 @@ Auth.prototype.setup = function (settings) {
     utility.getPreferredLanguage(this.uiSupportedLanguages, settings.languageCode);
 
   //-- returnURL
-  settings.returnURL = settings.returnURL || 'auto#';
+  settings.returnURL = settings.returnURL || 'auto#';
   if (settings.returnURL) {
     // check the trailer
     var trailer = settings.returnURL.charAt(settings.returnURL.length - 1);
@@ -15660,7 +17052,7 @@ Auth.prototype.setup = function (settings) {
       }.bind(this)
     };
 
-    system.request(_.extend(pack, this.config.registerURL));
+    utility.request(_.extend(pack, this.config.registerURL));
 
 
   }
@@ -15689,7 +17081,7 @@ Auth.prototype.poll = function poll() {
       }.bind(this)
     };
 
-    system.request(_.extend(pack, this.config.registerURL));
+    utility.request(_.extend(pack, this.config.registerURL));
 
 
     this.pollingID = setTimeout(this.poll.bind(this), this.state.poll_rate_ms);
@@ -15788,276 +17180,7 @@ Auth.prototype._cleanStatusFromURL = function () {
 module.exports = new Auth();
 
 })()
-},{"../Connection.js":12,"../system/system.js":14,"../utility/utility.js":15,"underscore":37}],54:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
- /* TODO This a the view for each node, with dynamic animation
- we can't re-render on change because animation would no be done
- If the model is a event Node we must include a new typed view
- */
-module.exports = Marionette.ItemView.extend({
-  template: '#nodeView',
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-
-    this.$el.attr('id', this.model.get('id'));
-    this.$el.attr('data-streamId', this.model.get('streamId'));
-    this.$el.attr('data-streamName', this.model.get('streamName'));
-    this.$el.attr('data-connectionId', this.model.get('connectionId'));
-    this.$el.addClass('node animated  fadeIn');
-    this.$el.addClass(this.model.get('className'));
-
-  },
-  triggers: {
-    'click .nodeHeader': 'headerClicked'
-  },
-  change: function () {
-
-    this._refreshStyle();
-  },
-
-  renderView: function () {
-
-    this.render();
-  },
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    this._refreshStyle();
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.html(html);
-
-    $('#' + this.model.get('containerId')).prepend(this.$el);
-    if (this.model.get('eventView')) {
-      this.model.get('eventView').render(this.model.get('id'));
-    }
-    this.bindUIElements();
-
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
-
-  },
-  _refreshStyle: function () {
-    if (this.model.get('weight') === 0) {
-      this.close();
-      return;
-    }
-    this.$el.attr('weight', this.model.get('weight'));
-    this.$el.attr('className', this.model.get('className'));
-    this.$el.css('width', this.model.get('width'));
-    this.$el.css('height', this.model.get('height'));
-    this.$el.css('left', this.model.get('x'));
-    this.$el.css('top', this.model.get('y'));
-    if (this.model.get('color')) {
-      this.$el.css('background-color', this.model.get('color'));
-    }
-  },
-  close: function () {
-
-    this.$el.removeClass('animated  fadeIn');
-    this.$el.addClass('animated  fadeOut');
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":73}],55:[function(require,module,exports){
-
-var _ = require('underscore');
-var TreemapUtils = module.exports = TreemapUtils || {};
-TreemapUtils.sumArray = function (nodes) {
-  // Use one adding function rather than create a new one each
-  // time sumArray is called.
-  return _.reduce(TreemapUtils._extractWeight(nodes), function (memo, num) {
-    return memo + num;
-  }, 0);
-
-};
-TreemapUtils._getMaxWeight = function (nodes) {
-  return Math.max.apply(null, TreemapUtils._extractWeight(nodes));
-};
-TreemapUtils._getMinWeight = function (nodes) {
-  return Math.min.apply(null, TreemapUtils._extractWeight(nodes));
-};
-TreemapUtils._extractWeight = function (nodes) {
-  var result = [];
-  _.each(nodes, function (node) {
-    result.push(node.normalizedWeight);
-  });
-  return result;
-};
-//
-// Treemap squarify layout function.
-//  rect - containing rectangle; an array of 4 values x, y, width, height
-//  vals - array of (normalized) float values each representing percent contribution to
-//  total area of containing rectangle
-//
-// Non-recursive implementation of the squarify treemap layout algorithm published in:
-// "Squarified Treemaps" by Mark Bruls, Kees Huizing and Jarke J. van Wijk
-// http://www.win.tue.nl/~vanwijk/stm.pdf
-//
-// Includes tips and tricks from:
-// http://ejohn.org/blog/fast-javascript-maxmin/#postcomment
-//
-TreemapUtils.squarify = function (rect, vals) {
-  // console.log('squrify begin');
-
-  var Subrectangle = function (rect) {
-    this.setX = function (x) {
-      rect.width -= x - rect.x;
-      rect.x = x;
-    };
-    this.setY = function (y) {
-      rect.height -= y - rect.y;
-      rect.y = y;
-    };
-    this.getX = function () {
-      return rect.x;
-    };
-    this.getY = function () {
-      return rect.y;
-    };
-    this.getW = function () {
-      return rect.width;
-    };
-    this.getH = function () {
-      return rect.height;
-    };
-    this.getWidth = function () {
-      return Math.min(rect.width, rect.height);
-    };
-  };
-  //
-  // The function worst() gives the highest aspect ratio of a list
-  // of rectangles, given the length of the side along which they are to
-  // be laid out.
-  // Let a list of areas R be given and let s be their total sum. Then the function worst is
-  // defined by:
-  // worst(R,w) = max(max(w^2r=s^2; s^2=(w^2r)))
-  //              for all r in R
-  // Since one term is increasing in r and the other is decreasing, this is equal to
-  //              max(w^2r+=(s^2); s^2=(w^2r-))
-  // where r+ and r- are the maximum and minimum of R.
-  // Hence, the current maximum and minimum of the row that is being laid out.
-  //
-  var worst = function (r, w) {
-    var rMax = TreemapUtils._getMaxWeight(r);
-    var rMin = TreemapUtils._getMinWeight(r);
-
-    var s = TreemapUtils.sumArray(r);
-    var sSqr = s * s;
-    var wSqr = w * w;
-    return Math.max((wSqr * rMax) / sSqr, sSqr / (wSqr * rMin));
-  };
-
-  // Take row of values and calculate the set of rectangles
-  // that will fit in the current subrectangle.
-  var layoutrow = function (row) {
-    var x = subrect.getX(),
-      y = subrect.getY(),
-      maxX = x + subrect.getW(),
-      maxY = y + subrect.getH(),
-      rowHeight,
-      i,
-      w;
-
-    if (subrect.getW() < subrect.getH()) {
-      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getW());
-      if (y + rowHeight >= maxY) { rowHeight = maxY - y; }
-      for (i = 0; i < row.length; i++) {
-        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
-        if (x + w > maxX || i + 1 === row.length) { w = maxX - x; }
-        layout[row[i].uniqueId] = {x: x, y: y, width: w, height: rowHeight};
-
-        x = (x + w);
-      }
-      subrect.setY(y + rowHeight);
-    } else {
-      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getH());
-      if (x + rowHeight >= maxX) { rowHeight = maxX - x; }
-      for (i = 0; i < row.length; i++) {
-        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
-        if (y + w > maxY || i + 1 === row.length) { w = maxY - y; }
-        // layout.push({x: x, y: y, width: rowHeight, height: w});
-        layout[row[i].uniqueId] = {x: x, y: y, width: rowHeight, height: w};
-
-        y = (y + w);
-      }
-      subrect.setX(x + rowHeight);
-    }
-  };
-
-  // Pull values from input array until the aspect ratio of rectangles in row
-  // under construction degrades.
-  var buildRow = function (children) {
-    var row = [];
-    row.push(children.shift()); // descending input
-    //row.push(children.pop()); // ascending input
-    if (children.length === 0) {
-      return row;
-    }
-    var newRow = row.slice();
-    var w = subrect.getWidth();
-    do {
-      newRow.push(children[0]); // descending input
-      //newRow.push(children[children.length-1]); // ascending input
-      //  console.log('worst');
-//      console.log(worst(row, w));
-      if (worst(row, w) > worst(newRow, w)) {
-        row = newRow.slice();
-        children.shift(); // descending input
-        //children.pop(); // ascending input
-      }
-      else {
-        break;
-      }
-    } while (children.length > 0);
-    return row;
-  };
-
-  // Non recursive version of Bruls, Huizing and van Wijk
-  // squarify layout algorithim.
-  // While values exist in input array, make a row with good aspect
-  // ratios for its values then caclulate the row's geometry, repeat.
-  var nrSquarify = function (children) {
-    do {
-      layoutrow(buildRow(children));
-    } while (children.length > 0);
-  };
-
-
-  var layout = {};
-  var newVals;
-
-  newVals =  _.clone(_.sortBy(vals, function (num) {
-    return num.normalizedWeight;
-  }).reverse());
-
-  var i;
-
-  // if either height or width of containing rect are <= 0
-  // simply copy containing rect to layout rects
-  if (rect.width <= 0 || rect.height <= 0) {
-    for (i = 0; i < vals.length; i++) {
-      layout[vals[i].uniqueId] = rect;
-    }
-  } else { // else compute squarified layout
-    _.each(newVals, function (val) {
-      val.normalizedWeight = Math.round(val.normalizedWeight * rect.width * rect.height);
-
-    });
-    // vals come in normalized. convert them here to make them relative to containing rect
-    // newVals = vals.map(function(item){return item*(rect.width*rect.height);});
-    var subrect = new Subrectangle(rect);
-    nrSquarify(newVals);
-  }
-  return layout;
-};
-},{"underscore":8}],56:[function(require,module,exports){
+},{"../Connection.js":16,"../utility/utility.js":15,"underscore":47}],63:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -16082,6 +17205,7 @@ var StreamNode = module.exports = TreeNode.implement(
         this.stream.color = parentNode.stream.color;
       }
     }
+
 
     /**
      * eventsNodes are stored by their key
@@ -16254,7 +17378,9 @@ var StreamNode = module.exports = TreeNode.implement(
     eventLeaveScope: function (event, reason, callback) {
       var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
       if (!eventNode) {
-        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+        if (_.isFunction(callback)) {
+          return callback();
+        }
       }
       if (this.redirect) {
         for (var i = 0, n = this.redirect.length; i < n; ++i) {
@@ -16266,7 +17392,7 @@ var StreamNode = module.exports = TreeNode.implement(
         }
       }
       eventNode.eventLeaveScope(event, reason, callback);
-      if (_.size(eventNode.events) === 0) {
+      if (eventNode.size === 0) {
         eventNode._closeView();
         delete this.eventsNodes[key];
       }
@@ -16277,10 +17403,11 @@ var StreamNode = module.exports = TreeNode.implement(
           throw new Error('EventLeaveScore: did not find an eventView for the aggregated stream');
         }
         eventNode.eventLeaveScope(event, reason, callback);
-        if (_.size(eventNode.events) === 0) {
+        if (eventNode.size === 0) {
           eventNode._closeView();
           delete aggregatedParent.eventsNodesAggregated[key];
         }
+
       }
     },
 
@@ -16362,132 +17489,7 @@ StreamNode.registeredEventNodeTypes = {
   'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":35,"./eventsNode/GenericEventsNode.js":83,"./eventsNode/NotesEventsNode.js":80,"./eventsNode/NumericalsEventsNode.js":81,"./eventsNode/PicturesEventsNode.js":79,"./eventsNode/PositionsEventsNode.js":78,"./eventsNode/TweetsEventsNode.js":82,"underscore":8}],58:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    event: null,
-    collection: null,
-    highlighted: false,
-    checked: false
-  },
-  getTimeDifference: function (time) {
-    return Math.abs(time - this.get('event').time);
-  },
-  isTrashed: function () {
-    return this.get('event').trashed;
-  },
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
-  },
-  save: function () {
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      this.get('event').addAttachment(file, function () {
-        //  console.log('trash event callback', arguments);
-      });
-    }
-    event.update(function () {
-      //  console.log('update event callback', arguments);
-    });
-  },
-  create: function () {
-    console.log('CREATE', this);
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      event.connection.events.createWithAttachment(event, file);
-    }  else {
-      event.connection.events.create(event);
-    }
-  },
-  addAttachment: function (file) {
-    this.get('event').file = file;
-    console.log('addAttachment', file, this);
-  },
-  removeAttachment: function (fileName, callback) {
-    this.get('event').removeAttachment(fileName, callback);
-  },
-  trash: function () {
-    this.get('event').trash(function () {
-    //  console.log('trash event callback', arguments);
-    });
-  }
-});
-},{"backbone":19}],57:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./EventModel.js');
-
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model,
-  highlightedDate: null,
-  currentElement: null,
-  comparator: function (a, b) {
-    a = a.get('event').time;
-    b = b.get('event').time;
-    return a > b ? -1
-      : a < b ? 1
-      : 0;
-  },
-  highlightEvent: function (time) {
-    var next =  this.getEventhighlighted(time);
-    if (!next || next === Infinity) {
-      return;
-    }
-    this.setCurrentElement(next);
-    return next;
-  },
-  getEventhighlighted: function (time) {
-    this.highlightedDate = time === Infinity ? 99999999999 : time;
-    return this.min(this._getTimeDifference.bind(this));
-  },
-  getTrashed: function () {
-    return this.filter(this._getTrashed);
-  },
-  getEventById: function (id) {
-    return this.find(function (e) {
-      return e.get('event').id === id;
-    });
-  },
-  getActive: function () {
-    return this.reject(this._getTrashed);
-  },
-  _getTimeDifference: function (event) {
-    return event.getTimeDifference(this.highlightedDate);
-  },
-  _getTrashed: function (event) {
-    return event.isTrashed();
-  },
-  getCurrentElement: function () {
-    return this.currentElement;
-  },
-  setCurrentElement: function (model) {
-    if (!model) {
-      return;
-    }
-    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
-      if (this.currentElement) {
-        this.currentElement.setHighlighted(false);
-      }
-      if (model) {
-        model.setHighlighted(true);
-      }
-    }
-    this.currentElement = model;
-  },
-  next: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
-    return this;
-  },
-  prev: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
-    return this;
-  }
-});
-},{"./EventModel.js":58,"backbone":19}],59:[function(require,module,exports){
+},{"./TreeNode":32,"./eventsNode/GenericEventsNode.js":89,"./eventsNode/NotesEventsNode.js":86,"./eventsNode/NumericalsEventsNode.js":91,"./eventsNode/PicturesEventsNode.js":90,"./eventsNode/PositionsEventsNode.js":87,"./eventsNode/TweetsEventsNode.js":88,"underscore":8}],64:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -16548,7 +17550,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./ItemView.js":84,"backbone.marionette":73,"underscore":8}],65:[function(require,module,exports){
+},{"./ItemView.js":92,"backbone.marionette":46,"underscore":8}],66:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -16566,7 +17568,9 @@ module.exports = Marionette.ItemView.extend({
     li: 'li.editable',
     edit: '.edit',
     submit: '#submit-edit',
-    trash: '#trash-edit'
+    submitSpin: '#submit-edit .fa-spin',
+    trash: '#trash-edit',
+    trashSpin: '#trash-edit .fa-spin'
   },
   templateHelpers: function () {
     return {
@@ -16685,18 +17689,26 @@ module.exports = Marionette.ItemView.extend({
       return;
     }
     var event = this.model.get('event');
+    this.ui.submitSpin.show();
     if (event.id) {
-      this.model.set('event', event).save();
+      this.model.set('event', event).save(function () {
+        this.ui.submitSpin.hide();
+      }.bind(this));
     } else if (event.connection && event.type && event.streamId) {
-      this.model.set('event', event).create();
+      this.model.set('event', event).create(function () {
+        this.ui.submitSpin.hide();
+      }.bind(this));
     } else {
-      //TODO error handling
+
       console.err('Creation event failed, missing valid properties', event);
     }
   }, 5 * 1000),
 
   trash: function () {
-    this.model.trash();
+    this.ui.trashSpin.show();
+    this.model.trash(function () {
+      this.ui.trashSpin.hide();
+    }.bind(this));
   },
   completeEdit: function ($elem) {
     $($elem).removeClass('editing');
@@ -16743,31 +17755,125 @@ module.exports = Marionette.ItemView.extend({
    }  */
 });
 })()
-},{"backbone.marionette":73,"underscore":8}],69:[function(require,module,exports){
+},{"backbone.marionette":46,"underscore":8}],65:[function(require,module,exports){
 var Backbone = require('backbone'),
-  Model = require('./TimeSeriesModel.js');
+  Model = require('./EventModel.js');
 
 module.exports = Backbone.Collection.extend({
+  url: '#',
   model: Model,
-
-  initialize: function (models, options) {
-    this.type = options.type;
+  highlightedDate: null,
+  currentElement: null,
+  comparator: function (a, b) {
+    a = a.get('event').time;
+    b = b.get('event').time;
+    return a > b ? -1
+      : a < b ? 1
+      : 0;
   },
-
-  comparator: function () {
-
+  highlightEvent: function (time) {
+    var next =  this.getEventhighlighted(time);
+    if (!next || next === Infinity) {
+      return;
+    }
+    this.setCurrentElement(next);
+    return next;
+  },
+  getEventhighlighted: function (time) {
+    this.highlightedDate = time === Infinity ? 99999999999 : time;
+    return this.min(this._getTimeDifference.bind(this));
+  },
+  getTrashed: function () {
+    return this.filter(this._getTrashed);
+  },
+  getEventById: function (id) {
+    return this.find(function (e) {
+      return e.get('event').id === id;
+    });
+  },
+  getActive: function () {
+    return this.reject(this._getTrashed);
+  },
+  _getTimeDifference: function (event) {
+    return event.getTimeDifference(this.highlightedDate);
+  },
+  _getTrashed: function (event) {
+    return event.isTrashed();
+  },
+  getCurrentElement: function () {
+    return this.currentElement;
+  },
+  setCurrentElement: function (model) {
+    if (!model) {
+      return;
+    }
+    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
+      if (this.currentElement) {
+        this.currentElement.setHighlighted(false);
+      }
+      if (model) {
+        model.setHighlighted(true);
+      }
+    }
+    this.currentElement = model;
+  },
+  next: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
+    return this;
+  },
+  prev: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
+    return this;
   }
 });
-},{"./TimeSeriesModel.js":70,"backbone":19}],68:[function(require,module,exports){
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js');
+},{"./EventModel.js":74,"backbone":27}],74:[function(require,module,exports){
+var Backbone = require('backbone');
 
-module.exports = Marionette.CollectionView.extend({
-  tagName: 'ul',
-  itemView: ItemView
+module.exports = Backbone.Model.extend({
+  defaults: {
+    event: null,
+    collection: null,
+    highlighted: false,
+    checked: false
+  },
+  getTimeDifference: function (time) {
+    return Math.abs(time - this.get('event').time);
+  },
+  isTrashed: function () {
+    return this.get('event').trashed;
+  },
+  setHighlighted: function (highlight) {
+    this.set('highlighted', highlight);
+  },
+  save: function (callback) {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      this.get('event').addAttachment(file, callback);
+    }
+    event.update(callback);
+  },
+  create: function (callback) {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      event.connection.events.createWithAttachment(event, file, callback);
+    }  else {
+      event.connection.events.create(event, callback);
+    }
+  },
+  addAttachment: function (file) {
+    this.get('event').file = file;
+    console.log('addAttachment', file, this);
+  },
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
+  },
+  trash: function (callback) {
+    this.get('event').trash(callback);
+  }
 });
-
-},{"./ItemView.js":85,"backbone.marionette":73}],71:[function(require,module,exports){
+},{"backbone":27}],75:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -16809,7 +17915,10 @@ module.exports = Backbone.Model.extend({
     xaxis: null,
 
     // Editable point mode
-    editPoint: false
+    editPoint: false,
+
+    // Show node count
+    showNodeCount: true
   },
 
   initialize: function () {
@@ -16822,13 +17931,28 @@ module.exports = Backbone.Model.extend({
     this.set('highlighted', highlight);
   }
 });
-},{"backbone":19}],72:[function(require,module,exports){
+},{"backbone":27}],76:[function(require,module,exports){
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./ItemView.js');
+
+module.exports = Marionette.CollectionView.extend({
+  tagName: 'ul',
+  itemView: ItemView,
+
+  onRender: function () {
+    if (this.children.length === 0) {
+      this.$el.parent().css({visibility: 'hidden'});
+    }
+  }
+});
+
+},{"./ItemView.js":93,"backbone.marionette":46}],77:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
   _ = require('underscore'),
   ChartTransform = require('./utils/ChartTransform.js');
-
+var DND_TRANSFER_DATA = null;
 module.exports = Marionette.CompositeView.extend({
   template: '#template-chart-container',
   container: null,
@@ -16838,6 +17962,8 @@ module.exports = Marionette.CompositeView.extend({
   chartContainer: null,
   useExtras: null,
   waitExtras: null,
+
+  currentlyEdited: null,
 
 
   initialize: function () {
@@ -16881,17 +18007,10 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('collection').length === 1 &&
       this.model.get('collection').at(0).get('events').length === 1 &&
       this.model.get('singleNumberAsText')) {
-      var m = this.model.get('collection').at(0);
-      $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
-        '<div class="content Center-Container is-Table">' +
-        '<div class="Table-Cell">' +
-        '<div class="Center-Block">' +
-        '<span class="value"> ' +
-        m.get('events')[0].content + ' ' +
-        '</span><span class="unity">' +
-        (this.useExtras ?
-          Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
-        '</span></div></div></div>');
+
+
+      this.singleEventSetup();
+
     } else {
       this.makePlot();
       this.onDateHighLighted();
@@ -16917,7 +18036,9 @@ module.exports = Marionette.CompositeView.extend({
     _.each(this.data, function (d) {
       eventsNbr += d.data.length;
     });
-    $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+    if (this.model.get('showNodeCount')) {
+      $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+    }
 
     this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
@@ -16937,7 +18058,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   resize: function () {
-
     if (!this.model.get('dimensions')) {
       return;
     }
@@ -16979,22 +18099,37 @@ module.exports = Marionette.CompositeView.extend({
       this.options.legend.labelFormatter = function (label) {
         var buttons = model.get('legendButtonContent');
         var legend = '<span class="DnD-legend-text">' + label + '</span>';
+        console.log('buttons', buttons, buttons.length);
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
           case 'ready':
-            legend = legend + '<a class="DnD-legend-button-ready" href="javascript:;">ok</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-ready" ' +
+              'href="javascript:;"><span class="fa fa-check"></span></a>';
             break;
           case 'duplicate':
-            legend = legend + '<a class="DnD-legend-button-duplicate" href="javascript:;">2</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-duplicate" ' +
+              'href="javascript:;"><span class="fa fa-files-o"></span></a>';
             break;
           case 'remove':
-            legend = legend + '<a class="DnD-legend-button-remove" href="javascript:;">x</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-remove" ' +
+              'href="javascript:;"><span class="fa fa-minus"></span></a>';
             break;
           case 'edit':
-            legend = legend + '<a class="DnD-legend-button-edit" href="javascript:;">e</a>';
+            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+              'DnD-legend-button-edit" ' +
+              'href="javascript:;"><span class="fa fa-pencil-square-o"></span></a>';
             break;
           }
         }
+        console.log('legend', legend);
+        return legend;
+      };
+    } else {
+      this.options.legend.labelFormatter = function (label) {
+        var legend = '<span class="DnD-legend-text">' + label + '</span>';
         return legend;
       };
     }
@@ -17041,8 +18176,11 @@ module.exports = Marionette.CompositeView.extend({
     var min = Infinity, max = 0;
     collection.each(function (s) {
       var events = s.get('events');
-      min = (events[events.length - 1].time < min) ? events[events.length - 1].time : min;
-      max = (events[0].time > max) ? events[0].time : max;
+      for (var i = 0, l = events.length; i < l; ++i) {
+        min = (events[i].time < min) ? events[i].time : min;
+        max = (events[i].time > max) ? events[i].time : max;
+      }
+
     });
     return [min * 1000, max * 1000];
   },
@@ -17133,21 +18271,41 @@ module.exports = Marionette.CompositeView.extend({
   rebuildLegend: function (element) {
     var list = $('<ul/>');
     $(element).find('tr').each(function (index) {
-      var p = $(this).children().map(function (index2) {
-        if (index2 === 0) {
-          if ($('div > div', $(this)).length !== 0) {
-            $('div > div', $(this)).addClass('DnD-legend-color');
-            return $('div > div', $(this))[0].outerHTML;
+      var colorBox = '';
+      var buttonBox = '';
+      var textBox = '';
+      $(this).children().map(function (/*index2*/) {
+        if ($(this) && $(this).length > 0) {
+          var child = $($(this).get(0));
+          if (child.hasClass('legendColorBox')) {
+            $('div > div', child).addClass('DnD-legend-color');
+            colorBox = $('div > div', child)[0].outerHTML;
+          }
+          if (child.hasClass('legendLabel')) {
+            for (var i = 0; i < child[0].childElementCount; i++) {
+              var c = child[0].childNodes[i];
+              if ($(c).hasClass('DnD-legend-text')) {
+                textBox = $(c)[0].outerHTML;
+              } else if ($(c).hasClass('DnD-legend-button')) {
+                $('a', $(c)).attr('id', 'series-' + index);
+                buttonBox += $(c)[0].outerHTML;
+              }
+            }
           }
         }
-        if (index2 === 1) {
-          if ($('a', $(this)).length !== 0) {
-            $('a', $(this)).attr('id', 'series-' + index);
-            return $(this).html();
-          }
-        }
+
       });
-      list.append('<li>' + $.makeArray(p).join('') + '</li>');
+      var toAppend = '';
+      if (colorBox) {
+        toAppend += colorBox;
+      }
+      if (textBox) {
+        toAppend += textBox;
+      }
+      if (buttonBox) {
+        toAppend += buttonBox;
+      }
+      list.append('<li>' + toAppend + '</li>');
     });
     $('div', $(element).parent()).remove();
     $(element).replaceWith(list);
@@ -17213,7 +18371,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   highlightEvent: function (event) {
-    // TODO: Support multiple series containing the same event.
     if (!this.plot) {
       return;
     }
@@ -17258,6 +18415,9 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onClose: function () {
+    $('#editPointVal').unbind();
+    $('#editPointBut').unbind();
+    $('#chart-pt-editor').remove();
     $(this.chartContainer).empty();
     $(this.container).unbind();
     $(this.container).empty();
@@ -17275,6 +18435,10 @@ module.exports = Marionette.CompositeView.extend({
       this.trigger('chart:resize', this.model);
     });
 
+    if (this.model.get('editPoint')) {
+      $(this.container).bind('plotclick', this.onEdit.bind(this));
+    }
+
     if (this.model.get('onClick')) {
       $(this.container).bind('plotclick', this.onClick.bind(this));
     }
@@ -17289,10 +18453,13 @@ module.exports = Marionette.CompositeView.extend({
       $(this.container).bind('dragleave', this.onDragLeave.bind(this));
       $(this.container).bind('drop', this.onDrop.bind(this));
       $(this.container).bind('dragend', this.onDragEnd.bind(this));
-      $(this.container + ' .aggregated-nbr-events').bind('click',
-        function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
+    }
+
+    if (this.model.get('showNodeCount')) {
+      $(this.container).bind('click',
+      function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
     }
 
     if (this.model.get('allowPan')) {
@@ -17347,6 +18514,68 @@ module.exports = Marionette.CompositeView.extend({
     }
   },
 
+  onEdit: function (event, pos, item) {
+    if ($('#chart-pt-editor')) {
+      $('#editPointVal').unbind();
+      $('#editPointBut').unbind();
+      $('#chart-pt-editor').remove();
+    }
+    if (this.model.get('editPoint') && item) {
+      var tc = this.model.get('collection').at(0);
+      if (!tc.get('transform') && !tc.get('interval')) {
+        this.currentlyEdited = [{time: item.datapoint[0], value: item.datapoint[1]}];
+        this.showPointEditor(item.pageY + 5, item.pageX + 5);
+      }
+
+    }
+  },
+
+  showPointEditor: function (x, y) {
+    $('.modal-content').append(
+      '<div id="chart-pt-editor" class="tooltip has-feedback">' +
+      '  <div class="input-group">' +
+      '    <input type="text" class="form-control" id="editPointVal">' +
+      '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
+      '    <span class="input-group-btn">' +
+      '      <button class="btn" id="editPointBut" type="button">Ok!</button>' +
+      '    </span>' +
+      '  </div>' +
+      '</div>');
+
+    var os = $('.modal-content').offset();
+    $('#chart-pt-editor').css({
+      color: 'none',
+      'background-color': 'none',
+      width: '20%',
+      top: x - os.top,
+      left: y - os.left
+    }).fadeIn(200);
+
+    $('#editPointVal').bind('input', function () {
+      if ($(this).val().length < 1) {
+        $('#chart-pt-editor').removeClass('has-success');
+        $('#chart-pt-editor').removeClass('has-warning');
+        $('#editPointBut').removeClass('btn-success');
+        $('#editPointBut').removeClass('btn-danger');
+      } else if (isNaN($(this).val())) {
+        $('#chart-pt-editor').removeClass('has-success');
+        $('#chart-pt-editor').addClass('has-warning');
+        $('#editPointBut').removeClass('btn-success');
+        $('#editPointBut').addClass('btn-danger');
+      } else {
+        $('#chart-pt-editor').removeClass('has-warning');
+        $('#chart-pt-editor').addClass('has-success');
+        $('#editPointBut').removeClass('btn-danger');
+        $('#editPointBut').addClass('btn-success');
+      }
+    });
+
+    $('#editPointBut').bind('click', function () {
+      this.currentlyEdited.push({value: $('editPointVal').val});
+    }.bind(this));
+
+  },
+
   computeCoordinates: function (xAxis, yAxis, xPoint, yPoint) {
     var yAxes = this.plot.getYAxes();
     var xAxes = this.plot.getXAxes();
@@ -17363,20 +18592,22 @@ module.exports = Marionette.CompositeView.extend({
 
   /* Called when this object is starts being dragged */
   onDragStart: function (e) {
-    var data = '{ "nodeId": "' + this.container.substr(1) + '", ' +
+    DND_TRANSFER_DATA = '{ "nodeId": "' + this.container.substr(1) + '", ' +
       '"streamId": "' + $(this.container).attr('data-streamid') + '", ' +
       '"connectionId": "' + $(this.container).attr('data-connectionid') + '"}';
-    e.originalEvent.dataTransfer.setData('text', data);
+    e.originalEvent.dataTransfer.setData('text', DND_TRANSFER_DATA);
   },
 
   /* Fires when a dragged element enters this' scope */
   onDragEnter: function (e) {
-    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+    var data = DND_TRANSFER_DATA;
     var droppedNodeID = data.nodeId;
     if ($(e.currentTarget).attr('id') !== droppedNodeID) {
       $('.chartContainer', $(e.currentTarget)).not(this.container).addClass('animated shake');
+      $('.NumericalsEventsNode  > div').not(this.container).addClass('animated shake');
       setTimeout(function () {
         $('.chartContainer', $(e.currentTarget)).removeClass('animated shake');
+        $('.NumericalsEventsNode  > div', $(e.currentTarget)).removeClass('animated shake');
       }, 1000);
     }
   },
@@ -17387,12 +18618,15 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   /* Fires when a dragged element leaves this' scope */
-  onDragLeave: function (e) {
-    var data = JSON.parse(e.originalEvent.dataTransfer.getData('text'));
+  onDragLeave: function () {
+    var data = DND_TRANSFER_DATA;
     var droppedNodeID = data.nodeId;
     $('.chartContainer').not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
+    $('.NumericalsEventsNode  > div')
+      .not('#' + droppedNodeID + ' .chartContainer').addClass('animated shake');
     setTimeout(function () {
       $('.chartContainer').removeClass('animated shake');
+      $('.NumericalsEventsNode > div').removeClass('animated shake');
     }, 1000);
   },
 
@@ -17429,12 +18663,49 @@ module.exports = Marionette.CompositeView.extend({
       }
       this.legendButtonBindings();
     }
+  },
+
+  singleEventSetup: function () {
+    var m = this.model.get('collection').at(0);
+    if (this.model.get('showNodeCount')) {
+      $(this.container).html(
+      '<div class="content Center-Container is-Table">' +
+      '<div class="Table-Cell">' +
+      '<div class="Center-Block">' +
+      '<span class="value"> ' +
+      m.get('events')[0].content + ' ' +
+      '</span><span class="unity">' +
+      (this.useExtras ?
+        Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
+      '</span></div></div></div>');
+    }
+
+    $(this.container).unbind();
+
+    $(this.container).bind('resize', function () {
+      this.trigger('chart:resize', this.model);
+    });
+
+    if (this.model.get('onDnD')) {
+      $(this.container).attr('draggable', true);
+      $(this.container).bind('dragstart', this.onDragStart.bind(this));
+      $(this.container).bind('dragenter', this.onDragEnter.bind(this));
+      $(this.container).bind('dragover', this.onDragOver.bind(this));
+      $(this.container).bind('dragleave', this.onDragLeave.bind(this));
+      $(this.container).bind('drop', this.onDrop.bind(this));
+      $(this.container).bind('dragend', this.onDragEnd.bind(this));
+    }
+    if (this.model.get('showNodeCount')) {
+      $(this.container).bind('click',
+      function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+    }
   }
 });
 
 })()
-},{"./utils/ChartTransform.js":86,"backbone.marionette":73,"pryv":9,"underscore":8}],70:[function(require,module,exports){
-(function(){/* global window */
+},{"./utils/ChartTransform.js":94,"backbone.marionette":46,"pryv":9,"underscore":8}],79:[function(require,module,exports){
 
 var Backbone = require('backbone');
 
@@ -17450,7 +18721,9 @@ module.exports = Backbone.Model.extend({
     color: null,
     style: null,
     transform: null,
-    interval: null
+    interval: null,
+
+    virtual: null
   },
   sortData: function () {
     this.get('events').sort(function (a, b) {
@@ -17458,40 +18731,25 @@ module.exports = Backbone.Model.extend({
       if (b.time < a.time) { return 1; }
       return 0;
     });
-  },
-  set: function (attr, options) {
-    Backbone.Model.prototype.set.call(this, attr, options);
-    if (this.supports_html5_storage() &&
-      (attr === 'color' ||
-      attr === 'style' ||
-      attr === 'transform' ||
-      attr === 'interval')) {
-      window.localStorage.setItem(this.get('streamId') + '.' +
-        this.get('type') + '.' + attr, options);
-    }
+  }
 
+});
+},{"backbone":27}],78:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./TimeSeriesModel.js');
+
+module.exports = Backbone.Collection.extend({
+  model: Model,
+
+  initialize: function (models, options) {
+    this.type = options.type;
   },
-  get: function (attr) {
-    var r = Backbone.Model.prototype.get.call(this, attr);
-    if (this.supports_html5_storage() && (attr === 'color' ||
-        attr === 'style' ||
-        attr === 'transform' ||
-        attr === 'interval')) {
-      r = window.localStorage.getItem(this.get('streamId') + '.' +
-        this.get('type') + '.' + attr);
-    }
-    return r;
-  },
-  supports_html5_storage: function () {
-    try {
-      return 'localStorage' in window && window.localStorage !== null;
-    } catch (e) {
-      return false;
-    }
+
+  comparator: function () {
+
   }
 });
-})()
-},{"backbone":19}],77:[function(require,module,exports){
+},{"./TimeSeriesModel.js":79,"backbone":27}],85:[function(require,module,exports){
 var _ = require('underscore'),
     SignalEmitter = require('./utility/SignalEmitter.js'),
     Filter = require('./Filter.js');
@@ -17560,8 +18818,8 @@ Monitor.prototype.destroy = function () {
 };
 
 Monitor.prototype.getEvents = function () {
-  if (! this.events || ! this._events.active) {return []; }
-  return this._events.active;
+  if (! this._events || ! this._events.active) {return []; }
+  return _.toArray(this._events.active);
 };
 
 // ------------ private ----------//
@@ -17752,47 +19010,7 @@ module.exports = Monitor;
 
 
 
-},{"./Filter.js":13,"./utility/SignalEmitter.js":38,"underscore":37}],74:[function(require,module,exports){
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-
-  tagName: 'tr',
-  template: '#template-sharingItemView',
-  events: {
-    'click .sharing-trash': '_onTrashClick'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-
-  },
-  onRender: function () {
-  },
-  _onTrashClick: function () {
-    this.trigger('sharing:delete', this.model);
-  }
-});
-},{"backbone.marionette":73}],76:[function(require,module,exports){
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-
-  tagName: 'tr',
-  template: '#template-bookmarkItemView',
-  events: {
-    'click .bookmark-trash': '_onTrashClick'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-
-  },
-  onRender: function () {
-  },
-  _onTrashClick: function () {
-    this.trigger('bookmark:delete', this.model);
-  }
-});
-},{"backbone.marionette":73}],75:[function(require,module,exports){
+},{"./Filter.js":14,"./utility/SignalEmitter.js":48,"underscore":47}],81:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -17818,7 +19036,88 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":73}],62:[function(require,module,exports){
+},{"backbone.marionette":46}],82:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+
+  tagName: 'tr',
+  template: '#template-sharingItemView',
+  ui: {
+    editName: '.sharing-edit-name',
+    editNameInput: '.sharing-name .input-group input',
+    editNameSpan: '.sharing-name .input-group span',
+    editNameButton: '.sharing-name .input-group button',
+    editNameSpinner: '.sharing-name .fa-spin'
+  },
+  events: {
+    'click .sharing-trash': '_onTrashClick',
+    'click i.sharing-edit-name': '_onEditNameClick'
+  },
+
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+
+  },
+  onRender: function () {
+    this.ui.editNameInput.hide();
+    this.ui.editNameSpan.hide();
+    this.ui.editNameSpinner.hide();
+    this.ui.editNameButton.click(this._onSaveClick.bind(this));
+  },
+  _onTrashClick: function () {
+    this.trigger('sharing:delete', this.model);
+  },
+  _onEditNameClick: function () {
+    this.ui.editName.hide();
+    this.ui.editNameSpinner.hide();
+    this.ui.editNameButton.removeClass('btn-danger').addClass('btn-default');
+    this.ui.editNameInput.show();
+    this.ui.editNameSpan.show();
+  },
+  _onSaveClick: function () {
+    var val = this.ui.editNameInput.val().trim();
+    if (val.length > 0) {
+      this.model.get('sharing').oldName = this.model.get('sharing').name;
+      this.model.get('sharing').name = val;
+      this.ui.editNameSpinner.show();
+      this.trigger('sharing:update', this);
+    }
+  },
+  endUpdateSharing: function (error) {
+    this.ui.editNameSpinner.hide();
+    if (error) {
+      this.ui.editNameButton.removeClass('btn-default').addClass('btn-danger');
+      this.model.get('sharing').name = this.model.get('sharing').oldName;
+    } else {
+      this.ui.editNameInput.hide();
+      this.ui.editNameSpan.hide();
+      this.ui.editName.show();
+      this.render();
+    }
+  }
+});
+},{"backbone.marionette":46}],83:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+
+  tagName: 'tr',
+  template: '#template-bookmarkItemView',
+  events: {
+    'click .bookmark-trash': '_onTrashClick'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+
+  },
+  onRender: function () {
+  },
+  _onTrashClick: function () {
+    this.trigger('bookmark:delete', this.model);
+  }
+});
+},{"backbone.marionette":46}],67:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -17862,7 +19161,221 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":73,"underscore":8}],63:[function(require,module,exports){
+},{"backbone.marionette":46,"underscore":8}],73:[function(require,module,exports){
+(function(){/* global $, document*/
+var Marionette = require('backbone.marionette'),
+  MapLoader = require('google-maps');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Position',
+  template: '#template-detail-content-position',
+  tagName: 'div',
+  id: 'map_canvas',
+  itemViewContainer: '#detail-content',
+  google: null,
+  map: null,
+  waitForGoogle: false,
+  marker: null,
+  ui: {
+    li: 'li.editable',
+    edit: '.edit'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.actualizePosition);
+    MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
+    MapLoader.load().then(function (google) {
+      this.google = google;
+      if (this.waitForGoogle) {
+        this.waitForGoogle = false;
+        this.render();
+      }
+    }.bind(this));
+  },
+  actualizePosition: function () {
+    if (!this.google) {
+      this.waitForGoogle = true;
+    } else {
+      var lat = this.model.get('event').content.latitude,
+        lng = this.model.get('event').content.longitude;
+      this.marker.setPosition(new this.google.maps.LatLng(lat, lng));
+      this.map.setCenter(this.marker.position);
+    }
+  },
+  onRender: function () {
+    if (!this.google) {
+      this.waitForGoogle = true;
+    } else {
+      $(this.itemViewContainer).html(this.el);
+      setTimeout(function () {
+        if (this.model.get('event')) {
+          if (!this.model.get('event').content) {
+            this.model.get('event').content = {};
+          }
+          var lat = this.model.get('event').content.latitude || 46.51759,
+            lng = this.model.get('event').content.longitude || 6.56267;
+          this.map = new this.google.maps.Map(document.getElementById('map_canvas'), {
+            zoom: 16,
+            center: new this.google.maps.LatLng(lat, lng),
+            mapTypeId: this.google.maps.MapTypeId.ROADMAP
+          });
+          var elevator = new this.google.maps.ElevationService();
+          this.marker = new this.google.maps.Marker({
+            position: new this.google.maps.LatLng(lat, lng),
+            draggable: true
+          });
+
+          this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
+            var event = this.model.get('event');
+            event.content.latitude = evt.latLng.lat();
+            event.content.longitude = evt.latLng.lng();
+            var positionalRequest = {
+              'locations': [evt.latLng]
+            };
+            elevator.getElevationForLocations(positionalRequest, function (results, status) {
+              if (status === this.google.maps.ElevationStatus.OK) {
+                // Retrieve the first result
+                if (results[0]) {
+                  var event = this.model.get('event');
+                  event.content.altitude = results[0].elevation;
+                }
+              }
+            }.bind(this));
+          }.bind(this));
+
+          this.map.setCenter(this.marker.position);
+          this.marker.setMap(this.map);
+        }
+      }.bind(this), 1000);
+
+    }
+  }
+});
+})()
+},{"backbone.marionette":46,"google-maps":84}],70:[function(require,module,exports){
+(function(){/* global $*/
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect'},
+  validType = ['note/txt', 'picture/attached', 'position/wgs84'];
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Creation',
+  step: creationStep.typeSelect,
+  getTemplate: function () {
+    if (this.step === creationStep.typeSelect) {
+      return '#template-detail-creation-type';
+    } else if (this.step === creationStep.streamSelect) {
+      return '#template-detail-creation-stream';
+    }
+  },
+  templateHelpers: function () {
+    return {
+      getStream: function () {
+        return this.getStream();
+      }.bind(this)
+    };
+  },
+  itemViewContainer: '#detail-content',
+  ui: {
+    type: '#type-select',
+    stream: 'ul#stream-select'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+    this.step = creationStep.typeSelect;
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    this.ui.type.bind('click', this.onTypeClick.bind(this));
+    this.ui.stream.bind('click', this.onStreamClick.bind(this));
+  },
+  onStreamClick: function (e) {
+    var streamSelected = $(e.target).attr('data-stream'),
+      connectionSelected = this.connection.get($(e.target).attr('data-connection')),
+      event = this.model.get('event');
+    event.streamId = streamSelected;
+    if (connectionSelected) {
+      event.connection = connectionSelected;
+      this.trigger('endOfSelection');
+    }
+    return true;
+  },
+  onTypeClick: function (e) {
+    var typeSelected =  $(e.target).attr('data-type') || $(e.target).parent().attr('data-type'),
+        event = this.model.get('event');
+
+    if (validType.indexOf(typeSelected) !== -1) {
+      event.type = typeSelected;
+      this.step = creationStep.streamSelect;
+      this.render();
+    }
+    return true;
+  },
+  getStream: function () {
+    var result = '<ul id="stream-select">',
+      connections  = this.connection._connections;
+    _.each(connections, function (c) {
+      if (!this._isWritePermission(c)) {
+        return;
+      }
+      result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
+      result += this.getStreamStructure(c);
+      result += '</ul>';
+
+    }.bind(this));
+    return result + '</ul>';
+  },
+  getStreamStructure: function (connection) {
+    var rootStreams = connection.datastore.getStreams(),
+      result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (this._isWritePermission(connection, rootStreams[i])) {
+        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+      }
+    }
+    return result;
+
+  },
+  _walkStreamStructure: function (stream) {
+    var preSelected = this.connectionId === stream.connection.serialId &&
+      this.streamId === stream.id ? 'preSelected-stream' : '';
+    var result = '<li class="' + preSelected + '" data-connection="' +
+      stream.connection.serialId + '" data-stream="' +
+      stream.id + '">' + stream.name + '</li>';
+    for (var j = 0; j < stream.children.length; j++) {
+      if (this._isWritePermission(stream.connection, stream.children[j])) {
+        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+      }
+    }
+    return result;
+  },
+  _isWritePermission: function (connection, streamId) {
+    if (!connection._accessInfo) {
+      return false;
+    }
+    if (connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId !== 'read') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId === 'read') {
+      return false;
+    }
+    if (streamId) {
+      return !!_.find(connection._accessInfo.permissions, function (p) {
+        return p.streamId === streamId && p.level !== 'read';
+      });
+    }
+    return false;
+  }
+});
+})()
+},{"backbone.marionette":46,"underscore":8}],69:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -17952,7 +19465,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":73,"underscore":8}],60:[function(require,module,exports){
+},{"backbone.marionette":46,"underscore":8}],72:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -18005,7 +19518,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":73,"underscore":8}],61:[function(require,module,exports){
+},{"backbone.marionette":46,"underscore":8}],71:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -18131,225 +19644,13 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":73,"underscore":8}],66:[function(require,module,exports){
-(function(){/* global $, document*/
-var Marionette = require('backbone.marionette'),
-  MapLoader = require('google-maps');
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Position',
-  template: '#template-detail-content-position',
-  tagName: 'div',
-  id: 'map_canvas',
-  itemViewContainer: '#detail-content',
-  google: null,
-  map: null,
-  waitForGoogle: false,
-  marker: null,
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.actualizePosition);
-    MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
-    MapLoader.load().then(function (google) {
-      this.google = google;
-      if (this.waitForGoogle) {
-        this.waitForGoogle = false;
-        this.render();
-      }
-    }.bind(this));
-  },
-  actualizePosition: function () {
-    if (!this.google) {
-      this.waitForGoogle = true;
-    } else {
-      var lat = this.model.get('event').content.latitude,
-        lng = this.model.get('event').content.longitude;
-      this.marker.setPosition(new this.google.maps.LatLng(lat, lng));
-      this.map.setCenter(this.marker.position);
-    }
-  },
-  onRender: function () {
-    if (!this.google) {
-      this.waitForGoogle = true;
-    } else {
-      $(this.itemViewContainer).html(this.el);
-      setTimeout(function () {
-        if (this.model.get('event')) {
-          if (!this.model.get('event').content) {
-            this.model.get('event').content = {};
-          }
-          var lat = this.model.get('event').content.latitude || 46.51759,
-            lng = this.model.get('event').content.longitude || 6.56267;
-          this.map = new this.google.maps.Map(document.getElementById('map_canvas'), {
-            zoom: 16,
-            center: new this.google.maps.LatLng(lat, lng),
-            mapTypeId: this.google.maps.MapTypeId.ROADMAP
-          });
-          var elevator = new this.google.maps.ElevationService();
-          this.marker = new this.google.maps.Marker({
-            position: new this.google.maps.LatLng(lat, lng),
-            draggable: true
-          });
-
-          this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
-            var event = this.model.get('event');
-            event.content.latitude = evt.latLng.lat();
-            event.content.longitude = evt.latLng.lng();
-            var positionalRequest = {
-              'locations': [evt.latLng]
-            };
-            elevator.getElevationForLocations(positionalRequest, function (results, status) {
-              if (status === this.google.maps.ElevationStatus.OK) {
-                // Retrieve the first result
-                if (results[0]) {
-                  var event = this.model.get('event');
-                  event.content.altitude = results[0].elevation;
-                }
-              }
-            }.bind(this));
-          }.bind(this));
-
-          this.map.setCenter(this.marker.position);
-          this.marker.setMap(this.map);
-        }
-      }.bind(this), 1000);
-
-    }
-  }
-});
-})()
-},{"backbone.marionette":73,"google-maps":87}],67:[function(require,module,exports){
-(function(){/* global $*/
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect'},
-  validType = ['note/txt', 'picture/attached', 'position/wgs84'];
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Creation',
-  step: creationStep.typeSelect,
-  getTemplate: function () {
-    if (this.step === creationStep.typeSelect) {
-      return '#template-detail-creation-type';
-    } else if (this.step === creationStep.streamSelect) {
-      return '#template-detail-creation-stream';
-    }
-  },
-  templateHelpers: function () {
-    return {
-      getStream: function () {
-        return this.getStream();
-      }.bind(this)
-    };
-  },
-  itemViewContainer: '#detail-content',
-  ui: {
-    type: 'ul#type-select',
-    stream: 'ul#stream-select'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-    this.step = creationStep.typeSelect;
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-    this.ui.type.bind('click', this.onTypeClick.bind(this));
-    this.ui.stream.bind('click', this.onStreamClick.bind(this));
-  },
-  onStreamClick: function (e) {
-    var streamSelected = $(e.target).attr('data-stream'),
-      connectionSelected = this.connection.get($(e.target).attr('data-connection')),
-      event = this.model.get('event');
-    event.streamId = streamSelected;
-    if (connectionSelected) {
-      event.connection = connectionSelected;
-      this.trigger('endOfSelection');
-    }
-    return true;
-  },
-  onTypeClick: function (e) {
-    var typeSelected = $(e.target).attr('data-type'),
-    event = this.model.get('event');
-    if (validType.indexOf(typeSelected) !== -1) {
-      event.type = typeSelected;
-      this.step = creationStep.streamSelect;
-      this.render();
-    }
-    return true;
-  },
-  getStream: function () {
-    var result = '<ul id="stream-select">',
-      connections  = this.connection._connections;
-    _.each(connections, function (c) {
-      if (!this._isWritePermission(c)) {
-        return;
-      }
-      result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
-      result += this.getStreamStructure(c);
-      result += '</ul>';
-
-    }.bind(this));
-    return result + '</ul>';
-  },
-  getStreamStructure: function (connection) {
-    var rootStreams = connection.datastore.getStreams(),
-      result = '';
-    for (var i = 0; i < rootStreams.length; i++) {
-      if (this._isWritePermission(connection, rootStreams[i])) {
-        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
-      }
-    }
-    return result;
-
-  },
-  _walkStreamStructure: function (stream) {
-    var preSelected = this.connectionId === stream.connection.serialId &&
-      this.streamId === stream.id ? 'preSelected-stream' : '';
-    var result = '<li class="' + preSelected + '" data-connection="' +
-      stream.connection.serialId + '" data-stream="' +
-      stream.id + '">' + stream.name + '</li>';
-    for (var j = 0; j < stream.children.length; j++) {
-      if (this._isWritePermission(stream.connection, stream.children[j])) {
-        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
-      }
-    }
-    return result;
-  },
-  _isWritePermission: function (connection, streamId) {
-    if (!connection._accessInfo) {
-      return false;
-    }
-    if (connection._accessInfo.type === 'personal') {
-      return true;
-    }
-    if (connection._accessInfo.permissions &&
-      connection._accessInfo.permissions[0].streamId === '*' &&
-      connection._accessInfo.permissions[0].streamId !== 'read') {
-      return true;
-    }
-    if (connection._accessInfo.permissions &&
-      connection._accessInfo.permissions[0].streamId === '*' &&
-      connection._accessInfo.permissions[0].streamId === 'read') {
-      return false;
-    }
-    if (streamId) {
-      return !!_.find(connection._accessInfo.permissions, function (p) {
-        return p.streamId === streamId && p.level !== 'read';
-      });
-    }
-    return false;
-  }
-});
-})()
-},{"backbone.marionette":73,"underscore":8}],64:[function(require,module,exports){
+},{"backbone.marionette":46,"underscore":8}],68:[function(require,module,exports){
 (function(){/* global window */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   Model = require('../../../numericals/TimeSeriesModel.js'),
   Collection = require('../../../numericals/TimeSeriesCollection.js'),
+  Settings = require('../../../numericals/utils/ChartSettings.js'),
   Sev = require('./SingleEditView.js'),
   Gcv = require('./GeneralConfigView.js');
 
@@ -18367,6 +19668,7 @@ module.exports = Marionette.ItemView.extend({
   rendered: false,
   needToRender: null,
   firstRender: null,
+  virtual: null,
   initialize: function () {
     this.firstRender = true;
     this.listenTo(this.model, 'change:collection', this.collectionChanged.bind(this));
@@ -18387,6 +19689,7 @@ module.exports = Marionette.ItemView.extend({
       this.view.bind('remove', this.removeSeriesEvent.bind(this));
     } else if (this.viewType === Sev) {
       this.view.bind('ready', this.readySeriesEvent.bind(this));
+      this.view.bind('cancel', this.cancelSeriesEvent.bind(this));
     }
     if (this.firstRender) {
       this.firstRender = false;
@@ -18422,17 +19725,24 @@ module.exports = Marionette.ItemView.extend({
           }
         }
       } else {
+        var s = new Settings(ev.stream, ev.type, this.model.get('virtual'));
         c.add(new Model({
             events: [ev],
             connectionId: connectionId,
+            stream: ev.stream,
             streamId: streamId,
             streamName: streamName,
             type: type,
-            category: 'any'
+            category: 'any',
+            virtual: this.model.get('virtual'),
+            color: s.get('color'),
+            style: s.get('style'),
+            transform: s.get('transform'),
+            interval: s.get('interval')
           })
         );
       }
-    });
+    }.bind(this));
   },
   onClose: function () {
     this.view.close();
@@ -18451,9 +19761,19 @@ module.exports = Marionette.ItemView.extend({
     this.prepareSingleEditModel(m);
     this.render();
   },
-  readySeriesEvent: function () {
+  cancelSeriesEvent: function () {
+    this.closeChild();
+    this.viewType = Gcv;
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  readySeriesEvent: function (m) {
+    var s = new Settings(m.get('stream'), m.get('type'), m.get('virtual'));
+    s.set('color', m.get('color'));
+    s.set('style', m.get('style'));
+    s.set('transform', m.get('transform'));
+    s.set('interval', m.get('interval'));
 
-    // TODO: save model changes in stream's storage and virtual node's storage
     this.closeChild();
     this.viewType = Gcv;
     this.prepareGeneralConfigModel();
@@ -18476,6 +19796,21 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
   removeSeriesEvent: function (m) {
+    var virtual = this.model.get('virtual');
+    var streamId = m.get('streamId');
+    var type = m.get('type');
+    var filters = virtual.filters;
+    var newFilter = [];
+    for (var i = 0; i < filters.length; ++i) {
+      if (!(filters[i].streamId === streamId &&
+        filters[i].type === type)) {
+        newFilter.push(filters[i]);
+      }
+    }
+    virtual.filters = newFilter;
+
+
+
     this.closeChild();
     this.viewType = Gcv;
     this.collection.remove(m);
@@ -18492,15 +19827,15 @@ module.exports = Marionette.ItemView.extend({
     this.render();
   },
   prepareSingleEditModel: function (m) {
-    var c = new Collection([], {type: 'All'});
-    c.add(m);
     this.viewModel = new Model({
-      collection: c
+      collection: this.collection,
+      edited: m
     });
   },
   prepareGeneralConfigModel: function () {
     this.viewModel = new Model({
-      collection: this.collection
+      collection: this.collection,
+      virtual: this.model.get('virtual')
     });
   },
   closeChild: function () {
@@ -18512,7 +19847,7 @@ module.exports = Marionette.ItemView.extend({
   }, 1000)
 });
 })()
-},{"../../../numericals/TimeSeriesCollection.js":69,"../../../numericals/TimeSeriesModel.js":70,"./GeneralConfigView.js":89,"./SingleEditView.js":88,"backbone.marionette":73,"underscore":8}],84:[function(require,module,exports){
+},{"../../../numericals/TimeSeriesCollection.js":78,"../../../numericals/TimeSeriesModel.js":79,"../../../numericals/utils/ChartSettings.js":34,"./GeneralConfigView.js":96,"./SingleEditView.js":95,"backbone.marionette":46,"underscore":8}],92:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -18523,7 +19858,7 @@ module.exports = Marionette.ItemView.extend({
     getPreview: function () {
       var type = this.event.type;
       if (type.indexOf('picture') === 0) {
-        return '<img src=" ' + this.event.attachmentsUrl + '">';
+        return '<img src=" ' + this.event.getPicturePreview() + '">';
       }
       return '';
     }
@@ -18558,7 +19893,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":73}],85:[function(require,module,exports){
+},{"backbone.marionette":46}],93:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.CompositeView.extend({
@@ -18581,23 +19916,96 @@ module.exports = Marionette.CompositeView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":73}],78:[function(require,module,exports){
+},{"backbone.marionette":46}],84:[function(require,module,exports){
+// Generated by CoffeeScript 1.6.3
+(function() {
+  var Google, Q;
+
+  Q = require('q');
+
+  Google = (function() {
+    function Google() {}
+
+    Google.URL = 'https://maps.googleapis.com/maps/api/js?sensor=false';
+
+    Google.KEY = null;
+
+    Google.WINDOW_CALLBACK_NAME = '__google_maps_api_provider_initializator__';
+
+    Google.google = null;
+
+    Google.loading = false;
+
+    Google.promises = [];
+
+    Google.load = function() {
+      var deferred, script, url,
+        _this = this;
+      deferred = Q.defer();
+      if (this.google === null) {
+        if (this.loading === true) {
+          this.promises.push(deferred);
+        } else {
+          this.loading = true;
+          window[this.WINDOW_CALLBACK_NAME] = function() {
+            return _this._ready(deferred);
+          };
+          url = this.URL;
+          if (this.KEY !== null) {
+            url += "&key=" + this.KEY;
+          }
+          url += "&callback=" + this.WINDOW_CALLBACK_NAME;
+          script = document.createElement('script');
+          script.type = 'text/javascript';
+          script.src = url;
+          document.body.appendChild(script);
+        }
+      } else {
+        deferred.resolve(this.google);
+      }
+      return deferred.promise;
+    };
+
+    Google._ready = function(deferred) {
+      var def, _i, _len, _ref;
+      Google.loading = false;
+      if (Google.google === null) {
+        Google.google = window.google;
+      }
+      deferred.resolve(Google.google);
+      _ref = Google.promises;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        def = _ref[_i];
+        def.resolve(Google.google);
+      }
+      return Google.promises = [];
+    };
+
+    return Google;
+
+  }).call(this);
+
+  module.exports = Google;
+
+}).call(this);
+
+},{"q":97}],88:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/positions/Model.js'),
+  EventsView = require('../../view/events-views/tweet/Model.js'),
   _ = require('underscore'),
   DEFAULT_WEIGHT = 1;
 
 /**
- * Holder for EventsNode
+ * Holder for TweetsNode
  * @type {*}
  */
-var PositionsEventsNode = module.exports = EventsNode.implement(
+var TweetsEventsNode = module.exports = EventsNode.implement(
   function (parentStreamNode) {
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'PositionsEventsNode EventsNode',
+    className: 'TweetsEventsNode EventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return DEFAULT_WEIGHT;
@@ -18606,11 +20014,11 @@ var PositionsEventsNode = module.exports = EventsNode.implement(
   });
 
 // we accept all kind of events
-PositionsEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'position/wgs84');
+TweetsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'message/twitter');
 };
 try {
-  Object.defineProperty(window.PryvBrowser, 'positionWeight', {
+  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
     set: function (value) {
       value = +value;
       if (_.isFinite(value)) {
@@ -18631,7 +20039,107 @@ try {
 
 
 })()
-},{"../../view/events-views/positions/Model.js":90,"../EventsNode":91,"underscore":8}],81:[function(require,module,exports){
+},{"../../view/events-views/tweet/Model.js":98,"../EventsNode":99,"underscore":8}],86:[function(require,module,exports){
+(function(){/* global window */
+var EventsNode = require('../EventsNode'),
+  EventsView = require('../../view/events-views/notes/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var NotesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'NotesEventsNode EventsNode',
+    pluginView: EventsView,
+    getWeight: function () {
+      return DEFAULT_WEIGHT;
+    }
+
+  });
+
+// we accept all kind of events
+NotesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'note/txt' || eventType === 'note/text');
+};
+try {
+  Object.defineProperty(window.PryvBrowser, 'noteWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
+
+
+})()
+},{"../../view/events-views/notes/Model.js":100,"../EventsNode":99,"underscore":8}],89:[function(require,module,exports){
+(function(){/* global window */
+var EventsNode = require('../EventsNode'),
+  _ = require('underscore'),
+  EventsView = require('../../view/events-views/generics/Model.js');
+
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var DEFAULT_WEIGHT = 1;
+var GenericEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'GenericEventsNode EventsNode',
+    pluginView: EventsView,
+    getWeight: function () {
+      return DEFAULT_WEIGHT;
+    }
+
+  });
+
+// we accept all kind of events
+GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
+  return true;
+};
+try {
+  Object.defineProperty(window.PryvBrowser, 'genericWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
+
+})()
+},{"../../view/events-views/generics/Model.js":101,"../EventsNode":99,"underscore":8}],91:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/numericals/Model.js'),
@@ -18711,10 +20219,10 @@ try {
 
 
 })()
-},{"../../view/events-views/numericals/Model.js":92,"../EventsNode":91,"underscore":8}],80:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":102,"../EventsNode":99,"underscore":8}],87:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/notes/Model.js'),
+  EventsView = require('../../view/events-views/positions/Model.js'),
   _ = require('underscore'),
   DEFAULT_WEIGHT = 1;
 
@@ -18722,12 +20230,12 @@ var EventsNode = require('../EventsNode'),
  * Holder for EventsNode
  * @type {*}
  */
-var NotesEventsNode = module.exports = EventsNode.implement(
+var PositionsEventsNode = module.exports = EventsNode.implement(
   function (parentStreamNode) {
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'NotesEventsNode EventsNode',
+    className: 'PositionsEventsNode EventsNode',
     pluginView: EventsView,
     getWeight: function () {
       return DEFAULT_WEIGHT;
@@ -18736,11 +20244,11 @@ var NotesEventsNode = module.exports = EventsNode.implement(
   });
 
 // we accept all kind of events
-NotesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'note/txt' || eventType === 'note/text');
+PositionsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'position/wgs84');
 };
 try {
-  Object.defineProperty(window.PryvBrowser, 'noteWeight', {
+  Object.defineProperty(window.PryvBrowser, 'positionWeight', {
     set: function (value) {
       value = +value;
       if (_.isFinite(value)) {
@@ -18761,7 +20269,7 @@ try {
 
 
 })()
-},{"../../view/events-views/notes/Model.js":93,"../EventsNode":91,"underscore":8}],79:[function(require,module,exports){
+},{"../../view/events-views/positions/Model.js":103,"../EventsNode":99,"underscore":8}],90:[function(require,module,exports){
 (function(){/*global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/pictures/Model.js'),
@@ -18812,107 +20320,1816 @@ try {
 
 
 })()
-},{"../../view/events-views/pictures/Model.js":94,"../EventsNode":91,"underscore":8}],83:[function(require,module,exports){
-(function(){/* global window */
-var EventsNode = require('../EventsNode'),
-  _ = require('underscore'),
-  EventsView = require('../../view/events-views/generics/Model.js');
+},{"../../view/events-views/pictures/Model.js":104,"../EventsNode":99,"underscore":8}],105:[function(require,module,exports){
+// shim for using process in browser
 
+var process = module.exports = {};
 
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var DEFAULT_WEIGHT = 1;
-var GenericEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'GenericEventsNode EventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
     }
 
-  });
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            var source = ev.source;
+            if ((source === window || source === null) && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
 
-// we accept all kind of events
-GenericEventsNode.acceptThisEventType = function (/*eventType*/) {
-  return true;
-};
-try {
-  Object.defineProperty(window.PryvBrowser, 'genericWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
-        }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
     }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
 }
 
-})()
-},{"../../view/events-views/generics/Model.js":95,"../EventsNode":91,"underscore":8}],82:[function(require,module,exports){
-(function(){/* global window */
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/tweet/Model.js'),
-  _ = require('underscore'),
-  DEFAULT_WEIGHT = 1;
-
-/**
- * Holder for TweetsNode
- * @type {*}
- */
-var TweetsEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'TweetsEventsNode EventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
-    }
-
-  });
-
-// we accept all kind of events
-TweetsEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'message/twitter');
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
 };
-try {
-  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
+
+},{}],97:[function(require,module,exports){
+(function(process){// vim:ts=4:sts=4:sw=4:
+/*!
+ *
+ * Copyright 2009-2012 Kris Kowal under the terms of the MIT
+ * license found at http://github.com/kriskowal/q/raw/master/LICENSE
+ *
+ * With parts by Tyler Close
+ * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
+ * at http://www.opensource.org/licenses/mit-license.html
+ * Forked at ref_send.js version: 2009-05-11
+ *
+ * With parts by Mark Miller
+ * Copyright (C) 2011 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+(function (definition) {
+    // Turn off strict mode for this function so we can assign to global.Q
+    /* jshint strict: false */
+
+    // This file will function properly as a <script> tag, or a module
+    // using CommonJS and NodeJS or RequireJS module formats.  In
+    // Common/Node/RequireJS, the module exports the Q API and when
+    // executed as a simple <script>, it creates a Q global instead.
+
+    // Montage Require
+    if (typeof bootstrap === "function") {
+        bootstrap("promise", definition);
+
+    // CommonJS
+    } else if (typeof exports === "object") {
+        module.exports = definition();
+
+    // RequireJS
+    } else if (typeof define === "function" && define.amd) {
+        define(definition);
+
+    // SES (Secure EcmaScript)
+    } else if (typeof ses !== "undefined") {
+        if (!ses.ok()) {
+            return;
+        } else {
+            ses.makeQ = definition;
         }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
+
+    // <script>
+    } else {
+        Q = definition();
     }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
+
+})(function () {
+"use strict";
+
+var hasStacks = false;
+try {
+    throw new Error();
+} catch (e) {
+    hasStacks = !!e.stack;
 }
 
+// All code after this point will be filtered from stack traces reported
+// by Q.
+var qStartingLine = captureLine();
+var qFileName;
 
-})()
-},{"../../view/events-views/tweet/Model.js":96,"../EventsNode":91,"underscore":8}],86:[function(require,module,exports){
+// shims
+
+// used for fallback in "allResolved"
+var noop = function () {};
+
+// Use the fastest possible means to execute a task in a future turn
+// of the event loop.
+var nextTick =(function () {
+    // linked list of tasks (single, with head node)
+    var head = {task: void 0, next: null};
+    var tail = head;
+    var flushing = false;
+    var requestTick = void 0;
+    var isNodeJS = false;
+
+    function flush() {
+        while (head.next) {
+            head = head.next;
+            var task = head.task;
+            head.task = void 0;
+            var domain = head.domain;
+
+            if (domain) {
+                head.domain = void 0;
+                domain.enter();
+            }
+
+            try {
+                task();
+
+            } catch (e) {
+                if (isNodeJS) {
+                    // In node, uncaught exceptions are considered fatal errors.
+                    // Re-throw them synchronously to interrupt flushing!
+
+                    // Ensure continuation if the uncaught exception is suppressed
+                    // listening "uncaughtException" events (as domains does).
+                    // Continue in next event to avoid tick recursion.
+                    domain && domain.exit();
+                    setTimeout(flush, 0);
+                    domain && domain.enter();
+
+                    throw e;
+
+                } else {
+                    // In browsers, uncaught exceptions are not fatal.
+                    // Re-throw them asynchronously to avoid slow-downs.
+                    setTimeout(function() {
+                       throw e;
+                    }, 0);
+                }
+            }
+
+            if (domain) {
+                domain.exit();
+            }
+        }
+
+        flushing = false;
+    }
+
+    nextTick = function (task) {
+        tail = tail.next = {
+            task: task,
+            domain: isNodeJS && process.domain,
+            next: null
+        };
+
+        if (!flushing) {
+            flushing = true;
+            requestTick();
+        }
+    };
+
+    if (typeof process !== "undefined" && process.nextTick) {
+        // Node.js before 0.9. Note that some fake-Node environments, like the
+        // Mocha test runner, introduce a `process` global without a `nextTick`.
+        isNodeJS = true;
+
+        requestTick = function () {
+            process.nextTick(flush);
+        };
+
+    } else if (typeof setImmediate === "function") {
+        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
+        if (typeof window !== "undefined") {
+            requestTick = setImmediate.bind(window, flush);
+        } else {
+            requestTick = function () {
+                setImmediate(flush);
+            };
+        }
+
+    } else if (typeof MessageChannel !== "undefined") {
+        // modern browsers
+        // http://www.nonblocking.io/2011/06/windownexttick.html
+        var channel = new MessageChannel();
+        channel.port1.onmessage = flush;
+        requestTick = function () {
+            channel.port2.postMessage(0);
+        };
+
+    } else {
+        // old browsers
+        requestTick = function () {
+            setTimeout(flush, 0);
+        };
+    }
+
+    return nextTick;
+})();
+
+// Attempt to make generics safe in the face of downstream
+// modifications.
+// There is no situation where this is necessary.
+// If you need a security guarantee, these primordials need to be
+// deeply frozen anyway, and if you don’t need a security guarantee,
+// this is just plain paranoid.
+// However, this does have the nice side-effect of reducing the size
+// of the code by reducing x.call() to merely x(), eliminating many
+// hard-to-minify characters.
+// See Mark Miller’s explanation of what this does.
+// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
+function uncurryThis(f) {
+    var call = Function.call;
+    return function () {
+        return call.apply(f, arguments);
+    };
+}
+// This is equivalent, but slower:
+// uncurryThis = Function_bind.bind(Function_bind.call);
+// http://jsperf.com/uncurrythis
+
+var array_slice = uncurryThis(Array.prototype.slice);
+
+var array_reduce = uncurryThis(
+    Array.prototype.reduce || function (callback, basis) {
+        var index = 0,
+            length = this.length;
+        // concerning the initial value, if one is not provided
+        if (arguments.length === 1) {
+            // seek to the first value in the array, accounting
+            // for the possibility that is is a sparse array
+            do {
+                if (index in this) {
+                    basis = this[index++];
+                    break;
+                }
+                if (++index >= length) {
+                    throw new TypeError();
+                }
+            } while (1);
+        }
+        // reduce
+        for (; index < length; index++) {
+            // account for the possibility that the array is sparse
+            if (index in this) {
+                basis = callback(basis, this[index], index);
+            }
+        }
+        return basis;
+    }
+);
+
+var array_indexOf = uncurryThis(
+    Array.prototype.indexOf || function (value) {
+        // not a very good shim, but good enough for our one use of it
+        for (var i = 0; i < this.length; i++) {
+            if (this[i] === value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+);
+
+var array_map = uncurryThis(
+    Array.prototype.map || function (callback, thisp) {
+        var self = this;
+        var collect = [];
+        array_reduce(self, function (undefined, value, index) {
+            collect.push(callback.call(thisp, value, index, self));
+        }, void 0);
+        return collect;
+    }
+);
+
+var object_create = Object.create || function (prototype) {
+    function Type() { }
+    Type.prototype = prototype;
+    return new Type();
+};
+
+var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
+
+var object_keys = Object.keys || function (object) {
+    var keys = [];
+    for (var key in object) {
+        if (object_hasOwnProperty(object, key)) {
+            keys.push(key);
+        }
+    }
+    return keys;
+};
+
+var object_toString = uncurryThis(Object.prototype.toString);
+
+function isObject(value) {
+    return value === Object(value);
+}
+
+// generator related shims
+
+// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
+function isStopIteration(exception) {
+    return (
+        object_toString(exception) === "[object StopIteration]" ||
+        exception instanceof QReturnValue
+    );
+}
+
+// FIXME: Remove this helper and Q.return once ES6 generators are in
+// SpiderMonkey.
+var QReturnValue;
+if (typeof ReturnValue !== "undefined") {
+    QReturnValue = ReturnValue;
+} else {
+    QReturnValue = function (value) {
+        this.value = value;
+    };
+}
+
+// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+// engine that has a deployed base of browsers that support generators.
+// However, SM's generators use the Python-inspired semantics of
+// outdated ES6 drafts.  We would like to support ES6, but we'd also
+// like to make it possible to use generators in deployed browsers, so
+// we also support Python-style generators.  At some point we can remove
+// this block.
+var hasES6Generators;
+try {
+    /* jshint evil: true, nonew: false */
+    new Function("(function* (){ yield 1; })");
+    hasES6Generators = true;
+} catch (e) {
+    hasES6Generators = false;
+}
+
+// long stack traces
+
+var STACK_JUMP_SEPARATOR = "From previous event:";
+
+function makeStackTraceLong(error, promise) {
+    // If possible, transform the error stack trace by removing Node and Q
+    // cruft, then concatenating with the stack trace of `promise`. See #57.
+    if (hasStacks &&
+        promise.stack &&
+        typeof error === "object" &&
+        error !== null &&
+        error.stack &&
+        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
+    ) {
+        var stacks = [];
+        for (var p = promise; !!p; p = p.source) {
+            if (p.stack) {
+                stacks.unshift(p.stack);
+            }
+        }
+        stacks.unshift(error.stack);
+
+        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
+        error.stack = filterStackString(concatedStacks);
+    }
+}
+
+function filterStackString(stackString) {
+    var lines = stackString.split("\n");
+    var desiredLines = [];
+    for (var i = 0; i < lines.length; ++i) {
+        var line = lines[i];
+
+        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
+            desiredLines.push(line);
+        }
+    }
+    return desiredLines.join("\n");
+}
+
+function isNodeFrame(stackLine) {
+    return stackLine.indexOf("(module.js:") !== -1 ||
+           stackLine.indexOf("(node.js:") !== -1;
+}
+
+function getFileNameAndLineNumber(stackLine) {
+    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
+    // In IE10 function name can have spaces ("Anonymous function") O_o
+    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
+    if (attempt1) {
+        return [attempt1[1], Number(attempt1[2])];
+    }
+
+    // Anonymous functions: "at filename:lineNumber:columnNumber"
+    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
+    if (attempt2) {
+        return [attempt2[1], Number(attempt2[2])];
+    }
+
+    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
+    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
+    if (attempt3) {
+        return [attempt3[1], Number(attempt3[2])];
+    }
+}
+
+function isInternalFrame(stackLine) {
+    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
+
+    if (!fileNameAndLineNumber) {
+        return false;
+    }
+
+    var fileName = fileNameAndLineNumber[0];
+    var lineNumber = fileNameAndLineNumber[1];
+
+    return fileName === qFileName &&
+        lineNumber >= qStartingLine &&
+        lineNumber <= qEndingLine;
+}
+
+// discover own file name and line number range for filtering stack
+// traces
+function captureLine() {
+    if (!hasStacks) {
+        return;
+    }
+
+    try {
+        throw new Error();
+    } catch (e) {
+        var lines = e.stack.split("\n");
+        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
+        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
+        if (!fileNameAndLineNumber) {
+            return;
+        }
+
+        qFileName = fileNameAndLineNumber[0];
+        return fileNameAndLineNumber[1];
+    }
+}
+
+function deprecate(callback, name, alternative) {
+    return function () {
+        if (typeof console !== "undefined" &&
+            typeof console.warn === "function") {
+            console.warn(name + " is deprecated, use " + alternative +
+                         " instead.", new Error("").stack);
+        }
+        return callback.apply(callback, arguments);
+    };
+}
+
+// end of shims
+// beginning of real work
+
+/**
+ * Creates fulfilled promises from non-thenables,
+ * Passes Q promises through,
+ * Coerces other thenables to Q promises.
+ */
+function Q(value) {
+    return resolve(value);
+}
+
+/**
+ * Performs a task in a future turn of the event loop.
+ * @param {Function} task
+ */
+Q.nextTick = nextTick;
+
+/**
+ * Controls whether or not long stack traces will be on
+ */
+Q.longStackSupport = false;
+
+/**
+ * Constructs a {promise, resolve, reject} object.
+ *
+ * `resolve` is a callback to invoke with a more resolved value for the
+ * promise. To fulfill the promise, invoke `resolve` with any value that is
+ * not a thenable. To reject the promise, invoke `resolve` with a rejected
+ * thenable, or invoke `reject` with the reason directly. To resolve the
+ * promise to another thenable, thus putting it in the same state, invoke
+ * `resolve` with that other thenable.
+ */
+Q.defer = defer;
+function defer() {
+    // if "messages" is an "Array", that indicates that the promise has not yet
+    // been resolved.  If it is "undefined", it has been resolved.  Each
+    // element of the messages array is itself an array of complete arguments to
+    // forward to the resolved promise.  We coerce the resolution value to a
+    // promise using the `resolve` function because it handles both fully
+    // non-thenable values and other thenables gracefully.
+    var messages = [], progressListeners = [], resolvedPromise;
+
+    var deferred = object_create(defer.prototype);
+    var promise = object_create(Promise.prototype);
+
+    promise.promiseDispatch = function (resolve, op, operands) {
+        var args = array_slice(arguments);
+        if (messages) {
+            messages.push(args);
+            if (op === "when" && operands[1]) { // progress operand
+                progressListeners.push(operands[1]);
+            }
+        } else {
+            nextTick(function () {
+                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
+            });
+        }
+    };
+
+    // XXX deprecated
+    promise.valueOf = deprecate(function () {
+        if (messages) {
+            return promise;
+        }
+        var nearerValue = nearer(resolvedPromise);
+        if (isPromise(nearerValue)) {
+            resolvedPromise = nearerValue; // shorten chain
+        }
+        return nearerValue;
+    }, "valueOf", "inspect");
+
+    promise.inspect = function () {
+        if (!resolvedPromise) {
+            return { state: "pending" };
+        }
+        return resolvedPromise.inspect();
+    };
+
+    if (Q.longStackSupport && hasStacks) {
+        try {
+            throw new Error();
+        } catch (e) {
+            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
+            // accessor around; that causes memory leaks as per GH-111. Just
+            // reify the stack trace as a string ASAP.
+            //
+            // At the same time, cut off the first line; it's always just
+            // "[object Promise]\n", as per the `toString`.
+            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
+        }
+    }
+
+    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
+    // consolidating them into `become`, since otherwise we'd create new
+    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
+
+    function become(newPromise) {
+        resolvedPromise = newPromise;
+        promise.source = newPromise;
+
+        array_reduce(messages, function (undefined, message) {
+            nextTick(function () {
+                newPromise.promiseDispatch.apply(newPromise, message);
+            });
+        }, void 0);
+
+        messages = void 0;
+        progressListeners = void 0;
+    }
+
+    deferred.promise = promise;
+    deferred.resolve = function (value) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(resolve(value));
+    };
+
+    deferred.fulfill = function (value) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(fulfill(value));
+    };
+    deferred.reject = function (reason) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        become(reject(reason));
+    };
+    deferred.notify = function (progress) {
+        if (resolvedPromise) {
+            return;
+        }
+
+        array_reduce(progressListeners, function (undefined, progressListener) {
+            nextTick(function () {
+                progressListener(progress);
+            });
+        }, void 0);
+    };
+
+    return deferred;
+}
+
+/**
+ * Creates a Node-style callback that will resolve or reject the deferred
+ * promise.
+ * @returns a nodeback
+ */
+defer.prototype.makeNodeResolver = function () {
+    var self = this;
+    return function (error, value) {
+        if (error) {
+            self.reject(error);
+        } else if (arguments.length > 2) {
+            self.resolve(array_slice(arguments, 1));
+        } else {
+            self.resolve(value);
+        }
+    };
+};
+
+/**
+ * @param resolver {Function} a function that returns nothing and accepts
+ * the resolve, reject, and notify functions for a deferred.
+ * @returns a promise that may be resolved with the given resolve and reject
+ * functions, or rejected by a thrown exception in resolver
+ */
+Q.promise = promise;
+function promise(resolver) {
+    if (typeof resolver !== "function") {
+        throw new TypeError("resolver must be a function.");
+    }
+
+    var deferred = defer();
+    fcall(
+        resolver,
+        deferred.resolve,
+        deferred.reject,
+        deferred.notify
+    ).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Constructs a Promise with a promise descriptor object and optional fallback
+ * function.  The descriptor contains methods like when(rejected), get(name),
+ * set(name, value), post(name, args), and delete(name), which all
+ * return either a value, a promise for a value, or a rejection.  The fallback
+ * accepts the operation name, a resolver, and any further arguments that would
+ * have been forwarded to the appropriate method above had a method been
+ * provided with the proper name.  The API makes no guarantees about the nature
+ * of the returned object, apart from that it is usable whereever promises are
+ * bought and sold.
+ */
+Q.makePromise = Promise;
+function Promise(descriptor, fallback, inspect) {
+    if (fallback === void 0) {
+        fallback = function (op) {
+            return reject(new Error(
+                "Promise does not support operation: " + op
+            ));
+        };
+    }
+    if (inspect === void 0) {
+        inspect = function () {
+            return {state: "unknown"};
+        };
+    }
+
+    var promise = object_create(Promise.prototype);
+
+    promise.promiseDispatch = function (resolve, op, args) {
+        var result;
+        try {
+            if (descriptor[op]) {
+                result = descriptor[op].apply(promise, args);
+            } else {
+                result = fallback.call(promise, op, args);
+            }
+        } catch (exception) {
+            result = reject(exception);
+        }
+        if (resolve) {
+            resolve(result);
+        }
+    };
+
+    promise.inspect = inspect;
+
+    // XXX deprecated `valueOf` and `exception` support
+    if (inspect) {
+        var inspected = inspect();
+        if (inspected.state === "rejected") {
+            promise.exception = inspected.reason;
+        }
+
+        promise.valueOf = deprecate(function () {
+            var inspected = inspect();
+            if (inspected.state === "pending" ||
+                inspected.state === "rejected") {
+                return promise;
+            }
+            return inspected.value;
+        });
+    }
+
+    return promise;
+}
+
+Promise.prototype.then = function (fulfilled, rejected, progressed) {
+    var self = this;
+    var deferred = defer();
+    var done = false;   // ensure the untrusted promise makes at most a
+                        // single call to one of the callbacks
+
+    function _fulfilled(value) {
+        try {
+            return typeof fulfilled === "function" ? fulfilled(value) : value;
+        } catch (exception) {
+            return reject(exception);
+        }
+    }
+
+    function _rejected(exception) {
+        if (typeof rejected === "function") {
+            makeStackTraceLong(exception, self);
+            try {
+                return rejected(exception);
+            } catch (newException) {
+                return reject(newException);
+            }
+        }
+        return reject(exception);
+    }
+
+    function _progressed(value) {
+        return typeof progressed === "function" ? progressed(value) : value;
+    }
+
+    nextTick(function () {
+        self.promiseDispatch(function (value) {
+            if (done) {
+                return;
+            }
+            done = true;
+
+            deferred.resolve(_fulfilled(value));
+        }, "when", [function (exception) {
+            if (done) {
+                return;
+            }
+            done = true;
+
+            deferred.resolve(_rejected(exception));
+        }]);
+    });
+
+    // Progress propagator need to be attached in the current tick.
+    self.promiseDispatch(void 0, "when", [void 0, function (value) {
+        var newValue;
+        var threw = false;
+        try {
+            newValue = _progressed(value);
+        } catch (e) {
+            threw = true;
+            if (Q.onerror) {
+                Q.onerror(e);
+            } else {
+                throw e;
+            }
+        }
+
+        if (!threw) {
+            deferred.notify(newValue);
+        }
+    }]);
+
+    return deferred.promise;
+};
+
+Promise.prototype.thenResolve = function (value) {
+    return when(this, function () { return value; });
+};
+
+Promise.prototype.thenReject = function (reason) {
+    return when(this, function () { throw reason; });
+};
+
+// Chainable methods
+array_reduce(
+    [
+        "isFulfilled", "isRejected", "isPending",
+        "dispatch",
+        "when", "spread",
+        "get", "set", "del", "delete",
+        "post", "send", "mapply", "invoke", "mcall",
+        "keys",
+        "fapply", "fcall", "fbind",
+        "all", "allResolved",
+        "timeout", "delay",
+        "catch", "finally", "fail", "fin", "progress", "done",
+        "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
+        "npost", "nsend", "nmapply", "ninvoke", "nmcall",
+        "nodeify"
+    ],
+    function (undefined, name) {
+        Promise.prototype[name] = function () {
+            return Q[name].apply(
+                Q,
+                [this].concat(array_slice(arguments))
+            );
+        };
+    },
+    void 0
+);
+
+Promise.prototype.toSource = function () {
+    return this.toString();
+};
+
+Promise.prototype.toString = function () {
+    return "[object Promise]";
+};
+
+/**
+ * If an object is not a promise, it is as "near" as possible.
+ * If a promise is rejected, it is as "near" as possible too.
+ * If it’s a fulfilled promise, the fulfillment value is nearer.
+ * If it’s a deferred promise and the deferred has been resolved, the
+ * resolution is "nearer".
+ * @param object
+ * @returns most resolved (nearest) form of the object
+ */
+
+// XXX should we re-do this?
+Q.nearer = nearer;
+function nearer(value) {
+    if (isPromise(value)) {
+        var inspected = value.inspect();
+        if (inspected.state === "fulfilled") {
+            return inspected.value;
+        }
+    }
+    return value;
+}
+
+/**
+ * @returns whether the given object is a promise.
+ * Otherwise it is a fulfilled value.
+ */
+Q.isPromise = isPromise;
+function isPromise(object) {
+    return isObject(object) &&
+        typeof object.promiseDispatch === "function" &&
+        typeof object.inspect === "function";
+}
+
+Q.isPromiseAlike = isPromiseAlike;
+function isPromiseAlike(object) {
+    return isObject(object) && typeof object.then === "function";
+}
+
+/**
+ * @returns whether the given object is a pending promise, meaning not
+ * fulfilled or rejected.
+ */
+Q.isPending = isPending;
+function isPending(object) {
+    return isPromise(object) && object.inspect().state === "pending";
+}
+
+/**
+ * @returns whether the given object is a value or fulfilled
+ * promise.
+ */
+Q.isFulfilled = isFulfilled;
+function isFulfilled(object) {
+    return !isPromise(object) || object.inspect().state === "fulfilled";
+}
+
+/**
+ * @returns whether the given object is a rejected promise.
+ */
+Q.isRejected = isRejected;
+function isRejected(object) {
+    return isPromise(object) && object.inspect().state === "rejected";
+}
+
+//// BEGIN UNHANDLED REJECTION TRACKING
+
+// This promise library consumes exceptions thrown in handlers so they can be
+// handled by a subsequent promise.  The exceptions get added to this array when
+// they are created, and removed when they are handled.  Note that in ES6 or
+// shimmed environments, this would naturally be a `Set`.
+var unhandledReasons = [];
+var unhandledRejections = [];
+var unhandledReasonsDisplayed = false;
+var trackUnhandledRejections = true;
+function displayUnhandledReasons() {
+    if (
+        !unhandledReasonsDisplayed &&
+        typeof window !== "undefined" &&
+        !window.Touch &&
+        window.console
+    ) {
+        console.warn("[Q] Unhandled rejection reasons (should be empty):",
+                     unhandledReasons);
+    }
+
+    unhandledReasonsDisplayed = true;
+}
+
+function logUnhandledReasons() {
+    for (var i = 0; i < unhandledReasons.length; i++) {
+        var reason = unhandledReasons[i];
+        if (reason && typeof reason.stack !== "undefined") {
+            console.warn("Unhandled rejection reason:", reason.stack);
+        } else {
+            console.warn("Unhandled rejection reason (no stack):", reason);
+        }
+    }
+}
+
+function resetUnhandledRejections() {
+    unhandledReasons.length = 0;
+    unhandledRejections.length = 0;
+    unhandledReasonsDisplayed = false;
+
+    if (!trackUnhandledRejections) {
+        trackUnhandledRejections = true;
+
+        // Show unhandled rejection reasons if Node exits without handling an
+        // outstanding rejection.  (Note that Browserify presently produces a
+        // `process` global without the `EventEmitter` `on` method.)
+        if (typeof process !== "undefined" && process.on) {
+            process.on("exit", logUnhandledReasons);
+        }
+    }
+}
+
+function trackRejection(promise, reason) {
+    if (!trackUnhandledRejections) {
+        return;
+    }
+
+    unhandledRejections.push(promise);
+    unhandledReasons.push(reason);
+    displayUnhandledReasons();
+}
+
+function untrackRejection(promise) {
+    if (!trackUnhandledRejections) {
+        return;
+    }
+
+    var at = array_indexOf(unhandledRejections, promise);
+    if (at !== -1) {
+        unhandledRejections.splice(at, 1);
+        unhandledReasons.splice(at, 1);
+    }
+}
+
+Q.resetUnhandledRejections = resetUnhandledRejections;
+
+Q.getUnhandledReasons = function () {
+    // Make a copy so that consumers can't interfere with our internal state.
+    return unhandledReasons.slice();
+};
+
+Q.stopUnhandledRejectionTracking = function () {
+    resetUnhandledRejections();
+    if (typeof process !== "undefined" && process.on) {
+        process.removeListener("exit", logUnhandledReasons);
+    }
+    trackUnhandledRejections = false;
+};
+
+resetUnhandledRejections();
+
+//// END UNHANDLED REJECTION TRACKING
+
+/**
+ * Constructs a rejected promise.
+ * @param reason value describing the failure
+ */
+Q.reject = reject;
+function reject(reason) {
+    var rejection = Promise({
+        "when": function (rejected) {
+            // note that the error has been handled
+            if (rejected) {
+                untrackRejection(this);
+            }
+            return rejected ? rejected(reason) : this;
+        }
+    }, function fallback() {
+        return this;
+    }, function inspect() {
+        return { state: "rejected", reason: reason };
+    });
+
+    // Note that the reason has not been handled.
+    trackRejection(rejection, reason);
+
+    return rejection;
+}
+
+/**
+ * Constructs a fulfilled promise for an immediate reference.
+ * @param value immediate reference
+ */
+Q.fulfill = fulfill;
+function fulfill(value) {
+    return Promise({
+        "when": function () {
+            return value;
+        },
+        "get": function (name) {
+            return value[name];
+        },
+        "set": function (name, rhs) {
+            value[name] = rhs;
+        },
+        "delete": function (name) {
+            delete value[name];
+        },
+        "post": function (name, args) {
+            // Mark Miller proposes that post with no name should apply a
+            // promised function.
+            if (name === null || name === void 0) {
+                return value.apply(void 0, args);
+            } else {
+                return value[name].apply(value, args);
+            }
+        },
+        "apply": function (thisP, args) {
+            return value.apply(thisP, args);
+        },
+        "keys": function () {
+            return object_keys(value);
+        }
+    }, void 0, function inspect() {
+        return { state: "fulfilled", value: value };
+    });
+}
+
+/**
+ * Constructs a promise for an immediate reference, passes promises through, or
+ * coerces promises from different systems.
+ * @param value immediate reference or promise
+ */
+Q.resolve = resolve;
+function resolve(value) {
+    // If the object is already a Promise, return it directly.  This enables
+    // the resolve function to both be used to created references from objects,
+    // but to tolerably coerce non-promises to promises.
+    if (isPromise(value)) {
+        return value;
+    }
+
+    // assimilate thenables
+    if (isPromiseAlike(value)) {
+        return coerce(value);
+    } else {
+        return fulfill(value);
+    }
+}
+
+/**
+ * Converts thenables to Q promises.
+ * @param promise thenable promise
+ * @returns a Q promise
+ */
+function coerce(promise) {
+    var deferred = defer();
+    nextTick(function () {
+        try {
+            promise.then(deferred.resolve, deferred.reject, deferred.notify);
+        } catch (exception) {
+            deferred.reject(exception);
+        }
+    });
+    return deferred.promise;
+}
+
+/**
+ * Annotates an object such that it will never be
+ * transferred away from this process over any promise
+ * communication channel.
+ * @param object
+ * @returns promise a wrapping of that object that
+ * additionally responds to the "isDef" message
+ * without a rejection.
+ */
+Q.master = master;
+function master(object) {
+    return Promise({
+        "isDef": function () {}
+    }, function fallback(op, args) {
+        return dispatch(object, op, args);
+    }, function () {
+        return resolve(object).inspect();
+    });
+}
+
+/**
+ * Registers an observer on a promise.
+ *
+ * Guarantees:
+ *
+ * 1. that fulfilled and rejected will be called only once.
+ * 2. that either the fulfilled callback or the rejected callback will be
+ *    called, but not both.
+ * 3. that fulfilled and rejected will not be called in this turn.
+ *
+ * @param value      promise or immediate reference to observe
+ * @param fulfilled  function to be called with the fulfilled value
+ * @param rejected   function to be called with the rejection exception
+ * @param progressed function to be called on any progress notifications
+ * @return promise for the return value from the invoked callback
+ */
+Q.when = when;
+function when(value, fulfilled, rejected, progressed) {
+    return Q(value).then(fulfilled, rejected, progressed);
+}
+
+/**
+ * Spreads the values of a promised array of arguments into the
+ * fulfillment callback.
+ * @param fulfilled callback that receives variadic arguments from the
+ * promised array
+ * @param rejected callback that receives the exception if the promise
+ * is rejected.
+ * @returns a promise for the return value or thrown exception of
+ * either callback.
+ */
+Q.spread = spread;
+function spread(promise, fulfilled, rejected) {
+    return when(promise, function (valuesOrPromises) {
+        return all(valuesOrPromises).then(function (values) {
+            return fulfilled.apply(void 0, values);
+        }, rejected);
+    }, rejected);
+}
+
+/**
+ * The async function is a decorator for generator functions, turning
+ * them into asynchronous generators.  Although generators are only part
+ * of the newest ECMAScript 6 drafts, this code does not cause syntax
+ * errors in older engines.  This code should continue to work and will
+ * in fact improve over time as the language improves.
+ *
+ * ES6 generators are currently part of V8 version 3.19 with the
+ * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
+ * for longer, but under an older Python-inspired form.  This function
+ * works on both kinds of generators.
+ *
+ * Decorates a generator function such that:
+ *  - it may yield promises
+ *  - execution will continue when that promise is fulfilled
+ *  - the value of the yield expression will be the fulfilled value
+ *  - it returns a promise for the return value (when the generator
+ *    stops iterating)
+ *  - the decorated function returns a promise for the return value
+ *    of the generator or the first rejected promise among those
+ *    yielded.
+ *  - if an error is thrown in the generator, it propagates through
+ *    every following yield until it is caught, or until it escapes
+ *    the generator function altogether, and is translated into a
+ *    rejection for the promise returned by the decorated generator.
+ */
+Q.async = async;
+function async(makeGenerator) {
+    return function () {
+        // when verb is "send", arg is a value
+        // when verb is "throw", arg is an exception
+        function continuer(verb, arg) {
+            var result;
+            if (hasES6Generators) {
+                try {
+                    result = generator[verb](arg);
+                } catch (exception) {
+                    return reject(exception);
+                }
+                if (result.done) {
+                    return result.value;
+                } else {
+                    return when(result.value, callback, errback);
+                }
+            } else {
+                // FIXME: Remove this case when SM does ES6 generators.
+                try {
+                    result = generator[verb](arg);
+                } catch (exception) {
+                    if (isStopIteration(exception)) {
+                        return exception.value;
+                    } else {
+                        return reject(exception);
+                    }
+                }
+                return when(result, callback, errback);
+            }
+        }
+        var generator = makeGenerator.apply(this, arguments);
+        var callback = continuer.bind(continuer, "send");
+        var errback = continuer.bind(continuer, "throw");
+        return callback();
+    };
+}
+
+/**
+ * The spawn function is a small wrapper around async that immediately
+ * calls the generator and also ends the promise chain, so that any
+ * unhandled errors are thrown instead of forwarded to the error
+ * handler. This is useful because it's extremely common to run
+ * generators at the top-level to work with libraries.
+ */
+Q.spawn = spawn;
+function spawn(makeGenerator) {
+    Q.done(Q.async(makeGenerator)());
+}
+
+// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
+/**
+ * Throws a ReturnValue exception to stop an asynchronous generator.
+ *
+ * This interface is a stop-gap measure to support generator return
+ * values in older Firefox/SpiderMonkey.  In browsers that support ES6
+ * generators like Chromium 29, just use "return" in your generator
+ * functions.
+ *
+ * @param value the return value for the surrounding generator
+ * @throws ReturnValue exception with the value.
+ * @example
+ * // ES6 style
+ * Q.async(function* () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      return foo + bar;
+ * })
+ * // Older SpiderMonkey style
+ * Q.async(function () {
+ *      var foo = yield getFooPromise();
+ *      var bar = yield getBarPromise();
+ *      Q.return(foo + bar);
+ * })
+ */
+Q["return"] = _return;
+function _return(value) {
+    throw new QReturnValue(value);
+}
+
+/**
+ * The promised function decorator ensures that any promise arguments
+ * are settled and passed as values (`this` is also settled and passed
+ * as a value).  It will also ensure that the result of a function is
+ * always a promise.
+ *
+ * @example
+ * var add = Q.promised(function (a, b) {
+ *     return a + b;
+ * });
+ * add(Q.resolve(a), Q.resolve(B));
+ *
+ * @param {function} callback The function to decorate
+ * @returns {function} a function that has been decorated.
+ */
+Q.promised = promised;
+function promised(callback) {
+    return function () {
+        return spread([this, all(arguments)], function (self, args) {
+            return callback.apply(self, args);
+        });
+    };
+}
+
+/**
+ * sends a message to a value in a future turn
+ * @param object* the recipient
+ * @param op the name of the message operation, e.g., "when",
+ * @param args further arguments to be forwarded to the operation
+ * @returns result {Promise} a promise for the result of the operation
+ */
+Q.dispatch = dispatch;
+function dispatch(object, op, args) {
+    var deferred = defer();
+    nextTick(function () {
+        resolve(object).promiseDispatch(deferred.resolve, op, args);
+    });
+    return deferred.promise;
+}
+
+/**
+ * Constructs a promise method that can be used to safely observe resolution of
+ * a promise for an arbitrarily named method like "propfind" in a future turn.
+ *
+ * "dispatcher" constructs methods like "get(promise, name)" and "set(promise)".
+ */
+Q.dispatcher = dispatcher;
+function dispatcher(op) {
+    return function (object) {
+        var args = array_slice(arguments, 1);
+        return dispatch(object, op, args);
+    };
+}
+
+/**
+ * Gets the value of a property in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of property to get
+ * @return promise for the property value
+ */
+Q.get = dispatcher("get");
+
+/**
+ * Sets the value of a property in a future turn.
+ * @param object    promise or immediate reference for object object
+ * @param name      name of property to set
+ * @param value     new value of property
+ * @return promise for the return value
+ */
+Q.set = dispatcher("set");
+
+/**
+ * Deletes a property in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of property to delete
+ * @return promise for the return value
+ */
+Q["delete"] = // XXX experimental
+Q.del = dispatcher("delete");
+
+/**
+ * Invokes a method in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of method to invoke
+ * @param value     a value to post, typically an array of
+ *                  invocation arguments for promises that
+ *                  are ultimately backed with `resolve` values,
+ *                  as opposed to those backed with URLs
+ *                  wherein the posted value can be any
+ *                  JSON serializable object.
+ * @return promise for the return value
+ */
+// bound locally because it is used by other methods
+var post = Q.post = dispatcher("post");
+Q.mapply = post; // experimental
+
+/**
+ * Invokes a method in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @param name      name of method to invoke
+ * @param ...args   array of invocation arguments
+ * @return promise for the return value
+ */
+Q.send = send;
+Q.invoke = send; // synonyms
+Q.mcall = send; // experimental
+function send(value, name) {
+    var args = array_slice(arguments, 2);
+    return post(value, name, args);
+}
+
+/**
+ * Applies the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param args      array of application arguments
+ */
+Q.fapply = fapply;
+function fapply(value, args) {
+    return dispatch(value, "apply", [void 0, args]);
+}
+
+/**
+ * Calls the promised function in a future turn.
+ * @param object    promise or immediate reference for target function
+ * @param ...args   array of application arguments
+ */
+Q["try"] = fcall; // XXX experimental
+Q.fcall = fcall;
+function fcall(value) {
+    var args = array_slice(arguments, 1);
+    return fapply(value, args);
+}
+
+/**
+ * Binds the promised function, transforming return values into a fulfilled
+ * promise and thrown errors into a rejected one.
+ * @param object    promise or immediate reference for target function
+ * @param ...args   array of application arguments
+ */
+Q.fbind = fbind;
+function fbind(value) {
+    var args = array_slice(arguments, 1);
+    return function fbound() {
+        var allArgs = args.concat(array_slice(arguments));
+        return dispatch(value, "apply", [this, allArgs]);
+    };
+}
+
+/**
+ * Requests the names of the owned properties of a promised
+ * object in a future turn.
+ * @param object    promise or immediate reference for target object
+ * @return promise for the keys of the eventually settled object
+ */
+Q.keys = dispatcher("keys");
+
+/**
+ * Turns an array of promises into a promise for an array.  If any of
+ * the promises gets rejected, the whole array is rejected immediately.
+ * @param {Array*} an array (or promise for an array) of values (or
+ * promises for values)
+ * @returns a promise for an array of the corresponding values
+ */
+// By Mark Miller
+// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
+Q.all = all;
+function all(promises) {
+    return when(promises, function (promises) {
+        var countDown = 0;
+        var deferred = defer();
+        array_reduce(promises, function (undefined, promise, index) {
+            var snapshot;
+            if (
+                isPromise(promise) &&
+                (snapshot = promise.inspect()).state === "fulfilled"
+            ) {
+                promises[index] = snapshot.value;
+            } else {
+                ++countDown;
+                when(promise, function (value) {
+                    promises[index] = value;
+                    if (--countDown === 0) {
+                        deferred.resolve(promises);
+                    }
+                }, deferred.reject);
+            }
+        }, void 0);
+        if (countDown === 0) {
+            deferred.resolve(promises);
+        }
+        return deferred.promise;
+    });
+}
+
+/**
+ * Waits for all promises to be settled, either fulfilled or
+ * rejected.  This is distinct from `all` since that would stop
+ * waiting at the first rejection.  The promise returned by
+ * `allResolved` will never be rejected.
+ * @param promises a promise for an array (or an array) of promises
+ * (or values)
+ * @return a promise for an array of promises
+ */
+Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
+function allResolved(promises) {
+    return when(promises, function (promises) {
+        promises = array_map(promises, resolve);
+        return when(all(array_map(promises, function (promise) {
+            return when(promise, noop, noop);
+        })), function () {
+            return promises;
+        });
+    });
+}
+
+Q.allSettled = allSettled;
+function allSettled(values) {
+    return when(values, function (values) {
+        return all(array_map(values, function (value, i) {
+            return when(
+                value,
+                function (fulfillmentValue) {
+                    values[i] = { state: "fulfilled", value: fulfillmentValue };
+                    return values[i];
+                },
+                function (reason) {
+                    values[i] = { state: "rejected", reason: reason };
+                    return values[i];
+                }
+            );
+        })).thenResolve(values);
+    });
+}
+
+/**
+ * Captures the failure of a promise, giving an oportunity to recover
+ * with a callback.  If the given promise is fulfilled, the returned
+ * promise is fulfilled.
+ * @param {Any*} promise for something
+ * @param {Function} callback to fulfill the returned promise if the
+ * given promise is rejected
+ * @returns a promise for the return value of the callback
+ */
+Q["catch"] = // XXX experimental
+Q.fail = fail;
+function fail(promise, rejected) {
+    return when(promise, void 0, rejected);
+}
+
+/**
+ * Attaches a listener that can respond to progress notifications from a
+ * promise's originating deferred. This listener receives the exact arguments
+ * passed to ``deferred.notify``.
+ * @param {Any*} promise for something
+ * @param {Function} callback to receive any progress notifications
+ * @returns the given promise, unchanged
+ */
+Q.progress = progress;
+function progress(promise, progressed) {
+    return when(promise, void 0, void 0, progressed);
+}
+
+/**
+ * Provides an opportunity to observe the settling of a promise,
+ * regardless of whether the promise is fulfilled or rejected.  Forwards
+ * the resolution to the returned promise when the callback is done.
+ * The callback can return a promise to defer completion.
+ * @param {Any*} promise
+ * @param {Function} callback to observe the resolution of the given
+ * promise, takes no arguments.
+ * @returns a promise for the resolution of the given promise when
+ * ``fin`` is done.
+ */
+Q["finally"] = // XXX experimental
+Q.fin = fin;
+function fin(promise, callback) {
+    return when(promise, function (value) {
+        return when(callback(), function () {
+            return value;
+        });
+    }, function (exception) {
+        return when(callback(), function () {
+            return reject(exception);
+        });
+    });
+}
+
+/**
+ * Terminates a chain of promises, forcing rejections to be
+ * thrown as exceptions.
+ * @param {Any*} promise at the end of a chain of promises
+ * @returns nothing
+ */
+Q.done = done;
+function done(promise, fulfilled, rejected, progress) {
+    var onUnhandledError = function (error) {
+        // forward to a future turn so that ``when``
+        // does not catch it and turn it into a rejection.
+        nextTick(function () {
+            makeStackTraceLong(error, promise);
+
+            if (Q.onerror) {
+                Q.onerror(error);
+            } else {
+                throw error;
+            }
+        });
+    };
+
+    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
+    var promiseToHandle = fulfilled || rejected || progress ?
+        when(promise, fulfilled, rejected, progress) :
+        promise;
+
+    if (typeof process === "object" && process && process.domain) {
+        onUnhandledError = process.domain.bind(onUnhandledError);
+    }
+    fail(promiseToHandle, onUnhandledError);
+}
+
+/**
+ * Causes a promise to be rejected if it does not get fulfilled before
+ * some milliseconds time out.
+ * @param {Any*} promise
+ * @param {Number} milliseconds timeout
+ * @param {String} custom error message (optional)
+ * @returns a promise for the resolution of the given promise if it is
+ * fulfilled before the timeout, otherwise rejected.
+ */
+Q.timeout = timeout;
+function timeout(promise, ms, msg) {
+    var deferred = defer();
+    var timeoutId = setTimeout(function () {
+        deferred.reject(new Error(msg || "Timed out after " + ms + " ms"));
+    }, ms);
+
+    when(promise, function (value) {
+        clearTimeout(timeoutId);
+        deferred.resolve(value);
+    }, function (exception) {
+        clearTimeout(timeoutId);
+        deferred.reject(exception);
+    }, deferred.notify);
+
+    return deferred.promise;
+}
+
+/**
+ * Returns a promise for the given value (or promised value) after some
+ * milliseconds.
+ * @param {Any*} promise
+ * @param {Number} milliseconds
+ * @returns a promise for the resolution of the given promise after some
+ * time has elapsed.
+ */
+Q.delay = delay;
+function delay(promise, timeout) {
+    if (timeout === void 0) {
+        timeout = promise;
+        promise = void 0;
+    }
+
+    var deferred = defer();
+
+    when(promise, undefined, undefined, deferred.notify);
+    setTimeout(function () {
+        deferred.resolve(promise);
+    }, timeout);
+
+    return deferred.promise;
+}
+
+/**
+ * Passes a continuation to a Node function, which is called with the given
+ * arguments provided as an array, and returns a promise.
+ *
+ *      Q.nfapply(FS.readFile, [__filename])
+ *      .then(function (content) {
+ *      })
+ *
+ */
+Q.nfapply = nfapply;
+function nfapply(callback, args) {
+    var nodeArgs = array_slice(args);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    fapply(callback, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Passes a continuation to a Node function, which is called with the given
+ * arguments provided individually, and returns a promise.
+ *
+ *      Q.nfcall(FS.readFile, __filename)
+ *      .then(function (content) {
+ *      })
+ *
+ */
+Q.nfcall = nfcall;
+function nfcall(callback/*, ...args */) {
+    var nodeArgs = array_slice(arguments, 1);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    fapply(callback, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Wraps a NodeJS continuation passing function and returns an equivalent
+ * version that returns a promise.
+ *
+ *      Q.nfbind(FS.readFile, __filename)("utf-8")
+ *      .then(console.log)
+ *      .done()
+ *
+ */
+Q.nfbind = nfbind;
+Q.denodeify = Q.nfbind; // synonyms
+function nfbind(callback/*, ...args */) {
+    var baseArgs = array_slice(arguments, 1);
+    return function () {
+        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        nodeArgs.push(deferred.makeNodeResolver());
+
+        fapply(callback, nodeArgs).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+Q.nbind = nbind;
+function nbind(callback, thisArg /*, ... args*/) {
+    var baseArgs = array_slice(arguments, 2);
+    return function () {
+        var nodeArgs = baseArgs.concat(array_slice(arguments));
+        var deferred = defer();
+        nodeArgs.push(deferred.makeNodeResolver());
+
+        function bound() {
+            return callback.apply(thisArg, arguments);
+        }
+
+        fapply(bound, nodeArgs).fail(deferred.reject);
+        return deferred.promise;
+    };
+}
+
+/**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback with a given array of arguments, plus a provided callback.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param {Array} args arguments to pass to the method; the callback
+ * will be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
+ */
+Q.npost = npost;
+Q.nmapply = npost; // synonyms
+function npost(object, name, args) {
+    var nodeArgs = array_slice(args || []);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+
+    post(object, name, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+/**
+ * Calls a method of a Node-style object that accepts a Node-style
+ * callback, forwarding the given variadic arguments, plus a provided
+ * callback argument.
+ * @param object an object that has the named method
+ * @param {String} name name of the method of object
+ * @param ...args arguments to pass to the method; the callback will
+ * be provided by Q and appended to these arguments.
+ * @returns a promise for the value or error
+ */
+Q.nsend = nsend;
+Q.ninvoke = Q.nsend; // synonyms
+Q.nmcall = Q.nsend; // synonyms
+function nsend(object, name /*, ...args*/) {
+    var nodeArgs = array_slice(arguments, 2);
+    var deferred = defer();
+    nodeArgs.push(deferred.makeNodeResolver());
+    post(object, name, nodeArgs).fail(deferred.reject);
+    return deferred.promise;
+}
+
+Q.nodeify = nodeify;
+function nodeify(promise, nodeback) {
+    if (nodeback) {
+        promise.then(function (value) {
+            nextTick(function () {
+                nodeback(null, value);
+            });
+        }, function (error) {
+            nextTick(function () {
+                nodeback(error);
+            });
+        });
+    } else {
+        return promise;
+    }
+}
+
+// All code before this point will be filtered from stack traces.
+var qEndingLine = captureLine();
+
+return Q;
+
+});
+
+})(require("__browserify_process"))
+},{"__browserify_process":105}],94:[function(require,module,exports){
 var _ = require('underscore');
 
 var ChartTransform = module.exports = {};
@@ -19137,1504 +22354,7 @@ ChartTransform.avg = function (data) {
 
 
 
-},{"underscore":8}],91:[function(require,module,exports){
-(function(){var TreeNode = require('./TreeNode'),
-  RootNode = require('./RootNode'),
-  Backbone = require('backbone'),
-  NodeView = require('../view/NodeView.js'),
-  _ = require('underscore');
-
-/*
- If you want to bypass the plugin detection system (i.e not use EventsView.js)
- just remove EventsView = require... above and add to all the Events typed node:
- var EventsView = require( {path to the plugin view} );  as a global var
- pluginView: EventsView, as an instance var
- to create the view just do: new this.pluginView(params);
- */
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var EventsNode = module.exports = TreeNode.implement(
-  function (parentStreamNode) {
-    TreeNode.call(this, parentStreamNode.treeMap, parentStreamNode);
-    this.events = {};
-    this.eventDisplayed = null;
-    this.eventView = null;
-    this.model  = null;
-
-  },
-  {
-    className: 'EventsNode',
-    aggregated: false,
-    getChildren: function () {
-      return null;
-    },
-
-    eventEnterScope: function (event, reason, callback) {
-      event.streamName =
-        this.parent.connectionNode.connection.datastore.getStreamById(event.streamId).name;
-      this.events[event.id] = event;
-      if (!this.eventView) {
-        this._createEventView();
-      } else {
-        this.eventView.eventEnter(event);
-      }
-
-      if (callback) {
-        callback(null);
-      }
-    },
-    eventLeaveScope: function (event, reason, callback) {
-      delete this.events[event.id];
-      if (this.eventView) {
-        this.eventView.eventLeave(event);
-      }
-    },
-    onDateHighLighted: function (time) {
-      if (this.eventView) {
-        this.eventView.OnDateHighlightedChange(time);
-      }
-    },
-    /*jshint -W098 */
-    eventChange: function (event, reason, callback) {
-      this.events[event.id] = event;
-      //console.log('eventChange', event);
-      if (this.eventView) {
-        this.eventView.eventChange(event);
-      }
-
-      if (callback) {
-        callback(null);
-      }
-    },
-
-    _refreshViewModel: function (recursive) {
-      if (!this.model) {
-        var BasicModel = Backbone.Model.extend({ });
-        this.model = new BasicModel({
-          containerId: this.parent.uniqueId,
-          id: this.uniqueId,
-          className: this.className,
-          width: this.width,
-          height: this.height,
-          x: this.x,
-          y: this.y,
-          depth: this.depth,
-          color: this.parent.stream.color,
-          weight: this.getWeight(),
-          content: this.events || this.stream || this.connection,
-          eventView: this.eventView,
-          streamId: this.parent.stream.id,
-          streamName: this.parent.stream.name,
-          connectionId: this.parent.connectionNode.id
-        });
-      } else {
-        // TODO For now empty nodes (i.e streams) are not displayed
-        // but we'll need to display them to create event, drag drop ...
-        /*if (this.getWeight() === 0) {
-         if (this.model) {
-         this.model.set('width', 0);
-         this.model.set('height', 0);
-         }
-         return;
-         } */
-        this.model.set('containerId', this.parent.uniqueId);
-        this.model.set('id', this.uniqueId);
-        this.model.set('name', this.className);
-        this.model.set('width', this.width);
-        this.model.set('height', this.height);
-        this.model.set('x', this.x);
-        this.model.set('y', this.y);
-        this.model.set('depth', this.depth);
-        this.model.set('weight', this.getWeight());
-        this.model.set('streamId', this.parent.stream.id);
-        this.model.set('connectionId', this.parent.connectionNode.id);
-        if (this.eventView) {
-          this.eventView.refresh({
-            width: this.width,
-            height: this.height
-          });
-        }
-      }
-      if (recursive && this.getChildren()) {
-        _.each(this.getChildren(), function (child) {
-          child._refreshViewModel(true);
-        });
-      }
-    },
-
-    _createEventView: function () {
-      this.eventView = new this.pluginView(this.events, {
-        width: this.width,
-        height: this.height,
-        id: this.uniqueId,
-        treeMap: this.treeMap,
-        stream: this.parent.stream
-      }, this);
-    },
-
-    /**
-     * Called on drag and drop
-     * @param nodeId
-     * @param streamId
-     * @param connectionId
-     */
-    dragAndDrop: function (nodeId, streamId, connectionId) {
-
-
-      var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
-      var thisNode = this;
-
-      if (thisNode.parent.stream.isVirtual || otherNode.parent.stream.isVirtual) {
-        throw new Error('Creating virtual node out of virtual node currently not allowed.');
-      }
-
-      if (otherNode !== thisNode) {
-        this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
-      }
-
-      var thisStreams = this.treeMap.getFiltersFromNode(thisNode);
-      thisStreams = [thisStreams];
-      var streams = this.treeMap.getFiltersFromNode(otherNode);
-      streams = [streams];
-
-      for (var i = 0, n = thisStreams.length; i < n; ++i) {
-        streams.push(thisStreams[i]);
-      }
-      console.log(streams);
-      this.treeMap.createVirtualNode(streams);
-
-
-
-    }
-
-  });
-
-
-EventsNode.acceptThisEventType = function () {
-  throw new Error('EventsNode.acceptThisEventType nust be overriden');
-};
-
-
-
-
-})()
-},{"../view/NodeView.js":54,"./RootNode":20,"./TreeNode":35,"backbone":19,"underscore":8}],97:[function(require,module,exports){
-(function(){/* global window, google, document */
-/*jshint -W084 */
-/*jshint -W089 */
-/**
- * @name MarkerClusterer for Google Maps v3
- * @version version 1.0.1
- * @author Luke Mahe
- * @fileoverview
- * The library creates and manages per-zoom-level clusters for large amounts of
- * markers.
- * <br/>
- * This is a v3 implementation of the
- * <a href="http://gmaps-utility-library-dev.googlecode.com/svn/tags/markerclusterer/"
- * >v2 MarkerClusterer</a>.
- */
-
-/**
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * A Marker Clusterer that clusters markers.
- *
- * @param {google.maps.Map} map The Google map to attach to.
- * @param {Array.<google.maps.Marker>=} opt_markers Optional markers to add to
- *   the cluster.
- * @param {Object=} opt_options support the following options:
- *     'gridSize': (number) The grid size of a cluster in pixels.
- *     'maxZoom': (number) The maximum zoom level that a marker can be part of a
- *                cluster.
- *     'zoomOnClick': (boolean) Whether the default behaviour of clicking on a
- *                    cluster is to zoom into it.
- *     'averageCenter': (boolean) Wether the center of each cluster should be
- *                      the average of all markers in the cluster.
- *     'minimumClusterSize': (number) The minimum number of markers to be in a
- *                           cluster before the markers are hidden and a count
- *                           is shown.
- *     'styles': (object) An object that has style properties:
- *       'url': (string) The image url.
- *       'height': (number) The image height.
- *       'width': (number) The image width.
- *       'anchor': (Array) The anchor position of the label text.
- *       'textColor': (string) The text color.
- *       'textSize': (number) The text size.
- *       'backgroundPosition': (string) The position of the backgound x, y.
- * @constructor
- * @extends google.maps.OverlayView
- */
-var MarkerClusterer = module.exports = function (map, opt_markers, opt_options) {
-  // MarkerClusterer implements google.maps.OverlayView interface. We use the
-  // extend function to extend MarkerClusterer with google.maps.OverlayView
-  // because it might not always be available when the code is defined so we
-  // look for it at the last possible moment. If it doesn't exist now then
-  // there is no point going ahead :)
-  this.extend(MarkerClusterer, google.maps.OverlayView);
-  this.map_ = map;
-
-  /**
-   * @type {Array.<google.maps.Marker>}
-   * @private
-   */
-  this.markers_ = [];
-
-  /**
-   *  @type {Array.<Cluster>}
-   */
-  this.clusters_ = [];
-
-  this.sizes = [53, 56, 66, 78, 90];
-
-  /**
-   * @private
-   */
-  this.styles_ = [];
-
-  /**
-   * @type {boolean}
-   * @private
-   */
-  this.ready_ = false;
-
-  var options = opt_options || {};
-
-  /**
-   * @type {number}
-   * @private
-   */
-  this.gridSize_ = options.gridSize || 60;
-
-  /**
-   * @private
-   */
-  this.minClusterSize_ = options.minimumClusterSize || 2;
-
-
-  /**
-   * @type {?number}
-   * @private
-   */
-  this.maxZoom_ = options.maxZoom || null;
-
-  this.styles_ = options.styles || [];
-
-  /**
-   * @type {string}
-   * @private
-   */
-  this.imagePath_ = options.imagePath ||
-    this.MARKER_CLUSTER_IMAGE_PATH_;
-
-  /**
-   * @type {string}
-   * @private
-   */
-  this.imageExtension_ = options.imageExtension ||
-    this.MARKER_CLUSTER_IMAGE_EXTENSION_;
-
-  /**
-   * @type {boolean}
-   * @private
-   */
-  this.zoomOnClick_ = true;
-
-  if (options.zoomOnClick !== undefined) {
-    this.zoomOnClick_ = options.zoomOnClick;
-  }
-
-  /**
-   * @type {boolean}
-   * @private
-   */
-  this.averageCenter_ = false;
-
-  if (options.averageCenter !== undefined) {
-    this.averageCenter_ = options.averageCenter;
-  }
-
-  this.setupStyles_();
-
-  this.setMap(map);
-
-  /**
-   * @type {number}
-   * @private
-   */
-  this.prevZoom_ = this.map_.getZoom();
-
-  // Add the map event listeners
-  var that = this;
-  google.maps.event.addListener(this.map_, 'zoom_changed', function () {
-    // Determines map type and prevent illegal zoom levels
-    var zoom = that.map_.getZoom();
-    var minZoom = that.map_.minZoom || 0;
-    var maxZoom = Math.min(that.map_.maxZoom || 100,
-      that.map_.mapTypes[that.map_.getMapTypeId()].maxZoom);
-    zoom = Math.min(Math.max(zoom, minZoom), maxZoom);
-
-    if (that.prevZoom_ !== zoom) {
-      that.prevZoom_ = zoom;
-      that.resetViewport();
-    }
-  });
-
-  google.maps.event.addListener(this.map_, 'idle', function () {
-    that.redraw();
-  });
-
-  // Finally, add the markers
-  if (opt_markers && (opt_markers.length || Object.keys(opt_markers).length)) {
-    this.addMarkers(opt_markers, false);
-  }
-};
-
-
-/**
- * The marker cluster image path.
- *
- * @type {string}
- * @private
- */
-MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_PATH_ =
-  'https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/' +
-    'images/m';
-
-
-/**
- * The marker cluster image path.
- *
- * @type {string}
- * @private
- */
-MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_EXTENSION_ = 'png';
-
-
-/**
- * Extends a objects prototype by anothers.
- *
- * @param {Object} obj1 The object to be extended.
- * @param {Object} obj2 The object to extend with.
- * @return {Object} The new extended object.
- * @ignore
- */
-MarkerClusterer.prototype.extend = function (obj1, obj2) {
-  return (function (object) {
-    for (var property in object.prototype) {
-      this.prototype[property] = object.prototype[property];
-    }
-    return this;
-  }).apply(obj1, [obj2]);
-};
-
-
-/**
- * Implementaion of the interface method.
- * @ignore
- */
-MarkerClusterer.prototype.onAdd = function () {
-  this.setReady_(true);
-};
-
-/**
- * Implementaion of the interface method.
- * @ignore
- */
-MarkerClusterer.prototype.draw = function () {};
-
-/**
- * Sets up the styles object.
- *
- * @private
- */
-MarkerClusterer.prototype.setupStyles_ = function () {
-  if (this.styles_.length) {
-    return;
-  }
-
-  for (var i = 0, size; size = this.sizes[i]; i++) {
-    this.styles_.push({
-      url: this.imagePath_ + (i + 1) + '.' + this.imageExtension_,
-      height: size,
-      width: size
-    });
-  }
-};
-
-/**
- *  Fit the map to the bounds of the markers in the clusterer.
- */
-MarkerClusterer.prototype.fitMapToMarkers = function () {
-  var markers = this.getMarkers();
-  var bounds = new google.maps.LatLngBounds();
-  for (var i = 0, marker; marker = markers[i]; i++) {
-    bounds.extend(marker.getPosition());
-  }
-
-  this.map_.fitBounds(bounds);
-};
-
-
-/**
- *  Sets the styles.
- *
- *  @param {Object} styles The style to set.
- */
-MarkerClusterer.prototype.setStyles = function (styles) {
-  this.styles_ = styles;
-};
-
-
-/**
- *  Gets the styles.
- *
- *  @return {Object} The styles object.
- */
-MarkerClusterer.prototype.getStyles = function () {
-  return this.styles_;
-};
-
-
-/**
- * Whether zoom on click is set.
- *
- * @return {boolean} True if zoomOnClick_ is set.
- */
-MarkerClusterer.prototype.isZoomOnClick = function () {
-  return this.zoomOnClick_;
-};
-
-/**
- * Whether average center is set.
- *
- * @return {boolean} True if averageCenter_ is set.
- */
-MarkerClusterer.prototype.isAverageCenter = function () {
-  return this.averageCenter_;
-};
-
-
-/**
- *  Returns the array of markers in the clusterer.
- *
- *  @return {Array.<google.maps.Marker>} The markers.
- */
-MarkerClusterer.prototype.getMarkers = function () {
-  return this.markers_;
-};
-
-
-/**
- *  Returns the number of markers in the clusterer
- *
- *  @return {Number} The number of markers.
- */
-MarkerClusterer.prototype.getTotalMarkers = function () {
-  return this.markers_.length;
-};
-
-
-/**
- *  Sets the max zoom for the clusterer.
- *
- *  @param {number} maxZoom The max zoom level.
- */
-MarkerClusterer.prototype.setMaxZoom = function (maxZoom) {
-  this.maxZoom_ = maxZoom;
-};
-
-
-/**
- *  Gets the max zoom for the clusterer.
- *
- *  @return {number} The max zoom level.
- */
-MarkerClusterer.prototype.getMaxZoom = function () {
-  return this.maxZoom_;
-};
-
-
-/**
- *  The function for calculating the cluster icon image.
- *
- *  @param {Array.<google.maps.Marker>} markers The markers in the clusterer.
- *  @param {number} numStyles The number of styles available.
- *  @return {Object} A object properties: 'text' (string) and 'index' (number).
- *  @private
- */
-MarkerClusterer.prototype.calculator_ = function (markers, numStyles) {
-  var index = 0;
-  var count = markers.length;
-  var dv = count;
-  while (dv !== 0) {
-    dv = parseInt(dv / 10, 10);
-    index++;
-  }
-
-  index = Math.min(index, numStyles);
-  return {
-    text: count,
-    index: index
-  };
-};
-
-
-/**
- * Set the calculator function.
- *
- * @param {function (Array, number)} calculator The function to set as the
- *     calculator. The function should return a object properties:
- *     'text' (string) and 'index' (number).
- *
- */
-MarkerClusterer.prototype.setCalculator = function (calculator) {
-  this.calculator_ = calculator;
-};
-
-
-/**
- * Get the calculator function.
- *
- * @return {function (Array, number)} the calculator function.
- */
-MarkerClusterer.prototype.getCalculator = function () {
-  return this.calculator_;
-};
-
-
-/**
- * Add an array of markers to the clusterer.
- *
- * @param {Array.<google.maps.Marker>} markers The markers to add.
- * @param {boolean=} opt_nodraw Whether to redraw the clusters.
- */
-MarkerClusterer.prototype.addMarkers = function (markers, opt_nodraw) {
-  var marker;
-  if (markers.length) {
-    for (var i = 0; marker = markers[i]; i++) {
-      this.pushMarkerTo_(marker);
-    }
-  } else if (Object.keys(markers).length) {
-    for (marker in markers) {
-      this.pushMarkerTo_(markers[marker]);
-    }
-  }
-  if (!opt_nodraw) {
-    this.redraw();
-  }
-};
-
-
-/**
- * Pushes a marker to the clusterer.
- *
- * @param {google.maps.Marker} marker The marker to add.
- * @private
- */
-MarkerClusterer.prototype.pushMarkerTo_ = function (marker) {
-  marker.isAdded = false;
-  if (marker.draggable) {
-    // If the marker is draggable add a listener so we update the clusters on
-    // the drag end.
-    var that = this;
-    google.maps.event.addListener(marker, 'dragend', function () {
-      marker.isAdded = false;
-      that.repaint();
-    });
-  }
-  this.markers_.push(marker);
-};
-
-
-/**
- * Adds a marker to the clusterer and redraws if needed.
- *
- * @param {google.maps.Marker} marker The marker to add.
- * @param {boolean=} opt_nodraw Whether to redraw the clusters.
- */
-MarkerClusterer.prototype.addMarker = function (marker, opt_nodraw) {
-  this.pushMarkerTo_(marker);
-  if (!opt_nodraw) {
-    this.redraw();
-  }
-};
-
-
-/**
- * Removes a marker and returns true if removed, false if not
- *
- * @param {google.maps.Marker} marker The marker to remove
- * @return {boolean} Whether the marker was removed or not
- * @private
- */
-MarkerClusterer.prototype.removeMarker_ = function (marker) {
-  var index = -1;
-  if (this.markers_.indexOf) {
-    index = this.markers_.indexOf(marker);
-  } else {
-    for (var i = 0, m; m = this.markers_[i]; i++) {
-      if (m === marker) {
-        index = i;
-        break;
-      }
-    }
-  }
-
-  if (index === -1) {
-    // Marker is not in our list of markers.
-    return false;
-  }
-
-  marker.setMap(null);
-
-  this.markers_.splice(index, 1);
-
-  return true;
-};
-
-
-/**
- * Remove a marker from the cluster.
- *
- * @param {google.maps.Marker} marker The marker to remove.
- * @param {boolean=} opt_nodraw Optional boolean to force no redraw.
- * @return {boolean} True if the marker was removed.
- */
-MarkerClusterer.prototype.removeMarker = function (marker, opt_nodraw) {
-  var removed = this.removeMarker_(marker);
-
-  if (!opt_nodraw && removed) {
-    this.resetViewport();
-    this.redraw();
-    return true;
-  } else {
-    return false;
-  }
-};
-
-
-/**
- * Removes an array of markers from the cluster.
- *
- * @param {Array.<google.maps.Marker>} markers The markers to remove.
- * @param {boolean=} opt_nodraw Optional boolean to force no redraw.
- */
-MarkerClusterer.prototype.removeMarkers = function (markers, opt_nodraw) {
-  var removed = false;
-
-  for (var i = 0, marker; marker = markers[i]; i++) {
-    var r = this.removeMarker_(marker);
-    removed = removed || r;
-  }
-
-  if (!opt_nodraw && removed) {
-    this.resetViewport();
-    this.redraw();
-    return true;
-  }
-};
-
-
-/**
- * Sets the clusterer's ready state.
- *
- * @param {boolean} ready The state.
- * @private
- */
-MarkerClusterer.prototype.setReady_ = function (ready) {
-  if (!this.ready_) {
-    this.ready_ = ready;
-    this.createClusters_();
-  }
-};
-
-
-/**
- * Returns the number of clusters in the clusterer.
- *
- * @return {number} The number of clusters.
- */
-MarkerClusterer.prototype.getTotalClusters = function () {
-  return this.clusters_.length;
-};
-
-
-/**
- * Returns the google map that the clusterer is associated with.
- *
- * @return {google.maps.Map} The map.
- */
-MarkerClusterer.prototype.getMap = function () {
-  return this.map_;
-};
-
-
-/**
- * Sets the google map that the clusterer is associated with.
- *
- * @param {google.maps.Map} map The map.
- */
-MarkerClusterer.prototype.setMap = function (map) {
-  this.map_ = map;
-};
-
-
-/**
- * Returns the size of the grid.
- *
- * @return {number} The grid size.
- */
-MarkerClusterer.prototype.getGridSize = function () {
-  return this.gridSize_;
-};
-
-
-/**
- * Sets the size of the grid.
- *
- * @param {number} size The grid size.
- */
-MarkerClusterer.prototype.setGridSize = function (size) {
-  this.gridSize_ = size;
-};
-
-
-/**
- * Returns the min cluster size.
- *
- * @return {number} The grid size.
- */
-MarkerClusterer.prototype.getMinClusterSize = function () {
-  return this.minClusterSize_;
-};
-
-/**
- * Sets the min cluster size.
- *
- * @param {number} size The grid size.
- */
-MarkerClusterer.prototype.setMinClusterSize = function (size) {
-  this.minClusterSize_ = size;
-};
-
-
-/**
- * Extends a bounds object by the grid size.
- *
- * @param {google.maps.LatLngBounds} bounds The bounds to extend.
- * @return {google.maps.LatLngBounds} The extended bounds.
- */
-MarkerClusterer.prototype.getExtendedBounds = function (bounds) {
-  var projection = this.getProjection();
-
-  // Turn the bounds into latlng.
-  var tr = new google.maps.LatLng(bounds.getNorthEast().lat(),
-    bounds.getNorthEast().lng());
-  var bl = new google.maps.LatLng(bounds.getSouthWest().lat(),
-    bounds.getSouthWest().lng());
-
-  // Convert the points to pixels and the extend out by the grid size.
-  var trPix = projection.fromLatLngToDivPixel(tr);
-  trPix.x += this.gridSize_;
-  trPix.y -= this.gridSize_;
-
-  var blPix = projection.fromLatLngToDivPixel(bl);
-  blPix.x -= this.gridSize_;
-  blPix.y += this.gridSize_;
-
-  // Convert the pixel points back to LatLng
-  var ne = projection.fromDivPixelToLatLng(trPix);
-  var sw = projection.fromDivPixelToLatLng(blPix);
-
-  // Extend the bounds to contain the new bounds.
-  bounds.extend(ne);
-  bounds.extend(sw);
-
-  return bounds;
-};
-
-
-/**
- * Determins if a marker is contained in a bounds.
- *
- * @param {google.maps.Marker} marker The marker to check.
- * @param {google.maps.LatLngBounds} bounds The bounds to check against.
- * @return {boolean} True if the marker is in the bounds.
- * @private
- */
-MarkerClusterer.prototype.isMarkerInBounds_ = function (marker, bounds) {
-  return bounds.contains(marker.getPosition());
-};
-
-
-/**
- * Clears all clusters and markers from the clusterer.
- */
-MarkerClusterer.prototype.clearMarkers = function () {
-  this.resetViewport(true);
-
-  // Set the markers a empty array.
-  this.markers_ = [];
-};
-
-
-/**
- * Clears all existing clusters and recreates them.
- * @param {boolean} opt_hide To also hide the marker.
- */
-MarkerClusterer.prototype.resetViewport = function (opt_hide) {
-  // Remove all the clusters
-  for (var i = 0, cluster; cluster = this.clusters_[i]; i++) {
-    cluster.remove();
-  }
-
-  // Reset the markers to not be added and to be invisible.
-  for (var j = 0, marker; marker = this.markers_[j]; j++) {
-    marker.isAdded = false;
-    if (opt_hide) {
-      marker.setMap(null);
-    }
-  }
-
-  this.clusters_ = [];
-};
-
-/**
- *
- */
-MarkerClusterer.prototype.repaint = function () {
-  var oldClusters = this.clusters_.slice();
-  this.clusters_.length = 0;
-  this.resetViewport();
-  this.redraw();
-
-  // Remove the old clusters.
-  // Do it in a timeout so the other clusters have been drawn first.
-  window.setTimeout(function () {
-    for (var i = 0, cluster; cluster = oldClusters[i]; i++) {
-      cluster.remove();
-    }
-  }, 0);
-};
-
-
-/**
- * Redraws the clusters.
- */
-MarkerClusterer.prototype.redraw = function () {
-  this.createClusters_();
-};
-
-
-/**
- * Calculates the distance between two latlng locations in km.
- * @see http://www.movable-type.co.uk/scripts/latlong.html
- *
- * @param {google.maps.LatLng} p1 The first lat lng point.
- * @param {google.maps.LatLng} p2 The second lat lng point.
- * @return {number} The distance between the two points in km.
- * @private
- */
-MarkerClusterer.prototype.distanceBetweenPoints_ = function (p1, p2) {
-  if (!p1 || !p2) {
-    return 0;
-  }
-
-  var R = 6371; // Radius of the Earth in km
-  var dLat = (p2.lat() - p1.lat()) * Math.PI / 180;
-  var dLon = (p2.lng() - p1.lng()) * Math.PI / 180;
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(p1.lat() * Math.PI / 180) * Math.cos(p2.lat() * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c;
-  return d;
-};
-
-
-/**
- * Add a marker to a cluster, or creates a new cluster.
- *
- * @param {google.maps.Marker} marker The marker to add.
- * @private
- */
-MarkerClusterer.prototype.addToClosestCluster_ = function (marker) {
-  var distance = 40000; // Some large number
-  var clusterToAddTo = null;
-  //var pos = marker.getPosition();
-  var cluster;
-  for (var i = 0; cluster = this.clusters_[i]; i++) {
-    var center = cluster.getCenter();
-    if (center) {
-      var d = this.distanceBetweenPoints_(center, marker.getPosition());
-      if (d < distance) {
-        distance = d;
-        clusterToAddTo = cluster;
-      }
-    }
-  }
-
-  if (clusterToAddTo && clusterToAddTo.isMarkerInClusterBounds(marker)) {
-    clusterToAddTo.addMarker(marker);
-  } else {
-    cluster = new Cluster(this);
-    cluster.addMarker(marker);
-    this.clusters_.push(cluster);
-  }
-};
-
-
-/**
- * Creates the clusters.
- *
- * @private
- */
-MarkerClusterer.prototype.createClusters_ = function () {
-  if (!this.ready_) {
-    return;
-  }
-
-  // Get our current map view bounds.
-  // Create a new bounds object so we don't affect the map.
-  var mapBounds = new google.maps.LatLngBounds(this.map_.getBounds().getSouthWest(),
-    this.map_.getBounds().getNorthEast());
-  var bounds = this.getExtendedBounds(mapBounds);
-
-  for (var i = 0, marker; marker = this.markers_[i]; i++) {
-    if (!marker.isAdded && this.isMarkerInBounds_(marker, bounds)) {
-      this.addToClosestCluster_(marker);
-    }
-  }
-};
-
-
-/**
- * A cluster that contains markers.
- *
- * @param {MarkerClusterer} markerClusterer The markerclusterer that this
- *     cluster is associated with.
- * @constructor
- * @ignore
- */
-function Cluster(markerClusterer) {
-  this.markerClusterer_ = markerClusterer;
-  this.map_ = markerClusterer.getMap();
-  this.gridSize_ = markerClusterer.getGridSize();
-  this.minClusterSize_ = markerClusterer.getMinClusterSize();
-  this.averageCenter_ = markerClusterer.isAverageCenter();
-  this.center_ = null;
-  this.markers_ = [];
-  this.bounds_ = null;
-  this.clusterIcon_ = new ClusterIcon(this, markerClusterer.getStyles(),
-    markerClusterer.getGridSize());
-}
-
-/**
- * Determins if a marker is already added to the cluster.
- *
- * @param {google.maps.Marker} marker The marker to check.
- * @return {boolean} True if the marker is already added.
- */
-Cluster.prototype.isMarkerAlreadyAdded = function (marker) {
-  if (this.markers_.indexOf) {
-    return this.markers_.indexOf(marker) !== -1;
-  } else {
-    for (var i = 0, m; m = this.markers_[i]; i++) {
-      if (m === marker) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
-
-
-/**
- * Add a marker the cluster.
- *
- * @param {google.maps.Marker} marker The marker to add.
- * @return {boolean} True if the marker was added.
- */
-Cluster.prototype.addMarker = function (marker) {
-  if (this.isMarkerAlreadyAdded(marker)) {
-    return false;
-  }
-
-  if (!this.center_) {
-    this.center_ = marker.getPosition();
-    this.calculateBounds_();
-  } else {
-    if (this.averageCenter_) {
-      var l = this.markers_.length + 1;
-      var lat = (this.center_.lat() * (l - 1) + marker.getPosition().lat()) / l;
-      var lng = (this.center_.lng() * (l - 1) + marker.getPosition().lng()) / l;
-      this.center_ = new google.maps.LatLng(lat, lng);
-      this.calculateBounds_();
-    }
-  }
-
-  marker.isAdded = true;
-  this.markers_.push(marker);
-
-  var len = this.markers_.length;
-  if (len < this.minClusterSize_ && marker.getMap() !== this.map_) {
-    // Min cluster size not reached so show the marker.
-    marker.setMap(this.map_);
-  }
-
-  if (len === this.minClusterSize_) {
-    // Hide the markers that were showing.
-    for (var i = 0; i < len; i++) {
-      this.markers_[i].setMap(null);
-    }
-  }
-
-  if (len >= this.minClusterSize_) {
-    marker.setMap(null);
-  }
-
-  this.updateIcon();
-  return true;
-};
-
-
-/**
- * Returns the marker clusterer that the cluster is associated with.
- *
- * @return {MarkerClusterer} The associated marker clusterer.
- */
-Cluster.prototype.getMarkerClusterer = function () {
-  return this.markerClusterer_;
-};
-
-
-/**
- * Returns the bounds of the cluster.
- *
- * @return {google.maps.LatLngBounds} the cluster bounds.
- */
-Cluster.prototype.getBounds = function () {
-  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
-  var markers = this.getMarkers();
-  for (var i = 0, marker; marker = markers[i]; i++) {
-    bounds.extend(marker.getPosition());
-  }
-  return bounds;
-};
-
-
-/**
- * Removes the cluster
- */
-Cluster.prototype.remove = function () {
-  this.clusterIcon_.remove();
-  this.markers_.length = 0;
-  delete this.markers_;
-};
-
-
-/**
- * Returns the center of the cluster.
- *
- * @return {number} The cluster center.
- */
-Cluster.prototype.getSize = function () {
-  return this.markers_.length;
-};
-
-
-/**
- * Returns the center of the cluster.
- *
- * @return {Array.<google.maps.Marker>} The cluster center.
- */
-Cluster.prototype.getMarkers = function () {
-  return this.markers_;
-};
-
-
-/**
- * Returns the center of the cluster.
- *
- * @return {google.maps.LatLng} The cluster center.
- */
-Cluster.prototype.getCenter = function () {
-  return this.center_;
-};
-
-
-/**
- * Calculated the extended bounds of the cluster with the grid.
- *
- * @private
- */
-Cluster.prototype.calculateBounds_ = function () {
-  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
-  this.bounds_ = this.markerClusterer_.getExtendedBounds(bounds);
-};
-
-
-/**
- * Determines if a marker lies in the clusters bounds.
- *
- * @param {google.maps.Marker} marker The marker to check.
- * @return {boolean} True if the marker lies in the bounds.
- */
-Cluster.prototype.isMarkerInClusterBounds = function (marker) {
-  return this.bounds_.contains(marker.getPosition());
-};
-
-
-/**
- * Returns the map that the cluster is associated with.
- *
- * @return {google.maps.Map} The map.
- */
-Cluster.prototype.getMap = function () {
-  return this.map_;
-};
-
-
-/**
- * Updates the cluster icon
- */
-Cluster.prototype.updateIcon = function () {
-  var zoom = this.map_.getZoom();
-  var mz = this.markerClusterer_.getMaxZoom();
-
-  if (mz && zoom > mz) {
-    // The zoom is greater than our max zoom so show all the markers in cluster.
-    for (var i = 0, marker; marker = this.markers_[i]; i++) {
-      marker.setMap(this.map_);
-    }
-    return;
-  }
-
-  if (this.markers_.length < this.minClusterSize_) {
-    // Min cluster size not yet reached.
-    this.clusterIcon_.hide();
-    return;
-  }
-
-  var numStyles = this.markerClusterer_.getStyles().length;
-  var sums = this.markerClusterer_.getCalculator()(this.markers_, numStyles);
-  this.clusterIcon_.setCenter(this.center_);
-  this.clusterIcon_.setSums(sums);
-  this.clusterIcon_.show();
-};
-
-
-/**
- * A cluster icon
- *
- * @param {Cluster} cluster The cluster to be associated with.
- * @param {Object} styles An object that has style properties:
- *     'url': (string) The image url.
- *     'height': (number) The image height.
- *     'width': (number) The image width.
- *     'anchor': (Array) The anchor position of the label text.
- *     'textColor': (string) The text color.
- *     'textSize': (number) The text size.
- *     'backgroundPosition: (string) The background postition x, y.
- * @param {number=} opt_padding Optional padding to apply to the cluster icon.
- * @constructor
- * @extends google.maps.OverlayView
- * @ignore
- */
-function ClusterIcon(cluster, styles, opt_padding) {
-  cluster.getMarkerClusterer().extend(ClusterIcon, google.maps.OverlayView);
-
-  this.styles_ = styles;
-  this.padding_ = opt_padding || 0;
-  this.cluster_ = cluster;
-  this.center_ = null;
-  this.map_ = cluster.getMap();
-  this.div_ = null;
-  this.sums_ = null;
-  this.visible_ = false;
-
-  this.setMap(this.map_);
-}
-
-
-/**
- * Triggers the clusterclick event and zoom's if the option is set.
- */
-ClusterIcon.prototype.triggerClusterClick = function () {
-  var markerClusterer = this.cluster_.getMarkerClusterer();
-
-  // Trigger the clusterclick event.
-  google.maps.event.trigger(markerClusterer, 'clusterclick', this.cluster_);
-
-  if (markerClusterer.isZoomOnClick()) {
-    // Zoom into the cluster.
-    this.map_.fitBounds(this.cluster_.getBounds());
-  }
-};
-
-
-/**
- * Adding the cluster icon to the dom.
- * @ignore
- */
-ClusterIcon.prototype.onAdd = function () {
-  this.div_ = document.createElement('DIV');
-  if (this.visible_) {
-    var pos = this.getPosFromLatLng_(this.center_);
-    this.div_.style.cssText = this.createCss(pos);
-    this.div_.innerHTML = this.sums_.text;
-  }
-
-  var panes = this.getPanes();
-  panes.overlayMouseTarget.appendChild(this.div_);
-
-  var that = this;
-  google.maps.event.addDomListener(this.div_, 'click', function () {
-    that.triggerClusterClick();
-  });
-};
-
-
-/**
- * Returns the position to place the div dending on the latlng.
- *
- * @param {google.maps.LatLng} latlng The position in latlng.
- * @return {google.maps.Point} The position in pixels.
- * @private
- */
-ClusterIcon.prototype.getPosFromLatLng_ = function (latlng) {
-  var pos = this.getProjection().fromLatLngToDivPixel(latlng);
-  pos.x -= parseInt(this.width_ / 2, 10);
-  pos.y -= parseInt(this.height_ / 2, 10);
-  return pos;
-};
-
-
-/**
- * Draw the icon.
- * @ignore
- */
-ClusterIcon.prototype.draw = function () {
-  if (this.visible_) {
-    var pos = this.getPosFromLatLng_(this.center_);
-    this.div_.style.top = pos.y + 'px';
-    this.div_.style.left = pos.x + 'px';
-  }
-};
-
-
-/**
- * Hide the icon.
- */
-ClusterIcon.prototype.hide = function () {
-  if (this.div_) {
-    this.div_.style.display = 'none';
-  }
-  this.visible_ = false;
-};
-
-
-/**
- * Position and show the icon.
- */
-ClusterIcon.prototype.show = function () {
-  if (this.div_) {
-    var pos = this.getPosFromLatLng_(this.center_);
-    this.div_.style.cssText = this.createCss(pos);
-    this.div_.style.display = '';
-  }
-  this.visible_ = true;
-};
-
-
-/**
- * Remove the icon from the map
- */
-ClusterIcon.prototype.remove = function () {
-  this.setMap(null);
-};
-
-
-/**
- * Implementation of the onRemove interface.
- * @ignore
- */
-ClusterIcon.prototype.onRemove = function () {
-  if (this.div_ && this.div_.parentNode) {
-    this.hide();
-    this.div_.parentNode.removeChild(this.div_);
-    this.div_ = null;
-  }
-};
-
-
-/**
- * Set the sums of the icon.
- *
- * @param {Object} sums The sums containing:
- *   'text': (string) The text to display in the icon.
- *   'index': (number) The style index of the icon.
- */
-ClusterIcon.prototype.setSums = function (sums) {
-  this.sums_ = sums;
-  this.text_ = sums.text;
-  this.index_ = sums.index;
-  if (this.div_) {
-    this.div_.innerHTML = sums.text;
-  }
-
-  this.useStyle();
-};
-
-
-/**
- * Sets the icon to the the styles.
- */
-ClusterIcon.prototype.useStyle = function () {
-  var index = Math.max(0, this.sums_.index - 1);
-  index = Math.min(this.styles_.length - 1, index);
-  var style = this.styles_[index];
-  this.url_ = style.url;
-  this.height_ = style.height;
-  this.width_ = style.width;
-  this.textColor_ = style.textColor;
-  this.anchor_ = style.anchor;
-  this.textSize_ = style.textSize;
-  this.backgroundPosition_ = style.backgroundPosition;
-};
-
-
-/**
- * Sets the center of the icon.
- *
- * @param {google.maps.LatLng} center The latlng to set as the center.
- */
-ClusterIcon.prototype.setCenter = function (center) {
-  this.center_ = center;
-};
-
-
-/**
- * Create the css text based on the position of the icon.
- *
- * @param {google.maps.Point} pos The position.
- * @return {string} The css style text.
- */
-ClusterIcon.prototype.createCss = function (pos) {
-  var style = [];
-  style.push('background-image:url(' + this.url_ + ');');
-  var backgroundPosition = this.backgroundPosition_ ? this.backgroundPosition_ : '0 0';
-  style.push('background-position:' + backgroundPosition + ';');
-
-  if (typeof this.anchor_ === 'object') {
-    if (typeof this.anchor_[0] === 'number' && this.anchor_[0] > 0 &&
-      this.anchor_[0] < this.height_) {
-      style.push('height:' + (this.height_ - this.anchor_[0]) +
-        'px; padding-top:' + this.anchor_[0] + 'px;');
-    } else {
-      style.push('height:' + this.height_ + 'px; line-height:' + this.height_ +
-        'px;');
-    }
-    if (typeof this.anchor_[1] === 'number' && this.anchor_[1] > 0 &&
-      this.anchor_[1] < this.width_) {
-      style.push('width:' + (this.width_ - this.anchor_[1]) +
-        'px; padding-left:' + this.anchor_[1] + 'px;');
-    } else {
-      style.push('width:' + this.width_ + 'px; text-align:center;');
-    }
-  } else {
-    style.push('height:' + this.height_ + 'px; line-height:' +
-      this.height_ + 'px; width:' + this.width_ + 'px; text-align:center;');
-  }
-
-  var txtColor = this.textColor_ ? this.textColor_ : 'black';
-  var txtSize = this.textSize_ ? this.textSize_ : 11;
-
-  style.push('cursor:pointer; top:' + pos.y + 'px; left:' +
-    pos.x + 'px; color:' + txtColor + '; position:absolute; font-size:' +
-    txtSize + 'px; font-family:Arial,sans-serif; font-weight:bold');
-  return style.join('');
-};
-
-
-// Export Symbols for Closure
-// If you are not going to compile with closure then you can remove the
-// code below.
-window.MarkerClusterer = MarkerClusterer;
-MarkerClusterer.prototype.addMarker = MarkerClusterer.prototype.addMarker;
-MarkerClusterer.prototype.addMarkers = MarkerClusterer.prototype.addMarkers;
-MarkerClusterer.prototype.clearMarkers =
-  MarkerClusterer.prototype.clearMarkers;
-MarkerClusterer.prototype.fitMapToMarkers =
-  MarkerClusterer.prototype.fitMapToMarkers;
-MarkerClusterer.prototype.getCalculator =
-  MarkerClusterer.prototype.getCalculator;
-MarkerClusterer.prototype.getGridSize =
-  MarkerClusterer.prototype.getGridSize;
-MarkerClusterer.prototype.getExtendedBounds =
-  MarkerClusterer.prototype.getExtendedBounds;
-MarkerClusterer.prototype.getMap = MarkerClusterer.prototype.getMap;
-MarkerClusterer.prototype.getMarkers = MarkerClusterer.prototype.getMarkers;
-MarkerClusterer.prototype.getMaxZoom = MarkerClusterer.prototype.getMaxZoom;
-MarkerClusterer.prototype.getStyles = MarkerClusterer.prototype.getStyles;
-MarkerClusterer.prototype.getTotalClusters =
-  MarkerClusterer.prototype.getTotalClusters;
-MarkerClusterer.prototype.getTotalMarkers =
-  MarkerClusterer.prototype.getTotalMarkers;
-MarkerClusterer.prototype.redraw = MarkerClusterer.prototype.redraw;
-MarkerClusterer.prototype.removeMarker =
-  MarkerClusterer.prototype.removeMarker;
-MarkerClusterer.prototype.removeMarkers =
-  MarkerClusterer.prototype.removeMarkers;
-MarkerClusterer.prototype.resetViewport =
-  MarkerClusterer.prototype.resetViewport;
-MarkerClusterer.prototype.repaint =
-  MarkerClusterer.prototype.repaint;
-MarkerClusterer.prototype.setCalculator =
-  MarkerClusterer.prototype.setCalculator;
-MarkerClusterer.prototype.setGridSize =
-  MarkerClusterer.prototype.setGridSize;
-MarkerClusterer.prototype.setMaxZoom =
-  MarkerClusterer.prototype.setMaxZoom;
-MarkerClusterer.prototype.onAdd = MarkerClusterer.prototype.onAdd;
-MarkerClusterer.prototype.draw = MarkerClusterer.prototype.draw;
-
-Cluster.prototype.getCenter = Cluster.prototype.getCenter;
-Cluster.prototype.getSize = Cluster.prototype.getSize;
-Cluster.prototype.getMarkers = Cluster.prototype.getMarkers;
-
-ClusterIcon.prototype.onAdd = ClusterIcon.prototype.onAdd;
-ClusterIcon.prototype.draw = ClusterIcon.prototype.draw;
-ClusterIcon.prototype.onRemove = ClusterIcon.prototype.onRemove;
-
-Object.keys = Object.keys || function (o) {
-  var result = [];
-  for (var name in o) {
-    if (o.hasOwnProperty(name)) {
-      result.push(name);
-    }
-  }
-  return result;
-};
-
-})()
-},{}],73:[function(require,module,exports){
+},{"underscore":8}],46:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -22596,7 +24316,1511 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":98,"backbone.babysitter":99,"backbone.wreqr":100,"underscore":8}],88:[function(require,module,exports){
+},{"backbone":107,"backbone.babysitter":106,"backbone.wreqr":108,"underscore":8}],99:[function(require,module,exports){
+(function(){var TreeNode = require('./TreeNode'),
+  RootNode = require('./RootNode'),
+  Backbone = require('backbone'),
+  NodeView = require('../view/NodeView.js'),
+  _ = require('underscore');
+
+/*
+ If you want to bypass the plugin detection system (i.e not use EventsView.js)
+ just remove EventsView = require... above and add to all the Events typed node:
+ var EventsView = require( {path to the plugin view} );  as a global var
+ pluginView: EventsView, as an instance var
+ to create the view just do: new this.pluginView(params);
+ */
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var EventsNode = module.exports = TreeNode.implement(
+  function (parentStreamNode) {
+    TreeNode.call(this, parentStreamNode.treeMap, parentStreamNode);
+    this.events = {};
+    this.trashedEvents = {};
+    this.eventDisplayed = null;
+    this.eventView = null;
+    this.model  = null;
+    this.size = 0;
+  },
+  {
+    className: 'EventsNode',
+    aggregated: false,
+    getChildren: function () {
+      return null;
+    },
+
+    eventEnterScope: function (event, reason, callback) {
+      this.size++;
+      event.streamName =
+        this.parent.connectionNode.connection.datastore.getStreamById(event.streamId).name;
+      this.events[event.id] = event;
+      if (!this.eventView) {
+        this._createEventView();
+      } else {
+        this.eventView.eventEnter(event);
+      }
+
+      if (callback) {
+        callback(null);
+      }
+    },
+    eventLeaveScope: function (event, reason, callback) {
+      if (this.events[event.id]) {
+        this.size--;
+        delete this.events[event.id];
+        if (this.eventView) {
+          this.eventView.eventLeave(event);
+        }
+      }
+    },
+    onDateHighLighted: function (time) {
+      if (this.eventView) {
+        this.eventView.OnDateHighlightedChange(time);
+      }
+    },
+    /*jshint -W098 */
+    eventChange: function (event, reason, callback) {
+      this.events[event.id] = event;
+      //console.log('eventChange', event);
+      if (this.eventView) {
+        this.eventView.eventChange(event);
+      }
+
+      if (callback) {
+        callback(null);
+      }
+    },
+
+    _refreshViewModel: function (recursive) {
+      if (!this.model) {
+        var BasicModel = Backbone.Model.extend({ });
+        this.model = new BasicModel({
+          containerId: this.parent.uniqueId,
+          id: this.uniqueId,
+          className: this.className,
+          width: this.width,
+          height: this.height,
+          x: this.x,
+          y: this.y,
+          depth: this.depth,
+          color: this.parent.stream.color,
+          weight: this.getWeight(),
+          content: this.events || this.stream || this.connection,
+          eventView: this.eventView,
+          streamId: this.parent.stream.id,
+          streamName: this.parent.stream.name,
+          connectionId: this.parent.connectionNode.id
+        });
+      } else {
+        // TODO For now empty nodes (i.e streams) are not displayed
+        // but we'll need to display them to create event, drag drop ...
+        /*if (this.getWeight() === 0) {
+         if (this.model) {
+         this.model.set('width', 0);
+         this.model.set('height', 0);
+         }
+         return;
+         } */
+        this.model.set('containerId', this.parent.uniqueId);
+        this.model.set('id', this.uniqueId);
+        this.model.set('name', this.className);
+        this.model.set('width', this.width);
+        this.model.set('height', this.height);
+        this.model.set('x', this.x);
+        this.model.set('y', this.y);
+        this.model.set('depth', this.depth);
+        this.model.set('weight', this.getWeight());
+        this.model.set('streamId', this.parent.stream.id);
+        this.model.set('connectionId', this.parent.connectionNode.id);
+        if (this.eventView) {
+          this.eventView.refresh({
+            width: this.width,
+            height: this.height
+          });
+        }
+      }
+      if (recursive && this.getChildren()) {
+        _.each(this.getChildren(), function (child) {
+          child._refreshViewModel(true);
+        });
+      }
+    },
+
+    _createEventView: function () {
+      this.eventView = new this.pluginView(this.events, {
+        width: this.width,
+        height: this.height,
+        id: this.uniqueId,
+        treeMap: this.treeMap,
+        stream: this.parent.stream
+      }, this);
+    },
+    /**
+     * Called on drag and drop
+     * @param nodeId
+     * @param streamId
+     * @param connectionId
+     */
+    dragAndDrop: function (nodeId, streamId, connectionId) {
+
+      if (!nodeId || !streamId || !connectionId) {
+        return this;
+      }
+
+      var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
+      var thisNode = this;
+
+      if (thisNode.isVirtual() || otherNode.isVirtual()) {
+        throw new Error('Creating virtual node out of virtual nodes currently not allowed.');
+      }
+      if (otherNode === thisNode) {
+        throw new Error('Creating virtual node with the same node not allowed.');
+      }
+
+      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+    },
+    isVirtual: function () {
+      return (true && this.parent.stream.virtual);
+    },
+    getVirtual: function () {
+      console.log('getVirtual', this.parent.stream.virtual);
+      return this.parent.stream.virtual;
+    },
+
+    getSettings: function () {
+      console.log('getSettings');
+    }
+
+
+  });
+
+
+EventsNode.acceptThisEventType = function () {
+  throw new Error('EventsNode.acceptThisEventType nust be overriden');
+};
+
+
+
+
+
+})()
+},{"../view/NodeView.js":61,"./RootNode":17,"./TreeNode":32,"backbone":27,"underscore":8}],109:[function(require,module,exports){
+(function(){/* global window, google, document */
+/*jshint -W084 */
+/*jshint -W089 */
+/**
+ * @name MarkerClusterer for Google Maps v3
+ * @version version 1.0.1
+ * @author Luke Mahe
+ * @fileoverview
+ * The library creates and manages per-zoom-level clusters for large amounts of
+ * markers.
+ * <br/>
+ * This is a v3 implementation of the
+ * <a href="http://gmaps-utility-library-dev.googlecode.com/svn/tags/markerclusterer/"
+ * >v2 MarkerClusterer</a>.
+ */
+
+/**
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * A Marker Clusterer that clusters markers.
+ *
+ * @param {google.maps.Map} map The Google map to attach to.
+ * @param {Array.<google.maps.Marker>=} opt_markers Optional markers to add to
+ *   the cluster.
+ * @param {Object=} opt_options support the following options:
+ *     'gridSize': (number) The grid size of a cluster in pixels.
+ *     'maxZoom': (number) The maximum zoom level that a marker can be part of a
+ *                cluster.
+ *     'zoomOnClick': (boolean) Whether the default behaviour of clicking on a
+ *                    cluster is to zoom into it.
+ *     'averageCenter': (boolean) Wether the center of each cluster should be
+ *                      the average of all markers in the cluster.
+ *     'minimumClusterSize': (number) The minimum number of markers to be in a
+ *                           cluster before the markers are hidden and a count
+ *                           is shown.
+ *     'styles': (object) An object that has style properties:
+ *       'url': (string) The image url.
+ *       'height': (number) The image height.
+ *       'width': (number) The image width.
+ *       'anchor': (Array) The anchor position of the label text.
+ *       'textColor': (string) The text color.
+ *       'textSize': (number) The text size.
+ *       'backgroundPosition': (string) The position of the backgound x, y.
+ * @constructor
+ * @extends google.maps.OverlayView
+ */
+var MarkerClusterer = module.exports = function (map, opt_markers, opt_options) {
+  // MarkerClusterer implements google.maps.OverlayView interface. We use the
+  // extend function to extend MarkerClusterer with google.maps.OverlayView
+  // because it might not always be available when the code is defined so we
+  // look for it at the last possible moment. If it doesn't exist now then
+  // there is no point going ahead :)
+  this.extend(MarkerClusterer, google.maps.OverlayView);
+  this.map_ = map;
+
+  /**
+   * @type {Array.<google.maps.Marker>}
+   * @private
+   */
+  this.markers_ = [];
+
+  /**
+   *  @type {Array.<Cluster>}
+   */
+  this.clusters_ = [];
+
+  this.sizes = [53, 56, 66, 78, 90];
+
+  /**
+   * @private
+   */
+  this.styles_ = [];
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this.ready_ = false;
+
+  var options = opt_options || {};
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this.gridSize_ = options.gridSize || 60;
+
+  /**
+   * @private
+   */
+  this.minClusterSize_ = options.minimumClusterSize || 2;
+
+
+  /**
+   * @type {?number}
+   * @private
+   */
+  this.maxZoom_ = options.maxZoom || null;
+
+  this.styles_ = options.styles || [];
+
+  /**
+   * @type {string}
+   * @private
+   */
+  this.imagePath_ = options.imagePath ||
+    this.MARKER_CLUSTER_IMAGE_PATH_;
+
+  /**
+   * @type {string}
+   * @private
+   */
+  this.imageExtension_ = options.imageExtension ||
+    this.MARKER_CLUSTER_IMAGE_EXTENSION_;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this.zoomOnClick_ = true;
+
+  if (options.zoomOnClick !== undefined) {
+    this.zoomOnClick_ = options.zoomOnClick;
+  }
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this.averageCenter_ = false;
+
+  if (options.averageCenter !== undefined) {
+    this.averageCenter_ = options.averageCenter;
+  }
+
+  this.setupStyles_();
+
+  this.setMap(map);
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this.prevZoom_ = this.map_.getZoom();
+
+  // Add the map event listeners
+  var that = this;
+  google.maps.event.addListener(this.map_, 'zoom_changed', function () {
+    // Determines map type and prevent illegal zoom levels
+    var zoom = that.map_.getZoom();
+    var minZoom = that.map_.minZoom || 0;
+    var maxZoom = Math.min(that.map_.maxZoom || 100,
+      that.map_.mapTypes[that.map_.getMapTypeId()].maxZoom);
+    zoom = Math.min(Math.max(zoom, minZoom), maxZoom);
+
+    if (that.prevZoom_ !== zoom) {
+      that.prevZoom_ = zoom;
+      that.resetViewport();
+    }
+  });
+
+  google.maps.event.addListener(this.map_, 'idle', function () {
+    that.redraw();
+  });
+
+  // Finally, add the markers
+  if (opt_markers && (opt_markers.length || Object.keys(opt_markers).length)) {
+    this.addMarkers(opt_markers, false);
+  }
+};
+
+
+/**
+ * The marker cluster image path.
+ *
+ * @type {string}
+ * @private
+ */
+MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_PATH_ =
+  'https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/' +
+    'images/m';
+
+
+/**
+ * The marker cluster image path.
+ *
+ * @type {string}
+ * @private
+ */
+MarkerClusterer.prototype.MARKER_CLUSTER_IMAGE_EXTENSION_ = 'png';
+
+
+/**
+ * Extends a objects prototype by anothers.
+ *
+ * @param {Object} obj1 The object to be extended.
+ * @param {Object} obj2 The object to extend with.
+ * @return {Object} The new extended object.
+ * @ignore
+ */
+MarkerClusterer.prototype.extend = function (obj1, obj2) {
+  return (function (object) {
+    for (var property in object.prototype) {
+      this.prototype[property] = object.prototype[property];
+    }
+    return this;
+  }).apply(obj1, [obj2]);
+};
+
+
+/**
+ * Implementaion of the interface method.
+ * @ignore
+ */
+MarkerClusterer.prototype.onAdd = function () {
+  this.setReady_(true);
+};
+
+/**
+ * Implementaion of the interface method.
+ * @ignore
+ */
+MarkerClusterer.prototype.draw = function () {};
+
+/**
+ * Sets up the styles object.
+ *
+ * @private
+ */
+MarkerClusterer.prototype.setupStyles_ = function () {
+  if (this.styles_.length) {
+    return;
+  }
+
+  for (var i = 0, size; size = this.sizes[i]; i++) {
+    this.styles_.push({
+      url: this.imagePath_ + (i + 1) + '.' + this.imageExtension_,
+      height: size,
+      width: size
+    });
+  }
+};
+
+/**
+ *  Fit the map to the bounds of the markers in the clusterer.
+ */
+MarkerClusterer.prototype.fitMapToMarkers = function () {
+  var markers = this.getMarkers();
+  var bounds = new google.maps.LatLngBounds();
+  for (var i = 0, marker; marker = markers[i]; i++) {
+    bounds.extend(marker.getPosition());
+  }
+
+  this.map_.fitBounds(bounds);
+};
+
+
+/**
+ *  Sets the styles.
+ *
+ *  @param {Object} styles The style to set.
+ */
+MarkerClusterer.prototype.setStyles = function (styles) {
+  this.styles_ = styles;
+};
+
+
+/**
+ *  Gets the styles.
+ *
+ *  @return {Object} The styles object.
+ */
+MarkerClusterer.prototype.getStyles = function () {
+  return this.styles_;
+};
+
+
+/**
+ * Whether zoom on click is set.
+ *
+ * @return {boolean} True if zoomOnClick_ is set.
+ */
+MarkerClusterer.prototype.isZoomOnClick = function () {
+  return this.zoomOnClick_;
+};
+
+/**
+ * Whether average center is set.
+ *
+ * @return {boolean} True if averageCenter_ is set.
+ */
+MarkerClusterer.prototype.isAverageCenter = function () {
+  return this.averageCenter_;
+};
+
+
+/**
+ *  Returns the array of markers in the clusterer.
+ *
+ *  @return {Array.<google.maps.Marker>} The markers.
+ */
+MarkerClusterer.prototype.getMarkers = function () {
+  return this.markers_;
+};
+
+
+/**
+ *  Returns the number of markers in the clusterer
+ *
+ *  @return {Number} The number of markers.
+ */
+MarkerClusterer.prototype.getTotalMarkers = function () {
+  return this.markers_.length;
+};
+
+
+/**
+ *  Sets the max zoom for the clusterer.
+ *
+ *  @param {number} maxZoom The max zoom level.
+ */
+MarkerClusterer.prototype.setMaxZoom = function (maxZoom) {
+  this.maxZoom_ = maxZoom;
+};
+
+
+/**
+ *  Gets the max zoom for the clusterer.
+ *
+ *  @return {number} The max zoom level.
+ */
+MarkerClusterer.prototype.getMaxZoom = function () {
+  return this.maxZoom_;
+};
+
+
+/**
+ *  The function for calculating the cluster icon image.
+ *
+ *  @param {Array.<google.maps.Marker>} markers The markers in the clusterer.
+ *  @param {number} numStyles The number of styles available.
+ *  @return {Object} A object properties: 'text' (string) and 'index' (number).
+ *  @private
+ */
+MarkerClusterer.prototype.calculator_ = function (markers, numStyles) {
+  var index = 0;
+  var count = markers.length;
+  var dv = count;
+  while (dv !== 0) {
+    dv = parseInt(dv / 10, 10);
+    index++;
+  }
+
+  index = Math.min(index, numStyles);
+  return {
+    text: count,
+    index: index
+  };
+};
+
+
+/**
+ * Set the calculator function.
+ *
+ * @param {function (Array, number)} calculator The function to set as the
+ *     calculator. The function should return a object properties:
+ *     'text' (string) and 'index' (number).
+ *
+ */
+MarkerClusterer.prototype.setCalculator = function (calculator) {
+  this.calculator_ = calculator;
+};
+
+
+/**
+ * Get the calculator function.
+ *
+ * @return {function (Array, number)} the calculator function.
+ */
+MarkerClusterer.prototype.getCalculator = function () {
+  return this.calculator_;
+};
+
+
+/**
+ * Add an array of markers to the clusterer.
+ *
+ * @param {Array.<google.maps.Marker>} markers The markers to add.
+ * @param {boolean=} opt_nodraw Whether to redraw the clusters.
+ */
+MarkerClusterer.prototype.addMarkers = function (markers, opt_nodraw) {
+  var marker;
+  if (markers.length) {
+    for (var i = 0; marker = markers[i]; i++) {
+      this.pushMarkerTo_(marker);
+    }
+  } else if (Object.keys(markers).length) {
+    for (marker in markers) {
+      this.pushMarkerTo_(markers[marker]);
+    }
+  }
+  if (!opt_nodraw) {
+    this.redraw();
+  }
+};
+
+
+/**
+ * Pushes a marker to the clusterer.
+ *
+ * @param {google.maps.Marker} marker The marker to add.
+ * @private
+ */
+MarkerClusterer.prototype.pushMarkerTo_ = function (marker) {
+  marker.isAdded = false;
+  if (marker.draggable) {
+    // If the marker is draggable add a listener so we update the clusters on
+    // the drag end.
+    var that = this;
+    google.maps.event.addListener(marker, 'dragend', function () {
+      marker.isAdded = false;
+      that.repaint();
+    });
+  }
+  this.markers_.push(marker);
+};
+
+
+/**
+ * Adds a marker to the clusterer and redraws if needed.
+ *
+ * @param {google.maps.Marker} marker The marker to add.
+ * @param {boolean=} opt_nodraw Whether to redraw the clusters.
+ */
+MarkerClusterer.prototype.addMarker = function (marker, opt_nodraw) {
+  this.pushMarkerTo_(marker);
+  if (!opt_nodraw) {
+    this.redraw();
+  }
+};
+
+
+/**
+ * Removes a marker and returns true if removed, false if not
+ *
+ * @param {google.maps.Marker} marker The marker to remove
+ * @return {boolean} Whether the marker was removed or not
+ * @private
+ */
+MarkerClusterer.prototype.removeMarker_ = function (marker) {
+  var index = -1;
+  if (this.markers_.indexOf) {
+    index = this.markers_.indexOf(marker);
+  } else {
+    for (var i = 0, m; m = this.markers_[i]; i++) {
+      if (m === marker) {
+        index = i;
+        break;
+      }
+    }
+  }
+
+  if (index === -1) {
+    // Marker is not in our list of markers.
+    return false;
+  }
+
+  marker.setMap(null);
+
+  this.markers_.splice(index, 1);
+
+  return true;
+};
+
+
+/**
+ * Remove a marker from the cluster.
+ *
+ * @param {google.maps.Marker} marker The marker to remove.
+ * @param {boolean=} opt_nodraw Optional boolean to force no redraw.
+ * @return {boolean} True if the marker was removed.
+ */
+MarkerClusterer.prototype.removeMarker = function (marker, opt_nodraw) {
+  var removed = this.removeMarker_(marker);
+
+  if (!opt_nodraw && removed) {
+    this.resetViewport();
+    this.redraw();
+    return true;
+  } else {
+    return false;
+  }
+};
+
+
+/**
+ * Removes an array of markers from the cluster.
+ *
+ * @param {Array.<google.maps.Marker>} markers The markers to remove.
+ * @param {boolean=} opt_nodraw Optional boolean to force no redraw.
+ */
+MarkerClusterer.prototype.removeMarkers = function (markers, opt_nodraw) {
+  var removed = false;
+
+  for (var i = 0, marker; marker = markers[i]; i++) {
+    var r = this.removeMarker_(marker);
+    removed = removed || r;
+  }
+
+  if (!opt_nodraw && removed) {
+    this.resetViewport();
+    this.redraw();
+    return true;
+  }
+};
+
+
+/**
+ * Sets the clusterer's ready state.
+ *
+ * @param {boolean} ready The state.
+ * @private
+ */
+MarkerClusterer.prototype.setReady_ = function (ready) {
+  if (!this.ready_) {
+    this.ready_ = ready;
+    this.createClusters_();
+  }
+};
+
+
+/**
+ * Returns the number of clusters in the clusterer.
+ *
+ * @return {number} The number of clusters.
+ */
+MarkerClusterer.prototype.getTotalClusters = function () {
+  return this.clusters_.length;
+};
+
+
+/**
+ * Returns the google map that the clusterer is associated with.
+ *
+ * @return {google.maps.Map} The map.
+ */
+MarkerClusterer.prototype.getMap = function () {
+  return this.map_;
+};
+
+
+/**
+ * Sets the google map that the clusterer is associated with.
+ *
+ * @param {google.maps.Map} map The map.
+ */
+MarkerClusterer.prototype.setMap = function (map) {
+  this.map_ = map;
+};
+
+
+/**
+ * Returns the size of the grid.
+ *
+ * @return {number} The grid size.
+ */
+MarkerClusterer.prototype.getGridSize = function () {
+  return this.gridSize_;
+};
+
+
+/**
+ * Sets the size of the grid.
+ *
+ * @param {number} size The grid size.
+ */
+MarkerClusterer.prototype.setGridSize = function (size) {
+  this.gridSize_ = size;
+};
+
+
+/**
+ * Returns the min cluster size.
+ *
+ * @return {number} The grid size.
+ */
+MarkerClusterer.prototype.getMinClusterSize = function () {
+  return this.minClusterSize_;
+};
+
+/**
+ * Sets the min cluster size.
+ *
+ * @param {number} size The grid size.
+ */
+MarkerClusterer.prototype.setMinClusterSize = function (size) {
+  this.minClusterSize_ = size;
+};
+
+
+/**
+ * Extends a bounds object by the grid size.
+ *
+ * @param {google.maps.LatLngBounds} bounds The bounds to extend.
+ * @return {google.maps.LatLngBounds} The extended bounds.
+ */
+MarkerClusterer.prototype.getExtendedBounds = function (bounds) {
+  var projection = this.getProjection();
+
+  // Turn the bounds into latlng.
+  var tr = new google.maps.LatLng(bounds.getNorthEast().lat(),
+    bounds.getNorthEast().lng());
+  var bl = new google.maps.LatLng(bounds.getSouthWest().lat(),
+    bounds.getSouthWest().lng());
+
+  // Convert the points to pixels and the extend out by the grid size.
+  var trPix = projection.fromLatLngToDivPixel(tr);
+  trPix.x += this.gridSize_;
+  trPix.y -= this.gridSize_;
+
+  var blPix = projection.fromLatLngToDivPixel(bl);
+  blPix.x -= this.gridSize_;
+  blPix.y += this.gridSize_;
+
+  // Convert the pixel points back to LatLng
+  var ne = projection.fromDivPixelToLatLng(trPix);
+  var sw = projection.fromDivPixelToLatLng(blPix);
+
+  // Extend the bounds to contain the new bounds.
+  bounds.extend(ne);
+  bounds.extend(sw);
+
+  return bounds;
+};
+
+
+/**
+ * Determins if a marker is contained in a bounds.
+ *
+ * @param {google.maps.Marker} marker The marker to check.
+ * @param {google.maps.LatLngBounds} bounds The bounds to check against.
+ * @return {boolean} True if the marker is in the bounds.
+ * @private
+ */
+MarkerClusterer.prototype.isMarkerInBounds_ = function (marker, bounds) {
+  return bounds.contains(marker.getPosition());
+};
+
+
+/**
+ * Clears all clusters and markers from the clusterer.
+ */
+MarkerClusterer.prototype.clearMarkers = function () {
+  this.resetViewport(true);
+
+  // Set the markers a empty array.
+  this.markers_ = [];
+};
+
+
+/**
+ * Clears all existing clusters and recreates them.
+ * @param {boolean} opt_hide To also hide the marker.
+ */
+MarkerClusterer.prototype.resetViewport = function (opt_hide) {
+  // Remove all the clusters
+  for (var i = 0, cluster; cluster = this.clusters_[i]; i++) {
+    cluster.remove();
+  }
+
+  // Reset the markers to not be added and to be invisible.
+  for (var j = 0, marker; marker = this.markers_[j]; j++) {
+    marker.isAdded = false;
+    if (opt_hide) {
+      marker.setMap(null);
+    }
+  }
+
+  this.clusters_ = [];
+};
+
+/**
+ *
+ */
+MarkerClusterer.prototype.repaint = function () {
+  var oldClusters = this.clusters_.slice();
+  this.clusters_.length = 0;
+  this.resetViewport();
+  this.redraw();
+
+  // Remove the old clusters.
+  // Do it in a timeout so the other clusters have been drawn first.
+  window.setTimeout(function () {
+    for (var i = 0, cluster; cluster = oldClusters[i]; i++) {
+      cluster.remove();
+    }
+  }, 0);
+};
+
+
+/**
+ * Redraws the clusters.
+ */
+MarkerClusterer.prototype.redraw = function () {
+  this.createClusters_();
+};
+
+
+/**
+ * Calculates the distance between two latlng locations in km.
+ * @see http://www.movable-type.co.uk/scripts/latlong.html
+ *
+ * @param {google.maps.LatLng} p1 The first lat lng point.
+ * @param {google.maps.LatLng} p2 The second lat lng point.
+ * @return {number} The distance between the two points in km.
+ * @private
+ */
+MarkerClusterer.prototype.distanceBetweenPoints_ = function (p1, p2) {
+  if (!p1 || !p2) {
+    return 0;
+  }
+
+  var R = 6371; // Radius of the Earth in km
+  var dLat = (p2.lat() - p1.lat()) * Math.PI / 180;
+  var dLon = (p2.lng() - p1.lng()) * Math.PI / 180;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(p1.lat() * Math.PI / 180) * Math.cos(p2.lat() * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var d = R * c;
+  return d;
+};
+
+
+/**
+ * Add a marker to a cluster, or creates a new cluster.
+ *
+ * @param {google.maps.Marker} marker The marker to add.
+ * @private
+ */
+MarkerClusterer.prototype.addToClosestCluster_ = function (marker) {
+  var distance = 40000; // Some large number
+  var clusterToAddTo = null;
+  //var pos = marker.getPosition();
+  var cluster;
+  for (var i = 0; cluster = this.clusters_[i]; i++) {
+    var center = cluster.getCenter();
+    if (center) {
+      var d = this.distanceBetweenPoints_(center, marker.getPosition());
+      if (d < distance) {
+        distance = d;
+        clusterToAddTo = cluster;
+      }
+    }
+  }
+
+  if (clusterToAddTo && clusterToAddTo.isMarkerInClusterBounds(marker)) {
+    clusterToAddTo.addMarker(marker);
+  } else {
+    cluster = new Cluster(this);
+    cluster.addMarker(marker);
+    this.clusters_.push(cluster);
+  }
+};
+
+
+/**
+ * Creates the clusters.
+ *
+ * @private
+ */
+MarkerClusterer.prototype.createClusters_ = function () {
+  if (!this.ready_) {
+    return;
+  }
+
+  // Get our current map view bounds.
+  // Create a new bounds object so we don't affect the map.
+  var mapBounds = new google.maps.LatLngBounds(this.map_.getBounds().getSouthWest(),
+    this.map_.getBounds().getNorthEast());
+  var bounds = this.getExtendedBounds(mapBounds);
+
+  for (var i = 0, marker; marker = this.markers_[i]; i++) {
+    if (!marker.isAdded && this.isMarkerInBounds_(marker, bounds)) {
+      this.addToClosestCluster_(marker);
+    }
+  }
+};
+
+
+/**
+ * A cluster that contains markers.
+ *
+ * @param {MarkerClusterer} markerClusterer The markerclusterer that this
+ *     cluster is associated with.
+ * @constructor
+ * @ignore
+ */
+function Cluster(markerClusterer) {
+  this.markerClusterer_ = markerClusterer;
+  this.map_ = markerClusterer.getMap();
+  this.gridSize_ = markerClusterer.getGridSize();
+  this.minClusterSize_ = markerClusterer.getMinClusterSize();
+  this.averageCenter_ = markerClusterer.isAverageCenter();
+  this.center_ = null;
+  this.markers_ = [];
+  this.bounds_ = null;
+  this.clusterIcon_ = new ClusterIcon(this, markerClusterer.getStyles(),
+    markerClusterer.getGridSize());
+}
+
+/**
+ * Determins if a marker is already added to the cluster.
+ *
+ * @param {google.maps.Marker} marker The marker to check.
+ * @return {boolean} True if the marker is already added.
+ */
+Cluster.prototype.isMarkerAlreadyAdded = function (marker) {
+  if (this.markers_.indexOf) {
+    return this.markers_.indexOf(marker) !== -1;
+  } else {
+    for (var i = 0, m; m = this.markers_[i]; i++) {
+      if (m === marker) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+
+/**
+ * Add a marker the cluster.
+ *
+ * @param {google.maps.Marker} marker The marker to add.
+ * @return {boolean} True if the marker was added.
+ */
+Cluster.prototype.addMarker = function (marker) {
+  if (this.isMarkerAlreadyAdded(marker)) {
+    return false;
+  }
+
+  if (!this.center_) {
+    this.center_ = marker.getPosition();
+    this.calculateBounds_();
+  } else {
+    if (this.averageCenter_) {
+      var l = this.markers_.length + 1;
+      var lat = (this.center_.lat() * (l - 1) + marker.getPosition().lat()) / l;
+      var lng = (this.center_.lng() * (l - 1) + marker.getPosition().lng()) / l;
+      this.center_ = new google.maps.LatLng(lat, lng);
+      this.calculateBounds_();
+    }
+  }
+
+  marker.isAdded = true;
+  this.markers_.push(marker);
+
+  var len = this.markers_.length;
+  if (len < this.minClusterSize_ && marker.getMap() !== this.map_) {
+    // Min cluster size not reached so show the marker.
+    marker.setMap(this.map_);
+  }
+
+  if (len === this.minClusterSize_) {
+    // Hide the markers that were showing.
+    for (var i = 0; i < len; i++) {
+      this.markers_[i].setMap(null);
+    }
+  }
+
+  if (len >= this.minClusterSize_) {
+    marker.setMap(null);
+  }
+
+  this.updateIcon();
+  return true;
+};
+
+
+/**
+ * Returns the marker clusterer that the cluster is associated with.
+ *
+ * @return {MarkerClusterer} The associated marker clusterer.
+ */
+Cluster.prototype.getMarkerClusterer = function () {
+  return this.markerClusterer_;
+};
+
+
+/**
+ * Returns the bounds of the cluster.
+ *
+ * @return {google.maps.LatLngBounds} the cluster bounds.
+ */
+Cluster.prototype.getBounds = function () {
+  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
+  var markers = this.getMarkers();
+  for (var i = 0, marker; marker = markers[i]; i++) {
+    bounds.extend(marker.getPosition());
+  }
+  return bounds;
+};
+
+
+/**
+ * Removes the cluster
+ */
+Cluster.prototype.remove = function () {
+  this.clusterIcon_.remove();
+  this.markers_.length = 0;
+  delete this.markers_;
+};
+
+
+/**
+ * Returns the center of the cluster.
+ *
+ * @return {number} The cluster center.
+ */
+Cluster.prototype.getSize = function () {
+  return this.markers_.length;
+};
+
+
+/**
+ * Returns the center of the cluster.
+ *
+ * @return {Array.<google.maps.Marker>} The cluster center.
+ */
+Cluster.prototype.getMarkers = function () {
+  return this.markers_;
+};
+
+
+/**
+ * Returns the center of the cluster.
+ *
+ * @return {google.maps.LatLng} The cluster center.
+ */
+Cluster.prototype.getCenter = function () {
+  return this.center_;
+};
+
+
+/**
+ * Calculated the extended bounds of the cluster with the grid.
+ *
+ * @private
+ */
+Cluster.prototype.calculateBounds_ = function () {
+  var bounds = new google.maps.LatLngBounds(this.center_, this.center_);
+  this.bounds_ = this.markerClusterer_.getExtendedBounds(bounds);
+};
+
+
+/**
+ * Determines if a marker lies in the clusters bounds.
+ *
+ * @param {google.maps.Marker} marker The marker to check.
+ * @return {boolean} True if the marker lies in the bounds.
+ */
+Cluster.prototype.isMarkerInClusterBounds = function (marker) {
+  return this.bounds_.contains(marker.getPosition());
+};
+
+
+/**
+ * Returns the map that the cluster is associated with.
+ *
+ * @return {google.maps.Map} The map.
+ */
+Cluster.prototype.getMap = function () {
+  return this.map_;
+};
+
+
+/**
+ * Updates the cluster icon
+ */
+Cluster.prototype.updateIcon = function () {
+  var zoom = this.map_.getZoom();
+  var mz = this.markerClusterer_.getMaxZoom();
+
+  if (mz && zoom > mz) {
+    // The zoom is greater than our max zoom so show all the markers in cluster.
+    for (var i = 0, marker; marker = this.markers_[i]; i++) {
+      marker.setMap(this.map_);
+    }
+    return;
+  }
+
+  if (this.markers_.length < this.minClusterSize_) {
+    // Min cluster size not yet reached.
+    this.clusterIcon_.hide();
+    return;
+  }
+
+  var numStyles = this.markerClusterer_.getStyles().length;
+  var sums = this.markerClusterer_.getCalculator()(this.markers_, numStyles);
+  this.clusterIcon_.setCenter(this.center_);
+  this.clusterIcon_.setSums(sums);
+  this.clusterIcon_.show();
+};
+
+
+/**
+ * A cluster icon
+ *
+ * @param {Cluster} cluster The cluster to be associated with.
+ * @param {Object} styles An object that has style properties:
+ *     'url': (string) The image url.
+ *     'height': (number) The image height.
+ *     'width': (number) The image width.
+ *     'anchor': (Array) The anchor position of the label text.
+ *     'textColor': (string) The text color.
+ *     'textSize': (number) The text size.
+ *     'backgroundPosition: (string) The background postition x, y.
+ * @param {number=} opt_padding Optional padding to apply to the cluster icon.
+ * @constructor
+ * @extends google.maps.OverlayView
+ * @ignore
+ */
+function ClusterIcon(cluster, styles, opt_padding) {
+  cluster.getMarkerClusterer().extend(ClusterIcon, google.maps.OverlayView);
+
+  this.styles_ = styles;
+  this.padding_ = opt_padding || 0;
+  this.cluster_ = cluster;
+  this.center_ = null;
+  this.map_ = cluster.getMap();
+  this.div_ = null;
+  this.sums_ = null;
+  this.visible_ = false;
+
+  this.setMap(this.map_);
+}
+
+
+/**
+ * Triggers the clusterclick event and zoom's if the option is set.
+ */
+ClusterIcon.prototype.triggerClusterClick = function () {
+  var markerClusterer = this.cluster_.getMarkerClusterer();
+
+  // Trigger the clusterclick event.
+  google.maps.event.trigger(markerClusterer, 'clusterclick', this.cluster_);
+
+  if (markerClusterer.isZoomOnClick()) {
+    // Zoom into the cluster.
+    this.map_.fitBounds(this.cluster_.getBounds());
+  }
+};
+
+
+/**
+ * Adding the cluster icon to the dom.
+ * @ignore
+ */
+ClusterIcon.prototype.onAdd = function () {
+  this.div_ = document.createElement('DIV');
+  if (this.visible_) {
+    var pos = this.getPosFromLatLng_(this.center_);
+    this.div_.style.cssText = this.createCss(pos);
+    this.div_.innerHTML = this.sums_.text;
+  }
+
+  var panes = this.getPanes();
+  panes.overlayMouseTarget.appendChild(this.div_);
+
+  var that = this;
+  google.maps.event.addDomListener(this.div_, 'click', function () {
+    that.triggerClusterClick();
+  });
+};
+
+
+/**
+ * Returns the position to place the div dending on the latlng.
+ *
+ * @param {google.maps.LatLng} latlng The position in latlng.
+ * @return {google.maps.Point} The position in pixels.
+ * @private
+ */
+ClusterIcon.prototype.getPosFromLatLng_ = function (latlng) {
+  var pos = this.getProjection().fromLatLngToDivPixel(latlng);
+  pos.x -= parseInt(this.width_ / 2, 10);
+  pos.y -= parseInt(this.height_ / 2, 10);
+  return pos;
+};
+
+
+/**
+ * Draw the icon.
+ * @ignore
+ */
+ClusterIcon.prototype.draw = function () {
+  if (this.visible_) {
+    var pos = this.getPosFromLatLng_(this.center_);
+    this.div_.style.top = pos.y + 'px';
+    this.div_.style.left = pos.x + 'px';
+  }
+};
+
+
+/**
+ * Hide the icon.
+ */
+ClusterIcon.prototype.hide = function () {
+  if (this.div_) {
+    this.div_.style.display = 'none';
+  }
+  this.visible_ = false;
+};
+
+
+/**
+ * Position and show the icon.
+ */
+ClusterIcon.prototype.show = function () {
+  if (this.div_) {
+    var pos = this.getPosFromLatLng_(this.center_);
+    this.div_.style.cssText = this.createCss(pos);
+    this.div_.style.display = '';
+  }
+  this.visible_ = true;
+};
+
+
+/**
+ * Remove the icon from the map
+ */
+ClusterIcon.prototype.remove = function () {
+  this.setMap(null);
+};
+
+
+/**
+ * Implementation of the onRemove interface.
+ * @ignore
+ */
+ClusterIcon.prototype.onRemove = function () {
+  if (this.div_ && this.div_.parentNode) {
+    this.hide();
+    this.div_.parentNode.removeChild(this.div_);
+    this.div_ = null;
+  }
+};
+
+
+/**
+ * Set the sums of the icon.
+ *
+ * @param {Object} sums The sums containing:
+ *   'text': (string) The text to display in the icon.
+ *   'index': (number) The style index of the icon.
+ */
+ClusterIcon.prototype.setSums = function (sums) {
+  this.sums_ = sums;
+  this.text_ = sums.text;
+  this.index_ = sums.index;
+  if (this.div_) {
+    this.div_.innerHTML = sums.text;
+  }
+
+  this.useStyle();
+};
+
+
+/**
+ * Sets the icon to the the styles.
+ */
+ClusterIcon.prototype.useStyle = function () {
+  var index = Math.max(0, this.sums_.index - 1);
+  index = Math.min(this.styles_.length - 1, index);
+  var style = this.styles_[index];
+  this.url_ = style.url;
+  this.height_ = style.height;
+  this.width_ = style.width;
+  this.textColor_ = style.textColor;
+  this.anchor_ = style.anchor;
+  this.textSize_ = style.textSize;
+  this.backgroundPosition_ = style.backgroundPosition;
+};
+
+
+/**
+ * Sets the center of the icon.
+ *
+ * @param {google.maps.LatLng} center The latlng to set as the center.
+ */
+ClusterIcon.prototype.setCenter = function (center) {
+  this.center_ = center;
+};
+
+
+/**
+ * Create the css text based on the position of the icon.
+ *
+ * @param {google.maps.Point} pos The position.
+ * @return {string} The css style text.
+ */
+ClusterIcon.prototype.createCss = function (pos) {
+  var style = [];
+  style.push('background-image:url(' + this.url_ + ');');
+  var backgroundPosition = this.backgroundPosition_ ? this.backgroundPosition_ : '0 0';
+  style.push('background-position:' + backgroundPosition + ';');
+
+  if (typeof this.anchor_ === 'object') {
+    if (typeof this.anchor_[0] === 'number' && this.anchor_[0] > 0 &&
+      this.anchor_[0] < this.height_) {
+      style.push('height:' + (this.height_ - this.anchor_[0]) +
+        'px; padding-top:' + this.anchor_[0] + 'px;');
+    } else {
+      style.push('height:' + this.height_ + 'px; line-height:' + this.height_ +
+        'px;');
+    }
+    if (typeof this.anchor_[1] === 'number' && this.anchor_[1] > 0 &&
+      this.anchor_[1] < this.width_) {
+      style.push('width:' + (this.width_ - this.anchor_[1]) +
+        'px; padding-left:' + this.anchor_[1] + 'px;');
+    } else {
+      style.push('width:' + this.width_ + 'px; text-align:center;');
+    }
+  } else {
+    style.push('height:' + this.height_ + 'px; line-height:' +
+      this.height_ + 'px; width:' + this.width_ + 'px; text-align:center;');
+  }
+
+  var txtColor = this.textColor_ ? this.textColor_ : 'black';
+  var txtSize = this.textSize_ ? this.textSize_ : 11;
+
+  style.push('cursor:pointer; top:' + pos.y + 'px; left:' +
+    pos.x + 'px; color:' + txtColor + '; position:absolute; font-size:' +
+    txtSize + 'px; font-family:Arial,sans-serif; font-weight:bold');
+  return style.join('');
+};
+
+
+// Export Symbols for Closure
+// If you are not going to compile with closure then you can remove the
+// code below.
+window.MarkerClusterer = MarkerClusterer;
+MarkerClusterer.prototype.addMarker = MarkerClusterer.prototype.addMarker;
+MarkerClusterer.prototype.addMarkers = MarkerClusterer.prototype.addMarkers;
+MarkerClusterer.prototype.clearMarkers =
+  MarkerClusterer.prototype.clearMarkers;
+MarkerClusterer.prototype.fitMapToMarkers =
+  MarkerClusterer.prototype.fitMapToMarkers;
+MarkerClusterer.prototype.getCalculator =
+  MarkerClusterer.prototype.getCalculator;
+MarkerClusterer.prototype.getGridSize =
+  MarkerClusterer.prototype.getGridSize;
+MarkerClusterer.prototype.getExtendedBounds =
+  MarkerClusterer.prototype.getExtendedBounds;
+MarkerClusterer.prototype.getMap = MarkerClusterer.prototype.getMap;
+MarkerClusterer.prototype.getMarkers = MarkerClusterer.prototype.getMarkers;
+MarkerClusterer.prototype.getMaxZoom = MarkerClusterer.prototype.getMaxZoom;
+MarkerClusterer.prototype.getStyles = MarkerClusterer.prototype.getStyles;
+MarkerClusterer.prototype.getTotalClusters =
+  MarkerClusterer.prototype.getTotalClusters;
+MarkerClusterer.prototype.getTotalMarkers =
+  MarkerClusterer.prototype.getTotalMarkers;
+MarkerClusterer.prototype.redraw = MarkerClusterer.prototype.redraw;
+MarkerClusterer.prototype.removeMarker =
+  MarkerClusterer.prototype.removeMarker;
+MarkerClusterer.prototype.removeMarkers =
+  MarkerClusterer.prototype.removeMarkers;
+MarkerClusterer.prototype.resetViewport =
+  MarkerClusterer.prototype.resetViewport;
+MarkerClusterer.prototype.repaint =
+  MarkerClusterer.prototype.repaint;
+MarkerClusterer.prototype.setCalculator =
+  MarkerClusterer.prototype.setCalculator;
+MarkerClusterer.prototype.setGridSize =
+  MarkerClusterer.prototype.setGridSize;
+MarkerClusterer.prototype.setMaxZoom =
+  MarkerClusterer.prototype.setMaxZoom;
+MarkerClusterer.prototype.onAdd = MarkerClusterer.prototype.onAdd;
+MarkerClusterer.prototype.draw = MarkerClusterer.prototype.draw;
+
+Cluster.prototype.getCenter = Cluster.prototype.getCenter;
+Cluster.prototype.getSize = Cluster.prototype.getSize;
+Cluster.prototype.getMarkers = Cluster.prototype.getMarkers;
+
+ClusterIcon.prototype.onAdd = ClusterIcon.prototype.onAdd;
+ClusterIcon.prototype.draw = ClusterIcon.prototype.draw;
+ClusterIcon.prototype.onRemove = ClusterIcon.prototype.onRemove;
+
+Object.keys = Object.keys || function (o) {
+  var result = [];
+  for (var name in o) {
+    if (o.hasOwnProperty(name)) {
+      result.push(name);
+    }
+  }
+  return result;
+};
+
+})()
+},{}],95:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -22613,12 +25837,16 @@ module.exports = Marionette.ItemView.extend({
     selColor: '#detailed-view-chart-color',
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
-    selInterval: '#detailed-view-chart-interval'
+    selInterval: '#detailed-view-chart-interval',
+    butOk: '#detailed-view-chart-ok',
+    butCancel: '#detailed-view-chart-cancel'
   },
   chartView: null,
   chartViewModel: null,
   rendered: false,
   collection: null,
+  edited: null,
+  old: null,
   color: null,
   style: null,
   transform: null,
@@ -22626,6 +25854,13 @@ module.exports = Marionette.ItemView.extend({
   initialize: function () {
     this.listenTo(this.model, 'change:collection', this.prepareCollection.bind(this));
     this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+    this.edited = this.model.get('edited');
+    this.old = {
+      color: this.edited.get('color'),
+      style: this.edited.get('style'),
+      transform: this.edited.get('transform'),
+      interval: this.edited.get('interval')
+    };
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
@@ -22645,24 +25880,36 @@ module.exports = Marionette.ItemView.extend({
           dimensions: null,
           legendStyle: 'list', // Legend style: 'list', 'table'
           legendButton: true,  // A button in the legend
-          legendButtonContent: ['ready'],
+          legendButtonContent: [],
           legendShow: true,     // Show legend or not
           legendContainer: '#legend-container-edit', //false or a a selector
           legendExtras: true,   // use extras in the legend
           onClick: false,
           onHover: false,
           onDnD: false,
+          editPoint: true,
           allowPan: false,      // Allows navigation through the chart
           allowZoom: false,     // Allows zooming on the chart
-          xaxis: true
+          xaxis: true,
+          showNodeCount: false
         });
+      this.ui.selColor.css({'background-color': this.edited.get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
       this.ui.selStyle.bind('change', this.editorChange.bind(this));
       this.ui.selOperation.bind('change', this.editorChange.bind(this));
       this.ui.selInterval.bind('change', this.editorChange.bind(this));
-      this.chartView.on('ready', function (m) {
-        this.trigger('ready', m);
+      this.ui.butOk.on('click', function () {
+        console.log('SEV: OK');
+        this.trigger('ready', this.edited);
+      }.bind(this));
+      this.ui.butCancel.on('click', function () {
+        console.log('SEV: cancel');
+        this.edited.set('color', this.old.color);
+        this.edited.set('style', this.old.style);
+        this.edited.set('transform', this.old.transform);
+        this.edited.set('interval', this.old.interval);
+        this.trigger('cancel');
       }.bind(this));
     }
 
@@ -22682,6 +25929,7 @@ module.exports = Marionette.ItemView.extend({
   editorChange: function () {
     if (this.ui.selColor[0].selectedIndex > -1) {
       this.color = this.ui.selColor[0].options[this.ui.selColor[0].selectedIndex].value;
+      this.ui.selColor.css({'background-color': this.color});
     }
     if (this.ui.selStyle[0].selectedIndex > -1) {
       this.style = this.ui.selStyle[0].options[this.ui.selStyle[0].selectedIndex].value;
@@ -22693,10 +25941,10 @@ module.exports = Marionette.ItemView.extend({
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
     }
 
-    this.collection.at(0).set('color', this.color);
-    this.collection.at(0).set('style', this.style);
-    this.collection.at(0).set('transform', this.transform);
-    this.collection.at(0).set('interval', this.interval);
+    this.edited.set('color', this.color);
+    this.edited.set('style', this.style);
+    this.edited.set('transform', this.transform);
+    this.edited.set('interval', this.interval);
 
     this.chartView.render();
   },
@@ -22717,28 +25965,28 @@ module.exports = Marionette.ItemView.extend({
     var i;
     var options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('color')) {
+      if (options[i].value === this.model.get('edited').get('color')) {
         this.ui.selColor[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selStyle[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('style')) {
+      if (options[i].value === this.model.get('edited').get('style')) {
         this.ui.selStyle[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selOperation[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('transform')) {
+      if (options[i].value === this.model.get('edited').get('transform')) {
         this.ui.selOperation[0].selectedIndex = i;
         break;
       }
     }
     options = this.ui.selInterval[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('collection').at(0).get('interval')) {
+      if (options[i].value === this.model.get('edited').get('interval')) {
         this.ui.selInterval[0].selectedIndex = i;
         break;
       }
@@ -22746,7 +25994,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"../../../numericals/ChartModel.js":71,"../../../numericals/ChartView.js":72,"backbone.marionette":73,"underscore":8}],89:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":75,"../../../numericals/ChartView.js":77,"backbone.marionette":46,"underscore":8}],96:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -22767,6 +26015,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
+    console.log('this.model', this.model);
 
     if (this.chartView) {
       this.chartView.model.set('collection', this.model.get('collection'));
@@ -22784,7 +26033,7 @@ module.exports = Marionette.ItemView.extend({
           dimensions: null,
           legendStyle: 'list', // Legend style: 'list', 'table'
           legendButton: true,  // A button in the legend
-          legendButtonContent: ['edit', 'duplicate', 'remove'],
+          legendButtonContent: this.model.get('virtual') ? ['remove', 'edit'] : ['edit'],
           legendShow: true,     // Show legend or not
           legendContainer: '#legend-container-general', //false or a a selector
           legendExtras: true,   // use extras in the legend
@@ -22793,7 +26042,8 @@ module.exports = Marionette.ItemView.extend({
           onDnD: false,
           allowPan: false,      // Allows navigation through the chart
           allowZoom: false,     // Allows zooming on the chart
-          xaxis: true
+          xaxis: true,
+          showNodeCount: false
         })});
 
       this.chartView.on('remove', function (m) {
@@ -22834,1888 +26084,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"../../../numericals/ChartModel.js":71,"../../../numericals/ChartView.js":72,"backbone.marionette":73,"underscore":8}],87:[function(require,module,exports){
-// Generated by CoffeeScript 1.6.3
-(function() {
-  var Google, Q;
-
-  Q = require('q');
-
-  Google = (function() {
-    function Google() {}
-
-    Google.URL = 'https://maps.googleapis.com/maps/api/js?sensor=false';
-
-    Google.KEY = null;
-
-    Google.WINDOW_CALLBACK_NAME = '__google_maps_api_provider_initializator__';
-
-    Google.google = null;
-
-    Google.loading = false;
-
-    Google.promises = [];
-
-    Google.load = function() {
-      var deferred, script, url,
-        _this = this;
-      deferred = Q.defer();
-      if (this.google === null) {
-        if (this.loading === true) {
-          this.promises.push(deferred);
-        } else {
-          this.loading = true;
-          window[this.WINDOW_CALLBACK_NAME] = function() {
-            return _this._ready(deferred);
-          };
-          url = this.URL;
-          if (this.KEY !== null) {
-            url += "&key=" + this.KEY;
-          }
-          url += "&callback=" + this.WINDOW_CALLBACK_NAME;
-          script = document.createElement('script');
-          script.type = 'text/javascript';
-          script.src = url;
-          document.body.appendChild(script);
-        }
-      } else {
-        deferred.resolve(this.google);
-      }
-      return deferred.promise;
-    };
-
-    Google._ready = function(deferred) {
-      var def, _i, _len, _ref;
-      Google.loading = false;
-      if (Google.google === null) {
-        Google.google = window.google;
-      }
-      deferred.resolve(Google.google);
-      _ref = Google.promises;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        def = _ref[_i];
-        def.resolve(Google.google);
-      }
-      return Google.promises = [];
-    };
-
-    return Google;
-
-  }).call(this);
-
-  module.exports = Google;
-
-}).call(this);
-
-},{"q":101}],102:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            if (ev.source === window && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],101:[function(require,module,exports){
-(function(process){// vim:ts=4:sts=4:sw=4:
-/*!
- *
- * Copyright 2009-2012 Kris Kowal under the terms of the MIT
- * license found at http://github.com/kriskowal/q/raw/master/LICENSE
- *
- * With parts by Tyler Close
- * Copyright 2007-2009 Tyler Close under the terms of the MIT X license found
- * at http://www.opensource.org/licenses/mit-license.html
- * Forked at ref_send.js version: 2009-05-11
- *
- * With parts by Mark Miller
- * Copyright (C) 2011 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
-(function (definition) {
-    // Turn off strict mode for this function so we can assign to global.Q
-    /* jshint strict: false */
-
-    // This file will function properly as a <script> tag, or a module
-    // using CommonJS and NodeJS or RequireJS module formats.  In
-    // Common/Node/RequireJS, the module exports the Q API and when
-    // executed as a simple <script>, it creates a Q global instead.
-
-    // Montage Require
-    if (typeof bootstrap === "function") {
-        bootstrap("promise", definition);
-
-    // CommonJS
-    } else if (typeof exports === "object") {
-        module.exports = definition();
-
-    // RequireJS
-    } else if (typeof define === "function" && define.amd) {
-        define(definition);
-
-    // SES (Secure EcmaScript)
-    } else if (typeof ses !== "undefined") {
-        if (!ses.ok()) {
-            return;
-        } else {
-            ses.makeQ = definition;
-        }
-
-    // <script>
-    } else {
-        Q = definition();
-    }
-
-})(function () {
-"use strict";
-
-var hasStacks = false;
-try {
-    throw new Error();
-} catch (e) {
-    hasStacks = !!e.stack;
-}
-
-// All code after this point will be filtered from stack traces reported
-// by Q.
-var qStartingLine = captureLine();
-var qFileName;
-
-// shims
-
-// used for fallback in "allResolved"
-var noop = function () {};
-
-// Use the fastest possible means to execute a task in a future turn
-// of the event loop.
-var nextTick =(function () {
-    // linked list of tasks (single, with head node)
-    var head = {task: void 0, next: null};
-    var tail = head;
-    var flushing = false;
-    var requestTick = void 0;
-    var isNodeJS = false;
-
-    function flush() {
-        while (head.next) {
-            head = head.next;
-            var task = head.task;
-            head.task = void 0;
-            var domain = head.domain;
-
-            if (domain) {
-                head.domain = void 0;
-                domain.enter();
-            }
-
-            try {
-                task();
-
-            } catch (e) {
-                if (isNodeJS) {
-                    // In node, uncaught exceptions are considered fatal errors.
-                    // Re-throw them synchronously to interrupt flushing!
-
-                    // Ensure continuation if the uncaught exception is suppressed
-                    // listening "uncaughtException" events (as domains does).
-                    // Continue in next event to avoid tick recursion.
-                    domain && domain.exit();
-                    setTimeout(flush, 0);
-                    domain && domain.enter();
-
-                    throw e;
-
-                } else {
-                    // In browsers, uncaught exceptions are not fatal.
-                    // Re-throw them asynchronously to avoid slow-downs.
-                    setTimeout(function() {
-                       throw e;
-                    }, 0);
-                }
-            }
-
-            if (domain) {
-                domain.exit();
-            }
-        }
-
-        flushing = false;
-    }
-
-    nextTick = function (task) {
-        tail = tail.next = {
-            task: task,
-            domain: isNodeJS && process.domain,
-            next: null
-        };
-
-        if (!flushing) {
-            flushing = true;
-            requestTick();
-        }
-    };
-
-    if (typeof process !== "undefined" && process.nextTick) {
-        // Node.js before 0.9. Note that some fake-Node environments, like the
-        // Mocha test runner, introduce a `process` global without a `nextTick`.
-        isNodeJS = true;
-
-        requestTick = function () {
-            process.nextTick(flush);
-        };
-
-    } else if (typeof setImmediate === "function") {
-        // In IE10, Node.js 0.9+, or https://github.com/NobleJS/setImmediate
-        if (typeof window !== "undefined") {
-            requestTick = setImmediate.bind(window, flush);
-        } else {
-            requestTick = function () {
-                setImmediate(flush);
-            };
-        }
-
-    } else if (typeof MessageChannel !== "undefined") {
-        // modern browsers
-        // http://www.nonblocking.io/2011/06/windownexttick.html
-        var channel = new MessageChannel();
-        channel.port1.onmessage = flush;
-        requestTick = function () {
-            channel.port2.postMessage(0);
-        };
-
-    } else {
-        // old browsers
-        requestTick = function () {
-            setTimeout(flush, 0);
-        };
-    }
-
-    return nextTick;
-})();
-
-// Attempt to make generics safe in the face of downstream
-// modifications.
-// There is no situation where this is necessary.
-// If you need a security guarantee, these primordials need to be
-// deeply frozen anyway, and if you don’t need a security guarantee,
-// this is just plain paranoid.
-// However, this does have the nice side-effect of reducing the size
-// of the code by reducing x.call() to merely x(), eliminating many
-// hard-to-minify characters.
-// See Mark Miller’s explanation of what this does.
-// http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
-function uncurryThis(f) {
-    var call = Function.call;
-    return function () {
-        return call.apply(f, arguments);
-    };
-}
-// This is equivalent, but slower:
-// uncurryThis = Function_bind.bind(Function_bind.call);
-// http://jsperf.com/uncurrythis
-
-var array_slice = uncurryThis(Array.prototype.slice);
-
-var array_reduce = uncurryThis(
-    Array.prototype.reduce || function (callback, basis) {
-        var index = 0,
-            length = this.length;
-        // concerning the initial value, if one is not provided
-        if (arguments.length === 1) {
-            // seek to the first value in the array, accounting
-            // for the possibility that is is a sparse array
-            do {
-                if (index in this) {
-                    basis = this[index++];
-                    break;
-                }
-                if (++index >= length) {
-                    throw new TypeError();
-                }
-            } while (1);
-        }
-        // reduce
-        for (; index < length; index++) {
-            // account for the possibility that the array is sparse
-            if (index in this) {
-                basis = callback(basis, this[index], index);
-            }
-        }
-        return basis;
-    }
-);
-
-var array_indexOf = uncurryThis(
-    Array.prototype.indexOf || function (value) {
-        // not a very good shim, but good enough for our one use of it
-        for (var i = 0; i < this.length; i++) {
-            if (this[i] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-);
-
-var array_map = uncurryThis(
-    Array.prototype.map || function (callback, thisp) {
-        var self = this;
-        var collect = [];
-        array_reduce(self, function (undefined, value, index) {
-            collect.push(callback.call(thisp, value, index, self));
-        }, void 0);
-        return collect;
-    }
-);
-
-var object_create = Object.create || function (prototype) {
-    function Type() { }
-    Type.prototype = prototype;
-    return new Type();
-};
-
-var object_hasOwnProperty = uncurryThis(Object.prototype.hasOwnProperty);
-
-var object_keys = Object.keys || function (object) {
-    var keys = [];
-    for (var key in object) {
-        if (object_hasOwnProperty(object, key)) {
-            keys.push(key);
-        }
-    }
-    return keys;
-};
-
-var object_toString = uncurryThis(Object.prototype.toString);
-
-function isObject(value) {
-    return value === Object(value);
-}
-
-// generator related shims
-
-// FIXME: Remove this function once ES6 generators are in SpiderMonkey.
-function isStopIteration(exception) {
-    return (
-        object_toString(exception) === "[object StopIteration]" ||
-        exception instanceof QReturnValue
-    );
-}
-
-// FIXME: Remove this helper and Q.return once ES6 generators are in
-// SpiderMonkey.
-var QReturnValue;
-if (typeof ReturnValue !== "undefined") {
-    QReturnValue = ReturnValue;
-} else {
-    QReturnValue = function (value) {
-        this.value = value;
-    };
-}
-
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
-}
-
-// long stack traces
-
-var STACK_JUMP_SEPARATOR = "From previous event:";
-
-function makeStackTraceLong(error, promise) {
-    // If possible, transform the error stack trace by removing Node and Q
-    // cruft, then concatenating with the stack trace of `promise`. See #57.
-    if (hasStacks &&
-        promise.stack &&
-        typeof error === "object" &&
-        error !== null &&
-        error.stack &&
-        error.stack.indexOf(STACK_JUMP_SEPARATOR) === -1
-    ) {
-        var stacks = [];
-        for (var p = promise; !!p; p = p.source) {
-            if (p.stack) {
-                stacks.unshift(p.stack);
-            }
-        }
-        stacks.unshift(error.stack);
-
-        var concatedStacks = stacks.join("\n" + STACK_JUMP_SEPARATOR + "\n");
-        error.stack = filterStackString(concatedStacks);
-    }
-}
-
-function filterStackString(stackString) {
-    var lines = stackString.split("\n");
-    var desiredLines = [];
-    for (var i = 0; i < lines.length; ++i) {
-        var line = lines[i];
-
-        if (!isInternalFrame(line) && !isNodeFrame(line) && line) {
-            desiredLines.push(line);
-        }
-    }
-    return desiredLines.join("\n");
-}
-
-function isNodeFrame(stackLine) {
-    return stackLine.indexOf("(module.js:") !== -1 ||
-           stackLine.indexOf("(node.js:") !== -1;
-}
-
-function getFileNameAndLineNumber(stackLine) {
-    // Named functions: "at functionName (filename:lineNumber:columnNumber)"
-    // In IE10 function name can have spaces ("Anonymous function") O_o
-    var attempt1 = /at .+ \((.+):(\d+):(?:\d+)\)$/.exec(stackLine);
-    if (attempt1) {
-        return [attempt1[1], Number(attempt1[2])];
-    }
-
-    // Anonymous functions: "at filename:lineNumber:columnNumber"
-    var attempt2 = /at ([^ ]+):(\d+):(?:\d+)$/.exec(stackLine);
-    if (attempt2) {
-        return [attempt2[1], Number(attempt2[2])];
-    }
-
-    // Firefox style: "function@filename:lineNumber or @filename:lineNumber"
-    var attempt3 = /.*@(.+):(\d+)$/.exec(stackLine);
-    if (attempt3) {
-        return [attempt3[1], Number(attempt3[2])];
-    }
-}
-
-function isInternalFrame(stackLine) {
-    var fileNameAndLineNumber = getFileNameAndLineNumber(stackLine);
-
-    if (!fileNameAndLineNumber) {
-        return false;
-    }
-
-    var fileName = fileNameAndLineNumber[0];
-    var lineNumber = fileNameAndLineNumber[1];
-
-    return fileName === qFileName &&
-        lineNumber >= qStartingLine &&
-        lineNumber <= qEndingLine;
-}
-
-// discover own file name and line number range for filtering stack
-// traces
-function captureLine() {
-    if (!hasStacks) {
-        return;
-    }
-
-    try {
-        throw new Error();
-    } catch (e) {
-        var lines = e.stack.split("\n");
-        var firstLine = lines[0].indexOf("@") > 0 ? lines[1] : lines[2];
-        var fileNameAndLineNumber = getFileNameAndLineNumber(firstLine);
-        if (!fileNameAndLineNumber) {
-            return;
-        }
-
-        qFileName = fileNameAndLineNumber[0];
-        return fileNameAndLineNumber[1];
-    }
-}
-
-function deprecate(callback, name, alternative) {
-    return function () {
-        if (typeof console !== "undefined" &&
-            typeof console.warn === "function") {
-            console.warn(name + " is deprecated, use " + alternative +
-                         " instead.", new Error("").stack);
-        }
-        return callback.apply(callback, arguments);
-    };
-}
-
-// end of shims
-// beginning of real work
-
-/**
- * Creates fulfilled promises from non-thenables,
- * Passes Q promises through,
- * Coerces other thenables to Q promises.
- */
-function Q(value) {
-    return resolve(value);
-}
-
-/**
- * Performs a task in a future turn of the event loop.
- * @param {Function} task
- */
-Q.nextTick = nextTick;
-
-/**
- * Controls whether or not long stack traces will be on
- */
-Q.longStackSupport = false;
-
-/**
- * Constructs a {promise, resolve, reject} object.
- *
- * `resolve` is a callback to invoke with a more resolved value for the
- * promise. To fulfill the promise, invoke `resolve` with any value that is
- * not a thenable. To reject the promise, invoke `resolve` with a rejected
- * thenable, or invoke `reject` with the reason directly. To resolve the
- * promise to another thenable, thus putting it in the same state, invoke
- * `resolve` with that other thenable.
- */
-Q.defer = defer;
-function defer() {
-    // if "messages" is an "Array", that indicates that the promise has not yet
-    // been resolved.  If it is "undefined", it has been resolved.  Each
-    // element of the messages array is itself an array of complete arguments to
-    // forward to the resolved promise.  We coerce the resolution value to a
-    // promise using the `resolve` function because it handles both fully
-    // non-thenable values and other thenables gracefully.
-    var messages = [], progressListeners = [], resolvedPromise;
-
-    var deferred = object_create(defer.prototype);
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, operands) {
-        var args = array_slice(arguments);
-        if (messages) {
-            messages.push(args);
-            if (op === "when" && operands[1]) { // progress operand
-                progressListeners.push(operands[1]);
-            }
-        } else {
-            nextTick(function () {
-                resolvedPromise.promiseDispatch.apply(resolvedPromise, args);
-            });
-        }
-    };
-
-    // XXX deprecated
-    promise.valueOf = deprecate(function () {
-        if (messages) {
-            return promise;
-        }
-        var nearerValue = nearer(resolvedPromise);
-        if (isPromise(nearerValue)) {
-            resolvedPromise = nearerValue; // shorten chain
-        }
-        return nearerValue;
-    }, "valueOf", "inspect");
-
-    promise.inspect = function () {
-        if (!resolvedPromise) {
-            return { state: "pending" };
-        }
-        return resolvedPromise.inspect();
-    };
-
-    if (Q.longStackSupport && hasStacks) {
-        try {
-            throw new Error();
-        } catch (e) {
-            // NOTE: don't try to use `Error.captureStackTrace` or transfer the
-            // accessor around; that causes memory leaks as per GH-111. Just
-            // reify the stack trace as a string ASAP.
-            //
-            // At the same time, cut off the first line; it's always just
-            // "[object Promise]\n", as per the `toString`.
-            promise.stack = e.stack.substring(e.stack.indexOf("\n") + 1);
-        }
-    }
-
-    // NOTE: we do the checks for `resolvedPromise` in each method, instead of
-    // consolidating them into `become`, since otherwise we'd create new
-    // promises with the lines `become(whatever(value))`. See e.g. GH-252.
-
-    function become(newPromise) {
-        resolvedPromise = newPromise;
-        promise.source = newPromise;
-
-        array_reduce(messages, function (undefined, message) {
-            nextTick(function () {
-                newPromise.promiseDispatch.apply(newPromise, message);
-            });
-        }, void 0);
-
-        messages = void 0;
-        progressListeners = void 0;
-    }
-
-    deferred.promise = promise;
-    deferred.resolve = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(resolve(value));
-    };
-
-    deferred.fulfill = function (value) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(fulfill(value));
-    };
-    deferred.reject = function (reason) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        become(reject(reason));
-    };
-    deferred.notify = function (progress) {
-        if (resolvedPromise) {
-            return;
-        }
-
-        array_reduce(progressListeners, function (undefined, progressListener) {
-            nextTick(function () {
-                progressListener(progress);
-            });
-        }, void 0);
-    };
-
-    return deferred;
-}
-
-/**
- * Creates a Node-style callback that will resolve or reject the deferred
- * promise.
- * @returns a nodeback
- */
-defer.prototype.makeNodeResolver = function () {
-    var self = this;
-    return function (error, value) {
-        if (error) {
-            self.reject(error);
-        } else if (arguments.length > 2) {
-            self.resolve(array_slice(arguments, 1));
-        } else {
-            self.resolve(value);
-        }
-    };
-};
-
-/**
- * @param resolver {Function} a function that returns nothing and accepts
- * the resolve, reject, and notify functions for a deferred.
- * @returns a promise that may be resolved with the given resolve and reject
- * functions, or rejected by a thrown exception in resolver
- */
-Q.promise = promise;
-function promise(resolver) {
-    if (typeof resolver !== "function") {
-        throw new TypeError("resolver must be a function.");
-    }
-
-    var deferred = defer();
-    fcall(
-        resolver,
-        deferred.resolve,
-        deferred.reject,
-        deferred.notify
-    ).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Constructs a Promise with a promise descriptor object and optional fallback
- * function.  The descriptor contains methods like when(rejected), get(name),
- * set(name, value), post(name, args), and delete(name), which all
- * return either a value, a promise for a value, or a rejection.  The fallback
- * accepts the operation name, a resolver, and any further arguments that would
- * have been forwarded to the appropriate method above had a method been
- * provided with the proper name.  The API makes no guarantees about the nature
- * of the returned object, apart from that it is usable whereever promises are
- * bought and sold.
- */
-Q.makePromise = Promise;
-function Promise(descriptor, fallback, inspect) {
-    if (fallback === void 0) {
-        fallback = function (op) {
-            return reject(new Error(
-                "Promise does not support operation: " + op
-            ));
-        };
-    }
-    if (inspect === void 0) {
-        inspect = function () {
-            return {state: "unknown"};
-        };
-    }
-
-    var promise = object_create(Promise.prototype);
-
-    promise.promiseDispatch = function (resolve, op, args) {
-        var result;
-        try {
-            if (descriptor[op]) {
-                result = descriptor[op].apply(promise, args);
-            } else {
-                result = fallback.call(promise, op, args);
-            }
-        } catch (exception) {
-            result = reject(exception);
-        }
-        if (resolve) {
-            resolve(result);
-        }
-    };
-
-    promise.inspect = inspect;
-
-    // XXX deprecated `valueOf` and `exception` support
-    if (inspect) {
-        var inspected = inspect();
-        if (inspected.state === "rejected") {
-            promise.exception = inspected.reason;
-        }
-
-        promise.valueOf = deprecate(function () {
-            var inspected = inspect();
-            if (inspected.state === "pending" ||
-                inspected.state === "rejected") {
-                return promise;
-            }
-            return inspected.value;
-        });
-    }
-
-    return promise;
-}
-
-Promise.prototype.then = function (fulfilled, rejected, progressed) {
-    var self = this;
-    var deferred = defer();
-    var done = false;   // ensure the untrusted promise makes at most a
-                        // single call to one of the callbacks
-
-    function _fulfilled(value) {
-        try {
-            return typeof fulfilled === "function" ? fulfilled(value) : value;
-        } catch (exception) {
-            return reject(exception);
-        }
-    }
-
-    function _rejected(exception) {
-        if (typeof rejected === "function") {
-            makeStackTraceLong(exception, self);
-            try {
-                return rejected(exception);
-            } catch (newException) {
-                return reject(newException);
-            }
-        }
-        return reject(exception);
-    }
-
-    function _progressed(value) {
-        return typeof progressed === "function" ? progressed(value) : value;
-    }
-
-    nextTick(function () {
-        self.promiseDispatch(function (value) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_fulfilled(value));
-        }, "when", [function (exception) {
-            if (done) {
-                return;
-            }
-            done = true;
-
-            deferred.resolve(_rejected(exception));
-        }]);
-    });
-
-    // Progress propagator need to be attached in the current tick.
-    self.promiseDispatch(void 0, "when", [void 0, function (value) {
-        var newValue;
-        var threw = false;
-        try {
-            newValue = _progressed(value);
-        } catch (e) {
-            threw = true;
-            if (Q.onerror) {
-                Q.onerror(e);
-            } else {
-                throw e;
-            }
-        }
-
-        if (!threw) {
-            deferred.notify(newValue);
-        }
-    }]);
-
-    return deferred.promise;
-};
-
-Promise.prototype.thenResolve = function (value) {
-    return when(this, function () { return value; });
-};
-
-Promise.prototype.thenReject = function (reason) {
-    return when(this, function () { throw reason; });
-};
-
-// Chainable methods
-array_reduce(
-    [
-        "isFulfilled", "isRejected", "isPending",
-        "dispatch",
-        "when", "spread",
-        "get", "set", "del", "delete",
-        "post", "send", "mapply", "invoke", "mcall",
-        "keys",
-        "fapply", "fcall", "fbind",
-        "all", "allResolved",
-        "timeout", "delay",
-        "catch", "finally", "fail", "fin", "progress", "done",
-        "nfcall", "nfapply", "nfbind", "denodeify", "nbind",
-        "npost", "nsend", "nmapply", "ninvoke", "nmcall",
-        "nodeify"
-    ],
-    function (undefined, name) {
-        Promise.prototype[name] = function () {
-            return Q[name].apply(
-                Q,
-                [this].concat(array_slice(arguments))
-            );
-        };
-    },
-    void 0
-);
-
-Promise.prototype.toSource = function () {
-    return this.toString();
-};
-
-Promise.prototype.toString = function () {
-    return "[object Promise]";
-};
-
-/**
- * If an object is not a promise, it is as "near" as possible.
- * If a promise is rejected, it is as "near" as possible too.
- * If it’s a fulfilled promise, the fulfillment value is nearer.
- * If it’s a deferred promise and the deferred has been resolved, the
- * resolution is "nearer".
- * @param object
- * @returns most resolved (nearest) form of the object
- */
-
-// XXX should we re-do this?
-Q.nearer = nearer;
-function nearer(value) {
-    if (isPromise(value)) {
-        var inspected = value.inspect();
-        if (inspected.state === "fulfilled") {
-            return inspected.value;
-        }
-    }
-    return value;
-}
-
-/**
- * @returns whether the given object is a promise.
- * Otherwise it is a fulfilled value.
- */
-Q.isPromise = isPromise;
-function isPromise(object) {
-    return isObject(object) &&
-        typeof object.promiseDispatch === "function" &&
-        typeof object.inspect === "function";
-}
-
-Q.isPromiseAlike = isPromiseAlike;
-function isPromiseAlike(object) {
-    return isObject(object) && typeof object.then === "function";
-}
-
-/**
- * @returns whether the given object is a pending promise, meaning not
- * fulfilled or rejected.
- */
-Q.isPending = isPending;
-function isPending(object) {
-    return isPromise(object) && object.inspect().state === "pending";
-}
-
-/**
- * @returns whether the given object is a value or fulfilled
- * promise.
- */
-Q.isFulfilled = isFulfilled;
-function isFulfilled(object) {
-    return !isPromise(object) || object.inspect().state === "fulfilled";
-}
-
-/**
- * @returns whether the given object is a rejected promise.
- */
-Q.isRejected = isRejected;
-function isRejected(object) {
-    return isPromise(object) && object.inspect().state === "rejected";
-}
-
-//// BEGIN UNHANDLED REJECTION TRACKING
-
-// This promise library consumes exceptions thrown in handlers so they can be
-// handled by a subsequent promise.  The exceptions get added to this array when
-// they are created, and removed when they are handled.  Note that in ES6 or
-// shimmed environments, this would naturally be a `Set`.
-var unhandledReasons = [];
-var unhandledRejections = [];
-var unhandledReasonsDisplayed = false;
-var trackUnhandledRejections = true;
-function displayUnhandledReasons() {
-    if (
-        !unhandledReasonsDisplayed &&
-        typeof window !== "undefined" &&
-        !window.Touch &&
-        window.console
-    ) {
-        console.warn("[Q] Unhandled rejection reasons (should be empty):",
-                     unhandledReasons);
-    }
-
-    unhandledReasonsDisplayed = true;
-}
-
-function logUnhandledReasons() {
-    for (var i = 0; i < unhandledReasons.length; i++) {
-        var reason = unhandledReasons[i];
-        if (reason && typeof reason.stack !== "undefined") {
-            console.warn("Unhandled rejection reason:", reason.stack);
-        } else {
-            console.warn("Unhandled rejection reason (no stack):", reason);
-        }
-    }
-}
-
-function resetUnhandledRejections() {
-    unhandledReasons.length = 0;
-    unhandledRejections.length = 0;
-    unhandledReasonsDisplayed = false;
-
-    if (!trackUnhandledRejections) {
-        trackUnhandledRejections = true;
-
-        // Show unhandled rejection reasons if Node exits without handling an
-        // outstanding rejection.  (Note that Browserify presently produces a
-        // `process` global without the `EventEmitter` `on` method.)
-        if (typeof process !== "undefined" && process.on) {
-            process.on("exit", logUnhandledReasons);
-        }
-    }
-}
-
-function trackRejection(promise, reason) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    unhandledRejections.push(promise);
-    unhandledReasons.push(reason);
-    displayUnhandledReasons();
-}
-
-function untrackRejection(promise) {
-    if (!trackUnhandledRejections) {
-        return;
-    }
-
-    var at = array_indexOf(unhandledRejections, promise);
-    if (at !== -1) {
-        unhandledRejections.splice(at, 1);
-        unhandledReasons.splice(at, 1);
-    }
-}
-
-Q.resetUnhandledRejections = resetUnhandledRejections;
-
-Q.getUnhandledReasons = function () {
-    // Make a copy so that consumers can't interfere with our internal state.
-    return unhandledReasons.slice();
-};
-
-Q.stopUnhandledRejectionTracking = function () {
-    resetUnhandledRejections();
-    if (typeof process !== "undefined" && process.on) {
-        process.removeListener("exit", logUnhandledReasons);
-    }
-    trackUnhandledRejections = false;
-};
-
-resetUnhandledRejections();
-
-//// END UNHANDLED REJECTION TRACKING
-
-/**
- * Constructs a rejected promise.
- * @param reason value describing the failure
- */
-Q.reject = reject;
-function reject(reason) {
-    var rejection = Promise({
-        "when": function (rejected) {
-            // note that the error has been handled
-            if (rejected) {
-                untrackRejection(this);
-            }
-            return rejected ? rejected(reason) : this;
-        }
-    }, function fallback() {
-        return this;
-    }, function inspect() {
-        return { state: "rejected", reason: reason };
-    });
-
-    // Note that the reason has not been handled.
-    trackRejection(rejection, reason);
-
-    return rejection;
-}
-
-/**
- * Constructs a fulfilled promise for an immediate reference.
- * @param value immediate reference
- */
-Q.fulfill = fulfill;
-function fulfill(value) {
-    return Promise({
-        "when": function () {
-            return value;
-        },
-        "get": function (name) {
-            return value[name];
-        },
-        "set": function (name, rhs) {
-            value[name] = rhs;
-        },
-        "delete": function (name) {
-            delete value[name];
-        },
-        "post": function (name, args) {
-            // Mark Miller proposes that post with no name should apply a
-            // promised function.
-            if (name === null || name === void 0) {
-                return value.apply(void 0, args);
-            } else {
-                return value[name].apply(value, args);
-            }
-        },
-        "apply": function (thisP, args) {
-            return value.apply(thisP, args);
-        },
-        "keys": function () {
-            return object_keys(value);
-        }
-    }, void 0, function inspect() {
-        return { state: "fulfilled", value: value };
-    });
-}
-
-/**
- * Constructs a promise for an immediate reference, passes promises through, or
- * coerces promises from different systems.
- * @param value immediate reference or promise
- */
-Q.resolve = resolve;
-function resolve(value) {
-    // If the object is already a Promise, return it directly.  This enables
-    // the resolve function to both be used to created references from objects,
-    // but to tolerably coerce non-promises to promises.
-    if (isPromise(value)) {
-        return value;
-    }
-
-    // assimilate thenables
-    if (isPromiseAlike(value)) {
-        return coerce(value);
-    } else {
-        return fulfill(value);
-    }
-}
-
-/**
- * Converts thenables to Q promises.
- * @param promise thenable promise
- * @returns a Q promise
- */
-function coerce(promise) {
-    var deferred = defer();
-    nextTick(function () {
-        try {
-            promise.then(deferred.resolve, deferred.reject, deferred.notify);
-        } catch (exception) {
-            deferred.reject(exception);
-        }
-    });
-    return deferred.promise;
-}
-
-/**
- * Annotates an object such that it will never be
- * transferred away from this process over any promise
- * communication channel.
- * @param object
- * @returns promise a wrapping of that object that
- * additionally responds to the "isDef" message
- * without a rejection.
- */
-Q.master = master;
-function master(object) {
-    return Promise({
-        "isDef": function () {}
-    }, function fallback(op, args) {
-        return dispatch(object, op, args);
-    }, function () {
-        return resolve(object).inspect();
-    });
-}
-
-/**
- * Registers an observer on a promise.
- *
- * Guarantees:
- *
- * 1. that fulfilled and rejected will be called only once.
- * 2. that either the fulfilled callback or the rejected callback will be
- *    called, but not both.
- * 3. that fulfilled and rejected will not be called in this turn.
- *
- * @param value      promise or immediate reference to observe
- * @param fulfilled  function to be called with the fulfilled value
- * @param rejected   function to be called with the rejection exception
- * @param progressed function to be called on any progress notifications
- * @return promise for the return value from the invoked callback
- */
-Q.when = when;
-function when(value, fulfilled, rejected, progressed) {
-    return Q(value).then(fulfilled, rejected, progressed);
-}
-
-/**
- * Spreads the values of a promised array of arguments into the
- * fulfillment callback.
- * @param fulfilled callback that receives variadic arguments from the
- * promised array
- * @param rejected callback that receives the exception if the promise
- * is rejected.
- * @returns a promise for the return value or thrown exception of
- * either callback.
- */
-Q.spread = spread;
-function spread(promise, fulfilled, rejected) {
-    return when(promise, function (valuesOrPromises) {
-        return all(valuesOrPromises).then(function (values) {
-            return fulfilled.apply(void 0, values);
-        }, rejected);
-    }, rejected);
-}
-
-/**
- * The async function is a decorator for generator functions, turning
- * them into asynchronous generators.  Although generators are only part
- * of the newest ECMAScript 6 drafts, this code does not cause syntax
- * errors in older engines.  This code should continue to work and will
- * in fact improve over time as the language improves.
- *
- * ES6 generators are currently part of V8 version 3.19 with the
- * --harmony-generators runtime flag enabled.  SpiderMonkey has had them
- * for longer, but under an older Python-inspired form.  This function
- * works on both kinds of generators.
- *
- * Decorates a generator function such that:
- *  - it may yield promises
- *  - execution will continue when that promise is fulfilled
- *  - the value of the yield expression will be the fulfilled value
- *  - it returns a promise for the return value (when the generator
- *    stops iterating)
- *  - the decorated function returns a promise for the return value
- *    of the generator or the first rejected promise among those
- *    yielded.
- *  - if an error is thrown in the generator, it propagates through
- *    every following yield until it is caught, or until it escapes
- *    the generator function altogether, and is translated into a
- *    rejection for the promise returned by the decorated generator.
- */
-Q.async = async;
-function async(makeGenerator) {
-    return function () {
-        // when verb is "send", arg is a value
-        // when verb is "throw", arg is an exception
-        function continuer(verb, arg) {
-            var result;
-            if (hasES6Generators) {
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    return reject(exception);
-                }
-                if (result.done) {
-                    return result.value;
-                } else {
-                    return when(result.value, callback, errback);
-                }
-            } else {
-                // FIXME: Remove this case when SM does ES6 generators.
-                try {
-                    result = generator[verb](arg);
-                } catch (exception) {
-                    if (isStopIteration(exception)) {
-                        return exception.value;
-                    } else {
-                        return reject(exception);
-                    }
-                }
-                return when(result, callback, errback);
-            }
-        }
-        var generator = makeGenerator.apply(this, arguments);
-        var callback = continuer.bind(continuer, "send");
-        var errback = continuer.bind(continuer, "throw");
-        return callback();
-    };
-}
-
-/**
- * The spawn function is a small wrapper around async that immediately
- * calls the generator and also ends the promise chain, so that any
- * unhandled errors are thrown instead of forwarded to the error
- * handler. This is useful because it's extremely common to run
- * generators at the top-level to work with libraries.
- */
-Q.spawn = spawn;
-function spawn(makeGenerator) {
-    Q.done(Q.async(makeGenerator)());
-}
-
-// FIXME: Remove this interface once ES6 generators are in SpiderMonkey.
-/**
- * Throws a ReturnValue exception to stop an asynchronous generator.
- *
- * This interface is a stop-gap measure to support generator return
- * values in older Firefox/SpiderMonkey.  In browsers that support ES6
- * generators like Chromium 29, just use "return" in your generator
- * functions.
- *
- * @param value the return value for the surrounding generator
- * @throws ReturnValue exception with the value.
- * @example
- * // ES6 style
- * Q.async(function* () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      return foo + bar;
- * })
- * // Older SpiderMonkey style
- * Q.async(function () {
- *      var foo = yield getFooPromise();
- *      var bar = yield getBarPromise();
- *      Q.return(foo + bar);
- * })
- */
-Q["return"] = _return;
-function _return(value) {
-    throw new QReturnValue(value);
-}
-
-/**
- * The promised function decorator ensures that any promise arguments
- * are settled and passed as values (`this` is also settled and passed
- * as a value).  It will also ensure that the result of a function is
- * always a promise.
- *
- * @example
- * var add = Q.promised(function (a, b) {
- *     return a + b;
- * });
- * add(Q.resolve(a), Q.resolve(B));
- *
- * @param {function} callback The function to decorate
- * @returns {function} a function that has been decorated.
- */
-Q.promised = promised;
-function promised(callback) {
-    return function () {
-        return spread([this, all(arguments)], function (self, args) {
-            return callback.apply(self, args);
-        });
-    };
-}
-
-/**
- * sends a message to a value in a future turn
- * @param object* the recipient
- * @param op the name of the message operation, e.g., "when",
- * @param args further arguments to be forwarded to the operation
- * @returns result {Promise} a promise for the result of the operation
- */
-Q.dispatch = dispatch;
-function dispatch(object, op, args) {
-    var deferred = defer();
-    nextTick(function () {
-        resolve(object).promiseDispatch(deferred.resolve, op, args);
-    });
-    return deferred.promise;
-}
-
-/**
- * Constructs a promise method that can be used to safely observe resolution of
- * a promise for an arbitrarily named method like "propfind" in a future turn.
- *
- * "dispatcher" constructs methods like "get(promise, name)" and "set(promise)".
- */
-Q.dispatcher = dispatcher;
-function dispatcher(op) {
-    return function (object) {
-        var args = array_slice(arguments, 1);
-        return dispatch(object, op, args);
-    };
-}
-
-/**
- * Gets the value of a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to get
- * @return promise for the property value
- */
-Q.get = dispatcher("get");
-
-/**
- * Sets the value of a property in a future turn.
- * @param object    promise or immediate reference for object object
- * @param name      name of property to set
- * @param value     new value of property
- * @return promise for the return value
- */
-Q.set = dispatcher("set");
-
-/**
- * Deletes a property in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of property to delete
- * @return promise for the return value
- */
-Q["delete"] = // XXX experimental
-Q.del = dispatcher("delete");
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param value     a value to post, typically an array of
- *                  invocation arguments for promises that
- *                  are ultimately backed with `resolve` values,
- *                  as opposed to those backed with URLs
- *                  wherein the posted value can be any
- *                  JSON serializable object.
- * @return promise for the return value
- */
-// bound locally because it is used by other methods
-var post = Q.post = dispatcher("post");
-Q.mapply = post; // experimental
-
-/**
- * Invokes a method in a future turn.
- * @param object    promise or immediate reference for target object
- * @param name      name of method to invoke
- * @param ...args   array of invocation arguments
- * @return promise for the return value
- */
-Q.send = send;
-Q.invoke = send; // synonyms
-Q.mcall = send; // experimental
-function send(value, name) {
-    var args = array_slice(arguments, 2);
-    return post(value, name, args);
-}
-
-/**
- * Applies the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param args      array of application arguments
- */
-Q.fapply = fapply;
-function fapply(value, args) {
-    return dispatch(value, "apply", [void 0, args]);
-}
-
-/**
- * Calls the promised function in a future turn.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q["try"] = fcall; // XXX experimental
-Q.fcall = fcall;
-function fcall(value) {
-    var args = array_slice(arguments, 1);
-    return fapply(value, args);
-}
-
-/**
- * Binds the promised function, transforming return values into a fulfilled
- * promise and thrown errors into a rejected one.
- * @param object    promise or immediate reference for target function
- * @param ...args   array of application arguments
- */
-Q.fbind = fbind;
-function fbind(value) {
-    var args = array_slice(arguments, 1);
-    return function fbound() {
-        var allArgs = args.concat(array_slice(arguments));
-        return dispatch(value, "apply", [this, allArgs]);
-    };
-}
-
-/**
- * Requests the names of the owned properties of a promised
- * object in a future turn.
- * @param object    promise or immediate reference for target object
- * @return promise for the keys of the eventually settled object
- */
-Q.keys = dispatcher("keys");
-
-/**
- * Turns an array of promises into a promise for an array.  If any of
- * the promises gets rejected, the whole array is rejected immediately.
- * @param {Array*} an array (or promise for an array) of values (or
- * promises for values)
- * @returns a promise for an array of the corresponding values
- */
-// By Mark Miller
-// http://wiki.ecmascript.org/doku.php?id=strawman:concurrency&rev=1308776521#allfulfilled
-Q.all = all;
-function all(promises) {
-    return when(promises, function (promises) {
-        var countDown = 0;
-        var deferred = defer();
-        array_reduce(promises, function (undefined, promise, index) {
-            var snapshot;
-            if (
-                isPromise(promise) &&
-                (snapshot = promise.inspect()).state === "fulfilled"
-            ) {
-                promises[index] = snapshot.value;
-            } else {
-                ++countDown;
-                when(promise, function (value) {
-                    promises[index] = value;
-                    if (--countDown === 0) {
-                        deferred.resolve(promises);
-                    }
-                }, deferred.reject);
-            }
-        }, void 0);
-        if (countDown === 0) {
-            deferred.resolve(promises);
-        }
-        return deferred.promise;
-    });
-}
-
-/**
- * Waits for all promises to be settled, either fulfilled or
- * rejected.  This is distinct from `all` since that would stop
- * waiting at the first rejection.  The promise returned by
- * `allResolved` will never be rejected.
- * @param promises a promise for an array (or an array) of promises
- * (or values)
- * @return a promise for an array of promises
- */
-Q.allResolved = deprecate(allResolved, "allResolved", "allSettled");
-function allResolved(promises) {
-    return when(promises, function (promises) {
-        promises = array_map(promises, resolve);
-        return when(all(array_map(promises, function (promise) {
-            return when(promise, noop, noop);
-        })), function () {
-            return promises;
-        });
-    });
-}
-
-Q.allSettled = allSettled;
-function allSettled(values) {
-    return when(values, function (values) {
-        return all(array_map(values, function (value, i) {
-            return when(
-                value,
-                function (fulfillmentValue) {
-                    values[i] = { state: "fulfilled", value: fulfillmentValue };
-                    return values[i];
-                },
-                function (reason) {
-                    values[i] = { state: "rejected", reason: reason };
-                    return values[i];
-                }
-            );
-        })).thenResolve(values);
-    });
-}
-
-/**
- * Captures the failure of a promise, giving an oportunity to recover
- * with a callback.  If the given promise is fulfilled, the returned
- * promise is fulfilled.
- * @param {Any*} promise for something
- * @param {Function} callback to fulfill the returned promise if the
- * given promise is rejected
- * @returns a promise for the return value of the callback
- */
-Q["catch"] = // XXX experimental
-Q.fail = fail;
-function fail(promise, rejected) {
-    return when(promise, void 0, rejected);
-}
-
-/**
- * Attaches a listener that can respond to progress notifications from a
- * promise's originating deferred. This listener receives the exact arguments
- * passed to ``deferred.notify``.
- * @param {Any*} promise for something
- * @param {Function} callback to receive any progress notifications
- * @returns the given promise, unchanged
- */
-Q.progress = progress;
-function progress(promise, progressed) {
-    return when(promise, void 0, void 0, progressed);
-}
-
-/**
- * Provides an opportunity to observe the settling of a promise,
- * regardless of whether the promise is fulfilled or rejected.  Forwards
- * the resolution to the returned promise when the callback is done.
- * The callback can return a promise to defer completion.
- * @param {Any*} promise
- * @param {Function} callback to observe the resolution of the given
- * promise, takes no arguments.
- * @returns a promise for the resolution of the given promise when
- * ``fin`` is done.
- */
-Q["finally"] = // XXX experimental
-Q.fin = fin;
-function fin(promise, callback) {
-    return when(promise, function (value) {
-        return when(callback(), function () {
-            return value;
-        });
-    }, function (exception) {
-        return when(callback(), function () {
-            return reject(exception);
-        });
-    });
-}
-
-/**
- * Terminates a chain of promises, forcing rejections to be
- * thrown as exceptions.
- * @param {Any*} promise at the end of a chain of promises
- * @returns nothing
- */
-Q.done = done;
-function done(promise, fulfilled, rejected, progress) {
-    var onUnhandledError = function (error) {
-        // forward to a future turn so that ``when``
-        // does not catch it and turn it into a rejection.
-        nextTick(function () {
-            makeStackTraceLong(error, promise);
-
-            if (Q.onerror) {
-                Q.onerror(error);
-            } else {
-                throw error;
-            }
-        });
-    };
-
-    // Avoid unnecessary `nextTick`ing via an unnecessary `when`.
-    var promiseToHandle = fulfilled || rejected || progress ?
-        when(promise, fulfilled, rejected, progress) :
-        promise;
-
-    if (typeof process === "object" && process && process.domain) {
-        onUnhandledError = process.domain.bind(onUnhandledError);
-    }
-    fail(promiseToHandle, onUnhandledError);
-}
-
-/**
- * Causes a promise to be rejected if it does not get fulfilled before
- * some milliseconds time out.
- * @param {Any*} promise
- * @param {Number} milliseconds timeout
- * @param {String} custom error message (optional)
- * @returns a promise for the resolution of the given promise if it is
- * fulfilled before the timeout, otherwise rejected.
- */
-Q.timeout = timeout;
-function timeout(promise, ms, msg) {
-    var deferred = defer();
-    var timeoutId = setTimeout(function () {
-        deferred.reject(new Error(msg || "Timed out after " + ms + " ms"));
-    }, ms);
-
-    when(promise, function (value) {
-        clearTimeout(timeoutId);
-        deferred.resolve(value);
-    }, function (exception) {
-        clearTimeout(timeoutId);
-        deferred.reject(exception);
-    }, deferred.notify);
-
-    return deferred.promise;
-}
-
-/**
- * Returns a promise for the given value (or promised value) after some
- * milliseconds.
- * @param {Any*} promise
- * @param {Number} milliseconds
- * @returns a promise for the resolution of the given promise after some
- * time has elapsed.
- */
-Q.delay = delay;
-function delay(promise, timeout) {
-    if (timeout === void 0) {
-        timeout = promise;
-        promise = void 0;
-    }
-
-    var deferred = defer();
-
-    when(promise, undefined, undefined, deferred.notify);
-    setTimeout(function () {
-        deferred.resolve(promise);
-    }, timeout);
-
-    return deferred.promise;
-}
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided as an array, and returns a promise.
- *
- *      Q.nfapply(FS.readFile, [__filename])
- *      .then(function (content) {
- *      })
- *
- */
-Q.nfapply = nfapply;
-function nfapply(callback, args) {
-    var nodeArgs = array_slice(args);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-
-    fapply(callback, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Passes a continuation to a Node function, which is called with the given
- * arguments provided individually, and returns a promise.
- *
- *      Q.nfcall(FS.readFile, __filename)
- *      .then(function (content) {
- *      })
- *
- */
-Q.nfcall = nfcall;
-function nfcall(callback/*, ...args */) {
-    var nodeArgs = array_slice(arguments, 1);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-
-    fapply(callback, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Wraps a NodeJS continuation passing function and returns an equivalent
- * version that returns a promise.
- *
- *      Q.nfbind(FS.readFile, __filename)("utf-8")
- *      .then(console.log)
- *      .done()
- *
- */
-Q.nfbind = nfbind;
-Q.denodeify = Q.nfbind; // synonyms
-function nfbind(callback/*, ...args */) {
-    var baseArgs = array_slice(arguments, 1);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-
-        fapply(callback, nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-Q.nbind = nbind;
-function nbind(callback, thisArg /*, ... args*/) {
-    var baseArgs = array_slice(arguments, 2);
-    return function () {
-        var nodeArgs = baseArgs.concat(array_slice(arguments));
-        var deferred = defer();
-        nodeArgs.push(deferred.makeNodeResolver());
-
-        function bound() {
-            return callback.apply(thisArg, arguments);
-        }
-
-        fapply(bound, nodeArgs).fail(deferred.reject);
-        return deferred.promise;
-    };
-}
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback with a given array of arguments, plus a provided callback.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param {Array} args arguments to pass to the method; the callback
- * will be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.npost = npost;
-Q.nmapply = npost; // synonyms
-function npost(object, name, args) {
-    var nodeArgs = array_slice(args || []);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-
-    post(object, name, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-/**
- * Calls a method of a Node-style object that accepts a Node-style
- * callback, forwarding the given variadic arguments, plus a provided
- * callback argument.
- * @param object an object that has the named method
- * @param {String} name name of the method of object
- * @param ...args arguments to pass to the method; the callback will
- * be provided by Q and appended to these arguments.
- * @returns a promise for the value or error
- */
-Q.nsend = nsend;
-Q.ninvoke = Q.nsend; // synonyms
-Q.nmcall = Q.nsend; // synonyms
-function nsend(object, name /*, ...args*/) {
-    var nodeArgs = array_slice(arguments, 2);
-    var deferred = defer();
-    nodeArgs.push(deferred.makeNodeResolver());
-    post(object, name, nodeArgs).fail(deferred.reject);
-    return deferred.promise;
-}
-
-Q.nodeify = nodeify;
-function nodeify(promise, nodeback) {
-    if (nodeback) {
-        promise.then(function (value) {
-            nextTick(function () {
-                nodeback(null, value);
-            });
-        }, function (error) {
-            nextTick(function () {
-                nodeback(error);
-            });
-        });
-    } else {
-        return promise;
-    }
-}
-
-// All code before this point will be filtered from stack traces.
-var qEndingLine = captureLine();
-
-return Q;
-
-});
-
-})(require("__browserify_process"))
-},{"__browserify_process":102}],93:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":75,"../../../numericals/ChartView.js":77,"backbone.marionette":46,"underscore":8}],100:[function(require,module,exports){
 var _ = require('underscore'),
   NotesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -24743,7 +26112,37 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":104,"./View.js":103,"underscore":8}],90:[function(require,module,exports){
+},{"../common/Model.js":111,"./View.js":110,"underscore":8}],98:[function(require,module,exports){
+var _ = require('underscore'),
+  TweetView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = TweetView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.modelContent = {
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        width: this.width,
+        height: this.height,
+        eventsNbr: _.size(this.events)
+      };
+    }
+  }
+);
+},{"../common/Model.js":111,"./View.js":112,"underscore":8}],103:[function(require,module,exports){
 var _ = require('underscore'),
   PositionsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -24789,36 +26188,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":104,"./View.js":105,"underscore":8}],94:[function(require,module,exports){
-var _ = require('underscore'),
-  PicturesView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = PicturesView;
-    this.eventDisplayed = null;
-    this.modelContent = {};
-  },
-  {
-    beforeRefreshModelView: function () {
-      this.modelContent = {
-        content: this.eventDisplayed.content,
-        description: this.eventDisplayed.description,
-        id: this.eventDisplayed.id,
-        modified: this.eventDisplayed.modified,
-        streamId: this.eventDisplayed.streamId,
-        tags: this.eventDisplayed.tags,
-        time: this.eventDisplayed.time,
-        type: this.eventDisplayed.type,
-        picUrl: this.eventDisplayed.attachmentsUrl,
-        eventsNbr: _.size(this.events)
-      };
-    }
-  }
-);
-},{"../common/Model.js":104,"./View.js":106,"underscore":8}],95:[function(require,module,exports){
+},{"../common/Model.js":111,"./View.js":113,"underscore":8}],101:[function(require,module,exports){
 var _ = require('underscore'),
   GenericsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -24846,7 +26216,36 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":104,"./View.js":107,"underscore":8}],92:[function(require,module,exports){
+},{"../common/Model.js":111,"./View.js":114,"underscore":8}],104:[function(require,module,exports){
+var _ = require('underscore'),
+  PicturesView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = PicturesView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.modelContent = {
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        picUrl: this.eventDisplayed.getPicturePreview(this.width, this.height),
+        eventsNbr: _.size(this.events)
+      };
+    }
+  }
+);
+},{"../common/Model.js":111,"./View.js":115,"underscore":8}],102:[function(require,module,exports){
 (function(){/* global window, $ */
 
 var _ = require('underscore'),
@@ -24854,7 +26253,8 @@ var _ = require('underscore'),
   ChartView = require('./ChartView.js'),
   ChartModel = require('./ChartModel.js'),
   TsCollection = require('./TimeSeriesCollection.js'),
-  TsModel = require('./TimeSeriesModel.js');
+  TsModel = require('./TimeSeriesModel.js'),
+  Settings = require('./utils/ChartSettings.js');
 
 
 var NumericalsPlugin = module.exports = function (events, params, node) {
@@ -24982,7 +26382,6 @@ NumericalsPlugin.prototype.close = function () {
   this.modelView = null;
   this.eventDisplayed = null;
   this.needToRender = false;
-
 };
 
 
@@ -25021,38 +26420,50 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       eventsModel = matching[0];
       eventsModel.get('events').push(eventsToAdd[i]);
     } else {
+      var s = new Settings(eventsToAdd[i].stream,
+        eventsToAdd[i].type, this.eventsNode.parent.stream.virtual);
       eventsModel = new TsModel({
         events: [eventsToAdd[i]],
         connectionId: eventsToAdd[i].connection.id,
         streamId: eventsToAdd[i].streamId,
         streamName: eventsToAdd[i].stream.name,
         type: eventsToAdd[i].type,
-        category: 'any'
+        category: 'any',
+        virtual: this.eventsNode.parent.stream.virtual,
+        color: s.get('color'),
+        style: s.get('style'),
+        transform: s.get('transform'),
+        interval: s.get('interval')
       });
       this.seriesCollection.add(eventsModel);
     }
-
   }
-/*
+
   // Process those to remove
   for (i = 0; i < eventsToRem.length; ++i) {
       // find corresponding model
     matching = this.seriesCollection.where({
-      connectionId: eventsToAdd[i].connection.id,
-      streamId: eventsToAdd[i].streamId,
-      type: eventsToAdd[i].type
+      connectionId: eventsToRem[i].connection.id,
+      streamId: eventsToRem[i].streamId,
+      type: eventsToRem[i].type
     });
     if (matching && matching.length !== 0) {
       eventsModel = matching[0];
       events = eventsModel.get('events');
+      var events_new = [];
       for (eIter = 0; eIter < events.length; ++eIter) {
-        if (events[eIter].id === eventsToRem[i].id) {
-          delete events[eIter];
+        if (events[eIter].id !== eventsToRem[i].id) {
+          events_new.push(events[eIter]);
         }
+      }
+      if (events_new.length === 0) {
+        this.seriesCollection.remove(eventsModel);
+      } else {
+        eventsModel.set('events', events_new);
       }
     }
   }
-  */
+
 
   // Process those to change
   for (i = 0; i < eventsToCha.length; ++i) {
@@ -25112,6 +26523,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         this.detailedView.addEvents(this.events);
         this.detailedView.show();
         this.detailedView.highlightDate(this.highlightedTime);
+        this.detailedView.virtual = this.eventsNode.parent.stream.virtual;
       }.bind(this));
     }
   } else if (this.view) {
@@ -25186,591 +26598,7 @@ NumericalsPlugin.prototype.resize = function () {
 };
 
 })()
-},{"../detailed/Controller.js":21,"./ChartModel.js":71,"./ChartView.js":72,"./TimeSeriesCollection.js":69,"./TimeSeriesModel.js":70,"underscore":8}],96:[function(require,module,exports){
-var _ = require('underscore'),
-  TweetView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = TweetView;
-    this.eventDisplayed = null;
-    this.modelContent = {};
-  },
-  {
-    beforeRefreshModelView: function () {
-      this.modelContent = {
-        content: this.eventDisplayed.content,
-        description: this.eventDisplayed.description,
-        id: this.eventDisplayed.id,
-        modified: this.eventDisplayed.modified,
-        streamId: this.eventDisplayed.streamId,
-        tags: this.eventDisplayed.tags,
-        time: this.eventDisplayed.time,
-        type: this.eventDisplayed.type,
-        width: this.width,
-        height: this.height,
-        eventsNbr: _.size(this.events)
-      };
-    }
-  }
-);
-},{"../common/Model.js":104,"./View.js":108,"underscore":8}],103:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#notesView',
-  container: null,
-  animation: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node singleNote ');
-
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
-    this.$el.attr('id', this.model.get('id'));
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      this.$('.aggregated-nbr-events').bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":73}],104:[function(require,module,exports){
-(function(){/* global $*/
-var _ = require('underscore'),
-  Backbone = require('backbone');
-var Model = module.exports = function (events, params) {
-  this.verbose = false;
-  this.events = {};
-  this.modelContent = {};
-  _.each(events, function (event) {
-    this.events[event.id] = event;
-  }, this);
-  this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.view = null;
-  this.eventDisplayed = null;
-  this.container = null;
-  this.needToRender = null;
-  this.typeView = null;
-  this.animationIn = null;
-  this.animationOut = null;
-  this.hasDetailedView = false;
-  _.extend(this, params);
-  this.debounceRefresh = _.debounce(function () {
-    this._refreshModelView();
-  }, 100);
-  this.debounceRefresh();
-};
-
-Model.implement = function (constructor, members) {
-  var newImplementation = constructor;
-  if (typeof Object.create === 'undefined') {
-    Object.create = function (prototype) {
-      function C() { }
-      C.prototype = prototype;
-      return new C();
-    };
-  }
-  newImplementation.prototype = Object.create(this.prototype);
-  _.extend(newImplementation.prototype, members);
-  newImplementation.implement = this.implement;
-  return newImplementation;
-};
-
-_.extend(Model.prototype, {
-  eventEnter: function (event) {
-    if (this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventEnter: this eventId already exist:', event.id,
-        'current:', this.events[event.id], 'new:', event);
-    }
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.addEventsDetailedView(event);
-    }
-
-    this.debounceRefresh();
-  },
-  eventLeave: function (event) {
-    if (!this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventLeave: this eventId dont exist:', event.id,
-        'event:', event);
-    }
-    delete this.events[event.id];
-    if (this.hasDetailedView) {
-      this.treeMap.deleteEventDetailedView(event);
-    }
-    if (_.size(this.events) !== 0) {
-      this.debounceRefresh();
-    }
-  },
-  eventChange: function (event) {
-    if (!this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventChange: this eventId dont exist:', event.id,
-        'event:', event);
-    }
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.updateEventDetailedView(event);
-    }
-    this.debounceRefresh();
-  },
-  OnDateHighlightedChange: function (time) {
-    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
-    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
-    this.highlightedTime = time;
-    if (this.hasDetailedView) {
-      this.treeMap.highlightDateDetailedView(this.highlightedTime);
-    }
-    this.debounceRefresh();
-  },
-  render: function (container) {
-    this.container = container;
-    if (this.view) {
-      this.view.renderView(this.container, this.animationIn);
-    } else {
-      this.needToRender = true;
-    }
-  },
-  refresh: function (newParams) {
-    _.extend(this, newParams);
-    this.debounceRefresh();
-  },
-  close: function () {
-    if (this.view) {
-      this.view.close(this.animationOut);
-    }
-    this.view = null;
-    this.events = null;
-    this.highlightedTime = Infinity;
-    this.modelView = null;
-    this.eventDisplayed = null;
-  },
-  beforeRefreshModelView: function () {},
-  afterRefreshModelView: function () {},
-  _refreshModelView: function () {
-    this._findEventToDisplay();
-    this.beforeRefreshModelView();
-    if (!this.modelView) {
-      var BasicModel = Backbone.Model.extend({});
-      this.modelView = new BasicModel({});
-    }
-
-    // Update the model
-    _.each(_.keys(this.modelContent), function (key) {
-      this.modelView.set(key, this.modelContent[key]);
-    }, this);
-
-    if (!this.view) {
-      if (typeof(document) !== 'undefined')  {
-        this.view = new this.typeView({model: this.modelView});
-        this.view.on('nodeClicked', function () {
-          if (!this.hasDetailedView) {
-            this.hasDetailedView = true;
-            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-              this.treeMap.closeDetailedView();
-              this.hasDetailedView = false;
-            }.bind(this));
-            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-          }
-        }.bind(this));
-      }
-    }
-    this.view.off('nodeClicked');
-    this.view.on('nodeClicked', function () {
-      if (!this.hasDetailedView) {
-        this.hasDetailedView = true;
-        var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-          this.treeMap.closeDetailedView();
-          this.hasDetailedView = false;
-        }.bind(this));
-        this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
-      }
-    }.bind(this));
-    if (this.needToRender) {
-      this.view.renderView(this.container, this.animationIn);
-      this.needToRender = false;
-    }
-    this.afterRefreshModelView();
-  },
-
-  _findEventToDisplay: function () {
-    if (this.highlightedTime === Infinity) {
-      var oldestTime = 0;
-      _.each(this.events, function (event) {
-        if (event.time >= oldestTime) {
-          oldestTime = event.time;
-          this.eventDisplayed = event;
-        }
-      }, this);
-
-    } else {
-      var timeDiff = Infinity, debounceRefresh = 0;
-      _.each(this.events, function (event) {
-        debounceRefresh = Math.abs(event.time - this.highlightedTime);
-        if (debounceRefresh <= timeDiff) {
-          timeDiff = debounceRefresh;
-          this.eventDisplayed = event;
-        }
-      }, this);
-    }
-  }
-
-});
-})()
-},{"backbone":19,"underscore":8}],106:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#picturesView',
-  container: null,
-  animation: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
-    this.$el.attr('id', this.model.get('id'));
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      this.$el.css(
-        {'background': 'url(' + this.model.get('picUrl') + ') no-repeat center center',
-          '-webkit-background-size': 'cover',
-          '-moz-background-size': 'cover',
-          '-o-background-size': 'cover',
-          'background-size': 'cover'
-        });
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      this.$('.aggregated-nbr-events').bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":73}],105:[function(require,module,exports){
-(function(){/* global document, $ */
-var  Marionette = require('backbone.marionette'),
-  MapLoader = require('google-maps'),
-  _ = require('underscore'),
-  MarkerClusterer = require('./utility/markerclusterer.js');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#positionsView',
-  mapLoaded: false,
-  mapOtions : {},
-  bounds: null,
-  paths: {},
-  gmaps: null,
-  map: null,
-  container: null,
-  markers: null,
-  highlightedMarker: null,
-  highlightedTime: Infinity,
-  positions: null,
-  highlightedPosition: null,
-  triggers: {
-    'click .aggregated-nbr-events': 'nodeClicked'
-  },
-  initialize: function () {
-
-    this.positions = this.model.get('positions');
-    MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
-    MapLoader.load().then(function (google) {
-      this.gmaps = google.maps;
-      if (this.waitingForInitMap) {
-        this.waitingForInitMap = false;
-        this._initMap();
-      }
-      if (this.waitingForDrawingMap) {
-        this.waitingForDrawingMap = false;
-        this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
-      }
-    }.bind(this));
-
-    this.listenTo(this.model, 'change:positions', this.changePos);
-    this.listenTo(this.model, 'change:posWidth', this.resize);
-    this.listenTo(this.model, 'change:posHeight', this.resize);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-  },
-  resize: function () {
-    if (this.map && this.bounds) {
-      var timer = setInterval(function () {
-        this.gmaps.event.trigger(this.map, 'resize');
-      }.bind(this), 100);
-      setTimeout(function () {
-        clearInterval(timer);
-        this.map.fitBounds(this.bounds);
-      }.bind(this), 1000);
-    }
-  },
-  changePos: function () {
-    this.positions = this.model.get('positions');
-    this.model.set('eventsNbr', this.positions.length);
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.render();
-  },
-  onBeforeRender: function () {
-    this._initMap();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).append(this.el);
-    }
-    this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
-  },
-  _initMap: function () {
-    if (!this.gmaps) {
-      this.waitingForInitMap = true;
-      return;
-    }
-    var geopoint;
-    this.markers = [];
-    this.paths = {};
-    this.mapOptions =  {
-      zoom: 8,
-      zoomControl: false,
-      mapTypeControl: false,
-      scaleControl: false,
-      streetViewControl: false,
-      overviewMapControl: false,
-      scrollwheel: true,
-      mapTypeId: this.gmaps.MapTypeId.ROADMAP
-    };
-    _.each(this.positions, function (p) {
-      geopoint = new this.gmaps.LatLng(p.content.latitude, p.content.longitude);
-      this.markers.push(new this.gmaps.Marker({
-        position: geopoint,
-        visible: false
-      }));
-      if (!this.bounds) {
-        this.bounds = new this.gmaps.LatLngBounds(geopoint, geopoint);
-        this.mapOptions.center = geopoint;
-      } else {
-        this.bounds.extend(geopoint);
-      }
-      if (!this.paths[p.streamId]) { this.paths[p.streamId] = []; }
-      this.paths[p.streamId].push(geopoint);
-    }, this);
-  },
-  _drawMap: function ($container) {
-    if (!$container) {
-      return;
-    }
-    if (!this.gmaps) {
-      this.waitingForDrawingMap = true;
-      return;
-    }
-    this.map = new this.gmaps.Map($container, this.mapOptions);
-    this.gmaps.event.trigger(this.map, 'resize');
-    this.map.fitBounds(this.bounds);
-    var gPath, gMarker;
-    _.each(this.paths, function (path) {
-      if (path.length > 1) {
-        gPath = new this.gmaps.Polyline({
-          path: path,
-          strokeColor: this._generateRandomColor(),
-          strokeOpacity: 1.0,
-          strokeWeight: 6
-        });
-        gPath.setMap(this.map);
-      } else {
-        gMarker = new this.gmaps.Marker({
-          position: path[0]
-        });
-        gMarker.setMap(this.map);
-      }
-    }, this);
-    gMarker = new MarkerClusterer(this.map, this.markers);
-  },
-  _generateRandomColor: function () {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.round(Math.random() * 15)];
-    }
-    return color;
-  },
-  onDateHighLighted : function (time) {
-    this.highlightedTime = time;
-    var positionToShow = null;
-
-    var timeDiff = Infinity, temp = 0, highlightTime = this.highlightedTime;
-    _.each(this.positions, function (position) {
-      temp = Math.abs(position.time - highlightTime);
-      if (temp <= timeDiff) {
-        timeDiff = temp;
-        positionToShow = position;
-      }
-    });
-    if (this.highlightedPosition !== positionToShow) {
-      if (this.highlightedMarker && this.map) {
-        this.highlightedMarker.setMap(null);
-      }
-
-      var geopoint =  new this.gmaps.LatLng(positionToShow.content.latitude,
-        positionToShow.content.longitude);
-      this.highlightedMarker = new this.gmaps.Marker({
-        position: geopoint
-      });
-      if (this.map) {
-        this.highlightedMarker.setMap(this.map);
-        this.map.panTo(geopoint);
-      }
-      this.highlightedPosition = positionToShow;
-    }
-    return positionToShow;
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"./utility/markerclusterer.js":97,"backbone.marionette":73,"google-maps":87,"underscore":8}],107:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#genericsView',
-  container: null,
-  animation: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      this.$('.aggregated-nbr-events').bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":73}],108:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#tweetView',
-  container: null,
-  animation: null,
-  templateHelpers: {
-    getUrl: function () {
-      var id = this.content.id,
-      screenName = this.content['screen-name'],
-      date = new Date(this.time * 1000);
-      return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
-        'data-datetime="' + date.toISOString() + '">' + date.toLocaleDateString() + '</a>';
-    }
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change:content', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      this.$('.aggregated-nbr-events').bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":73}],98:[function(require,module,exports){
+},{"../detailed/Controller.js":18,"./ChartModel.js":75,"./ChartView.js":77,"./TimeSeriesCollection.js":78,"./TimeSeriesModel.js":79,"./utils/ChartSettings.js":34,"underscore":8}],107:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -27344,7 +28172,573 @@ module.exports = Marionette.ItemView.extend({
 }).call(this);
 
 })()
-},{"underscore":8}],99:[function(require,module,exports){
+},{"underscore":8}],110:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#notesView',
+  container: null,
+  animation: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node singleNote ');
+
+  },
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'tada';
+    this.$el.attr('id', this.model.get('id'));
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":46}],111:[function(require,module,exports){
+(function(){/* global $*/
+var _ = require('underscore'),
+  Backbone = require('backbone');
+var Model = module.exports = function (events, params) {
+  this.verbose = false;
+  this.events = {};
+  this.modelContent = {};
+  _.each(events, function (event) {
+    this.events[event.id] = event;
+  }, this);
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.view = null;
+  this.eventDisplayed = null;
+  this.container = null;
+  this.needToRender = null;
+  this.typeView = null;
+  this.animationIn = null;
+  this.animationOut = null;
+  this.hasDetailedView = false;
+  _.extend(this, params);
+  this.debounceRefresh = _.debounce(function () {
+    if (!_.isEmpty(this.events)) {
+      this._refreshModelView();
+    }
+  }, 100);
+  this.debounceRefresh();
+};
+
+Model.implement = function (constructor, members) {
+  var newImplementation = constructor;
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+_.extend(Model.prototype, {
+  eventEnter: function (event) {
+    if (this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventEnter: this eventId already exist:', event.id,
+        'current:', this.events[event.id], 'new:', event);
+    }
+    this.events[event.id] = event;
+    if (this.hasDetailedView) {
+      this.treeMap.addEventsDetailedView(event);
+    }
+
+    this.debounceRefresh();
+  },
+  eventLeave: function (event) {
+    if (!this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventLeave: this eventId dont exist:', event.id,
+        'event:', event);
+    }
+    delete this.events[event.id];
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
+    }
+    //if (!_.isEmpty(this.events)) {
+    this.debounceRefresh();
+    //}
+  },
+  eventChange: function (event) {
+    if (!this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventChange: this eventId dont exist:', event.id,
+        'event:', event);
+    }
+    this.events[event.id] = event;
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
+    }
+    this.debounceRefresh();
+  },
+  OnDateHighlightedChange: function (time) {
+    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
+    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
+    this.highlightedTime = time;
+    if (this.hasDetailedView) {
+      this.treeMap.highlightDateDetailedView(this.highlightedTime);
+    }
+    this.debounceRefresh();
+  },
+  render: function (container) {
+    this.container = container;
+    if (this.view) {
+      this.view.renderView(this.container, this.animationIn);
+    } else {
+      this.needToRender = true;
+    }
+  },
+  refresh: function (newParams) {
+    _.extend(this, newParams);
+    this.debounceRefresh();
+  },
+  close: function () {
+    if (this.view) {
+      this.view.close(this.animationOut);
+    }
+    this.view = null;
+    this.events = null;
+    this.highlightedTime = Infinity;
+    this.modelView = null;
+    this.eventDisplayed = null;
+  },
+  beforeRefreshModelView: function () {},
+  afterRefreshModelView: function () {},
+  _refreshModelView: function () {
+    this._findEventToDisplay();
+    this.beforeRefreshModelView();
+    if (!this.modelView) {
+      var BasicModel = Backbone.Model.extend({});
+      this.modelView = new BasicModel({});
+    }
+
+    // Update the model
+    _.each(_.keys(this.modelContent), function (key) {
+      this.modelView.set(key, this.modelContent[key]);
+    }, this);
+
+    if (!this.view) {
+      if (typeof(document) !== 'undefined')  {
+        this.view = new this.typeView({model: this.modelView});
+        this.view.on('nodeClicked', function () {
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
+          }
+        }.bind(this));
+      }
+    }
+    this.view.off('nodeClicked');
+    this.view.on('nodeClicked', function () {
+      if (!this.hasDetailedView) {
+        this.hasDetailedView = true;
+        var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+          this.treeMap.closeDetailedView();
+          this.hasDetailedView = false;
+        }.bind(this));
+        this.treeMap.initDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
+      }
+    }.bind(this));
+    if (this.needToRender) {
+      this.view.renderView(this.container, this.animationIn);
+      this.needToRender = false;
+    }
+    this.afterRefreshModelView();
+  },
+
+  _findEventToDisplay: function () {
+    if (this.highlightedTime === Infinity) {
+      var oldestTime = 0;
+      _.each(this.events, function (event) {
+        if (event.time >= oldestTime) {
+          oldestTime = event.time;
+          this.eventDisplayed = event;
+        }
+      }, this);
+
+    } else {
+      var timeDiff = Infinity, debounceRefresh = 0;
+      _.each(this.events, function (event) {
+        debounceRefresh = Math.abs(event.time - this.highlightedTime);
+        if (debounceRefresh <= timeDiff) {
+          timeDiff = debounceRefresh;
+          this.eventDisplayed = event;
+        }
+      }, this);
+    }
+  }
+
+});
+})()
+},{"backbone":27,"underscore":8}],112:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#tweetView',
+  container: null,
+  animation: null,
+  templateHelpers: {
+    getUrl: function () {
+      var id = this.content.id,
+      screenName = this.content['screen-name'],
+      date = new Date(this.time * 1000);
+      return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
+        'data-datetime="' + date.toISOString() + '">' + date.toLocaleDateString() + '</a>';
+    }
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change:content', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+  },
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'tada';
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":46}],114:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#genericsView',
+  container: null,
+  animation: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+  },
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'tada';
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":46}],113:[function(require,module,exports){
+(function(){/* global document, $ */
+var  Marionette = require('backbone.marionette'),
+  MapLoader = require('google-maps'),
+  _ = require('underscore'),
+  MarkerClusterer = require('./utility/markerclusterer.js');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#positionsView',
+  mapLoaded: false,
+  mapOtions : {},
+  bounds: null,
+  paths: {},
+  gmaps: null,
+  map: null,
+  container: null,
+  markers: null,
+  highlightedMarker: null,
+  highlightedTime: Infinity,
+  positions: null,
+  highlightedPosition: null,
+
+  initialize: function () {
+
+    this.positions = this.model.get('positions');
+    MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
+    MapLoader.load().then(function (google) {
+      this.gmaps = google.maps;
+      if (this.waitingForInitMap) {
+        this.waitingForInitMap = false;
+        this._initMap();
+      }
+      if (this.waitingForDrawingMap) {
+        this.waitingForDrawingMap = false;
+        this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
+      }
+    }.bind(this));
+
+    this.listenTo(this.model, 'change:positions', this.changePos);
+    this.listenTo(this.model, 'change:posWidth', this.resize);
+    this.listenTo(this.model, 'change:posHeight', this.resize);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+  },
+  resize: function () {
+    if (this.map && this.bounds) {
+      var timer = setInterval(function () {
+        this.gmaps.event.trigger(this.map, 'resize');
+      }.bind(this), 100);
+      setTimeout(function () {
+        clearInterval(timer);
+        this.map.fitBounds(this.bounds);
+      }.bind(this), 1000);
+    }
+  },
+  changePos: function () {
+    this.positions = this.model.get('positions');
+    this.model.set('eventsNbr', this.positions.length);
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.render();
+  },
+  onBeforeRender: function () {
+    this._initMap();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).append(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+    }
+    this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
+  },
+  _initMap: function () {
+    if (!this.gmaps) {
+      this.waitingForInitMap = true;
+      return;
+    }
+    var geopoint;
+    this.markers = [];
+    this.paths = {};
+    this.mapOptions =  {
+      zoom: 8,
+      zoomControl: false,
+      mapTypeControl: false,
+      scaleControl: false,
+      streetViewControl: false,
+      overviewMapControl: false,
+      scrollwheel: true,
+      mapTypeId: this.gmaps.MapTypeId.ROADMAP
+    };
+    _.each(this.positions, function (p) {
+      geopoint = new this.gmaps.LatLng(p.content.latitude, p.content.longitude);
+      this.markers.push(new this.gmaps.Marker({
+        position: geopoint,
+        visible: false
+      }));
+      if (!this.bounds) {
+        this.bounds = new this.gmaps.LatLngBounds(geopoint, geopoint);
+        this.mapOptions.center = geopoint;
+      } else {
+        this.bounds.extend(geopoint);
+      }
+      if (!this.paths[p.streamId]) { this.paths[p.streamId] = []; }
+      this.paths[p.streamId].push(geopoint);
+    }, this);
+  },
+  _drawMap: function ($container) {
+    if (!$container) {
+      return;
+    }
+    if (!this.gmaps) {
+      this.waitingForDrawingMap = true;
+      return;
+    }
+    this.map = new this.gmaps.Map($container, this.mapOptions);
+    this.gmaps.event.trigger(this.map, 'resize');
+    this.map.fitBounds(this.bounds);
+    var gPath, gMarker;
+    _.each(this.paths, function (path) {
+      if (path.length > 1) {
+        gPath = new this.gmaps.Polyline({
+          path: path,
+          strokeColor: this._generateRandomColor(),
+          strokeOpacity: 1.0,
+          strokeWeight: 6
+        });
+        gPath.setMap(this.map);
+      } else {
+        gMarker = new this.gmaps.Marker({
+          position: path[0]
+        });
+        gMarker.setMap(this.map);
+      }
+    }, this);
+    gMarker = new MarkerClusterer(this.map, this.markers);
+  },
+  _generateRandomColor: function () {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+      color += letters[Math.round(Math.random() * 15)];
+    }
+    return color;
+  },
+  onDateHighLighted : function (time) {
+    this.highlightedTime = time;
+    var positionToShow = null;
+
+    var timeDiff = Infinity, temp = 0, highlightTime = this.highlightedTime;
+    _.each(this.positions, function (position) {
+      temp = Math.abs(position.time - highlightTime);
+      if (temp <= timeDiff) {
+        timeDiff = temp;
+        positionToShow = position;
+      }
+    });
+    if (this.highlightedPosition !== positionToShow) {
+      if (this.highlightedMarker && this.map) {
+        this.highlightedMarker.setMap(null);
+      }
+
+      var geopoint =  new this.gmaps.LatLng(positionToShow.content.latitude,
+        positionToShow.content.longitude);
+      this.highlightedMarker = new this.gmaps.Marker({
+        position: geopoint
+      });
+      if (this.map) {
+        this.highlightedMarker.setMap(this.map);
+        this.map.panTo(geopoint);
+      }
+      this.highlightedPosition = positionToShow;
+    }
+    return positionToShow;
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"./utility/markerclusterer.js":109,"backbone.marionette":46,"google-maps":84,"underscore":8}],115:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#picturesView',
+  container: null,
+  animation: null,
+  currentId: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+
+  },
+  change: function () {
+    if (!this.currentId || this.currentId !== this.model.get('id')) {
+      $('#' + this.container).removeClass('animated ' + this.animation);
+      this.animation = 'tada';
+      this.$el.attr('id', this.model.get('id'));
+      this.currentId = this.model.get('id');
+    } else {
+      this.animation = null;
+    }
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.currentId = this.model.get('id');
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      this.$el.css(
+        {'background': 'url(' + this.model.get('picUrl') + ') no-repeat center center',
+          '-webkit-background-size': 'cover',
+          '-moz-background-size': 'cover',
+          '-o-background-size': 'cover',
+          'background-size': 'cover'
+        });
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      if (this.animation) {
+        $('#' + this.container).addClass('animated ' + this.animation);
+        setTimeout(function () {
+          $('#' + this.container).removeClass('animated ' + this.animation);
+        }.bind(this), 1000);
+      }
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":46}],106:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -27524,7 +28918,7 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":98,"underscore":8}],100:[function(require,module,exports){
+},{"backbone":107,"underscore":8}],108:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -27804,5 +29198,5 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":98,"underscore":8}]},{},["3XoGqR"])
+},{"backbone":107,"underscore":8}]},{},["3XoGqR"])
 ;

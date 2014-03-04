@@ -4,7 +4,7 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_test2/">
+  <base href="{browser-source}_v0.0.8/">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="Content available on Pryv only." />
@@ -14,16 +14,49 @@
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
+  <script src="script/airbrake-shim.js" data-airbrake-project-id="browser" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="production"></script>
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
       var sampleApp = require('SampleApp');
-      sampleApp.main(false);
+      var wrapped = Airbrake.wrap(function() {
+        sampleApp.main(false);
+      });
+      wrapped();
     });
+  </script>
+  <script id="onboardingView" type="template">
+    <div class="container">
+    <div class="row onboarding">
+      <div class="col-md-4"><h1 class="hidden-xs">What matters in your life ?</h1>
+        <div class="ob_text hidden-xs">
+          <p>Your life is made of streams.
+            <span class="stream_color_1">Travel</span>,<span class="stream_color_2"> Friends</span>,<span class="stream_color_3"> Family</span>,<span class="stream_color_4"> Sports...</span></p>
+          <p>To get started, create streams that matter to you:</p>
+          <form class="form-inline" role="form" id="onboarding-form">
+            <div class="form-group">
+              <input type="text" id='onboarding-input-name' class="form-control" placeholder="Create Your Stream" style="width: 152px;">
+            </div>
+            <button type="submit" class="btn btn-primary">START  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+          </form>
+        </div>
+
+        <div class="ob_text visible-xs">
+        <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
+          <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong></p>
+          <p style="font-size: 16px;">You will shortly receive an invitation to download Pryv iOS on Testflight, our partner during the beta testing phase.</p>
+        </div>
+
+      </div>
+      <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
+    </div>
+    </div>
   </script>
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+    <% } %>
 
     <div class="aggregated-icon-page"></div>
     <div class="content Center-Container is-Table">
@@ -39,19 +72,23 @@
   </script>
   <script id="positionsView" type="template">
     <div class="aggregated-icon Positions"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+    <% } %>
 
     <div id="map-canvas-<%=id%>" class="mapView"></div>
   </script>
   <script id="picturesView" type="template">
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
   </script>
 
   <script id="notesView" type="template">
     <div class="aggregated-icon Notes"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
@@ -64,9 +101,9 @@
   </script>
   <script id="genericsView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="aggregated-icon-page"></div>
 
 
@@ -74,7 +111,7 @@
       <div class="Table-Cell">
         <div class="Center-Block">
           <% if (type.split("/")[0] === 'url') { %>
-          <a href="<%= content %>"><%= content %></a>
+          <a href="<%= content %>" target="_blank"><%= content %></a>
           <% } else { %>
           <%= content %>
           <% } %>
@@ -82,11 +119,12 @@
       </div>
     </div>
 
-  </script>  <script id="tweetView" type="template">
+  </script>
+  <script id="tweetView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="aggregated-icon-page"></div>
 
 
@@ -135,15 +173,25 @@
   </script>
   <script type="text/html" id="template-sharingItemView">
 
-    <td class="sharing-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= sharing.name %></td><td><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
-     <td class="share"><a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><img src="./images/mail-24.png"/></a>
-      <a href="https://twitter.com/share" class="twitter-share-button" data-url="<%= sharing.url %>" data-via="pryv" data-count="none">Tweet</a>
-      <fb:share-button href="<%= sharing.url %>" type="button"></fb:share-button></td>
+    <td class="sharing-name col-md-4"><i class="fa fa-edit sharing-edit-name fa-lg"></i> <span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
+        <button class="btn btn-default" type="button">Save <i class="fa fa-spinner fa-spin"></i></button>
+      </span></div></td><td class="sharing-url"><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
+     <td class="share share-small">
+
+      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<%= sharing.url.replace(/#/g, '%23') %>&t="
+       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;">
+      <i class="fa fa-facebook"></i></a>
+       <a target="_blank" href="https://twitter.com/share?url=<%= sharing.url.replace(/#/g, '%23') %>&via=pryv"
+       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;">
+      <i class="fa fa-twitter"></i></a>
+       <a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><i class="fa fa-envelope"></i></a>
+     </td>
+    <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
     <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= connection.id %>
+      <%= connection.url %>
       <input type="text" placeholder="Name" required class="subscription-name">
       <% if (error) {%>
         <span class="glyphicon glyphicon-warning-sign"></span>
@@ -154,17 +202,41 @@
     <ul id="bookmark-list"></ul>
   </script>
   <script type="text/html" id="template-bookmarkItemView">
-    <td class="bookmark-trash"><a href="javascript:void(0)">&#10008</a></td><td><%= bookmark.settings.name %></td><td><%= bookmark.settings.auth %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td>
+   <td><%= bookmark.settings.name %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td><td class="bookmark-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
   </script>
     
   <script type="text/html" id="template-draganddrop">
-    <div id="dnd-body" class="dnd-body">
-      <div id="dnd-panel-list"></div>
-      <div id="dnd-panel-chart"></div>
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+      <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
+      <div class="modal-close"></div>
     </div>
+    <div class="modal-dnd-middle">
+      <div class="modal-dnd-left">
+        <div class="modal-dnd-chart"></div>
+        <div class="modal-dnd-legend">legend</div>
+      </div>
+      <div class="modal-dnd-right">
+        <div class="modal-dnd-values">
+          <span><h2>Your Values</h2></span>
+          <span><h4>Add your value and create your node</h4></span>
+        </div>
+        <div class="modal-dnd-list"></div>
+      </div>
+    </div>
+    <div class="modal-dnd-footer">
+      <div class="input-group input-group-lg">
+        <input type="text" class="form-control " id="dnd-field-name" placeholder="Enter the Node's name here">
+        <span class="input-group-btn">
+          <button class="btn btn-danger" id="dnd-btn-cancel" type="button">Cancel</button>
+          <button class="btn btn-success" id="dnd-btn-create" type="button">Create!</button>
+        </span>
+      </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
-    <a class="DnD-legend-button" href="javascript:;">+</a>
+    <a class="btn btn-primary btn-xs DnD-legend-button" href="javascript:;">
+      <span class="fa fa-plus"></span>
+    </a>
     <span class="DnD-legend-text"><%= displayName() %></span>
   </script>
   <script type="text/template" id="template-chart-container">
@@ -180,16 +252,26 @@
     <% } %>
   </script>
   <script type="template" id="template-detail-creation-type">
-    <h1>Choose an event type</h1>
-    <ul id="type-select">
-      <li class="type-select" data-type="note/txt">Add a note</li>
-      <li class="type-select" data-type="picture/attached">Add a picture</li>
-      <li class="type-select" data-type="position/wgs84">Add a position</li>
-    </ul>
+    <div class="container">
+    <div class="row" id="type-select">
+      <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span>Note</span></div>
+      <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span>Picture</span></div>
+      <div class="type-select col-md-2" data-type="position/wgs84"><i class="fa fa-map-marker  fa-3"></i><span>Position</span></div>
+    </div>
+    </div>
   </script>
   <script type="template" id="template-detail-creation-stream">
     <h1>Choose a stream</h1>
     <%= getStream() %>
+  </script>
+  <script type="template" id="template-detail-picture-select">
+    <div class="container">
+    <h1>Upload photo</h1>
+    <div id="select-picture-container">
+      <input type="file" id="fileElem" name="file" accept="image/*" multiple>
+      <button id="fileSelect" class="btn btn-default">Select Picture</button>
+    </div>
+    </div>
   </script>
   <script type="template" id="template-detail-content-tweet">
     <div class="content Center-Container is-Table">
@@ -205,6 +287,15 @@
         </div>
       </div>
     </div>
+  </script>
+  <script type="template" id="template-detail-creation-event">
+    <div id="creation-content">
+    <div class="creation-typed creation-typed-<%= getEventType() %> full-height col-md-9">
+      <%= getTypedView() %>
+    </div>
+    <div id="creation-select-stream" class="full-height col-md-3"><h3>Select a Stream</h3><%= getStream() %></div>
+    </div>
+    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise">Publish <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn">Cancel</button></div>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
@@ -235,46 +326,77 @@
       <div class="detail-chart-container" id="detail-chart-container-edit"></div>
       <div class="editor-container">
         <div id="dc-editor-appearance">
-          <span>Appearance</span>
           <ul>
             <li>
-              <span>Color</span>
-                <select id="detailed-view-chart-color">
-                    <option value="#00FFFF" style="background-color: Aqua">Aqua</option>
-                    <option value="#000000" style="background-color: Black">Black</option>
-                    <option value="#0000FF" style="background-color: Blue">Blue</option>
-                    <option value="#FF00FF" style="background-color: Fuchsia">Fuchsia</option>
-                    <option value="#808080" style="background-color: Gray">Gray</option>
-                    <option value="#008000" style="background-color: Green">Green</option>
-                </select>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Color</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-color" class="form-control">
+                    <option value="#1abc9c" style="background-color: #1abc9c">&nbsp;</option>
+                    <option value="#2ecc71" style="background-color: #2ecc71">&nbsp;</option>
+                    <option value="#16a085" style="background-color: #16a085">&nbsp;</option>
+                    <option value="#27ae60" style="background-color: #27ae60">&nbsp;</option>
+                    <option value="#3498db" style="background-color: #3498db">&nbsp;</option>
+                    <option value="#2980b9" style="background-color: #2980b9">&nbsp;</option>
+                    <option value="#9b59b6" style="background-color: #9b59b6">&nbsp;</option>
+                    <option value="#8e44ad" style="background-color: #8e44ad">&nbsp;</option>
+                    <option value="#34495e" style="background-color: #34495e">&nbsp;</option>
+                    <option value="#2c3e50" style="background-color: #2c3e50">&nbsp;</option>
+                    <option value="#f1c40f" style="background-color: #f1c40f">&nbsp;</option>
+                    <option value="#f39c12" style="background-color: #f39c12">&nbsp;</option>
+                    <option value="#e67e22" style="background-color: #e67e22">&nbsp;</option>
+                    <option value="#d35400" style="background-color: #d35400">&nbsp;</option>
+                    <option value="#e74c3c" style="background-color: #e74c3c">&nbsp;</option>
+                    <option value="#c0392b" style="background-color: #c0392b">&nbsp;</option>
+                    <option value="#ecf0f1" style="background-color: #ecf0f1">&nbsp;</option>
+                    <option value="#bdc3c7" style="background-color: #bdc3c7">&nbsp;</option>
+                    <option value="#95a5a6" style="background-color: #95a5a6">&nbsp;</option>
+                    <option value="#7f8c8d" style="background-color: #7f8c8d">&nbsp;</option>
+                  </select>
+                </div>
+              </div>
             </li>
             <li>
-              <span>Style</span>
-              <select id="detailed-view-chart-style">
-                <option value="line">Line</option>
-                <option value="point">Point</option>
-                <option value="bar">Bar</option>
-                </select>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Style</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-style" class="form-control">
+                    <option value="line">Line</option>
+                    <option value="point">Point</option>
+                    <option value="bar">Bar</option>
+                  </select>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Operation</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-operation" class="form-control">
+                    <option value="none">None</option>
+                    <option value="sum">Sum</option>
+                    <option value="average">Average</option>
+                  </select>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Interval</label>
+                <div class="col-sm-10">
+                  <select id="detailed-view-chart-interval" class="form-control">
+                    <option value="none">None</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                </div>
+              </div>
             </li>
           </ul>
-        </div>
-        <div id="dc-editor-transform">
-          <span>Operation</span>
-          <select id="detailed-view-chart-operation" size="4">
-            <option value="none">None</option>
-            <option value="sum">Sum</option>
-            <option value="average">Average</option>
-          </select>
-        </div>
-        <div id="dc-editor-period">
-          <span>Interval</span>
-            <select id="detailed-view-chart-interval" size="4">
-              <option value="none">None</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-            </select>
+          <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger">Cancel</button>
+          <button id="detailed-view-chart-ok" type="button" class="btn btn-success">Ok!</button>
         </div>
       </div>
   </script>
@@ -289,12 +411,12 @@
 
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
-        </li>
-        <li class="event-structure editable" id="current-time">time: <label><%= new Date(event.time *
+        </li> -->
+        <li class="event-structure editable" id="current-time">Time: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
           %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
-        </li>
+        </li> <!--
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">
         </li> -->
@@ -307,8 +429,8 @@
           <% }) %>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
 
-        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise">Submit</button>
-        <button id ="trash-edit" type="button" class="btn btn-danger">Trash</button>
+        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise">Submit <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+        <button id ="trash-edit" type="button" class="btn btn-danger">Trash <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
       </ul>
       <% } %>
   </script>
@@ -317,13 +439,13 @@
     </div>
   </script>
   <script id="node-template" type="text/template">
-    <li>
-    <div class="checkbox">
+    <summary>
+    <div class="checkbox inline-block">
       <label>
         <input class="input-checkbox" type="checkbox"><%= name %>
       </label>
     </div>
-    </li>
+    </summary>
   </script>
 </head>
 
@@ -348,7 +470,7 @@
     </form>
   </div>
 </div>
-<a href="javascript:void(0)" id="login-button" class="menu-button">Sign In</a>
+<a href="javascript:void(0)" id="login-button" class="menu-button"><i class="fa fa-sign-in"></i> Sign In</a>
 <a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
 <a href="javascript:void(0)" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
@@ -360,9 +482,9 @@
   </div>
 </div>
 <div id="timeframe"></div>
-<div class="modal node" id="pryv-modal" tabindex="-1" role="dialog"
+<div class="modal" id="pryv-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-animation">
     <div class="modal-content">
 
     </div>

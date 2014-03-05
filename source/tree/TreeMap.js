@@ -53,21 +53,21 @@ var TreeMap = module.exports = function (model) {
       this.focusOnStreams(null);
     }
   }.bind(this));
-  $('#logo-add').click(function (e) {
+  $('.logo-add').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateEventView();
     }.bind(this));
     this.showCreateEventView($modal, this.model.connections, this.focusedStreams, e.currentTarget);
   }.bind(this));
-  $('#logo-sharing').click(function (e) {
+  $('.logo-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSharingView();
     }.bind(this));
     this.showSharingView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
-  $('#logo-subscribe').click(function (e) {
+  $('.logo-subscribe').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSubscribeView();
@@ -75,7 +75,7 @@ var TreeMap = module.exports = function (model) {
     this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
       e.currentTarget);
   }.bind(this));
-  $('#logo-create-sharing').click(function (e) {
+  $('.logo-create-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateSharingView();

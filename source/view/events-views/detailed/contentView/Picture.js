@@ -57,7 +57,7 @@ module.exports = Marionette.ItemView.extend({
       attachments = event.attachments;
     if (attachments) {
       var keys = _.keys(attachments);
-      return event.url + '/' + attachments[keys[0]].fileName + '?auth=' + event.connection.auth;
+      return event.url + '/' + attachments[keys[0]].id + '?auth=' + event.connection.auth;
     } else {
       return '';
     }

@@ -11,7 +11,7 @@
   <title>Pryv @ Glance</title>
   <base href="{browser-source}_<!-- @echo version -->/">
   <!-- @endif -->
-
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
   <meta property="og:url" content="https://{host}" />
@@ -495,11 +495,18 @@
     </form>
   </div>
 </div>
-<a href="javascript:void(0)" id="login-button" class="menu-button"><i class="fa fa-sign-in"></i> Sign In</a>
-<a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
-<a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
-<a href="javascript:void(0)" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
-<a href="javascript:void(0)" id="logo-create-sharing" class="menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> Sign In</a>
+<ul class="dropdown-menu">
+  <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> Add event</a></li>
+  <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> Share a slice of life</a></li>
+  <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> Manage Slices</a></li>
+  <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> Follow this slice</a></li>
+  <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> Sign out</a></li>
+</ul></div>
+<a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
+<a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
+<a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
 <!-- @if NODE_ENV == 'DEVELOPMENT' -->
 <!-- do not put anything between #logo-reload and #tree -->
 <!-- @endif -->

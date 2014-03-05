@@ -28,12 +28,12 @@ body{
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
   background-size: cover; /* version standardisée */
-  font-weight: 100; 
+  font-weight: 700;
   letter-spacing: 1px;
 }
 .logo{
   z-index: 90000;
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   text-indent: -9999em;
@@ -52,7 +52,9 @@ body{
 }
 .menu-button {
   z-index: 90000;
-  position: absolute;
+  position: relative;
+  float: right;
+  margin-left: 10px;
   top: 0;
   display: block;
   background-color: #3e3e3e;
@@ -61,39 +63,51 @@ body{
   padding-left: 8px;
 }
 #login-button {
-  right: 0;
+  float: right;
   padding: 10px;
   font-weight: bold;
 }
-#login-button:hover {
+#login-button:hover, #login-button:focus {
   text-decoration: none;
   color: white;
 }
+#login-dropdown .dropdown-menu {
+  right: 0;
+  left: auto;
+  background-color: #3e3e3e;
+  border-radius: 0px;
+}
+#login-dropdown .dropdown-menu a {
+  color: #eee;
+}
+#login-dropdown .dropdown-menu a:hover {
+  background-color: inherit;
+  color: #fff;
+}
 #logo-add {
-  right: 120px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-sharing {
-  right: 165px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-subscribe {
-  right: 120px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-create-sharing {
-  right: 210px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #tree {
+  position: absolute;
+  top: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   color: white;

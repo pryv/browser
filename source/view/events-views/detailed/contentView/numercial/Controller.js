@@ -191,7 +191,6 @@ module.exports = Marionette.ItemView.extend({
   },
   collectionChanged: function () {
     // TODO: depends on view type
-    console.log('collectionChanged collectionChanged');
     this.updateCollection();
     if (this.view) {
       this.view.unbind();

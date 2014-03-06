@@ -637,7 +637,6 @@ module.exports = Marionette.CompositeView.extend({
 
     $('#editPointBut').bind('click', function () {
       this.currentlyEdited.value = +$('#editPointVal').val();
-      console.log('editedEvent', this.currentlyEdited.event);
       this.currentlyEdited.event.content = this.currentlyEdited.value;
       if ($('#chart-pt-editor')) {
         $('#editPointVal').unbind();

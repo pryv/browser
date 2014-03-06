@@ -221,16 +221,16 @@ NumericalsPlugin.prototype.refreshCollection = function () {
   for (i = 0; i < eventsToCha.length; ++i) {
     // find corresponding model
     matching = this.seriesCollection.where({
-      connectionId: eventsToAdd[i].connection.id,
-      streamId: eventsToAdd[i].streamId,
-      type: eventsToAdd[i].type
+      connectionId: eventsToCha[i].connection.id,
+      streamId: eventsToCha[i].streamId,
+      type: eventsToCha[i].type
     });
     if (matching && matching.length !== 0) {
       eventsModel = matching[0];
       events = eventsModel.get('events');
       for (eIter = 0; eIter < events.length; ++eIter) {
-        if (events[eIter].id === eventsToRem[i].id) {
-          events[eIter] = eventsToRem[i];
+        if (events[eIter].id === eventsToCha[i].id) {
+          events[eIter] = eventsToCha[i];
         }
       }
     }

@@ -50,7 +50,7 @@ module.exports = function (grunt) {
           'source/vendor/require.js',
           'source/vendor/jquery.flot.js',
           'source/vendor/jquery.flot.time.js',
-	  'source/vendor/jquery.flot.curvedLines.js',
+          'source/vendor/jquery.flot.curvedLines.js',
           'source/vendor/jquery.flot.navigate.js'],
         dest: 'dist/script/vendor.js'
       }

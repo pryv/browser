@@ -129,6 +129,11 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       $('#tree').removeClass('animated slideInLeft');
       $('#login').addClass('animated slideInRight');
       $('#tree').addClass('animated slideOutLeft');
+      if (detectIE()) {
+        $('#tree').fadeOut('slow', function () {
+          $('#login').fadeIn('slow');
+        });
+      }
     }
   }.bind(this));
   $('#login-caret').click(function () {
@@ -136,6 +141,11 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     $('#tree').removeClass('animated slideOutLeft');
     $('#login').addClass('animated slideOutRight');
     $('#tree').addClass('animated slideInLeft');
+    if (detectIE()) {
+      $('#login').fadeOut('slow', function () {
+        $('#tree').fadeIn('slow');
+      });
+    }
   });
   $('#login form').submit(function (e) {
     e.preventDefault();
@@ -177,6 +187,11 @@ Model.prototype.signedIn = function (connection) {
   $('#tree').removeClass('animated slideOutLeft');
   $('#login').addClass('animated slideOutRight');
   $('#tree').addClass('animated slideInLeft');
+  if (detectIE()) {
+    $('#login').fadeOut('slow', function () {
+      $('#tree').fadeIn('slow');
+    });
+  }
 };
 
 Model.prototype.addConnection = function (connection) {
@@ -249,3 +264,22 @@ function initTimeAndFilter(timeView, filter) {
   });
 }
 
+var detectIE = function detectIE() {
+  var ua = window.navigator.userAgent;
+  var msie = ua.indexOf('MSIE ');
+  var trident = ua.indexOf('Trident/');
+
+  if (msie > 0) {
+    // IE 10 or older => return version number
+    return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+  }
+
+  if (trident > 0) {
+    // IE 11 (or newer) => return version number
+    var rv = ua.indexOf('rv:');
+    return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+  }
+
+  // other browser
+  return false;
+};

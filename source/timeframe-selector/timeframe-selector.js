@@ -534,12 +534,6 @@ module.exports = Backbone.View.extend({
       [startConstraint  - (markerWidth / 2), 0, endConstraint  - (markerWidth / 2), 0]);
     $focusLabel.draggable('option', 'containment',
       [startConstraint - (this.labelWidth / 2), 0, endConstraint - (this.labelWidth / 2), 0]);
-    console.log('TM', '$startMarker', 'containment:', $startMarker.draggable('option', 'containment'), 'left:', $startMarker.position().left);
-    console.log('TM', '$startLabel', 'containment:', $startLabel.draggable('option', 'containment'), 'left:', $startLabel.position().left);
-    console.log('TM', '$endLabel', 'containment:', $endLabel.draggable('option', 'containment'), 'left:', $endLabel.position().left);
-    console.log('TM', '$endMarker', 'containment:', $endMarker.draggable('option', 'containment'), 'left:', $endMarker.position().left);
-    console.log('TM', '$focusMarker', 'containment:', $focusMarker.draggable('option', 'containment'), 'left:', $focusMarker.position().left);
-    console.log('TM', '$focusLabel', 'containment:', $focusLabel.draggable('option', 'containment'), 'left:', $focusLabel.position().left);
   },
   setMarkers: function () {
     if ($('#timeframe #start-marker').length === 0) {

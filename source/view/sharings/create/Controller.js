@@ -58,6 +58,7 @@ var TreeView = Marionette.CompositeView.extend({
   onRender: function () {
     this.ui.checkbox[0].checked = this.model.get('checked');
     this.ui.checkbox.click(this.toggleCheck.bind(this));
+    $('details').details();
   },
   toggleCheck: function () {
     var checked = !this.model.get('checked');
@@ -247,6 +248,7 @@ Controller.prototype.show = function () {
     '<button id="cancel" class="btn" data-dismiss="modal">Cancel</button>' +
     '</div></div>');
   $('#creation-content').html(this.treeView.el);
+  $('details').details();
   $('#publish').click(function (e) {
     this.treeView.createSharing(e, $('#publish'));
   }.bind(this));

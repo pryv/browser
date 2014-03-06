@@ -61,6 +61,7 @@ module.exports = Marionette.ItemView.extend({
     fileSelect: '#fileSelect',
     stream: '#stream-select',
     inputStream: '.create-stream input',
+    selectStreamRadio: 'input.select-stream',
     publish: '#publish',
     cancel: '#cancel',
     spin: '.fa-spin'
@@ -86,7 +87,12 @@ module.exports = Marionette.ItemView.extend({
   },
   onInputStreamChange: function (e) {
     var currentValue = e.target.value;
+    this.ui.selectStreamRadio.each(function (i, elem) {
+      elem.checked = false;
+    });
     this.ui.inputStream.val('');
+    this.streamSelected = null;
+    this.connectionSelected = null;
     e.target.value = currentValue;
   },
   onPublishClick: function () {
@@ -236,6 +242,7 @@ module.exports = Marionette.ItemView.extend({
         $(e.target).parent().attr('data-stream'),
       connectionSelected = this.connection.get($(e.target).attr('data-connection') ||
         $(e.target).parent().attr('data-connection'));
+    this.ui.inputStream.val('');
     this.streamSelected = streamSelected;
     if (connectionSelected) {
       this.connectionSelected = connectionSelected;
@@ -318,7 +325,7 @@ module.exports = Marionette.ItemView.extend({
       } else {
         open = '';
       }
-      result += '<details ' + open + '><summary class="connection">' +
+      result += '<details open><summary class="connection">' +
         c.username + ' / ' + c._accessInfo.name + '</summary>';
       result += this.getStreamStructure(c);
       result += '</details>';
@@ -348,12 +355,11 @@ module.exports = Marionette.ItemView.extend({
       }
     }
     result +=
-      '<summary><div class="input-group">' +
+      '<details><summary>&nbsp;&nbsp;Create a new stream</summary><div class="input-group">' +
         '<form role="form" class="create-stream">' +
-        '<i class="fa fa-plus fa-2"></i>' +
-        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        '<input type="text" class="form-control" placeholder="Name this stream"' +
         ' data-parentId=""  data-connection="' + connection.serialId + '">' +
-        '</form></div></summary>';
+        '</form></div></details>';
     return result;
 
   },
@@ -386,12 +392,11 @@ module.exports = Marionette.ItemView.extend({
       }
     }
     result +=
-      '<summary><div class="input-group">' +
+      '<details><summary>&nbsp;&nbsp;Create a new stream</summary><div class="input-group">' +
         '<form role="form" class="create-stream">' +
-        '<i class="fa fa-plus fa-2"></i>' +
-        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        '<input type="text" class="form-control" placeholder="Name this stream"' +
         ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
-        '</form></div></summary>';
+        '</form></div></details>';
     return result;
   },
   _isWritePermission: function (connection, streamId) {

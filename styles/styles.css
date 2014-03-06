@@ -28,12 +28,12 @@ body{
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
   background-size: cover; /* version standardisée */
-  font-weight: 100; 
+  font-weight: 700;
   letter-spacing: 1px;
 }
 .logo{
   z-index: 90000;
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   text-indent: -9999em;
@@ -52,7 +52,9 @@ body{
 }
 .menu-button {
   z-index: 90000;
-  position: absolute;
+  position: relative;
+  float: right;
+  margin-left: 10px;
   top: 0;
   display: block;
   background-color: #3e3e3e;
@@ -61,39 +63,54 @@ body{
   padding-left: 8px;
 }
 #login-button {
-  right: 0;
+  float: right;
   padding: 10px;
   font-weight: bold;
 }
-#login-button:hover {
+#login-button:hover, #login-button:focus {
   text-decoration: none;
   color: white;
 }
+#login-dropdown .dropdown-menu {
+  right: 0;
+  left: auto;
+  background-color: #3e3e3e;
+  border-radius: 0px;
+}
+#login-dropdown .dropdown-menu a {
+  color: #eee;
+}
+#login-dropdown .dropdown-menu a:hover {
+  background-color: inherit;
+  color: #fff;
+}
 #logo-add {
-  right: 120px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-sharing {
-  right: 165px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-subscribe {
-  right: 120px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
+#subscribe-list {
+  display: inline-block;
+}
 #logo-create-sharing {
-  right: 210px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #tree {
+  position: absolute;
+  top: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   color: white;
@@ -149,6 +166,7 @@ body{
 }
 .EventsNode {
   overflow: hidden;
+  cursor: pointer;
 }
 .EventsNode:hover {
   box-shadow: 0 0 0 1px #FFF;
@@ -486,6 +504,9 @@ text-align: center;*/
   box-shadow: 0 0px 0px rgba(0,0,0,0.5);;
   border-radius: 0px;
   bottom: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 .modal-body {
   padding: 0;
@@ -604,6 +625,9 @@ text-align: center;*/
 }
 .full-height {
   height: 100%;
+}
+.full-width {
+  width: 100%;
 }
 #creation-content {
   height: 100%;
@@ -731,21 +755,41 @@ details details {
 summary {
   cursor: pointer;
 }
-.select-stream + label {
-  font-weight: normal;
-  color: #000;
+summary:focus {
+  outline: none;
 }
 .select-stream:checked + label {
   background-color: #7f8c8d;
   font-weight: 700;
   color: #fff;
 }
+input.select-stream {
+  visibility: hidden;
+  opacity: 0;
+}
 summary.connection {
   font-weight: bold;
 }
-details summary::-webkit-details-marker {
-  color: #3498db;
+summary, summary label  {
+  font-weight: normal;
+  color: #000;
 }
+details summary::-webkit-details-marker {
+  display: none;
+}
+details > summary:first-child::before {
+  font-family: FontAwesome;
+  content: "\f054";
+}
+details[open] > summary:first-child::before {
+  font-family: FontAwesome;
+  content: "\f078";
+}
+details.open > summary:first-child::before {
+  font-family: FontAwesome;
+  content: "\f078";
+}
+
 .create-stream {
   display: inline-flex;
 }
@@ -1047,4 +1091,54 @@ ul.modal-dnd-legend > li {
 
 #add-bookmark-auth {
   display: none;
+}
+
+
+
+/** CSS switches **/
+.onoffswitch {
+  position: relative; width: 90px;
+  -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+  display: none;
+}
+.onoffswitch-label {
+  display: block; overflow: hidden; cursor: pointer;
+  border: 2px solid #999999; border-radius: 20px;
+}
+.onoffswitch-inner {
+  width: 200%; margin-left: -100%;
+  -moz-transition: margin 0.3s ease-in 0s; -webkit-transition: margin 0.3s ease-in 0s;
+  -o-transition: margin 0.3s ease-in 0s; transition: margin 0.3s ease-in 0s;
+}
+.onoffswitch-inner:before, .onoffswitch-inner:after {
+  float: left; width: 50%; height: 30px; padding: 0; line-height: 30px;
+  font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+.onoffswitch-inner:before {
+  content: "ON";
+  padding-left: 10px;
+  background-color: #2FCCFF; color: #FFFFFF;
+}
+.onoffswitch-inner:after {
+  content: "OFF";
+  padding-right: 10px;
+  background-color: #EEEEEE; color: #999999;
+  text-align: right;
+}
+.onoffswitch-switch {
+  width: 18px; margin: 6px;
+  background: #FFFFFF;
+  border: 2px solid #999999; border-radius: 20px;
+  position: absolute; top: 0; bottom: 0; right: 56px;
+  -moz-transition: all 0.3s ease-in 0s; -webkit-transition: all 0.3s ease-in 0s;
+  -o-transition: all 0.3s ease-in 0s; transition: all 0.3s ease-in 0s;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+  margin-left: 0;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+  right: 0px;
 }

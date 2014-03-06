@@ -4,7 +4,8 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.8/">
+  <base href="{browser-source}_v0.0.12/">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="Content available on Pryv only." />
@@ -41,11 +42,6 @@
           </form>
         </div>
 
-        <div class="ob_text visible-xs">
-        <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
-          <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong></p>
-          <p style="font-size: 16px;">You will shortly receive an invitation to download Pryv iOS on Testflight, our partner during the beta testing phase.</p>
-        </div>
 
       </div>
       <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
@@ -148,8 +144,10 @@
     <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
     <div class='nodeHeader '><%= content.name %></div>
-    <% } else if (typeof(content.username) != "undefined") { %>
+    <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
     <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <% } else if (typeof(content.username) != "undefined") { %>
+    <div class='nodeHeader'><%= content.username %></div>
     <% } } %>
     <span></span>
   </script>
@@ -189,10 +187,10 @@
     <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
-    <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= connection.url %>
-      <input type="text" placeholder="Name" required class="subscription-name">
+      <input type="checkbox" class="checkbox">
+      <label>Name this slice: </label>
+      <input type="text" placeholder="Name" required class="subscription-name" placeholder="<%= connection._accessInfo.name %>">
       <% if (error) {%>
         <span class="glyphicon glyphicon-warning-sign"></span>
       <% } %>
@@ -308,7 +306,7 @@
   </script>
   <script type="template" id="template-detail-content-picture">
     <% if (event) { %>
-      <div class="event-structure" id="current-picture">
+      <div class="event-structure full-height full-width" id="current-picture">
         <span class="fa fa-angle-left picture-icon"></span>
         <span class="fa fa-angle-right picture-icon"></span>
             <img src="<%= getSrc() %>" alt="<%= getAlt()%>">
@@ -394,9 +392,25 @@
                 </div>
               </div>
             </li>
+            <li>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Fitting</label>
+                <div class="col-sm-10">
+                  <div class="onoffswitch">
+                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
+                    <label class="onoffswitch-label" for="detailed-view-chart-fitting">
+                      <div class="onoffswitch-inner"></div>
+                      <div class="onoffswitch-switch"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger">Cancel</button>
+              <button id="detailed-view-chart-ok" type="button" class="btn btn-success">Ok!</button>
+            </li>
           </ul>
-          <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger">Cancel</button>
-          <button id="detailed-view-chart-ok" type="button" class="btn btn-success">Ok!</button>
         </div>
       </div>
   </script>
@@ -450,6 +464,13 @@
 </head>
 
 <body>
+<div class="onboarding visible-xs">
+<div class="ob_text" style="margin: 15px;">
+  <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
+  <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.</p>
+</div>
+</div>
+<div class="hidden-xs">
 <span id="pryvButton"></span>
 <div id="login">
   <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
@@ -470,11 +491,18 @@
     </form>
   </div>
 </div>
-<a href="javascript:void(0)" id="login-button" class="menu-button"><i class="fa fa-sign-in"></i> Sign In</a>
-<a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
-<a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
-<a href="javascript:void(0)" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
-<a href="javascript:void(0)" id="logo-create-sharing" class="menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> Sign In</a>
+<ul class="dropdown-menu">
+  <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> Add event</a></li>
+  <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> Share a slice of life</a></li>
+  <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> Manage Slices</a></li>
+  <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> Follow this slice</a></li>
+  <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> Sign out</a></li>
+</ul></div>
+<a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
+<a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
+<a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
   <div id="empty-events">
@@ -493,6 +521,7 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+</div>
 <!-- Facebook -->
 <div id="fb-root"></div>
 <script>(function(d, s, id) {

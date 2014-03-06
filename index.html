@@ -4,7 +4,7 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.9/">
+  <base href="{browser-source}_v0.0.10/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
@@ -42,11 +42,6 @@
           </form>
         </div>
 
-        <div class="ob_text visible-xs">
-        <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
-          <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong></p>
-          <p style="font-size: 16px;">You will shortly receive an invitation to download Pryv iOS on Testflight, our partner during the beta testing phase.</p>
-        </div>
 
       </div>
       <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
@@ -309,7 +304,7 @@
   </script>
   <script type="template" id="template-detail-content-picture">
     <% if (event) { %>
-      <div class="event-structure" id="current-picture">
+      <div class="event-structure full-height full-width" id="current-picture">
         <span class="fa fa-angle-left picture-icon"></span>
         <span class="fa fa-angle-right picture-icon"></span>
             <img src="<%= getSrc() %>" alt="<%= getAlt()%>">
@@ -451,6 +446,13 @@
 </head>
 
 <body>
+<div class="onboarding visible-xs">
+<div class="ob_text" style="margin: 15px;">
+  <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
+  <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.</p>
+</div>
+</div>
+<div class="hidden-xs">
 <span id="pryvButton"></span>
 <div id="login">
   <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
@@ -501,6 +503,7 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+</div>
 <!-- Facebook -->
 <div id="fb-root"></div>
 <script>(function(d, s, id) {

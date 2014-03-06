@@ -331,8 +331,11 @@ module.exports = Marionette.ItemView.extend({
       } else {
         open = '';
       }
-      result += '<details open><summary class="connection">' +
-        c.username + ' / ' + c._accessInfo.name + '</summary>';
+      result += '<details open><summary class="connection">' + c.username;
+      if (c._accessInfo.name !== 'pryv-browser') {
+        result += ' / ' + c._accessInfo.name;
+      }
+      result += '</summary>';
       result += this.getStreamStructure(c);
       result += '</details>';
 

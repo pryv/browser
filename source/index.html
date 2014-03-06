@@ -168,8 +168,10 @@
     <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
     <div class='nodeHeader '><%= content.name %></div>
-    <% } else if (typeof(content.username) != "undefined") { %>
+    <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
     <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <% } else if (typeof(content.username) != "undefined") { %>
+    <div class='nodeHeader'><%= content.username %></div>
     <% } } %>
     <span></span>
   </script>

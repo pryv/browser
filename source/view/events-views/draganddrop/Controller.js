@@ -207,7 +207,8 @@ _.extend(Controller.prototype, {
       } else {
         this.treemap.createVirtualNode(vn_filters, vn_name);
         this.close();
-        this.$modal.modal('hide');
+        $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+        $('.modal-backdrop').remove();
       }
     }.bind(this));
   },
@@ -470,6 +471,8 @@ _.extend(Controller.prototype, {
 
   close: function () {
     this.chartView.close();
+    $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+    $('.modal-backdrop').remove();
     this.$modal.find('.modal-content').empty();
   },
 

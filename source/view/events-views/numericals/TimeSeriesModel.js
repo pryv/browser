@@ -14,6 +14,7 @@ module.exports = Backbone.Model.extend({
     style: null,
     transform: null,
     interval: null,
+    fitting: null,
 
     virtual: null
   },

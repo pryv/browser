@@ -15,6 +15,7 @@ module.exports = Marionette.ItemView.extend({
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
     selInterval: '#detailed-view-chart-interval',
+    selFitting: '#detailed-view-chart-fitting',
     butOk: '#detailed-view-chart-ok',
     butCancel: '#detailed-view-chart-cancel'
   },
@@ -36,7 +37,8 @@ module.exports = Marionette.ItemView.extend({
       color: this.edited.get('color'),
       style: this.edited.get('style'),
       transform: this.edited.get('transform'),
-      interval: this.edited.get('interval')
+      interval: this.edited.get('interval'),
+      fitting: this.edited.get('fitting')
     };
   },
   onRender: function () {
@@ -77,6 +79,7 @@ module.exports = Marionette.ItemView.extend({
       this.ui.selStyle.bind('change', this.editorChange.bind(this));
       this.ui.selOperation.bind('change', this.editorChange.bind(this));
       this.ui.selInterval.bind('change', this.editorChange.bind(this));
+      this.ui.selFitting.bind('change', this.editorChange.bind(this));
       this.ui.butOk.on('click', function () {
         this.trigger('ready', this.edited);
       }.bind(this));
@@ -85,6 +88,7 @@ module.exports = Marionette.ItemView.extend({
         this.edited.set('style', this.old.style);
         this.edited.set('transform', this.old.transform);
         this.edited.set('interval', this.old.interval);
+        this.edited.set('fitting', this.old.fitting);
         this.trigger('cancel');
       }.bind(this));
     }
@@ -124,10 +128,20 @@ module.exports = Marionette.ItemView.extend({
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
     }
 
+    this.fitting = this.ui.selFitting.prop('checked');
+
     this.edited.set('color', this.color);
     this.edited.set('style', this.style);
     this.edited.set('transform', this.transform);
     this.edited.set('interval', this.interval);
+    this.edited.set('fitting', this.fitting);
+
+    if (this.edited.get('style') !== 'line') {
+      this.ui.selFitting.prop('disabled', true);
+      this.model.get('edited').set('fitting', false);
+    } else {
+      this.ui.selFitting.prop('disabled', false);
+    }
 
     if (this.chartView) { this.chartView.unbind(); }
     this.chartView.render();
@@ -176,5 +190,14 @@ module.exports = Marionette.ItemView.extend({
         break;
       }
     }
+
+    if (this.edited.get('style') !== 'line') {
+      this.ui.selFitting.prop('disabled', true);
+      this.model.get('edited').set('fitting', false);
+    } else {
+      this.ui.selFitting.prop('disabled', false);
+    }
+
+    this.ui.selFitting.prop('checked', true && this.model.get('edited').get('fitting'));
   }
 });

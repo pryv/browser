@@ -134,6 +134,7 @@ module.exports = Marionette.CompositeView.extend({
       minBorderMargin: 5,
       autoHighlight: true
     };
+    this.options.series = {curvedLines: {active: true}};
     this.options.xaxes = [ {
       show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
@@ -285,6 +286,11 @@ module.exports = Marionette.CompositeView.extend({
     switch (series.get('style')) {
     case 'line':
       this.data[seriesIndex].lines = { show: true };
+      if (series.get('fitting')) {
+        this.data[seriesIndex].curvedLines = {
+          apply: true
+        };
+      }
       this.data[seriesIndex].points = { show: (data.length < 2) };
       break;
     case 'bar':

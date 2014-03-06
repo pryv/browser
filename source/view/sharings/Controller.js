@@ -7,7 +7,7 @@ var _ = require('underscore'),
   BookmarkModel = require('./BookmarkModel.js'),
   BookmarkListView = require('./BookmarkListView.js'),
   Pryv = require('pryv');
-var Controller = module.exports = function ($modal, connection) {
+var Controller = module.exports = function ($modal, connection, target) {
   this.sharings = {};
   this.connection = connection;
   this.sharingCollection =  new SharingCollection();
@@ -15,6 +15,8 @@ var Controller = module.exports = function ($modal, connection) {
   this.bookmarkCollection =  new BookmarkCollection();
   this.bookmarkListView = null;
   this.$modal = $modal;
+  this.target = target;
+  $('.modal-content').empty();
   $('.modal-content').prepend('<div class="modal-header">  ' +
     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
     '&times;</button> ' +
@@ -32,7 +34,11 @@ var Controller = module.exports = function ($modal, connection) {
 
 _.extend(Controller.prototype, {
   show: function () {
-    this.$modal.modal();
+    this.$modal.modal({currentTarget: this.target});
+    $('.modal-content').hide();
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
     if (!this.sharingListView) {
       this.sharingListView = new SharingListView({
         collection: this.sharingCollection

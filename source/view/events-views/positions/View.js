@@ -18,9 +18,7 @@ module.exports = Marionette.ItemView.extend({
   highlightedTime: Infinity,
   positions: null,
   highlightedPosition: null,
-  triggers: {
-    'click .aggregated-nbr-events': 'nodeClicked'
-  },
+
   initialize: function () {
 
     this.positions = this.model.get('positions');
@@ -70,6 +68,9 @@ module.exports = Marionette.ItemView.extend({
   onRender: function () {
     if (this.container) {
       $('#' + this.container).append(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
     }
     this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
   },

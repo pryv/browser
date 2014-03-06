@@ -505,7 +505,7 @@ module.exports = Marionette.CompositeView.extend({
     }
 
     if (this.model.get('showNodeCount')) {
-      $(this.container + ' .aggregated-nbr-events').bind('click',
+      $(this.container).bind('click',
       function () {
         this.trigger('nodeClicked');
       }.bind(this));
@@ -741,7 +741,7 @@ module.exports = Marionette.CompositeView.extend({
   singleEventSetup: function () {
     var m = this.model.get('collection').at(0);
     if (this.model.get('showNodeCount')) {
-      $(this.container).html('<span class="aggregated-nbr-events">1</span>' +
+      $(this.container).html(
       '<div class="content Center-Container is-Table">' +
       '<div class="Table-Cell">' +
       '<div class="Center-Block">' +
@@ -769,7 +769,7 @@ module.exports = Marionette.CompositeView.extend({
       $(this.container).bind('dragend', this.onDragEnd.bind(this));
     }
     if (this.model.get('showNodeCount')) {
-      $(this.container + ' .aggregated-nbr-events').bind('click',
+      $(this.container).bind('click',
       function () {
         this.trigger('nodeClicked');
       }.bind(this));

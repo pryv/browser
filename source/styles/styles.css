@@ -28,12 +28,12 @@ body{
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
   background-size: cover; /* version standardisée */
-  font-weight: 100; 
+  font-weight: 700;
   letter-spacing: 1px;
 }
 .logo{
   z-index: 90000;
-  position: absolute;
+  position: relative;
   top: 0;
   left: 0;
   text-indent: -9999em;
@@ -52,7 +52,9 @@ body{
 }
 .menu-button {
   z-index: 90000;
-  position: absolute;
+  position: relative;
+  float: right;
+  margin-left: 10px;
   top: 0;
   display: block;
   background-color: #3e3e3e;
@@ -61,39 +63,51 @@ body{
   padding-left: 8px;
 }
 #login-button {
-  right: 0;
+  float: right;
   padding: 10px;
   font-weight: bold;
 }
-#login-button:hover {
+#login-button:hover, #login-button:focus {
   text-decoration: none;
   color: white;
 }
+#login-dropdown .dropdown-menu {
+  right: 0;
+  left: auto;
+  background-color: #3e3e3e;
+  border-radius: 0px;
+}
+#login-dropdown .dropdown-menu a {
+  color: #eee;
+}
+#login-dropdown .dropdown-menu a:hover {
+  background-color: inherit;
+  color: #fff;
+}
 #logo-add {
-  right: 120px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-sharing {
-  right: 165px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-subscribe {
-  right: 120px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #logo-create-sharing {
-  right: 210px;
   width: 40px;
   height: 40px;
   font-size: 26px;
 }
 #tree {
+  position: absolute;
+  top: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   color: white;
@@ -123,10 +137,21 @@ body{
   margin: 10px;
   text-align: center;
 }
+.modal-animation {
+  position: absolute;
+  transition: height 0.5s ease, width 0.5s ease, top 0.5s ease, left 0.5s ease, bottom 0.5s ease, right 0.5s ease, opacity 0.5s ease;
+  -webkit-transition: height 0.5s ease, width 0.5s ease, top 0.5s ease, left 0.5s ease, bottom 0.5s ease, right 0.5s ease, opacity 0.5s ease;
+  -moz-transition: height 0.5s ease, width 0.5s ease, top 0.5s ease, left 0.5s ease, bottom 0.5s ease, right 0.5s ease, opacity 0.5s ease;
+  -ms-transition: height 0.5s ease, width 0.5s ease, top 0.5s ease, left 0.5s ease, bottom 0.5s ease, right 0.5s ease, opacity 0.5s ease;
+  -o-transition: height 0.5s ease, width 0.5s ease, top 0.5s ease, left 0.5s ease, bottom 0.5s ease, right 0.5s ease, opacity 0.5s ease;
+}
 .node{
   position: absolute;
-  transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
-  -webkit-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease;
+  transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease, bottom 1s ease, right 1s ease;
+  -webkit-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease, bottom 1s ease, right 1s ease;
+  -moz-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease, bottom 1s ease, right 1s ease;
+  -ms-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease, bottom 1s ease, right 1s ease;
+  -o-transition: height 1s ease, width 1s ease, top 1s ease, left 1s ease, bottom 1s ease, right 1s ease;
   border-radius: 2px;
 }
 .nodeHeader {
@@ -136,17 +161,25 @@ body{
   /*border-left: 2px solid #FFF;*/
   line-height:18px;
 }
+.EventsNode {
+  overflow: hidden;
+  cursor: pointer;
+}
 .EventsNode:hover {
-opacity: .9;
+  box-shadow: 0 0 0 1px #FFF;
+  -webkit-box-shadow: 0 0 0 1px #FFF;
+  -moz-box-shadow: 0 0 0 1px #FFF;
+  -ms-box-shadow: 0 0 0 1px #FFF;
+  -o-box-shadow: 0 0 0 1px #FFF;
 }
 .EventsNode:hover .aggregated-nbr-events {
-font-size:50px;
+/*font-size:50px;
 font-weight: 100;
 padding: 0px 15px;
 -webkit-transition: font 0.1s ease;
 -moz-transition: font 0.1s ease;
 -o-transition: font 0.1s ease;
--ms-transition: font 0.1s ease;
+-ms-transition: font 0.1s ease; */
 }
 
 /*-----------------theme Connection*/
@@ -159,6 +192,16 @@ padding: 0px 15px;
 #node_connection_2 .EventsNode{background-color: #D68912;}
 /*#node_connection_2 > .nodeHeader {border-left:20px solid #F1C40F;}*/
 
+#node_connection_3 .EventsNode{background-color: #8e44ad;}
+
+#node_connection_4 .EventsNode{background-color: #c0392b;}
+
+#node_connection_5 .EventsNode{background-color: #2c3e50;}
+#node_connection_6 .EventsNode{background-color: #2c3e50;}
+#node_connection_7 .EventsNode{background-color: #2c3e50;}
+#node_connection_8 .EventsNode{background-color: #2c3e50;}
+#node_connection_9 .EventsNode{background-color: #2c3e50;}
+#node_connection_10 .EventsNode{background-color: #2c3e50;}
 
 .nodeHeader.color_0:hover,.nodeHeader.color_1:hover,.nodeHeader.color_2:hover,.nodeHeader.color_3:hover,.nodeHeader.color_4:hover,.nodeHeader.color_5:hover
 ,.nodeHeader.color_6:hover,.nodeHeader.color_7:hover,.nodeHeader.color_8:hover,.nodeHeader.color_9:hover,.nodeHeader.color_10:hover,.nodeHeader.color_11:hover
@@ -448,15 +491,19 @@ text-align: center;*/
   right: 0;
   left: 0;
   bottom: 54px;
-  min-width: 600px;
-  padding: 0 !important;
-  width: auto !important;
+  /*min-width: 600px;*/
+  padding: 0;
+  width: auto;
+  background-color: #fff;
 }
 .modal-content {
   -webkit-box-shadow: 0 0px 0px rgba(0,0,0,0.5);
   box-shadow: 0 0px 0px rgba(0,0,0,0.5);;
   border-radius: 0px;
   bottom: 0;
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 .modal-body {
   padding: 0;
@@ -575,6 +622,9 @@ text-align: center;*/
 }
 .full-height {
   height: 100%;
+}
+.full-width {
+  width: 100%;
 }
 #creation-content {
   height: 100%;
@@ -702,15 +752,38 @@ details details {
 summary {
   cursor: pointer;
 }
-summary.focused {
-  background-color: #95a5a6;
+.select-stream:checked + label {
+  background-color: #7f8c8d;
+  font-weight: 700;
+  color: #fff;
+}
+input.select-stream {
+  visibility: hidden;
+  opacity: 0;
 }
 summary.connection {
   font-weight: bold;
 }
-details summary::-webkit-details-marker {
-  color: #3498db;
+summary, summary label  {
+  font-weight: normal;
+  color: #000;
 }
+details summary::-webkit-details-marker {
+  display: none;
+}
+details > summary:first-child::before {
+  font-family: FontAwesome;
+  content: "\f054";
+}
+details[open] > summary:first-child::before {
+  font-family: FontAwesome;
+  content: "\f078";
+}
+details.open > summary:first-child::before {
+  font-family: FontAwesome;
+  content: "\f078";
+}
+
 .create-stream {
   display: inline-flex;
 }

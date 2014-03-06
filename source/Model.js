@@ -9,8 +9,8 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   TimeLine = require('./timeframe-selector/timeframe-selector.js'),
   PUBLIC_TOKEN = 'public',
   STAGING,
-  toShowWhenLoggedIn = ['#logo-sharing', '#logo-add', '#logo-create-sharing'],
-  toShowSubscribe = ['#logo-subscribe'];
+  toShowWhenLoggedIn = ['.logo-sharing', '.logo-add', '.logo-create-sharing'],
+  toShowSubscribe = ['.logo-subscribe'];
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
@@ -93,7 +93,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login-button').text('Sign In');
+        $('#login-button').html('<i class="fa fa-sign-in"></i> Sign In');
         this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
@@ -112,16 +112,28 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     }.bind(this));
   }
   Pryv.Auth.whoAmI(settings);
+  $('#sign-out').click(function () {
+    if (this.loggedConnection) {
+      Pryv.Auth.trustedLogout();
+    }
+  }.bind(this));
   $('#login-button').click(function (e) {
     if (this.loggedConnection) {
+      $('#login-button').dropdown();
       e.stopPropagation();
-      Pryv.Auth.trustedLogout();
+      $('#login-dropdown .dropdown-menu').css('opacity', 1);
     } else {
+      $('#login-dropdown .dropdown-menu').css('opacity', 0);
       $('#login').css('display', 'block');
       $('#login').removeClass('animated slideOutRight');
       $('#tree').removeClass('animated slideInLeft');
       $('#login').addClass('animated slideInRight');
       $('#tree').addClass('animated slideOutLeft');
+      if (detectIE()) {
+        $('#tree').fadeOut('slow', function () {
+          $('#login').fadeIn('slow');
+        });
+      }
     }
   }.bind(this));
   $('#login-caret').click(function () {
@@ -129,6 +141,11 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     $('#tree').removeClass('animated slideOutLeft');
     $('#login').addClass('animated slideOutRight');
     $('#tree').addClass('animated slideInLeft');
+    if (detectIE()) {
+      $('#login').fadeOut('slow', function () {
+        $('#tree').fadeIn('slow');
+      });
+    }
   });
   $('#login form').submit(function (e) {
     e.preventDefault();
@@ -147,7 +164,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 Model.prototype.signedIn = function (connection) {
   console.log('Successfully signed in', connection);
   this.loggedConnection = connection;
-  $('#login-button').text(connection.username);
+  $('#login-button').html(connection.username + ' <i class="fa fa-chevron-down"></i>');
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
     if (!this.sharingsConnections) {
@@ -170,6 +187,11 @@ Model.prototype.signedIn = function (connection) {
   $('#tree').removeClass('animated slideOutLeft');
   $('#login').addClass('animated slideOutRight');
   $('#tree').addClass('animated slideInLeft');
+  if (detectIE()) {
+    $('#login').fadeOut('slow', function () {
+      $('#tree').fadeIn('slow');
+    });
+  }
 };
 
 Model.prototype.addConnection = function (connection) {
@@ -242,3 +264,22 @@ function initTimeAndFilter(timeView, filter) {
   });
 }
 
+var detectIE = function detectIE() {
+  var ua = window.navigator.userAgent;
+  var msie = ua.indexOf('MSIE ');
+  var trident = ua.indexOf('Trident/');
+
+  if (msie > 0) {
+    // IE 10 or older => return version number
+    return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+  }
+
+  if (trident > 0) {
+    // IE 11 (or newer) => return version number
+    var rv = ua.indexOf('rv:');
+    return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+  }
+
+  // other browser
+  return false;
+};

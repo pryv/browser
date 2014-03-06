@@ -53,28 +53,29 @@ var TreeMap = module.exports = function (model) {
       this.focusOnStreams(null);
     }
   }.bind(this));
-  $('#logo-add').click(function (e) {
+  $('.logo-add').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateEventView();
     }.bind(this));
-    this.showCreateEventView($modal, this.model.connections, this.focusedStreams);
+    this.showCreateEventView($modal, this.model.connections, this.focusedStreams, e.currentTarget);
   }.bind(this));
-  $('#logo-sharing').click(function (e) {
+  $('.logo-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSharingView();
     }.bind(this));
-    this.showSharingView($modal, this.model.loggedConnection);
+    this.showSharingView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
-  $('#logo-subscribe').click(function (e) {
+  $('.logo-subscribe').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSubscribeView();
     }.bind(this));
-    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections);
+    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
+      e.currentTarget);
   }.bind(this));
-  $('#logo-create-sharing').click(function (e) {
+  $('.logo-create-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateSharingView();
@@ -93,7 +94,7 @@ var TreeMap = module.exports = function (model) {
     }
     if (streams.length !== 0) {
       this.showCreateSharingView($modal, this.model.loggedConnection, streams,
-        this.model.activeFilter.timeFrameST);
+        this.model.activeFilter.timeFrameST, e.currentTarget);
     }
   }.bind(this));
   this._onIgnoreParamChanged = function () {
@@ -326,9 +327,9 @@ TreeMap.prototype.getFiltersFromNode = function (node) {
 
 
 //======== Detailed View ========\\
-TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime) {
+TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime, target) {
   if (!this.hasDetailedView()) {
-    this.detailedView = new DetailView($modal, this.model.connections);
+    this.detailedView = new DetailView($modal, this.model.connections, target);
     this.addEventsDetailedView(events);
     this.showDetailedView();
     this.highlightDateDetailedView(highlightedTime);
@@ -377,12 +378,12 @@ TreeMap.prototype.highlightDateDetailedView = function (time) {
 TreeMap.prototype.hasCreateEventView = function () {
   return typeof this.createEventView !== 'undefined' && this.createEventView !== null;
 };
-TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStream) {
+TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStream, target) {
   this.closeSharingView();
   this.closeCreateSharingView();
   this.closeDetailedView();
   if ($modal && connection && !this.hasCreateEventView()) {
-    this.createEventView = new CreateEventView($modal, connection, focusedStream);
+    this.createEventView = new CreateEventView($modal, connection, focusedStream, target);
     this.createEventView.show();
   }
 };
@@ -397,13 +398,13 @@ TreeMap.prototype.closeCreateEventView = function () {
 TreeMap.prototype.hasSharingView = function () {
   return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
 };
-TreeMap.prototype.showSharingView = function ($modal, connection) {
+TreeMap.prototype.showSharingView = function ($modal, connection, target) {
   this.closeSharingView();
   this.closeCreateSharingView();
   this.closeDetailedView();
   this.closeCreateEventView();
   if ($modal && connection) {
-    this.sharingView = new SharingView($modal, connection);
+    this.sharingView = new SharingView($modal, connection, target);
     this.sharingView.show();
   }
 };
@@ -418,13 +419,14 @@ TreeMap.prototype.closeSharingView = function () {
 TreeMap.prototype.hasCreateSharingView = function () {
   return typeof this.createSharingView !== 'undefined' && this.createSharingView !== null;
 };
-TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilter, streams) {
+TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilter, streams,
+                                                    target) {
   this.closeCreateSharingView();
   this.closeDetailedView();
   this.closeSharingView();
   this.closeCreateEventView();
   if ($modal && timeFilter && streams) {
-    this.createSharingView = new CreateSharingView($modal, connection, timeFilter, streams);
+    this.createSharingView = new CreateSharingView($modal, connection, timeFilter, streams, target);
     this.createSharingView.show();
   }
 };
@@ -439,10 +441,11 @@ TreeMap.prototype.closeCreateSharingView = function () {
 TreeMap.prototype.hasSubscribeView = function () {
   return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
 };
-TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections) {
+TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections,
+                                                target) {
   this.closeSubscribeView();
   if ($modal && loggedConnection) {
-    this.subscribeView = new SubscribeView($modal, loggedConnection, sharingsConnections);
+    this.subscribeView = new SubscribeView($modal, loggedConnection, sharingsConnections, target);
     this.subscribeView.show();
   }
 };

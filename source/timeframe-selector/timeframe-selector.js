@@ -376,7 +376,7 @@ module.exports = Backbone.View.extend({
 
       var calculateDelta = function () {
         return (self.frameTo - self.frameFrom) /
-               ($endMarker.position().left - $startMarker.position().left);
+               ($endMarker.data('left') - $startMarker.data('left'));
       };
       delta = calculateDelta();
       var showFocusLabel = function () {
@@ -520,8 +520,8 @@ module.exports = Backbone.View.extend({
     var markerWidth = $startMarker.width();
     var leftConstraint =  -$timeline.width() * 0.5;
     var rightConstraint = $timeline.width() * 1.5;
-    var startConstraint = $startMarker.position().left + (markerWidth / 2);
-    var endConstraint = $endMarker.position().left + (markerWidth / 2);
+    var startConstraint = $startMarker.data('left') + (markerWidth / 2);
+    var endConstraint = $endMarker.data('left') + (markerWidth / 2);
     $startMarker.draggable('option', 'containment',
       [leftConstraint, 0, endConstraint - (markerWidth / 2), 0]);
     $startLabel.draggable('option', 'containment',
@@ -576,6 +576,8 @@ module.exports = Backbone.View.extend({
 
     var selectedFrameLeft = startMarkerLeft + (markerWidth / 2);
     var selectedFrameWidth = endMarkerLeft + (markerWidth / 2) - selectedFrameLeft;
+    $startMarker.data('left', startMarkerLeft);
+    $endMarker.data('left', endMarkerLeft);
     $startMarker.show().animate({'left': startMarkerLeft + 'px'});
     $startLabel.show().animate({'left': startLabelLeft + 'px'});
     $startArrow.show().animate({'left': startArrowLeft + 'px'});

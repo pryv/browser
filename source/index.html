@@ -11,7 +11,7 @@
   <title>Pryv @ Glance</title>
   <base href="{browser-source}_<!-- @echo version -->/">
   <!-- @endif -->
-
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
   <meta property="og:url" content="https://{host}" />
@@ -53,8 +53,8 @@
   <script id="onboardingView" type="template">
     <div class="container">
     <div class="row onboarding">
-      <div class="col-md-4"><h1>What matters in your life ?</h1>
-        <div class="ob_text">
+      <div class="col-md-4"><h1 class="hidden-xs">What matters in your life ?</h1>
+        <div class="ob_text hidden-xs">
           <p>Your life is made of streams.
             <span class="stream_color_1">Travel</span>,<span class="stream_color_2"> Friends</span>,<span class="stream_color_3"> Family</span>,<span class="stream_color_4"> Sports...</span></p>
           <p>To get started, create streams that matter to you:</p>
@@ -65,14 +65,18 @@
             <button type="submit" class="btn btn-primary">START  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
           </form>
         </div>
+
+
       </div>
-      <div class="col-md-8"><img src="images/onboarding_image.png"/></div>
+      <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
     </div>
     </div>
   </script>
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+    <% } %>
 
     <div class="aggregated-icon-page"></div>
     <div class="content Center-Container is-Table">
@@ -88,19 +92,23 @@
   </script>
   <script id="positionsView" type="template">
     <div class="aggregated-icon Positions"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+    <% } %>
 
     <div id="map-canvas-<%=id%>" class="mapView"></div>
   </script>
   <script id="picturesView" type="template">
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
   </script>
 
   <script id="notesView" type="template">
     <div class="aggregated-icon Notes"></div>
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
@@ -113,9 +121,9 @@
   </script>
   <script id="genericsView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="aggregated-icon-page"></div>
 
 
@@ -131,11 +139,12 @@
       </div>
     </div>
 
-  </script>  <script id="tweetView" type="template">
+  </script>
+  <script id="tweetView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-
+    <% if(eventsNbr > 1) { %>
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-
+    <% } %>
     <div class="aggregated-icon-page"></div>
 
 
@@ -319,7 +328,7 @@
   </script>
   <script type="template" id="template-detail-content-picture">
     <% if (event) { %>
-      <div class="event-structure" id="current-picture">
+      <div class="event-structure full-height full-width" id="current-picture">
         <span class="fa fa-angle-left picture-icon"></span>
         <span class="fa fa-angle-right picture-icon"></span>
             <img src="<%= getSrc() %>" alt="<%= getAlt()%>">
@@ -461,6 +470,13 @@
 </head>
 
 <body>
+<div class="onboarding visible-xs">
+<div class="ob_text" style="margin: 15px;">
+  <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
+  <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.</p>
+</div>
+</div>
+<div class="hidden-xs">
 <span id="pryvButton"></span>
 <div id="login">
   <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
@@ -481,11 +497,18 @@
     </form>
   </div>
 </div>
-<a href="javascript:void(0)" id="login-button" class="menu-button">Sign In</a>
-<a href="javascript:void(0)" id="logo-sharing" class="menu-button"><span class="glyphicon glyphicon-star"></span></a>
-<a href="javascript:void(0)" id="logo-add" class="menu-button"><span class="glyphicon glyphicon-plus"></span></a>
-<a href="javascript:void(0)" id="logo-subscribe" class="menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
-<a href="javascript:void(0)" id="logo-create-sharing" class="menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> Sign In</a>
+<ul class="dropdown-menu">
+  <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> Add event</a></li>
+  <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> Share a slice of life</a></li>
+  <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> Manage Slices</a></li>
+  <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> Follow this slice</a></li>
+  <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> Sign out</a></li>
+</ul></div>
+<a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
+<a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
+<a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
+<a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
 <!-- @if NODE_ENV == 'DEVELOPMENT' -->
 <!-- do not put anything between #logo-reload and #tree -->
 <!-- @endif -->
@@ -496,9 +519,9 @@
   </div>
 </div>
 <div id="timeframe"></div>
-<div class="modal node" id="pryv-modal" tabindex="-1" role="dialog"
+<div class="modal" id="pryv-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-animation">
     <div class="modal-content">
 
     </div>
@@ -507,6 +530,7 @@
   <!-- /.modal-dialog -->
 </div>
 <!-- /.modal -->
+</div>
 <!-- Facebook -->
 <div id="fb-root"></div>
 <script>(function(d, s, id) {

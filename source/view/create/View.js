@@ -5,7 +5,8 @@ var Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
   creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect',
     pictureSelect: 'pictureSelect', eventEdit: 'eventEdit'},
-  validType = ['note/txt', 'picture/attached', 'position/wgs84'];
+  validType = ['note/txt', 'picture/attached', 'position/wgs84'],
+  UNIQUE_ID = 0;
 
 module.exports = Marionette.ItemView.extend({
   type: 'Creation',
@@ -60,6 +61,7 @@ module.exports = Marionette.ItemView.extend({
     fileSelect: '#fileSelect',
     stream: '#stream-select',
     inputStream: '.create-stream input',
+    selectStreamRadio: 'input.select-stream',
     publish: '#publish',
     cancel: '#cancel',
     spin: '.fa-spin'
@@ -68,7 +70,7 @@ module.exports = Marionette.ItemView.extend({
     this.step = creationStep.typeSelect;
   },
   onRender: function () {
-    $(this.itemViewContainer).html(this.el);
+    $(this.itemViewContainer).html($(this.el).fadeIn());
     this.ui.type.bind('click', this.onTypeClick.bind(this));
     this.ui.stream.bind('click', this.onStreamClick.bind(this));
     this.ui.fileSelect.bind('click', this.onFileSelectClick.bind(this));
@@ -85,7 +87,12 @@ module.exports = Marionette.ItemView.extend({
   },
   onInputStreamChange: function (e) {
     var currentValue = e.target.value;
+    this.ui.selectStreamRadio.each(function (i, elem) {
+      elem.checked = false;
+    });
     this.ui.inputStream.val('');
+    this.streamSelected = null;
+    this.connectionSelected = null;
     e.target.value = currentValue;
   },
   onPublishClick: function () {
@@ -231,8 +238,11 @@ module.exports = Marionette.ItemView.extend({
   },
 
   onStreamClick: function (e) {
-    var streamSelected = $(e.target).attr('data-stream'),
-      connectionSelected = this.connection.get($(e.target).attr('data-connection'));
+    var streamSelected = $(e.target).attr('data-stream') ||
+        $(e.target).parent().attr('data-stream'),
+      connectionSelected = this.connection.get($(e.target).attr('data-connection') ||
+        $(e.target).parent().attr('data-connection'));
+    this.ui.inputStream.val('');
     this.streamSelected = streamSelected;
     if (connectionSelected) {
       this.connectionSelected = connectionSelected;
@@ -315,7 +325,7 @@ module.exports = Marionette.ItemView.extend({
       } else {
         open = '';
       }
-      result += '<details ' + open + '><summary class="connection">' +
+      result += '<details open><summary class="connection">' +
         c.username + ' / ' + c._accessInfo.name + '</summary>';
       result += this.getStreamStructure(c);
       result += '</details>';
@@ -325,7 +335,7 @@ module.exports = Marionette.ItemView.extend({
   },
   getStreamStructure: function (connection) {
     var rootStreams = connection.datastore.getStreams(),
-      result = '', open = '', focused = '';
+      result = '', open = '', checked = '';
     for (var i = 0; i < rootStreams.length; i++) {
       if (this._isWritePermission(connection, rootStreams[i])) {
         if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
@@ -333,33 +343,36 @@ module.exports = Marionette.ItemView.extend({
           open = 'open';
           this.focusedStream.ancestor.shift();
           if (this.focusedStream.ancestor.length === 0) {
-            focused = 'focused';
+            checked = 'checked';
           }
         } else {
-          focused = '';
+          checked = '';
           open = '';
         }
         result += '<details ' + open + ' ">' +
-          this._walkStreamStructure(rootStreams[i], focused) +
+          this._walkStreamStructure(rootStreams[i], checked) +
           '</details>';
       }
     }
     result +=
-      '<summary><div class="input-group">' +
+      '<details><summary>&nbsp;&nbsp;Create a new stream</summary><div class="input-group">' +
         '<form role="form" class="create-stream">' +
-        '<i class="fa fa-plus fa-2"></i>' +
-        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        '<input type="text" class="form-control" placeholder="Name this stream"' +
         ' data-parentId=""  data-connection="' + connection.serialId + '">' +
-        '</form></div></summary>';
+        '</form></div></details>';
     return result;
 
   },
-  _walkStreamStructure: function (stream, focused) {
-    var result = '<summary class="' + focused + '" data-connection="' +
+  _walkStreamStructure: function (stream, checked) {
+    var result = '<summary data-connection="' +
       stream.connection.serialId + '" data-stream="' +
-      stream.id + '">' + stream.name + '</summary>';
+      stream.id + '"><input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
+      '" class="select-stream" ' +
+      checked + '><label for="selectStream' + UNIQUE_ID + '">' +
+      stream.name + '</label></summary>';
+    UNIQUE_ID++;
     var open = '';
-    focused = '';
+    checked = '';
     for (var j = 0; j < stream.children.length; j++) {
       if (this._isWritePermission(stream.connection, stream.children[j])) {
         if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
@@ -367,24 +380,23 @@ module.exports = Marionette.ItemView.extend({
           open = 'open';
           this.focusedStream.ancestor.shift();
           if (this.focusedStream.ancestor.length === 0) {
-            focused = 'focused';
+            checked = 'checked';
           }
         } else {
           open = '';
-          focused = '';
+          checked = '';
         }
         result += '<details ' + open + ' ">' +
-          this._walkStreamStructure(stream.children[j], focused) +
+          this._walkStreamStructure(stream.children[j], checked) +
           '</details>';
       }
     }
     result +=
-      '<summary><div class="input-group">' +
+      '<details><summary>&nbsp;&nbsp;Create a new stream</summary><div class="input-group">' +
         '<form role="form" class="create-stream">' +
-        '<i class="fa fa-plus fa-2"></i>' +
-        '<input type="text" class="form-control" placeholder="Create new stream"' +
+        '<input type="text" class="form-control" placeholder="Name this stream"' +
         ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
-        '</form></div></summary>';
+        '</form></div></details>';
     return result;
   },
   _isWritePermission: function (connection, streamId) {

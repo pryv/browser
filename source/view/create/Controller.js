@@ -41,7 +41,8 @@ _.extend(Controller.prototype, {
     }
     this.newEvent = null;
     $(this.container).empty();
-    this.$modal.modal('hide');
+    $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+    $('.modal-backdrop').remove();
   },
   _defaultEvent: function () {
     var result = {};

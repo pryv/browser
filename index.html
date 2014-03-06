@@ -4,7 +4,7 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.11/">
+  <base href="{browser-source}_v0.0.12/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
@@ -144,8 +144,10 @@
     <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
     <div class='nodeHeader '><%= content.name %></div>
-    <% } else if (typeof(content.username) != "undefined") { %>
+    <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
     <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <% } else if (typeof(content.username) != "undefined") { %>
+    <div class='nodeHeader'><%= content.username %></div>
     <% } } %>
     <span></span>
   </script>
@@ -185,10 +187,10 @@
     <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
-    <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= connection.url %>
-      <input type="text" placeholder="Name" required class="subscription-name">
+      <input type="checkbox" class="checkbox">
+      <label>Name this slice: </label>
+      <input type="text" placeholder="Name" required class="subscription-name" placeholder="<%= connection._accessInfo.name %>">
       <% if (error) {%>
         <span class="glyphicon glyphicon-warning-sign"></span>
       <% } %>
@@ -390,9 +392,25 @@
                 </div>
               </div>
             </li>
+            <li>
+              <div class="form-group">
+                <label class="col-sm-2 control-label">Fitting</label>
+                <div class="col-sm-10">
+                  <div class="onoffswitch">
+                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
+                    <label class="onoffswitch-label" for="detailed-view-chart-fitting">
+                      <div class="onoffswitch-inner"></div>
+                      <div class="onoffswitch-switch"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger">Cancel</button>
+              <button id="detailed-view-chart-ok" type="button" class="btn btn-success">Ok!</button>
+            </li>
           </ul>
-          <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger">Cancel</button>
-          <button id="detailed-view-chart-ok" type="button" class="btn btn-success">Ok!</button>
         </div>
       </div>
   </script>

@@ -644,6 +644,7 @@ module.exports = Marionette.CompositeView.extend({
         $('#chart-pt-editor').remove();
       }
       this.trigger('eventEdit', this.currentlyEdited);
+      this.render();
     }.bind(this));
 
   },

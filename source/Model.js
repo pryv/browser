@@ -181,6 +181,11 @@ Model.prototype.signedIn = function (connection) {
     }
     this.treemap.isOnboarding();
   } else {
+    if (!this.sharingsConnections && this.publicConnection) {
+      this.sharingsConnections = [];
+      this.sharingsConnections.push(this.publicConnection);
+    }
+
     this.showSubscribeElement();
   }
   $('#login').removeClass('animated slideInRight');

@@ -211,10 +211,10 @@
     <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
-    <input type="checkbox" class="checkbox">
     <div class="view">
-      <%= connection.url %>
-      <input type="text" placeholder="Name" required class="subscription-name">
+      <input type="checkbox" class="checkbox">
+      <label>Name this slice: </label>
+      <input type="text" placeholder="Name" required class="subscription-name" placeholder="<%= connection._accessInfo.name %>">
       <% if (error) {%>
         <span class="glyphicon glyphicon-warning-sign"></span>
       <% } %>

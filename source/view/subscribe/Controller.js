@@ -10,6 +10,7 @@ var Controller = module.exports = function ($modal, loggedConnection, sharingsCo
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';
+  console.log(sharingsConnections);
   this.addSharings(sharingsConnections);
 };
 
@@ -25,6 +26,7 @@ _.extend(Controller.prototype, {
         collection: this.collection
       });
       this.listView.on('subscription:add', this._createSubscription.bind(this));
+      this.listView.on('close', this.close.bind(this));
     }
     this.listView.render();
   },
@@ -34,12 +36,15 @@ _.extend(Controller.prototype, {
       this.collection.reset();
       this.collection = null;
     }
+    $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+    $('.modal-backdrop').remove();
   },
   addSharings: function (sharings) {
     if (!Array.isArray(sharings)) {
       sharings = [sharings];
     }
     sharings.forEach(function (sharing) {
+      console.log(sharing);
       sharing.url = sharing.id.replace(/\?auth.*$/, '')
         .replace(/\.in/, '.li')
         .replace(/\.io/, '.me');
@@ -54,20 +59,22 @@ _.extend(Controller.prototype, {
     var subNumber = subscriptions.length;
     subscriptions.forEach(function (model) {
       var connection = model.get('connection');
+      var gotError = false;
+      if (!connection.name || connection.name.length === 0) {
+        connection.name = connection._accessInfo.name;
+      }
       if (connection.name && connection.auth && connection.url) {
         this.loggedConnection.bookmarks.create(
           {url: connection.url, accessToken: connection.auth, name: connection.name},
           function (error) {
-          if (!error) {
             subNumber -= 1;
             if (subNumber === 0) {
-              this.close();
-              this.$modal.modal('hide');
+              this.listView.onCreateSubscriptionFinished(gotError);
             }
-          } else {
-            model.set('error', error);
-          }
-        }.bind(this));
+            if (error) {
+              model.set('error', error);
+            }
+          }.bind(this));
       }
     }.bind(this));
   }

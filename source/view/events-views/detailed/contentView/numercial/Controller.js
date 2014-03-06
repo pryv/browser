@@ -43,6 +43,7 @@ module.exports = Marionette.ItemView.extend({
     } else if (this.viewType === Sev) {
       this.view.bind('ready', this.readySeriesEvent.bind(this));
       this.view.bind('cancel', this.cancelSeriesEvent.bind(this));
+      this.view.bind('eventEdit', this.eventEdited.bind(this));
     }
     if (this.firstRender) {
       this.firstRender = false;
@@ -120,6 +121,24 @@ module.exports = Marionette.ItemView.extend({
     this.prepareGeneralConfigModel();
     this.render();
   },
+  eventEdited: function (event) {
+    var c = this.model.get('collection');
+    var submitter = function () {
+      this.collectionChanged.bind(this);
+    }.bind(this);
+
+    for (var i = 0; i < c.length; ++i) {
+      var current = c.at(i);
+      var e = current.get('event');
+      if (e.id === event.eventId) {
+        e.content = event.value;
+        current.save(submitter);
+        break;
+      }
+    }
+
+
+  },
   readySeriesEvent: function (m) {
     var s = new Settings(m.get('stream'), m.get('type'), m.get('virtual'));
     s.set('color', m.get('color'));
@@ -172,6 +191,7 @@ module.exports = Marionette.ItemView.extend({
   },
   collectionChanged: function () {
     // TODO: depends on view type
+    console.log('collectionChanged collectionChanged');
     this.updateCollection();
     if (this.view) {
       this.view.unbind();

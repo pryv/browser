@@ -18,7 +18,6 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    console.log('this.model', this.model);
 
     if (this.chartView) {
       this.chartView.model.set('collection', this.model.get('collection'));

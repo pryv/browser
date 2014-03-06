@@ -64,7 +64,8 @@ module.exports = Marionette.ItemView.extend({
     selectStreamRadio: 'input.select-stream',
     publish: '#publish',
     cancel: '#cancel',
-    spin: '.fa-spin'
+    spin: '.fa-spin',
+    createStreamFrom: '.create-stream'
   },
   initialize: function () {
     this.step = creationStep.typeSelect;
@@ -78,6 +79,10 @@ module.exports = Marionette.ItemView.extend({
     this.ui.publish.bind('click', this.onPublishClick.bind(this));
     this.ui.cancel.bind('click', this.onCancelClick.bind(this));
     this.ui.inputStream.bind('keypress past', this.onInputStreamChange.bind(this));
+    this.ui.createStreamFrom.bind('submit', function (e) {
+      e.preventDefault();
+      this.onPublishClick();
+    }.bind(this));
     this.ui.spin.hide();
     $('.td-progress').hide();
     $('details').details();
@@ -122,6 +127,7 @@ module.exports = Marionette.ItemView.extend({
             if (err) {
               console.warn(err);
               this.ui.publish.css({'background-color': '#e74c3c'});
+              this.ui.spin.hide();
             } else {
               this.streamSelected = res.id;
               this.onPublishClick();

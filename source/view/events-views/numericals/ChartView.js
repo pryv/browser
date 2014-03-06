@@ -150,7 +150,6 @@ module.exports = Marionette.CompositeView.extend({
       this.options.legend.labelFormatter = function (label) {
         var buttons = model.get('legendButtonContent');
         var legend = '<span class="DnD-legend-text">' + label + '</span>';
-        console.log('buttons', buttons, buttons.length);
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
           case 'ready':
@@ -175,7 +174,6 @@ module.exports = Marionette.CompositeView.extend({
             break;
           }
         }
-        console.log('legend', legend);
         return legend;
       };
     } else {
@@ -573,11 +571,26 @@ module.exports = Marionette.CompositeView.extend({
     }
     if (this.model.get('editPoint') && item) {
       var tc = this.model.get('collection').at(0);
-      if (!tc.get('transform') && !tc.get('interval')) {
-        this.currentlyEdited = [{time: item.datapoint[0], value: item.datapoint[1]}];
+      if (tc.get('transform') === 'none' && tc.get('interval') === 'none') {
+        var editedSerie =  this.model.get('collection').at(item.seriesIndex);
+        var allEvents = editedSerie.get('events');
+        var editedEvent = null;
+        for (var i = 0; i < allEvents.length; ++i) {
+          if (allEvents[i].content === item.datapoint[1] &&
+            allEvents[i].time * 1000 === item.datapoint[0]) {
+            editedEvent =  allEvents[i];
+            break;
+          }
+        }
+        this.currentlyEdited = {
+          event: editedEvent,
+          eventId: editedEvent.id,
+          streamId: editedEvent.streamId,
+          value: editedEvent.content,
+          time: editedEvent.time
+        };
         this.showPointEditor(item.pageY + 5, item.pageX + 5);
       }
-
     }
   },
 
@@ -585,7 +598,8 @@ module.exports = Marionette.CompositeView.extend({
     $('.modal-content').append(
       '<div id="chart-pt-editor" class="tooltip has-feedback">' +
       '  <div class="input-group">' +
-      '    <input type="text" class="form-control" id="editPointVal">' +
+      '    <input type="text" class="form-control" id="editPointVal" placeholder="' +
+        this.currentlyEdited.value + '">' +
       '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
       '    <span class="input-group-btn">' +
       '      <button class="btn" id="editPointBut" type="button">Ok!</button>' +
@@ -622,7 +636,15 @@ module.exports = Marionette.CompositeView.extend({
     });
 
     $('#editPointBut').bind('click', function () {
-      this.currentlyEdited.push({value: $('editPointVal').val});
+      this.currentlyEdited.value = +$('#editPointVal').val();
+      this.currentlyEdited.event.content = this.currentlyEdited.value;
+      if ($('#chart-pt-editor')) {
+        $('#editPointVal').unbind();
+        $('#editPointBut').unbind();
+        $('#chart-pt-editor').remove();
+      }
+      this.trigger('eventEdit', this.currentlyEdited);
+      this.render();
     }.bind(this));
 
   },

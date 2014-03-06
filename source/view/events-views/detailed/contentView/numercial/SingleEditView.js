@@ -70,6 +70,7 @@ module.exports = Marionette.ItemView.extend({
           xaxis: true,
           showNodeCount: false
         });
+
       this.ui.selColor.css({'background-color': this.edited.get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
@@ -77,11 +78,9 @@ module.exports = Marionette.ItemView.extend({
       this.ui.selOperation.bind('change', this.editorChange.bind(this));
       this.ui.selInterval.bind('change', this.editorChange.bind(this));
       this.ui.butOk.on('click', function () {
-        console.log('SEV: OK');
         this.trigger('ready', this.edited);
       }.bind(this));
       this.ui.butCancel.on('click', function () {
-        console.log('SEV: cancel');
         this.edited.set('color', this.old.color);
         this.edited.set('style', this.old.style);
         this.edited.set('transform', this.old.transform);
@@ -92,17 +91,24 @@ module.exports = Marionette.ItemView.extend({
 
     if ($('#detail-chart-container-edit').length !== 0) {
       this.updateEditor();
+      if (this.chartView) { this.chartView.unbind(); }
       this.chartView.render();
+      this.chartView.on('eventEdit', this.onValueEdited.bind(this));
       this.highlightEvent();
       this.rendered = true;
     }
   },
   debounceRender: _.debounce(function () {
     if (!this.rendered) {
+      if (this.chartView) { this.chartView.unbind(); }
       this.render();
       this.highlightEvent();
+      this.chartView.on('eventEdit', this.onValueEdited.bind(this));
     }
   }, 1000),
+  onValueEdited: function (event) {
+    this.trigger('eventEdit', event);
+  },
   editorChange: function () {
     if (this.ui.selColor[0].selectedIndex > -1) {
       this.color = this.ui.selColor[0].options[this.ui.selColor[0].selectedIndex].value;
@@ -123,7 +129,9 @@ module.exports = Marionette.ItemView.extend({
     this.edited.set('transform', this.transform);
     this.edited.set('interval', this.interval);
 
+    if (this.chartView) { this.chartView.unbind(); }
     this.chartView.render();
+    this.chartView.on('eventEdit', this.onValueEdited.bind(this));
   },
   highlightEvent: function () {
     if (this.chartView && this.model.get('event')) {

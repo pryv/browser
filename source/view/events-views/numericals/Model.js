@@ -185,7 +185,8 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         color: s.get('color'),
         style: s.get('style'),
         transform: s.get('transform'),
-        interval: s.get('interval')
+        interval: s.get('interval'),
+        fitting: s.get('fitting')
       });
       this.seriesCollection.add(eventsModel);
     }

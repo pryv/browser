@@ -288,9 +288,7 @@ module.exports = Marionette.CompositeView.extend({
       this.data[seriesIndex].lines = { show: true };
       if (series.get('fitting')) {
         this.data[seriesIndex].curvedLines = {
-          apply: true,
-          fit: true,
-          fitPointDist: 0.000001
+          apply: true
         };
       }
       this.data[seriesIndex].points = { show: (data.length < 2) };

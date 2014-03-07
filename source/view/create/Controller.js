@@ -35,14 +35,16 @@ _.extend(Controller.prototype, {
 
   },
   close: function () {
+    this.newEvent = null;
     if (this.view) {
       this.view.close();
       this.view = null;
+      $(this.container).empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
     }
-    this.newEvent = null;
-    $(this.container).empty();
-    $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
-    $('.modal-backdrop').remove();
+
   },
   _defaultEvent: function () {
     var result = {};

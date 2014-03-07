@@ -40,9 +40,11 @@ module.exports = Marionette.CompositeView.extend({
     $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
   },
   onTrashSelectedClick: function () {
+    var i = 0;
     this.collection.each(function (model) {
       if (model.get('checked')) {
-        model.trash();
+        i++;
+        model.trash(function () { i--; });
       }
     }.bind(this));
   },

@@ -56,6 +56,7 @@ var TreeMap = module.exports = function (model) {
   $('.logo-add').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      console.log('close');
       this.closeCreateEventView();
     }.bind(this));
     this.showCreateEventView($modal, this.model.connections, this.focusedStreams, e.currentTarget);
@@ -388,6 +389,7 @@ TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStr
   }
 };
 TreeMap.prototype.closeCreateEventView = function () {
+  console.log(this.hasCreateEventView());
   if (this.hasCreateEventView()) {
     this.createEventView.close();
     this.createEventView = null;

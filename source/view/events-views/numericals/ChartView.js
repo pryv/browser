@@ -577,7 +577,8 @@ module.exports = Marionette.CompositeView.extend({
     }
     if (this.model.get('editPoint') && item) {
       var tc = this.model.get('collection').at(0);
-      if (tc.get('transform') === 'none' && tc.get('interval') === 'none') {
+      if ((tc.get('transform') === 'none' || tc.get('transform') === null) &&
+        (tc.get('interval') === 'none' || tc.get('interval') === null)) {
         var editedSerie =  this.model.get('collection').at(item.seriesIndex);
         var allEvents = editedSerie.get('events');
         var editedEvent = null;

@@ -162,13 +162,23 @@ module.exports = Marionette.ItemView.extend({
   },
   updateEditor: function () {
     var i;
+    var found = false;
     var options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
       if (options[i].value === this.model.get('edited').get('color')) {
         this.ui.selColor[0].selectedIndex = i;
+        found = true;
         break;
       }
     }
+    if (!found) {
+      if (this.model.get('edited').get('color')) {
+        $(this.ui.selColor).css({
+          'background-color': this.model.get('edited').get('color')
+        });
+      }
+    }
+
     options = this.ui.selStyle[0].options;
     for (i = 0; i < options.length; ++i) {
       if (options[i].value === this.model.get('edited').get('style')) {

@@ -4,7 +4,7 @@
 <head>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.13/">
+  <base href="{browser-source}_v0.0.14/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
@@ -187,14 +187,23 @@
     <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
-    <div class="view">
-      <input type="checkbox" class="checkbox">
-      <label>Name this slice: </label>
-      <input type="text" required class="subscription-name" placeholder="<%= connection._accessInfo.name %>">
+    <form class="form-inline subscribe" role="form">
+      <div class="checkbox">
+        <label>
+          <input type="checkbox"> Follow
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Name this slice: </label>
+        <input type="text" required class="subscription-name form-control" placeholder="<%= connection._accessInfo.name %>">
+      </div>
       <% if (error) {%>
-        <span class="glyphicon glyphicon-warning-sign"></span>
+        <i class="fa fa-exclamation-circle"></i>
       <% } %>
-    </div>
+      <% if (created) {%>
+      <i class="fa fa-check-circle"></i>
+      <% } %>
+    </form>
   </script>
   <script type="text/html" id="template-bookmarkListCompositeView">
     <ul id="bookmark-list"></ul>
@@ -497,6 +506,7 @@
   <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> Share a slice of life</a></li>
   <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> Manage Slices</a></li>
   <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> Follow this slice</a></li>
+  <li class=""><a href="mailto:support@pryv.com?subject=Browser bug report&amp;body=" title="Bug report"><i class="fa fa-bug"></i> Report a bug</a></li>
   <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> Sign out</a></li>
 </ul></div>
 <a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
@@ -522,17 +532,6 @@
 </div>
 <!-- /.modal -->
 </div>
-<!-- Facebook -->
-<div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1&appId=589869207755296";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-<!-- Twitter -->
-<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 <!-- Google Analytics -->
 <script>
   var _gaq=[['_setAccount','UA-36589447-3'],['_trackPageview']];

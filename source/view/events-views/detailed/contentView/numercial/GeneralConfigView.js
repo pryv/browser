@@ -40,7 +40,7 @@ module.exports = Marionette.ItemView.extend({
           legendContainer: '#legend-container-general', //false or a a selector
           legendExtras: true,   // use extras in the legend
           onClick: false,
-          onHover: false,
+          onHover: true,
           onDnD: false,
           allowPan: true,      // Allows navigation through the chart
           allowZoom: true,     // Allows zooming on the chart

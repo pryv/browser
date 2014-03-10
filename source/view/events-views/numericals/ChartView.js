@@ -563,7 +563,7 @@ module.exports = Marionette.CompositeView.extend({
       var labelValue = item.datapoint[1].toFixed(2);
       var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
         item.datapoint[0]);
-      this.showTooltip(coords.top + 5, coords.left + 5, labelValue);
+      this.showTooltip(coords.top + 10, coords.left + 10, labelValue);
     } else {
       this.removeTooltip();
     }

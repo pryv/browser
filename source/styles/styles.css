@@ -100,7 +100,8 @@ body{
   font-size: 26px;
 }
 #subscribe-list {
-  display: inline-block;
+  display: block;
+  list-style-type: none;
 }
 #logo-create-sharing {
   width: 40px;
@@ -1141,4 +1142,10 @@ ul.modal-dnd-legend > li {
 }
 .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
   right: 0px;
+}
+.fa-check-circle {
+  color: #2ecc71;
+}
+.fa-exclamation-circle {
+  color: #e74c3c;
 }

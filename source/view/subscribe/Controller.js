@@ -57,9 +57,9 @@ _.extend(Controller.prototype, {
   },
   _createSubscription: function (subscriptions) {
     var subNumber = subscriptions.length;
+    var gotError = false;
     subscriptions.forEach(function (model) {
       var connection = model.get('connection');
-      var gotError = false;
       if (!connection.name || connection.name.length === 0) {
         connection.name = connection._accessInfo.name;
       }
@@ -67,13 +67,17 @@ _.extend(Controller.prototype, {
         this.loggedConnection.bookmarks.create(
           {url: connection.url, accessToken: connection.auth, name: connection.name},
           function (error) {
-            subNumber -= 1;
+            console.log('create done');
+            if (error) {
+              gotError = true;
+            }
+            model.set('error', error);
+            model.set('created', !error);
+            subNumber--;
             if (subNumber === 0) {
               this.listView.onCreateSubscriptionFinished(gotError);
             }
-            if (error) {
-              model.set('error', error);
-            }
+
           }.bind(this));
       }
     }.bind(this));

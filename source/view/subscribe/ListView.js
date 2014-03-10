@@ -9,6 +9,7 @@ module.exports = Marionette.CompositeView.extend({
   itemView: ItemView,
   itemViewContainer: '#subscribe-list',
   $addButton: null,
+  $forms: null,
   initialize: function () {
     this.listenTo(this.collection, 'change', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
@@ -32,17 +33,17 @@ module.exports = Marionette.CompositeView.extend({
     $('.fa-spin', this.$addButton).show();
     this.$addButton.attr('disabled', 'disabled');
     this.collection.each(function (model) {
-      if (model.get('checked')) {
+      if (model.get('checked') && !model.get('created')) {
         subscriptions.push(model);
       }
     }.bind(this));
     this.trigger('subscription:add', subscriptions);
   },
-  onCreateSubscriptionFinished: function (gotError) {
+  onCreateSubscriptionFinished: function (error) {
+    console.log('onCreateSubscriptionFinished');
     $('.fa-spin', this.$addButton).hide();
-    if (gotError) {
-      this.$addButton.removeClass('btn-pryv-turquoise').addClass('btn-danger');
-    } else {
+    this.$addButton.attr('disabled', false);
+    if (!error) {
       this.trigger('close');
     }
   },
@@ -50,6 +51,12 @@ module.exports = Marionette.CompositeView.extend({
     $(this.itemViewContainer).append(itemView.el);
   },
   onRender: function () {
+    this.$forms = $('form.subscribe');
+    this.$forms.bind('submit',
+      function (e) {
+        e.preventDefault();
+        this._addSubscribe();
+      }.bind(this));
   },
   onBeforeClose: function () {
     $(this.container).empty();

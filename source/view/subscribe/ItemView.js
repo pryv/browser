@@ -5,7 +5,7 @@ module.exports = Marionette.ItemView.extend({
   tagName: 'li',
   template: '#template-subscriptionItemView',
   ui: {
-    checkbox: '.checkbox',
+    checkbox: '.checkbox input',
     name: '.subscription-name'
   },
   initialize: function () {
@@ -13,11 +13,11 @@ module.exports = Marionette.ItemView.extend({
 
   },
   onRender: function () {
-    console.log('onRender');
     this.ui.checkbox[0].checked = this.model.get('checked');
     this.ui.checkbox.bind('click', function () {
       this.model.set('checked', this.ui.checkbox[0].checked);
     }.bind(this));
+    this.ui.name.val(this.model.get('connection').name);
     this.ui.name.bind('change paste keyup', function () {
       this.model.get('connection').name =  this.ui.name.val();
     }.bind(this));

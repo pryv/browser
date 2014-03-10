@@ -5,6 +5,7 @@ module.exports = Backbone.Model.extend({
     connection: null,
     collection: null,
     checked: true,
-    error: null
+    error: null,
+    created: false
   }
 });

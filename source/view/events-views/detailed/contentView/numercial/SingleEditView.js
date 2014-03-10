@@ -138,6 +138,7 @@ module.exports = Marionette.ItemView.extend({
 
     if (this.edited.get('style') !== 'line') {
       this.ui.selFitting.prop('disabled', true);
+      this.ui.selFitting.prop('checked', false);
       this.model.get('edited').set('fitting', false);
     } else {
       this.ui.selFitting.prop('disabled', false);

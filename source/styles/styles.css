@@ -438,18 +438,18 @@ text-align: center;*/
 }
 .share a {
   display: inline-block;
-  margin: 10px;
-  font-size: 2em;
+  /*margin: 10px;
+  font-size: 2em;*/
   background-color: #2c3e50;
   border-radius: 100%;
 }
 #sharing-list td {
   vertical-align: middle;
 }
-.share-small a {
+/*.share-small a {
   margin: 0 !important;
   font-size: 1.2em !important;
-}
+}*/
 .share i {
   width: 50px;
   line-height: 50px;
@@ -472,14 +472,6 @@ text-align: center;*/
 }
 .modal-backdrop {
   background: none;
-}
-.modal-header {
-  height: 60px;
-  background-color: #34495e;
-  color: white;
-}
-.modal-header .close, .modal-header .close:hover {
-  color: #fff;
 }
 .modal-dialog{
   position: fixed;
@@ -1145,4 +1137,27 @@ ul.modal-dnd-legend > li {
 }
 .fa-exclamation-circle {
   color: #e74c3c;
+}
+
+
+/* OVERIDE BOOTSTRAP*/
+.table tbody {
+/*font-weight: bold;*/
+}
+h5 {text-transform: uppercase;color: #DFDFDF;}
+.table-striped>tbody>tr:nth-child(odd)>td, .table-striped>tbody>tr:nth-child(odd)>th {
+background-color: #F7F9FA;
+}
+.table tbody>tr>td, .table tbody>tr>th, .table tfoot>tr>td, .table tfoot>tr>th, .table thead>tr>td, .table thead>tr>th {
+border-top: 1px solid #EFF4F7;
+font-weight: bold;
+}
+.table thead>tr>th {
+border-bottom: 0px solid #DDD;
+font-weight: 300;
+font-size: 11px;
+}
+.modal-title {
+font-size: 14px;
+font-weight: normal;
 }

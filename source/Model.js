@@ -16,6 +16,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   window.Pryv = Pryv;
   this.urlUsername = Pryv.utility.getUsernameFromUrl();
   this.urlSharings = Pryv.utility.getSharingsFromUrl();
+  if (Pryv.utility.isSignInFromUrl()) {
+    $('#login-username').val(this.urlUsername);
+    openLogin();
+  }
   this.publicConnection = null;
   this.loggedConnection = null;
   this.sharingsConnections = null;
@@ -124,29 +128,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       $('#login-dropdown .dropdown-menu').css('opacity', 1);
     } else {
       $('#login-dropdown .dropdown-menu').css('opacity', 0);
-      $('#login').css('display', 'block');
-      $('#login').removeClass('animated slideOutRight');
-      $('#tree').removeClass('animated slideInLeft');
-      $('#login').addClass('animated slideInRight');
-      $('#tree').addClass('animated slideOutLeft');
-      if (detectIE()) {
-        $('#tree').fadeOut('slow', function () {
-          $('#login').fadeIn('slow');
-        });
-      }
+      openLogin();
     }
   }.bind(this));
-  $('#login-caret').click(function () {
-    $('#login').removeClass('animated slideInRight');
-    $('#tree').removeClass('animated slideOutLeft');
-    $('#login').addClass('animated slideOutRight');
-    $('#tree').addClass('animated slideInLeft');
-    if (detectIE()) {
-      $('#login').fadeOut('slow', function () {
-        $('#tree').fadeIn('slow');
-      });
-    }
-  });
+  $('#login-caret').click(closeLogin);
   $('#login form').submit(function (e) {
     e.preventDefault();
     if (this.loggedConnection) {
@@ -188,15 +173,7 @@ Model.prototype.signedIn = function (connection) {
 
     this.showSubscribeElement();
   }
-  $('#login').removeClass('animated slideInRight');
-  $('#tree').removeClass('animated slideOutLeft');
-  $('#login').addClass('animated slideOutRight');
-  $('#tree').addClass('animated slideInLeft');
-  if (detectIE()) {
-    $('#login').fadeOut('slow', function () {
-      $('#tree').fadeIn('slow');
-    });
-  }
+  closeLogin();
 };
 
 Model.prototype.addConnection = function (connection) {
@@ -233,8 +210,9 @@ Model.prototype.removeConnections = function (connections) {
  */
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
-    var stats = this.activeFilter.stats();
-    this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
+    this.activeFilter.stats(false, function (stats) {
+      this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
+    }.bind(this));
   }.bind(this), 100))();
 };
 
@@ -269,6 +247,46 @@ function initTimeAndFilter(timeView, filter) {
   });
 }
 
+
+
+/*var toggleLogin = function () {
+  var $login = $('#login');
+  var opened = $login.data('opened');
+  if (opened) {
+    closeLogin();
+  } else {
+    openLogin();
+  }
+}; */
+var closeLogin = function () {
+  var $login = $('#login');
+  var $tree = $('#tree');
+  $login.removeClass('animated slideInRight');
+  $tree.removeClass('animated slideOutLeft');
+  $login.addClass('animated slideOutRight');
+  $tree.addClass('animated slideInLeft');
+  if (detectIE()) {
+    $login.fadeOut('slow', function () {
+      $tree.fadeIn('slow');
+    });
+  }
+  $login.data('opened', false);
+};
+var openLogin = function () {
+  var $login = $('#login');
+  var $tree = $('#tree');
+  $login.css('display', 'block');
+  $login.removeClass('animated slideOutRight');
+  $tree.removeClass('animated slideInLeft');
+  $login.addClass('animated slideInRight');
+  $tree.addClass('animated slideOutLeft');
+  if (detectIE()) {
+    $tree.fadeOut('slow', function () {
+      $login.fadeIn('slow');
+    });
+  }
+  $login.data('opened', true);
+};
 var detectIE = function detectIE() {
   var ua = window.navigator.userAgent;
   var msie = ua.indexOf('MSIE ');

@@ -563,7 +563,7 @@ module.exports = Marionette.CompositeView.extend({
       var labelValue = item.datapoint[1].toFixed(2);
       var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
         item.datapoint[0]);
-      this.showTooltip(coords.top + 5, coords.left + 5, labelValue);
+      this.showTooltip(coords.top + 10, coords.left + 10, labelValue);
     } else {
       this.removeTooltip();
     }
@@ -577,7 +577,8 @@ module.exports = Marionette.CompositeView.extend({
     }
     if (this.model.get('editPoint') && item) {
       var tc = this.model.get('collection').at(0);
-      if (tc.get('transform') === 'none' && tc.get('interval') === 'none') {
+      if ((tc.get('transform') === 'none' || tc.get('transform') === null) &&
+        (tc.get('interval') === 'none' || tc.get('interval') === null)) {
         var editedSerie =  this.model.get('collection').at(item.seriesIndex);
         var allEvents = editedSerie.get('events');
         var editedEvent = null;

@@ -64,7 +64,7 @@ module.exports = Marionette.ItemView.extend({
           legendContainer: '#legend-container-edit', //false or a a selector
           legendExtras: true,   // use extras in the legend
           onClick: false,
-          onHover: false,
+          onHover: true,
           onDnD: false,
           editPoint: true,
           allowPan: false,      // Allows navigation through the chart
@@ -138,6 +138,7 @@ module.exports = Marionette.ItemView.extend({
 
     if (this.edited.get('style') !== 'line') {
       this.ui.selFitting.prop('disabled', true);
+      this.ui.selFitting.prop('checked', false);
       this.model.get('edited').set('fitting', false);
     } else {
       this.ui.selFitting.prop('disabled', false);
@@ -162,13 +163,23 @@ module.exports = Marionette.ItemView.extend({
   },
   updateEditor: function () {
     var i;
+    var found = false;
     var options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
       if (options[i].value === this.model.get('edited').get('color')) {
         this.ui.selColor[0].selectedIndex = i;
+        found = true;
         break;
       }
     }
+    if (!found) {
+      if (this.model.get('edited').get('color')) {
+        $(this.ui.selColor).css({
+          'background-color': this.model.get('edited').get('color')
+        });
+      }
+    }
+
     options = this.ui.selStyle[0].options;
     for (i = 0; i < options.length; ++i) {
       if (options[i].value === this.model.get('edited').get('style')) {

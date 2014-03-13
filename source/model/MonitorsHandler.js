@@ -309,18 +309,24 @@ _.each(['set'],  function (func) {
 /**
  * return informations on events
  */
-MonitorsHandler.prototype.stats = function () {
+MonitorsHandler.prototype.stats = function (force, callback) {
   var result = {
     timeFrameLT : [null, null]
   };
+  var monitorNbr = _.size(this._monitors);
   this._eachMonitor(function (monitor) {
-    var tf = monitor.stats().timeFrameLT;
-    if (! result.timeFrameLT[0] || tf[0] < result.timeFrameLT[0]) {
-      result.timeFrameLT[0] = tf[0];
-    }
-    if (! result.timeFrameLT[1] || tf[1] > result.timeFrameLT[1]) {
-      result.timeFrameLT[1] = tf[1];
-    }
+    monitor.stats(force, function (timeLimits) {
+      var tf = timeLimits.timeFrameLT;
+      if (! result.timeFrameLT[0] || tf[0] < result.timeFrameLT[0]) {
+        result.timeFrameLT[0] = tf[0];
+      }
+      if (! result.timeFrameLT[1] || tf[1] > result.timeFrameLT[1]) {
+        result.timeFrameLT[1] = tf[1];
+      }
+      monitorNbr--;
+      if (monitorNbr === 0 && _.isFunction(callback)) {
+        callback(result);
+      }
+    });
   });
-  return result;
 };

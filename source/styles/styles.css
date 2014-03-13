@@ -1161,3 +1161,6 @@ font-size: 11px;
 font-size: 14px;
 font-weight: normal;
 }
+.chartview-zoompan-ui {
+    float: right;
+}

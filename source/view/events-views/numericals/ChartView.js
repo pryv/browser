@@ -105,7 +105,7 @@ module.exports = Marionette.CompositeView.extend({
       }
       this.legendButtonBindings();
     }
-
+    this.setUpPanZoomUI();
   },
 
   resize: function () {
@@ -662,6 +662,39 @@ module.exports = Marionette.CompositeView.extend({
     var coordY = yAxes[yAxis].p2c(xPoint);
     var coordX = xAxes[xAxis].p2c(yPoint);
     return { top: coordY, left: coordX};
+  },
+
+
+
+  setUpPanZoomUI: function () {
+    if (this.model.get('panZoomButton')) {
+      $(this.container + ' .chartContainer').prepend($('#chartview-zoompan-ui').html());
+
+      var thePlot = this.plot;
+      $('#pan-up').bind('click', function () {
+        thePlot.pan({left: 0, top: -10});
+      });
+
+      $('#pan-down').bind('click', function () {
+        thePlot.pan({left: 0, top: 10});
+      });
+
+      $('#pan-left').bind('click', function () {
+        thePlot.pan({left: -10, top: 0});
+      });
+
+      $('#pan-right').bind('click', function () {
+        thePlot.pan({left: 10, top: 0});
+      });
+
+      $('#zoom-plus').bind('click', function () {
+        thePlot.zoom();
+      });
+
+      $('#zoom-minus').bind('click', function () {
+        thePlot.zoomOut();
+      });
+    }
   },
 
 

@@ -35,11 +35,9 @@ module.exports = Marionette.ItemView.extend({
       self._isChildrenCheck($(container.parent())[0]);
     });
     this.bindUIElements();
-    console.log('PANEL', 'ask onFocusStreamChanged');
     this.onFocusStreamChanged();
   },
   onFocusStreamChanged: function () {
-    console.log('PANEL', 'onFocusStreamChanged');
     var focusedStreams = this.MainModel.activeFilter.getStreams();
     var focusedStreamsIds = [];
     try {
@@ -48,7 +46,6 @@ module.exports = Marionette.ItemView.extend({
         checked: false
       });
     } catch (e) {
-      console.error('PANEL onFocusError', e);
       return false;
     }
 

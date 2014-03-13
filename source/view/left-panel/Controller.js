@@ -24,8 +24,6 @@ var view = null,
     public: 0
   };
 Controller.render = function (MainModel) {
-  console.log('PANEL render', view,
-    filterByStreamView, _.size(MainModel.loggedConnection.datastore.getStreams()));
   if (!view || !filterByStreamView) {
     if (!view) {
       view = new Layout();
@@ -65,7 +63,8 @@ var isConnectionsNumberChange = function (MainModel) {
     connectionsNumber.public === pub &&
     connectionsNumber.sharings === sharings &&
     connectionsNumber.bookmarks === bookmarks
-    ); connectionsNumber.logged = logged;
+    );
+  connectionsNumber.logged = logged;
   connectionsNumber.public = pub;
   connectionsNumber.sharings = sharings;
   connectionsNumber.bookmarks = bookmarks;

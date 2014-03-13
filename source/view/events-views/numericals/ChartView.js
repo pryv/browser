@@ -288,7 +288,10 @@ module.exports = Marionette.CompositeView.extend({
       this.data[seriesIndex].lines = { show: true };
       if (series.get('fitting')) {
         this.data[seriesIndex].curvedLines = {
-          apply: true
+          apply: true,
+          fit: true,
+          fitPointDist: 0.1,
+          curvePointFactor: 10
         };
       }
       this.data[seriesIndex].points = { show: (data.length < 2) };
@@ -563,7 +566,7 @@ module.exports = Marionette.CompositeView.extend({
       var labelValue = item.datapoint[1].toFixed(2);
       var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
         item.datapoint[0]);
-      this.showTooltip(coords.top + 10, coords.left + 10, labelValue);
+      this.showTooltip(coords.top - 25, coords.left - 25, labelValue);
     } else {
       this.removeTooltip();
     }

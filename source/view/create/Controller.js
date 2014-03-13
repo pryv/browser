@@ -1,11 +1,12 @@
 /* global $ */
 var _ = require('underscore'),
   View = require('./View.js'),
-  Model = require('./EventModel.js');
+  Model = require('./EventModel.js'),
+  _ = require('underscore');
 
 var Controller = module.exports = function ($modal, connection, focusedStream, target) {
   this.connection = connection;
-  this.focusedStream = focusedStream;
+  this.focusedStream = _.size(focusedStream) === 0 ? null : focusedStream;
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';

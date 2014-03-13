@@ -152,7 +152,12 @@ module.exports = function (grunt) {
     preprocess : {
       dev : {
         src : 'source/index.html',
-        dest : 'dist/index.html'
+        dest : 'dist/index.html',
+        options : {
+          context: {
+            version: 'v<%= pkg.version %>'
+          }
+        }
       },
       staging : {
         src : 'source/index.html',

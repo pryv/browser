@@ -216,11 +216,13 @@ var Controller = module.exports = function ($modal, connection, streams, timeFil
   this.$modal = $modal;
   this.target = target;
   this.connection = connection;
+
   this.streams = streams;
   this.timeFrom = timeFilter[1];
   this.timeTo = timeFilter[0];
   this.container = '.modal-content';
   this.treeView = null;
+  // TODO: ignore stream if  stream.parentId is already present
 };
 Controller.prototype.show = function () {
   this.$modal.modal({currentTarget: this.target});

@@ -31,10 +31,57 @@ body{
   font-weight: 300;
   /*letter-spacing: 1px;*/
 }
-
+.menu-panel {
+  background: #34495e;
+  color: #fff;
+  width: 240px;
+  height: 100%;
+  position: absolute;
+  z-index: 10000;
+  top: 0;
+  left: -240px;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  overflow: auto;
+}
+.menu-list {
+  list-style: none;
+  padding: 0;
+}
+.menu-list li span:hover {
+  background: #2c3e50;
+}
+.menu-list .li-title {
+  display: block;
+  color: #fff;
+  font-size: 1.1em;
+  line-height: 3.5;
+  padding: 0 20px;
+  cursor: pointer;
+  background: #34495e;
+  border-bottom: 1px solid #2c3e50;
+  border-top: 1px solid #2c3e50;
+}
+.menu-footer {
+  padding: 15px;
+  text-align: right;
+}
+#main-container.slideRight {
+  margin-left: 240px;
+}
+#main-container {
+  position: relative;
+  height: 100%;
+  left: 0px;
+  margin-left: 0px;
+  -webkit-transition: margin-left 0.3s ease-in-out;
+  -moz-transition: margin-left 0.3s ease-in-out;
+  -ms-transition: margin-left 0.3s ease-in-out;
+  -o-transition: margin-left 0.3s ease-in-out;
+  transition: margin-left 0.3s ease-in-out;
+}
 .logo{
   z-index: 90000;
-  position: relative;
+  position: absolute;
   top: 0;
   left: 0;
   text-indent: -9999em;
@@ -85,17 +132,19 @@ body{
   background-color: inherit;
   color: #fff;
 }
-#logo-add {
-  width: 40px;
-  height: 40px;
-  font-size: 26px;
+#logo-toggle-panel {
+  z-index: 90000;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  display: block;
+  background-color: #3e3e3e;
+  color: #eee;
+  padding-top: 6px;
+  padding-left: 8px;
+  cursor: pointer;
 }
-#logo-sharing {
-  width: 40px;
-  height: 40px;
-  font-size: 26px;
-}
-#logo-subscribe {
+#logo-add , #logo-subscribe, #logo-sharing , #logo-create-sharing, #logo-toggle-panel{
   width: 40px;
   height: 40px;
   font-size: 26px;
@@ -103,11 +152,6 @@ body{
 #subscribe-list {
   display: block;
   list-style-type: none;
-}
-#logo-create-sharing {
-  width: 40px;
-  height: 40px;
-  font-size: 26px;
 }
 #tree {
   position: absolute;
@@ -462,7 +506,9 @@ text-align: center;*/
 }
 
 .modal, .modal-backdrop, .modal-content {
-  position: fixed;
+  position: absolute;
+  width: 100%;
+  height: 100%;
   top: 0;
   left: 0;
   right: 0;
@@ -482,7 +528,7 @@ text-align: center;*/
   color: #fff;
 }
 .modal-dialog{
-  position: fixed;
+  position: absolute;
   overflow: hidden;
   overflow-y: hidden;
   margin-left: 39px;
@@ -770,7 +816,6 @@ summary.connection {
 }
 summary, summary label  {
   font-weight: normal;
-  color: #000;
 }
 details summary::-webkit-details-marker {
   display: none;

@@ -1,16 +1,17 @@
-/* global $, window */
+/* global $, window, location */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
   _ = require('underscore'),
   ConnectionsHandler = require('./model/ConnectionsHandler.js'),
   SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
   TreeMap = require('./tree/TreeMap.js'),
   Controller = require('./orchestrator/Controller.js'),
+  PanelMenu = require('./view/left-panel/Controller.js'),
   Pryv = require('pryv'),
   TimeLine = require('./timeframe-selector/timeframe-selector.js'),
   PUBLIC_TOKEN = 'public',
   STAGING,
-  toShowWhenLoggedIn = ['.logo-sharing', '.logo-add', '.logo-create-sharing'],
-  toShowSubscribe = ['.logo-subscribe'];
+  toShowWhenLoggedIn = ['.logo-sharing', '.logo-add', '.logo-create-sharing', '#logo-toggle-panel'],
+  toShowSubscribe = ['.logo-subscribe', '.logo-to-my-pryv', '#logo-toggle-panel'];
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
@@ -116,6 +117,11 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     }.bind(this));
   }
   Pryv.Auth.whoAmI(settings);
+  $('#logo-toggle-panel').click(function () {
+    this.togglePanel(function () {
+      $(window).trigger('resize');
+    });
+  }.bind(this));
   $('#sign-out').click(function () {
     if (this.loggedConnection) {
       Pryv.Auth.trustedLogout();
@@ -222,12 +228,48 @@ Model.prototype.showLoggedInElement = function () {
   $(toShowWhenLoggedIn.join(',')).show();
 };
 Model.prototype.showSubscribeElement = function () {
+  var home = location.origin.replace(this.urlUsername, this.loggedConnection.username);
+  $('.logo-to-my-pryv a').attr('href', home);
   $(toShowSubscribe.join(',')).show();
 };
 
 Model.prototype.hideLoggedInElement = function () {
   $(toShowWhenLoggedIn.join(',')).hide();
   $(toShowSubscribe.join(',')).hide();
+};
+Model.prototype.togglePanel = function (callback) {
+  var opened = $('#main-container').data('panel-opened');
+  if (opened) {
+    this.closePanel(callback);
+  } else {
+    this.openPanel(callback);
+  }
+};
+Model.prototype.openPanel = function (callback) {
+  var $container = $('#main-container');
+  this.renderPanel(this);
+  $container.addClass('slideRight').data('panel-opened', true);
+  if (_.isFunction(callback)) {
+    $container.one(
+      'transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd',
+      function () {
+        callback();
+      });
+  }
+};
+Model.prototype.closePanel = function (callback) {
+  var $container = $('#main-container');
+  $container.removeClass('slideRight').data('panel-opened', false);
+  if (_.isFunction(callback)) {
+    $container.one(
+      'transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd',
+      function () {
+        callback();
+      });
+  }
+};
+Model.prototype.renderPanel = function () {
+  PanelMenu.render(this);
 };
 function initTimeAndFilter(timeView, filter) {
   var spanTime = 86400000,

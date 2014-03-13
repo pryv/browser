@@ -58,7 +58,8 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateEventView();
     }.bind(this));
-    this.showCreateEventView($modal, this.model.connections, this.focusedStreams, e.currentTarget);
+    this.showCreateEventView($modal, this.model.connections,
+      this.getFocusedStreams(), e.currentTarget);
   }.bind(this));
   $('.logo-sharing').click(function (e) {
     e.preventDefault();
@@ -80,16 +81,22 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateSharingView();
     }.bind(this));
-    var streams = [],
+    var streams = [], streamsId = [],
       loggedUsername = this.model.loggedConnection.username;
     this.model.activeFilter.getStreams().forEach(function (stream) {
       if (stream.connection.username === loggedUsername) {
-        streams.push({id: stream.id, name: stream.name, children: stream.children});
+        if (streamsId.indexOf((stream.parentId)) === -1) {
+          streams.push({id: stream.id, name: stream.name, children: stream.children});
+        }
+        streamsId.push(stream.id);
       }
     });
     if (streams.length === 0) {
       this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
-        streams.push({id: stream.id, name: stream.name, children: stream.children});
+        if (streamsId.indexOf((stream.parentId)) === -1) {
+          streams.push({id: stream.id, name: stream.name, children: stream.children});
+        }
+        streamsId.push(stream.id);
       });
     }
     if (streams.length !== 0) {
@@ -134,7 +141,8 @@ var TreeMap = module.exports = function (model) {
 
   $(window).resize(_.debounce(function () {
     var $tree = $('#tree');
-    this.root.width = $tree.width() - MARGIN_LEFT - MARGIN_RIGHT;
+    this.root.width = $tree.width() - MARGIN_LEFT - MARGIN_RIGHT -
+      ($tree.position().left || 0) - ($tree.position().right || 0);
     this.root.height = $tree.height() - MARGIN_BOTTOM - MARGIN_TOP;
     this.root.x =  MARGIN_LEFT;
     this.root.y =  MARGIN_TOP;
@@ -230,7 +238,7 @@ TreeMap.prototype.setFocusedStreams = function (stream) {
   this.focusedStreams = stream;
 };
 TreeMap.prototype.getFocusedStreams = function () {
-  return this.focusedStreams;
+  return this.model.activeFilter.getStreams();
 };
 TreeMap.prototype.onDateHighLighted = function (time) {
   if (this.root) {

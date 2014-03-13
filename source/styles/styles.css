@@ -1149,3 +1149,9 @@ ul.modal-dnd-legend > li {
 .fa-exclamation-circle {
   color: #e74c3c;
 }
+
+
+
+.chartview-zoompan-ui {
+    float: right;
+}

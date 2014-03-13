@@ -564,9 +564,23 @@ module.exports = Marionette.CompositeView.extend({
   onHover: function (event, pos, item) {
     if (item) {
       var labelValue = item.datapoint[1].toFixed(2);
-      var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
-        item.datapoint[0]);
-      this.showTooltip(coords.top - 25, coords.left - 25, labelValue);
+      var labelTime = item.datapoint[0].toFixed(2);
+
+      // Check if point is a real value:
+      var evList = this.model.get('collection').at(item.seriesIndex).get('events');
+
+      var found = false;
+      for (var i = 0; i < evList.length; ++i) {
+        if (+labelTime === evList[i].time * 1000) {
+          found = true;
+        }
+      }
+
+      if (found) {
+        var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
+          item.datapoint[0]);
+        this.showTooltip(coords.top - 33, coords.left - 25, labelValue);
+      }
     } else {
       this.removeTooltip();
     }

@@ -135,8 +135,6 @@ module.exports = Marionette.ItemView.extend({
     this.edited.set('interval', this.interval);
     this.edited.set('fitting', this.fitting);
 
-    console.log('this style', this.edited.get('style'));
-
     if (this.edited.get('style') !== 'line') {
       this.ui.selFitting.prop('disabled', true);
       this.ui.selFitting.prop('checked', false);

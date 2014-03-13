@@ -2,10 +2,10 @@
   height: 60px;
   /*margin-bottom: -35px;*/
 }
-@font-face {
+/*@font-face {
   font-family: MuseoSans-300;
   src: url(../fonts/MuseoSans-300.otf);
-}
+}*/
 html{
   height: 100%;
   width: 100%;
@@ -20,7 +20,7 @@ body{
   width: 100%;
   padding: 0;
   margin: 0;
-  font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-family: 'Roboto',Georgia,Arial,sans-serif;
   font-size:14px;
   overflow: hidden;
   background: url(../images/bg3.jpg) no-repeat center fixed;
@@ -28,9 +28,10 @@ body{
   -moz-background-size: cover; /* pour Firefox */
   -o-background-size: cover; /* pour Opera */
   background-size: cover; /* version standardisée */
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-weight: 300;
+  /*letter-spacing: 1px;*/
 }
+
 .logo{
   z-index: 90000;
   position: relative;
@@ -159,10 +160,7 @@ body{
   border-radius: 2px;
 }
 .nodeHeader {
-  /*font-family: MuseoSans-300;*/
-  /*padding-left: 7px;*/
   font-size:18px;
-  /*border-left: 2px solid #FFF;*/
   line-height:18px;
 }
 .EventsNode {
@@ -262,7 +260,6 @@ padding: 0px 15px;
 .NotesEventsNode .content {
   /*color: #C7B0A4;*/
   text-align: center;
-  /*font-family: MuseoSans-300;*/
   /*font-size: 21px;*/
   /*margin-top: 30px;
   margin-left: 5px;
@@ -1115,7 +1112,7 @@ ul.modal-dnd-legend > li {
 }
 .onoffswitch-inner:before, .onoffswitch-inner:after {
   float: left; width: 50%; height: 30px; padding: 0; line-height: 30px;
-  font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+  font-size: 14px; color: white; /*font-family: Trebuchet, Arial, sans-serif;*/ font-weight: bold;
   -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
 }
 .onoffswitch-inner:before {

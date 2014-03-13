@@ -127,6 +127,7 @@ module.exports = Marionette.ItemView.extend({
     if (this.ui.selInterval[0].selectedIndex > -1) {
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
     }
+    this.fitting = this.ui.selFitting.prop('checked');
 
 
     this.edited.set('color', this.color);

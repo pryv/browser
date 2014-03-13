@@ -30,7 +30,7 @@ var VirtualNode = module.exports = function VirtualNode(node, name) {
   SERIAL++;
 
   this._createIfNotExist();
-  //this._emptyData();
+  this._emptyData();
 };
 
 VirtualNode.prototype._emptyData = function () {

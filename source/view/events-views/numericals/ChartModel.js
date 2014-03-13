@@ -34,6 +34,7 @@ module.exports = Backbone.Model.extend({
     // Panning and Zooming
     allowPan: false,      // Allows navigation through the chart
     allowZoom: false,     // Allows zooming on the chart
+    panZoomButton: false,
 
     // Display X-axis
     xaxis: null,

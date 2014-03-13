@@ -12,9 +12,10 @@ module.exports = Marionette.CompositeView.extend({
   initialize: function () {
     this.listenTo(this.collection, 'add remove', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h1>Shared slices</h1>' +
-    '<table class="table table-striped" >' +
-      '<thead><tr><th>Name</th><th>Link</th><th>Share</th><th></th></tr></thead>' +
+    $(this.container).append('<h5>Shared slices</h5>' +
+    '<table class="table" >' +
+      '<thead><tr><th>Name</th><th>Link</th>' +
+      '<th>Share</th><th></th></tr></thead>' +
       '<tbody id="sharing-list"></tbody>' +
     '</table>');
   },

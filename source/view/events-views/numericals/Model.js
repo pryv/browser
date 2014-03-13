@@ -257,6 +257,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         onDnD: true,
         allowPan: false,      // Allows navigation through the chart
         allowZoom: false,     // Allows zooming on the chart
+        panZoomButton: false,
         xaxis: false
       });
     if (typeof(document) !== 'undefined')  {

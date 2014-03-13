@@ -105,7 +105,7 @@ module.exports = Marionette.CompositeView.extend({
       }
       this.legendButtonBindings();
     }
-
+    this.setUpPanZoomUI();
   },
 
   resize: function () {
@@ -288,7 +288,10 @@ module.exports = Marionette.CompositeView.extend({
       this.data[seriesIndex].lines = { show: true };
       if (series.get('fitting')) {
         this.data[seriesIndex].curvedLines = {
-          apply: true
+          apply: true,
+          fit: true
+          //fitPointDist: 0.5,
+          //curvePointFactor: 4
         };
       }
       this.data[seriesIndex].points = { show: (data.length < 2) };
@@ -551,6 +554,9 @@ module.exports = Marionette.CompositeView.extend({
   },
 
 
+
+
+
   /* ***********************
    * Click and Point hover Functions
    */
@@ -560,13 +566,37 @@ module.exports = Marionette.CompositeView.extend({
 
   onHover: function (event, pos, item) {
     if (item) {
-      var labelValue = item.datapoint[1].toFixed(2);
-      var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
-        item.datapoint[0]);
-      this.showTooltip(coords.top + 10, coords.left + 10, labelValue);
+      var labelTime = item.datapoint[0].toFixed(0);
+      var evList = this.model.get('collection').at(item.seriesIndex).get('events');
+      var sts = ((evList[evList.length - 1].time - evList[0].time) * 1000) / evList.length;
+
+      var bestFit = this.findNearestPoint(evList, +labelTime);
+
+      if (bestFit.distance < sts) {
+        //console.log(bestFit.event.time * 1000, +labelTime);
+        var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
+          item.datapoint[0]);
+        this.showTooltip(coords.top - 33, coords.left - 25, bestFit.event.content);
+      }
     } else {
       this.removeTooltip();
     }
+  },
+
+  findNearestPoint: function (events, time) {
+    var distance = Infinity;
+    var best = -Infinity;
+    for (var i = 0, l = events.length; i < l; ++i) {
+      var cTime = events[i].time * 1000;
+
+      if (Math.abs(cTime - time) < distance) {
+        distance = Math.abs(cTime - time);
+        best = i;
+      } else {
+        break;
+      }
+    }
+    return {event: events[best], distance: distance};
   },
 
   onEdit: function (event, pos, item) {
@@ -662,6 +692,39 @@ module.exports = Marionette.CompositeView.extend({
     var coordY = yAxes[yAxis].p2c(xPoint);
     var coordX = xAxes[xAxis].p2c(yPoint);
     return { top: coordY, left: coordX};
+  },
+
+
+
+  setUpPanZoomUI: function () {
+    if (this.model.get('panZoomButton')) {
+      $(this.container + ' .chartContainer').prepend($('#chartview-zoompan-ui').html());
+
+      var thePlot = this.plot;
+      $('#pan-up').bind('click', function () {
+        thePlot.pan({left: 0, top: -10});
+      });
+
+      $('#pan-down').bind('click', function () {
+        thePlot.pan({left: 0, top: 10});
+      });
+
+      $('#pan-left').bind('click', function () {
+        thePlot.pan({left: -10, top: 0});
+      });
+
+      $('#pan-right').bind('click', function () {
+        thePlot.pan({left: 10, top: 0});
+      });
+
+      $('#zoom-plus').bind('click', function () {
+        thePlot.zoom();
+      });
+
+      $('#zoom-minus').bind('click', function () {
+        thePlot.zoomOut();
+      });
+    }
   },
 
 

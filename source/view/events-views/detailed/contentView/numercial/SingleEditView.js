@@ -127,8 +127,8 @@ module.exports = Marionette.ItemView.extend({
     if (this.ui.selInterval[0].selectedIndex > -1) {
       this.interval = this.ui.selInterval[0].options[this.ui.selInterval[0].selectedIndex].value;
     }
-
     this.fitting = this.ui.selFitting.prop('checked');
+
 
     this.edited.set('color', this.color);
     this.edited.set('style', this.style);
@@ -209,6 +209,14 @@ module.exports = Marionette.ItemView.extend({
       this.ui.selFitting.prop('disabled', false);
     }
 
+    if (this.edited.get('style') === 'point' ||
+      this.edited.get('style') === 'bar') {
+      this.ui.selFitting.prop('disabled', true);
+      this.ui.selFitting.prop('checked', false);
+      this.model.get('edited').set('fitting', false);
+    } else {
+      this.ui.selFitting.prop('disabled', false);
+    }
     this.ui.selFitting.prop('checked', true && this.model.get('edited').get('fitting'));
   }
 });

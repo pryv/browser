@@ -197,7 +197,7 @@
   </script>
   <script type="text/html" id="template-sharingItemView">
 
-    <td class="sharing-name col-md-4"><i class="fa fa-edit sharing-edit-name fa-lg"></i> <span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
+    <td class="sharing-name col-md-4"><a href="javascript:void(0)"><i class="fa fa-pencil sharing-edit-name"></i> </a><span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
         <button class="btn btn-default" type="button">Save <i class="fa fa-spinner fa-spin"></i></button>
       </span></div></td><td class="sharing-url"><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
      <td class="share share-small">
@@ -210,7 +210,7 @@
       <i class="fa fa-twitter"></i></a>
        <a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><i class="fa fa-envelope"></i></a>
      </td>
-    <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
+    <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
     <form class="form-inline subscribe" role="form">
@@ -235,7 +235,7 @@
     <ul id="bookmark-list"></ul>
   </script>
   <script type="text/html" id="template-bookmarkItemView">
-   <td><%= bookmark.settings.name %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td><td class="bookmark-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
+   <td class="col-md-4"><%= bookmark.settings.name %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td><td class="bookmark-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
   </script>
     
   <script type="text/html" id="template-draganddrop">
@@ -349,6 +349,25 @@
       </div>
     <% } %>
   </script>
+
+  <script type="template" id="chartview-zoompan-ui">
+      <div class="chartview-zoompan-ui">
+        <div class="chartview-pan-ui" id="chartview-pan-ui">
+          <div>
+            <span class="fa fa-arrow-circle-o-up" id="pan-up"></span>
+            <span class="fa fa-arrow-circle-o-left" id="pan-left"></span>
+            <span class="fa fa-dot-circle-o" id="pan-center"></span>
+            <span class="fa fa-arrow-circle-o-down" id="pan-down"></span>
+            <span class="fa fa-arrow-circle-o-right" id="pan-right"></span>
+          </div>
+        </div>
+        <div class="chartview-zoom-ui" id="chartview-zoom-ui">
+          <span class="fa fa-plus-square" id="zoom-plus"></span>
+          <span class="fa fa-minus-square" id="zoom-minus"></span>
+        </div>
+      </div>
+  </script>
+
 
   <script type="template" id="template-detail-content-numerical-general">
       <div class="legend-container" id="legend-container-general"></div>

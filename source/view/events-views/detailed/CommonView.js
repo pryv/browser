@@ -43,17 +43,20 @@ module.exports = Marionette.ItemView.extend({
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
     this.ui.submit.bind('click', this.submit.bind(this));
     this.ui.trash.bind('click', this.trash.bind(this));
+    this.ui.submit.hide();
     /* _.each(_.keys(this.attachmentId), function (k) {
      $('#' + k + ' i').bind('click', { id: k, fileName: this.attachmentId[k] },
      this._onRemoveFileClick.bind(this));
      }.bind(this));  */
   },
   onEditClick: function (e) {
+    this.ui.submit.show();
     $(e.currentTarget).addClass('editing');
     this.ui.edit.focus();
   },
   onEditBlur: function (e) {
     this.updateEvent(e.currentTarget);
+    this.ui.submit.show();
     if (e.relatedTarget.id === 'submit-edit') {
       this.submit();
     }
@@ -63,6 +66,7 @@ module.exports = Marionette.ItemView.extend({
     var ENTER_KEY = 13;
     if (e.which === ENTER_KEY) {
       this.updateEvent(e.currentTarget);
+      this.ui.submit.show();
     }
   },
   /*addAttachment: function () {
@@ -109,6 +113,7 @@ module.exports = Marionette.ItemView.extend({
     var event = this.model.get('event'),
       key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
       value = $($elem).val().trim();
+    console.log('DEBUG', key, value);
     if (key === 'time') {
       value = new Date(value);
       if (isNaN(value)) {
@@ -125,6 +130,9 @@ module.exports = Marionette.ItemView.extend({
     eval('event.' + key + ' = value');
     this.completeEdit($($elem).parent());
     this.render();
+    if (key === 'streamId') {
+      $('#current-streamId label').text($('#edit-streamId option:selected').text().trim());
+    }
     if (this.waitSubmit) {
       this.waitSubmit = false;
       this.submit();

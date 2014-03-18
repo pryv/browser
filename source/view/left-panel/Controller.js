@@ -29,8 +29,7 @@ Controller.render = function (MainModel) {
       view = new Layout();
       view.render();
     }
-    if (!filterByStreamView &&
-      _.size(MainModel.loggedConnection.datastore.getStreams()) !== 0) {
+    if (!filterByStreamView) {
       filterByStreamView = new FilterByStreamView({MainModel: MainModel});
       view.filterByStream.show(filterByStreamView);
     }
@@ -49,15 +48,25 @@ Controller.render = function (MainModel) {
 
 var isConnectionsNumberChange = function (MainModel) {
   // hack: need to have an onStream change and onConnection change;
-  var logged = _.size(MainModel.loggedConnection.datastore.getStreams());
-  var pub = _.size(MainModel.publicConnection.datastore.getStreams());
+  var logged = 0;
+  if (MainModel.loggedConnection.datastore) {
+    logged = _.size(MainModel.loggedConnection.datastore.getStreams());
+  }
+  var pub = 0;
+  if (MainModel.publicConnection.datastore) {
+    pub = _.size(MainModel.publicConnection.datastore.getStreams());
+  }
   var sharings = 0;
   _.each(MainModel.sharingsConnections, function (connection) {
-    sharings += _.size(connection.datastore.getStreams());
+    if (connection.datastore) {
+      sharings += _.size(connection.datastore.getStreams());
+    }
   });
   var bookmarks = 0;
   _.each(MainModel.bookmakrsConnections, function (connection) {
-    bookmarks += _.size(connection.datastore.getStreams());
+    if (connection.datastore) {
+      bookmarks += _.size(connection.datastore.getStreams());
+    }
   });
   var res = !(connectionsNumber.logged === logged &&
     connectionsNumber.public === pub &&

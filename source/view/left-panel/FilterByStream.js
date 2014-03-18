@@ -126,7 +126,9 @@ module.exports = Marionette.ItemView.extend({
     if (!this.MainModel.loggedConnection) {
       return result;
     }
-    connections.push(this.MainModel.loggedConnection);
+    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
+      connections.push(this.MainModel.loggedConnection);
+    }
     _.each(this.MainModel.sharingsConnections, function (c) {
       connections.push(c);
     });

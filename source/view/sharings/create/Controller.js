@@ -143,6 +143,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       '      </div>' +
       ' </div> ' +
       '  </div> ' +
+      '<input type="submit" style="opacity: 0; visibility: hidden;">' +
       '<h5>Select streams</h5>' +
       '');
     var $form = $('#form-create-sharing', this.$el),
@@ -161,6 +162,10 @@ var TreeRoot = Marionette.CollectionView.extend({
       $spin = $('.fa-spin', $btn);
     var access = {}, name = $name.val().trim(), token = $token.val().trim(),
       permission = $permission.val();
+    if (name.length === 0) {
+      $('#form-create-sharing', this.$el).find(':submit').click();
+      return;
+    }
     if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
       permission = 'read';
     }

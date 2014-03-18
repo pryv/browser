@@ -782,7 +782,7 @@ text-align: center;*/
 #select-picture-container {
   margin: 30px;
   height: 250px;
-  border: gray dashed;
+  /*border: gray dashed; no drag and drop for now*/
   text-align: center;
 }
 #select-picture-container #fileSelect{

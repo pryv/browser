@@ -32,15 +32,14 @@ body{
   /*letter-spacing: 1px;*/
 }
 .menu-panel {
-  background: #34495e;
-  color: #fff;
+  background: #ffffff;
+  color: #8a8a8a;
   width: 240px;
   height: 100%;
   position: absolute;
   z-index: 10000;
   top: 0;
   left: -240px;
-  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
   overflow: auto;
 }
 .menu-list {
@@ -48,22 +47,27 @@ body{
   padding: 0;
 }
 .menu-list li span:hover {
-  background: #2c3e50;
+  background: #FAFAFA;
 }
 .menu-list .li-title {
   display: block;
-  color: #fff;
+  color: #b3b3b3;
   font-size: 1.1em;
   line-height: 3.5;
   padding: 0 20px;
   cursor: pointer;
-  background: #34495e;
-  border-bottom: 1px solid #2c3e50;
-  border-top: 1px solid #2c3e50;
+  background: #fcfcfc;
+  border-bottom: 1px solid #E9E9E9;
+  border-top: 1px solid #E9E9E9;
 }
 .menu-footer {
-  padding: 15px;
-  text-align: right;
+  padding: 5px;
+  text-align: center;
+  position: absolute;
+  bottom: 0;
+  font-size: 10px;
+  width: 100%;
+  color:#dfdfdf;
 }
 #main-container.slideRight {
   margin-left: 240px;

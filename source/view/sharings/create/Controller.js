@@ -85,7 +85,7 @@ var TreeRoot = Marionette.CollectionView.extend({
     }
 
     this.$el.prepend(
-      '<h1>Settings</h1>' +
+      '<h5>Settings</h5>' +
       '<form role="form" id="form-create-sharing"' +
       '<div class="form-horizontal">' +
       '<div class="form-group">' +
@@ -143,7 +143,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       '      </div>' +
       ' </div> ' +
       '  </div> ' +
-      '<h1>Select streams</h1>' +
+      '<h5>Select streams</h5>' +
       '');
     var $form = $('#form-create-sharing', this.$el),
       $name = $('#input-name', this.$el);

@@ -107,7 +107,7 @@ module.exports = Marionette.ItemView.extend({
     _.each(this.ui.checkbox, function (checkbox) {
       checkbox = $(checkbox);
       if (checkbox.prop('checked')) {
-        $parent = $(checkbox.parent());
+        $parent = $(checkbox.parent().parent());
         if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
           connection = this.MainModel.connections.get($parent.attr('data-connection'));
           if (connection) {

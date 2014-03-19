@@ -20,19 +20,21 @@ module.exports = Marionette.ItemView.extend({
     this.MainModel  = options.MainModel;
   },
   onRender: function () {
-    $('details').details();
     var self = this;
     self.ui.applyBtn.prop('disabled', true);
     self.ui.applyBtn.click(this._applyFilter.bind(this));
-    this.ui.checkbox.change(function () {
-      var checked = $(this).prop('checked'),
-        container = $(this).parent().parent();
+    this.ui.checkbox.click(function (e) {
+      e.stopPropagation();
+    });
+    this.ui.checkbox.change(function (e) {
+      var checked = $(e.currentTarget).prop('checked'),
+        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
       self.ui.applyBtn.prop('disabled', false);
       container.find('input[type="checkbox"]').prop({
         indeterminate: false,
         checked: checked
       });
-      self._isChildrenCheck($(container.parent())[0]);
+      self._isChildrenCheck(container.parent().parent());
     });
     this.bindUIElements();
     this.onFocusStreamChanged();
@@ -55,7 +57,7 @@ module.exports = Marionette.ItemView.extend({
     var $parent, c, s;
     _.each(this.ui.checkbox, function (checkbox) {
       checkbox = $(checkbox);
-      $parent = $(checkbox.parent());
+      $parent = $(checkbox.parent().parent());
       if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
         c = this.MainModel.connections.get($parent.attr('data-connection'));
         if (c) {
@@ -76,29 +78,28 @@ module.exports = Marionette.ItemView.extend({
     return true;
   },
   _isChildrenCheck: function ($el) {
-    if ($el.tagName !== 'DETAILS') {
+    if ($el.attr('id') === 'collapseFilterByStream') {
       return;
     }
     var allChecked = true;
     var allUncheck = true;
     var children  = $($el).find('input[type="checkbox"]');
-
-    for (var i = 1; i < children.length; i++) {
+    for (var i = 0; i < children.length; i++) {
       allChecked = allChecked && $(children[i]).prop('checked');
       allUncheck = allUncheck && !$(children[i]).prop('checked');
     }
     if (allChecked || allUncheck) {
-      $(children[0]).prop({
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
         indeterminate: false,
         checked: allChecked
       });
     } else {
-      $(children[0]).prop({
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
         indeterminate: true,
         checked: false
       });
     }
-    this._isChildrenCheck($($($el).parent())[0]);
+    this._isChildrenCheck($($($el).parent().parent()));
   },
   _applyFilter: function () {
     var streams = [], $parent, connection, stream;
@@ -136,16 +137,21 @@ module.exports = Marionette.ItemView.extend({
       connections.push(c);
     });
     _.each(connections, function (c) {
-      result += '<details open><summary class="connection">' +
+      result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +
+        'data-target="#collapse' + UNIQUE_ID + '">' +
+        '<div class="pryv-checkbox">' +
         '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
         '"><label for="filterStream' + UNIQUE_ID + '">' +   c.username;
-      UNIQUE_ID++;
       if (c._accessInfo.name !== 'pryv-browser') {
         result += ' / ' + c._accessInfo.name;
       }
-      result += '</label></summary>';
+      result += '</label></div></li>';
+      result += '<ul id="collapse' + UNIQUE_ID +
+        '" class="panel-collapse  collapse in stream-tree-children">' +
+        '<div class="panel-body">';
+      UNIQUE_ID++;
       result += this._getStreamStructure(c);
-      result += '</details>';
+      result += '</div></ul>';
     }.bind(this));
 
     return result;
@@ -155,29 +161,32 @@ module.exports = Marionette.ItemView.extend({
       result = '';
     for (var i = 0; i < rootStreams.length; i++) {
       if (!rootStreams[i].virtual) {
-        result += '<details>' +
-          this._walkStreamStructure(rootStreams[i]) +
-          '</details>';
+        result += this._walkStreamStructure(rootStreams[i]);
       }
     }
     return result;
   },
   _walkStreamStructure: function (stream) {
 
-    var result = '<summary data-connection="' +
+    var result = '<li data-connection="' +
       stream.connection.serialId + '" data-stream="' +
-      stream.id + '"><input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+      stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
+      'data-target="#collapse' + UNIQUE_ID + '">' +
+      '<div class="pryv-checkbox">' +
+      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
       '"><label for="filterStream' + UNIQUE_ID + '">' +
-      stream.name + '</label></summary>';
+      stream.name + '</label></div></li>';
+    result += '<ul id="collapse' + UNIQUE_ID +
+      '" class="panel-collapse  collapse stream-tree-children">' +
+      '<div class="panel-body">';
     UNIQUE_ID++;
     for (var j = 0; j < stream.children.length; j++) {
       if (!stream.children[j].virtual) {
-        result += '<details>' +
-          this._walkStreamStructure(stream.children[j]) +
-          '</details>';
+        result += this._walkStreamStructure(stream.children[j]);
       }
 
     }
+    result += '</div></ul>';
     return result;
   }
 

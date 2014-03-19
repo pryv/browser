@@ -32,7 +32,7 @@ body{
   /*letter-spacing: 1px;*/
 }
 .menu-panel {
-  background: #ffffff;
+  background: #f5f7fa;
   color: #8a8a8a;
   width: 240px;
   height: 100%;
@@ -56,9 +56,66 @@ body{
   line-height: 3.5;
   padding: 0 20px;
   cursor: pointer;
-  background: #fcfcfc;
-  border-bottom: 1px solid #E9E9E9;
-  border-top: 1px solid #E9E9E9;
+  border-bottom: 1px solid #e6e9ed;
+  border-top: 1px solid #e6e9ed;
+}
+.pryv-checkbox input {
+  display: none;
+}
+.pryv-checkbox label {
+  padding-left: 25px;
+  position: relative;
+  cursor: pointer;
+}
+.pryv-checkbox label:before {
+  width: 20px;
+  margin-top: 10px;
+  height: 20px;
+  background-color: #fff;
+  content: ' ';
+  position: absolute;
+  left: 0;
+  font-family: FontAwesome;
+}
+.pryv-checkbox input[type=checkbox]:checked + label:before {
+  background-color: #00a8e2;
+  content: "\f00c";
+  color: #fff;
+  font-size: 1.2em;
+  text-align: center;
+  line-height: 1.2;
+}
+.pryv-checkbox input[type=checkbox]:indeterminate + label:before {
+  background-color: #00a8e2;
+  content: " ";
+}
+.stream-tree-children {
+  padding: 0;
+  padding-left: 20px;
+}
+.stream-tree-summary {
+  list-style: none;
+  line-height: 3;
+  cursor: pointer;
+}
+.stream-tree-summary:hover {
+  background-color:  #edf8fe;
+}
+#collapseFilterByStream .panel-body {
+  padding: 0;
+}
+#collapseFilterByStream {
+  padding-left: 20px;
+  background-color: #e6e9ed;
+}
+#collapseFilterByStream label {
+  font-weight: inherit;
+  color: #4f4e4e;
+  margin: 0;
+  margin-left: 5px;
+}
+#filter-by-stream-apply {
+  margin: 10px;
 }
 .menu-footer {
   padding: 5px;

@@ -131,10 +131,14 @@ module.exports = Marionette.ItemView.extend({
       connections.push(this.MainModel.loggedConnection);
     }
     _.each(this.MainModel.sharingsConnections, function (c) {
-      connections.push(c);
+      if (c._accessInfo) {
+        connections.push(c);
+      }
     });
     _.each(this.MainModel.bookmakrsConnections, function (c) {
-      connections.push(c);
+      if (c._accessInfo) {
+        connections.push(c);
+      }
     });
     _.each(connections, function (c) {
       result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +

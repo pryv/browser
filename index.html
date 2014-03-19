@@ -5,13 +5,14 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.0.15/">
+  <base href="{browser-source}_v0.1.10/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
-  <meta property="og:description" content="Content available on Pryv only." />
-  <meta property="og:image" content="http://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
-  <meta property="og:image:secure_url" content="https://d233medomu0tdb.cloudfront.net/media_dist/og_image.jpg" />
+  <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
+  <meta property="og:image" content="{browser-source}_v0.1.10/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.1.10/images/fb_share.jpg" />
+  <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
@@ -173,7 +174,7 @@
   </script>
   <script type="text/html" id="template-sharingItemView">
 
-    <td class="sharing-name col-md-4"><i class="fa fa-edit sharing-edit-name fa-lg"></i> <span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
+    <td class="sharing-name col-md-4"><a href="javascript:void(0)"><i class="fa fa-pencil sharing-edit-name"></i> </a><span class="sharing-edit-name"> <%= sharing.name %></span><div class="input-group"><input type="text" class="form-control" placeholder="<%= sharing.name %>"><span class="input-group-btn" style="width: auto;">
         <button class="btn btn-default" type="button">Save <i class="fa fa-spinner fa-spin"></i></button>
       </span></div></td><td class="sharing-url"><a href="<%= sharing.url %>"><%= sharing.url %></a></td>
      <td class="share share-small">
@@ -186,7 +187,7 @@
       <i class="fa fa-twitter"></i></a>
        <a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><i class="fa fa-envelope"></i></a>
      </td>
-    <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
+    <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
 
   </script> <script type="text/html" id="template-subscriptionItemView">
     <form class="form-inline subscribe" role="form">
@@ -211,7 +212,7 @@
     <ul id="bookmark-list"></ul>
   </script>
   <script type="text/html" id="template-bookmarkItemView">
-   <td><%= bookmark.settings.name %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td><td class="bookmark-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o fa-lg"></i></a></td>
+   <td class="col-md-4"><%= bookmark.settings.name %></td><td><a href="<%= bookmark.settings.url %>"><%= bookmark.settings.url %></a></a></td><td class="bookmark-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
   </script>
     
   <script type="text/html" id="template-draganddrop">
@@ -261,7 +262,7 @@
     <% } %>
   </script>
   <script type="template" id="template-detail-creation-type">
-    <div class="container">
+    <div class="container" style="width: auto;">
     <div class="row" id="type-select">
       <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span>Note</span></div>
       <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span>Picture</span></div>
@@ -325,6 +326,25 @@
       </div>
     <% } %>
   </script>
+
+  <script type="template" id="chartview-zoompan-ui">
+      <div class="chartview-zoompan-ui">
+        <div class="chartview-pan-ui" id="chartview-pan-ui">
+          <div>
+            <span class="fa fa-arrow-circle-o-up" id="pan-up"></span>
+            <span class="fa fa-arrow-circle-o-left" id="pan-left"></span>
+            <span class="fa fa-dot-circle-o" id="pan-center"></span>
+            <span class="fa fa-arrow-circle-o-down" id="pan-down"></span>
+            <span class="fa fa-arrow-circle-o-right" id="pan-right"></span>
+          </div>
+        </div>
+        <div class="chartview-zoom-ui" id="chartview-zoom-ui">
+          <span class="fa fa-plus-square" id="zoom-plus"></span>
+          <span class="fa fa-minus-square" id="zoom-minus"></span>
+        </div>
+      </div>
+  </script>
+
 
   <script type="template" id="template-detail-content-numerical-general">
       <div class="legend-container" id="legend-container-general"></div>
@@ -472,6 +492,25 @@
     </div>
     </summary>
   </script>
+<script type="template" id="left-panel-template">
+  <h3></h3>
+  <ul class="menu-list">
+    <li id="filter-by-stream"></li>
+  </ul>
+  <div class="menu-footer">
+    <span class="version">Browser v0.1.10</span>
+    <span class="copyright">&copy; 2014 Pryv</span>
+  </div>
+</script>
+<script type="template" id="filter-by-stream-template">
+  <span class="li-title" data-toggle="collapse" data-target="#collapseFilterByStream">Filter by stream</span>
+  <div id="collapseFilterByStream" class="panel-collapse collapse">
+    <div class="panel-body">
+      <%= getStream() %>
+      <button class="btn" id="filter-by-stream-apply">Apply</button>
+    </div>
+  </div>
+</script>
 </head>
 
 <body>
@@ -481,7 +520,8 @@
   <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.</p>
 </div>
 </div>
-<div class="hidden-xs">
+<div id="main-container" class="hidden-xs">
+  <div class="menu-panel"></div>
 <span id="pryvButton"></span>
 <div id="login">
   <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
@@ -507,6 +547,7 @@
   <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> Add event</a></li>
   <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> Share a slice of life</a></li>
   <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> Manage Slices</a></li>
+  <li class="logo-to-my-pryv"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-home"></span> Go to my Pryv</a></li>
   <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> Follow this slice</a></li>
   <li class=""><a href="mailto:support@pryv.com?subject=Browser bug report&amp;body=" title="Bug report"><i class="fa fa-bug"></i> Report a bug</a></li>
   <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> Sign out</a></li>
@@ -515,6 +556,7 @@
 <a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
 <a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
+<span id="logo-toggle-panel" ><i class="fa fa-bars"></i></span>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
   <div id="empty-events">

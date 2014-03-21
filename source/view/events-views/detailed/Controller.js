@@ -11,12 +11,15 @@ var _ = require('underscore'),
   PictureContentView = require('./contentView/Picture.js'),
   PositionContentView = require('./contentView/Position.js'),
   CreationView = require('./contentView/Creation.js');
+var EVENTS_PER_SCROLL = 20;
 var Controller = module.exports = function ($modal, connections, target) {
   this.events = {};
   this.eventsToAdd = [];
+  this.eventsToAddToListView = [];
   this.connection = connections;
   this.newEvent = null;
   this.collection =  new Collection();
+  this.listViewcollection =  new Collection();
   this.highlightedDate = null;
   this.listView = null;
   this.commonView = null;
@@ -24,12 +27,19 @@ var Controller = module.exports = function ($modal, connections, target) {
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';
+  var once = true;
   this.debounceAdd = _.debounce(function () {
     this.collection.add(this.eventsToAdd, {sort: false});
     this.collection.sort();
+    this.eventsToAddToListView = _.sortBy(this.eventsToAddToListView, function (model) {
+      return -model.get('event').time;
+    });
+    this.listViewcollection.add(this.eventsToAddToListView.splice(0, EVENTS_PER_SCROLL),
+      {sort: false});
     this.eventsToAdd = [];
-    if (this.highlightedDate) {
+    if (once && this.highlightedDate) {
       this.highlightDate(this.highlightedDate);
+      once = false;
     }
   }.bind(this), 100);
   $(window).resize(this.resizeModal);
@@ -45,10 +55,12 @@ _.extend(Controller.prototype, {
     if (!this.listView) {
       this.commonView = new CommonView({model: new Model({})});
       this.listView = new ListView({
-        collection: this.collection
+        collection: this.listViewcollection
       });
+      this.listView.on('showMore', this.debounceAdd.bind(this));
       this.listView.on('itemview:date:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
+        this.listViewcollection.setCurrentElement(evt.model);
         this.updateSingleView(this.collection.getCurrentElement());
       }.bind(this));
     }
@@ -74,10 +86,12 @@ _.extend(Controller.prototype, {
       var DOWN_KEY = 40;
       if (e.which === LEFT_KEY || e.which === UP_KEY) {
         this.updateSingleView(this.collection.prev().getCurrentElement());
+        this.updateSingleView(this.listViewcollection.prev().getCurrentElement());
         return false;
       }
       if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
         this.updateSingleView(this.collection.next().getCurrentElement());
+        this.updateSingleView(this.listViewcollection.next().getCurrentElement());
         return false;
       }
     }.bind(this));
@@ -88,6 +102,8 @@ _.extend(Controller.prototype, {
     $(this.container).empty();
     if (this.collection) {this.collection.reset(); }
     this.collection = null;
+    if (this.listViewcollection) {this.listViewcollection.reset(); }
+    this.listViewcollection = null;
     this.events = {};
     $(this.$modal).unbind('keydown');
   },
@@ -105,12 +121,16 @@ _.extend(Controller.prototype, {
     if (!this.collection) {
       this.collection = new Collection();
     }
+    if (!this.listViewcollection) {
+      this.listViewcollection = new Collection();
+    }
     _.each(event, function (e) {
       var m = new Model({
         event: e
       });
       this.events[e.id] = e;
       this.eventsToAdd.push(m);
+      this.eventsToAddToListView.push(m);
     }, this);
     this.debounceAdd();
   },
@@ -127,11 +147,13 @@ _.extend(Controller.prototype, {
     if (toUpdate) {
       toUpdate.set('event', event);
       this.collection.sort();
+      this.listViewcollection.sort();
     }
   },
   highlightDate: function (time) {
     this.highlightedDate = time;
     var model = this.collection.highlightEvent(time);
+    this.listViewcollection.highlightEvent(time);
     this.updateSingleView(model);
 
   },
@@ -150,9 +172,11 @@ _.extend(Controller.prototype, {
           this.collection, virtual: this.virtual})});
         this.contentView.on('previous', function () {
           this.updateSingleView(this.collection.prev().getCurrentElement());
+          this.listViewcollection.prev();
         }.bind(this));
         this.contentView.on('next', function () {
           this.updateSingleView(this.collection.next().getCurrentElement());
+          this.listViewcollection.next();
         }.bind(this));
         if (newContentView.type === 'Creation') {
           $('.modal-panel-right').hide();

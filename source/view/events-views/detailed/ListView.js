@@ -10,7 +10,8 @@ module.exports = Marionette.CompositeView.extend({
   itemViewContainer: '#detail-list',
   checkAll: false,
   events: {
-    'click #check-all': 'onCheckAllClick'
+    'click #check-all': 'onCheckAllClick',
+    'scroll #detail-list' : '_showMore'
   },
   initialize: function () {
     if ($('.modal-panel-right').length === 0) {
@@ -25,7 +26,7 @@ module.exports = Marionette.CompositeView.extend({
         '</div>');
 
     }
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'add remove', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
   },
   appendHtml: function (collectionView, itemView) {
@@ -38,6 +39,7 @@ module.exports = Marionette.CompositeView.extend({
     $checkAll[0].checked = false;
     $checkAll.bind('click', this.onCheckAllClick.bind(this));
     $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
+    $('#detail-list').bind('scroll', this._showMore.bind(this));
   },
   onTrashSelectedClick: function () {
     var i = 0;
@@ -56,5 +58,18 @@ module.exports = Marionette.CompositeView.extend({
   },
   debounceRender: _.debounce(function () {
     this.render();
-  }, 100)
+  }, 100),
+  _showMore: function () {
+    var $detailList = $('#detail-list');
+    var height = $detailList.height();
+    var scrollHeight = $detailList[0].scrollHeight;
+    var scrollTop = $detailList.scrollTop();
+    var triggerOffset = 1.15;
+    var scrollBarHeight = height * height / scrollHeight;
+    var currentScroll = (scrollBarHeight + (scrollTop / (scrollHeight / height))) * triggerOffset;
+    // if we are closer than 'margin' to the end of the content, load more books
+    if (currentScroll >= height) {
+      this.trigger('showMore');
+    }
+  }
 });

@@ -477,7 +477,7 @@ module.exports = Marionette.ItemView.extend({
       this.newEvents.get('event').content.latitude = lat = 46.51759;
       this.newEvents.get('event').content.longitude = lng = 6.56267;
 
-      map = new this.google.maps.Map(document.getElementById('creation-picture'), {
+      map = new this.google.maps.Map(document.getElementById('creation-position'), {
         zoom: 16,
         center: new this.google.maps.LatLng(lat, lng),
         mapTypeId: this.google.maps.MapTypeId.ROADMAP
@@ -545,7 +545,7 @@ module.exports = Marionette.ItemView.extend({
   },
   _getPositionView: function () {
     var result = '';
-    result += '<div id="creation-picture" class="col-md-12"></div>';
+    result += '<div id="creation-position" class="col-md-12"></div>';
     result += '<form id="creation-form" role="form">' +
       '  <div class="form-group td-tags">' +
       '    <label class="sr-only" for="tags">Tags</label>' +

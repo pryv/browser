@@ -7,10 +7,10 @@ module.exports = Backbone.Collection.extend({
   highlightedDate: null,
   currentElement: null,
   comparator: function (a, b) {
-    a = a.get('event').time;
-    b = b.get('event').time;
-    return a > b ? -1
-      : a < b ? 1
+    var aTime = a.get('event').time;
+    var bTime = b.get('event').time;
+    return aTime > bTime ? -1
+      : aTime < bTime ? 1
       : 0;
   },
   highlightEvent: function (time) {

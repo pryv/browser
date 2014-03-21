@@ -186,11 +186,21 @@
     <ul id="subscribe-list"></ul>
   </script>
   <script type="text/html" id="template-detailItemView">
-    <input type="checkbox" class="checkbox">
-    <div class="view clearfix">
-      <div class="preview"><%= getPreview() %></div>
-      <div class="date"><%= new Date(event.time * 1000).toLocaleDateString() %></div>
-      <div class="time"><%= new Date(event.time * 1000).toLocaleTimeString() %></div>
+    <div class="row detail-item-date">
+      <div>
+        <span class="date"><%= new Date(event.time * 1000).toLocaleDateString() %></span>
+        <span class="time"><%= new Date(event.time * 1000).toLocaleTimeString() %></span>
+      </div>
+    </div>
+    <div class="row detail-item-content">
+      <%= getPreview() %>
+    </div>
+    <div class="row detail-item-checkbox">
+      <div class="pryv-checkbox">
+        <input type="checkbox" id="c<%= getUniqueId() %>" class="checkbox">
+        <label for="c<%= getUniqueId() - 1 %>">&nbsp;</label>
+      </div>
+
     </div>
   </script>
   <script type="text/html" id="template-sharingListCompositeView">

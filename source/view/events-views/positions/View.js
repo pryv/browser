@@ -50,6 +50,12 @@ module.exports = Marionette.ItemView.extend({
       setTimeout(function () {
         clearInterval(timer);
         this.map.fitBounds(this.bounds);
+        var listener = this.gmaps.event.addListener(this.map, 'idle', function () {
+          if (this.map.getZoom() > 10) {
+            this.map.setZoom(10);
+          }
+          this.gmaps.event.removeListener(listener);
+        }.bind(this));
       }.bind(this), 1000);
     }
   },
@@ -83,7 +89,7 @@ module.exports = Marionette.ItemView.extend({
     this.markers = [];
     this.paths = {};
     this.mapOptions =  {
-      zoom: 8,
+      zoom: 10,
       zoomControl: false,
       mapTypeControl: false,
       scaleControl: false,
@@ -119,6 +125,12 @@ module.exports = Marionette.ItemView.extend({
     this.map = new this.gmaps.Map($container, this.mapOptions);
     this.gmaps.event.trigger(this.map, 'resize');
     this.map.fitBounds(this.bounds);
+    var listener = this.gmaps.event.addListener(this.map, 'idle', function () {
+      if (this.map.getZoom() > 10) {
+        this.map.setZoom(10);
+      }
+      this.gmaps.event.removeListener(listener);
+    }.bind(this));
     var gPath, gMarker;
     _.each(this.paths, function (path) {
       if (path.length > 1) {

@@ -61,6 +61,7 @@ module.exports = Marionette.ItemView.extend({
           });
 
           this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
+            $('#submit-edit').show();
             var event = this.model.get('event');
             event.content.latitude = evt.latLng.lat();
             event.content.longitude = evt.latLng.lng();

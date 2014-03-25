@@ -19,6 +19,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
   },
   onEditClick: function (e) {
+    $('#submit-edit').show();
     $(e.currentTarget).addClass('editing');
     this.ui.edit.focus();
   },

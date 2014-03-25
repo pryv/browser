@@ -246,9 +246,11 @@ module.exports = Marionette.ItemView.extend({
 
   onStreamClick: function (e) {
     var streamSelected = $(e.target).attr('data-stream') ||
-        $(e.target).parent().attr('data-stream'),
+                         $(e.target).parent().attr('data-stream') ||
+                         $(e.target).parent().parent().attr('data-stream'),
       connectionSelected = this.connection.get($(e.target).attr('data-connection') ||
-        $(e.target).parent().attr('data-connection'));
+                           $(e.target).parent().attr('data-connection') ||
+                           $(e.target).parent().parent().attr('data-connection'));
     if (streamSelected && connectionSelected) {
       this.ui.inputStream.val('');
       $(e.target).find('input[type="radio"]').prop('checked', true);

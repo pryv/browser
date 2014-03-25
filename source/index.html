@@ -506,7 +506,7 @@
           <% event.tags.forEach(function (tag) { %>
           <label><%= tag %></label>
           <% }) %>
-          <input class="edit" id="edit-tags" value="<%= event.tags.join(', ') %>"></li>
+          <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('"', '&quot;') %>"></li>
 
         <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise">Submit <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
         <button id ="trash-edit" type="button" class="btn btn-danger">Trash <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>

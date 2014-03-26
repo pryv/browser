@@ -19,6 +19,8 @@ var ConnectionNode = module.exports = TreeNode.implement(
     this.connection = connection;
     this.streamNodes = {};
     this.virtNodeWaiting = {};
+    this.waitForStream = {};
+    this.waitForParentStream = {};
     this.margin = STREAM_MARGIN;
     this.uniqueId = 'node_connection_' + SERIAL;
     SERIAL++;
@@ -158,9 +160,55 @@ var ConnectionNode = module.exports = TreeNode.implement(
     eventEnterScope: function (event, reason, callback) {
       var node =  this.streamNodes[event.stream.id]; // do we already know this stream?
       if (typeof node === 'undefined') {
-        throw new Error('Cannot find stream with id: ' + event.stream.id);
+        if (!this.waitForStream[event.stream.id]) {
+          this.waitForStream[event.stream.id] = [];
+        }
+        this.waitForStream[event.stream.id].push(event);
+        if (typeof(callback) === 'function') {
+          return callback();
+        } else {
+          return null;
+        }
       }
       node.eventEnterScope(event, reason, callback);
+    },
+    streamEnterScope: function (stream, reason, callback) {
+      if (this.streamNodes[stream.id]) {
+        if (typeof(callback) === 'function') {
+          return callback();
+        } else {
+          return null;
+        }
+      }
+      if (!stream.parent) {
+        this.streamNodes[stream.id] = new StreamNode(this, this, stream);
+      }
+      if (stream.parent && this.streamNodes[stream.parent.id]) {
+        this.streamNodes[stream.id] =
+          new StreamNode(this, this.streamNodes[stream.parent.id], stream);
+      }
+      if (stream.parent && !this.streamNodes[stream.parent.id]) {
+        if (!this.waitForParentStream[stream.parent.id]) {
+          this.waitForParentStream[stream.parent.id] = [];
+        }
+        this.waitForParentStream[stream.parent.id].push(stream);
+        if (typeof(callback) === 'function') {
+          return callback();
+        } else {
+          return null;
+        }
+      }
+      _.each(this.waitForStream[stream.id], function (event) {
+        this.eventEnterScope(event, null, function () {});
+      }.bind(this));
+      _.each(this.waitForParentStream[stream.id], function (stream) {
+        this.streamEnterScope(stream, null, function () {});
+      }.bind(this));
+      if (typeof(callback) === 'function') {
+        return callback();
+      } else {
+        return null;
+      }
     },
 
     eventLeaveScope: function (event, reason, callback) {

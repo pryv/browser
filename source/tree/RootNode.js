@@ -43,6 +43,16 @@ module.exports = TreeNode.implement(
         connectionNode.eventEnterScope(event, reason, callback);
       });
     },
+    streamEnterScope: function (stream, reason, callback) {
+      var connectionNode = this.connectionNodes[stream.connection.id];
+      if (typeof connectionNode !== 'undefined') {
+        return connectionNode.streamEnterScope(stream, reason, callback);
+      }
+      // we create a new connection Node
+      connectionNode = new ConnectionNode(this, stream.connection);
+      this.connectionNodes[stream.connection.id] = connectionNode;
+      connectionNode.streamEnterScope(stream, reason, callback);
+    },
 
     eventLeaveScope: function (event, reason, callback) {
       var node = this.connectionNodes[event.connection.id];

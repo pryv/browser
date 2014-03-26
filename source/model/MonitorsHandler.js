@@ -38,6 +38,20 @@ MonitorsHandler.prototype._eventsChange = function (reason, events, batch) {
   if (events.length === 0) { return; }
   this._fireEvent(MSGs.SIGNAL.EVENT_CHANGE, {reason: reason, events: events}, batch);
 };
+MonitorsHandler.prototype._streamsEnterScope = function (reason, streams, batch) {
+  if (streams.length === 0) { return; }
+  this._fireEvent(MSGs.SIGNAL.STREAM_SCOPE_ENTER, {reason: reason, streams: streams}, batch);
+};
+
+MonitorsHandler.prototype._streamsLeaveScope = function (reason, streams, batch) {
+  if (streams.length === 0) { return; }
+  this._fireEvent(MSGs.SIGNAL.STREAM_SCOPE_LEAVE, {reason: reason, streams: streams}, batch);
+};
+
+MonitorsHandler.prototype._streamsChange = function (reason, streams, batch) {
+  if (streams.length === 0) { return; }
+  this._fireEvent(MSGs.SIGNAL.STREAM_CHANGE, {reason: reason, streams: streams}, batch);
+};
 
 // ----------------------------- Events from monitors ------------------ //
 
@@ -47,6 +61,11 @@ MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, ba
   this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, myBatch);
   this._eventsChange(MSGs.REASON.REMOTELY, changes.modified, myBatch);
   myBatch.done();
+};
+MonitorsHandler.prototype._onMonitorStreamChange = function (changes) {
+  this._streamsEnterScope(MSGs.REASON.REMOTELY, changes.created);
+  this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed);
+  this._streamsChange(MSGs.REASON.REMOTELY, changes.modified);
 };
 
 MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batchId, batch) {
@@ -105,6 +124,7 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
     monitor.addEventListener('started', onMonitorOnLoad.bind(this));
 
     monitor.addEventListener('eventsChanged', this._onMonitorEventChange.bind(this));
+    monitor.addEventListener('streamsChanged', this._onMonitorStreamChange.bind(this));
     monitor.addEventListener('filterChanged', this._onMonitorFilterChange.bind(this));
 
     monitor.start(function (error) {

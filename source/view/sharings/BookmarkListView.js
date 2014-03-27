@@ -29,29 +29,33 @@ module.exports = Marionette.CompositeView.extend({
   initialize: function () {
     this.listenTo(this.collection, 'change', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h5>Followed slices</h5>' +
+    $(this.container).append('<h5 data-i18n="modal.manageSlices.followedSlices"></h5>' +
       
       '<table class="table" >' +
-      '<thead><tr><th>Name</th><th>Link</th><th></th></tr></thead>' +
+      '<thead><tr><th data-i18n="modal.manageSlices.name"></th>' +
+      '<th data-i18n="modal.manageSlices.link"></th><th></th></tr></thead>' +
       '<tbody id="bookmark-list"></tbody>' +
       '</table>' +
       '<button class="btn btn-default btn-sm" id="add-slice">' +
-      ' <i class="fa fa-plus-square-o"></i> Add a new slice</button>' +
+      ' <i class="fa fa-plus-square-o"></i> ' +
+      '<span data-i18n="modal.manageSlices.newAdd"></span></button>' +
       '<form class="form-inline" id="add-bookmark" role="form">' +
       '<div class="form-group">' +
       ' <label class="sr-only" for="add-bookmark-url">url</label>' +
-      ' <input type="url" class="form-control" id="add-bookmark-url" placeholder="Link">' +
+      ' <input type="url" class="form-control" id="add-bookmark-url" ' +
+      'data-i18n="[placeholder]modal.manageSlices.newLink">' +
       '</div> ' +
       '<div class="form-group">' +
         '<label class="sr-only" for="add-bookmark-name">Name</label>' +
         '<input type="text" class="form-control" id="add-bookmark-name" ' +
-      'placeholder="Name this slice">' +
+      'data-i18n="[placeholder]modal.manageSlices.newName">' +
       '</div>' +
       '<div class="form-group">' +
         ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
         ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
       '</div> ' +
-      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">Add  ' +
+      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">' +
+      '<span data-i18n="button.add"></span> ' +
       '<i class="fa fa-spinner fa-spin"></i></button>  ' +
       '' +
       ' </form>');
@@ -99,7 +103,7 @@ module.exports = Marionette.CompositeView.extend({
     $(this.itemViewContainer).append(itemView.el);
   },
   onRender: function () {
-    $('details').details();
+    $('body').i18n();
   },
   onBeforeClose: function () {
     $(this.container).empty();

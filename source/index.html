@@ -35,6 +35,15 @@
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
+      var i18nOptions = {
+        ns: {
+          namespaces: ['browser'],
+          defaultNs: 'browser'
+        }
+      };
+      i18n.init(i18nOptions, function () {
+        $('body').i18n();
+      });
       var sampleApp = require('SampleApp');
       <!-- @if NODE_ENV == 'PRODUCTION'  -->
       var wrapped = Airbrake.wrap(function() {
@@ -51,21 +60,20 @@
       <!-- @if NODE_ENV == 'DEVELOPMENT' -->
       sampleApp.main(true);
       <!-- @endif -->
+
     });
   </script>
   <script id="onboardingView" type="template">
     <div class="container">
     <div class="row onboarding">
-      <div class="col-md-4"><h1 class="hidden-xs">What matters in your life ?</h1>
-        <div class="ob_text hidden-xs">
-          <p>Your life is made of streams.
-            <span class="stream_color_1">Travel</span>,<span class="stream_color_2"> Friends</span>,<span class="stream_color_3"> Family</span>,<span class="stream_color_4"> Sports...</span></p>
-          <p>To get started, create streams that matter to you:</p>
+      <div class="col-md-4"><h1 class="hidden-xs" data-i18n="onboarding.title"></h1>
+        <div class="ob_text hidden-xs" >
+          <div data-i18n="[html]onboarding.content"></div>
           <form class="form-inline" role="form" id="onboarding-form">
             <div class="form-group">
-              <input type="text" id='onboarding-input-name' class="form-control" placeholder="Create Your Stream" style="width: 152px;" required>
+              <input type="text" id='onboarding-input-name' class="form-control" data-i18n="[placeholder]onboarding.streamInput" style="width: 152px;" required>
             </div>
-            <button type="submit" class="btn btn-primary">START  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+            <button type="submit" class="btn btn-primary"><span data-i18n="button.start"></span>  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
           </form>
         </div>
 
@@ -298,22 +306,22 @@
   <script type="template" id="template-detail-creation-type">
     <div class="container" style="width: auto;">
     <div class="row" id="type-select">
-      <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span>Note</span></div>
-      <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span>Picture</span></div>
-      <div class="type-select col-md-2" data-type="position/wgs84"><i class="fa fa-map-marker  fa-3"></i><span>Position</span></div>
+      <div class="type-select col-md-2" data-type="note/txt"><i class="fa fa-pencil fa-3"></i><span data-i18n="modal.addEvent.selectType.note"></span></div>
+      <div class="type-select col-md-2" data-type="picture/attached"><i class="fa fa-camera  fa-3"></i><span data-i18n="modal.addEvent.selectType.picture"></span></div>
+      <div class="type-select col-md-2" data-type="position/wgs84"><i class="fa fa-map-marker  fa-3"></i><span data-i18n="modal.addEvent.selectType.position"></span></div>
     </div>
     </div>
   </script>
   <script type="template" id="template-detail-creation-stream">
-    <h1>Choose a stream</h1>
+    <h1 data-i18n="modal.addEvent.selectStream"></h1>
     <%= getStream() %>
   </script>
   <script type="template" id="template-detail-picture-select">
     <div class="container">
-    <h1>Upload photo</h1>
+    <h1 data-i18n="modal.addEvent.uploadPicture"></h1>
     <div id="select-picture-container">
       <input type="file" id="fileElem" name="file" accept="image/*" multiple>
-      <button id="fileSelect" class="btn btn-default">Select Picture</button>
+      <button id="fileSelect" class="btn btn-default" data-i18n="button.selectPicture"></button>
     </div>
     </div>
   </script>
@@ -337,14 +345,14 @@
     <div class="creation-typed creation-typed-<%= getEventType() %> full-height col-md-9">
       <%= getTypedView() %>
     </div>
-    <div id="creation-select-stream" class="full-height col-md-3"><h3>Select a Stream</h3><%= getStream() %></div>
+    <div id="creation-select-stream" class="full-height col-md-3"><h3 data-i18n="modal.addEvent.selectStream"></h3><%= getStream() %></div>
     </div>
-    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise">Publish <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn">Cancel</button></div>
+    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise" ><span data-i18n="button.publish"></span> <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn" data-i18n="button.cancel"></button></div>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
     <ul>
-      <li class="event-structure editable" id="current-content">content: <label><%= event.content %></label>
+      <li class="event-structure editable" id="current-content"><span data-i18n="modal.detail.content"></span>: <label><%= event.content %></label>
         <textarea class="edit form-control" rows="5" id="edit-content" value="<%= event.content %>"><%= event.content %></textarea>
       </li>
     </ul>
@@ -392,7 +400,7 @@
           <ul>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label">Color</label>
+                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.color"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-color" class="form-control">
                     <option value="#1abc9c" style="background-color: #1abc9c">&nbsp;</option>
@@ -421,45 +429,45 @@
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label">Style</label>
+                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.style"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-style" class="form-control">
-                    <option value="line">Line</option>
-                    <option value="point">Point</option>
-                    <option value="bar">Bar</option>
+                    <option value="line" data-i18n="modal.detail.graph.line"></option>
+                    <option value="point" data-i18n="modal.detail.graph.point"></option>
+                    <option value="bar" data-i18n="modal.detail.graph.bar"></option>
                   </select>
                 </div>
               </div>
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label">Operation</label>
+                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.operation"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-operation" class="form-control">
-                    <option value="none">None</option>
-                    <option value="sum">Sum</option>
-                    <option value="average">Average</option>
+                    <option value="none" data-i18n="modal.detail.graph.none"></option>
+                    <option value="sum" data-i18n="modal.detail.graph.sum"></option>
+                    <option value="average" data-i18n="modal.detail.graph.average"></option>
                   </select>
                 </div>
               </div>
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label">Interval</label>
+                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.interval"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-interval" class="form-control">
-                    <option value="none">None</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
+                    <option value="none" data-i18n="modal.detail.graph.none"></option>
+                    <option value="daily" data-i18n="modal.detail.graph.daily"></option>
+                    <option value="weekly" data-i18n="modal.detail.graph.weekly"></option>
+                    <option value="monthly" data-i18n="modal.detail.graph.monthly"></option>
+                    <option value="yearly" data-i18n="modal.detail.graph.yearly"></option>
                   </select>
                 </div>
               </div>
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label">Fitting</label>
+                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.fitting"></label>
                 <div class="col-sm-10">
                   <div class="onoffswitch">
                     <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
@@ -472,8 +480,8 @@
               </div>
             </li>
             <li>
-              <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger">Cancel</button>
-              <button id="detailed-view-chart-ok" type="button" class="btn btn-success">Ok!</button>
+              <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger" data-i18n="button.cancel"></button>
+              <button id="detailed-view-chart-ok" type="button" class="btn btn-success" data-i18n="button.ok"></button>
             </li>
           </ul>
         </div>
@@ -483,7 +491,7 @@
   <script type="template" id="template-detail-full">
       <% if (event) {%>
       <ul>
-        <li class="event-structure editable" id="current-streamId">Stream: <label><%= event.streamName
+        <li class="event-structure editable" id="current-streamId"><span data-i18n="modal.detail.editForm.stream"></span>: <label><%= event.streamName
           %></label>
           <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
         </li>
@@ -491,7 +499,7 @@
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
         </li> -->
-        <li class="event-structure editable" id="current-time">Time: <label><%= new Date(event.time *
+        <li class="event-structure editable" id="current-time"><span data-i18n="modal.detail.editForm.time"></span>: <label><%= new Date(event.time *
           1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
           %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
@@ -499,17 +507,17 @@
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">
         </li> -->
-        <li class="event-structure editable" id="current-description">Description: <label><%=
+        <li class="event-structure editable" id="current-description"><span data-i18n="modal.detail.editForm.description"></span>: <label><%=
           event.description %></label>
           <input class="edit" id="edit-description" value="<%= event.description %>"></li>
-        <li class="event-structure editable" id="current-tags">Tags:
+        <li class="event-structure editable" id="current-tags"><span data-i18n="modal.detail.editForm.tags"></span>:
           <% event.tags.forEach(function (tag) { %>
           <label><%= tag %></label>
           <% }) %>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('"', '&quot;') %>"></li>
 
-        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise">Submit <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
-        <button id ="trash-edit" type="button" class="btn btn-danger">Trash <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise"><span data-i18n="button.submit"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+        <button id ="trash-edit" type="button" class="btn btn-danger"><span data-i18n="button.trash"></span><i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
       </ul>
       <% } %>
   </script>
@@ -537,11 +545,11 @@
   </div>
 </script>
 <script type="template" id="filter-by-stream-template">
-  <span class="li-title" data-toggle="collapse" data-target="#collapseFilterByStream">Filter by stream</span>
+  <span class="li-title" data-toggle="collapse" data-target="#collapseFilterByStream" data-i18n="leftPanel.filterByStream"></span>
   <div id="collapseFilterByStream" class="panel-collapse collapse">
     <div class="panel-body">
       <%= getStream() %>
-      <button class="btn" id="filter-by-stream-apply">Apply</button>
+      <button class="btn" id="filter-by-stream-apply" data-i18n="button.apply"></button>
     </div>
   </div>
 </script>
@@ -551,7 +559,7 @@
 <div class="onboarding visible-xs">
 <div class="ob_text" style="margin: 15px;">
   <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
-  <p style="font-size: 16px;">Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.</p>
+  <p style="font-size: 16px;" data-i18n="[html]mobile"></p>
 </div>
 </div>
 <div id="main-container" class="hidden-xs">
@@ -562,29 +570,29 @@
   </div>
   <div id="login-form" class="centered">
     <form role="form">
-      <h3>Login</h3>
+      <h3 data-i18n="login.title"></h3>
 
       <div class="form-group">
         <label class="sr-only" for="login-username">Username</label>
-        <input type="text" class="form-control" id="login-username" placeholder="Username">
+        <input type="text" class="form-control" id="login-username" data-i18n="[placeholder]login.username">
       </div>
       <div class="form-group">
         <label class="sr-only" for="login-password">Password</label>
-        <input type="password" class="form-control" id="login-password" placeholder="Password">
+        <input type="password" class="form-control" id="login-password" data-i18n="[placeholder]login.password">
       </div>
-      <button type="submit" class="btn btn-pryv-turquoise">Sign In</button>
+      <button type="submit" class="btn btn-pryv-turquoise" data-i18n="button.login"></button>
     </form>
   </div>
 </div>
-<div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> Sign In</a>
+<div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> </a>
 <ul class="dropdown-menu">
-  <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> Add event</a></li>
-  <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> Share a slice of life</a></li>
-  <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> Manage Slices</a></li>
-  <li class="logo-to-my-pryv"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-home"></span> Go to my Pryv</a></li>
-  <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> Follow this slice</a></li>
-  <li class=""><a href="mailto:support@pryv.com?subject=Browser bug report&amp;body=" title="Bug report"><i class="fa fa-bug"></i> Report a bug</a></li>
-  <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> Sign out</a></li>
+  <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> <span data-i18n="nav.addEvent"></span></a></li>
+  <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></a></li>
+  <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></a></li>
+  <li class="logo-to-my-pryv"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-home"></span> <span data-i18n="nav.myPryv"></span></a></li>
+  <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> <span data-i18n="nav.follow"></span></a></li>
+  <li class=""><a href="mailto:support@pryv.com?subject=Browser bug report&amp;body=" title="Bug report"><i class="fa fa-bug"></i> <span data-i18n="nav.bugReport"></span></a></li>
+  <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> <span data-i18n="nav.signOut"></span></a></li>
 </ul></div>
 <a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
 <a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
@@ -597,7 +605,7 @@
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
   <div id="empty-events">
-    <h1> No events to display </h1>
+    <h1 data-i18n="noEvents.title"></h1>
   </div>
 </div>
 <div id="timeframe"></div>

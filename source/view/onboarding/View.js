@@ -23,5 +23,6 @@ module.exports = Marionette.ItemView.extend({
         }.bind(this));
       }
     }.bind(this));
+    $('body').i18n();
   }
 });

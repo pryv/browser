@@ -17,6 +17,7 @@ module.exports = Marionette.ItemView.extend({
     $(this.itemViewContainer).html(this.el);
     this.ui.li.bind('dblclick', this.onEditClick.bind(this));
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
+    $('body').i18n();
   },
   onEditClick: function (e) {
     $('#submit-edit').show();

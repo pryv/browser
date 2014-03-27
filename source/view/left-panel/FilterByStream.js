@@ -38,6 +38,7 @@ module.exports = Marionette.ItemView.extend({
     });
     this.bindUIElements();
     this.onFocusStreamChanged();
+    setTimeout(function () {$('body').i18n(); }, 100);
   },
   onFocusStreamChanged: function () {
     var focusedStreams = this.MainModel.activeFilter.getStreams();

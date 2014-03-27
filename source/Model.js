@@ -1,4 +1,4 @@
-/* global $, window, location */
+/* global $, window, location, i18n */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
   _ = require('underscore'),
   ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -26,6 +26,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   this.sharingsConnections = null;
   this.bookmakrsConnections = null;
   this.hideLoggedInElement();
+  i18n.init(function (t) {
+    $('#login-button').html('<i class="fa fa-sign-in"></i> ' + t('nav.signIn'));
+  });
+
   if (this.urlSharings.length > 0) {
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
@@ -98,7 +102,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login-button').html('<i class="fa fa-sign-in"></i> Sign In');
+        $('#login-button').html('<i class="fa fa-sign-in"></i> ' + i18n.t('nav.signIn'));
         this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
@@ -148,8 +152,6 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     settings.password = $('#login-password').val();
     Pryv.Auth.login(settings);
   }.bind(this));
-
-
 
 };
 Model.prototype.signedIn = function (connection) {

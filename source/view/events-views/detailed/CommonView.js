@@ -48,6 +48,7 @@ module.exports = Marionette.ItemView.extend({
      $('#' + k + ' i').bind('click', { id: k, fileName: this.attachmentId[k] },
      this._onRemoveFileClick.bind(this));
      }.bind(this));  */
+    $('body').i18n();
   },
   onEditClick: function (e) {
     this.ui.submit.show();

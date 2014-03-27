@@ -20,8 +20,8 @@ module.exports = Marionette.CompositeView.extend({
         '<div class="modal-panel-right"> ' +
         '    <div id="modal-right-content"> ' +
         '        <div id="detail-list"></div> ' +
-        '        <div id="filter"> <input type="checkbox" id="check-all"> Check All ' +
-          '      <button id ="trash-selected" type="button" class="btn btn-danger">Trash Selected</button></div>' +
+        '        <div id="filter"> <input type="checkbox" id="check-all"> <span data-i18n="modal.detail.checkAll"></span> ' +
+          '      <button id ="trash-selected" type="button" class="btn btn-danger" data-i18n="modal.detail.trashSelected"></button></div>' +
         '    </div> ' +
         '</div>');
 

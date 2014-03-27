@@ -85,7 +85,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
     this.ui.spin.hide();
     $('.td-progress').hide();
-    $('details').details();
+    $('body').i18n();
   },
   _close: function () {
     this.trigger('close');
@@ -267,7 +267,8 @@ module.exports = Marionette.ItemView.extend({
 
     if (validType.indexOf(typeSelected) !== -1) {
       event.type = this.eventType =  typeSelected;
-      $('#myModalLabel').text('Add ' + this.eventType.split('/')[0]);
+      $('#myModalLabel').attr('data-i18n',
+        'modal.addEvent.header.add-' + this.eventType.split('/')[0]);
       if (typeSelected === validType[1]) {
         this.step = creationStep.pictureSelect;
       } else  if (typeSelected === validType[2]) {
@@ -355,7 +356,8 @@ module.exports = Marionette.ItemView.extend({
       result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
         '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
         '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
-        '<input type="text" class="form-control create-stream" placeholder="Create a new stream"' +
+        '<input type="text" class="form-control create-stream" ' +
+        'data-i18n="[placeholder]modal.addEvent.createStream;"' +
         ' data-parentId="" data-connection="' + c.serialId + '">' +
         '</label></div></li>';
       result += '</div></ul>';
@@ -421,7 +423,8 @@ module.exports = Marionette.ItemView.extend({
     result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
       '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
       '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
-      '<input type="text" class="form-control create-stream" placeholder="Create a new stream"' +
+      '<input type="text" class="form-control create-stream" ' +
+      'data-i18n="[placeholder]modal.addEvent.createStream;"' +
       ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
       '</label></div></li>' +
       '</div></ul>';
@@ -524,12 +527,12 @@ module.exports = Marionette.ItemView.extend({
       '      <div class="form-group td-content">' +
       '        <label class="sr-only" for="content">Content</label>' +
       '        <textarea rows="15" class="form-control" id="content-0" ' +
-      'placeholder="Enter your note..."></textarea>' +
+      'data-i18n="[placeholder]modal.addEvent.editForm.noteContent"></textarea>' +
       '      </div>' +
       '  <div class="form-group td-tags">' +
       '    <label class="sr-only" for="tags">Tags</label>' +
       '    <input type="text" class="form-control" id="tags-0" ' +
-      'placeholder="Enter tags (comma separated)">' +
+      'data-i18n="[placeholder]modal.addEvent.editForm.tags">' +
       '    </div>' +
       '    <div class="form-group td-time">' +
       '      <label class="sr-only" for="edit-time">Time</label>' +
@@ -540,7 +543,7 @@ module.exports = Marionette.ItemView.extend({
       '      <div class="form-group td-description">' +
       '        <label class="sr-only" for="description">Description</label>' +
       '        <textarea rows="3" class="form-control" id="description-0" ' +
-      'placeholder="Description"></textarea>' +
+      'data-i18n="[placeholder]modal.addEvent.editForm.description"></textarea>' +
       '      </div>' +
       '    </form>';
     return result;
@@ -552,7 +555,7 @@ module.exports = Marionette.ItemView.extend({
       '  <div class="form-group td-tags">' +
       '    <label class="sr-only" for="tags">Tags</label>' +
       '    <input type="text" class="form-control" id="tags-0" ' +
-      'placeholder="Enter tags (comma separated)">' +
+      'data-i18n="[placeholder]modal.addEvent.editForm.tags">' +
       '    </div>' +
       '    <div class="form-group td-time">' +
       '      <label class="sr-only" for="edit-time">Time</label>' +
@@ -563,7 +566,7 @@ module.exports = Marionette.ItemView.extend({
       '      <div class="form-group td-description">' +
       '        <label class="sr-only" for="description">Description</label>' +
       '        <textarea rows="3" class="form-control" id="description-0" ' +
-      'placeholder="Description"></textarea>' +
+      'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea>' +
       '      </div>' +
       '    </form>';
     return result;
@@ -596,7 +599,7 @@ module.exports = Marionette.ItemView.extend({
         '  <div class="form-group td-tags">' +
         '    <label class="sr-only" for="tags">Tags</label>' +
         '    <input type="text" class="form-control" id="tags-0" ' +
-        'placeholder="Enter tags (comma separated)">' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.tags;">' +
         '    </div>' +
         '    <div class="form-group td-time">' +
         '      <label class="sr-only" for="edit-time">Time</label>' +
@@ -607,7 +610,7 @@ module.exports = Marionette.ItemView.extend({
         '      <div class="form-group td-description">' +
         '        <label class="sr-only" for="description">Description</label>' +
         '        <textarea rows="3" class="form-control" id="description-0" ' +
-        'placeholder="Description"></textarea>' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea>' +
         '      </div>' +
         '    </form>';
       toRead.push({file: event.previewFile, selector: '#preview-0'});
@@ -625,7 +628,7 @@ module.exports = Marionette.ItemView.extend({
           '<td class="td-tags"><div class="form-group"><label class="sr-only" ' +
           'for="tags">Tags</label>' +
           '<input type="text" class="form-control" id="tags-' + i +
-          '" placeholder="Enter tags (comma separated)">' +
+          '" data-i18n="[placeholder]modal.addEvent.editForm.tags;">' +
           '</div></td>' +
           '<td class="td-time"><div class="form-group"><label class="sr-only" ' +
           'for="edit-time">Time</label>' +
@@ -635,7 +638,7 @@ module.exports = Marionette.ItemView.extend({
           '<td class="td-description"><div class="form-group"><label class="sr-only" ' +
           'for="description">Description' +
           '</label><textarea row="3" class="form-control" id="description-' + i + '" ' +
-          'placeholder="Description"></textarea></div></td>' +
+          'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea></div></td>' +
           '</tr>';
         toRead.push({file: model.get('event').previewFile, selector: '#preview-' + i});
       }

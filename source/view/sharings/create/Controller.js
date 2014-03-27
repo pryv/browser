@@ -2,31 +2,6 @@
 var Backbone = require('backbone'),
     Marionette = require('backbone.marionette'),
     _ = require('underscore');
-// The recursive tree view
-/*var slugMe = function (value) {
-  var rExps = [
-    {re: /[\xC0-\xC6]/g, ch: 'A'},
-    {re: /[\xE0-\xE6]/g, ch: 'a'},
-    {re: /[\xC8-\xCB]/g, ch: 'E'},
-    {re: /[\xE8-\xEB]/g, ch: 'e'},
-    {re: /[\xCC-\xCF]/g, ch: 'I'},
-    {re: /[\xEC-\xEF]/g, ch: 'i'},
-    {re: /[\xD2-\xD6]/g, ch: 'O'},
-    {re: /[\xF2-\xF6]/g, ch: 'o'},
-    {re: /[\xD9-\xDC]/g, ch: 'U'},
-    {re: /[\xF9-\xFC]/g, ch: 'u'},
-    {re: /[\xC7-\xE7]/g, ch: 'c'},
-    {re: /[\xD1]/g, ch: 'N'},
-    {re: /[\xF1]/g, ch: 'n'}
-  ];
-  for (var i = 0, len = rExps.length; i < len; i++) {
-    value = value.replace(rExps[i].re, rExps[i].ch);
-  }
-  return value.toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/\-{2,}/g, '-');
-};  */
 var eachStream = function (collection, callback) {
   collection.each(function (model) {
     if (_.isFunction(callback)) {
@@ -85,20 +60,24 @@ var TreeRoot = Marionette.CollectionView.extend({
     }
 
     this.$el.prepend(
-      '<h5>Settings</h5>' +
+      '<h5 data-i18n="modal.share.settings.title"></h5>' +
       '<form role="form" id="form-create-sharing"' +
       '<div class="form-horizontal">' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-name" placeholder="Name" required>' +
+      '<input type="text" class="form-control" id="input-name" ' +
+        'data-i18n="[placeholder]modal.share.settings.name" required>' +
       '</div>' +
       '</div>' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
       '<select class="form-control" id="input-global-permission">' +
-      '  <option value="read" selected="selected">Allow read only</option>' +
-      '  <option value="contribute">Allow contributing events</option>' +
-      '  <option value="manage">Allow managing events and streams</option>' +
+      '  <option value="read" selected="selected" ' +
+        'data-i18n="modal.share.settings.read"></option>' +
+      '  <option value="contribute" ' +
+        'data-i18n="modal.share.settings.contribute"></option>' +
+      '  <option value="manage" ' +
+        'data-i18n="modal.share.settings.manage"></option>' +
       '</select>' +
       '</div>' +
       '</div>' +
@@ -144,7 +123,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       ' </div> ' +
       '  </div> ' +
       '<input type="submit" style="opacity: 0; visibility: hidden;">' +
-      '<h5>Select streams</h5>' +
+      '<h5 data-i18n="modal.share.settings.selectStreams"></h5>' +
       '');
     var $form = $('#form-create-sharing', this.$el),
       $name = $('#input-name', this.$el);
@@ -246,16 +225,17 @@ Controller.prototype.show = function () {
   $(this.container).prepend('<div class="modal-header">  ' +
     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
     '&times;</button> ' +
-    '<h4 class="modal-title" id="myModalLabel">Share a slice of life</h4>' +
+    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.share.header"></h4>' +
     '<div class="modal-close"></div> ' +
     '</div><div id="modal-content"><div id="creation-content"></div>' +
     '<div id="creation-footer" class="col-md-12">' +
-    '<button id="publish" class="btn btn-pryv-turquoise">Share  ' +
+    '<button id="publish" class="btn btn-pryv-turquoise">' +
+    '<span data-i18n="button.publish"></span> ' +
     '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
-    '<button id="cancel" class="btn" data-dismiss="modal">Cancel</button>' +
+    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="button.cancel"></button>' +
     '</div></div>');
   $('#creation-content').html(this.treeView.el);
-  $('details').details();
+  $('body').i18n();
   $('#publish').click(function (e) {
     this.treeView.createSharing(e, $('#publish'));
   }.bind(this));
@@ -268,8 +248,7 @@ Controller.prototype.show = function () {
     url = url.replace(/\.io/, '.me');
     url += '#/sharings/' + token;
     $('#creation-content').html('<div class="container">' +
-      '<h4>Your sharing was successfully created, share it via ' +
-      'Facebook, Twitter, mail or this link: </h4>' +
+      '<h4 data-i18n="modal.share.success"></h4>' +
       '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
       '<p class="text-center share">' +
       '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +
@@ -289,6 +268,7 @@ Controller.prototype.show = function () {
       '" title="Share by Email">' +
       '<i class="fa fa-envelope"></i></a>' +
       '</p></div>');
+    $('body').i18n();
   }.bind(this));
 };
 Controller.prototype.close = function () {

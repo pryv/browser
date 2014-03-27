@@ -48,6 +48,7 @@ module.exports = function (grunt) {
           'source/vendor/jquery.details.min.js',
           'source/vendor/bootstrap.min.js',
           'source/vendor/require.js',
+          'source/vendor/i18next-1.7.2.min.js',
           'source/vendor/jquery.flot.js',
           'source/vendor/jquery.flot.time.js',
           'source/vendor/jquery.flot.curvedLines.js',
@@ -71,6 +72,12 @@ module.exports = function (grunt) {
             filter: 'isFile',
             src: 'source/images/**',
             dest: 'dist/images/'
+          },
+          {
+            expand: true,
+            cwd: 'source/locales/',
+            src: '**',
+            dest: 'dist/locales/'
           },
           {
             expand: true,

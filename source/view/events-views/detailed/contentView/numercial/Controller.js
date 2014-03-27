@@ -1,4 +1,4 @@
-/* global window */
+/* global window, $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   Model = require('../../../numericals/TimeSeriesModel.js'),
@@ -51,6 +51,7 @@ module.exports = Marionette.ItemView.extend({
     } else {
       this.view.render();
     }
+    $('body').i18n();
   },
   updateCollection: function () {
     if (!this.collection) {

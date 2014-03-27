@@ -24,7 +24,8 @@ _.extend(Controller.prototype, {
     $(this.container).append('<div class="modal-header">  ' +
       '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
       '&times;</button> ' +
-      '<h4 class="modal-title" id="myModalLabel">Add Event</h4>' +
+      '<h4 class="modal-title" id="myModalLabel" ' +
+      'data-i18n="modal.addEvent.header.add-event"></h4>' +
       '<div class="modal-close"></div> ' +
       '</div>' +
       '<div id="modal-content"></div>');
@@ -33,7 +34,7 @@ _.extend(Controller.prototype, {
     this.view.focusedStream = this.focusedStream;
     this.view.render();
     this.view.on('close', this.close.bind(this));
-
+    $('body').i18n();
   },
   close: function () {
     this.newEvent = null;

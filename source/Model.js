@@ -160,6 +160,10 @@ Model.prototype.signedIn = function (connection) {
   $('#login-button').html(connection.username + ' <i class="fa fa-chevron-down"></i>');
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
+    if (this.sharingsConnections.length === 1 &&
+      this.sharingsConnections[0] === this.publicConnection) {
+      this.sharingsConnections = null;
+    }
     if (!this.sharingsConnections) {
       this.addConnection(connection);
       if (this.publicConnection) {

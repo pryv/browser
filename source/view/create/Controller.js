@@ -6,7 +6,7 @@ var _ = require('underscore'),
 
 var Controller = module.exports = function ($modal, connection, focusedStream, target) {
   this.connection = connection;
-  this.focusedStream = _.size(focusedStream) === 0 ? null : focusedStream;
+  this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';

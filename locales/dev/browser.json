@@ -1,0 +1,118 @@
+{
+  "button": {
+    "submit": "Submit",
+    "publish": "Publish",
+    "cancel": "Cancel",
+    "trash": "Trash",
+    "selectPicture": "Select Picture",
+    "share": "Share",
+    "ok": "Ok",
+    "add": "Add",
+    "login": "Sign in",
+    "start": "START",
+    "apply": "Apply"
+  },
+  "noEvents": {
+    "title": "No events to display"
+  },
+  "onboarding":{
+    "title": "What matters in your life ?",
+    "content": ["<p>Your life is made of streams.<span class=\"stream_color_1\">Travel</span>,<span class=\"stream_color_2\"> Friends</span>,<span class=\"stream_color_3\"> Family</span>,<span class=\"stream_color_4\"> Sports...</span></p>",
+                "<p>To get started, create streams that matter to you:</p>"],
+    "streamInput": "Create Your Stream"
+  },
+  "mobile": "Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.",
+  "login": {
+    "title": "Login",
+    "username": "Username",
+    "password": "Password"
+  },
+  "leftPanel": {
+    "filterByStream": "Filter by stream"
+  },
+  "nav": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "addEvent": "Add event",
+    "share": "Share a slice of life",
+    "manageSlices": "Manage slices",
+    "bugReport": "Report a bug",
+    "follow": "Follow this slice",
+    "myPryv": "Go to my Pryv"
+  },
+  "modal": {
+    "detail": {
+      "header": "Detailed View",
+      "editForm": {
+        "stream": "Stream",
+        "time": "Time",
+        "description": "Description",
+        "tags": "Tags"
+      },
+      "checkAll": "Check All",
+      "trashSelected": "Trash Selected",
+      "content": "Content",
+      "graph": {
+        "color": "Color",
+        "operation": "Operation",
+        "none": "None",
+        "sum": "Sum",
+        "average": "Average",
+        "fitting": "Fitting",
+        "style": "Style",
+        "line": "Line",
+        "point": "Point",
+        "bar": "Bar",
+        "interval": "Interval",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      }
+    },
+    "manageSlices": {
+      "header": "Slices",
+      "link": "Link",
+      "name": "Name",
+      "share": "Share",
+      "sharedSlices": "Shared slices",
+      "followedSlices": "Followed slices",
+      "newLink": "Link",
+      "newName": "Name this slice",
+      "newAdd": "Add a new slice"
+    },
+    "share": {
+      "header": "Share a slice of life",
+      "success": "Your sharing was successfully created, share it via Facebook, Twitter, mail or this link:",
+      "settings": {
+        "title": "Settings",
+        "name": "Name",
+        "read": "Allow read only",
+        "contribute": "Allow contributing events",
+        "manage": "Allow managing events and streams",
+        "selectStreams": "Select Streams"
+      }
+    },
+    "addEvent": {
+      "header": {
+        "add-event": "Add Event",
+        "add-note": "Add Note",
+        "add-picture": "Add Picture",
+        "add-position": "Add Position"
+      },
+      "selectType": {
+        "note": "Note",
+        "picture": "Picture",
+        "position": "Position"
+      },
+      "selectStream": "Select a Stream",
+      "createStream": "Create a new stream",
+      "uploadPicture": "Upload photo",
+      "editForm": {
+        "noteContent": "Enter your note...",
+        "tags": "Enter tags (comma separated)",
+        "description": "Enter a description"
+      }
+    }
+  }
+}

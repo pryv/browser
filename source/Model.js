@@ -26,9 +26,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   this.sharingsConnections = null;
   this.bookmakrsConnections = null;
   this.hideLoggedInElement();
-  i18n.init(function (t) {
-    $('#login-button').html('<i class="fa fa-sign-in"></i> ' + t('nav.signIn'));
-  });
+
 
   if (this.urlSharings.length > 0) {
     this.sharingsConnections = [];

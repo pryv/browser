@@ -39,10 +39,20 @@
         ns: {
           namespaces: ['browser'],
           defaultNs: 'browser'
+        },
+        customLoad: function(lng, ns, options, loadComplete) {
+          $.get('locales/' + lng + '/' + ns + '.json')
+           .done(function (data) {
+             loadComplete(null, data);
+           })
+           .fail(function (e) {
+             loadComplete(e);
+           });
         }
       };
-      i18n.init(i18nOptions, function () {
+      i18n.init(i18nOptions, function (t) {
         $('body').i18n();
+        $('#login-button').html('<i class="fa fa-sign-in"></i> ' + t('nav.signIn'));
       });
       var sampleApp = require('SampleApp');
       <!-- @if NODE_ENV == 'PRODUCTION'  -->

@@ -35,13 +35,15 @@
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
+      var baseHref = $('base').attr('href');
+
       var i18nOptions = {
         ns: {
           namespaces: ['browser'],
           defaultNs: 'browser'
         },
         customLoad: function(lng, ns, options, loadComplete) {
-          $.get('locales/' + lng + '/' + ns + '.json')
+          $.get(baseHref + 'locales/' + lng + '/' + ns + '.json')
            .done(function (data) {
              loadComplete(null, data);
            })

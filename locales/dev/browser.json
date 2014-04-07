@@ -10,7 +10,8 @@
     "add": "Add",
     "login": "Sign in",
     "start": "START",
-    "apply": "Apply"
+    "apply": "Apply",
+    "save": "Save"
   },
   "noEvents": {
     "title": "No events to display"
@@ -38,9 +39,23 @@
     "manageSlices": "Manage slices",
     "bugReport": "Report a bug",
     "follow": "Follow this slice",
-    "myPryv": "Go to my Pryv"
+    "myPryv": "Go to my Pryv",
+    "settings": "Settings"
   },
   "modal": {
+    "settings": {
+      "header": "Settings",
+      "nav": {
+        "password": "Password"
+      },
+      "password": {
+        "title": "Password",
+        "subtitle": "Change your account password",
+        "current": "Current",
+        "new": "New",
+        "reNew": "Re-type new"
+      }
+    },
     "detail": {
       "header": "Detailed View",
       "editForm": {

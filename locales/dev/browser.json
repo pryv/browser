@@ -26,7 +26,8 @@
   "login": {
     "title": "Login",
     "username": "Username",
-    "password": "Password"
+    "password": "Password",
+    "resetPassword": "Forgot your password?"
   },
   "leftPanel": {
     "filterByStream": "Filter by stream"

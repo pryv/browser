@@ -646,6 +646,13 @@
         <input type="password" class="form-control" id="login-password" data-i18n="[placeholder]login.password">
       </div>
       <button type="submit" class="btn btn-pryv-turquoise" data-i18n="button.login"></button>
+      <!-- @if NODE_ENV == 'PRODUCTION' -->
+      <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.resetPassword" target="_blank"></a>
+      <!-- @endif -->
+      <!-- @if NODE_ENV != 'PRODUCTION' -->
+      <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.resetPassword" target="_blank"></a>
+      <!-- @endif -->
+
     </form>
   </div>
 </div>

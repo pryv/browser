@@ -1175,6 +1175,9 @@ ul.modal-dnd-legend > li {
   height: 100%;
   vertical-align: middle;
 }
+#resetPassword, #resetPassword:hover, #resetPassword:focus {
+  color: #fff;
+}
 .centered {
   display: inline-block;
   vertical-align: middle;

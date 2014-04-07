@@ -10,7 +10,8 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   TimeLine = require('./timeframe-selector/timeframe-selector.js'),
   PUBLIC_TOKEN = 'public',
   STAGING,
-  toShowWhenLoggedIn = ['.logo-sharing', '.logo-add', '.logo-create-sharing', '#logo-toggle-panel'],
+  toShowWhenLoggedIn = ['.logo-sharing', '.logo-add', '.logo-create-sharing', '#logo-toggle-panel',
+    '#logo-settings'],
   toShowSubscribe = ['.logo-subscribe', '.logo-to-my-pryv', '#logo-toggle-panel'];
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;

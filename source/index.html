@@ -565,6 +565,59 @@
     </div>
   </div>
 </script>
+<script type="template" id="settings-modal-template">
+   <div class="modal-header">
+     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+     <h4 class="modal-title" id="myModalLabel" data-i18n="modal.settings.header"></h4>
+     <div class="modal-close"></div>
+   </div>
+  <div id="modal-content">
+    <div id="settings-nav"></div>
+    <div id="settings-content" class="col-md-10" >
+      <div id="settings-password"></div>
+    </div>
+  </div>
+</script>
+<script type="template" id="nav-settings-modal-template">
+  <ul class="nav">
+    <li><a href="javascript:void(0)" data-name="password" data-i18n="modal.settings.nav.password"></a></li>
+  </ul>
+</script>
+<script type="template" id="password-settings-modal-template">
+  <div class="panel panel-default settings-panel">
+    <div class="panel-heading">
+      <h2 class="panel-title" data-i18n="modal.settings.password.title"></h2>
+      <h6 class="panel-subtitle" data-i18n="modal.settings.password.subtitle"></h6>
+    </div>
+    <div class="panel-body">
+      <form class="form-horizontal" role="form">
+        <div class="form-group">
+          <label for="currentPassword" class="col-sm-2 control-label" data-i18n="modal.settings.password.current"></label>
+          <div class="col-sm-5">
+            <input type="password" class="form-control" id="currentPassword" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="newPassword" class="col-sm-2 control-label" data-i18n="modal.settings.password.new"></label>
+          <div class="col-sm-5">
+            <input type="password" class="form-control" id="newPassword" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reNewPassword" class="col-sm-2 control-label" data-i18n="modal.settings.password.reNew"></label>
+          <div class="col-sm-5">
+            <input type="password" class="form-control" id="reNewPassword" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-5">
+            <button type="submit" class="btn btn-pryv-turquoise"><span data-i18n="button.save"></span> <span class="fa fa-spinner fa-spin"></span></button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</script>
 </head>
 
 <body>
@@ -598,6 +651,7 @@
 </div>
 <div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> </a>
 <ul class="dropdown-menu">
+  <li class="logo-settings"><a href="javascript:void(0)" ><span class="fa fa-cog"></span> <span data-i18n="nav.settings"></span></a></li>
   <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> <span data-i18n="nav.addEvent"></span></a></li>
   <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></a></li>
   <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></a></li>
@@ -606,6 +660,7 @@
   <li class=""><a href="mailto:support@pryv.com?subject=Browser bug report&amp;body=" title="Bug report"><i class="fa fa-bug"></i> <span data-i18n="nav.bugReport"></span></a></li>
   <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> <span data-i18n="nav.signOut"></span></a></li>
 </ul></div>
+<a href="javascript:void(0)" id="logo-settings" class="logo-settings menu-button"><span class="fa fa-cog"></span></a>
 <a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
 <a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>

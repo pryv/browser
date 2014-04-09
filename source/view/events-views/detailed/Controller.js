@@ -29,11 +29,17 @@ var Controller = module.exports = function ($modal, connections, target) {
   this.container = '.modal-content';
   var once = true;
   this.debounceAdd = _.debounce(function () {
+    if (!this.collection) {
+      this.collection = new Collection();
+    }
     this.collection.add(this.eventsToAdd, {sort: false});
     this.collection.sort();
     this.eventsToAddToListView = _.sortBy(this.eventsToAddToListView, function (model) {
       return -model.get('event').time;
     });
+    if (!this.listViewcollection) {
+      this.listViewcollection = new Collection();
+    }
     this.listViewcollection.add(this.eventsToAddToListView.splice(0, EVENTS_PER_SCROLL),
       {sort: false});
     this.eventsToAdd = [];

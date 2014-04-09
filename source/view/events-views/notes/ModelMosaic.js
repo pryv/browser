@@ -162,7 +162,7 @@ NotesPlugin.prototype._refreshModelView = function () {
               this.treeMap.closeDetailedView();
               this.hasDetailedView = false;
             }.bind(this));
-            this.treeMap.initDetailedView($modal, this.events, this.highlightedTime);
+            this.treeMap.showDetailedView($modal, this.events, this.highlightedTime);
           }
         }.bind(this));
       }

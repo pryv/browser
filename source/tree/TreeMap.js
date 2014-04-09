@@ -364,22 +364,16 @@ TreeMap.prototype.closeViews = function () {
   this.closeSubscribeView();
 };
 //======== Detailed View ========\\
-TreeMap.prototype.initDetailedView = function ($modal, events, highlightedTime, target) {
-  if (!this.hasDetailedView()) {
-    this.detailedView = new DetailView($modal, this.model.connections, target);
-    this.addEventsDetailedView(events);
-    this.showDetailedView();
-    this.highlightDateDetailedView(highlightedTime);
-  }
-};
-
 TreeMap.prototype.hasDetailedView = function () {
   return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
 };
-TreeMap.prototype.showDetailedView = function () {
+TreeMap.prototype.showDetailedView = function ($modal, events, highlightedTime, target) {
   this.closeViews();
-  if (this.hasDetailedView()) {
+  if (!this.hasDetailedView()) {
+    this.detailedView = new DetailView($modal, this.model.connections, target);
+    this.addEventsDetailedView(events);
     this.detailedView.show();
+    this.highlightDateDetailedView(highlightedTime);
   }
 };
 TreeMap.prototype.closeDetailedView = function () {

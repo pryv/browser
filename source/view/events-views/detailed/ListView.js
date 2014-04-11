@@ -64,7 +64,7 @@ module.exports = Marionette.CompositeView.extend({
     var height = $detailList.height();
     var scrollHeight = $detailList[0].scrollHeight;
     var scrollTop = $detailList.scrollTop();
-    var triggerOffset = 1.15;
+    var triggerOffset = 1.25;
     var scrollBarHeight = height * height / scrollHeight;
     var currentScroll = (scrollBarHeight + (scrollTop / (scrollHeight / height))) * triggerOffset;
     // if we are closer than 'margin' to the end of the content, load more books

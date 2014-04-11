@@ -1,4 +1,6 @@
+/* global window, i18n */
 var Marionette = require('backbone.marionette');
+
 
 module.exports = Marionette.ItemView.extend({
 
@@ -50,6 +52,7 @@ module.exports = Marionette.ItemView.extend({
     if (error) {
       this.ui.editNameButton.removeClass('btn-default').addClass('btn-danger');
       this.model.get('sharing').name = this.model.get('sharing').oldName;
+      window.PryvBrowser.showAlert('.modal-content', i18n.t('error.createdSlice.edit.' + error.id));
     } else {
       this.ui.editNameInput.hide();
       this.ui.editNameSpan.hide();

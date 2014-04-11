@@ -1,4 +1,4 @@
-/* global $, FormData */
+/* global $, FormData, window, i18n */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
@@ -21,12 +21,6 @@ module.exports = Marionette.ItemView.extend({
   },
   templateHelpers: function () {
     return {
-      /*showContent: function () {
-       return this.objectToHtml('content', this.model.get('event').content, 'content');
-       }.bind(this),
-       showAttachment: function () {
-       return this.showAttachment();
-       }.bind(this),   */
       getStreamStructure: function () {
         return this.getStreamStructure();
       }.bind(this)
@@ -44,10 +38,6 @@ module.exports = Marionette.ItemView.extend({
     this.ui.submit.bind('click', this.submit.bind(this));
     this.ui.trash.bind('click', this.trash.bind(this));
     this.ui.submit.hide();
-    /* _.each(_.keys(this.attachmentId), function (k) {
-     $('#' + k + ' i').bind('click', { id: k, fileName: this.attachmentId[k] },
-     this._onRemoveFileClick.bind(this));
-     }.bind(this));  */
     $('body').i18n();
   },
   onEditClick: function (e) {
@@ -70,45 +60,7 @@ module.exports = Marionette.ItemView.extend({
       this.ui.submit.show();
     }
   },
-  /*addAttachment: function () {
-   var id = 'attachment-' + this.addAttachmentId;
-   var html = '<li><input type="file" id="' + id + '"></li>';
-   this.addAttachmentId++;
-   $(this.addAttachmentContainer).append(html);
-   $('#' + id).bind('change', this._onFileAttach.bind(this));
-   },
-   _onFileAttach : function (event)	{
-   var file = new FormData();
-   event.target.disabled = true;
-   file.append('attachment-0', event.target.files[0]);
-   this.model.addAttachment(file);
-   this.addAttachment();
-   },
-   showAttachment: function () {
-   var event =  this.model.get('event');
-   var attachments = event.attachments;
-   var html = '';
-   if (attachments) {
-   html += '<ul> attachments:';
-   _.each(_.keys(attachments), function (k) {
-   html += '<li id="' + k + '">' + k + ': <a href="' + event.url + '/' +
-   attachments[k].fileName + '?auth=' + event.connection.auth + '" target="_blank"> ' +
-   attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
-   this.attachmentId[k] = attachments[k].fileName;
-   }.bind(this));
-   html += '</ul>';
-   } else {
-   return '';
-   }
-   return html;
-   },
-   _onRemoveFileClick: function (event) {
-   this.model.removeAttachment(event.data.fileName, function () {
-   $('#' + event.data.id + ' i').off();
-   $('#' + event.data.id).remove();
-   delete this.attachmentId[event.data.id];
-   }.bind(this));
-   },   */
+
   /* jshint -W098, -W061 */
   updateEvent: function ($elem) {
     var event = this.model.get('event'),
@@ -146,13 +98,22 @@ module.exports = Marionette.ItemView.extend({
     }
     var event = this.model.get('event');
     this.ui.submitSpin.show();
+    this.ui.submit.prop('disabled', true);
     if (event.id) {
-      this.model.set('event', event).save(function () {
+      this.model.set('event', event).save(function (err) {
+        this.ui.submit.prop('disabled', false);
         this.ui.submitSpin.hide();
+        if (err) {
+          window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.update.' + err.id));
+        }
       }.bind(this));
     } else if (event.connection && event.type && event.streamId) {
-      this.model.set('event', event).create(function () {
+      this.model.set('event', event).create(function (err) {
+        this.ui.submit.prop('disabled', false);
         this.ui.submitSpin.hide();
+        if (err) {
+          window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.create.' + err.id));
+        }
       }.bind(this));
     } else {
 
@@ -162,7 +123,12 @@ module.exports = Marionette.ItemView.extend({
 
   trash: function () {
     this.ui.trashSpin.show();
-    this.model.trash(function () {
+    this.ui.trash.prop('disabled', true);
+    this.model.trash(function (err) {
+      this.ui.trash.prop('disabled', false);
+      if (err) {
+        window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.trash.' + err.id));
+      }
       this.ui.trashSpin.hide();
     }.bind(this));
   },
@@ -195,19 +161,4 @@ module.exports = Marionette.ItemView.extend({
     }
     return result;
   }
-  /*  objectToHtml: function (key, object, id) {
-   var result = '';
-   if (_.isObject(object)) {
-   result += '<ul>' + key + ':';
-   _.each(_.keys(object), function (k) {
-   result += this.objectToHtml(k, object[k], id + '-' + k);
-   }.bind(this));
-   result += '</ul>';
-   return result;
-   } else {
-   return '<li class="editable" id="current-' + id + '">' + key +
-   ': <label>' + object + '</label>' +
-   '<input class="edit" id="edit-' + id + '" value="' + object + '"></li>';
-   }
-   }  */
 });

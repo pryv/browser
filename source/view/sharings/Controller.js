@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, window, i18n */
 var _ = require('underscore'),
   SharingCollection = require('./SharingCollection.js'),
   SharingModel = require('./SharingModel.js'),
@@ -115,10 +115,12 @@ _.extend(Controller.prototype, {
   },
   _createBookmark: function (url, auth, name) {
     if (url && auth && name) {
-      var conn = new Pryv.Connection({url: url, auth: auth});
+      var conn = new Pryv.Connection({
+        url: url.replace('.li', '.in').replace('.me', '.io'),
+        auth: auth
+      });
       conn.accessInfo(function (error) {
         if (!error) {
-          console.log('Bookmark exist!');
           this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
           function (error, result) {
             if (!error && result) {
@@ -135,13 +137,17 @@ _.extend(Controller.prototype, {
         }
       }.bind(this));
     }
+    else {
+      this.bookmarkListView.endAddBookmark({id: 'slice-unknown'});
+    }
   },
   _onDeleteBookmarkClick: function (e, bookmarkModel) {
     this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
     function (error) {
       if (!error) {
         this.bookmarkCollection.remove(bookmarkModel);
-      } else {
+      } else { window.PryvBrowser.showAlert(this.container,
+        i18n.t('error.followedSlice.delete.' + error.id));
         console.warn(error);
       }
     }.bind(this));
@@ -152,6 +158,8 @@ _.extend(Controller.prototype, {
       if (!error) {
         this.sharingCollection.remove(sharingModel);
       } else {
+        window.PryvBrowser.showAlert(this.container,
+          i18n.t('error.createdSlice.delete.' + error.id));
         console.warn(error);
       }
     }.bind(this));

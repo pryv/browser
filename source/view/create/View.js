@@ -1,4 +1,4 @@
-/* global $, FileReader, document*/
+/* global $, FileReader, document, window, i18n*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   Model = require('./EventModel.js'),
@@ -84,6 +84,7 @@ module.exports = Marionette.ItemView.extend({
       this.onPublishClick();
     }.bind(this));
     this.ui.spin.hide();
+    this.ui.publish.prop('disabled', false);
     $('.td-progress').hide();
     $('body').i18n();
   },
@@ -104,6 +105,8 @@ module.exports = Marionette.ItemView.extend({
   onPublishClick: function () {
     if (this.streamSelected && this.connectionSelected) {
       this.ui.spin.show();
+      this.ui.publish.removeClass('btn-pryv-alizarin');
+      this.ui.publish.prop('disabled', true);
       if (this.eventType === validType[2]) {
         this._publishPosition();
       }
@@ -120,6 +123,8 @@ module.exports = Marionette.ItemView.extend({
         input = $(this.ui.inputStream[i]);
         if (input.val().length > 0) {
           this.ui.spin.show();
+          this.ui.publish.removeClass('btn-pryv-alizarin');
+          this.ui.publish.prop('disabled', true);
           name = input.val().trim();
           parentId = input.attr('data-parentId') || null;
           this.connectionSelected = this.connection.get(input.attr('data-connection'));
@@ -127,8 +132,11 @@ module.exports = Marionette.ItemView.extend({
           function (err, res) {
             if (err) {
               console.warn(err);
-              this.ui.publish.css({'background-color': '#e74c3c'});
+              this.ui.publish.addClass('btn-pryv-alizarin');
               this.ui.spin.hide();
+              this.ui.publish.prop('disabled', false);
+              window.PryvBrowser.showAlert(this.itemViewContainer,
+                i18n.t('error.addEvent.createStream.' + err.id));
             } else {
               this.streamSelected = res.id;
               this.onPublishClick();
@@ -136,6 +144,10 @@ module.exports = Marionette.ItemView.extend({
           }.bind(this));
           break;
         }
+      }
+      if (!name) {
+        window.PryvBrowser.showAlert(this.itemViewContainer,
+          i18n.t('error.addEvent.select-stream'));
       }
     }
   },
@@ -154,11 +166,13 @@ module.exports = Marionette.ItemView.extend({
     event.connection = this.connectionSelected;
     this.newEvents.create(function (err) {
       this.ui.spin.hide();
+      this.ui.publish.prop('disabled', false);
       if (err) {
         console.warn(err);
-        this.ui.publish.css({'background-color': '#e74c3c'});
+        this.ui.publish.addClass('btn-pryv-alizarin');
+        window.PryvBrowser.showAlert(this.itemViewContainer, i18n.t('error.addEvent.' + err.id));
       } else {
-        this.ui.publish.css({'background-color': '#2ecc71'});
+        this.ui.publish.removeClass('btn-pryv-alizarin');
         this._close();
       }
     }.bind(this));
@@ -175,11 +189,13 @@ module.exports = Marionette.ItemView.extend({
     event.connection = this.connectionSelected;
     this.newEvents.create(function (err) {
       this.ui.spin.hide();
+      this.ui.publish.prop('disabled', false);
       if (err) {
         console.warn(err);
-        this.ui.publish.css({'background-color': '#e74c3c'});
+        this.ui.publish.addClass('btn-pryv-alizarin');
+        window.PryvBrowser.showAlert(this.itemViewContainer, i18n.t('error.addEvent.' + err.id));
       } else {
-        this.ui.publish.css({'background-color': '#2ecc71'});
+        this.ui.publish.removeClass('btn-pryv-alizarin');
         this._close();
       }
     }.bind(this));
@@ -199,6 +215,7 @@ module.exports = Marionette.ItemView.extend({
         $progressBar.removeClass('progress-striped', 'active');
         if (err) {
           error = true;
+          window.PryvBrowser.showAlert(this.itemViewContainer, i18n.t('error.addEvent.' + err.id));
           $progressBar.find('.progress-bar').css({'background-color': '#e74c3c', 'width' : '100%'});
         } else {
           $progressBar.find('.progress-bar').css({'background-color': '#2ecc71', 'width' : '100%'});

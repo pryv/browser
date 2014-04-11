@@ -107,8 +107,13 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
       },
-      error: function (code, message) {
-        console.log('** ERROR! ' + code + ' ' + message);
+      error: function (data) {
+        if (data.error && data.error.message && data.error.message !== 'Not signed-on') {
+          $('#login form button[type=submit]').prop('disabled', false)
+            .addClass('btn-pryv-alizarin');
+          $('#login form button[type=submit] .fa-spinner').hide();
+          window.PryvBrowser.showAlert('#login', i18n.t('error.' + data.error.id));
+        }
       }
     }
   };
@@ -147,6 +152,8 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       console.warn('You are already logged in, please log out');
       return;
     }
+    $('#login form button[type=submit]').prop('disabled', true);
+    $('#login form button[type=submit] .fa-spinner').css('display', 'inherit');
     settings.username = $('#login-username').val();
     settings.password = $('#login-password').val();
     Pryv.Auth.login(settings);
@@ -154,6 +161,8 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
 };
 Model.prototype.signedIn = function (connection) {
+  $('#login form button[type=submit]').prop('disabled', false);
+  $('#login form button[type=submit] .fa-spinner').hide();
   console.log('Successfully signed in', connection);
   this.loggedConnection = connection;
   $('#login-button').html(connection.username + ' <i class="fa fa-chevron-down"></i>');
@@ -352,4 +361,12 @@ var detectIE = function detectIE() {
 
   // other browser
   return false;
+};
+
+window.PryvBrowser.showAlert = function (containerSelector, html) {
+  $('.alert').alert('close');
+  var $container = $(containerSelector);
+  $container.append('<div class="alert alert-danger">' +
+    '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
+    html + '</div>');
 };

@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, window, i18n */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
   Model = require('./Model.js'),
@@ -69,6 +69,8 @@ _.extend(Controller.prototype, {
           function (error) {
             console.log('create done');
             if (error) {
+              window.PryvBrowser.showAlert(this.container,
+                i18n.t('error.subscribeSlice.') + error.id);
               gotError = true;
             }
             model.set('error', error);

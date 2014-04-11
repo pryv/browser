@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, window, i18n */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./BookmarkItemView.js'),
   Pryv = require('pryv'),
@@ -43,12 +43,12 @@ module.exports = Marionette.CompositeView.extend({
       '<div class="form-group">' +
       ' <label class="sr-only" for="add-bookmark-url">url</label>' +
       ' <input type="url" class="form-control" id="add-bookmark-url" ' +
-      'data-i18n="[placeholder]modal.manageSlices.newLink">' +
+      'data-i18n="[placeholder]modal.manageSlices.newLink" required>' +
       '</div> ' +
       '<div class="form-group">' +
         '<label class="sr-only" for="add-bookmark-name">Name</label>' +
         '<input type="text" class="form-control" id="add-bookmark-name" ' +
-      'data-i18n="[placeholder]modal.manageSlices.newName">' +
+      'data-i18n="[placeholder]modal.manageSlices.newName" required>' +
       '</div>' +
       '<div class="form-group">' +
         ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
@@ -84,6 +84,7 @@ module.exports = Marionette.CompositeView.extend({
         sameNameExtension = '',
         i = 0;
       this.$spin.show();
+      this.$btn.removeClass('btn-pryv-alizarin');
       auths.forEach(function (auth) {
         this.trigger('bookmark:add', url, auth, name + sameNameExtension);
         i += 1;
@@ -94,9 +95,24 @@ module.exports = Marionette.CompositeView.extend({
   endAddBookmark: function (error) {
     this.$spin.hide();
     if (error) {
-      this.$btn.removeClass('btn-default btn-success').addClass('btn-danger');
+      var errorId;
+      console.log(error.id);
+      switch (error.id) {
+        case 'slice-unknown':
+        case 'API_UNREACHEABLE':
+          errorId = 'slice-unknown';
+          break;
+        case 'item-already-exists':
+          errorId = 'slice-already-exists';
+          break;
+        default:
+          errorId = 'slice-unknown';
+          break;
+      }
+      window.PryvBrowser.showAlert(this.container, i18n.t('error.followedSlice.add.' + errorId));
+      this.$btn.removeClass('btn-success').addClass('btn-pryv-alizarin');
     } else {
-      this.$btn.removeClass('btn-default btn-danger').addClass('btn-success');
+      this.$btn.removeClass('btn-pryv-alizarin').addClass('btn-success');
     }
   },
   appendHtml: function (collectionView, itemView) {

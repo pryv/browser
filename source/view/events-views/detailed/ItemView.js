@@ -13,7 +13,7 @@ module.exports = Marionette.ItemView.extend({
       if (type.indexOf('picture') === 0) {
         return '';
       }
-      if (type.indexOf('note') === 0) {
+      if (type.indexOf('note') === 0 && typeof(this.event.content) === 'string') {
         var text = this.event.content.trim();
         if (text.length > MAX_TEXT_CHAR) {
           text = text.slice(0, MAX_TEXT_CHAR) + '...';

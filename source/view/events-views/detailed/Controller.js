@@ -92,30 +92,36 @@ _.extend(Controller.prototype, {
       var DOWN_KEY = 40;
       if (e.which === LEFT_KEY || e.which === UP_KEY) {
         this.updateSingleView(this.collection.prev().getCurrentElement());
-        this.updateSingleView(this.listViewcollection.prev().getCurrentElement());
+        //this.updateSingleView(this.listViewcollection.prev().getCurrentElement());
         return false;
       }
       if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
         this.updateSingleView(this.collection.next().getCurrentElement());
-        this.updateSingleView(this.listViewcollection.next().getCurrentElement());
+        //this.updateSingleView(this.listViewcollection.next().getCurrentElement());
         return false;
       }
     }.bind(this));
     $('body').i18n();
   },
   close: function () {
-    if (this.commonView) {this.commonView.close(); }
-    if (this.contentView) {this.contentView.close(); }
-    $(this.container).empty();
-    if (this.collection) {this.collection.reset(); }
-    this.collection = null;
-    if (this.listViewcollection) {this.listViewcollection.reset(); }
-    this.listViewcollection = null;
-    this.events = {};
-    $(this.$modal).unbind('keydown');
+    if (this.commonView && this.contentView) {
+      if (this.commonView) {this.commonView.close(); this.commonView = null; }
+      if (this.contentView) {this.contentView.close(); this.contentView = null; }
+      $(this.container).empty();
+      if (this.collection) {this.collection.reset(); }
+      this.collection = null;
+      if (this.listViewcollection) {this.listViewcollection.reset(); }
+      this.listViewcollection = null;
+      this.events = {};
+      $(this.$modal).unbind('keydown');
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
+    }
   },
   getEventById: function (event) {
-    return this.collection.getEventById(event.id);
+    return [this.collection.getEventById(event.id),
+      this.listViewcollection.getEventById(event.id)];
   },
   addEvents: function (event) {
     if (!event) {
@@ -143,16 +149,27 @@ _.extend(Controller.prototype, {
   },
   deleteEvent: function (event) {
     delete this.events[event.id];
+    var currentElement = this.collection.getCurrentElement();
+    if (currentElement.get('event').id === event.id) {
+      var next = this.collection.next().getCurrentElement();
+      if (next.get('event').id === event.id) {
+        next = this.collection.prev().getCurrentElement();
+        if (next.get('event').id === event.id) {
+          return this.close();
+        }
+      }
+      this.updateSingleView(next);
+    }
     var toDelete = this.getEventById(event);
-    if (toDelete) {
-      toDelete.destroy();
+    if (toDelete.length > 0) {
+      toDelete.forEach(function (e) {e.destroy(); });
     }
   },
   updateEvent: function (event) {
     this.events[event.id] = event;
     var toUpdate = this.getEventById(event);
-    if (toUpdate) {
-      toUpdate.set('event', event);
+    if (toUpdate.length > 0) {
+      toUpdate.forEach(function (e) {e.set('event', event); });
       this.collection.sort();
       this.listViewcollection.sort();
     }
@@ -165,6 +182,7 @@ _.extend(Controller.prototype, {
 
   },
   updateSingleView: function (model) {
+    console.log('DETAILED', model);
     if (model) {
       if (model.get('event').type !== 'Creation') {
         this.commonView.model.set('event', model.get('event'));

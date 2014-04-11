@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, window, i18n */
 var Backbone = require('backbone'),
     Marionette = require('backbone.marionette'),
     _ = require('underscore');
@@ -164,11 +164,10 @@ var TreeRoot = Marionette.CollectionView.extend({
         $spin.hide();
       }
       if (error || result.message) {
-        $btn.removeClass('btn-primary');
-        $btn.addClass('btn-danger');
+        $btn.addClass('btn-pryv-alizarin');
+        window.PryvBrowser('.modal-content', i18n.t('error.createSlice.' + error.id));
       } else {
-        $btn.removeClass('btn-primary');
-        $btn.addClass('btn-success');
+        $btn.removeClass('btn-pryv-alizarin');
         this.trigger('sharing:createSuccess', result.token);
       }
     }.bind(this));

@@ -112,7 +112,13 @@ var Model = module.exports = function (staging) {  //setup env with grunt
           $('#login form button[type=submit]').prop('disabled', false)
             .addClass('btn-pryv-alizarin');
           $('#login form button[type=submit] .fa-spinner').hide();
-          window.PryvBrowser.showAlert('#login', i18n.t('error.' + data.error.id));
+          window.PryvBrowser.showAlert('#login', i18n.t('error.login.' + data.error.id));
+        } else if (!data.error) {
+          $('#login form button[type=submit]').prop('disabled', false)
+            .addClass('btn-pryv-alizarin');
+          $('#login form button[type=submit] .fa-spinner').hide();
+          window.PryvBrowser.showAlert('#login', i18n.t('error.login.unknown-username'));
+
         }
       }
     }
@@ -332,6 +338,7 @@ var openLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
   $login.css('display', 'block');
+  $('#login form button[type=submit] .fa-spinner').hide();
   $login.removeClass('animated slideOutRight');
   $tree.removeClass('animated slideInLeft');
   $login.addClass('animated slideInRight');

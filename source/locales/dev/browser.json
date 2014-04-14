@@ -1,4 +1,59 @@
 {
+  "error": {
+    "login": {
+      "unknown-username": "Unknown username",
+      "invalid-credentials": "Wrong password"
+    },
+    "addEvent": {
+      "createStream": {
+        "item-already-exists": "The stream name already exists",
+        "invalid-item-id": "The specified stream id is invalid"
+      },
+      "select-stream": "Please select a stream"
+    },
+    "detailed": {
+      "update": {
+        "invalid-operation": "The duration of the period event cannot be set to null",
+        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+      },
+      "create": {
+        "invalid-operation": "The selected stream is in the trash, and we prevent the recording of new events into trashed streams",
+        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+
+      },
+      "trash": {
+
+      }
+    },
+    "changePassword": {
+      "pass-dont-match": "Passwords do not match",
+      "invalid-operation": "Your current password is invalid"
+    },
+    "followedSlice": {
+      "add": {
+        "slice-unknown": "The given slice do not exists",
+        "slice-already-exists": "You already follow this slice or the given name already exists"
+      },
+      "delete": {
+
+      }
+    },
+    "createdSlice": {
+      "delete": {
+
+      },
+      "edit": {
+        "item-already-exists": "The slice name already exists"
+      }
+    },
+    "createSlice": {
+      "invalid-item-id": "The specified token is invalid (e.g. it's a reserved word such as null)"
+    },
+    "subscribeSlice": {
+      "slice-unknown": "The given slice do not exists",
+      "slice-already-exists": "You already follow this slice or the given name already exists"
+    }
+  },
   "button": {
     "submit": "Submit",
     "publish": "Publish",

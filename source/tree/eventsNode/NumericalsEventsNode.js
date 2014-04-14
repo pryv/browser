@@ -52,6 +52,7 @@ NumericalsEventsNode.acceptThisEventType = function (eventType) {
       eventTypeClass === 'pressure' ||
       eventTypeClass === 'speed' ||
       eventTypeClass === 'temperature' ||
+      eventTypeClass === 'time' ||
       eventTypeClass === 'volume'
     );
 };

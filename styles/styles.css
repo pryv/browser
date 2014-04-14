@@ -1188,8 +1188,8 @@ ul.modal-dnd-legend > li {
   color: white;
 }
 .btn-pryv-alizarin {
-  background-color: #e74c3c;
-  color: white;
+  background-color: #e74c3c !important;
+  color: white !important;
 }
 .advanced-settings {
   float: none !important;
@@ -1336,4 +1336,12 @@ font-weight: normal;
 
 span.value {
   font-size: 2.1em;
+}
+.alert {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 40px;
+  z-index: 9999;
 }

@@ -96,6 +96,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       signedIn: this.signedIn.bind(this),
       signedOut: function (connection) {
         this.hideLoggedInElement();
+        this.treemap.closeViews();
         this.removeConnection(connection);
         this.removeConnections(this.bookmakrsConnections);
         if (this.publicConnection) {

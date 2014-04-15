@@ -2,6 +2,7 @@
   "error": {
     "login": {
       "unknown-username": "Unknown username",
+      "unknown-resource": "Unknown username",
       "invalid-credentials": "Wrong password"
     },
     "addEvent": {
@@ -14,7 +15,9 @@
     "detailed": {
       "update": {
         "invalid-operation": "The duration of the period event cannot be set to null",
-        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events",
+        "forbidden": "You don't have permission to update this event",
+        "invalid-access-token": "You don't have permission to update this event"
       },
       "create": {
         "invalid-operation": "The selected stream is in the trash, and we prevent the recording of new events into trashed streams",
@@ -22,7 +25,8 @@
 
       },
       "trash": {
-
+        "unknown-resource": "Event has already been trashed",
+        "invalid-access-token": "You don't have permission to trash this event"
       }
     },
     "changePassword": {

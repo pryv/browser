@@ -4,21 +4,19 @@
 <head>
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
-  <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.5.5/">
+  <title>Pryv @ Glance || DEVMODE</title>
+  <base href="">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
-  <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.5.5/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.5.5/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.5.7/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.5.7/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
 
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
-  <script src="script/airbrake-shim.js" data-airbrake-project-id="browser" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="staging"></script>
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
@@ -44,10 +42,7 @@
         $('#login-button').html('<i class="fa fa-sign-in"></i> ' + t('nav.signIn'));
       });
       var sampleApp = require('SampleApp');
-      var wrapped = Airbrake.wrap(function() {
-        sampleApp.main(true);
-      });
-      wrapped();
+      sampleApp.main(true);
     });
   </script>
   <script id="onboardingView" type="template">
@@ -527,7 +522,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.5.5</span>
+    <span class="version">Browser v0.5.7</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -641,6 +636,7 @@
 <a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
 <a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
+<!-- do not put anything between #logo-reload and #tree -->
 <span id="logo-toggle-panel" ><i class="fa fa-bars"></i></span>
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
@@ -661,12 +657,5 @@
 </div>
 <!-- /.modal -->
 </div>
-<!-- Google Analytics -->
-<script>
-  var _gaq=[['_setAccount','UA-36589447-3'],['_trackPageview']];
-  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
 </body>
 </html>

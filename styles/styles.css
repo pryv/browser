@@ -31,6 +31,41 @@ body{
   font-weight: 300;
   /*letter-spacing: 1px;*/
 }
+/* SETTINGS MODAL*/
+#settings-content{
+  float: left;
+  padding: 15px;
+}
+#settings-content .panel-heading{
+  background-color: inherit;
+}
+#settings-nav .nav a.active, #settings-nav .nav> a.active:hover, #settings-nav .nav a.active:focus {
+  padding-left: 18px;
+  font-weight: 700;
+  color: #1abc9c;
+  background-color: transparent;
+  border-left: 2px solid #1abc9c;
+}
+#settings-nav .nav>li>a:hover, #settings-nav .nav>li>a:focus {
+  padding-left: 19px;
+  color: #1abc9c;
+  text-decoration: none;
+  background-color: transparent;
+  border-left: 1px solid #1abc9c;
+}
+#settings-nav .nav>li>a {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #999;
+  padding: 4px 20px;
+}
+#settings-nav {
+  padding:  15px;
+  max-width: 200px;
+  float: left;
+}
+/* DRAWER */
 .menu-panel {
   background: #f5f7fa;
   color: #8a8a8a;
@@ -224,7 +259,7 @@ body{
   padding-left: 8px;
   cursor: pointer;
 }
-#logo-add , #logo-subscribe, #logo-sharing , #logo-create-sharing, #logo-toggle-panel{
+#logo-add , #logo-subscribe, #logo-sharing , #logo-create-sharing, #logo-toggle-panel, #logo-settings{
   width: 40px;
   height: 40px;
   font-size: 26px;
@@ -1140,6 +1175,9 @@ ul.modal-dnd-legend > li {
   height: 100%;
   vertical-align: middle;
 }
+#resetPassword, #resetPassword:hover, #resetPassword:focus {
+  color: #fff;
+}
 .centered {
   display: inline-block;
   vertical-align: middle;
@@ -1150,8 +1188,8 @@ ul.modal-dnd-legend > li {
   color: white;
 }
 .btn-pryv-alizarin {
-  background-color: #e74c3c;
-  color: white;
+  background-color: #e74c3c !important;
+  color: white !important;
 }
 .advanced-settings {
   float: none !important;
@@ -1298,4 +1336,12 @@ font-weight: normal;
 
 span.value {
   font-size: 2.1em;
+}
+.alert {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 40px;
+  z-index: 9999;
 }

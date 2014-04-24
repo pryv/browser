@@ -3,6 +3,7 @@ var Marionette = require('backbone.marionette'),
   NavView = require('./NavView.js'),
   PasswordView = require('./PasswordView.js'),
   ManageAppsView = require('./ManageAppsView.js'),
+  AppListView = require('./AppListView.js'),
   _ = require('underscore');
 
 var Layout = Marionette.Layout.extend({
@@ -11,7 +12,8 @@ var Layout = Marionette.Layout.extend({
   regions: {
     nav: '#settings-nav',
     password: '#settings-password',
-    manageApps: '#settings-manage-apps'
+    manageApps: '#settings-manage-apps',
+    otherApps: '#settings-other-apps'
   },
   initialize: function () {
     this.$el =  $('.modal-content');
@@ -25,6 +27,7 @@ var Controller = module.exports  = function ($modal, connection, target) {
   this.nav = null;
   this.password = null;
   this.manageApps = null;
+  this.appList = null;
   this.currentRegion = '';
 
 
@@ -41,6 +44,7 @@ _.extend(Controller.prototype, {
     this.nav = new NavView();
     this.password = new PasswordView({connection: this.connection});
     this.manageApps = new ManageAppsView({connection: this.connection});
+    this.appList = new AppListView({connection: this.connection});
     this.view.render();
     this.view.nav.show(this.nav);
     this._showRegion(region);
@@ -55,28 +59,27 @@ _.extend(Controller.prototype, {
       $('.modal-backdrop').remove();
       this.$modal.trigger('hidden.bs.modal');
       this.manageApps.reset();
+      this.appList.reset();
     }
   },
   _showRegion: function (region) {
-    var regionView;
     if (region && this.view && region !== this.currentRegion) {
+      this.password.close();
+      this.manageApps.close();
+      this.appList.close();
       switch (region) {
         case 'password':
-          regionView = this.password;
+          this.view.password.show(this.password);
           break;
         case 'manageApps':
-          regionView = this.manageApps;
+          this.view.manageApps.show(this.manageApps);
+          this.view.otherApps.show(this.appList);
           break;
         default:
           break;
       }
-      if (region) {
-        this.currentRegion = region;
-        this.password.close();
-        this.manageApps.close();
-        this.view[region].show(regionView);
-        $('body').i18n();
-      }
+      this.currentRegion = region;
+      $('body').i18n();
     }
   }
 });

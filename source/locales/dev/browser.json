@@ -70,7 +70,8 @@
     "login": "Sign in",
     "start": "START",
     "apply": "Apply",
-    "save": "Save"
+    "save": "Save",
+    "download": "Download"
   },
   "noEvents": {
     "title": "No events to display"
@@ -115,6 +116,11 @@
         "current": "Current",
         "new": "New",
         "reNew": "Re-type new"
+      },
+      "manageApps": {
+        "title": "Manage applications",
+        "subtitle": "Following apps can access to your Pryv account",
+        "otherApps": "Check other apps"
       }
     },
     "detail": {

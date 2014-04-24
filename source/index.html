@@ -585,6 +585,7 @@
     <div id="settings-content" class="col-md-10" >
       <div id="settings-password"></div>
       <div id="settings-manage-apps"></div>
+      <div id="settings-other-apps"></div>
     </div>
   </div>
 </script>
@@ -634,11 +635,48 @@
 <script type="template" id="apps-item-settings-template">
     <td class="col-md-4"><%= app.name %></td><td class="app-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
 </script>
-<script type="template" id="apps-list-settings-template">
-     <table class="table">
-       <thead><tr><th data-i18n="modal.manageSlices.name"></th><th></th></tr></thead>
-       <tbody></tbody>
-     </table>
+  <script type="template" id="apps-list-settings-template">
+
+    <div class="panel panel-default seetings-panel">
+      <div class="panel-heading">
+        <h2 class="panel-title"
+          data-i18n="modal.settings.manageApps.title">
+        </h2>
+        <h6 class="panel-subtitle"
+          data-i18n="modal.settings.manageApps.subtitle">
+        </h6>
+      </div>
+        <div class="panel-body">
+          <table class="table">
+            <thead><tr><th data-i18n="modal.manageSlices.name"></th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+    </div>
+
+
+  </script>
+<script type="template" id="other-apps-item-settings-template">
+    <div class="thumbnail">
+      <img src="<%= app.iconURL %>">
+      <div class="caption">
+        <h3><%= app.displayName %></h3>
+        <p><%= app.description %></p>
+        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="button.download"></a></p>
+      </div>
+    </div></script>
+<script type="template" id="other-apps-list-settings-template">
+  <div class="panel panel-default seetings-panel">
+    <div class="panel-heading">
+      <h2 class="panel-title">
+       <a data-toggle="collapse" data-target="#appList" data-i18n="modal.settings.manageApps.otherApps" href="javascript:void(0)"></a>
+      </h2>
+    </div>
+    <div class="panel-collapse collapse">
+      <div id="appList" class="panel-body">
+      </div>
+    </div>
+  </div>
 </script>
 </head>
 

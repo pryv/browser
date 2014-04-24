@@ -172,6 +172,14 @@ Model.prototype.signedIn = function (connection) {
   console.log('Successfully signed in', connection);
   this.loggedConnection = connection;
   $('#login-button').html(connection.username + ' <i class="fa fa-chevron-down"></i>');
+  this.loggedConnection.account.getInfo(function (error, result) {
+    console.log('ACCOUNT', arguments);
+    if (!error && result && result.email) {
+      $('#login-button').prepend('<img  class="gravatar" src="http://www.gravatar.com/avatar/" ' +
+         result.email.md5() +
+        '/>');
+    }
+  });
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
     if (this.sharingsConnections && this.sharingsConnections.length === 1 &&

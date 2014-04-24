@@ -52,7 +52,8 @@ module.exports = function (grunt) {
           'source/vendor/jquery.flot.js',
           'source/vendor/jquery.flot.time.js',
           'source/vendor/jquery.flot.curvedLines.js',
-          'source/vendor/jquery.flot.navigate.js'],
+          'source/vendor/jquery.flot.navigate.js',
+          'source/vendor/md5.js'],
         dest: 'dist/script/vendor.js'
       }
     },

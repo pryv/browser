@@ -1369,3 +1369,8 @@ span.value {
   background-color: inherit;
   color: #fff;
 }
+nav .gravatar {
+  max-width: 18px;
+  max-height: 18px;
+  margin-right: 5px;
+}

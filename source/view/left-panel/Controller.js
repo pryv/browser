@@ -1,13 +1,15 @@
 /* global $ */
 var Marionette = require('backbone.marionette'),
   FilterByStreamView = require('./FilterByStream.js'),
+  ActionsView = require('./Actions.js'),
   _ = require('underscore');
 
 var Layout = Marionette.Layout.extend({
   template: '#left-panel-template',
 
   regions: {
-    filterByStream: '#filter-by-stream'
+    filterByStream: '#filter-by-stream',
+    actions: '#actions'
   },
   initialize: function () {
     this.$el =  $('.menu-panel');
@@ -17,6 +19,7 @@ var Controller = module.exports  = {};
 
 var view = null,
   filterByStreamView = null,
+  actionsView = null,
   connectionsNumber = {
     logged: 0,
     sharings: 0,
@@ -28,13 +31,16 @@ Controller.render = function (MainModel) {
     if (!view) {
       view = new Layout();
       view.render();
+      actionsView = new ActionsView();
+      view.actions.show(actionsView);
     }
     if (!filterByStreamView) {
       filterByStreamView = new FilterByStreamView({MainModel: MainModel});
       view.filterByStream.show(filterByStreamView);
     }
   } else if (view && filterByStreamView && isConnectionsNumberChange(MainModel)) {
-    view.render();
+    /*view.render();
+    view.actions.show(actionsView);*/
     view.filterByStream.show(filterByStreamView);
   } else if (view && filterByStreamView) {
     if (!filterByStreamView.onFocusStreamChanged()) {

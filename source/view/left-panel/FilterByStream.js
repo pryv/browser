@@ -20,6 +20,9 @@ module.exports = Marionette.ItemView.extend({
     this.MainModel  = options.MainModel;
   },
   onRender: function () {
+    if (!this.MainModel.activeFilter) {
+      return;
+    }
     var self = this;
     self.ui.applyBtn.prop('disabled', true);
     self.ui.applyBtn.click(this._applyFilter.bind(this));

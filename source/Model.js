@@ -10,9 +10,9 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   TimeLine = require('./timeframe-selector/timeframe-selector.js'),
   PUBLIC_TOKEN = 'public',
   STAGING,
-  toShowWhenLoggedIn = ['.logo-sharing', '.logo-add', '.logo-create-sharing', '#logo-toggle-panel',
-    '#logo-settings'],
-  toShowSubscribe = ['.logo-subscribe', '.logo-to-my-pryv', '#logo-toggle-panel'];
+  toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
+    'nav #togglePanel', 'nav #settings'],
+  toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
@@ -132,7 +132,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     }.bind(this));
   }
   Pryv.Auth.whoAmI(settings);
-  $('#logo-toggle-panel').click(function () {
+  $('nav #togglePanel').click(function () {
     this.togglePanel(function () {
       $(window).trigger('resize');
     });
@@ -144,10 +144,9 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   }.bind(this));
   $('#login-button').click(function (e) {
     if (this.loggedConnection) {
-      $('#login-button').dropdown();
-      e.stopPropagation();
       $('#login-dropdown .dropdown-menu').css('opacity', 1);
     } else {
+      e.stopPropagation();
       $('#login-dropdown .dropdown-menu').css('opacity', 0);
       openLogin();
     }
@@ -246,15 +245,18 @@ Model.prototype.updateTimeFrameLimits = function () {
 
 
 Model.prototype.showLoggedInElement = function () {
+  this.renderPanel(this);
   $(toShowWhenLoggedIn.join(',')).show();
 };
 Model.prototype.showSubscribeElement = function () {
+  this.renderPanel(this);
   var home = location.origin.replace(this.urlUsername, this.loggedConnection.username);
-  $('.logo-to-my-pryv a').attr('href', home);
+  $('nav #toMyPryv a').attr('href', home);
   $(toShowSubscribe.join(',')).show();
 };
 
 Model.prototype.hideLoggedInElement = function () {
+  this.renderPanel(this);
   $(toShowWhenLoggedIn.join(',')).hide();
   $(toShowSubscribe.join(',')).hide();
 };

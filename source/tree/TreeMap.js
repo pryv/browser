@@ -13,7 +13,7 @@ var RootNode = require('./RootNode.js'),
   OnboardingView = require('../view/onboarding/View.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
-var MARGIN_TOP = 40;
+var MARGIN_TOP = 50;
 var MARGIN_RIGHT = 40;
 var MARGIN_BOTTOM = 60;
 var MARGIN_LEFT = 40;
@@ -55,7 +55,7 @@ var TreeMap = module.exports = function (model) {
       this.focusOnStreams(null);
     }
   }.bind(this));
-  $('.logo-add').click(function (e) {
+  $('nav #addEvent').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeCreateEventView();
@@ -70,7 +70,7 @@ var TreeMap = module.exports = function (model) {
     }.bind(this));
     this.showSharingView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
-  $('.logo-settings').click(function (e) {
+  $('nav #settings').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSettingsView();

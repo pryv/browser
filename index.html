@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.5.7/">
+  <base href="{browser-source}_v0.6.0/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.5.7/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.5.7/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.6.0/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.6.0/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -523,13 +523,22 @@
   </script>
 <script type="template" id="left-panel-template">
   <h3></h3>
+  <div id="actions">
+
+  </div>
   <ul class="menu-list">
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.5.7</span>
+    <span class="version">Browser v0.6.0</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
+</script>
+<script type="template" id="actions-template">
+    <li><button type="button" class="logo-subscribe btn btn-pryv-turquoise"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.follow"></span></button></li>
+    <li><button type="button" class="logo-sharing btn btn-pryv-turquoise"><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></button></li>
+    <li><button type="button" class="logo-create-sharing btn btn-pryv-turquoise"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></button></li>
+
 </script>
 <script type="template" id="filter-by-stream-template">
   <span class="li-title" data-toggle="collapse" data-target="#collapseFilterByStream" data-i18n="leftPanel.filterByStream"></span>
@@ -625,6 +634,30 @@
     </form>
   </div>
 </div>
+  <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+      <ul class="nav navbar-nav navbar-left">
+        <li id="togglePanel">
+        <a href="javascript:void(0)"><span><i class="fa fa-bars"></i></span></a>
+        </li>
+        <li id="addEvent">
+          <a href="javascript:void(0)" ><span class="fa fa-plus-circle"></span> <span data-i18n="nav.addEvent"></span></a>
+        </li>
+      </ul>
+    <ul class="nav navbar-nav navbar-right">
+        <li id="toMyPryv">
+        <a href="javascript:void(0)"><span class="fa fa-user"></span>  <span data-i18n="nav.myPryv"></span></a>
+        </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="login-button"><i class="fa fa-sign-in"></i> </a>
+          <ul class="dropdown-menu">
+            <li id="settings"><a href="javascript:void(0)" ><span class="fa fa-cog"></span> <span data-i18n="nav.settings"></span></a></li>
+            <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> <span data-i18n="nav.signOut"></span></a></li>
+          </ul>
+        </li>
+
+      </ul>
+  </nav>
+  <!--
 <div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> </a>
 <ul class="dropdown-menu">
   <li class="logo-settings"><a href="javascript:void(0)" ><span class="fa fa-cog"></span> <span data-i18n="nav.settings"></span></a></li>
@@ -641,7 +674,7 @@
 <a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
 <a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
 <a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
-<span id="logo-toggle-panel" ><i class="fa fa-bars"></i></span>
+-->
 <a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
   <div id="empty-events">

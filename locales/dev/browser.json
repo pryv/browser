@@ -1,5 +1,8 @@
 {
   "error": {
+    "manageApps": {
+      "cannot-load-app-list": "Cannot load app list"
+    },
     "login": {
       "unknown-username": "Unknown username",
       "unknown-resource": "Unknown username",
@@ -71,7 +74,7 @@
     "start": "START",
     "apply": "Apply",
     "save": "Save",
-    "download": "Download"
+    "website": "Website"
   },
   "noEvents": {
     "title": "No events to display"
@@ -120,7 +123,7 @@
       "manageApps": {
         "title": "Manage applications",
         "subtitle": "Following apps can access to your Pryv account",
-        "otherApps": "Check other apps"
+        "otherApps": "Check other apps:"
       }
     },
     "detail": {

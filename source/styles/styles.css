@@ -65,6 +65,16 @@ body{
   max-width: 200px;
   float: left;
 }
+#settings-other-apps .thumbnail img {
+  max-height: 200px;
+}
+#settings-other-apps .thumbnail {
+  min-height: 400px;
+}
+#settings-other-apps .app-icon {
+  text-align: center;
+  min-height: 200px;
+}
 /* DRAWER */
 .menu-panel {
   background: #f5f7fa;
@@ -1346,7 +1356,7 @@ span.value {
   top: 0;
   left: 0;
   right: 0;
-  margin: 40px;
+  margin: 50px;
   z-index: 9999;
 }
 

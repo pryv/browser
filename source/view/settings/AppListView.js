@@ -43,7 +43,7 @@ module.exports = Marionette.CompositeView.extend({
         } else {
           result.forEach(function (access) {
             if (access.type === 'app') {
-              this.myAppsId.push(access.id);
+              this.myAppsId.push(access.name);
             }
           }.bind(this));
           if (sync) {
@@ -53,9 +53,7 @@ module.exports = Marionette.CompositeView.extend({
           }
         }
       }.bind(this));
-      var url = this.connection.staging ?
-        'https://reg.pryv.in/apps' :
-        'https://reg.pryv.io/apps';
+      var url = '/locales/appList.json';
       $.getJSON(url)
         .done(function (result) {
           result.forEach(function (app) {
@@ -84,7 +82,7 @@ module.exports = Marionette.CompositeView.extend({
     }.bind(this));
   },
   appendHtml: function (collectionView, itemView) {
-    collectionView.$('#appList').append(itemView.el);
+    collectionView.$('#appList .panel-body').append(itemView.el);
   },
   onRender: function () {
     $('body').i18n();

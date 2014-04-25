@@ -175,9 +175,9 @@ Model.prototype.signedIn = function (connection) {
   this.loggedConnection.account.getInfo(function (error, result) {
     console.log('ACCOUNT', arguments);
     if (!error && result && result.email) {
-      $('#login-button').prepend('<img  class="gravatar" src="http://www.gravatar.com/avatar/" ' +
+      $('#login-button').prepend('<img  class="gravatar" src="https://www.gravatar.com/avatar/' +
          result.email.md5() +
-        '/>');
+        '" />');
     }
   });
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page

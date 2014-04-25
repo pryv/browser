@@ -53,8 +53,8 @@ module.exports = Marionette.CompositeView.extend({
           }
         }
       }.bind(this));
-      var url = '/locales/appList.json';
-      $.getJSON(url)
+      var baseHref = $('base').attr('href');
+      $.get(baseHref + 'locales/appList.json')
         .done(function (result) {
           result.forEach(function (app) {
             this.apps.push(app);
@@ -69,6 +69,7 @@ module.exports = Marionette.CompositeView.extend({
           window.PryvBrowser.showAlert('.modal-content',
             i18n.t('error.manageApps.cannot-load-app-list'));
         });
+
     }
   },
   showAppList: function () {

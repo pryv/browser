@@ -567,7 +567,7 @@
 </script>
 <script type="template" id="filter-by-stream-template">
   <span class="li-title" data-toggle="collapse" data-target="#collapseFilterByStream" data-i18n="leftPanel.filterByStream"></span>
-  <div id="collapseFilterByStream" class="panel-collapse collapse">
+  <div id="collapseFilterByStream" class="panel-collapse collapse in">
     <div class="panel-body">
       <%= getStream() %>
       <button class="btn" id="filter-by-stream-apply" data-i18n="button.apply"></button>
@@ -633,7 +633,20 @@
   </div>
 </script>
 <script type="template" id="apps-item-settings-template">
-    <td class="col-md-4"><%= app.name %></td><td class="app-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
+  <td class="app-icon col-md-1">
+    <img src="<%= app.iconURL %>">
+  </td>
+  <td class="col-md-4">
+    <%= app.displayName %>
+  </td>
+  <td class="app-settings">
+    <% if (app.settingsPageURL && app.settingsPageURL.length > 0) { %>
+    <a href="<%= app.settingsPageURL %>"><i class="fa fa-cog"></i></a>
+    <% } %>
+  </td>
+  <td class="app-trash">
+    <a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+  </td>
 </script>
   <script type="template" id="apps-list-settings-template">
 
@@ -648,7 +661,11 @@
       </div>
         <div class="panel-body">
           <table class="table">
-            <thead><tr><th data-i18n="modal.manageSlices.name"></th><th></th></tr></thead>
+            <thead><tr>
+              <th></th>
+              <th data-i18n="modal.settings.manageApps.name"></th>
+              <th data-i18n="modal.settings.manageApps.settings"></th>
+              <th data-i18n="modal.settings.manageApps.trash"></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

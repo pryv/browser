@@ -111,7 +111,7 @@
       "header": "Settings",
       "nav": {
         "password": "Password",
-        "manageApps": "Manage Applications"
+        "manageApps": "Connected apps"
       },
       "password": {
         "title": "Password",
@@ -121,9 +121,12 @@
         "reNew": "Re-type new"
       },
       "manageApps": {
-        "title": "Manage applications",
-        "subtitle": "Following apps can access to your Pryv account",
-        "otherApps": "Check other apps:"
+        "title": "Connected apps",
+        "subtitle": "The following apps are connected and authorized to access your account.",
+        "otherApps": "Connect more apps",
+        "name": "Name",
+        "trash": "Trash",
+        "settings": "Settings"
       }
     },
     "detail": {

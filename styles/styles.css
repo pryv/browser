@@ -75,6 +75,11 @@ body{
   text-align: center;
   min-height: 200px;
 }
+
+#settings-manage-apps .app-icon img {
+  max-width: 50px;
+  max-height: 50px;
+}
 /* DRAWER */
 .menu-panel {
   background: #f5f7fa;

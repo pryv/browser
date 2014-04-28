@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.6.5/">
+  <base href="{browser-source}_v0.6.6/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.6.5/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.6.5/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.6.6/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.6.6/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -530,7 +530,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.6.5</span>
+    <span class="version">Browser v0.6.6</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -542,7 +542,7 @@
 </script>
 <script type="template" id="filter-by-stream-template">
   <span class="li-title" data-toggle="collapse" data-target="#collapseFilterByStream" data-i18n="leftPanel.filterByStream"></span>
-  <div id="collapseFilterByStream" class="panel-collapse collapse">
+  <div id="collapseFilterByStream" class="panel-collapse collapse in">
     <div class="panel-body">
       <%= getStream() %>
       <button class="btn" id="filter-by-stream-apply" data-i18n="button.apply"></button>
@@ -608,7 +608,20 @@
   </div>
 </script>
 <script type="template" id="apps-item-settings-template">
-    <td class="col-md-4"><%= app.name %></td><td class="app-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
+  <td class="app-icon col-md-1">
+    <img src="<%= app.iconURL %>">
+  </td>
+  <td class="col-md-4">
+    <%= app.displayName %>
+  </td>
+  <td class="app-settings">
+    <% if (app.settingsPageURL && app.settingsPageURL.length > 0) { %>
+    <a href="<%= app.settingsPageURL %>" target="_blank"><i class="fa fa-cog"></i></a>
+    <% } %>
+  </td>
+  <td class="app-trash">
+    <a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+  </td>
 </script>
   <script type="template" id="apps-list-settings-template">
 
@@ -623,7 +636,11 @@
       </div>
         <div class="panel-body">
           <table class="table">
-            <thead><tr><th data-i18n="modal.manageSlices.name"></th><th></th></tr></thead>
+            <thead><tr>
+              <th></th>
+              <th data-i18n="modal.settings.manageApps.name"></th>
+              <th data-i18n="modal.settings.manageApps.settings"></th>
+              <th data-i18n="modal.settings.manageApps.trash"></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

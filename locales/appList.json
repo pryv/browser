@@ -29,14 +29,14 @@
     "description": "Import tweets on your Pryv",
     "iconURL": "https://g.twimg.com/Twitter_logo_blue.png",
     "appURL": "https://bridges.pryv.io:4443/",
-    "settingsPageURL": ""
+    "settingsPageURL": "https://bridges.pryv.io:4443/"
   },
   {
     "id": "bridge-withings",
     "displayName": "Bridge Withings",
     "description": "Import your Withings data to your Pryv",
     "iconURL": "https://vitrine.withings.com/skin/frontend/withings/store/images/common/logo.png",
-    "appURL": "https://bridges.pryv.io:5443/",
-    "settingsPageURL": ""
+    "appURL": "http://bridges.pryv.io:5443/",
+    "settingsPageURL": "http://bridges.pryv.io:5443/"
   }
 ]

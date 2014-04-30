@@ -310,7 +310,7 @@ body{
   text-align: center;
   width: 100%;
 }
-.Center-Container.is-Table { display: table;height: 100%;width:100%; }
+.Center-Container.is-Table { display: table !important;height: 100%;width:100%; }
 .is-Table .Table-Cell {
   display: table-cell;
   vertical-align: middle;

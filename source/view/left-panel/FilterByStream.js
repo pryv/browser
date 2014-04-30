@@ -13,6 +13,7 @@ module.exports = Marionette.ItemView.extend({
     };
   },
   ui: {
+    label: 'label',
     checkbox: 'input[type=checkbox]',
     applyBtn: '#filter-by-stream-apply'
   },
@@ -26,6 +27,13 @@ module.exports = Marionette.ItemView.extend({
     var self = this;
     self.ui.applyBtn.prop('disabled', true);
     self.ui.applyBtn.click(this._applyFilter.bind(this));
+    this.ui.label.click(function (e) {
+      e.stopPropagation();
+      var input = $($(e.currentTarget).parent()).find('input');
+      var checked = input.prop('checked');
+      input.prop('checked', !checked);
+      input.trigger('change');
+    });
     this.ui.checkbox.click(function (e) {
       e.stopPropagation();
     });
@@ -149,7 +157,7 @@ module.exports = Marionette.ItemView.extend({
         'data-target="#collapse' + UNIQUE_ID + '">' +
         '<div class="pryv-checkbox">' +
         '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
-        '"><label for="filterStream' + UNIQUE_ID + '">' +   c.username;
+        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
       if (c._accessInfo.name !== 'pryv-browser') {
         result += ' / ' + c._accessInfo.name;
       }
@@ -182,7 +190,7 @@ module.exports = Marionette.ItemView.extend({
       'data-target="#collapse' + UNIQUE_ID + '">' +
       '<div class="pryv-checkbox">' +
       '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
-      '"><label for="filterStream' + UNIQUE_ID + '">' +
+      '"><label for="afilterStream' + UNIQUE_ID + '">' +
       stream.name + '</label></div></li>';
     result += '<ul id="collapse' + UNIQUE_ID +
       '" class="panel-collapse  collapse stream-tree-children">' +

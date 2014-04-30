@@ -12,7 +12,7 @@ module.exports = Marionette.ItemView.extend({
   },
   change: function () {
     this.$el.removeClass('animated bounceIn');
-    this.$el.addClass('animated  tada');
+    this.$el.addClass('animated  pulse');
     this.render();
   },
   renderView: function (container) {

@@ -142,6 +142,17 @@
     <div class="tags"><%= tags %></div>
     <div class="date"><%= new Date(time * 1000).toLocaleDateString() %></div>
   </script>
+
+  <script id="activityView" type="template">
+      <div class="aggregated-icon Numericals"></div>
+      <% if(eventsNbr > 1) { %>
+      <span class="aggregated-nbr-events"><%=eventsNbr%></span>
+      <% } %>
+      <div class="content Center-Container is-Table">
+         DONUT
+      </div>
+  </script>
+
   <script id="genericsView" type="template">
     <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
     <% if(eventsNbr > 1) { %>

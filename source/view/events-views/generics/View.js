@@ -13,7 +13,7 @@ module.exports = Marionette.ItemView.extend({
   },
   change: function () {
     $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
+    this.animation = 'pulse';
     this.render();
   },
   renderView: function (container) {

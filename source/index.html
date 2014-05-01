@@ -54,7 +54,7 @@
       };
       i18n.init(i18nOptions, function (t) {
         $('body').i18n();
-        $('#login-button').html('<i class="fa fa-sign-in"></i> ' + t('nav.signIn'));
+        $('#login-button').html(' ' + t('nav.signIn'));
       });
       var sampleApp = require('SampleApp');
       <!-- @if NODE_ENV == 'PRODUCTION'  -->
@@ -537,7 +537,7 @@
           <% event.tags.forEach(function (tag) { %>
           <label><%= tag %></label>
           <% }) %>
-          <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('"', '&quot;') %>"></li>
+          <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>"></li>
 
         <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise"><span data-i18n="button.submit"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
         <button id ="trash-edit" type="button" class="btn btn-danger"><span data-i18n="button.trash"></span><i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
@@ -747,12 +747,13 @@
   </div>
 </div>
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+    <a href="#" id="logo-reload" class="logo">Pryv</a>
       <ul class="nav navbar-nav navbar-left">
         <li id="togglePanel">
-        <a href="javascript:void(0)"><span><i class="fa fa-bars"></i></span></a>
+        <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
         </li>
         <li id="addEvent">
-          <a href="javascript:void(0)" ><span class="fa fa-plus-circle"></span> <span data-i18n="nav.addEvent"></span></a>
+          <a href="javascript:void(0)" ><span class="fa fa-plus-circle fa-lg"></span> <span data-i18n="nav.addEvent"></span></a>
         </li>
       </ul>
     <ul class="nav navbar-nav navbar-right">
@@ -762,36 +763,18 @@
         <li class="dropdown">
           <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" id="login-button"><i class="fa fa-sign-in"></i> </a>
           <ul class="dropdown-menu">
-            <li id="settings"><a href="javascript:void(0)" ><span class="fa fa-cog"></span> <span data-i18n="nav.settings"></span></a></li>
-            <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> <span data-i18n="nav.signOut"></span></a></li>
+            <li id="settings"><a href="javascript:void(0)" ><span class="fa fa-cog fa-lg"></span> <span data-i18n="nav.settings"></span></a></li>
+            <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out fa-lg"></i> <span data-i18n="nav.signOut"></span></a></li>
           </ul>
         </li>
 
       </ul>
   </nav>
-  <!--
-<div class="dropdown" id="login-dropdown" style="float: right; z-index: 9000;"><a href="javascript:void(0)" id="login-button" class="menu-button" data-toggle="dropdown"><i class="fa fa-sign-in"></i> </a>
-<ul class="dropdown-menu">
-  <li class="logo-settings"><a href="javascript:void(0)" ><span class="fa fa-cog"></span> <span data-i18n="nav.settings"></span></a></li>
-  <li class="logo-add"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-plus"></span> <span data-i18n="nav.addEvent"></span></a></li>
-  <li class="logo-create-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></a></li>
-  <li class="logo-sharing"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></a></li>
-  <li class="logo-to-my-pryv"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-home"></span> <span data-i18n="nav.myPryv"></span></a></li>
-  <li class="logo-subscribe"><a href="javascript:void(0)" ><span class="glyphicon glyphicon-star-empty"></span> <span data-i18n="nav.follow"></span></a></li>
-  <li class=""><a href="mailto:support@pryv.com?subject=Browser bug report&amp;body=" title="Bug report"><i class="fa fa-bug"></i> <span data-i18n="nav.bugReport"></span></a></li>
-  <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out"></i> <span data-i18n="nav.signOut"></span></a></li>
-</ul></div>
-<a href="javascript:void(0)" id="logo-settings" class="logo-settings menu-button"><span class="fa fa-cog"></span></a>
-<a href="javascript:void(0)" id="logo-subscribe" class="logo-subscribe menu-button"><span class="glyphicon glyphicon-star-empty"></span></a>
-<a href="javascript:void(0)" id="logo-sharing" class="logo-sharing menu-button"><span class="glyphicon glyphicon-star"></span></a>
-<a href="javascript:void(0)" id="logo-create-sharing" class="logo-create-sharing menu-button"><span class="glyphicon glyphicon-share-alt"></span></a>
-<a href="javascript:void(0)" id="logo-add" class="logo-add menu-button"><span class="glyphicon glyphicon-plus"></span></a>
--->
+  
 <!-- @if NODE_ENV == 'DEVELOPMENT' -->
 <!-- do not put anything between #logo-reload and #tree -->
 <!-- @endif -->
 
-<a href="#" id="logo-reload" class="logo">Pryv</a>
 <div id="tree">
   <div id="empty-events">
     <h1 data-i18n="noEvents.title"></h1>

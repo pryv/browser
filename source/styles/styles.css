@@ -216,17 +216,18 @@ body{
 .logo{
   z-index: 90000;
   position: absolute;
-  /*top: 0;*/
-  left: 0;
+  top: 5px;
+  left: 50%;
   text-indent: -9999em;
   display: block;
   width: 40px;
   height: 40px;
   background:url(../images/logo-pryv.png) 0 0 no-repeat;
   background-color: #3e3e3e;
+  margin-left: -20px;
 }
 .logo:hover{
-  background-position: -40px 0px;
+  /*background-position: -40px 0px;*/
 }
 .logo.loading {
   background:url(../images/loader2.gif) 0 0 no-repeat;
@@ -245,9 +246,8 @@ body{
   padding-left: 8px;
 }
 #login-button {
-/*  float: right;
-  padding: 10px;
-  font-weight: bold;    */
+ padding: 10px 10px;
+line-height: 27px;
 }
 #login-button:hover, #login-button:focus {
   text-decoration: none;
@@ -306,9 +306,12 @@ body{
  display: none;
 }
 #empty-events {
-  margin-top: 50px;
   text-align: center;
   width: 100%;
+  position: relative;
+  left: 0;
+  top: 50%;
+  margin-top: -10px;
 }
 .Center-Container.is-Table { display: table;height: 100%;width:100%; }
 .is-Table .Table-Cell {
@@ -1366,13 +1369,19 @@ span.value {
 }
 
 /* NAV */
-
+nav .icon-only{
+  padding: 5px 0 2px;
+}
 .navbar-inverse {
-   background-color: #373736;
+   background-color: #3F3F3F;
    border-color: #373736;
 }
 .navbar-inverse .navbar-nav>li>a, .navbar-inverse .navbar-text {
   color: #e3e3e3;
+}
+.navbar-inverse .navbar-nav>li>a:focus, .navbar-inverse .navbar-nav>li>a:hover {
+color: #FFF;
+background-color: #FFB800;
 }
 .navbar-inverse .dropdown-menu {
   background-color: #3e3e3e;
@@ -1384,8 +1393,12 @@ span.value {
   background-color: inherit;
   color: #fff;
 }
+.navbar-nav>li>a {
+  /*line-height: 25px;*/
+}
 nav .gravatar {
   max-width: 18px;
-  max-height: 18px;
-  margin-right: 5px;
+  max-height: 30px;
+  margin: 0 5px;
+  border-radius: 20px;
 }

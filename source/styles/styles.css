@@ -1375,6 +1375,7 @@ nav .icon-only{
 .navbar-inverse {
    background-color: #3F3F3F;
    border-color: #373736;
+   font-weight: 400;
 }
 .navbar-inverse .navbar-nav>li>a, .navbar-inverse .navbar-text {
   color: #e3e3e3;
@@ -1390,11 +1391,14 @@ background-color: #FFB800;
   color: #e3e3e3;
 }
 .navbar-inverse .dropdown-menu a:hover {
-  background-color: inherit;
+  background-color: #FFB800;
   color: #fff;
 }
 .navbar-nav>li>a {
   /*line-height: 25px;*/
+}
+.dropdown-menu>li>a {
+  padding: 9px 20px;
 }
 nav .gravatar {
   max-width: 18px;

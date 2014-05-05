@@ -1,4 +1,4 @@
-/*! browser - v0.7.0 - 2014-04-30 *//*!
+/*! browser - v0.7.1 - 2014-05-05 *//*!
  * jQuery JavaScript Library v1.9.1
  * http://jquery.com/
  *
@@ -11799,7 +11799,7 @@ var requirejs, require, define;
  * V. 1.1: Fix error handling so e.g. parsing an empty string does
  * produce a color rather than just crashing.
  */
-(function(B){B.color={};B.color.make=function(F,E,C,D){var G={};G.r=F||0;G.g=E||0;G.b=C||0;G.a=D!=null?D:1;G.add=function(J,I){for(var H=0;H<J.length;++H){G[J.charAt(H)]+=I}return G.normalize()};G.scale=function(J,I){for(var H=0;H<J.length;++H){G[J.charAt(H)]*=I}return G.normalize()};G.toString=function(){if(G.a>=1){return"rgb("+[G.r,G.g,G.b].join(",")+")"}else{return"rgba("+[G.r,G.g,G.b,G.a].join(",")+")"}};G.normalize=function(){function H(J,K,I){return K<J?J:(K>I?I:K)}G.r=H(0,parseInt(G.r),255);G.g=H(0,parseInt(G.g),255);G.b=H(0,parseInt(G.b),255);G.a=H(0,G.a,1);return G};G.clone=function(){return B.color.make(G.r,G.b,G.g,G.a)};return G.normalize()};B.color.extract=function(D,C){var E;do{E=D.css(C).toLowerCase();if(E!=""&&E!="transparent"){break}D=D.parent()}while(!B.nodeName(D.get(0),"body"));if(E=="rgba(0, 0, 0, 0)"){E="transparent"}return B.color.parse(E)};B.color.parse=function(F){var E,C=B.color.make;if(E=/rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(F)){return C(parseInt(E[1],10),parseInt(E[2],10),parseInt(E[3],10))}if(E=/rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(F)){return C(parseInt(E[1],10),parseInt(E[2],10),parseInt(E[3],10),parseFloat(E[4]))}if(E=/rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(F)){return C(parseFloat(E[1])*2.55,parseFloat(E[2])*2.55,parseFloat(E[3])*2.55)}if(E=/rgba\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(F)){return C(parseFloat(E[1])*2.55,parseFloat(E[2])*2.55,parseFloat(E[3])*2.55,parseFloat(E[4]))}if(E=/#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(F)){return C(parseInt(E[1],16),parseInt(E[2],16),parseInt(E[3],16))}if(E=/#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(F)){return C(parseInt(E[1]+E[1],16),parseInt(E[2]+E[2],16),parseInt(E[3]+E[3],16))}var D=B.trim(F).toLowerCase();if(D=="transparent"){return C(255,255,255,0)}else{E=A[D]||[0,0,0];return C(E[0],E[1],E[2])}};var A={aqua:[0,255,255],azure:[240,255,255],beige:[245,245,220],black:[0,0,0],blue:[0,0,255],brown:[165,42,42],cyan:[0,255,255],darkblue:[0,0,139],darkcyan:[0,139,139],darkgrey:[169,169,169],darkgreen:[0,100,0],darkkhaki:[189,183,107],darkmagenta:[139,0,139],darkolivegreen:[85,107,47],darkorange:[255,140,0],darkorchid:[153,50,204],darkred:[139,0,0],darksalmon:[233,150,122],darkviolet:[148,0,211],fuchsia:[255,0,255],gold:[255,215,0],green:[0,128,0],indigo:[75,0,130],khaki:[240,230,140],lightblue:[173,216,230],lightcyan:[224,255,255],lightgreen:[144,238,144],lightgrey:[211,211,211],lightpink:[255,182,193],lightyellow:[255,255,224],lime:[0,255,0],magenta:[255,0,255],maroon:[128,0,0],navy:[0,0,128],olive:[128,128,0],orange:[255,165,0],pink:[255,192,203],purple:[128,0,128],violet:[128,0,128],red:[255,0,0],silver:[192,192,192],white:[255,255,255],yellow:[255,255,0]}})(jQuery);
+(function($){$.color={};$.color.make=function(r,g,b,a){var o={};o.r=r||0;o.g=g||0;o.b=b||0;o.a=a!=null?a:1;o.add=function(c,d){for(var i=0;i<c.length;++i)o[c.charAt(i)]+=d;return o.normalize()};o.scale=function(c,f){for(var i=0;i<c.length;++i)o[c.charAt(i)]*=f;return o.normalize()};o.toString=function(){if(o.a>=1){return"rgb("+[o.r,o.g,o.b].join(",")+")"}else{return"rgba("+[o.r,o.g,o.b,o.a].join(",")+")"}};o.normalize=function(){function clamp(min,value,max){return value<min?min:value>max?max:value}o.r=clamp(0,parseInt(o.r),255);o.g=clamp(0,parseInt(o.g),255);o.b=clamp(0,parseInt(o.b),255);o.a=clamp(0,o.a,1);return o};o.clone=function(){return $.color.make(o.r,o.b,o.g,o.a)};return o.normalize()};$.color.extract=function(elem,css){var c;do{c=elem.css(css).toLowerCase();if(c!=""&&c!="transparent")break;elem=elem.parent()}while(elem.length&&!$.nodeName(elem.get(0),"body"));if(c=="rgba(0, 0, 0, 0)")c="transparent";return $.color.parse(c)};$.color.parse=function(str){var res,m=$.color.make;if(res=/rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/.exec(str))return m(parseInt(res[1],10),parseInt(res[2],10),parseInt(res[3],10));if(res=/rgba\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(str))return m(parseInt(res[1],10),parseInt(res[2],10),parseInt(res[3],10),parseFloat(res[4]));if(res=/rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/.exec(str))return m(parseFloat(res[1])*2.55,parseFloat(res[2])*2.55,parseFloat(res[3])*2.55);if(res=/rgba\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\s*\)/.exec(str))return m(parseFloat(res[1])*2.55,parseFloat(res[2])*2.55,parseFloat(res[3])*2.55,parseFloat(res[4]));if(res=/#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/.exec(str))return m(parseInt(res[1],16),parseInt(res[2],16),parseInt(res[3],16));if(res=/#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/.exec(str))return m(parseInt(res[1]+res[1],16),parseInt(res[2]+res[2],16),parseInt(res[3]+res[3],16));var name=$.trim(str).toLowerCase();if(name=="transparent")return m(255,255,255,0);else{res=lookupColors[name]||[0,0,0];return m(res[0],res[1],res[2])}};var lookupColors={aqua:[0,255,255],azure:[240,255,255],beige:[245,245,220],black:[0,0,0],blue:[0,0,255],brown:[165,42,42],cyan:[0,255,255],darkblue:[0,0,139],darkcyan:[0,139,139],darkgrey:[169,169,169],darkgreen:[0,100,0],darkkhaki:[189,183,107],darkmagenta:[139,0,139],darkolivegreen:[85,107,47],darkorange:[255,140,0],darkorchid:[153,50,204],darkred:[139,0,0],darksalmon:[233,150,122],darkviolet:[148,0,211],fuchsia:[255,0,255],gold:[255,215,0],green:[0,128,0],indigo:[75,0,130],khaki:[240,230,140],lightblue:[173,216,230],lightcyan:[224,255,255],lightgreen:[144,238,144],lightgrey:[211,211,211],lightpink:[255,182,193],lightyellow:[255,255,224],lime:[0,255,0],magenta:[255,0,255],maroon:[128,0,0],navy:[0,0,128],olive:[128,128,0],orange:[255,165,0],pink:[255,192,203],purple:[128,0,128],violet:[128,0,128],red:[255,0,0],silver:[192,192,192],white:[255,255,255],yellow:[255,255,0]}})(jQuery);
 
 // the actual Flot code
 (function($) {
@@ -11807,6 +11807,22 @@ var requirejs, require, define;
 	// Cache the prototype hasOwnProperty for faster access
 
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    // A shim to provide 'detach' to jQuery versions prior to 1.4.  Using a DOM
+    // operation produces the same effect as detach, i.e. removing the element
+    // without touching its jQuery data.
+
+    // Do not merge this into Flot 0.9, since it requires jQuery 1.4.4+.
+
+    if (!$.fn.detach) {
+        $.fn.detach = function() {
+            return this.each(function() {
+                if (this.parentNode) {
+                    this.parentNode.removeChild( this );
+                }
+            });
+        };
+    }
 
 	///////////////////////////////////////////////////////////////////////////
 	// The Canvas object is a wrapper around an HTML5 <canvas> tag.
@@ -12195,7 +12211,7 @@ var requirejs, require, define;
 			element: positions.length ? info.element.clone() : info.element,
 			x: x,
 			y: y
-		}
+		};
 
 		positions.push(position);
 
@@ -12428,12 +12444,28 @@ var requirejs, require, define;
             };
         };
         plot.shutdown = shutdown;
+        plot.destroy = function () {
+            shutdown();
+            placeholder.removeData("plot").empty();
 
-        plot.resize = function (width, height) {
-          width = (width === undefined) || (width <= 0) ? placeholder.width() : width,
-            height = (height === undefined) || (height <= 0)  ? placeholder.height() : height;
-          surface.resize(width, height);
-          overlay.resize(width, height);
+            series = [];
+            options = null;
+            surface = null;
+            overlay = null;
+            eventHolder = null;
+            ctx = null;
+            octx = null;
+            xaxes = [];
+            yaxes = [];
+            hooks = null;
+            highlights = [];
+            plot = null;
+        };
+        plot.resize = function () {
+        	var width = placeholder.width(),
+        		height = placeholder.height();
+            surface.resize(width, height);
+            overlay.resize(width, height);
         };
 
         // public attributes
@@ -12506,15 +12538,15 @@ var requirejs, require, define;
             // since the rest of the code assumes that they exist.
 
             var i, axisOptions, axisCount,
+                fontSize = placeholder.css("font-size"),
+                fontSizeDefault = fontSize ? +fontSize.replace("px", "") : 13,
                 fontDefaults = {
                     style: placeholder.css("font-style"),
-                    size: Math.round(0.8 * (+placeholder.css("font-size").replace("px", "") || 13)),
+                    size: Math.round(0.8 * fontSizeDefault),
                     variant: placeholder.css("font-variant"),
                     weight: placeholder.css("font-weight"),
                     family: placeholder.css("font-family")
                 };
-
-            fontDefaults.lineHeight = fontDefaults.size * 1.15;
 
             axisCount = options.xaxes.length || 1;
             for (i = 0; i < axisCount; ++i) {
@@ -12531,6 +12563,9 @@ var requirejs, require, define;
                     axisOptions.font = $.extend({}, fontDefaults, axisOptions.font);
                     if (!axisOptions.font.color) {
                         axisOptions.font.color = axisOptions.color;
+                    }
+                    if (!axisOptions.font.lineHeight) {
+                        axisOptions.font.lineHeight = Math.round(axisOptions.font.size * 1.15);
                     }
                 }
             }
@@ -12551,6 +12586,9 @@ var requirejs, require, define;
                     if (!axisOptions.font.color) {
                         axisOptions.font.color = axisOptions.color;
                     }
+                    if (!axisOptions.font.lineHeight) {
+                        axisOptions.font.lineHeight = Math.round(axisOptions.font.size * 1.15);
+                    }
                 }
             }
 
@@ -12562,10 +12600,24 @@ var requirejs, require, define;
             if (options.x2axis) {
                 options.xaxes[1] = $.extend(true, {}, options.xaxis, options.x2axis);
                 options.xaxes[1].position = "top";
+                // Override the inherit to allow the axis to auto-scale
+                if (options.x2axis.min == null) {
+                    options.xaxes[1].min = null;
+                }
+                if (options.x2axis.max == null) {
+                    options.xaxes[1].max = null;
+                }
             }
             if (options.y2axis) {
                 options.yaxes[1] = $.extend(true, {}, options.yaxis, options.y2axis);
                 options.yaxes[1].position = "right";
+                // Override the inherit to allow the axis to auto-scale
+                if (options.y2axis.min == null) {
+                    options.yaxes[1].min = null;
+                }
+                if (options.y2axis.max == null) {
+                    options.yaxes[1].max = null;
+                }
             }
             if (options.grid.coloredAreas)
                 options.grid.markings = options.grid.coloredAreas;
@@ -12902,7 +12954,7 @@ var requirejs, require, define;
                             if (val != null) {
                                 f = format[m];
                                 // extract min/max info
-                                if (f.autoscale) {
+                                if (f.autoscale !== false) {
                                     if (f.x) {
                                         updateAxis(s.xaxis, val, val);
                                     }
@@ -12989,11 +13041,8 @@ var requirejs, require, define;
                         case "right":
                             delta = -s.bars.barWidth;
                             break;
-                        case "center":
-                            delta = -s.bars.barWidth / 2;
-                            break;
                         default:
-                            throw new Error("Invalid bar alignment: " + s.bars.align);
+                            delta = -s.bars.barWidth / 2;
                     }
 
                     if (s.bars.horizontal) {
@@ -13024,7 +13073,9 @@ var requirejs, require, define;
             // from a previous plot in this container that we'll try to re-use.
 
             placeholder.css("padding", 0) // padding messes up the positioning
-                .children(":not(.flot-base,.flot-overlay)").remove();
+                .children().filter(function(){
+                    return !$(this).hasClass("flot-overlay") && !$(this).hasClass('flot-base');
+                }).remove();
 
             if (placeholder.css("position") == 'static')
                 placeholder.css("position", "relative"); // for positioning labels and overlay
@@ -13121,7 +13172,7 @@ var requirejs, require, define;
                 ticks = axis.ticks || [],
                 labelWidth = opts.labelWidth || 0,
                 labelHeight = opts.labelHeight || 0,
-                maxWidth = labelWidth || axis.direction == "x" ? Math.floor(surface.width / (ticks.length || 1)) : null;
+                maxWidth = labelWidth || (axis.direction == "x" ? Math.floor(surface.width / (ticks.length || 1)) : null),
                 legacyStyles = axis.direction + "Axis " + axis.direction + axis.n + "Axis",
                 layer = "flot-" + axis.direction + "-axis flot-" + axis.direction + axis.n + "-axis " + legacyStyles,
                 font = opts.font || "flot-tick-label tickLabel";
@@ -13153,37 +13204,50 @@ var requirejs, require, define;
             var lw = axis.labelWidth,
                 lh = axis.labelHeight,
                 pos = axis.options.position,
+                isXAxis = axis.direction === "x",
                 tickLength = axis.options.tickLength,
                 axisMargin = options.grid.axisMargin,
                 padding = options.grid.labelMargin,
-                all = axis.direction == "x" ? xaxes : yaxes,
-                index, innermost;
+                innermost = true,
+                outermost = true,
+                first = true,
+                found = false;
 
-            // determine axis margin
-            var samePosition = $.grep(all, function (a) {
-                return a && a.options.position == pos && a.reserveSpace;
+            // Determine the axis's position in its direction and on its side
+
+            $.each(isXAxis ? xaxes : yaxes, function(i, a) {
+                if (a && (a.show || a.reserveSpace)) {
+                    if (a === axis) {
+                        found = true;
+                    } else if (a.options.position === pos) {
+                        if (found) {
+                            outermost = false;
+                        } else {
+                            innermost = false;
+                        }
+                    }
+                    if (!found) {
+                        first = false;
+                    }
+                }
             });
-            if ($.inArray(axis, samePosition) == samePosition.length - 1)
-                axisMargin = 0; // outermost
 
-            // determine tick length - if we're innermost, we can use "full"
+            // The outermost axis on each side has no margin
+
+            if (outermost) {
+                axisMargin = 0;
+            }
+
+            // The ticks for the first axis in each direction stretch across
+
             if (tickLength == null) {
-                var sameDirection = $.grep(all, function (a) {
-                    return a && a.reserveSpace;
-                });
-
-                innermost = $.inArray(axis, sameDirection) == 0;
-                if (innermost)
-                    tickLength = "full";
-                else
-                    tickLength = 5;
+                tickLength = first ? "full" : 5;
             }
 
             if (!isNaN(+tickLength))
                 padding += +tickLength;
 
-            // compute box
-            if (axis.direction == "x") {
+            if (isXAxis) {
                 lh += padding;
 
                 if (pos == "bottom") {
@@ -13233,7 +13297,7 @@ var requirejs, require, define;
             // inside the canvas and isn't clipped off
 
             var minMargin = options.grid.minBorderMargin,
-                margins = { x: 0, y: 0 }, i, axis;
+                axis, i;
 
             // check stuff from the plot (FIXME: this should just read
             // a value from the series, otherwise it's impossible to
@@ -13244,21 +13308,32 @@ var requirejs, require, define;
                     minMargin = Math.max(minMargin, 2 * (series[i].points.radius + series[i].points.lineWidth/2));
             }
 
-            margins.x = margins.y = Math.ceil(minMargin);
+            var margins = {
+                left: minMargin,
+                right: minMargin,
+                top: minMargin,
+                bottom: minMargin
+            };
 
             // check axis labels, note we don't check the actual
             // labels but instead use the overall width/height to not
             // jump as much around with replots
             $.each(allAxes(), function (_, axis) {
-                var dir = axis.direction;
-                if (axis.reserveSpace)
-                    margins[dir] = Math.ceil(Math.max(margins[dir], (dir == "x" ? axis.labelWidth : axis.labelHeight) / 2));
+                if (axis.reserveSpace && axis.ticks && axis.ticks.length) {
+                    if (axis.direction === "x") {
+                        margins.left = Math.max(margins.left, axis.labelWidth / 2);
+                        margins.right = Math.max(margins.right, axis.labelWidth / 2);
+                    } else {
+                        margins.bottom = Math.max(margins.bottom, axis.labelHeight / 2);
+                        margins.top = Math.max(margins.top, axis.labelHeight / 2);
+                    }
+                }
             });
 
-            plotOffset.left = Math.max(margins.x, plotOffset.left);
-            plotOffset.right = Math.max(margins.x, plotOffset.right);
-            plotOffset.top = Math.max(margins.y, plotOffset.top);
-            plotOffset.bottom = Math.max(margins.y, plotOffset.bottom);
+            plotOffset.left = Math.ceil(Math.max(margins.left, plotOffset.left));
+            plotOffset.right = Math.ceil(Math.max(margins.right, plotOffset.right));
+            plotOffset.top = Math.ceil(Math.max(margins.top, plotOffset.top));
+            plotOffset.bottom = Math.ceil(Math.max(margins.bottom, plotOffset.bottom));
         }
 
         function setupGrid() {
@@ -13284,20 +13359,18 @@ var requirejs, require, define;
                 }
             }
 
-            // init axes
             $.each(axes, function (_, axis) {
-                axis.show = axis.options.show;
-                if (axis.show == null)
-                    axis.show = axis.used; // by default an axis is visible if it's got data
-
-                axis.reserveSpace = axis.show || axis.options.reserveSpace;
-
+                var axisOpts = axis.options;
+                axis.show = axisOpts.show == null ? axis.used : axisOpts.show;
+                axis.reserveSpace = axisOpts.reserveSpace == null ? axis.show : axisOpts.reserveSpace;
                 setRange(axis);
             });
 
             if (showGrid) {
 
-                var allocatedAxes = $.grep(axes, function (axis) { return axis.reserveSpace; });
+                var allocatedAxes = $.grep(axes, function (axis) {
+                    return axis.show || axis.reserveSpace;
+                });
 
                 $.each(allocatedAxes, function (_, axis) {
                     // make the ticks
@@ -13426,8 +13499,8 @@ var requirejs, require, define;
             axis.tickDecimals = Math.max(0, maxDec != null ? maxDec : dec);
             axis.tickSize = opts.tickSize || size;
 
-            // Time mode was moved to a plug-in in 0.8, but since so many people use this
-            // we'll add an especially friendly make sure they remembered to include it.
+            // Time mode was moved to a plug-in in 0.8, and since so many people use it
+            // we'll add an especially friendly reminder to make sure they included it.
 
             if (opts.mode == "time" && !axis.tickGenerator) {
                 throw new Error("Time mode requires the flot.time plugin.");
@@ -13683,26 +13756,34 @@ var requirejs, require, define;
                     yrange.from = Math.max(yrange.from, yrange.axis.min);
                     yrange.to = Math.min(yrange.to, yrange.axis.max);
 
-                    if (xrange.from == xrange.to && yrange.from == yrange.to)
+                    var xequal = xrange.from === xrange.to,
+                        yequal = yrange.from === yrange.to;
+
+                    if (xequal && yequal) {
                         continue;
+                    }
 
                     // then draw
-                    xrange.from = xrange.axis.p2c(xrange.from);
-                    xrange.to = xrange.axis.p2c(xrange.to);
-                    yrange.from = yrange.axis.p2c(yrange.from);
-                    yrange.to = yrange.axis.p2c(yrange.to);
+                    xrange.from = Math.floor(xrange.axis.p2c(xrange.from));
+                    xrange.to = Math.floor(xrange.axis.p2c(xrange.to));
+                    yrange.from = Math.floor(yrange.axis.p2c(yrange.from));
+                    yrange.to = Math.floor(yrange.axis.p2c(yrange.to));
 
-                    if (xrange.from == xrange.to || yrange.from == yrange.to) {
-                        // draw line
+                    if (xequal || yequal) {
+                        var lineWidth = m.lineWidth || options.grid.markingsLineWidth,
+                            subPixel = lineWidth % 2 ? 0.5 : 0;
                         ctx.beginPath();
                         ctx.strokeStyle = m.color || options.grid.markingsColor;
-                        ctx.lineWidth = m.lineWidth || options.grid.markingsLineWidth;
-                        ctx.moveTo(xrange.from, yrange.from);
-                        ctx.lineTo(xrange.to, yrange.to);
+                        ctx.lineWidth = lineWidth;
+                        if (xequal) {
+                            ctx.moveTo(xrange.to + subPixel, yrange.from);
+                            ctx.lineTo(xrange.to + subPixel, yrange.to);
+                        } else {
+                            ctx.moveTo(xrange.from, yrange.to + subPixel);
+                            ctx.lineTo(xrange.to, yrange.to + subPixel);                            
+                        }
                         ctx.stroke();
-                    }
-                    else {
-                        // fill area
+                    } else {
                         ctx.fillStyle = m.color || options.grid.markingsColor;
                         ctx.fillRect(xrange.from, yrange.to,
                                      xrange.to - xrange.from,
@@ -13871,16 +13952,20 @@ var requirejs, require, define;
         function drawAxisLabels() {
 
             $.each(allAxes(), function (_, axis) {
-                if (!axis.show || axis.ticks.length == 0)
-                    return;
-
                 var box = axis.box,
                     legacyStyles = axis.direction + "Axis " + axis.direction + axis.n + "Axis",
                     layer = "flot-" + axis.direction + "-axis flot-" + axis.direction + axis.n + "-axis " + legacyStyles,
                     font = axis.options.font || "flot-tick-label tickLabel",
                     tick, x, y, halign, valign;
 
+                // Remove text before checking for axis.show and ticks.length;
+                // otherwise plugins, like flot-tickrotor, that draw their own
+                // tick labels will end up with both theirs and the defaults.
+
                 surface.removeText(layer);
+
+                if (!axis.show || axis.ticks.length == 0)
+                    return;
 
                 for (var i = 0; i < axis.ticks.length; ++i) {
 
@@ -14239,7 +14324,7 @@ var requirejs, require, define;
             ctx.restore();
         }
 
-        function drawBar(x, y, b, barLeft, barRight, offset, fillStyleCallback, axisx, axisy, c, horizontal, lineWidth) {
+        function drawBar(x, y, b, barLeft, barRight, fillStyleCallback, axisx, axisy, c, horizontal, lineWidth) {
             var left, right, bottom, top,
                 drawLeft, drawRight, drawTop, drawBottom,
                 tmp;
@@ -14314,13 +14399,8 @@ var requirejs, require, define;
 
             // fill the bar
             if (fillStyleCallback) {
-                c.beginPath();
-                c.moveTo(left, bottom);
-                c.lineTo(left, top);
-                c.lineTo(right, top);
-                c.lineTo(right, bottom);
                 c.fillStyle = fillStyleCallback(bottom, top);
-                c.fill();
+                c.fillRect(left, top, right - left, bottom - top)
             }
 
             // draw outline
@@ -14328,35 +14408,35 @@ var requirejs, require, define;
                 c.beginPath();
 
                 // FIXME: inline moveTo is buggy with excanvas
-                c.moveTo(left, bottom + offset);
+                c.moveTo(left, bottom);
                 if (drawLeft)
-                    c.lineTo(left, top + offset);
+                    c.lineTo(left, top);
                 else
-                    c.moveTo(left, top + offset);
+                    c.moveTo(left, top);
                 if (drawTop)
-                    c.lineTo(right, top + offset);
+                    c.lineTo(right, top);
                 else
-                    c.moveTo(right, top + offset);
+                    c.moveTo(right, top);
                 if (drawRight)
-                    c.lineTo(right, bottom + offset);
+                    c.lineTo(right, bottom);
                 else
-                    c.moveTo(right, bottom + offset);
+                    c.moveTo(right, bottom);
                 if (drawBottom)
-                    c.lineTo(left, bottom + offset);
+                    c.lineTo(left, bottom);
                 else
-                    c.moveTo(left, bottom + offset);
+                    c.moveTo(left, bottom);
                 c.stroke();
             }
         }
 
         function drawSeriesBars(series) {
-            function plotBars(datapoints, barLeft, barRight, offset, fillStyleCallback, axisx, axisy) {
+            function plotBars(datapoints, barLeft, barRight, fillStyleCallback, axisx, axisy) {
                 var points = datapoints.points, ps = datapoints.pointsize;
 
                 for (var i = 0; i < points.length; i += ps) {
                     if (points[i] == null)
                         continue;
-                    drawBar(points[i], points[i + 1], points[i + 2], barLeft, barRight, offset, fillStyleCallback, axisx, axisy, ctx, series.bars.horizontal, series.bars.lineWidth);
+                    drawBar(points[i], points[i + 1], points[i + 2], barLeft, barRight, fillStyleCallback, axisx, axisy, ctx, series.bars.horizontal, series.bars.lineWidth);
                 }
             }
 
@@ -14376,15 +14456,12 @@ var requirejs, require, define;
                 case "right":
                     barLeft = -series.bars.barWidth;
                     break;
-                case "center":
-                    barLeft = -series.bars.barWidth / 2;
-                    break;
                 default:
-                    throw new Error("Invalid bar alignment: " + series.bars.align);
+                    barLeft = -series.bars.barWidth / 2;
             }
 
             var fillStyleCallback = series.bars.fill ? function (bottom, top) { return getFillStyle(series.bars, series.color, bottom, top); } : null;
-            plotBars(series.datapoints, barLeft, barLeft + series.bars.barWidth, 0, fillStyleCallback, series.xaxis, series.yaxis);
+            plotBars(series.datapoints, barLeft, barLeft + series.bars.barWidth, fillStyleCallback, series.xaxis, series.yaxis);
             ctx.restore();
         }
 
@@ -14404,10 +14481,15 @@ var requirejs, require, define;
 
         function insertLegend() {
 
-            placeholder.find(".legend").remove();
+            if (options.legend.container != null) {
+                $(options.legend.container).html("");
+            } else {
+                placeholder.find(".legend").remove();
+            }
 
-            if (!options.legend.show)
+            if (!options.legend.show) {
                 return;
+            }
 
             var fragments = [], entries = [], rowStarted = false,
                 lf = options.legend.labelFormatter, s, label;
@@ -14568,8 +14650,21 @@ var requirejs, require, define;
                 }
 
                 if (s.bars.show && !item) { // no other point can be nearby
-                    var barLeft = s.bars.align == "left" ? 0 : -s.bars.barWidth/2,
-                        barRight = barLeft + s.bars.barWidth;
+
+                    var barLeft, barRight;
+
+                    switch (s.bars.align) {
+                        case "left":
+                            barLeft = 0;
+                            break;
+                        case "right":
+                            barLeft = -s.bars.barWidth;
+                            break;
+                        default:
+                            barLeft = -s.bars.barWidth / 2;
+                    }
+
+                    barRight = barLeft + s.bars.barWidth;
 
                     for (j = 0; j < points.length; j += ps) {
                         var x = points[j], y = points[j + 1], b = points[j + 2];
@@ -14767,13 +14862,24 @@ var requirejs, require, define;
         function drawBarHighlight(series, point) {
             var highlightColor = (typeof series.highlightColor === "string") ? series.highlightColor : $.color.parse(series.color).scale('a', 0.5).toString(),
                 fillStyle = highlightColor,
-                barLeft = series.bars.align == "left" ? 0 : -series.bars.barWidth/2;
+                barLeft;
+
+            switch (series.bars.align) {
+                case "left":
+                    barLeft = 0;
+                    break;
+                case "right":
+                    barLeft = -series.bars.barWidth;
+                    break;
+                default:
+                    barLeft = -series.bars.barWidth / 2;
+            }
 
             octx.lineWidth = series.bars.lineWidth;
             octx.strokeStyle = highlightColor;
 
             drawBar(point[0], point[1], point[2] || 0, barLeft, barLeft + series.bars.barWidth,
-                    0, function () { return fillStyle; }, series.xaxis, series.yaxis, octx, series.bars.horizontal, series.bars.lineWidth);
+                    function () { return fillStyle; }, series.xaxis, series.yaxis, octx, series.bars.horizontal, series.bars.lineWidth);
         }
 
         function getColorOrGradient(spec, bottom, top, defaultColor) {
@@ -14812,7 +14918,7 @@ var requirejs, require, define;
         return plot;
     };
 
-    $.plot.version = "0.8.1";
+    $.plot.version = "0.8.3";
 
     $.plot.plugins = [];
 
@@ -14833,452 +14939,424 @@ var requirejs, require, define;
 
 (function($) {
 
-    var options = {
-        xaxis: {
-            timezone: null,        // "browser" for local to the client or timezone for timezone-js
-            timeformat: null,    // format string to use
-            twelveHourClock: false,    // 12 or 24 time in time mode
-            monthNames: null    // list of names of months
-        }
-    };
-
-    // round to nearby lower multiple of base
-
-    function floorInBase(n, base) {
-        return base * Math.floor(n / base);
-    }
-
-    // Returns a string with the date d formatted according to fmt.
-    // A subset of the Open Group's strftime format is supported.
-
-    function formatDate(d, fmt, monthNames, dayNames) {
-
-        if ($.isFunction(d.strftime)) {
-            return d.strftime(fmt);
-        }
-
-        var leftPad = function(n, pad) {
-            n = "" + n;
-            pad = "" + (pad == null ? "0" : pad);
-            return n.length === 1 ? pad + n : n;
-        };
-
-        var r = [],
-            escape = false,
-            hours = d.getHours(),
-            isAM = hours < 12;
-
-        if (monthNames == null) {
-            monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        }
-
-        if (dayNames == null) {
-            dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        }
-
-        var hours12;
-
-        if (hours > 12) {
-            hours12 = hours - 12;
-        } else if (hours === 0) {
-            hours12 = 12;
-        } else {
-            hours12 = hours;
-        }
-
-        for (var i = 0; i < fmt.length; ++i) {
-
-            var c = fmt.charAt(i);
-
-            if (escape) {
-                switch (c) {
-                case "a":
-                    c = "" + dayNames[d.getDay()];
-                    break;
-                case "b":
-                    c = "" + monthNames[d.getMonth()];
-                    break;
-                case "d":
-                    c = leftPad(d.getDate());
-                    break;
-                case "e":
-                    c = leftPad(d.getDate(), " ");
-                    break;
-                case "h":	// For back-compat with 0.7; remove in 1.0
-                case "H":
-                    c = leftPad(hours);
-                    break;
-                case "I":
-                    c = leftPad(hours12);
-                    break;
-                case "l":
-                    c = leftPad(hours12, " ");
-                    break;
-                case "m":
-                    c = leftPad(d.getMonth() + 1);
-                    break;
-                case "M":
-                    c = leftPad(d.getMinutes());
-                    break;
-                // quarters not in Open Group's strftime specification
-                case "q":
-                    c = "" + (Math.floor(d.getMonth() / 3) + 1);
-                    break;
-                case "S":
-                    c = leftPad(d.getSeconds());
-                    break;
-                case "y":
-                    c = leftPad(d.getFullYear() % 100);
-                    break;
-                case "Y":
-                    c = "" + d.getFullYear();
-                    break;
-                case "p":
-                    c = (isAM) ? ("" + "am") : ("" + "pm");
-                    break;
-                case "P":
-                    c = (isAM) ? ("" + "AM") : ("" + "PM");
-                    break;
-                case "w":
-                    c = "" + d.getDay();
-                    break;
-                }
-                r.push(c);
-                escape = false;
-            } else {
-                if (c === "%") {
-                    escape = true;
-                } else {
-                    r.push(c);
-                }
-            }
-        }
-
-        return r.join("");
-    }
-
-    // To have a consistent view of time-based data independent of which time
-    // zone the client happens to be in we need a date-like object independent
-    // of time zones.  This is done through a wrapper that only calls the UTC
-    // versions of the accessor methods.
-
-    function makeUtcWrapper(d) {
-
-        function addProxyMethod(sourceObj, sourceMethod, targetObj, targetMethod) {
-            sourceObj[sourceMethod] = function() {
-                return targetObj[targetMethod].apply(targetObj, arguments);
-            };
-        }
-
-        var utc = {
-            date: d
-        };
-
-        // support strftime, if found
-
-        if (d.strftime !== undefined) {
-            addProxyMethod(utc, "strftime", d, "strftime");
-        }
-
-        addProxyMethod(utc, "getTime", d, "getTime");
-        addProxyMethod(utc, "setTime", d, "setTime");
-
-        var props = ["Date", "Day", "FullYear", "Hours", "Milliseconds", "Minutes", "Month", "Seconds"];
-
-        for (var p = 0; p < props.length; p++) {
-            addProxyMethod(utc, "get" + props[p], d, "getUTC" + props[p]);
-            addProxyMethod(utc, "set" + props[p], d, "setUTC" + props[p]);
-        }
-
-        return utc;
-    }
-
-    // select time zone strategy.  This returns a date-like object tied to the
-    // desired timezone
-
-    function dateGenerator(ts, opts) {
-        if (opts.timezone === "browser") {
-            return new Date(ts);
-        } else if (!opts.timezone || opts.timezone === "utc") {
-            return makeUtcWrapper(new Date(ts));
-        } else if (typeof timezoneJS !== "undefined" && typeof timezoneJS.Date !== "undefined") {
-            var d = new timezoneJS.Date();
-            // timezone-js is fickle, so be sure to set the time zone before
-            // setting the time.
-            d.setTimezone(opts.timezone);
-            d.setTime(ts);
-            return d;
-        } else {
-            return makeUtcWrapper(new Date(ts));
-        }
-    }
-
-    // map of app. size of time units in milliseconds
-
-    var timeUnitSize = {
-        "second": 1000,
-        "minute": 60 * 1000,
-        "hour": 60 * 60 * 1000,
-        "day": 24 * 60 * 60 * 1000,
-        "month": 30 * 24 * 60 * 60 * 1000,
-        "quarter": 3 * 30 * 24 * 60 * 60 * 1000,
-        "year": 365.2425 * 24 * 60 * 60 * 1000
-    };
-
-    // the allowed tick sizes, after 1 year we use
-    // an integer algorithm
-
-    var baseSpec = [
-        [1, "second"], [2, "second"], [5, "second"], [10, "second"],
-        [30, "second"],
-        [1, "minute"], [2, "minute"], [5, "minute"], [10, "minute"],
-        [30, "minute"],
-        [1, "hour"], [2, "hour"], [4, "hour"],
-        [8, "hour"], [12, "hour"],
-        [1, "day"], [2, "day"], [3, "day"],
-        [0.25, "month"], [0.5, "month"], [1, "month"],
-        [2, "month"]
-    ];
-
-    // we don't know which variant(s) we'll need yet, but generating both is
-    // cheap
-
-    var specMonths = baseSpec.concat([[3, "month"], [6, "month"],
-        [1, "year"]]);
-    var specQuarters = baseSpec.concat([[1, "quarter"], [2, "quarter"],
-        [1, "year"]]);
-
-    function init(plot) {
-        plot.hooks.processOptions.push(function (plot) {
-            $.each(plot.getAxes(), function(axisName, axis) {
-
-                var opts = axis.options;
-
-                if (opts.mode === "time") {
-                    axis.tickGenerator = function(axis) {
-
-                        var ticks = [],
-                            d = dateGenerator(axis.min, opts),
-                            minSize = 0;
-
-                        // make quarter use a possibility if quarters are
-                        // mentioned in either of these options
-
-                        var spec = (opts.tickSize && opts.tickSize[1] ===
-                            "quarter") ||
-                            (opts.minTickSize && opts.minTickSize[1] ===
-                            "quarter") ? specQuarters : specMonths;
-
-                        if (opts.minTickSize != null) {
-                            if (typeof opts.tickSize === "number") {
-                                minSize = opts.tickSize;
-                            } else {
-                                minSize = opts.minTickSize[0] * timeUnitSize[opts.minTickSize[1]];
-                            }
-                        }
-
-                        for (var i = 0; i < spec.length - 1; ++i) {
-                            if (axis.delta < (spec[i][0] * timeUnitSize[spec[i][1]] +
-                                spec[i + 1][0] * timeUnitSize[spec[i + 1][1]]) / 2 &&
-                                spec[i][0] * timeUnitSize[spec[i][1]] >= minSize) {
-                                break;
-                            }
-                        }
-
-                        var size = spec[i][0],
-                            unit = spec[i][1];
-
-                        // special-case the possibility of several years
-
-                        if (unit === "year") {
-
-                            // if given a minTickSize in years, just use it,
-                            // ensuring that it's an integer
-
-                            if (opts.minTickSize != null && opts.minTickSize[1] === "year") {
-                                size = Math.floor(opts.minTickSize[0]);
-                            } else {
-
-                                var magn = Math.pow(10, Math.floor(Math.log(axis.delta / timeUnitSize.year) / Math.LN10)),
-                                    norm = (axis.delta / timeUnitSize.year) / magn;
-
-                                if (norm < 1.5) {
-                                    size = 1;
-                                } else if (norm < 3) {
-                                    size = 2;
-                                } else if (norm < 7.5) {
-                                    size = 5;
-                                } else {
-                                    size = 10;
-                                }
-
-                                size *= magn;
-                            }
-
-                            // minimum size for years is 1
-
-                            if (size < 1) {
-                                size = 1;
-                            }
-                        }
-
-                        axis.tickSize = opts.tickSize || [size, unit];
-                        var tickSize = axis.tickSize[0];
-                        unit = axis.tickSize[1];
-
-                        var step = tickSize * timeUnitSize[unit];
-
-                        if (unit === "second") {
-                            d.setSeconds(floorInBase(d.getSeconds(), tickSize));
-                        } else if (unit === "minute") {
-                            d.setMinutes(floorInBase(d.getMinutes(), tickSize));
-                        } else if (unit === "hour") {
-                            d.setHours(floorInBase(d.getHours(), tickSize));
-                        } else if (unit === "month") {
-                            d.setMonth(floorInBase(d.getMonth(), tickSize));
-                        } else if (unit === "quarter") {
-                            d.setMonth(3 * floorInBase(d.getMonth() / 3,
-                                tickSize));
-                        } else if (unit === "year") {
-                            d.setFullYear(floorInBase(d.getFullYear(), tickSize));
-                        }
-
-                        // reset smaller components
-
-                        d.setMilliseconds(0);
-
-                        if (step >= timeUnitSize.minute) {
-                            d.setSeconds(0);
-                        }
-                        if (step >= timeUnitSize.hour) {
-                            d.setMinutes(0);
-                        }
-                        if (step >= timeUnitSize.day) {
-                            d.setHours(0);
-                        }
-                        if (step >= timeUnitSize.day * 4) {
-                            d.setDate(1);
-                        }
-                        if (step >= timeUnitSize.month * 2) {
-                            d.setMonth(floorInBase(d.getMonth(), 3));
-                        }
-                        if (step >= timeUnitSize.quarter * 2) {
-                            d.setMonth(floorInBase(d.getMonth(), 6));
-                        }
-                        if (step >= timeUnitSize.year) {
-                            d.setMonth(0);
-                        }
-
-                        var carry = 0,
-                            v = Number.NaN,
-                            prev;
-
-                        do {
-
-                            prev = v;
-                            v = d.getTime();
-                            ticks.push(v);
-
-                            if (unit === "month" || unit === "quarter") {
-                                if (tickSize < 1) {
-
-                                    // a bit complicated - we'll divide the
-                                    // month/quarter up but we need to take
-                                    // care of fractions so we don't end up in
-                                    // the middle of a day
-
-                                    d.setDate(1);
-                                    var start = d.getTime();
-                                    d.setMonth(d.getMonth() + (unit === "quarter" ? 3 : 1));
-                                    var end = d.getTime();
-                                    d.setTime(v + carry * timeUnitSize.hour + (end - start) * tickSize);
-                                    carry = d.getHours();
-                                    d.setHours(0);
-                                } else {
-                                    d.setMonth(d.getMonth() +
-                                        tickSize * (unit === "quarter" ? 3 : 1));
-                                }
-                            } else if (unit === "year") {
-                                d.setFullYear(d.getFullYear() + tickSize);
-                            } else {
-                                d.setTime(v + step);
-                            }
-                        } while (v < axis.max && v !== prev);
-
-                        return ticks;
-                    };
-
-                    axis.tickFormatter = function (v, axis) {
-
-                        var d = dateGenerator(v, axis.options);
-
-                        // first check global format
-
-                        if (opts.timeformat != null) {
-                            return formatDate(d, opts.timeformat, opts.monthNames, opts.dayNames);
-                        }
-
-                        // possibly use quarters if quarters are mentioned in
-                        // any of these places
-
-                        var useQuarters = (axis.options.tickSize &&
-                                axis.options.tickSize[1] === "quarter") ||
-                                (axis.options.minTickSize &&
-                                axis.options.minTickSize[1] === "quarter"),
-                            t = axis.tickSize[0] * timeUnitSize[axis.tickSize[1]],
-                            span = axis.max - axis.min,
-                            suffix = (opts.twelveHourClock) ? " %p" : "",
-                            hourCode = (opts.twelveHourClock) ? "%I" : "%H",
-                            fmt;
-
-                        if (t < timeUnitSize.minute) {
-                            fmt = hourCode + ":%M:%S" + suffix;
-                        } else if (t < timeUnitSize.day) {
-                            if (span < 2 * timeUnitSize.day) {
-                                fmt = hourCode + ":%M" + suffix;
-                            } else {
-                                fmt = "%b %d " + hourCode + ":%M" + suffix;
-                            }
-                        } else if (t < timeUnitSize.month) {
-                            fmt = "%b %d";
-                        } else if ((useQuarters && t < timeUnitSize.quarter) ||
-                            (!useQuarters && t < timeUnitSize.year)) {
-                            if (span < timeUnitSize.year) {
-                                fmt = "%b";
-                            } else {
-                                fmt = "%b %Y";
-                            }
-                        } else if (useQuarters && t < timeUnitSize.year) {
-                            if (span < timeUnitSize.year) {
-                                fmt = "Q%q";
-                            } else {
-                                fmt = "Q%q %Y";
-                            }
-                        } else {
-                            fmt = "%Y";
-                        }
-
-                        var rt = formatDate(d, fmt, opts.monthNames, opts.dayNames);
-
-                        return rt;
-                    };
-                }
-            });
-        });
-    }
-
-    $.plot.plugins.push({
-        init: init,
-        options: options,
-        name: "time",
-        version: "1.0"
-    });
-
-    // Time-axis support used to be in Flot core, which exposed the
-    // formatDate function on the plot object.  Various plugins depend
-    // on the function, so we need to re-expose it here.
-
-    $.plot.formatDate = formatDate;
+	var options = {
+		xaxis: {
+			timezone: null,		// "browser" for local to the client or timezone for timezone-js
+			timeformat: null,	// format string to use
+			twelveHourClock: false,	// 12 or 24 time in time mode
+			monthNames: null	// list of names of months
+		}
+	};
+
+	// round to nearby lower multiple of base
+
+	function floorInBase(n, base) {
+		return base * Math.floor(n / base);
+	}
+
+	// Returns a string with the date d formatted according to fmt.
+	// A subset of the Open Group's strftime format is supported.
+
+	function formatDate(d, fmt, monthNames, dayNames) {
+
+		if (typeof d.strftime == "function") {
+			return d.strftime(fmt);
+		}
+
+		var leftPad = function(n, pad) {
+			n = "" + n;
+			pad = "" + (pad == null ? "0" : pad);
+			return n.length == 1 ? pad + n : n;
+		};
+
+		var r = [];
+		var escape = false;
+		var hours = d.getHours();
+		var isAM = hours < 12;
+
+		if (monthNames == null) {
+			monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+		}
+
+		if (dayNames == null) {
+			dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+		}
+
+		var hours12;
+
+		if (hours > 12) {
+			hours12 = hours - 12;
+		} else if (hours == 0) {
+			hours12 = 12;
+		} else {
+			hours12 = hours;
+		}
+
+		for (var i = 0; i < fmt.length; ++i) {
+
+			var c = fmt.charAt(i);
+
+			if (escape) {
+				switch (c) {
+					case 'a': c = "" + dayNames[d.getDay()]; break;
+					case 'b': c = "" + monthNames[d.getMonth()]; break;
+					case 'd': c = leftPad(d.getDate()); break;
+					case 'e': c = leftPad(d.getDate(), " "); break;
+					case 'h':	// For back-compat with 0.7; remove in 1.0
+					case 'H': c = leftPad(hours); break;
+					case 'I': c = leftPad(hours12); break;
+					case 'l': c = leftPad(hours12, " "); break;
+					case 'm': c = leftPad(d.getMonth() + 1); break;
+					case 'M': c = leftPad(d.getMinutes()); break;
+					// quarters not in Open Group's strftime specification
+					case 'q':
+						c = "" + (Math.floor(d.getMonth() / 3) + 1); break;
+					case 'S': c = leftPad(d.getSeconds()); break;
+					case 'y': c = leftPad(d.getFullYear() % 100); break;
+					case 'Y': c = "" + d.getFullYear(); break;
+					case 'p': c = (isAM) ? ("" + "am") : ("" + "pm"); break;
+					case 'P': c = (isAM) ? ("" + "AM") : ("" + "PM"); break;
+					case 'w': c = "" + d.getDay(); break;
+				}
+				r.push(c);
+				escape = false;
+			} else {
+				if (c == "%") {
+					escape = true;
+				} else {
+					r.push(c);
+				}
+			}
+		}
+
+		return r.join("");
+	}
+
+	// To have a consistent view of time-based data independent of which time
+	// zone the client happens to be in we need a date-like object independent
+	// of time zones.  This is done through a wrapper that only calls the UTC
+	// versions of the accessor methods.
+
+	function makeUtcWrapper(d) {
+
+		function addProxyMethod(sourceObj, sourceMethod, targetObj, targetMethod) {
+			sourceObj[sourceMethod] = function() {
+				return targetObj[targetMethod].apply(targetObj, arguments);
+			};
+		};
+
+		var utc = {
+			date: d
+		};
+
+		// support strftime, if found
+
+		if (d.strftime != undefined) {
+			addProxyMethod(utc, "strftime", d, "strftime");
+		}
+
+		addProxyMethod(utc, "getTime", d, "getTime");
+		addProxyMethod(utc, "setTime", d, "setTime");
+
+		var props = ["Date", "Day", "FullYear", "Hours", "Milliseconds", "Minutes", "Month", "Seconds"];
+
+		for (var p = 0; p < props.length; p++) {
+			addProxyMethod(utc, "get" + props[p], d, "getUTC" + props[p]);
+			addProxyMethod(utc, "set" + props[p], d, "setUTC" + props[p]);
+		}
+
+		return utc;
+	};
+
+	// select time zone strategy.  This returns a date-like object tied to the
+	// desired timezone
+
+	function dateGenerator(ts, opts) {
+		if (opts.timezone == "browser") {
+			return new Date(ts);
+		} else if (!opts.timezone || opts.timezone == "utc") {
+			return makeUtcWrapper(new Date(ts));
+		} else if (typeof timezoneJS != "undefined" && typeof timezoneJS.Date != "undefined") {
+			var d = new timezoneJS.Date();
+			// timezone-js is fickle, so be sure to set the time zone before
+			// setting the time.
+			d.setTimezone(opts.timezone);
+			d.setTime(ts);
+			return d;
+		} else {
+			return makeUtcWrapper(new Date(ts));
+		}
+	}
+	
+	// map of app. size of time units in milliseconds
+
+	var timeUnitSize = {
+		"second": 1000,
+		"minute": 60 * 1000,
+		"hour": 60 * 60 * 1000,
+		"day": 24 * 60 * 60 * 1000,
+		"month": 30 * 24 * 60 * 60 * 1000,
+		"quarter": 3 * 30 * 24 * 60 * 60 * 1000,
+		"year": 365.2425 * 24 * 60 * 60 * 1000
+	};
+
+	// the allowed tick sizes, after 1 year we use
+	// an integer algorithm
+
+	var baseSpec = [
+		[1, "second"], [2, "second"], [5, "second"], [10, "second"],
+		[30, "second"], 
+		[1, "minute"], [2, "minute"], [5, "minute"], [10, "minute"],
+		[30, "minute"], 
+		[1, "hour"], [2, "hour"], [4, "hour"],
+		[8, "hour"], [12, "hour"],
+		[1, "day"], [2, "day"], [3, "day"],
+		[0.25, "month"], [0.5, "month"], [1, "month"],
+		[2, "month"]
+	];
+
+	// we don't know which variant(s) we'll need yet, but generating both is
+	// cheap
+
+	var specMonths = baseSpec.concat([[3, "month"], [6, "month"],
+		[1, "year"]]);
+	var specQuarters = baseSpec.concat([[1, "quarter"], [2, "quarter"],
+		[1, "year"]]);
+
+	function init(plot) {
+		plot.hooks.processOptions.push(function (plot, options) {
+			$.each(plot.getAxes(), function(axisName, axis) {
+
+				var opts = axis.options;
+
+				if (opts.mode == "time") {
+					axis.tickGenerator = function(axis) {
+
+						var ticks = [];
+						var d = dateGenerator(axis.min, opts);
+						var minSize = 0;
+
+						// make quarter use a possibility if quarters are
+						// mentioned in either of these options
+
+						var spec = (opts.tickSize && opts.tickSize[1] ===
+							"quarter") ||
+							(opts.minTickSize && opts.minTickSize[1] ===
+							"quarter") ? specQuarters : specMonths;
+
+						if (opts.minTickSize != null) {
+							if (typeof opts.tickSize == "number") {
+								minSize = opts.tickSize;
+							} else {
+								minSize = opts.minTickSize[0] * timeUnitSize[opts.minTickSize[1]];
+							}
+						}
+
+						for (var i = 0; i < spec.length - 1; ++i) {
+							if (axis.delta < (spec[i][0] * timeUnitSize[spec[i][1]]
+											  + spec[i + 1][0] * timeUnitSize[spec[i + 1][1]]) / 2
+								&& spec[i][0] * timeUnitSize[spec[i][1]] >= minSize) {
+								break;
+							}
+						}
+
+						var size = spec[i][0];
+						var unit = spec[i][1];
+
+						// special-case the possibility of several years
+
+						if (unit == "year") {
+
+							// if given a minTickSize in years, just use it,
+							// ensuring that it's an integer
+
+							if (opts.minTickSize != null && opts.minTickSize[1] == "year") {
+								size = Math.floor(opts.minTickSize[0]);
+							} else {
+
+								var magn = Math.pow(10, Math.floor(Math.log(axis.delta / timeUnitSize.year) / Math.LN10));
+								var norm = (axis.delta / timeUnitSize.year) / magn;
+
+								if (norm < 1.5) {
+									size = 1;
+								} else if (norm < 3) {
+									size = 2;
+								} else if (norm < 7.5) {
+									size = 5;
+								} else {
+									size = 10;
+								}
+
+								size *= magn;
+							}
+
+							// minimum size for years is 1
+
+							if (size < 1) {
+								size = 1;
+							}
+						}
+
+						axis.tickSize = opts.tickSize || [size, unit];
+						var tickSize = axis.tickSize[0];
+						unit = axis.tickSize[1];
+
+						var step = tickSize * timeUnitSize[unit];
+
+						if (unit == "second") {
+							d.setSeconds(floorInBase(d.getSeconds(), tickSize));
+						} else if (unit == "minute") {
+							d.setMinutes(floorInBase(d.getMinutes(), tickSize));
+						} else if (unit == "hour") {
+							d.setHours(floorInBase(d.getHours(), tickSize));
+						} else if (unit == "month") {
+							d.setMonth(floorInBase(d.getMonth(), tickSize));
+						} else if (unit == "quarter") {
+							d.setMonth(3 * floorInBase(d.getMonth() / 3,
+								tickSize));
+						} else if (unit == "year") {
+							d.setFullYear(floorInBase(d.getFullYear(), tickSize));
+						}
+
+						// reset smaller components
+
+						d.setMilliseconds(0);
+
+						if (step >= timeUnitSize.minute) {
+							d.setSeconds(0);
+						}
+						if (step >= timeUnitSize.hour) {
+							d.setMinutes(0);
+						}
+						if (step >= timeUnitSize.day) {
+							d.setHours(0);
+						}
+						if (step >= timeUnitSize.day * 4) {
+							d.setDate(1);
+						}
+						if (step >= timeUnitSize.month * 2) {
+							d.setMonth(floorInBase(d.getMonth(), 3));
+						}
+						if (step >= timeUnitSize.quarter * 2) {
+							d.setMonth(floorInBase(d.getMonth(), 6));
+						}
+						if (step >= timeUnitSize.year) {
+							d.setMonth(0);
+						}
+
+						var carry = 0;
+						var v = Number.NaN;
+						var prev;
+
+						do {
+
+							prev = v;
+							v = d.getTime();
+							ticks.push(v);
+
+							if (unit == "month" || unit == "quarter") {
+								if (tickSize < 1) {
+
+									// a bit complicated - we'll divide the
+									// month/quarter up but we need to take
+									// care of fractions so we don't end up in
+									// the middle of a day
+
+									d.setDate(1);
+									var start = d.getTime();
+									d.setMonth(d.getMonth() +
+										(unit == "quarter" ? 3 : 1));
+									var end = d.getTime();
+									d.setTime(v + carry * timeUnitSize.hour + (end - start) * tickSize);
+									carry = d.getHours();
+									d.setHours(0);
+								} else {
+									d.setMonth(d.getMonth() +
+										tickSize * (unit == "quarter" ? 3 : 1));
+								}
+							} else if (unit == "year") {
+								d.setFullYear(d.getFullYear() + tickSize);
+							} else {
+								d.setTime(v + step);
+							}
+						} while (v < axis.max && v != prev);
+
+						return ticks;
+					};
+
+					axis.tickFormatter = function (v, axis) {
+
+						var d = dateGenerator(v, axis.options);
+
+						// first check global format
+
+						if (opts.timeformat != null) {
+							return formatDate(d, opts.timeformat, opts.monthNames, opts.dayNames);
+						}
+
+						// possibly use quarters if quarters are mentioned in
+						// any of these places
+
+						var useQuarters = (axis.options.tickSize &&
+								axis.options.tickSize[1] == "quarter") ||
+							(axis.options.minTickSize &&
+								axis.options.minTickSize[1] == "quarter");
+
+						var t = axis.tickSize[0] * timeUnitSize[axis.tickSize[1]];
+						var span = axis.max - axis.min;
+						var suffix = (opts.twelveHourClock) ? " %p" : "";
+						var hourCode = (opts.twelveHourClock) ? "%I" : "%H";
+						var fmt;
+
+						if (t < timeUnitSize.minute) {
+							fmt = hourCode + ":%M:%S" + suffix;
+						} else if (t < timeUnitSize.day) {
+							if (span < 2 * timeUnitSize.day) {
+								fmt = hourCode + ":%M" + suffix;
+							} else {
+								fmt = "%b %d " + hourCode + ":%M" + suffix;
+							}
+						} else if (t < timeUnitSize.month) {
+							fmt = "%b %d";
+						} else if ((useQuarters && t < timeUnitSize.quarter) ||
+							(!useQuarters && t < timeUnitSize.year)) {
+							if (span < timeUnitSize.year) {
+								fmt = "%b";
+							} else {
+								fmt = "%b %Y";
+							}
+						} else if (useQuarters && t < timeUnitSize.year) {
+							if (span < timeUnitSize.year) {
+								fmt = "Q%q";
+							} else {
+								fmt = "Q%q %Y";
+							}
+						} else {
+							fmt = "%Y";
+						}
+
+						var rt = formatDate(d, fmt, opts.monthNames, opts.dayNames);
+
+						return rt;
+					};
+				}
+			});
+		});
+	}
+
+	$.plot.plugins.push({
+		init: init,
+		options: options,
+		name: 'time',
+		version: '1.0'
+	});
+
+	// Time-axis support used to be in Flot core, which exposed the
+	// formatDate function on the plot object.  Various plugins depend
+	// on the function, so we need to re-expose it here.
+
+	$.plot.formatDate = formatDate;
+	$.plot.dateGenerator = dateGenerator;
 
 })(jQuery);
 
@@ -15627,6 +15705,16 @@ var requirejs, require, define;
 })(jQuery);
 
 
+// First two dependencies, jquery.event.drag.js and
+// jquery.mousewheel.js, we put them inline here to save people the
+// effort of downloading them.
+
+/*
+jquery.event.drag.js ~ v1.5 ~ Copyright (c) 2008, Three Dub Media (http://threedubmedia.com)
+Licensed under the MIT License ~ http://threedubmedia.googlecode.com/files/MIT-LICENSE.txt
+*/
+(function(a){function e(h){var k,j=this,l=h.data||{};if(l.elem)j=h.dragTarget=l.elem,h.dragProxy=d.proxy||j,h.cursorOffsetX=l.pageX-l.left,h.cursorOffsetY=l.pageY-l.top,h.offsetX=h.pageX-h.cursorOffsetX,h.offsetY=h.pageY-h.cursorOffsetY;else if(d.dragging||l.which>0&&h.which!=l.which||a(h.target).is(l.not))return;switch(h.type){case"mousedown":return a.extend(l,a(j).offset(),{elem:j,target:h.target,pageX:h.pageX,pageY:h.pageY}),b.add(document,"mousemove mouseup",e,l),i(j,!1),d.dragging=null,!1;case!d.dragging&&"mousemove":if(g(h.pageX-l.pageX)+g(h.pageY-l.pageY)<l.distance)break;h.target=l.target,k=f(h,"dragstart",j),k!==!1&&(d.dragging=j,d.proxy=h.dragProxy=a(k||j)[0]);case"mousemove":if(d.dragging){if(k=f(h,"drag",j),c.drop&&(c.drop.allowed=k!==!1,c.drop.handler(h)),k!==!1)break;h.type="mouseup"}case"mouseup":b.remove(document,"mousemove mouseup",e),d.dragging&&(c.drop&&c.drop.handler(h),f(h,"dragend",j)),i(j,!0),d.dragging=d.proxy=l.elem=!1}return!0}function f(b,c,d){b.type=c;var e=a.event.dispatch.call(d,b);return e===!1?!1:e||b.result}function g(a){return Math.pow(a,2)}function h(){return d.dragging===!1}function i(a,b){a&&(a.unselectable=b?"off":"on",a.onselectstart=function(){return b},a.style&&(a.style.MozUserSelect=b?"":"none"))}a.fn.drag=function(a,b,c){return b&&this.bind("dragstart",a),c&&this.bind("dragend",c),a?this.bind("drag",b?b:a):this.trigger("drag")};var b=a.event,c=b.special,d=c.drag={not:":input",distance:0,which:1,dragging:!1,setup:function(c){c=a.extend({distance:d.distance,which:d.which,not:d.not},c||{}),c.distance=g(c.distance),b.add(this,"mousedown",e,c),this.attachEvent&&this.attachEvent("ondragstart",h)},teardown:function(){b.remove(this,"mousedown",e),this===d.dragging&&(d.dragging=d.proxy=!1),i(this,!0),this.detachEvent&&this.detachEvent("ondragstart",h)}};c.dragstart=c.dragend={setup:function(){},teardown:function(){}}})(jQuery);
+
 /* jquery.mousewheel.min.js
  * Copyright (c) 2011 Brandon Aaron (http://brandonaaron.net)
  * Licensed under the MIT License (LICENSE.txt).
@@ -15642,269 +15730,245 @@ var requirejs, require, define;
 
 
 
+
 (function ($) {
-  var options = {
-    xaxis: {
-      zoomRange: null, // or [number, number] (min range, max range)
-      panRange: null // or [number, number] (min, max)
-    },
-    zoom: {
-      interactive: false,
-      trigger: "dblclick", // or "click" for single click
-      amount: 1.5 // how much to zoom relative to current position, 2 = 200% (zoom in), 0.5 = 50% (zoom out)
-    },
-    pan: {
-      interactive: false,
-      cursor: "move",
-      frameRate: 20
-    }
-  };
-
-  function init(plot) {
-    function onZoomClick(e, zoomOut) {
-      var c = plot.offset();
-      c.left = e.originalEvent.pageX - c.left;
-      c.top = e.originalEvent.pageY - c.top;
-      if (zoomOut) {
-        plot.zoomOut({ center: c });
-      } else {
-        plot.zoom({ center: c });
-      }
-    }
-
-    function onMouseWheel(e, delta) {
-      e.preventDefault();
-      onZoomClick(e, delta < 0);
-      return false;
-    }
-
-    var prevCursor = 'default', prevPageX = 0, prevPageY = 0,
-      panTimeout = null;
-
-    function onDragStart(e) {
-      if (e.which != 1)  // only accept left-click
-        return false;
-      var c = plot.getPlaceholder().css('cursor');
-      if (c)
-        prevCursor = c;
-      plot.getPlaceholder().css('cursor', plot.getOptions().pan.cursor);
-      prevPageX = e.originalEvent.pageX;
-      prevPageY = e.originalEvent.pageY;
-
-      plot.getPlaceholder().trigger("plotclick");
-    }
-
-    function onDrag(e) {
-      var frameRate = plot.getOptions().pan.frameRate;
-      if (panTimeout || !frameRate)
-        return;
-
-      panTimeout = setTimeout(function () {
-        plot.pan({ left: prevPageX - e.originalEvent.pageX,
-          top: prevPageY - e.originalEvent.pageY });
-        prevPageX = e.originalEvent.pageX;
-        prevPageY = e.originalEvent.pageY;
-
-        panTimeout = null;
-      }, 1 / frameRate * 1000);
-    }
-
-    function onDragEnd(e) {
-      if (panTimeout) {
-        clearTimeout(panTimeout);
-        panTimeout = null;
-      }
-
-      plot.getPlaceholder().css('cursor', prevCursor);
-      plot.pan({ left: prevPageX - e.originalEvent.pageX,
-        top: prevPageY - e.originalEvent.pageY });
-    }
-
-    function bindEvents(plot, eventHolder) {
-      var o = plot.getOptions();
-      if (o.zoom.interactive) {
-        eventHolder[o.zoom.trigger](onZoomClick);
-        eventHolder.mousewheel(onMouseWheel);
-      }
-
-      if (o.pan.interactive) {
-        $('.flot-overlay', plot.getPlaceholder()).attr('draggable', true);
-        eventHolder.bind("dragstart", onDragStart);
-        eventHolder.bind("drag", onDrag);
-        eventHolder.bind("dragend", onDragEnd);
-      }
-    }
-
-    plot.zoomOut = function (args) {
-      if (!args)
-        args = {};
-
-      if (!args.amount)
-        args.amount = plot.getOptions().zoom.amount;
-
-      args.amount = 1 / args.amount;
-      plot.zoom(args);
+    var options = {
+        xaxis: {
+            zoomRange: null, // or [number, number] (min range, max range)
+            panRange: null // or [number, number] (min, max)
+        },
+        zoom: {
+            interactive: false,
+            trigger: "dblclick", // or "click" for single click
+            amount: 1.5 // how much to zoom relative to current position, 2 = 200% (zoom in), 0.5 = 50% (zoom out)
+        },
+        pan: {
+            interactive: false,
+            cursor: "move",
+            frameRate: 20
+        }
     };
 
-    plot.zoom = function (args) {
-      if (!args)
-        args = {};
+    function init(plot) {
+        function onZoomClick(e, zoomOut) {
+            var c = plot.offset();
+            c.left = e.pageX - c.left;
+            c.top = e.pageY - c.top;
+            if (zoomOut)
+                plot.zoomOut({ center: c });
+            else
+                plot.zoom({ center: c });
+        }
 
-      var c = args.center,
-        amount = args.amount || plot.getOptions().zoom.amount,
-        w = plot.width(), h = plot.height();
+        function onMouseWheel(e, delta) {
+            e.preventDefault();
+            onZoomClick(e, delta < 0);
+            return false;
+        }
+        
+        var prevCursor = 'default', prevPageX = 0, prevPageY = 0,
+            panTimeout = null;
 
-      if (!c)
-        c = { left: w / 2, top: h / 2 };
+        function onDragStart(e) {
+            if (e.which != 1)  // only accept left-click
+                return false;
+            var c = plot.getPlaceholder().css('cursor');
+            if (c)
+                prevCursor = c;
+            plot.getPlaceholder().css('cursor', plot.getOptions().pan.cursor);
+            prevPageX = e.pageX;
+            prevPageY = e.pageY;
+        }
+        
+        function onDrag(e) {
+            var frameRate = plot.getOptions().pan.frameRate;
+            if (panTimeout || !frameRate)
+                return;
 
-      var xf = c.left / w,
-        yf = c.top / h,
-        minmax = {
-          x: {
-            min: c.left - xf * w / amount,
-            max: c.left + (1 - xf) * w / amount
-          },
-          y: {
-            min: c.top - yf * h / amount,
-            max: c.top + (1 - yf) * h / amount
-          }
+            panTimeout = setTimeout(function () {
+                plot.pan({ left: prevPageX - e.pageX,
+                           top: prevPageY - e.pageY });
+                prevPageX = e.pageX;
+                prevPageY = e.pageY;
+                                                    
+                panTimeout = null;
+            }, 1 / frameRate * 1000);
+        }
+
+        function onDragEnd(e) {
+            if (panTimeout) {
+                clearTimeout(panTimeout);
+                panTimeout = null;
+            }
+                    
+            plot.getPlaceholder().css('cursor', prevCursor);
+            plot.pan({ left: prevPageX - e.pageX,
+                       top: prevPageY - e.pageY });
+        }
+        
+        function bindEvents(plot, eventHolder) {
+            var o = plot.getOptions();
+            if (o.zoom.interactive) {
+                eventHolder[o.zoom.trigger](onZoomClick);
+                eventHolder.mousewheel(onMouseWheel);
+            }
+
+            if (o.pan.interactive) {
+                eventHolder.bind("dragstart", { distance: 10 }, onDragStart);
+                eventHolder.bind("drag", onDrag);
+                eventHolder.bind("dragend", onDragEnd);
+            }
+        }
+
+        plot.zoomOut = function (args) {
+            if (!args)
+                args = {};
+            
+            if (!args.amount)
+                args.amount = plot.getOptions().zoom.amount;
+
+            args.amount = 1 / args.amount;
+            plot.zoom(args);
+        };
+        
+        plot.zoom = function (args) {
+            if (!args)
+                args = {};
+            
+            var c = args.center,
+                amount = args.amount || plot.getOptions().zoom.amount,
+                w = plot.width(), h = plot.height();
+
+            if (!c)
+                c = { left: w / 2, top: h / 2 };
+                
+            var xf = c.left / w,
+                yf = c.top / h,
+                minmax = {
+                    x: {
+                        min: c.left - xf * w / amount,
+                        max: c.left + (1 - xf) * w / amount
+                    },
+                    y: {
+                        min: c.top - yf * h / amount,
+                        max: c.top + (1 - yf) * h / amount
+                    }
+                };
+
+            $.each(plot.getAxes(), function(_, axis) {
+                var opts = axis.options,
+                    min = minmax[axis.direction].min,
+                    max = minmax[axis.direction].max,
+                    zr = opts.zoomRange,
+                    pr = opts.panRange;
+
+                if (zr === false) // no zooming on this axis
+                    return;
+                    
+                min = axis.c2p(min);
+                max = axis.c2p(max);
+                if (min > max) {
+                    // make sure min < max
+                    var tmp = min;
+                    min = max;
+                    max = tmp;
+                }
+
+                //Check that we are in panRange
+                if (pr) {
+                    if (pr[0] != null && min < pr[0]) {
+                        min = pr[0];
+                    }
+                    if (pr[1] != null && max > pr[1]) {
+                        max = pr[1];
+                    }
+                }
+
+                var range = max - min;
+                if (zr &&
+                    ((zr[0] != null && range < zr[0] && amount >1) ||
+                     (zr[1] != null && range > zr[1] && amount <1)))
+                    return;
+            
+                opts.min = min;
+                opts.max = max;
+            });
+            
+            plot.setupGrid();
+            plot.draw();
+            
+            if (!args.preventEvent)
+                plot.getPlaceholder().trigger("plotzoom", [ plot, args ]);
         };
 
+        plot.pan = function (args) {
+            var delta = {
+                x: +args.left,
+                y: +args.top
+            };
 
-      $.each(plot.getAxes(), function (_, axis) {
-        var opts = axis.options,
-          min = minmax[axis.direction].min,
-          max = minmax[axis.direction].max,
-          zr = opts.zoomRange,
-          pr = opts.panRange;
+            if (isNaN(delta.x))
+                delta.x = 0;
+            if (isNaN(delta.y))
+                delta.y = 0;
 
-        if (zr === false) // no zooming on this axis
-          return;
+            $.each(plot.getAxes(), function (_, axis) {
+                var opts = axis.options,
+                    min, max, d = delta[axis.direction];
 
+                min = axis.c2p(axis.p2c(axis.min) + d),
+                max = axis.c2p(axis.p2c(axis.max) + d);
 
-        min = axis.c2p(min);
-        max = axis.c2p(max);
-        if (min > max) {
-          // make sure min < max
-          var tmp = min;
-          min = max;
-          max = tmp;
+                var pr = opts.panRange;
+                if (pr === false) // no panning on this axis
+                    return;
+                
+                if (pr) {
+                    // check whether we hit the wall
+                    if (pr[0] != null && pr[0] > min) {
+                        d = pr[0] - min;
+                        min += d;
+                        max += d;
+                    }
+                    
+                    if (pr[1] != null && pr[1] < max) {
+                        d = pr[1] - max;
+                        min += d;
+                        max += d;
+                    }
+                }
+                
+                opts.min = min;
+                opts.max = max;
+            });
+            
+            plot.setupGrid();
+            plot.draw();
+            
+            if (!args.preventEvent)
+                plot.getPlaceholder().trigger("plotpan", [ plot, args ]);
+        };
+
+        function shutdown(plot, eventHolder) {
+            eventHolder.unbind(plot.getOptions().zoom.trigger, onZoomClick);
+            eventHolder.unbind("mousewheel", onMouseWheel);
+            eventHolder.unbind("dragstart", onDragStart);
+            eventHolder.unbind("drag", onDrag);
+            eventHolder.unbind("dragend", onDragEnd);
+            if (panTimeout)
+                clearTimeout(panTimeout);
         }
-
-
-
-        //Check that we are in panRange
-        if (pr) {
-          if (pr[0] != null && min < pr[0]) {
-            min = pr[0];
-          }
-          if (pr[1] != null && max > pr[1]) {
-            max = pr[1];
-          }
-        }
-
-
-        var range = max - min;
-        if (zr &&
-          ((zr[0] != null && range < zr[0]) ||
-            (zr[1] != null && range > zr[1]))) {
-          return;
-        }
-
-        if (_ === 'xaxis') {
-          plot.getOptions().xaxes[0].ticks = [min, max];
-        }
-
-
-
-        opts.min = min;
-        opts.max = max;
-      });
-
-      plot.setupGrid();
-      plot.draw();
-
-      if (!args.preventEvent)
-        plot.getPlaceholder().trigger("plotzoom", [ plot, args ]);
-    };
-
-    plot.pan = function (args) {
-      var delta = {
-        x: +args.left,
-        y: +args.top
-      };
-
-      if (isNaN(delta.x))
-        delta.x = 0;
-      if (isNaN(delta.y))
-        delta.y = 0;
-
-      $.each(plot.getAxes(), function (_, axis) {
-        var opts = axis.options,
-          min, max, d = delta[axis.direction];
-
-        min = axis.c2p(axis.p2c(axis.min) + d);
-        max = axis.c2p(axis.p2c(axis.max) + d);
-
-        var pr = opts.panRange;
-        if (pr === false) // no panning on this axis
-          return;
-
-
-        if (pr) {
-          // check whether we hit the wall
-          if (pr[0] != null && pr[0] > min) {
-            d = pr[0] - min;
-            min += d;
-            max += d;
-          }
-
-          if (pr[1] != null && pr[1] < max) {
-            d = pr[1] - max;
-            min += d;
-            max += d;
-          }
-        }
-
-
-
-        opts.min = min;
-        if (_ === 'xaxis') {
-          plot.getOptions().xaxes[0].ticks = [min, plot.getOptions().xaxes[0].ticks[1]];
-        }
-        opts.max = max;
-        if (_ === 'xaxis') {
-            plot.getOptions().xaxes[0].ticks = [plot.getOptions().xaxes[0].ticks[0], max];
-        }
-      });
-
-      plot.setupGrid();
-      plot.draw();
-
-      if (!args.preventEvent)
-        plot.getPlaceholder().trigger("plotpan", [ plot, args ]);
-    };
-
-    function shutdown(plot, eventHolder) {
-      eventHolder.unbind(plot.getOptions().zoom.trigger, onZoomClick);
-      eventHolder.unbind("mousewheel", onMouseWheel);
-      eventHolder.unbind("dragstart", onDragStart);
-      eventHolder.unbind("drag", onDrag);
-      eventHolder.unbind("dragend", onDragEnd);
-      if (panTimeout)
-        clearTimeout(panTimeout);
+        
+        plot.hooks.bindEvents.push(bindEvents);
+        plot.hooks.shutdown.push(shutdown);
     }
-
-    plot.hooks.bindEvents.push(bindEvents);
-    plot.hooks.shutdown.push(shutdown);
-  }
-
-  $.plot.plugins.push({
-    init: init,
-    options: options,
-    name: 'navigate',
-    version: '1.3'
-  });
+    
+    $.plot.plugins.push({
+        init: init,
+        options: options,
+        name: 'navigate',
+        version: '1.3'
+    });
 })(jQuery);
 
 String.prototype.md5 = function () {

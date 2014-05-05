@@ -300,6 +300,7 @@ var StreamNode = module.exports = TreeNode.implement(
 
 StreamNode.registeredEventNodeTypes = {
   'NotesEventsNode' : require('./eventsNode/NotesEventsNode.js'),
+  'ActivitiesEventsNode' : require('./eventsNode/ActivitiesEventsNode.js'),
   'PositionsEventsNode' : require('./eventsNode/PositionsEventsNode.js'),
   'PicturesEventsNode' : require('./eventsNode/PicturesEventsNode.js'),
   'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),

@@ -4,7 +4,8 @@ var _ = require('underscore'),
   ChartView = require('./../numericals/ChartView.js'),
   Model = require('./../numericals/ChartModel.js'),
   TimeSeriesCollection = require('./../numericals/TimeSeriesCollection.js'),
-  TimeSeriesModel = require('./../numericals/TimeSeriesModel.js');
+  TimeSeriesModel = require('./../numericals/TimeSeriesModel.js'),
+  Settings = require('./../numericals/utils/ChartSettings.js');
 
 var Controller = module.exports = function ($modal, events, treemap) {
   this.$modal = $modal;
@@ -289,13 +290,20 @@ _.extend(Controller.prototype, {
           eventsModel = matching[0];
           eventsModel.get('events').push(eventsToAdd[i]);
         } else {
+          var s = new Settings(eventsToAdd[i].stream,
+            eventsToAdd[i].type, null);
           eventsModel = new TimeSeriesModel({
             events: [eventsToAdd[i]],
             connectionId: eventsToAdd[i].connection.id,
             streamId: eventsToAdd[i].streamId,
             streamName: eventsToAdd[i].stream.name,
             type: eventsToAdd[i].type,
-            category: this.getEventsCategory(eventsToAdd[i])
+            category: this.getEventsCategory(eventsToAdd[i]),
+            color: s.get('color'),
+            style: s.get('style'),
+            transform: s.get('transform'),
+            interval: s.get('interval'),
+            fitting: s.get('fitting')
           });
           eventsCollection.add(eventsModel);
         }

@@ -1,8 +1,8 @@
 
 /* global $, navigator, window, document */
 var Backbone = require('backbone'),
-  Modal = require('./modal.js'),
-  _ = require('underscore');
+    Modal = require('./modal.js'),
+    _ = require('underscore');
 /**
  timeViewTpl , 'tpl!../bower_components/browser-timeline/templates/time_view.html'
  customTimeModalTpl, 'tpl!../bower_components/browser-timeline/templates/custom_time_modal.html'
@@ -111,7 +111,7 @@ var CustomTimeModal = Modal.extend({
     }
 
     this.trigger('ok', 'custom', false, this.$from.datepicker('getDate'),
-      this.$to.datepicker('getDate'));
+        this.$to.datepicker('getDate'));
 
     this.close();
     return false;
@@ -190,10 +190,10 @@ module.exports = Backbone.View.extend({
       $('.nav-arrow').bind('touchstart', function () {
         startTime = new Date().getTime();
       }).bind('touchend', function () {
-          endTime = new Date().getTime();
-          longpress = (endTime - startTime >= 500);
-          self.onArrowClick($(this), longpress);
-        });
+            endTime = new Date().getTime();
+            longpress = (endTime - startTime >= 500);
+            self.onArrowClick($(this), longpress);
+          });
     } else {
       $('.nav-arrow').on('click', function () {
         self.onArrowClick($(this), longpress);
@@ -212,9 +212,9 @@ module.exports = Backbone.View.extend({
   setInitialWidth: function () {
     var visibleWidth = $('#timeframe').width();
     /*  var visibleWidth = $('#timeframe').width() - 2 *
-    ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
-      30 - $('#timeline-menu').outerWidth() -
-      parseInt($('#timeline-menu').css('marginRight'), null); */
+     ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
+     30 - $('#timeline-menu').outerWidth() -
+     parseInt($('#timeline-menu').css('marginRight'), null); */
     $('#timeline-scroll-wrapper').width(visibleWidth);
     var initialLeftPosition = -visibleWidth;
     this.$timeline.width(3 * visibleWidth).css('left', initialLeftPosition + 'px').data({
@@ -225,16 +225,16 @@ module.exports = Backbone.View.extend({
   },
   setLimit: function (from, to) {
     this.limitFrom = !from ? 0 :
-      from > this.limitFrom && this.limitFrom !== 0 ? this.limitFrom : from;
+        from > this.limitFrom && this.limitFrom !== 0 ? this.limitFrom : from;
     this.limitTo = !to ? Infinity :
-      to < this.limitTo && this.limitTo !== Infinity ? this.limitTo : to;
+        to < this.limitTo && this.limitTo !== Infinity ? this.limitTo : to;
   },
   _checkLimitDates: function (dateFrom, dateTo) {
     console.log('From:', this.limitFrom, dateFrom, 'To:', this.limitTo, dateTo);
-   /*dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
-    dateFrom = dateFrom >= this.limitTo ? this.frameFrom : dateFrom;
-    dateTo = dateTo > this.limitTo ? this.limitTo : dateTo;
-    dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo; */
+    /*dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
+     dateFrom = dateFrom >= this.limitTo ? this.frameFrom : dateFrom;
+     dateTo = dateTo > this.limitTo ? this.limitTo : dateTo;
+     dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo; */
     if (dateFrom > dateTo) {
       dateFrom = this.frameFrom;
       dateTo = this.frameTo;
@@ -248,7 +248,7 @@ module.exports = Backbone.View.extend({
   },
   onFiltersChanged: function (changes) {
     if (this.frameFrom === changes.from.getTime() &&
-      this.frameTo === changes.to.getTime()) {
+        this.frameTo === changes.to.getTime()) {
       this.timeframeChanged = false;
       this.fillTimeline();
       return;
@@ -264,7 +264,7 @@ module.exports = Backbone.View.extend({
       var devDateFrom = new Date(dateFrom);
       var devDateTo = new Date(dateTo);
       console.log('devMode - onFiltersChanged - dateFrom:', devDateFrom.toUTCString(),
-        'dateTo:', devDateTo.toUTCString());
+          'dateTo:', devDateTo.toUTCString());
       this.onFiltersChanged({
         from: devDateFrom,
         to: devDateTo,
@@ -307,27 +307,27 @@ module.exports = Backbone.View.extend({
       var min = Math.floor(duration_in_sec / 60);
       res = duration_in_sec % 60;
       interval_label = min + ' min' + (min > 1 ? 's' : '') +
-        (res === 0 ? '' : (' ' + res + ' sec'));
+          (res === 0 ? '' : (' ' + res + ' sec'));
     } else if (duration_in_sec < 60 * 60 * 24) {
       var hrs = Math.floor(duration_in_sec / (60 * 60));
       res = parseInt((duration_in_sec % (60 * 60)) / 60, null);
       interval_label = hrs + ' hr' + (hrs > 1 ? 's' : '') +
-        (res === 0 ? '' : (' ' + res + ' min') + (res > 1 ? 's' : ''));
+          (res === 0 ? '' : (' ' + res + ' min') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 7) {
       var days = Math.floor(duration_in_sec / (60 * 60 * 24));
       res = parseInt((duration_in_sec % (60 * 60 * 24)) / (60 * 60), null);
       interval_label = days + ' day' + (days > 1 ? 's' : '') +
-        (res === 0 ? '' : (' ' + res + ' hr') + (res > 1 ? 's' : ''));
+          (res === 0 ? '' : (' ' + res + ' hr') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 30) {
       var weeks = Math.floor(duration_in_sec / (60 * 60 * 24 * 7));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 7)) / (60 * 60 * 24), null);
       interval_label = weeks + ' week' + (weeks > 1 ? 's' : '') +
-        (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
+          (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
     } else if (duration_in_sec < 60 * 60 * 24 * 365) {
       var months = Math.floor(duration_in_sec / (60 * 60 * 24 * 30));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 30)) / (60 * 60 * 24), null);
       interval_label = months + ' month' + (months > 1 ? 's' : '') +
-        (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
+          (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
     } else {
       var years = Math.floor(duration_in_sec / (60 * 60 * 24 * 365));
       res = parseInt((duration_in_sec % (60 * 60 * 24 * 365)) / (60 * 60 * 24), null);
@@ -376,7 +376,7 @@ module.exports = Backbone.View.extend({
 
       var calculateDelta = function () {
         return (self.frameTo - self.frameFrom) /
-               ($endMarker.data('left') - $startMarker.data('left'));
+            ($endMarker.data('left') - $startMarker.data('left'));
       };
       delta = calculateDelta();
       var showFocusLabel = function () {
@@ -417,7 +417,7 @@ module.exports = Backbone.View.extend({
         }
         var highlightedTime = self.frameFrom +
             ($focusMarker.position().left -  $startMarker.position().left) *
-            delta;
+                delta;
         self.setLabelText($focusLabel, highlightedTime);
         self.triggerHighlight(highlightedTime);
       };
@@ -523,17 +523,17 @@ module.exports = Backbone.View.extend({
     var startConstraint = $startMarker.data('left') + (markerWidth / 2);
     var endConstraint = $endMarker.data('left') + (markerWidth / 2);
     $startMarker.draggable('option', 'containment',
-      [leftConstraint, 0, endConstraint - (markerWidth / 2), 0]);
+        [leftConstraint, 0, endConstraint - (markerWidth / 2), 0]);
     $startLabel.draggable('option', 'containment',
-      [leftConstraint, 0, endConstraint - (this.labelWidth + this.labelTipWidth), 0]);
+        [leftConstraint, 0, endConstraint - (this.labelWidth + this.labelTipWidth), 0]);
     $endMarker.draggable('option', 'containment',
-      [startConstraint - (markerWidth / 2), 0, rightConstraint, 0]);
+        [startConstraint - (markerWidth / 2), 0, rightConstraint, 0]);
     $endLabel.draggable('option', 'containment',
-      [startConstraint + this.labelTipWidth, 0, rightConstraint, 0]);
+        [startConstraint + this.labelTipWidth, 0, rightConstraint, 0]);
     $focusMarker.draggable('option', 'containment',
-      [startConstraint  - (markerWidth / 2), 0, endConstraint  - (markerWidth / 2), 0]);
+        [startConstraint  - (markerWidth / 2), 0, endConstraint  - (markerWidth / 2), 0]);
     $focusLabel.draggable('option', 'containment',
-      [startConstraint - (this.labelWidth / 2), 0, endConstraint - (this.labelWidth / 2), 0]);
+        [startConstraint - (this.labelWidth / 2), 0, endConstraint - (this.labelWidth / 2), 0]);
   },
   setMarkers: function () {
     if ($('#timeframe #start-marker').length === 0) {
@@ -619,11 +619,11 @@ module.exports = Backbone.View.extend({
       var initMonth = this.translate('mon_' + initialDate.getMonth());
       var initDay = initialDate.getDate();
       var initHours = initialDate.getHours() < 10 ?
-        '0' + initialDate.getHours() :
-        initialDate.getHours();
+          '0' + initialDate.getHours() :
+          initialDate.getHours();
       var initMinutes = initialDate.getMinutes() < 10 ?
-        '0' + initialDate.getMinutes() :
-        initialDate.getMinutes();
+          '0' + initialDate.getMinutes() :
+          initialDate.getMinutes();
       if (year !== initYear) {
         $('#' + elementId + '-year').removeClass('label-fixed');
       } else {
@@ -664,9 +664,9 @@ module.exports = Backbone.View.extend({
   },
   setSpan: function () {
     var frame_duration = this.frameTo - this.frameFrom;
-   // var frame_duration_sec = parseInt((frame_duration / 1000).toFixed(), null);
+    // var frame_duration_sec = parseInt((frame_duration / 1000).toFixed(), null);
     var numOfGraduations = parseInt((this.proportionTimeFrame *
-      $('#timeline-scroll-wrapper').width() / this.graduationStep).toFixed(), null);
+        $('#timeline-scroll-wrapper').width() / this.graduationStep).toFixed(), null);
     this.spanStep = 1;
     this.span = parseInt((frame_duration / (numOfGraduations * this.spanStep)).toFixed(), null);
   },
@@ -685,36 +685,36 @@ module.exports = Backbone.View.extend({
     var focus_date = new Date();
 
     switch (spanName) {
-    case 'day':
-      focus_date.setHours(focus_date.getHours() - 12);
-      this.frameFrom = new Date(focus_date.getTime()).getTime();
-      focus_date.setHours(focus_date.getHours() + 25);
-      this.frameTo = new Date(focus_date.getTime()).getTime();
-      break;
-    case 'month':
-      focus_date.setDate(focus_date.getDate() - 15);
-      this.frameFrom = new Date(focus_date.getTime()).getTime();
-      focus_date.setDate(focus_date.getDate() + 31);
-      this.frameTo = new Date(focus_date.getTime()).getTime();
-      break;
-    case 'year':
-      focus_date.setDate(focus_date.getDate() - 182);
-      this.frameFrom = new Date(focus_date.getTime()).getTime();
-      focus_date.setDate(focus_date.getDate() + 365);
-      this.frameTo = new Date(focus_date.getTime()).getTime();
-      break;
-    case 'custom':
-      this.frameFrom = from;
-      this.frameTo = to;
-      if (this.frameTo < this.frameFrom) {
-        var temp = new Date(this.frameTo);
-        this.frameTo = this.frameFrom;
-        this.frameFrom = temp;
-      }
-      this.span = this.frameTo.getTime() - this.frameFrom.getTime();
-      break;
-    default:
-      break;
+      case 'day':
+        focus_date.setHours(focus_date.getHours() - 12);
+        this.frameFrom = new Date(focus_date.getTime()).getTime();
+        focus_date.setHours(focus_date.getHours() + 25);
+        this.frameTo = new Date(focus_date.getTime()).getTime();
+        break;
+      case 'month':
+        focus_date.setDate(focus_date.getDate() - 15);
+        this.frameFrom = new Date(focus_date.getTime()).getTime();
+        focus_date.setDate(focus_date.getDate() + 31);
+        this.frameTo = new Date(focus_date.getTime()).getTime();
+        break;
+      case 'year':
+        focus_date.setDate(focus_date.getDate() - 182);
+        this.frameFrom = new Date(focus_date.getTime()).getTime();
+        focus_date.setDate(focus_date.getDate() + 365);
+        this.frameTo = new Date(focus_date.getTime()).getTime();
+        break;
+      case 'custom':
+        this.frameFrom = from;
+        this.frameTo = to;
+        if (this.frameTo < this.frameFrom) {
+          var temp = new Date(this.frameTo);
+          this.frameTo = this.frameFrom;
+          this.frameFrom = temp;
+        }
+        this.span = this.frameTo.getTime() - this.frameFrom.getTime();
+        break;
+      default:
+        break;
     }
     if (updateTimeline) {
       /* Force timeline update by faking a span change. */
@@ -742,45 +742,45 @@ module.exports = Backbone.View.extend({
     $('#focus-marker-label, #focus-marker-arrow').fadeOut();
 
     this.$timeline.animate({
-        left: (isPrevArrow ? '+=' : '-=') + $('#selected-frame').outerWidth() + 'px'
-      },
-      {
-        duration: gapSpeed * self.arrowPressDuration,
-        easing: 'easeOutCirc',
-        progress: function () {
-          var nextStartDate = null, nextEndDate = null;
-          var currentStartDate = new Date($('#start-marker').data('currentDate'));
-          var currentEndDate = new Date($('#end-marker').data('currentDate'));
-         // var currentFocusDate = new Date($('#focus-marker').data('currentDate'));
+      left: (isPrevArrow ? '+=' : '-=') + $('#selected-frame').outerWidth() + 'px'
+    },
+    {
+      duration: gapSpeed * self.arrowPressDuration,
+      easing: 'easeOutCirc',
+      progress: function () {
+        var nextStartDate = null, nextEndDate = null;
+        var currentStartDate = new Date($('#start-marker').data('currentDate'));
+        var currentEndDate = new Date($('#end-marker').data('currentDate'));
+        // var currentFocusDate = new Date($('#focus-marker').data('currentDate'));
 
-          nextStartDate = isPrevArrow ?
+        nextStartDate = isPrevArrow ?
             new Date(currentStartDate.getTime() - (self.spanStep * self.span)) :
             new Date(currentStartDate.getTime() + (self.spanStep * self.span));
-          nextEndDate = isPrevArrow ?
+        nextEndDate = isPrevArrow ?
             new Date(currentEndDate.getTime() - (self.spanStep * self.span)) :
             new Date(currentEndDate.getTime() + (self.spanStep * self.span));
-          self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
-          self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
-          $('#start-marker').data('currentDate', nextStartDate.getTime());
-          $('#end-marker').data('currentDate', nextEndDate.getTime());
-        },
-        done: function () {
-          $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-          var gap = gapSpeed * (self.frameTo - self.frameFrom);
-          var dateFrom = isPrevArrow ? self.frameFrom - gap : self.frameFrom + gap;
-          var dateTo = isPrevArrow ? self.frameTo - gap : self.frameTo + gap;
-          var dates = self._checkLimitDates(dateFrom, dateTo);
-          dateTo = dates.to;
-          dateFrom = dates.from;
-          self.timeframeChanged = true;
-          self.triggerFilter(dateFrom, dateTo);
-          dates = {'from': new Date(dateFrom), 'to': new Date(dateTo)};
-          self.setTimelineDates(dates, self.graduation);
-          self.setMarkers();
-          var initialLeftPosition = self.$timeline.data('initialLeftPosition');
-          self.$timeline.css({'left': initialLeftPosition + 'px'});
-        }
-      });
+        self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
+        self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
+        $('#start-marker').data('currentDate', nextStartDate.getTime());
+        $('#end-marker').data('currentDate', nextEndDate.getTime());
+      },
+      done: function () {
+        $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
+        var gap = gapSpeed * (self.frameTo - self.frameFrom);
+        var dateFrom = isPrevArrow ? self.frameFrom - gap : self.frameFrom + gap;
+        var dateTo = isPrevArrow ? self.frameTo - gap : self.frameTo + gap;
+        var dates = self._checkLimitDates(dateFrom, dateTo);
+        dateTo = dates.to;
+        dateFrom = dates.from;
+        self.timeframeChanged = true;
+        self.triggerFilter(dateFrom, dateTo);
+        dates = {'from': new Date(dateFrom), 'to': new Date(dateTo)};
+        self.setTimelineDates(dates, self.graduation);
+        self.setMarkers();
+        var initialLeftPosition = self.$timeline.data('initialLeftPosition');
+        self.$timeline.css({'left': initialLeftPosition + 'px'});
+      }
+    });
   },
   onClickMenu: function () {
     $('#menu-items').toggle();
@@ -811,8 +811,8 @@ module.exports = Backbone.View.extend({
       return;
     }
     var mouseProto = $.ui.mouse.prototype,
-      _mouseInit = mouseProto._mouseInit,
-      touchHandled;
+        _mouseInit = mouseProto._mouseInit,
+        touchHandled;
 
     function simulateMouseEvent(event, simulatedType) { //use this function to simulate mouse event
       // Ignore multi-touch events
@@ -822,25 +822,25 @@ module.exports = Backbone.View.extend({
       event.preventDefault(); //use this to prevent scrolling during ui use
 
       var touch = event.originalEvent.changedTouches[0],
-        simulatedEvent = document.createEvent('MouseEvents');
+          simulatedEvent = document.createEvent('MouseEvents');
       // Initialize the simulated mouse event using the touch event's coordinates
       simulatedEvent.initMouseEvent(
-        simulatedType,    // type
-        true,             // bubbles
-        true,             // cancelable
-        window,           // view
-        1,                // detail
-        touch.screenX,    // screenX
-        touch.screenY,    // screenY
-        touch.clientX,    // clientX
-        touch.clientY,    // clientY
-        false,            // ctrlKey
-        false,            // altKey
-        false,            // shiftKey
-        false,            // metaKey
-        0,                // button
-        null              // relatedTarget
-     );
+          simulatedType,    // type
+          true,             // bubbles
+          true,             // cancelable
+          window,           // view
+          1,                // detail
+          touch.screenX,    // screenX
+          touch.screenY,    // screenY
+          touch.clientX,    // clientX
+          touch.clientY,    // clientY
+          false,            // ctrlKey
+          false,            // altKey
+          false,            // shiftKey
+          false,            // metaKey
+          0,                // button
+          null              // relatedTarget
+      );
 
       // Dispatch the simulated event to the target element
       event.target.dispatchEvent(simulatedEvent);
@@ -895,9 +895,9 @@ module.exports = Backbone.View.extend({
       var self = this;
       // Delegate the touch handlers to the widget's element
       self.element
-        .on('touchstart', $.proxy(self, '_touchStart'))
-        .on('touchmove', $.proxy(self, '_touchMove'))
-        .on('touchend', $.proxy(self, '_touchEnd'));
+          .on('touchstart', $.proxy(self, '_touchStart'))
+          .on('touchmove', $.proxy(self, '_touchMove'))
+          .on('touchend', $.proxy(self, '_touchEnd'));
 
       // Call the original $.ui.mouse init method
       _mouseInit.call(self);

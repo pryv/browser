@@ -1,3 +1,4 @@
+/* global $*/
 var _ = require('underscore'),
   ActivityView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -77,8 +78,33 @@ module.exports = CommonModel.implement(
         tags: this.eventDisplayed.tags,
         time: this.eventDisplayed.time,
         type: this.eventDisplayed.type,
-        eventsNbr: _.size(this.events)
+        eventsNbr: _.size(this.events),
+        dimensions: this.computeDimension()
       };
+    },
+    computeDimension: function () {
+      var chartSizeWidth = null;
+      var chartSizeHeight = null;
+
+      if (this.width !== null) {
+        chartSizeWidth = this.width;
+      } else if ($('#' + this.container).length)  {
+        chartSizeWidth = $('#' + this.container).width();
+      } else if ($('#' + this.container).length)  {
+        chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+      }
+
+      if (this.height !== null) {
+        chartSizeHeight = this.height;
+      } else if ($('#' + this.container).length)  {
+        chartSizeHeight = $('#' + this.container).height();
+      } else if ($('#' + this.container).length)  {
+        chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+      }
+
+      console.log('computeDimensions model', {width: chartSizeWidth, height: chartSizeHeight});
+
+      return {width: chartSizeWidth, height: chartSizeHeight};
     }
   }
 );

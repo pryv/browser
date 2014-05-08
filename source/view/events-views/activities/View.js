@@ -11,12 +11,13 @@ module.exports = Marionette.ItemView.extend({
   options: null,
   data: null,
   initialize: function () {
-    console.log('CTOR activity pryv VIEW');
 
     this.listenTo(this.model, 'change', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
     this.$el.addClass('animated node');
+
+    this.plot = null;
 
     this.options = this.model.get('options');
     this.data = this.model.get('data');
@@ -40,39 +41,40 @@ module.exports = Marionette.ItemView.extend({
       $('#' + this.container).removeClass('animated fadeIn');
       $('#' + this.container).html(this.el);
 
-
-      console.log($(this.legendContainer));
-      console.log($(this.chartContainer));
-      console.log($(this.fullChart));
-
       var d = this.model.get('dimensions');
       var square =  (d.width < d.height) ? d.width: d.height;
-      this.fullChart.css(d);
+      $(this.fullChart).css(d);
 
-
+      var cssLegendContainer =  null;
+      var cssChartContainer = null;
       if (d.width < d.height) {
-        this.legendContainer.css({
+        cssLegendContainer = {
           top: 0 + 'px',
           height: d.height - square + 'px',
           width: d.width + 'px'
-        });
-        this.chartContainer.css({
-          top: d.height - square + 'px',
+        };
+        cssChartContainer = {
           height: square + 'px',
           width: square + 'px'
-        });
+        };
       } else {
-        this.legendContainer.css({
+        cssLegendContainer = {
           left: 0 + 'px',
           height: d.height + 'px',
-          width: d.width - square + 'px'
-        });
-        this.chartContainer.css({
-          left: d.width - square + 'px',
+          width: d.width - square + 'px',
+          position: 'absolute'
+        };
+        cssChartContainer = {
           height: square + 'px',
-          width: square + 'px'
-        });
+          width: square + 'px',
+          left: d.width - square + 'px',
+          float: 'right',
+          position: 'absolute'
+        };
       }
+      $(this.legendContainer).css(cssLegendContainer);
+      $(this.chartContainer).css(cssChartContainer);
+
 
 
       $('#' + this.container).bind('click', function () {
@@ -80,12 +82,11 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this));
 
       setTimeout(function () {
-        this.options.legend.show = false;
-        this.options.legend.container = $(this.legendContainer);
-        $('#' + this.container).removeClass('animated ' + this.animation);
-        console.log('this.options', this.options);
-        $.plot(this.chartContainer, this.data, this.options);
-
+        this.options.legend = {
+          show: true,
+          container: $(this.legendContainer)
+        };
+        this.plot = $.plot(this.chartContainer, this.data, this.options);
       }.bind(this), 1000);
     }
   },

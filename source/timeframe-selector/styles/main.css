@@ -11,10 +11,6 @@
   width: 100%;
   height: 400px;
 }
-#HTMLReporter {
-  position: absolute;
-  top: 400px;
-}
 .timeItem {
   float: left;
   text-align: center;
@@ -75,6 +71,7 @@
   width: 100%;
 }
 #custom {
+  cursor: pointer;
   position: absolute;
   right: 150px;
 }

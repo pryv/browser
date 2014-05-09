@@ -662,7 +662,7 @@ text-align: center;*/
   top: 0;
   left: 0;
   right: 0;
-  bottom: 54px;
+  bottom: 80px;
   overflow: hidden;
   overflow-y: hidden;
 }
@@ -679,7 +679,7 @@ text-align: center;*/
   top: 0;
   right: 0;
   left: 0;
-  bottom: 54px;
+  bottom: 80px;
   /*min-width: 600px;*/
   padding: 0;
   width: auto;

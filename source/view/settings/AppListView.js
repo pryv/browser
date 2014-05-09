@@ -1,4 +1,4 @@
-/* global window, i18n, $*/
+/* global window, i18n, $, document*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -53,9 +53,12 @@ module.exports = Marionette.CompositeView.extend({
           }
         }
       }.bind(this));
-      var baseHref = $('base').attr('href');
-      $.get(baseHref + 'locales/appList.json')
+      var url = 'https://reg.pryv';
+      url += document.location.host.indexOf('.me') !== -1 ? '.io' : '.in';
+      url += '/apps';
+      $.get(url)
         .done(function (result) {
+          result = result.apps || [];
           result.forEach(function (app) {
             this.apps.push(app);
           }.bind(this));

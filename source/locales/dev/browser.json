@@ -74,7 +74,11 @@
     "start": "START",
     "apply": "Apply",
     "save": "Save",
-    "website": "Website"
+    "website": "Website",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "action": "Action",
+    "settings": "Settings"
   },
   "noEvents": {
     "title": "No events to display"
@@ -125,7 +129,7 @@
         "subtitle": "The following apps are connected and authorized to access your account.",
         "otherApps": "Connect more apps",
         "name": "Name",
-        "trash": "Trash",
+        "action": "Action",
         "settings": "Settings"
       }
     },

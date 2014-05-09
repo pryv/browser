@@ -3,8 +3,8 @@ var _ = require('underscore');
 module.exports = (function () {
   var CONTAINER = '#timeframeContainer';
   var MARGIN = {
-    left: 100,
-    right: 100
+    left: 0,
+    right: 0
   };
   var DATE_FORMAT = {
     'day': {
@@ -36,16 +36,16 @@ module.exports = (function () {
       'others': 75
     },
     'month': {
-      'selected': 150,
-      'others': 75
+      'selected': 175,
+      'others': 100
     },
     'week': {
       'selected': 150,
       'others': 100
     },
     'year': {
-      'selected': 150,
-      'others': 75
+      'selected': 175,
+      'others': 100
     },
     'custom': {
       'selected': 500
@@ -98,14 +98,14 @@ module.exports = (function () {
       }
     });
     $('#custom').on('shown.bs.popover', function () {
-      var fromDate = 'not a date',
-          toDate = 'not a date';
+      var fromDate = moment.unix(_from),
+          toDate = moment.unix(_to);
       $(document.body).off('click', '#ok');
       $(document.body).on('click', '#ok', function () {
         fromDate = moment(fromDate);
         toDate = moment(toDate);
         if (fromDate.isValid() && toDate.isValid() && fromDate.unix() <= toDate.unix()) {
-          $('#custom').popover('hide');
+          $('#custom').popover('toggle');
           _scale = 'custom';
           setTimeBounds(fromDate, toDate);
           _updateDateScale();
@@ -113,34 +113,42 @@ module.exports = (function () {
       });
       $(document.body).off('click', '#fromButton');
       $(document.body).on('click', '#fromButton', function () {
+        fromDate = moment();
         $('#fromButton').trigger('click');
       });
 
       $(document.body).off('click', '#fromPicker input');
       $(document.body).on('click', '#fromPicker input', function () {
+        fromDate = moment();
         $('#fromButton').trigger('click');
       });
       $(document.body).off('click', '#toButton');
       $(document.body).on('click', '#toButton', function () {
+        toDate = moment();
         $('#toButton').trigger('click');
       });
 
       $(document.body).off('click', '#toPicker');
       $(document.body).on('click', '#toPicker input', function () {
+        toDate = moment();
         $('#toButton').trigger('click');
       });
       $('#fromPicker').datetimepicker({
-        direction: 'auto'
+        direction: 'auto',
+        language: i18n.lng()
       });
       $('#fromPicker').on('dp.change', function (e) {
         fromDate = e.date;
       });
       $('#toPicker').datetimepicker({
-        direction: 'auto'
+        direction: 'auto',
+        language: i18n.lng()
       });
       $('#toPicker').on('dp.change', function (e) {
         toDate = e.date;
       });
+      $('#fromPicker').data('DateTimePicker').setDate(fromDate);
+      $('#toPicker').data('DateTimePicker').setDate(toDate);
     });
   };
   var _updateDateScale = function () {

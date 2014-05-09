@@ -10,8 +10,8 @@ module.exports = CommonModel.implement(
     this.eventDisplayed = null;
     this.modelContent = {};
 
-    console.log('CTOR activity pryv MODEL');
-    console.log('pryv activity MODEL events', this.events);
+    //console.log('CTOR activity pryv MODEL');
+    //console.log('pryv activity MODEL events', this.events);
   },
   {
     beforeRefreshModelView: function () {
@@ -33,7 +33,7 @@ module.exports = CommonModel.implement(
       });
       // Merge childs into parent, such that all are a the same level
 
-      console.log('activities/model.js timeSumByStream', timeSumByStream);
+      //console.log('activities/model.js timeSumByStream', timeSumByStream);
 
       this.data = [];
       for (var s in timeSumByStream) {
@@ -42,7 +42,7 @@ module.exports = CommonModel.implement(
         }
       }
 
-      console.log('activities/model.js this.data', this.data);
+      //console.log('activities/model.js this.data', this.data);
 
 
 
@@ -102,7 +102,7 @@ module.exports = CommonModel.implement(
         chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
       }
 
-      console.log('computeDimensions model', {width: chartSizeWidth, height: chartSizeHeight});
+      //console.log('computeDimensions model', {width: chartSizeWidth, height: chartSizeHeight});
 
       return {width: chartSizeWidth, height: chartSizeHeight};
     }

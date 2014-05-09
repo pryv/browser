@@ -1,5 +1,9 @@
-#timeframe {
-  height: 60px;
+#timeframeContainer {
+  height: 80px;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  z-index: 9000;
   /*margin-bottom: -35px;*/
 }
 /*@font-face {

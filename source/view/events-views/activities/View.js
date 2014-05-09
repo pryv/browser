@@ -11,7 +11,7 @@ module.exports = Marionette.ItemView.extend({
   options: null,
   data: null,
   initialize: function () {
-    console.log('CTOR activity pryv VIEW');
+    //console.log('CTOR activity pryv VIEW');
 
     this.listenTo(this.model, 'change', this.change);
     this.$el.css('height', '100%');
@@ -41,9 +41,9 @@ module.exports = Marionette.ItemView.extend({
       $('#' + this.container).html(this.el);
 
 
-      console.log($(this.legendContainer));
-      console.log($(this.chartContainer));
-      console.log($(this.fullChart));
+      //console.log($(this.legendContainer));
+      //console.log($(this.chartContainer));
+      //console.log($(this.fullChart));
 
       var d = this.model.get('dimensions');
       var square =  (d.width < d.height) ? d.width: d.height;
@@ -83,7 +83,7 @@ module.exports = Marionette.ItemView.extend({
         this.options.legend.show = false;
         this.options.legend.container = $(this.legendContainer);
         $('#' + this.container).removeClass('animated ' + this.animation);
-        console.log('this.options', this.options);
+        //console.log('this.options', this.options);
         $.plot(this.chartContainer, this.data, this.options);
 
       }.bind(this), 1000);

@@ -1,5 +1,8 @@
 {
   "error": {
+    "manageApps": {
+      "cannot-load-app-list": "Cannot load app list"
+    },
     "login": {
       "unknown-username": "Unknown username",
       "unknown-resource": "Unknown username",
@@ -70,7 +73,12 @@
     "login": "Sign in",
     "start": "START",
     "apply": "Apply",
-    "save": "Save"
+    "save": "Save",
+    "website": "Website",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "action": "Action",
+    "settings": "Settings"
   },
   "noEvents": {
     "title": "No events to display"
@@ -99,14 +107,15 @@
     "manageSlices": "Manage slices",
     "bugReport": "Report a bug",
     "follow": "Follow this slice",
-    "myPryv": "Go to my Pryv",
+    "myPryv": "Me",
     "settings": "Settings"
   },
   "modal": {
     "settings": {
       "header": "Settings",
       "nav": {
-        "password": "Password"
+        "password": "Password",
+        "manageApps": "Connected apps"
       },
       "password": {
         "title": "Password",
@@ -114,6 +123,14 @@
         "current": "Current",
         "new": "New",
         "reNew": "Re-type new"
+      },
+      "manageApps": {
+        "title": "Connected apps",
+        "subtitle": "The following apps are connected and authorized to access your account.",
+        "otherApps": "Connect more apps",
+        "name": "Name",
+        "action": "Action",
+        "settings": "Settings"
       }
     },
     "detail": {

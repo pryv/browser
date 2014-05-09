@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.7.1/">
+  <base href="{browser-source}_v0.8.1/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.7.1/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.7.1/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.8.1/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.8.1/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -123,8 +123,9 @@
       <% if(eventsNbr > 1) { %>
       <span class="aggregated-nbr-events"><%=eventsNbr%></span>
       <% } %>
-      <div class="content Center-Container is-Table">
-         DONUT
+      <div class="fullChart">
+          <div class="pieLegendContainer"></div>
+          <div class="pieChartContainer"></div>
       </div>
   </script>
 
@@ -134,8 +135,6 @@
     <span class="aggregated-nbr-events"><%=eventsNbr%></span>
     <% } %>
     <div class="aggregated-icon-page"></div>
-
-
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
@@ -533,7 +532,7 @@
     </summary>
   </script>
 <script type="template" id="left-panel-template">
-  <h3></h3>
+  <h3 class="header-title">Manage</h3>
   <div id="actions">
 
   </div>
@@ -541,14 +540,14 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.7.1</span>
+    <span class="version">Browser v0.8.1</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
 <script type="template" id="actions-template">
-    <li><button type="button" class="logo-subscribe btn btn-pryv-turquoise"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.follow"></span></button></li>
-    <li><button type="button" class="logo-sharing btn btn-pryv-turquoise"><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></button></li>
-    <li><button type="button" class="logo-create-sharing btn btn-pryv-turquoise"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></button></li>
+    <li><button type="button" class="logo-subscribe btn btn-default btn-block"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.follow"></span></button></li>
+    <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></button></li>
+    <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></button></li>
 
 </script>
 <script type="template" id="filter-by-stream-template">
@@ -586,8 +585,8 @@
 <script type="template" id="password-settings-modal-template">
   <div class="panel panel-default settings-panel">
     <div class="panel-heading">
-      <h2 class="panel-title" data-i18n="modal.settings.password.title"></h2>
-      <h6 class="panel-subtitle" data-i18n="modal.settings.password.subtitle"></h6>
+      <h4 data-i18n="modal.settings.password.title"></h4>
+      <p class="panel-subtitle" data-i18n="modal.settings.password.subtitle"></p>
     </div>
     <div class="panel-body">
       <form class="form-horizontal" role="form">
@@ -611,7 +610,7 @@
         </div>
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-5">
-            <button type="submit" class="btn btn-pryv-turquoise"><span data-i18n="button.save"></span> <span class="fa fa-spinner fa-spin"></span></button>
+            <button type="submit" class="btn btn-default"><span data-i18n="button.save"></span> <span class="fa fa-spinner fa-spin"></span></button>
           </div>
         </div>
       </form>
@@ -622,36 +621,35 @@
   <td class="app-icon col-md-1">
     <img src="<%= app.iconURL %>">
   </td>
-  <td class="col-md-4">
+  <td class="col-md-7">
     <%= app.displayName %>
   </td>
-  <td class="app-settings">
+  <td class="col-md-2 app-settings">
     <% if (app.settingsPageURL && app.settingsPageURL.length > 0) { %>
-    <a href="<%= app.settingsPageURL %>" target="_blank"><i class="fa fa-cog"></i></a>
+      <a class="btn btn-default btn-xs" href="<%= app.settingsPageURL %>" target="_blank"><i class="fa fa-cog fa-xs"></i> <span data-i18n="button.settings"></span></a>
     <% } %>
   </td>
-  <td class="app-trash">
-    <a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+  <td class="col-md-2 app-trash">
+    <a class="btn btn-default btn-xs" href="javascript:void(0)"><i class="fa fa-times fa-xs"></i> <span data-i18n="button.disconnect"></span></a>
   </td>
 </script>
   <script type="template" id="apps-list-settings-template">
 
     <div class="panel panel-default seetings-panel">
       <div class="panel-heading">
-        <h2 class="panel-title"
-          data-i18n="modal.settings.manageApps.title">
-        </h2>
-        <h6 class="panel-subtitle"
+        <h4 data-i18n="modal.settings.manageApps.title">
+        </h4>
+        <p class="panel-subtitle"
           data-i18n="modal.settings.manageApps.subtitle">
-        </h6>
+        </p>
       </div>
         <div class="panel-body">
           <table class="table">
             <thead><tr>
               <th></th>
               <th data-i18n="modal.settings.manageApps.name"></th>
-              <th data-i18n="modal.settings.manageApps.settings"></th>
-              <th data-i18n="modal.settings.manageApps.trash"></th></tr></thead>
+              <th data-i18n="modal.settings.manageApps.action"></th>
+              <th></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -662,26 +660,22 @@
 <script type="template" id="other-apps-item-settings-template">
     <div class="thumbnail">
       <div class="app-icon">
-      <img src="<%= app.iconURL %>">
+        <img src="<%= app.iconURL %>">
       </div>
-      <div class="caption">
-        <h3><%= app.displayName %></h3>
+      <div class="">
+        <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
-        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="button.website"></a></p>
+        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="button.connect"></a></p>
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">
-  <div class="panel panel-default seetings-panel">
-    <div class="panel-heading">
-      <h2 class="panel-title">
-       <a data-toggle="collapse" data-target="#appList" data-i18n="modal.settings.manageApps.otherApps" href="javascript:void(0)"></a>
-      </h2>
-    </div>
+  <a class="btn btn-default btn-lg" data-toggle="collapse" data-target="#appList" data-i18n="modal.settings.manageApps.otherApps" href="javascript:void(0)"></a>
+  
     <div id="appList" class="panel-collapse collapse">
       <div class="panel-body">
       </div>
     </div>
-  </div>
+  
 </script>
 </head>
 
@@ -745,7 +739,7 @@
     <h1 data-i18n="noEvents.title"></h1>
   </div>
 </div>
-<div id="timeframe"></div>
+<div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-animation">

@@ -17,32 +17,6 @@ exports.main = function (STAGING) {
 })()
 },{"./Model.js":1}],2:[function(require,module,exports){
 
-var Controller = module.exports = function () {
-  this.treeMap = null;
-  this.menu = null;
-};
-
-Controller.prototype.setTreeMap = function (treemap) {
-  this.treeMap = treemap;
-};
-
-Controller.prototype.onDragAndDrop =
-  function (thisNode, thatNodeId, thatStreamId, thatConnectionId) {
-  var thatNode = this.treeMap.getNodeById(thatNodeId, thatStreamId, thatConnectionId);
-  console.log('Controller', thatNode);
-  //this.showFusionDialog(thatNodeId.data, thatNode.data, function () {}.bind(this));
-
-};
-
-Controller.prototype.showFusionDialog =
-  function () {
-  console.log('Controller:', 'Show fusion dialog');
-};
-
-
-
-},{}],3:[function(require,module,exports){
-
 //TODO write all add / remove connection logic
 
 var ConnectionsHandler = module.exports = function (model) {
@@ -96,6 +70,32 @@ ConnectionsHandler.prototype.get = function (connectionSerialId, andInitializeCa
 
 
 
+},{}],3:[function(require,module,exports){
+
+var Controller = module.exports = function () {
+  this.treeMap = null;
+  this.menu = null;
+};
+
+Controller.prototype.setTreeMap = function (treemap) {
+  this.treeMap = treemap;
+};
+
+Controller.prototype.onDragAndDrop =
+  function (thisNode, thatNodeId, thatStreamId, thatConnectionId) {
+  var thatNode = this.treeMap.getNodeById(thatNodeId, thatStreamId, thatConnectionId);
+  console.log('Controller', thatNode);
+  //this.showFusionDialog(thatNodeId.data, thatNode.data, function () {}.bind(this));
+
+};
+
+Controller.prototype.showFusionDialog =
+  function () {
+  console.log('Controller:', 'Show fusion dialog');
+};
+
+
+
 },{}],1:[function(require,module,exports){
 (function(){/* global $, window, location, i18n */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
@@ -139,8 +139,8 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
   }
   // create connection handler and filter
-  this.onFiltersChanged = function () {
-    this.activeFilter.timeFrameLT = [arguments[0].from, arguments[0].to];
+  this.onFiltersChanged = function (from, to) {
+    this.activeFilter.timeFrameLT = [new Date(from * 1000), new Date(to * 1000)];
   };
 
 
@@ -163,11 +163,12 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         $('#logo-reload').removeClass('loading');
       }
     });
-    this.timeView = new TimeLine();
-    this.timeView.render();
+    this.timeView = TimeLine;
+    console.log('TIMELINE', this.timeView);
+    this.timeView.init();
     initTimeAndFilter(this.timeView, this.activeFilter);
-    this.timeView.on('filtersChanged', this.onFiltersChanged, this);
-    this.timeView.on('dateHighlighted', this.onDateHighlighted, this);
+    this.timeView.on('timeBoundsChanged', this.onFiltersChanged.bind(this));
+    this.timeView.on('highlightChanged', this.onDateHighlighted.bind(this));
     this.timeView.on('dateMasked', this.onDateMasked, this);
 
     this.onDateMasked = function () {
@@ -343,8 +344,8 @@ Model.prototype.removeConnections = function (connections) {
  */
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
-    this.activeFilter.stats(false, function (stats) {
-      this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
+    this.activeFilter.stats(false, function () {
+      //this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
     }.bind(this));
   }.bind(this), 100))();
 };
@@ -402,21 +403,13 @@ Model.prototype.renderPanel = function () {
   PanelMenu.render(this);
 };
 function initTimeAndFilter(timeView, filter) {
-  var spanTime = 86400000,
-    fromTime = new Date(),
-    start = new Date(fromTime.getFullYear(), fromTime.getMonth(), fromTime.getDate());
-
-  fromTime = new Date(start.getTime() - (spanTime * 365));
-  var toTime = new Date(start.getTime() + spanTime - 1);
+  var fromTime = new Date(timeView.getTimeBounds().from * 1000),
+      toTime = new Date(timeView.getTimeBounds().to * 1000);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
     limit: 50000
   });
 
-  timeView.onFiltersChanged({
-    from:     fromTime,
-    to:       toTime
-  });
 }
 
 
@@ -488,7 +481,7 @@ window.PryvBrowser.showAlert = function (containerSelector, html) {
     html + '</div>');
 };
 })()
-},{"./model/ConnectionsHandler.js":3,"./model/Messages":8,"./model/MonitorsHandler.js":4,"./orchestrator/Controller.js":2,"./timeframe-selector/timeframe-selector.js":7,"./tree/TreeMap.js":5,"./view/left-panel/Controller.js":6,"pryv":10,"underscore":9}],9:[function(require,module,exports){
+},{"./model/ConnectionsHandler.js":2,"./model/Messages":7,"./model/MonitorsHandler.js":4,"./orchestrator/Controller.js":3,"./timeframe-selector/timeframe-selector.js":8,"./tree/TreeMap.js":5,"./view/left-panel/Controller.js":6,"pryv":10,"underscore":9}],9:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -1783,7 +1776,7 @@ module.exports = {
   }
 };
 
-},{"./Connection.js":12,"./Event.js":13,"./Filter.js":16,"./Monitor.js":18,"./Stream.js":14,"./auth/Auth.js":11,"./eventTypes.js":15,"./utility/utility.js":17}],4:[function(require,module,exports){
+},{"./Connection.js":12,"./Event.js":13,"./Filter.js":17,"./Monitor.js":18,"./Stream.js":15,"./auth/Auth.js":11,"./eventTypes.js":14,"./utility/utility.js":16}],4:[function(require,module,exports){
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
@@ -2136,7 +2129,119 @@ MonitorsHandler.prototype.stats = function (force, callback) {
     });
   });
 };
-},{"./Messages":8,"pryv":10,"underscore":9}],5:[function(require,module,exports){
+},{"./Messages":7,"pryv":10,"underscore":9}],19:[function(require,module,exports){
+
+/* Definition of a virtual node attached to a stream as its child
+ *  stream: <streamId>, // the node where it's attached to
+ *  name: <my name>,    // the name of that virtual node
+ *  filters: [          // an array of filter/setting pairs contained in this virtual node
+ *    { filter: f1,
+ *      settings:             // settings of that filter, such as color,
+ *        [{ color: 'green', // style, ... (especially for charts)
+ *        style: 'bar',
+ *         ... }, {}]
+ *    },
+ *    { filter: f2, settings: {...}},
+ *    ...
+ *   ]
+ *   Note:
+ *   The filters are ofa special kind. Each filter concerns exactly one type.
+ *   The settings override the stream/type pair's default one. Numerical data
+ *   would contain style (line, bar, ..), color, transform.
+ */
+
+
+
+var Settings = module.exports = function Setting(stream, type, virtualNode, offset) {
+  this._stream = stream;
+  this._type = type;
+  this._virtualNode = virtualNode;
+
+  this._offset = offset ? offset : 0;
+  this._cnt = offset ? offset : 0;
+
+  this._ptr = null;
+
+  this._createIfNotExist();
+  //this._emptyData();
+};
+
+
+Settings.prototype._createIfNotExist = function () {
+  if (this._virtualNode) {
+    var found = false;
+    for (var i = 0; i < this._virtualNode.filters.length; ++i) {
+      if (this._virtualNode.filters[i].streamId === this._stream.id &&
+        this._virtualNode.filters[i].type === this._type) {
+        if (this._cnt === 0) {
+          found = true;
+          break;
+        } else {
+          this._cnt--;
+        }
+      }
+    }
+    if (found) {
+      if (!this._virtualNode.filters[i].settings) {
+        this._virtualNode.filters[i].settings = {};
+      }
+      this._ptr = this._virtualNode.filters[i].settings;
+    }
+  } else {
+    if (!this._stream.clientData) {
+      this._stream.clientData = {};
+    }
+    if (!this._stream.clientData['pryv-browser:charts']) {
+      this._stream.clientData['pryv-browser:charts'] = {};
+    }
+    if (!this._stream.clientData['pryv-browser:charts'][this._type]) {
+      this._stream.clientData['pryv-browser:charts'][this._type] = {settings: {}};
+    }
+    this._ptr = this._stream.clientData['pryv-browser:charts'][this._type].settings;
+  }
+};
+
+
+Settings.prototype._emptyData = function () {
+  if (!this._virtualNode) {
+    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
+    this._stream.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for has been pushed:', error, result);
+    });
+  }
+};
+
+
+
+Settings.prototype._pushChanges = function () {
+  var changes = null;
+  if (this._virtualNode) {
+    changes = {'browser:virtualnode': this._virtualNode._getDataPointer()};
+    console.log('Pushing these changes in privateProfile', changes);
+    this._stream.connection.profile.setPrivate(changes, function (error, result) {
+      console.log('privateProfile for', 'browser:virtualnode', 'has been pushed:', error, result);
+    });
+  } else {
+    changes = {id: this._stream.id, clientData: this._stream.clientData};
+    console.log('Pushing these changes in clientData', changes);
+    this._stream.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for has been pushed:', error, result);
+    });
+  }
+
+};
+
+
+Settings.prototype.set = function (key, value) {
+  this._ptr[key] = value;
+  this._pushChanges();
+};
+
+Settings.prototype.get = function (key) {
+  return this._ptr[key];
+};
+
+},{}],5:[function(require,module,exports){
 (function(){
 /* global $, window, location */
 var RootNode = require('./RootNode.js'),
@@ -2154,7 +2259,7 @@ var RootNode = require('./RootNode.js'),
   Pryv = require('pryv');
 var MARGIN_TOP = 50;
 var MARGIN_RIGHT = 40;
-var MARGIN_BOTTOM = 60;
+var MARGIN_BOTTOM = 80;
 var MARGIN_LEFT = 40;
 var IGNORE_TRASHED_EVENT  = true;
 var IGNORE_PARAM_CHANGED = false;
@@ -2758,915 +2863,7 @@ try {
 }
 
 })()
-},{"../model/Messages":8,"../view/create/Controller.js":24,"../view/events-views/detailed/Controller.js":20,"../view/events-views/draganddrop/Controller.js":23,"../view/onboarding/View.js":25,"../view/settings/Controller.js":27,"../view/sharings/Controller.js":22,"../view/sharings/create/Controller.js":21,"../view/subscribe/Controller.js":28,"./RootNode.js":19,"./VirtualNode.js":26,"pryv":10,"underscore":9}],7:[function(require,module,exports){
-(function(){
-/* global $, navigator, window, document */
-var Backbone = require('backbone'),
-    Modal = require('./modal.js'),
-    _ = require('underscore');
-/**
- timeViewTpl , 'tpl!../bower_components/browser-timeline/templates/time_view.html'
- customTimeModalTpl, 'tpl!../bower_components/browser-timeline/templates/custom_time_modal.html'
- */
-/* jshint -W101 */
-var customTimeModalTpl = '<div id="custom_time_modal" class="modal hide fade"> <div class="modal-header">   <button type="button" class="close" data-dismiss="modal">&times;</button>   <h3>Custom Timeframe</h3> </div> <div class="modal-body">   <form class="form-horizontal center">     <div id="from_ctrl" class="control-group">       <label class="control-label" for="from_selected">From:</label>       <div class="controls">         <input type="text" id="from_selected" class="input-medium">         <span id="from_helper" class="help-block"></span>       </div>     </div>     <div id="to_ctrl" class="control-group">       <label class="control-label" for="to_selected">To:</label>       <div class="controls">         <input type="text" id="to_selected" class="input-medium">         <span id="to_helper" class="help-block"></span>       </div>     </div>   </form> </div> <div class="modal-footer">   <button id="ok_btn" class="btn btn-primary">OK</button>   <a class="btn" data-dismiss="modal">Cancel</a> </div></div>';
-var timeViewTpl = '<span id="start-marker-label" class="marker-label">	<span id="start-marker-year"></span>	<span id="start-marker-month"></span>	<span id="start-marker-day"></span>	<span id="start-marker-dash" class="label-dash">-</span>	<span id="start-marker-hour"></span>	<span id="start-marker-dots" class="label-dots">:</span>	<span id="start-marker-minute"></span></span><span id="start-marker-arrow" class="tooltip-arrow"></span><span id="end-marker-label" class="marker-label">	<span id="end-marker-year"></span>	<span id="end-marker-month"></span>	<span id="end-marker-day"></span>	<span id="end-marker-dash" class="label-dash">-</span>	<span id="end-marker-hour"></span>	<span id="end-marker-dots" class="label-dots">:</span>	<span id="end-marker-minute"></span></span><span id="end-marker-arrow" class="tooltip-arrow"></span><span id="focus-marker-label" class="marker-label">	<span id="focus-marker-year"></span>	<span id="focus-marker-month"></span>	<span id="focus-marker-day"></span>	<span id="focus-marker-dash" class="label-dash">-</span>	<span id="focus-marker-hour"></span>	<span id="focus-marker-dots" class="label-dots">:</span>	<span id="focus-marker-minute"></span></span><span id="focus-marker-arrow" class="tooltip-arrow"></span><form class="form center">	<span id="arrow-left" class="nav-arrow prev"></span><div id="timeline-scroll-wrapper">		<div id="timeline-content"></div>	</div>	<span id="arrow-right" class="nav-arrow next"></span></form>';
-
-var _keywords = {
-  english: {
-    today: 'today',
-    day: 'day',
-    week: 'week',
-    month: 'month',
-    year: 'year',
-    mon_0: 'JAN',
-    mon_1: 'FEB',
-    mon_2: 'MAR',
-    mon_3: 'APR',
-    mon_4: 'MAY',
-    mon_5: 'JUN',
-    mon_6: 'JUL',
-    mon_7: 'AUG',
-    mon_8: 'SEP',
-    mon_9: 'OCT',
-    mon_10: 'NOV',
-    mon_11: 'DEC',
-    day_0: 'Sun',
-    day_1: 'Mon',
-    day_2: 'Tue',
-    day_3: 'Wed',
-    day_4: 'Thr',
-    day_5: 'Fri',
-    day_6: 'Sat'
-  },
-  french: {
-    today: 'aujourd\'hui',
-    day: 'jour',
-    week: 'semaine',
-    month: 'mois',
-    year: 'ann&eacute;e',
-    custom: 'personnalis&eacute;',
-    mon_0: 'JAN',
-    mon_1: 'FEV',
-    mon_2: 'MAR',
-    mon_3: 'AVR',
-    mon_4: 'MAI',
-    mon_5: 'JUN',
-    mon_6: 'JUL',
-    mon_7: 'AOU',
-    mon_8: 'SEP',
-    mon_9: 'OCT',
-    mon_10: 'NOV',
-    mon_11: 'DEC'
-  }
-};
-
-
-var CustomTimeModal = Modal.extend({
-  /* Variables */
-  modalId: '#custom_time_modal',
-  template: customTimeModalTpl,
-  name: 'CustomTimeModal',
-  from: null,
-  to: null,
-  $from: null,
-  $to: null,
-  /* Events */
-  events: {
-    'click #ok_btn': 'onClickOK'
-  },
-  /* Methods */
-  initialize: function () {
-    console.log(this.name + ':initialize');
-  },
-  render: function () {
-    Modal.prototype.render.call(this);
-    $('#timeframe #menu-items').toggle();
-    this.$from = this.$('#from_selected');
-    this.$to = this.$('#to_selected');
-    this.$from.attr('value', this.from.toString()).datetimepicker();
-    this.$to.attr('value', this.to.toString()).datetimepicker();
-    $('#ui-datepicker-div').addClass('calendar');
-    return this;
-  },
-  open: function (from, to) {
-    this.from = from;
-    this.to = to;
-    this.render();
-  },
-  onClickOK: function () {
-    //console.log(this.name+':onClickOKBtn');
-    var f = this.$from.datepicker('getDate');
-    var t = this.$to.datepicker('getDate');
-    var ret = false;
-    if (f === null) {
-      this.$('#from_helper').text('Please provide a valid date.');
-      ret = true;
-    }
-    if (t === null) {
-      this.$('#from_helper').text('Please provide a valid date.');
-      ret = true;
-    }
-    if (ret) {
-      return;
-    }
-
-    this.trigger('ok', 'custom', false, this.$from.datepicker('getDate'),
-        this.$to.datepicker('getDate'));
-
-    this.close();
-    return false;
-  }
-});
-
-module.exports = Backbone.View.extend({
-  id: '#timeframe',
-  name: 'TimeView',
-  developmentMode: false,
-  frameFrom: null,
-  frameTo: null,
-  limitFrom: 0,
-  limitTo: Infinity,
-  labelWidth: 200,
-  labelTipWidth: 14,
-  markerOffset: 0.05,
-  arrowPressLongspeed: 3,
-  arrowPressDuration: 1500,
-  proportionTimeFrame: 0.6667,
-  span: null,
-  spanStep: null,
-  spanName: null,
-  graduation: null,
-  numOfGradustions: null,
-  graduationStep: 5,
-  currentLanguage: 'english',
-  $timeline: null,
-  timeframeChanged: false,
-  lastHighlightedDate: null,
-  intervalLabelWidth: 0,
-  focusTimeout: null,
-  events: {
-    'click #today': 'onClickToday',
-    'click #day': 'onClickTimeSpan',
-    'click #month': 'onClickTimeSpan',
-    'click #year': 'onClickTimeSpan',
-    'click #all': 'onClickAll',
-    'click #timeline-menu': 'onClickMenu',
-    'click #frame-interval-label': 'onClickMenu',
-    'click #custom': 'onClickCustomTime'
-  },
-  modals: {
-    customTime: new CustomTimeModal()
-  },
-  /* Methods. */
-  initialize: function (options) {
-    if (options && options.developmentMode !== null) {
-      this.developmentMode = options.developmentMode;
-    }
-    console.log(this.name + ':initialize');
-    this.modals.customTime.on('ok', this.onClickTimeSpan, this);
-    this.bindTouch();
-  },
-  render: function () {
-    this.setElement(this.id);
-    this.$el.html(timeViewTpl);
-    this.$timeline = this.$('#timeline-content');
-    this.setInitialWidth();
-
-    var longpress = false;
-    var self = this;
-
-
-    function resizedw() {
-      self.setInitialWidth();
-      self.triggerFilter(self.frameFrom, self.frameTo, true);
-    }
-
-    $(window).resize(_.debounce(function () {
-      resizedw();
-    }, 100));
-
-    var startTime, endTime;
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)) {
-      $('.nav-arrow').bind('touchstart', function () {
-        startTime = new Date().getTime();
-      }).bind('touchend', function () {
-            endTime = new Date().getTime();
-            longpress = (endTime - startTime >= 500);
-            self.onArrowClick($(this), longpress);
-          });
-    } else {
-      $('.nav-arrow').on('click', function () {
-        self.onArrowClick($(this), longpress);
-      });
-      $('.nav-arrow').on('mousedown', function () {
-        startTime = new Date().getTime();
-      });
-      $('.nav-arrow').on('mouseup', function () {
-        endTime = new Date().getTime();
-        longpress = (endTime - startTime >= 500);
-      });
-    }
-
-    return this;
-  },
-  setInitialWidth: function () {
-    var visibleWidth = $('#timeframe').width();
-    /*  var visibleWidth = $('#timeframe').width() - 2 *
-     ($('.nav-arrow').width() + 2 * parseInt($('.nav-arrow').css('paddingLeft'), null)) -
-     30 - $('#timeline-menu').outerWidth() -
-     parseInt($('#timeline-menu').css('marginRight'), null); */
-    $('#timeline-scroll-wrapper').width(visibleWidth);
-    var initialLeftPosition = -visibleWidth;
-    this.$timeline.width(3 * visibleWidth).css('left', initialLeftPosition + 'px').data({
-      'leftPosition': -visibleWidth,
-      'initialLeftPosition': initialLeftPosition
-    });
-
-  },
-  setLimit: function (from, to) {
-    this.limitFrom = !from ? 0 :
-        from > this.limitFrom && this.limitFrom !== 0 ? this.limitFrom : from;
-    this.limitTo = !to ? Infinity :
-        to < this.limitTo && this.limitTo !== Infinity ? this.limitTo : to;
-  },
-  _checkLimitDates: function (dateFrom, dateTo) {
-    console.log('From:', this.limitFrom, dateFrom, 'To:', this.limitTo, dateTo);
-    /*dateFrom = dateFrom < this.limitFrom ? this.limitFrom : dateFrom;
-     dateFrom = dateFrom >= this.limitTo ? this.frameFrom : dateFrom;
-     dateTo = dateTo > this.limitTo ? this.limitTo : dateTo;
-     dateTo = dateTo <= this.limitFrom ? this.frameTo : dateTo; */
-    if (dateFrom > dateTo) {
-      dateFrom = this.frameFrom;
-      dateTo = this.frameTo;
-    }
-    console.log('After', dateFrom, dateTo);
-    return {from: dateFrom, to: dateTo};
-  },
-  setTimelineDates: function (changes) {
-    this.frameFrom = changes.from.getTime();
-    this.frameTo = changes.to.getTime();
-  },
-  onFiltersChanged: function (changes) {
-    if (this.frameFrom === changes.from.getTime() &&
-        this.frameTo === changes.to.getTime()) {
-      this.timeframeChanged = false;
-      this.fillTimeline();
-      return;
-    }
-    this.setTimelineDates(changes);
-    this.fillTimeline();
-  },
-  triggerFilter: function (dateFrom, dateTo, windowResized) {
-    var dates = this._checkLimitDates(dateFrom, dateTo);
-    dateFrom = dates.from;
-    dateTo = dates.to;
-    if (this.developmentMode || windowResized) {
-      var devDateFrom = new Date(dateFrom);
-      var devDateTo = new Date(dateTo);
-      console.log('devMode - onFiltersChanged - dateFrom:', devDateFrom.toUTCString(),
-          'dateTo:', devDateTo.toUTCString());
-      this.onFiltersChanged({
-        from: devDateFrom,
-        to: devDateTo,
-        span: dateTo - dateFrom
-      });
-    } else {
-      this.trigger('filtersChanged', {
-        from: new Date(dateFrom),
-        to: new Date(dateTo),
-        span: dateTo - dateFrom
-      });
-      this.onFiltersChanged({
-        from: new Date(dateFrom),
-        to: new Date(dateTo),
-        span: dateTo - dateFrom
-      });
-    }
-  },
-  triggerHighlight: function (date) {
-    if (this.lastHighlightedDate !== date && !this.developmentMode) {
-      this.lastHighlightedDate = date;
-      var highlightedDate = new Date(parseInt(date, null));
-      this.trigger('dateHighlighted', highlightedDate);
-    }
-  },
-  // try to fix
-  setIntervalLabel: function (from, to) {
-    var startDate = from;
-    var endDate = to;
-    var duration = endDate - startDate;
-    var duration_in_sec = parseInt(duration / 1000, null);
-    var interval_label = '';
-    var res;
-
-    if (duration < 1000) {
-      interval_label = duration + ' ms';
-    } else if (duration_in_sec < 60) {
-      interval_label = duration_in_sec + ' sec';
-    } else if (duration_in_sec < 60 * 60) {
-      var min = Math.floor(duration_in_sec / 60);
-      res = duration_in_sec % 60;
-      interval_label = min + ' min' + (min > 1 ? 's' : '') +
-          (res === 0 ? '' : (' ' + res + ' sec'));
-    } else if (duration_in_sec < 60 * 60 * 24) {
-      var hrs = Math.floor(duration_in_sec / (60 * 60));
-      res = parseInt((duration_in_sec % (60 * 60)) / 60, null);
-      interval_label = hrs + ' hr' + (hrs > 1 ? 's' : '') +
-          (res === 0 ? '' : (' ' + res + ' min') + (res > 1 ? 's' : ''));
-    } else if (duration_in_sec < 60 * 60 * 24 * 7) {
-      var days = Math.floor(duration_in_sec / (60 * 60 * 24));
-      res = parseInt((duration_in_sec % (60 * 60 * 24)) / (60 * 60), null);
-      interval_label = days + ' day' + (days > 1 ? 's' : '') +
-          (res === 0 ? '' : (' ' + res + ' hr') + (res > 1 ? 's' : ''));
-    } else if (duration_in_sec < 60 * 60 * 24 * 30) {
-      var weeks = Math.floor(duration_in_sec / (60 * 60 * 24 * 7));
-      res = parseInt((duration_in_sec % (60 * 60 * 24 * 7)) / (60 * 60 * 24), null);
-      interval_label = weeks + ' week' + (weeks > 1 ? 's' : '') +
-          (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
-    } else if (duration_in_sec < 60 * 60 * 24 * 365) {
-      var months = Math.floor(duration_in_sec / (60 * 60 * 24 * 30));
-      res = parseInt((duration_in_sec % (60 * 60 * 24 * 30)) / (60 * 60 * 24), null);
-      interval_label = months + ' month' + (months > 1 ? 's' : '') +
-          (res === 0 ? '' : (' ' + res + ' day') + (res > 1 ? 's' : ''));
-    } else {
-      var years = Math.floor(duration_in_sec / (60 * 60 * 24 * 365));
-      res = parseInt((duration_in_sec % (60 * 60 * 24 * 365)) / (60 * 60 * 24), null);
-      interval_label = years + ' year' + (years > 1 ? 's' : '');
-      if (res <= 30) {
-        interval_label += (res === 0 ? '' : (' ' + res + ' day'));
-      } else {
-        res = parseInt(res / 30, null);
-        interval_label += (res === 0 ? '' : (' ' + res + ' month'));
-      }
-      interval_label += res > 1 ? 's' : '';
-    }
-    interval_label = interval_label.toUpperCase();
-    $('#frame-interval-label').text(interval_label);
-    $('#frame-interval-label-value').text(interval_label);
-    this.intervalLabelWidth = $('#frame-interval-label-value').width();
-  },
-  fillTimeline: function () {
-    this.setSpan();
-    this.setMarkers();
-    var $startMarker = $('#start-marker');
-    var $startLabel = $('#start-marker-label');
-    var $startArrow = $('#start-marker-arrow');
-    var $endMarker = $('#end-marker');
-    var $endLabel = $('#end-marker-label');
-    var $endArrow = $('#end-marker-arrow');
-    var $focusMarker = $('#focus-marker');
-    var $focusLabel = $('#focus-marker-label');
-    var $focusArrow = $('#focus-marker-arrow');
-    var $selectedFrame = $('#selected-frame');
-    var $timeline = $('#timeline-scroll-wrapper');
-    var self = this;
-    if (!this.$timeline.hasClass('ui-draggable')) {
-
-      // Try to fix timelime
-      var delta = 0;
-      var startedLeft = 0;
-      var startedLeftFollow;
-      var startedSelectedFrameLeft;
-      var startedSelectedFrameWidth;
-      var startedFrom = self.frameFrom;
-      var startedTo = self.frameTo;
-      var currentFrom = self.frameFrom;
-      var currentTo = self.frameTo;
-      var showFocus = false;
-
-      var calculateDelta = function () {
-        return (self.frameTo - self.frameFrom) /
-            ($endMarker.data('left') - $startMarker.data('left'));
-      };
-      delta = calculateDelta();
-      var showFocusLabel = function () {
-        showFocus = true;
-        $focusLabel.fadeIn();
-      };
-      var hideFocusLabel = _.debounce(function () {
-        if (!showFocus) {
-          $focusLabel.fadeOut();
-        }
-      }, 3000);
-      var startDragFocus = function (event, ui) {
-        startedLeft = ui.position.left;
-        startedLeftFollow = null;
-      };
-      var dragFocus = function ($arrToFollow, event, ui) {
-        if ($arrToFollow && !_.isArray($arrToFollow)) {
-          $arrToFollow = [$arrToFollow];
-        }
-        var xDiff = ui.position.left - startedLeft;
-
-        if (isNaN(delta)) {
-          delta = calculateDelta();
-        }
-        if ($arrToFollow) {
-          showFocusLabel();
-          var i = 0;
-          if (!startedLeftFollow) {
-            startedLeftFollow = [];
-            for (i = 0; i < $arrToFollow.length; i++) {
-              startedLeftFollow[i] = $arrToFollow[i].position().left;
-
-            }
-          }
-          for (i = 0; i < $arrToFollow.length; i++) {
-            $arrToFollow[i].css({left: startedLeftFollow[i] + xDiff + 'px'});
-          }
-        }
-        var highlightedTime = self.frameFrom +
-            ($focusMarker.position().left -  $startMarker.position().left) *
-                delta;
-        self.setLabelText($focusLabel, highlightedTime);
-        self.triggerHighlight(highlightedTime);
-      };
-      var stopDragFocus = function () {
-        showFocus = false;
-        hideFocusLabel();
-      };
-      var startDragLimit = function (event, ui) {
-        delta = calculateDelta();
-        startedLeft = ui.position.left;
-        startedLeftFollow = null;
-        startedSelectedFrameLeft = $selectedFrame.position().left;
-        startedSelectedFrameWidth = $selectedFrame.width();
-        startedFrom = self.frameFrom;
-        startedTo = self.frameTo;
-        currentFrom = self.frameFrom;
-        currentTo = self.frameTo;
-      };
-      var stopDragLimit = function () {
-        self.triggerFilter(currentFrom, currentTo);
-      };
-      var dragLimit = function (start, $arrToFollow, $label, event, ui) {
-        if ($arrToFollow && !_.isArray($arrToFollow)) {
-          $arrToFollow = [$arrToFollow];
-        }
-        var xDiff = ui.position.left - startedLeft;
-        if (isNaN(delta)) {
-          delta = calculateDelta();
-        }
-
-        var currentTime;
-        if (start) {
-          currentFrom = currentTime = startedFrom + (xDiff * delta);
-          currentFrom = currentTime = currentFrom > currentTo ? currentTo: currentFrom;
-        } else {
-          currentTo = currentTime = startedTo + (xDiff * delta);
-          currentTo = currentTime = currentTo < currentFrom ? currentFrom : currentTo;
-        }
-        if ($arrToFollow) {
-          var i = 0;
-          if (!startedLeftFollow) {
-            startedLeftFollow = [];
-            for (i = 0; i < $arrToFollow.length; i++) {
-              startedLeftFollow[i] = $arrToFollow[i].position().left;
-            }
-          }
-          for (i = 0; i < $arrToFollow.length; i++) {
-            $arrToFollow[i].css({left: startedLeftFollow[i] + xDiff + 'px'});
-          }
-        }
-        if ($label) {
-          self.setLabelText($label, currentTime);
-        }
-        self.setIntervalLabel(currentFrom, currentTo);
-
-        // update selected frame position and width
-        if (start) {
-          $selectedFrame.css({
-            'left': (startedSelectedFrameLeft + xDiff) + 'px',
-            'width': (startedSelectedFrameWidth - xDiff) + 'px'
-          });
-        } else {
-          $selectedFrame.css({
-            'left': startedSelectedFrameLeft + 'px',
-            'width': (startedSelectedFrameWidth + xDiff) + 'px'
-          });
-        }
-      };
-      $startMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
-        start: startDragLimit.bind(self),
-        drag: dragLimit.bind(self, true, [$startArrow, $startLabel], $startLabel),
-        stop: stopDragLimit.bind(self)
-      });
-      $startLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
-        start: startDragLimit.bind(self),
-        drag: dragLimit.bind(self, true, [$startArrow, $startMarker], $startLabel),
-        stop: stopDragLimit.bind(self)
-      });
-      $endMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
-        start: startDragLimit.bind(self),
-        drag: dragLimit.bind(self, false, [$endArrow, $endLabel], $endLabel),
-        stop: stopDragLimit.bind(self)
-      });
-      $endLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
-        start: startDragLimit.bind(self),
-        drag: dragLimit.bind(self, false, [$endArrow, $endMarker], $endLabel),
-        stop: stopDragLimit.bind(self)
-      });
-      $focusMarker.draggable({axis: 'x', grid: [this.graduationStep, 0],
-        start: startDragFocus.bind(self),
-        drag: dragFocus.bind(self, [$focusArrow, $focusLabel]),
-        stop: stopDragFocus.bind(self)
-      });
-      $focusLabel.draggable({axis: 'x', grid: [this.graduationStep, 0],
-        start: startDragFocus.bind(self),
-        drag: dragFocus.bind(self, [$focusArrow, $focusMarker]),
-        stop: stopDragFocus.bind(self)
-      });
-    }
-    var markerWidth = $startMarker.width();
-    var leftConstraint =  -$timeline.width() * 0.5;
-    var rightConstraint = $timeline.width() * 1.5;
-    var startConstraint = $startMarker.data('left') + (markerWidth / 2);
-    var endConstraint = $endMarker.data('left') + (markerWidth / 2);
-    $startMarker.draggable('option', 'containment',
-        [leftConstraint, 0, endConstraint - (markerWidth / 2), 0]);
-    $startLabel.draggable('option', 'containment',
-        [leftConstraint, 0, endConstraint - (this.labelWidth + this.labelTipWidth), 0]);
-    $endMarker.draggable('option', 'containment',
-        [startConstraint - (markerWidth / 2), 0, rightConstraint, 0]);
-    $endLabel.draggable('option', 'containment',
-        [startConstraint + this.labelTipWidth, 0, rightConstraint, 0]);
-    $focusMarker.draggable('option', 'containment',
-        [startConstraint  - (markerWidth / 2), 0, endConstraint  - (markerWidth / 2), 0]);
-    $focusLabel.draggable('option', 'containment',
-        [startConstraint - (this.labelWidth / 2), 0, endConstraint - (this.labelWidth / 2), 0]);
-  },
-  setMarkers: function () {
-    if ($('#timeframe #start-marker').length === 0) {
-      /*jshint -W101 */
-      $('#timeframe').append('<span id="start-marker"><span id="start-marker-bg"></span></span><span id="focus-marker"></span><span id="end-marker"><span id="end-marker-bg"></span></span><span id="selected-frame"><span id="frame-interval-label"></span><div id="timeline-menu"><span id="menu-arrow"></span><ul id="menu-items"><!--<li id="settings" class="menu-item">settings</li>--><li id="today" class="menu-item">today</li><li id="custom" class="menu-item">custom</li><li id="all" class="menu-item">all</li><li id="year" class="menu-item">year</li><li id="month" class="menu-item">month</li><li id="day" class="menu-item">day</li></ul></div></span><span id="frame-interval-label-value"></span>');
-    }
-    var $startMarker = $('#start-marker');
-    var $startLabel = $('#start-marker-label');
-    var $startArrow =  $('#start-marker-arrow');
-    var $endMarker = $('#end-marker');
-    var $endLabel = $('#end-marker-label');
-    var $endArrow =  $('#end-marker-arrow');
-    var $focusMarker = $('#focus-marker');
-    var $focusLabel = $('#focus-marker-label');
-    var $focusArrow = $('#focus-marker-arrow');
-    var $selectedFrame = $('#selected-frame');
-    var $timeline = $('#timeline-scroll-wrapper');
-
-    $startLabel.css('width', this.labelWidth);
-    $endLabel.css('width', this.labelWidth);
-    $focusLabel.css('width', this.labelWidth);
-
-    var markerWidth = $startMarker.width();
-    var focusMarkerWidth = $focusMarker.width();
-    var labelWidth = this.labelWidth + this.labelTipWidth;
-    var timelineWidth = $timeline.width();
-
-    var startMarkerLeft = (this.markerOffset * timelineWidth) + labelWidth - (markerWidth / 2);
-    var endMarkerLeft = timelineWidth - startMarkerLeft - markerWidth;
-
-    var startArrowLeft = startMarkerLeft + (markerWidth / 2) - 4;
-    var endArrowLeft = endMarkerLeft + (markerWidth / 2) - 4;
-
-    var startLabelLeft =  (this.markerOffset * timelineWidth);
-    var endLabelLeft = timelineWidth - startLabelLeft - this.labelWidth;
-
-    var focusMarkerLeft = (timelineWidth / 2) - (focusMarkerWidth / 2);
-    var focusLabelLeft = (timelineWidth / 2) - (this.labelWidth / 2);
-    var focusArrowLeft = (timelineWidth / 2) - 4;
-
-    var selectedFrameLeft = startMarkerLeft + (markerWidth / 2);
-    var selectedFrameWidth = endMarkerLeft + (markerWidth / 2) - selectedFrameLeft;
-    $startMarker.data('left', startMarkerLeft);
-    $endMarker.data('left', endMarkerLeft);
-    $startMarker.show().animate({'left': startMarkerLeft + 'px'});
-    $startLabel.show().animate({'left': startLabelLeft + 'px'});
-    $startArrow.show().animate({'left': startArrowLeft + 'px'});
-    $endMarker.show().animate({'left': endMarkerLeft + 'px'});
-    $endLabel.show().animate({'left': endLabelLeft + 'px'});
-    $endArrow.show().animate({'left': endArrowLeft + 'px'});
-    $focusMarker.show().animate({'left': focusMarkerLeft + 'px'});
-    $focusLabel.animate({'left': focusLabelLeft + 'px'}, function () {
-      $focusLabel.css('left', focusLabelLeft + 'px');
-    });
-    $focusArrow.show().animate({'left': focusArrowLeft + 'px'});
-    $selectedFrame.show().animate({'left': selectedFrameLeft, 'width': selectedFrameWidth});
-    this.setLabelText($startLabel, this.frameFrom);
-    this.setLabelText($endLabel, this.frameTo);
-    this.setIntervalLabel(this.frameFrom, this.frameTo);
-  },
-  setLabelText: function ($label, time) {
-    var date = new Date(time);
-    var year = date.getFullYear();
-    var month = this.translate('mon_' + date.getMonth());
-    var day = date.getDate();
-    var hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
-    var minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
-    $label.text(year + ' ' + month + ' ' + day + ' - ' + hours + ':' + minutes);
-  },
-  getMarkerLabelText: function (date, elementId, setDifference, initialDate) {
-    var year = date.getFullYear();
-    var month = this.translate('mon_' + date.getMonth());
-    var day = date.getDate();
-    var hours = date.getHours() < 10 ? '0' + date.getHours() : date.getHours();
-    var minutes = date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes();
-    $('#' + elementId + '-year').text(year);
-    $('#' + elementId + '-month').text(month);
-    $('#' + elementId + '-day').text(day);
-    $('#' + elementId + '-hour').text(hours);
-    $('#' + elementId + '-minute').text(minutes);
-    if (setDifference) {
-      var initYear = initialDate.getFullYear();
-      var initMonth = this.translate('mon_' + initialDate.getMonth());
-      var initDay = initialDate.getDate();
-      var initHours = initialDate.getHours() < 10 ?
-          '0' + initialDate.getHours() :
-          initialDate.getHours();
-      var initMinutes = initialDate.getMinutes() < 10 ?
-          '0' + initialDate.getMinutes() :
-          initialDate.getMinutes();
-      if (year !== initYear) {
-        $('#' + elementId + '-year').removeClass('label-fixed');
-      } else {
-        $('#' + elementId + '-year').addClass('label-fixed');
-      }
-      if (month !== initMonth) {
-        $('#' + elementId + '-month').removeClass('label-fixed');
-      } else {
-        $('#' + elementId + '-month').addClass('label-fixed');
-      }
-      if (day !== initDay) {
-        $('#' + elementId + '-day').removeClass('label-fixed');
-      } else {
-        $('#' + elementId + '-day').addClass('label-fixed');
-      }
-      if (hours !== initHours) {
-        $('#' + elementId + '-hour').removeClass('label-fixed');
-      } else {
-        $('#' + elementId + '-hour').addClass('label-fixed');
-      }
-      if (minutes !== initMinutes) {
-        $('#' + elementId + '-minute').removeClass('label-fixed');
-      } else {
-        $('#' + elementId + '-minute').addClass('label-fixed');
-      }
-      if (hours !== initHours && minutes !== initMinutes) {
-        $('#' + elementId + '-dots').removeClass('label-fixed');
-      } else {
-        $('#' + elementId + '-dots').addClass('label-fixed');
-      }
-    }
-  },
-  startZoom: function (startDate) {
-    this.triggerFilter(parseInt(startDate, null), this.frameTo);
-  },
-  endZoom: function (endDate) {
-    this.triggerFilter(this.frameFrom, parseInt(endDate, null));
-  },
-  setSpan: function () {
-    var frame_duration = this.frameTo - this.frameFrom;
-    // var frame_duration_sec = parseInt((frame_duration / 1000).toFixed(), null);
-    var numOfGraduations = parseInt((this.proportionTimeFrame *
-        $('#timeline-scroll-wrapper').width() / this.graduationStep).toFixed(), null);
-    this.spanStep = 1;
-    this.span = parseInt((frame_duration / (numOfGraduations * this.spanStep)).toFixed(), null);
-  },
-  onClickAll: function () {
-    if (this.limitFrom !== 0 && this.limitTo !== Infinity) {
-      this.triggerFilter(this.limitFrom, this.limitTo);
-    }
-
-  },
-  onClickTimeSpan: function (spanName, updateTimeline, from, to) {
-    /* Check if we received the spanName or a click event. */
-    if (typeof spanName !== 'string') {
-      spanName = spanName.target.id;
-    }
-    this.span = 86400000;
-    var focus_date = new Date();
-
-    switch (spanName) {
-      case 'day':
-        focus_date.setHours(focus_date.getHours() - 12);
-        this.frameFrom = new Date(focus_date.getTime()).getTime();
-        focus_date.setHours(focus_date.getHours() + 25);
-        this.frameTo = new Date(focus_date.getTime()).getTime();
-        break;
-      case 'month':
-        focus_date.setDate(focus_date.getDate() - 15);
-        this.frameFrom = new Date(focus_date.getTime()).getTime();
-        focus_date.setDate(focus_date.getDate() + 31);
-        this.frameTo = new Date(focus_date.getTime()).getTime();
-        break;
-      case 'year':
-        focus_date.setDate(focus_date.getDate() - 182);
-        this.frameFrom = new Date(focus_date.getTime()).getTime();
-        focus_date.setDate(focus_date.getDate() + 365);
-        this.frameTo = new Date(focus_date.getTime()).getTime();
-        break;
-      case 'custom':
-        this.frameFrom = from;
-        this.frameTo = to;
-        if (this.frameTo < this.frameFrom) {
-          var temp = new Date(this.frameTo);
-          this.frameTo = this.frameFrom;
-          this.frameFrom = temp;
-        }
-        this.span = this.frameTo.getTime() - this.frameFrom.getTime();
-        break;
-      default:
-        break;
-    }
-    if (updateTimeline) {
-      /* Force timeline update by faking a span change. */
-      this.spanName = '';
-    }
-    this.triggerFilter(this.frameFrom, this.frameTo);
-  },
-  onClickToday: function () {
-    var today = new Date();
-    var dateFrom = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    today.setDate(today.getDate() + 1);
-    var dateTo = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    this.triggerFilter(dateFrom.getTime(), dateTo.getTime());
-  },
-  onClickCustomTime: function () {
-    this.modals.customTime.open(new Date(this.frameFrom), new Date(this.frameTo));
-    return false;
-  },
-  onArrowClick: function (arrowElement, isLongClick) {
-    var isPrevArrow = $(arrowElement).hasClass('prev');
-    var gapSpeed = isLongClick ? this.arrowPressLongspeed : 1;
-
-    var self = this;
-    clearTimeout(self.focusTimeout);
-    $('#focus-marker-label, #focus-marker-arrow').fadeOut();
-
-    this.$timeline.animate({
-      left: (isPrevArrow ? '+=' : '-=') + $('#selected-frame').outerWidth() + 'px'
-    },
-    {
-      duration: gapSpeed * self.arrowPressDuration,
-      easing: 'easeOutCirc',
-      progress: function () {
-        var nextStartDate = null, nextEndDate = null;
-        var currentStartDate = new Date($('#start-marker').data('currentDate'));
-        var currentEndDate = new Date($('#end-marker').data('currentDate'));
-        // var currentFocusDate = new Date($('#focus-marker').data('currentDate'));
-
-        nextStartDate = isPrevArrow ?
-            new Date(currentStartDate.getTime() - (self.spanStep * self.span)) :
-            new Date(currentStartDate.getTime() + (self.spanStep * self.span));
-        nextEndDate = isPrevArrow ?
-            new Date(currentEndDate.getTime() - (self.spanStep * self.span)) :
-            new Date(currentEndDate.getTime() + (self.spanStep * self.span));
-        self.getMarkerLabelText(nextStartDate, 'start-marker', true, new Date(self.frameFrom));
-        self.getMarkerLabelText(nextEndDate, 'end-marker', true, new Date(self.frameTo));
-        $('#start-marker').data('currentDate', nextStartDate.getTime());
-        $('#end-marker').data('currentDate', nextEndDate.getTime());
-      },
-      done: function () {
-        $('#timeframe .marker-label span.label-fixed').removeClass('label-fixed');
-        var gap = gapSpeed * (self.frameTo - self.frameFrom);
-        var dateFrom = isPrevArrow ? self.frameFrom - gap : self.frameFrom + gap;
-        var dateTo = isPrevArrow ? self.frameTo - gap : self.frameTo + gap;
-        var dates = self._checkLimitDates(dateFrom, dateTo);
-        dateTo = dates.to;
-        dateFrom = dates.from;
-        self.timeframeChanged = true;
-        self.triggerFilter(dateFrom, dateTo);
-        dates = {'from': new Date(dateFrom), 'to': new Date(dateTo)};
-        self.setTimelineDates(dates, self.graduation);
-        self.setMarkers();
-        var initialLeftPosition = self.$timeline.data('initialLeftPosition');
-        self.$timeline.css({'left': initialLeftPosition + 'px'});
-      }
-    });
-  },
-  onClickMenu: function () {
-    $('#menu-items').toggle();
-  },
-  onLanguageChanged: function (language) {
-    this.currentLanguage = language;
-    this.updateLanguage();
-  },
-  updateLanguage: function () {
-    var keywords = _keywords[this.currentLanguage];
-    _.each(keywords, function (value, key) {
-      this.$('.' + key + '_lang').each(function () {
-        var $element = $(this);
-        if ($element.attr('value') && $element.attr('value') !== '') {
-          $element.attr('value', value);
-        }
-      }, this);
-    }, this);
-  },
-  translate: function (keyword) {
-    return _keywords[this.currentLanguage][keyword];
-  },
-  bindTouch: function () {
-    // Detect touch support
-    $.support.touch = 'ontouchend' in document;
-    // Ignore browsers without touch support
-    if (!$.support.touch) {
-      return;
-    }
-    var mouseProto = $.ui.mouse.prototype,
-        _mouseInit = mouseProto._mouseInit,
-        touchHandled;
-
-    function simulateMouseEvent(event, simulatedType) { //use this function to simulate mouse event
-      // Ignore multi-touch events
-      if (event.originalEvent.touches.length > 1) {
-        return;
-      }
-      event.preventDefault(); //use this to prevent scrolling during ui use
-
-      var touch = event.originalEvent.changedTouches[0],
-          simulatedEvent = document.createEvent('MouseEvents');
-      // Initialize the simulated mouse event using the touch event's coordinates
-      simulatedEvent.initMouseEvent(
-          simulatedType,    // type
-          true,             // bubbles
-          true,             // cancelable
-          window,           // view
-          1,                // detail
-          touch.screenX,    // screenX
-          touch.screenY,    // screenY
-          touch.clientX,    // clientX
-          touch.clientY,    // clientY
-          false,            // ctrlKey
-          false,            // altKey
-          false,            // shiftKey
-          false,            // metaKey
-          0,                // button
-          null              // relatedTarget
-      );
-
-      // Dispatch the simulated event to the target element
-      event.target.dispatchEvent(simulatedEvent);
-    }
-
-    mouseProto._touchStart = function (event) {
-      var self = this;
-      // Ignore the event if another widget is already being handled
-      if (touchHandled || !self._mouseCapture(event.originalEvent.changedTouches[0])) {
-        return;
-      }
-      // Set the flag to prevent other widgets from inheriting the touch event
-      touchHandled = true;
-      // Track movement to determine if interaction was a click
-      self._touchMoved = false;
-      // Simulate the mouseover event
-      simulateMouseEvent(event, 'mouseover');
-      // Simulate the mousemove event
-      simulateMouseEvent(event, 'mousemove');
-      // Simulate the mousedown event
-      simulateMouseEvent(event, 'mousedown');
-    };
-
-    mouseProto._touchMove = function (event) {
-      // Ignore event if not handled
-      if (!touchHandled) {
-        return;
-      }
-      // Interaction was not a click
-      this._touchMoved = true;
-      // Simulate the mousemove event
-      simulateMouseEvent(event, 'mousemove');
-    };
-    mouseProto._touchEnd = function (event) {
-      // Ignore event if not handled
-      if (!touchHandled) {
-        return;
-      }
-      // Simulate the mouseup event
-      simulateMouseEvent(event, 'mouseup');
-      // Simulate the mouseout event
-      simulateMouseEvent(event, 'mouseout');
-      // If the touch interaction did not move, it should trigger a click
-      if (!this._touchMoved) {
-        // Simulate the click event
-        simulateMouseEvent(event, 'click');
-      }
-      // Unset the flag to allow other widgets to inherit the touch event
-      touchHandled = false;
-    };
-    mouseProto._mouseInit = function () {
-      var self = this;
-      // Delegate the touch handlers to the widget's element
-      self.element
-          .on('touchstart', $.proxy(self, '_touchStart'))
-          .on('touchmove', $.proxy(self, '_touchMove'))
-          .on('touchend', $.proxy(self, '_touchEnd'));
-
-      // Call the original $.ui.mouse init method
-      _mouseInit.call(self);
-    };
-  }
-});
-})()
-},{"./modal.js":29,"backbone":30,"underscore":9}],8:[function(require,module,exports){
+},{"../model/Messages":7,"../view/create/Controller.js":22,"../view/events-views/detailed/Controller.js":23,"../view/events-views/draganddrop/Controller.js":26,"../view/onboarding/View.js":27,"../view/settings/Controller.js":29,"../view/sharings/Controller.js":21,"../view/sharings/create/Controller.js":25,"../view/subscribe/Controller.js":24,"./RootNode.js":20,"./VirtualNode.js":28,"pryv":10,"underscore":9}],7:[function(require,module,exports){
 
 var Messages = module.exports = { };
 
@@ -3700,103 +2897,391 @@ Messages.MonitorsHandler = {
     FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };
-},{"pryv":10}],6:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  FilterByStreamView = require('./FilterByStream.js'),
-  ActionsView = require('./Actions.js'),
-  _ = require('underscore');
-
-var Layout = Marionette.Layout.extend({
-  template: '#left-panel-template',
-
-  regions: {
-    filterByStream: '#filter-by-stream',
-    actions: '#actions'
-  },
-  initialize: function () {
-    this.$el =  $('.menu-panel');
-  }
-});
-var Controller = module.exports  = {};
-
-var view = null,
-  filterByStreamView = null,
-  actionsView = null,
-  connectionsNumber = {
-    logged: 0,
-    sharings: 0,
-    bookmarks: 0,
-    public: 0
+},{"pryv":10}],8:[function(require,module,exports){
+(function(){/* global $, document, i18n, window, moment */
+var _ = require('underscore');
+module.exports = (function () {
+  var CONTAINER = '#timeframeContainer';
+  var MARGIN = {
+    left: 100,
+    right: 100
   };
-Controller.render = function (MainModel) {
-  if (!view || !filterByStreamView) {
-    if (!view) {
-      view = new Layout();
-      view.render();
-      actionsView = new ActionsView();
-      view.actions.show(actionsView);
+  var DATE_FORMAT = {
+    'day': {
+      'selected': 'D.M.YYYY',
+      'others': 'D'
+    },
+    'month': {
+      'selected': 'MMM YYYY',
+      'others': 'MMM'
+    },
+    'week': {
+      'selected': 'D.M.YYYY',
+      'others': 'D.M'
+    },
+    'year': {
+      'selected': 'YYYY',
+      'others': 'YYYY'
+    },
+    'custom': {
+      'selected': 'D.M.YYYY LT'
+    },
+    'all': {
+      'selected': 'D.M.YYYY LT'
     }
-    if (!filterByStreamView) {
-      filterByStreamView = new FilterByStreamView({MainModel: MainModel});
-      view.filterByStream.show(filterByStreamView);
+  };
+  var DATE_SIZE = {
+    'day': {
+      'selected': 150,
+      'others': 75
+    },
+    'month': {
+      'selected': 150,
+      'others': 75
+    },
+    'week': {
+      'selected': 150,
+      'others': 100
+    },
+    'year': {
+      'selected': 150,
+      'others': 75
+    },
+    'custom': {
+      'selected': 500
     }
-  } else if (view && filterByStreamView && isConnectionsNumberChange(MainModel)) {
-    /*view.render();
-    view.actions.show(actionsView);*/
-    view.filterByStream.show(filterByStreamView);
-  } else if (view && filterByStreamView) {
-    if (!filterByStreamView.onFocusStreamChanged()) {
-      view.filterByStream.show(filterByStreamView);
+  };
+  var _isInit = false;
+  var _callbacks;
+  var _from;
+  var _to;
+  var _scale;
+  var _highlight;
+  var init = function () {
+    if (_isInit === true) {
+      return;
     }
-  }
+    _isInit = true;
+    moment.lang(i18n.lng());
+    _callbacks = {};
+    _initTimeFrame();
+  };
+  var _initHtml = function () {
+    $(CONTAINER).html('<div id="timeframe" style="margin-left: ' + MARGIN.left +
+        'px; margin-right: ' + MARGIN.right + 'px;"><div id="upperLayout"></div>' +
+        '<div id="datesContainer"><div id="dates"></div></div><div id="scales">' +
+        '<a href="javascript:void(0)" class="timeScale" data-timeScale="day">Day</a>' +
+        '<a href="javascript:void(0)" class="timeScale" data-timeScale="week">Week</a>' +
+        '<a href="javascript:void(0)" class="timeScale selected" data-timeScale="month">Month</a>' +
+        '<a href="javascript:void(0)" class="timeScale" data-timeScale="year">Year</a>' +
+        '</div><div id="custom" class="timeScale" data-timeScale="custom">Custom</div></div>');
+    $('#custom').popover({
+      html: true,
+      placement: 'top',
+      content: function () {
+        return $('<div>' +
+
+            '<div class="input-group date picker" id="fromPicker">' +
+            '<input type="text" class="form-control" placeholder="From"/> ' +
+            '<span id="fromButton" class="input-group-addon">' +
+            '<span class="fa fa-calendar"></span>' +
+            '</span>' +
+            '</div>' +
+            '<div class="input-group date picker" id="toPicker">' +
+            '<input type="text" class="form-control" placeholder="To"/> ' +
+            '<span id="toButton" class="input-group-addon">' +
+            '<span class="fa fa-calendar"></span>' +
+            '</span>' +
+            '</div>' +
+            '<div id="ok" class="btn btn-default">OK</div>' +
+            '</div>').html();
+      }
+    });
+    $('#custom').on('shown.bs.popover', function () {
+      var fromDate = 'not a date',
+          toDate = 'not a date';
+      $(document.body).off('click', '#ok');
+      $(document.body).on('click', '#ok', function () {
+        fromDate = moment(fromDate);
+        toDate = moment(toDate);
+        if (fromDate.isValid() && toDate.isValid() && fromDate.unix() <= toDate.unix()) {
+          $('#custom').popover('hide');
+          _scale = 'custom';
+          setTimeBounds(fromDate, toDate);
+          _updateDateScale();
+        }
+      });
+      $(document.body).off('click', '#fromButton');
+      $(document.body).on('click', '#fromButton', function () {
+        $('#fromButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#fromPicker input');
+      $(document.body).on('click', '#fromPicker input', function () {
+        $('#fromButton').trigger('click');
+      });
+      $(document.body).off('click', '#toButton');
+      $(document.body).on('click', '#toButton', function () {
+        $('#toButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#toPicker');
+      $(document.body).on('click', '#toPicker input', function () {
+        $('#toButton').trigger('click');
+      });
+      $('#fromPicker').datetimepicker({
+        direction: 'auto'
+      });
+      $('#fromPicker').on('dp.change', function (e) {
+        fromDate = e.date;
+      });
+      $('#toPicker').datetimepicker({
+        direction: 'auto'
+      });
+      $('#toPicker').on('dp.change', function (e) {
+        toDate = e.date;
+      });
+    });
+  };
+  var _updateDateScale = function () {
+    var containerWidth = $(CONTAINER).width();
+    var $dates = $('#dates');
+    var $datesMargin, $datesWidth;
+    moment.lang(i18n.lng());
+    if (_scale === 'custom') {
+      $('.timeScale').removeClass('selected');
+      $('#custom').addClass('selected');
+      $datesWidth = DATE_SIZE[_scale].selected;
+      $datesMargin = ((containerWidth - MARGIN.left - MARGIN.right) - $datesWidth) / 2;
+      $dates.empty();
+      $dates.css({
+        'width': $datesWidth + 'px',
+        'margin-left': $datesMargin + 'px'
+      });
+      $dates.append('<li class="timeItem selected" style="width: ' +
+          DATE_SIZE[_scale].selected + 'px;">' +
+          moment.unix(_from).format(DATE_FORMAT[_scale].selected) + ' - ' +
+          moment.unix(_to).format(DATE_FORMAT[_scale].selected) + '</li>');
+      return;
+    }
+
+    var nbrToDisplay = Math.floor((containerWidth - MARGIN.left - MARGIN.right -
+        DATE_SIZE[_scale].selected) / (DATE_SIZE[_scale].others * 2));
+
+    $datesWidth = (nbrToDisplay * 4 * DATE_SIZE[_scale].others) + DATE_SIZE[_scale].selected;
+    // use margin to center dates
+    $datesMargin = -($datesWidth - (containerWidth - MARGIN.left - MARGIN.right)) / 2;
+    $dates.empty();
+    for (var i = 0; i < nbrToDisplay * 2; i++) {
+      $dates.prepend('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+          moment.unix(_from).subtract(_scale, i + 1).format(DATE_FORMAT[_scale].others) + '</li>');
+    }
+    $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
+        'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + '</li>');
+    for (var j = 0; j < nbrToDisplay * 2; j++) {
+      $dates.append('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+          moment.unix(_from).add(_scale, j + 1).format(DATE_FORMAT[_scale].others) + '</li>');
+    }
+    $dates.css({
+      'width': $datesWidth + 'px',
+      'margin-left': $datesMargin + 'px'
+    });
+    $('.timeItem').click(_changeTime);
+  };
+
+  var _changeTime = function () {
+    var clickedIndex = $(this).index();
+    var totalIndex = $('.timeItem').length;
+    var centerIndex = (totalIndex - 1) / 2;
+    var diff = centerIndex - clickedIndex;
+    if (diff === 0) {
+      return;
+    }
+    var c = centerIndex + 1;
+    $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from)
+        .format(DATE_FORMAT[_scale].others))
+        .css('width', DATE_SIZE[_scale].others).removeClass('selected');
+    var $dates = $('#dates');
+    if (diff > 0) {
+      // add before and remove last
+      c = clickedIndex + 1;
+      $('.timeItem:nth-child(' + c + ')')
+          .html(moment.unix(_from).subtract(_scale, diff).format(DATE_FORMAT[_scale].selected))
+          .css('width', DATE_SIZE[_scale].selected).addClass('selected');
+      var d = diff + 1;
+      $('.timeItem:gt(-' + d + ')').remove();
+      for (var i = 0; i < diff; i++) {
+        $('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+            moment.unix(_from).subtract(_scale, totalIndex - centerIndex + i)
+                .format(DATE_FORMAT[_scale].others) + '</li>').hide().prependTo('#dates').animate({
+          width: 'toggle'
+        });
+      }
+      setTimeBounds(moment.unix(_from)
+          .subtract(_scale, diff).startOf(_scale),
+          moment.unix(_to).subtract(_scale, diff).endOf(_scale));
+    } else {
+      // remove before and add last
+
+      c = clickedIndex + 1;
+      $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from).add(_scale, -diff)
+          .format(DATE_FORMAT[_scale].selected))
+          .css('width', DATE_SIZE[_scale].selected).addClass('selected');
 
 
 
-};
+      $('.timeItem:lt(' + -diff + ')').animate({
+        width: 'toggle'
+      }, {
+        complete: function () {
+          $(this).remove();
+        }
+      });
 
-var isConnectionsNumberChange = function (MainModel) {
-  // hack: need to have an onStream change and onConnection change;
-  var logged = 0;
-  if (MainModel.loggedConnection.datastore) {
-    logged = _.size(MainModel.loggedConnection.datastore.getStreams());
-  }
-  var pub = 0;
-  if (MainModel.publicConnection.datastore) {
-    pub = _.size(MainModel.publicConnection.datastore.getStreams());
-  }
-  var sharings = 0;
-  _.each(MainModel.sharingsConnections, function (connection) {
-    if (connection.datastore) {
-      sharings += _.size(connection.datastore.getStreams());
+      for (var j = 0; j < -diff; j++) {
+        $dates.append('<li class="timeItem" style="width: ' +
+            DATE_SIZE[_scale].others + 'px;">' +
+            moment.unix(_from).add(_scale, totalIndex - centerIndex + j)
+                .format(DATE_FORMAT[_scale].others) + '</li>');
+      }
+      setTimeBounds(moment.unix(_from).add(_scale, -diff)
+          .startOf(_scale), moment.unix(_to).add(_scale, -diff).endOf(_scale));
     }
-  });
-  var bookmarks = 0;
-  _.each(MainModel.bookmakrsConnections, function (connection) {
-    if (connection.datastore) {
-      bookmarks += _.size(connection.datastore.getStreams());
+    $('.timeItem').off().click(_changeTime);
+  };
+  var _changeScale = function () {
+    var scale = $(this).attr('data-timeScale');
+    if (scale === _scale || scale === 'custom') {
+      return;
     }
-  });
-  var res = !(connectionsNumber.logged === logged &&
-    connectionsNumber.public === pub &&
-    connectionsNumber.sharings === sharings &&
-    connectionsNumber.bookmarks === bookmarks
-    );
-  connectionsNumber.logged = logged;
-  connectionsNumber.public = pub;
-  connectionsNumber.sharings = sharings;
-  connectionsNumber.bookmarks = bookmarks;
-  return res;
-};
+    $('.timeScale').removeClass('selected');
+    $(this).addClass('selected');
+    if (scale === 'day') {
+      if ((_scale === 'custom') ||
+          (moment().unix() >= moment.unix(_from).unix() &&
+              moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('day'), moment().endOf('day'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('day'), moment.unix(_from).endOf('day'));
+      }
+      _scale = 'day';
+    } else if (scale === 'week') {
+      if ((_scale === 'custom') ||
+          (moment().unix() >= moment.unix(_from).unix() &&
+              moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('week'), moment().endOf('week'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('week'), moment.unix(_from).endOf('week'));
+      }
+      _scale = 'week';
+    } else if (scale === 'month') {
+      if ((_scale === 'custom') ||
+          (moment().unix() >= moment.unix(_from).unix() &&
+              moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('month'), moment().endOf('month'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('month'), moment.unix(_from).endOf('month'));
+      }
+      _scale = 'month';
+    } else if (scale === 'year') {
+      if ((_scale === 'custom') ||
+          (moment().unix() >= moment.unix(_from).unix() &&
+              moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('year'), moment().endOf('year'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('year'), moment.unix(_from).endOf('year'));
+      }
+      _scale = 'year';
+    }
+    _updateDateScale();
+  };
+  // set time frame to current month and highlight to now
+  var _initTimeFrame = function () {
+    _scale = 'month';
+    setHighlight(moment());
+    setTimeBounds(moment().startOf('month'),
+        moment().endOf('month'));
 
+    _initHtml();
+    _updateDateScale();
+    $('.timeScale').click(_changeScale);
+    $(window).resize(_updateDateScale);
+
+  };
+  var setHighlight = function (time) {
+    init();
+    if (moment(time).isValid()) {
+      _highlight = moment(time).unix();
+      trigger('highlightChanged', _highlight);
+    } else {
+      console.warn('setHilghlight(): invalid argument', time);
+    }
+  };
+  var setTimeBounds = function (from, to) {
+    init();
+    if (moment(from).isValid() && moment(to).isValid()) {
+      _from = moment(from).unix();
+      _to = moment(to).unix();
+      trigger('timeBoundsChanged', _from, _to);
+    } else {
+      console.warn('setTimeBounds(): invalid argument', from, to);
+    }
+  };
+  var getTimeBounds  = function () {
+    return {from: _from, to: _to};
+  };
+  var on = function (event, callback) {
+    init();
+    if (event && typeof (event) === 'string' && callback && typeof (callback) === 'function') {
+      if (!_callbacks[event]) {
+        _callbacks[event] = [];
+      }
+      _callbacks[event].push(callback);
+    }
+  };
+  var off = function (event, callback) {
+    init();
+    if (!event || typeof (event) !== 'string') {
+      _callbacks = {};
+    } else {
+      if (callback && typeof (callback) === 'function' && _callbacks[event]) {
+        for (var i = 0; i < _callbacks[event].length; ++i) {
+          if (_callbacks[event][i] === callback) {
+            _callbacks[event][i] = null;
+          }
+        }
+      } else if (!callback && _callbacks[event]) {
+        _callbacks[event] = [];
+      }
+    }
+  };
+  var trigger = function () {
+    init();
+    var event = arguments[0];
+    var args = _.toArray(arguments).slice(1);
+    if (_callbacks[event]) {
+      _callbacks[event].forEach(function (cb) {
+        if (cb && typeof (cb) === 'function') {
+          cb.apply(null, args);
+        }
+      });
+    }
+  };
+
+
+  var oPublic = {
+    init: init,
+    setTimeBounds: setTimeBounds,
+    getTimeBounds: getTimeBounds,
+    setHighlight: setHighlight,
+    on: on,
+    off: off,
+    trigger: trigger
+  };
+  return oPublic;
+})();
 })()
-},{"./Actions.js":32,"./FilterByStream.js":31,"backbone.marionette":33,"underscore":9}],11:[function(require,module,exports){
-var utility = require('../utility/utility.js');
-
-module.exports =  utility.isBrowser() ?
-    require('./Auth-browser.js') : require('./Auth-node.js');
-
-},{"../utility/utility.js":17,"./Auth-browser.js":35,"./Auth-node.js":34}],15:[function(require,module,exports){
+},{"underscore":9}],14:[function(require,module,exports){
 
 var utility = require('./utility/utility');
 var eventTypes = module.exports = { };
@@ -3899,7 +3384,103 @@ eventTypes.extras = function (eventType) {
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./utility/utility":17}],36:[function(require,module,exports){
+},{"./utility/utility":16}],11:[function(require,module,exports){
+var utility = require('../utility/utility.js');
+
+module.exports =  utility.isBrowser() ?
+    require('./Auth-browser.js') : require('./Auth-node.js');
+
+},{"../utility/utility.js":16,"./Auth-browser.js":30,"./Auth-node.js":31}],6:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  FilterByStreamView = require('./FilterByStream.js'),
+  ActionsView = require('./Actions.js'),
+  _ = require('underscore');
+
+var Layout = Marionette.Layout.extend({
+  template: '#left-panel-template',
+
+  regions: {
+    filterByStream: '#filter-by-stream',
+    actions: '#actions'
+  },
+  initialize: function () {
+    this.$el =  $('.menu-panel');
+  }
+});
+var Controller = module.exports  = {};
+
+var view = null,
+  filterByStreamView = null,
+  actionsView = null,
+  connectionsNumber = {
+    logged: 0,
+    sharings: 0,
+    bookmarks: 0,
+    public: 0
+  };
+Controller.render = function (MainModel) {
+  if (!view || !filterByStreamView) {
+    if (!view) {
+      view = new Layout();
+      view.render();
+      actionsView = new ActionsView();
+      view.actions.show(actionsView);
+    }
+    if (!filterByStreamView) {
+      filterByStreamView = new FilterByStreamView({MainModel: MainModel});
+      view.filterByStream.show(filterByStreamView);
+    }
+  } else if (view && filterByStreamView && isConnectionsNumberChange(MainModel)) {
+    /*view.render();
+    view.actions.show(actionsView);*/
+    view.filterByStream.show(filterByStreamView);
+  } else if (view && filterByStreamView) {
+    if (!filterByStreamView.onFocusStreamChanged()) {
+      view.filterByStream.show(filterByStreamView);
+    }
+  }
+
+
+
+};
+
+var isConnectionsNumberChange = function (MainModel) {
+  // hack: need to have an onStream change and onConnection change;
+  var logged = 0;
+  if (MainModel.loggedConnection.datastore) {
+    logged = _.size(MainModel.loggedConnection.datastore.getStreams());
+  }
+  var pub = 0;
+  if (MainModel.publicConnection.datastore) {
+    pub = _.size(MainModel.publicConnection.datastore.getStreams());
+  }
+  var sharings = 0;
+  _.each(MainModel.sharingsConnections, function (connection) {
+    if (connection.datastore) {
+      sharings += _.size(connection.datastore.getStreams());
+    }
+  });
+  var bookmarks = 0;
+  _.each(MainModel.bookmakrsConnections, function (connection) {
+    if (connection.datastore) {
+      bookmarks += _.size(connection.datastore.getStreams());
+    }
+  });
+  var res = !(connectionsNumber.logged === logged &&
+    connectionsNumber.public === pub &&
+    connectionsNumber.sharings === sharings &&
+    connectionsNumber.bookmarks === bookmarks
+    );
+  connectionsNumber.logged = logged;
+  connectionsNumber.public = pub;
+  connectionsNumber.sharings = sharings;
+  connectionsNumber.bookmarks = bookmarks;
+  return res;
+};
+
+})()
+},{"./Actions.js":33,"./FilterByStream.js":32,"backbone.marionette":34,"underscore":9}],35:[function(require,module,exports){
 var apiPathPrivateProfile = '/profile/private';
 var apiPathPublicProfile = '/profile/app';
 
@@ -4049,7 +3630,7 @@ Profile.prototype._set = function (path, keyValuePairs, callback) {
 };
 
 module.exports = Profile;
-},{}],37:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 var apiPathAccount = '/account';
 
 function Account(connection) {
@@ -4075,7 +3656,7 @@ Account.prototype.getInfo = function (callback) {
 };
 
 module.exports = Account;
-},{}],38:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 exports.Errors = {
   API_UNREACHEABLE : 'API_UNREACHEABLE',
   INVALID_RESULT_CODE : 'INVALID_RESULT_CODE'
@@ -4087,7 +3668,20 @@ exports.Api = {
     ApiVersion : 'api-version'
   }
 };
-},{}],19:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
+
+module.exports = {};
+},{}],38:[function(require,module,exports){
+/**
+ * Common regexps
+ * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
+ */
+module.exports = {
+  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
+  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
+};
+
+},{}],20:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
@@ -4185,10 +3779,7 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":40,"./TreeNode":39,"underscore":9}],34:[function(require,module,exports){
-
-module.exports = {};
-},{}],26:[function(require,module,exports){
+},{"./ConnectionNode":40,"./TreeNode":39,"underscore":9}],28:[function(require,module,exports){
 var Pryv = require('pryv');
 var _ = require('underscore');
 
@@ -4425,39 +4016,6 @@ VirtualNode.nodeHas = function (node) {
 };
 
 },{"pryv":10,"underscore":9}],41:[function(require,module,exports){
-/**
- * Common regexps
- * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
- */
-module.exports = {
-  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
-  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
-};
-
-},{}],29:[function(require,module,exports){
-
-var Backbone = require('backbone');
-
-module.exports = Backbone.View.extend({
-  /* Variables */
-  id: '#modal',
-  $modal: null,
-  /* Methods */
-  render: function () {
-    this.setElement(this.id);
-    this.$el.html(this.template());
-    this.$modal = this.$(this.modalId).modal();
-    this.delegateEvents();
-    return this;
-  },
-  close: function () {
-    this.undelegateEvents();
-    this.$modal.modal('hide');
-  }
-});
-
-
-},{"backbone":30}],42:[function(require,module,exports){
 var events = require('events');
 
 exports.isArray = isArray;
@@ -4804,559 +4362,144 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":43}],44:[function(require,module,exports){
+},{"events":42}],13:[function(require,module,exports){
 
-/* Definition of a virtual node attached to a stream as its child
- *  stream: <streamId>, // the node where it's attached to
- *  name: <my name>,    // the name of that virtual node
- *  filters: [          // an array of filter/setting pairs contained in this virtual node
- *    { filter: f1,
- *      settings:             // settings of that filter, such as color,
- *        [{ color: 'green', // style, ... (especially for charts)
- *        style: 'bar',
- *         ... }, {}]
- *    },
- *    { filter: f2, settings: {...}},
- *    ...
- *   ]
- *   Note:
- *   The filters are ofa special kind. Each filter concerns exactly one type.
- *   The settings override the stream/type pair's default one. Numerical data
- *   would contain style (line, bar, ..), color, transform.
+var _ = require('underscore');
+
+var RW_PROPERTIES =
+  ['streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
+    'clientData', 'state', 'modified', 'trashed'];
+
+
+
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function Event(connection, data) {
+  if (! connection) {
+    throw new Error('Cannot create connection less events');
+  }
+  this.connection = connection;
+  this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
+  _.extend(this, data);
+};
+
+/**
+ * get Json object ready to be posted on the API
+ */
+Event.prototype.getData = function () {
+  var data = {};
+  _.each(RW_PROPERTIES, function (key) { // only set non null values
+    if (_.has(this, key)) { data[key] = this[key]; }
+  }.bind(this));
+  return data;
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.update = function (callback) {
+  this.connection.events.update(this, callback);
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.addAttachment = function (file, callback) {
+  this.connection.events.addAttachment(this.id, file, callback);
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.removeAttachment = function (fileName, callback) {
+  this.connection.events.removeAttachment(this.id, fileName, callback);
+};
+/**
+ * TODO create an attachment Class that contains such logic
+ * @param {attachment} attachment
+ */
+Event.prototype.attachmentUrl = function (attachment) {
+  var url =  this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + '/events/' +
+    this.id + '/' + attachment.id + '?readToken=' + attachment.readToken;
+  return url;
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.trash = function (callback) {
+  this.connection.events.trash(this, callback);
+};
+/**
+ * TODO document and rename to getPicturePreviewUrl
+ * @param width
+ * @param height
+ * @returns {string}
+ */
+Event.prototype.getPicturePreview = function (width, height) {
+  width = width ? '&w=' + width : '';
+  height = height ? '&h=' + height : '';
+  var url = this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
+    this.id + '?auth=' + this.connection.auth + width + height;
+  return url;
+};
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'timeLT', {
+  get: function () {
+    return this.connection.getLocalTime(this.time);
+  },
+  set: function (newValue) {
+    this.time = this.connection.getServerTime(newValue);
+  }
+});
+
+
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    if (! this.connection.datastore) {
+      throw new Error('call connection.fetchStructure before to get automatic stream mapping.' +
+        ' Or use StreamId');
+    }
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'url', {
+  get: function () {
+    var url = this.connection.settings.ssl ? 'https://' : 'http://';
+    url += this.connection.username + '.' + this.connection.settings.domain + '/events/' + this.id;
+    return url;
+  },
+  set: function () { throw new Error('Event.url property is read only'); }
+});
+
+
+/**
+ * An newly created Event (no id, not synched with API)
+ * or an object with sufficient properties to be considered as an Event.
+ * @typedef {(Event|Object)} NewEventLike
+ * @property {String} streamId
+ * @property {String} type
+ * @property {number} [time]
  */
 
-
-
-var Settings = module.exports = function Setting(stream, type, virtualNode, offset) {
-  this._stream = stream;
-  this._type = type;
-  this._virtualNode = virtualNode;
-
-  this._offset = offset ? offset : 0;
-  this._cnt = offset ? offset : 0;
-
-  this._ptr = null;
-
-  this._createIfNotExist();
-  //this._emptyData();
-};
-
-
-Settings.prototype._createIfNotExist = function () {
-  if (this._virtualNode) {
-    var found = false;
-    for (var i = 0; i < this._virtualNode.filters.length; ++i) {
-      if (this._virtualNode.filters[i].streamId === this._stream.id &&
-        this._virtualNode.filters[i].type === this._type) {
-        if (this._cnt === 0) {
-          found = true;
-          break;
-        } else {
-          this._cnt--;
-        }
-      }
-    }
-    if (found) {
-      if (!this._virtualNode.filters[i].settings) {
-        this._virtualNode.filters[i].settings = {};
-      }
-      this._ptr = this._virtualNode.filters[i].settings;
-    }
-  } else {
-    if (!this._stream.clientData) {
-      this._stream.clientData = {};
-    }
-    if (!this._stream.clientData['pryv-browser:charts']) {
-      this._stream.clientData['pryv-browser:charts'] = {};
-    }
-    if (!this._stream.clientData['pryv-browser:charts'][this._type]) {
-      this._stream.clientData['pryv-browser:charts'][this._type] = {settings: {}};
-    }
-    this._ptr = this._stream.clientData['pryv-browser:charts'][this._type].settings;
-  }
-};
-
-
-Settings.prototype._emptyData = function () {
-  if (!this._virtualNode) {
-    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
-    this._stream.connection.streams._updateWithData(changes, function (error, result) {
-      console.log('clientData for has been pushed:', error, result);
-    });
-  }
-};
-
-
-
-Settings.prototype._pushChanges = function () {
-  var changes = null;
-  if (this._virtualNode) {
-    changes = {'browser:virtualnode': this._virtualNode._getDataPointer()};
-    console.log('Pushing these changes in privateProfile', changes);
-    this._stream.connection.profile.setPrivate(changes, function (error, result) {
-      console.log('privateProfile for', 'browser:virtualnode', 'has been pushed:', error, result);
-    });
-  } else {
-    changes = {id: this._stream.id, clientData: this._stream.clientData};
-    console.log('Pushing these changes in clientData', changes);
-    this._stream.connection.streams._updateWithData(changes, function (error, result) {
-      console.log('clientData for has been pushed:', error, result);
-    });
-  }
-
-};
-
-
-Settings.prototype.set = function (key, value) {
-  this._ptr[key] = value;
-  this._pushChanges();
-};
-
-Settings.prototype.get = function (key) {
-  return this._ptr[key];
-};
-
-},{}],24:[function(require,module,exports){
-(function(){/* global $ */
-var _ = require('underscore'),
-  View = require('./View.js'),
-  Model = require('./EventModel.js'),
-  _ = require('underscore');
-
-var Controller = module.exports = function ($modal, connection, focusedStream, target) {
-  this.connection = connection;
-  this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
-  this.$modal = $modal;
-  this.target = target;
-  this.container = '.modal-content';
-  this.view = null;
-  this.newEvent = null;
-};
-_.extend(Controller.prototype, {
-  show: function () {
-    this.newEvent = new Model({event: this._defaultEvent()});
-    this.$modal.modal({currentTarget: this.target});
-    $(this.container).empty().hide();
-    setTimeout(function () {
-      $(this.container).fadeIn();
-    }.bind(this), 500);
-    $(this.container).append('<div class="modal-header">  ' +
-      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
-      '&times;</button> ' +
-      '<h4 class="modal-title" id="myModalLabel" ' +
-      'data-i18n="modal.addEvent.header.add-event"></h4>' +
-      '<div class="modal-close"></div> ' +
-      '</div>' +
-      '<div id="modal-content"></div>');
-    this.view = new View({model: this.newEvent});
-    this.view.connection = this.connection;
-    this.view.focusedStream = this.focusedStream;
-    this.view.render();
-    this.view.on('close', this.close.bind(this));
-    $('body').i18n();
-  },
-  close: function () {
-    this.newEvent = null;
-    if (this.view) {
-      this.view.close();
-      this.view = null;
-      $(this.container).empty();
-      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
-      $('.modal-backdrop').remove();
-      this.$modal.trigger('hidden.bs.modal');
-    }
-
-  },
-  _defaultEvent: function () {
-    var result = {};
-    result.time = new Date().getTime() / 1000;
-    result.tags = [];
-    result.content = null;
-    result.desctiption = '';
-    return result;
-  }
-});
-})()
-},{"./EventModel.js":46,"./View.js":45,"underscore":9}],22:[function(require,module,exports){
-(function(){/* global $, window, i18n */
-var _ = require('underscore'),
-  SharingCollection = require('./SharingCollection.js'),
-  SharingModel = require('./SharingModel.js'),
-  SharingListView = require('./SharingListView.js'),
-  BookmarkCollection = require('./BookmarkCollection.js'),
-  BookmarkModel = require('./BookmarkModel.js'),
-  BookmarkListView = require('./BookmarkListView.js'),
-  Pryv = require('pryv');
-var Controller = module.exports = function ($modal, connection, target) {
-  this.sharings = {};
-  this.connection = connection;
-  this.sharingCollection =  new SharingCollection();
-  this.sharingListView = null;
-  this.bookmarkCollection =  new BookmarkCollection();
-  this.bookmarkListView = null;
-  this.$modal = $modal;
-  this.target = target;
-  $('.modal-content').empty();
-  $('.modal-content').prepend('<div class="modal-header">  ' +
-    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
-    '&times;</button> ' +
-    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.manageSlices.header"></h4>' +
-    '<div class="modal-close"></div> ' +
-    '</div><div id="modal-content"><div id="creation-content">' +
-    '<div class="sharings container"></div></div>' +
-    '<div id="creation-footer" class="col-md-12">' +
-    '<button id="ok" class="btn btn-pryv-turquoise" ' +
-    'data-dismiss="modal" data-i18n="button.ok"></button>' +
-    '</div></div>');
-  $('body').i18n();
-  this.container = '.sharings';
-
-};
-
-_.extend(Controller.prototype, {
-  show: function () {
-    this.$modal.modal({currentTarget: this.target});
-    $('.modal-content').hide();
-    setTimeout(function () {
-      $('.modal-content').fadeIn();
-    }.bind(this), 500);
-    if (!this.sharingListView) {
-      this.sharingListView = new SharingListView({
-        collection: this.sharingCollection
-      });
-    }
-    if (!this.bookmarkListView) {
-      this.bookmarkListView = new BookmarkListView({
-        collection: this.bookmarkCollection
-      });
-      this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
-      this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
-      this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
-      this.sharingListView.on('itemview:sharing:update', this._onUpdateSharingClick.bind(this));
-    }
-    this.sharingListView.render();
-    this.bookmarkListView.render();
-    this.connection.accesses.get(function (error, result) {
-      if (error) {
-        console.error('GET ACCESSES:', error);
-      } else {
-        this.addSharings(result, this.connection);
-      }
-    }.bind(this));
-    this.connection.bookmarks.get(function (error, result) {
-      if (error) {
-        console.error('GET ACCESSES:', error);
-      } else {
-        this.addBookmarks(result);
-      }
-    }.bind(this));
-  },
-  close: function () {
-    this.sharingListView.close();
-    this.sharingCollection.reset();
-    $(this.container).remove();
-    $('.modal-content').empty();
-    this.sharingCollection = null;
-    this.sharings = {};
-  },
-  addSharings: function (sharings, connection) {
-    if (!Array.isArray(sharings)) {
-      sharings = [sharings];
-    }
-    sharings.forEach(function (sharing) {
-      if (sharing.type === 'shared') {
-        var url = connection.id.replace(/\?auth.*$/, '');
-        url = url.replace(/\.in/, '.li');
-        url = url.replace(/\.io/, '.me');
-        url += '#/sharings/' + sharing.token;
-        sharing.url = url;
-        var m = new SharingModel({
-          sharing: sharing
-        });
-        this.sharingCollection.add(m);
-      }
-    }.bind(this));
-  },
-  addBookmarks: function (bookmarks) {
-    console.log('addBookmarks', bookmarks);
-    if (!Array.isArray(bookmarks)) {
-      bookmarks = [bookmarks];
-    }
-    bookmarks.forEach(function (bookmark) {
-      var url = bookmark.settings.url;
-      url = url.replace(/\.in/, '.li');
-      url = url.replace(/\.io/, '.me');
-      bookmark.settings.url = url;
-      var m = new BookmarkModel({
-        bookmark: bookmark
-      });
-      this.bookmarkCollection.add(m);
-    }.bind(this));
-  },
-  _createBookmark: function (url, auth, name) {
-    if (url && auth && name) {
-      var conn = new Pryv.Connection({
-        url: url.replace('.li', '.in').replace('.me', '.io'),
-        auth: auth
-      });
-      conn.accessInfo(function (error) {
-        if (!error) {
-          this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
-          function (error, result) {
-            if (!error && result) {
-              this.addBookmarks(result);
-            }
-            if (error) {
-              console.error('Bookmarks creation error:', error);
-            }
-            this.bookmarkListView.endAddBookmark(error);
-          }.bind(this));
-        } else {
-          this.bookmarkListView.endAddBookmark(error);
-          console.warn('Bookmark dont exist', url, auth);
-        }
-      }.bind(this));
-    }
-    else {
-      this.bookmarkListView.endAddBookmark({id: 'slice-unknown'});
-    }
-  },
-  _onDeleteBookmarkClick: function (e, bookmarkModel) {
-    this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
-    function (error) {
-      if (!error) {
-        this.bookmarkCollection.remove(bookmarkModel);
-      } else { window.PryvBrowser.showAlert(this.container,
-        i18n.t('error.followedSlice.delete.' + error.id));
-        console.warn(error);
-      }
-    }.bind(this));
-  },
-  _onDeleteSharingClick: function (e, sharingModel) {
-    this.connection.accesses.delete(sharingModel.get('sharing').id,
-    function (error) {
-      if (!error) {
-        this.sharingCollection.remove(sharingModel);
-      } else {
-        window.PryvBrowser.showAlert(this.container,
-          i18n.t('error.createdSlice.delete.' + error.id));
-        console.warn(error);
-      }
-    }.bind(this));
-  },
-  _onUpdateSharingClick: function (e, view) {
-    this.connection.accesses.update(view.model.get('sharing'), view.endUpdateSharing.bind(view));
-  }
-});
-})()
-},{"./BookmarkCollection.js":50,"./BookmarkListView.js":52,"./BookmarkModel.js":49,"./SharingCollection.js":51,"./SharingListView.js":47,"./SharingModel.js":48,"pryv":10,"underscore":9}],25:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-/* TODO This a the view for each node, with dynamic animation
- we can't re-render on change because animation would no be done
- If the model is a event Node we must include a new typed view
- */
-module.exports = Marionette.ItemView.extend({
-  template: '#onboardingView',
-  container: '#tree',
-  connection: null,
-  onRender: function () {
-    $(this.container).html(this.$el);
-    $('#onboarding-form').submit(function (e) {
-      e.preventDefault();
-      $('#onboarding-form .fa-spin').show();
-      var streamName = $('#onboarding-input-name').val().trim();
-      if (streamName && streamName.length > 0 && this.connection) {
-        this.connection.streams.create({name: streamName}, function (error) {
-          $('#onboarding-form .fa-spin').hide();
-          if (!error) {
-            this.trigger('done');
-          }
-        }.bind(this));
-      }
-    }.bind(this));
-    $('body').i18n();
-  }
-});
-})()
-},{"backbone.marionette":33}],28:[function(require,module,exports){
-(function(){/* global $, window, i18n */
-var _ = require('underscore'),
-  Collection = require('./Collection.js'),
-  Model = require('./Model.js'),
-  ListView = require('./ListView.js');
-var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections, target) {
-  this.loggedConnection = loggedConnection;
-  this.collection =  new Collection();
-  this.listView = null;
-  this.$modal = $modal;
-  this.target = target;
-  this.container = '.modal-content';
-  console.log(sharingsConnections);
-  this.addSharings(sharingsConnections);
-};
-
-_.extend(Controller.prototype, {
-  show: function () {
-    this.$modal.modal({currentTarget: this.target});
-    $(this.container).empty().hide();
-    setTimeout(function () {
-      $(this.container).fadeIn();
-    }.bind(this), 500);
-    if (!this.listView) {
-      this.listView = new ListView({
-        collection: this.collection
-      });
-      this.listView.on('subscription:add', this._createSubscription.bind(this));
-      this.listView.on('close', this.close.bind(this));
-    }
-    this.listView.render();
-  },
-  close: function () {
-    this.listView.close();
-    if (this.collection) {
-      this.collection.reset();
-      this.collection = null;
-    }
-    $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
-    $('.modal-backdrop').remove();
-  },
-  addSharings: function (sharings) {
-    if (!Array.isArray(sharings)) {
-      sharings = [sharings];
-    }
-    sharings.forEach(function (sharing) {
-      console.log(sharing);
-      sharing.url = sharing.id.replace(/\?auth.*$/, '')
-        .replace(/\.in/, '.li')
-        .replace(/\.io/, '.me');
-      sharing.url += '#/sharings/' + sharing.auth;
-      var m = new Model({
-        connection: sharing
-      });
-      this.collection.add(m);
-    }.bind(this));
-  },
-  _createSubscription: function (subscriptions) {
-    var subNumber = subscriptions.length;
-    var gotError = false;
-    subscriptions.forEach(function (model) {
-      var connection = model.get('connection');
-      if (!connection.name || connection.name.length === 0) {
-        connection.name = connection._accessInfo.name;
-      }
-      if (connection.name && connection.auth && connection.url) {
-        this.loggedConnection.bookmarks.create(
-          {url: connection.url, accessToken: connection.auth, name: connection.name},
-          function (error) {
-            console.log('create done');
-            if (error) {
-              window.PryvBrowser.showAlert(this.container,
-                i18n.t('error.subscribeSlice.') + error.id);
-              gotError = true;
-            }
-            model.set('error', error);
-            model.set('created', !error);
-            subNumber--;
-            if (subNumber === 0) {
-              this.listView.onCreateSubscriptionFinished(gotError);
-            }
-
-          }.bind(this));
-      }
-    }.bind(this));
-  }
-});
-})()
-},{"./Collection.js":54,"./ListView.js":55,"./Model.js":53,"underscore":9}],27:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  NavView = require('./NavView.js'),
-  PasswordView = require('./PasswordView.js'),
-  ManageAppsView = require('./ManageAppsView.js'),
-  AppListView = require('./AppListView.js'),
-  _ = require('underscore');
-
-var Layout = Marionette.Layout.extend({
-  template: '#settings-modal-template',
-
-  regions: {
-    nav: '#settings-nav',
-    password: '#settings-password',
-    manageApps: '#settings-manage-apps',
-    otherApps: '#settings-other-apps'
-  },
-  initialize: function () {
-    this.$el =  $('.modal-content');
-  }
-});
-var Controller = module.exports  = function ($modal, connection, target) {
-  this.connection = connection;
-  this.$modal = $modal;
-  this.target = target;
-  this.view  = null;
-  this.nav = null;
-  this.password = null;
-  this.manageApps = null;
-  this.appList = null;
-  this.currentRegion = '';
-
-
-};
-_.extend(Controller.prototype, {
-  show: function (region) {
-    region = region || 'password';
-    this.$modal.modal({currentTarget: this.target});
-    setTimeout(function () {
-      $('.modal-content').fadeIn();
-    }.bind(this), 500);
-    this.view = new Layout();
-    this.view.on('close', this.close.bind(this));
-    this.nav = new NavView();
-    this.password = new PasswordView({connection: this.connection});
-    this.manageApps = new ManageAppsView({connection: this.connection});
-    this.appList = new AppListView({connection: this.connection});
-    this.view.render();
-    this.view.nav.show(this.nav);
-    this._showRegion(region);
-    this.nav.activeRegion(region);
-    this.nav.on('showRegion', this._showRegion.bind(this));
-  },
-  close: function () {
-    if (this.view) {
-      this.view = null;
-      $('.modal-content').empty();
-      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
-      $('.modal-backdrop').remove();
-      this.$modal.trigger('hidden.bs.modal');
-      this.manageApps.reset();
-      this.appList.reset();
-    }
-  },
-  _showRegion: function (region) {
-    if (region && this.view && region !== this.currentRegion) {
-      this.password.close();
-      this.manageApps.close();
-      this.appList.close();
-      switch (region) {
-        case 'password':
-          this.view.password.show(this.password);
-          break;
-        case 'manageApps':
-          this.view.manageApps.show(this.manageApps);
-          this.view.otherApps.show(this.appList);
-          break;
-        default:
-          break;
-      }
-      this.currentRegion = region;
-      $('body').i18n();
-    }
-  }
-});
-
-})()
-},{"./AppListView.js":59,"./ManageAppsView.js":58,"./NavView.js":56,"./PasswordView.js":57,"backbone.marionette":33,"underscore":9}],12:[function(require,module,exports){
+},{"underscore":43}],12:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('./utility/utility.js'),
     ConnectionEvents = require('./connection/ConnectionEvents.js'),
@@ -5734,7 +4877,7 @@ function domainOfConnection(connection) {
     return connection.username ? connection.username + '.' + host : host;
   }
 }
-},{"./Datastore.js":64,"./connection/ConnectionAccesses.js":65,"./connection/ConnectionAccount.js":37,"./connection/ConnectionBookmarks.js":61,"./connection/ConnectionConstants.js":38,"./connection/ConnectionEvents.js":62,"./connection/ConnectionMonitors.js":63,"./connection/ConnectionProfile.js":36,"./connection/ConnectionStreams.js":60,"./utility/utility.js":17,"underscore":66}],67:[function(require,module,exports){
+},{"./Datastore.js":49,"./connection/ConnectionAccesses.js":48,"./connection/ConnectionAccount.js":36,"./connection/ConnectionBookmarks.js":45,"./connection/ConnectionConstants.js":37,"./connection/ConnectionEvents.js":44,"./connection/ConnectionMonitors.js":47,"./connection/ConnectionProfile.js":35,"./connection/ConnectionStreams.js":46,"./utility/utility.js":16,"underscore":43}],50:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -5789,7 +4932,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],43:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function(process){if (!process.EventEmitter) process.EventEmitter = function () {};
 
 var EventEmitter = exports.EventEmitter = process.EventEmitter;
@@ -5986,7 +5129,7 @@ EventEmitter.listenerCount = function(emitter, type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":67}],14:[function(require,module,exports){
+},{"__browserify_process":50}],15:[function(require,module,exports){
 
 var _ = require('underscore');
 
@@ -6065,144 +5208,327 @@ Object.defineProperty(Stream.prototype, 'ancestors', {
 
 
 
-},{"underscore":66}],13:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var RW_PROPERTIES =
-  ['streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
-    'clientData', 'state', 'modified', 'trashed'];
+},{"underscore":43}],18:[function(require,module,exports){
+var _ = require('underscore'),
+  SignalEmitter = require('./utility/SignalEmitter.js'),
+  Filter = require('./Filter.js');
 
 
+var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
 
 /**
- *
+ * Monitoring
  * @type {Function}
  * @constructor
  */
-var Event = module.exports = function Event(connection, data) {
-  if (! connection) {
-    throw new Error('Cannot create connection less events');
-  }
+function Monitor(connection, filter) {
+  SignalEmitter.extend(this, Messages, 'Monitor');
   this.connection = connection;
-  this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
-  _.extend(this, data);
-};
+  this.id = 'M' + Monitor.serial++;
 
-/**
- * get Json object ready to be posted on the API
- */
-Event.prototype.getData = function () {
-  var data = {};
-  _.each(RW_PROPERTIES, function (key) { // only set non null values
-    if (_.has(this, key)) { data[key] = this[key]; }
-  }.bind(this));
-  return data;
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.update = function (callback) {
-  this.connection.events.update(this, callback);
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.addAttachment = function (file, callback) {
-  this.connection.events.addAttachment(this.id, file, callback);
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.removeAttachment = function (fileName, callback) {
-  this.connection.events.removeAttachment(this.id, fileName, callback);
-};
-/**
- * TODO create an attachment Class that contains such logic
- * @param {attachment} attachment
- */
-Event.prototype.attachmentUrl = function (attachment) {
-  var url =  this.connection.settings.ssl ? 'https://' : 'http://';
-  url += this.connection.username + '.' + this.connection.settings.domain + '/events/' +
-    this.id + '/' + attachment.id + '?readToken=' + attachment.readToken;
-  return url;
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.trash = function (callback) {
-  this.connection.events.trash(this, callback);
-};
-/**
- * TODO document and rename to getPicturePreviewUrl
- * @param width
- * @param height
- * @returns {string}
- */
-Event.prototype.getPicturePreview = function (width, height) {
-  width = width ? '&w=' + width : '';
-  height = height ? '&h=' + height : '';
-  var url = this.connection.settings.ssl ? 'https://' : 'http://';
-  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
-    this.id + '?auth=' + this.connection.auth + width + height;
-  return url;
-};
+  this.filter = filter;
 
-/**
- * TODO document
- */
-Object.defineProperty(Event.prototype, 'timeLT', {
-  get: function () {
-    return this.connection.getLocalTime(this.time);
-  },
-  set: function (newValue) {
-    this.time = this.connection.getServerTime(newValue);
+  this._lastUsedFilterData = filter.getData();
+
+  if (this.filter.state) {
+    throw new Error('Monitors only work for default state, not trashed or all');
   }
-});
+
+  this.filter.addEventListener(Filter.Messages.ON_CHANGE, this._onFilterChange.bind(this));
+  this._events = null;
+
+}
+
+Monitor.serial = 0;
+
+var Messages = Monitor.Messages = {
+  /** content: events **/
+  ON_LOAD : 'started',
+  /** content: error **/
+  ON_ERROR : 'error',
+  /** content: { enter: [], leave: [], change } **/
+  ON_EVENT_CHANGE : 'eventsChanged',
+  /** content: streams **/
+  ON_STRUCTURE_CHANGE : 'streamsChanged',
+  /** content: ? **/
+  ON_FILTER_CHANGE : 'filterChanged'
+};
+
+// ----------- prototype  public ------------//
+
+Monitor.prototype.start = function (done) {
+  done = done || function () {};
+
+  this.lastSynchedST = -1000000000000;
+  this._initEvents();
+
+  //TODO move this logic to ConnectionMonitors ??
+  this.connection.monitors._monitors[this.id] = this;
+  this.connection.monitors._startMonitoring(done);
+};
+
+
+Monitor.prototype.destroy = function () {
+  //TODO move this logic to ConnectionMonitors ??
+  delete this.connection.monitors._monitors[this.id];
+  if (_.keys(this.connection.monitors._monitors).length === 0) {
+    this.connection.monitors._stopMonitoring();
+  }
+};
+
+Monitor.prototype.getEvents = function () {
+  if (! this._events || ! this._events.active) {return []; }
+  return _.toArray(this._events.active);
+};
+
+// ------------ private ----------//
+
+// ----------- iOSocket ------//
+Monitor.prototype._onIoConnect = function () {
+  console.log('Monitor onConnect');
+};
+Monitor.prototype._onIoError = function (error) {
+  console.log('Monitor _onIoError' + error);
+};
+Monitor.prototype._onIoEventsChanged = function () {
+  this._connectionEventsGetChanges(Messages.ON_EVENT_CHANGE);
+};
+Monitor.prototype._onIoStreamsChanged = function () {
+  console.log('SOCKETIO', '_onIoStreamsChanged');
+  this._connectionStreamsGetChanges(Messages.ON_STRUCTURE_CHANGE);
+};
 
 
 
-/**
- * TODO document
- */
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    if (! this.connection.datastore) {
-      throw new Error('call connection.fetchStructure before to get automatic stream mapping.' +
-        ' Or use StreamId');
+// -----------  filter changes ----------- //
+
+
+Monitor.prototype._saveLastUsedFilter = function () {
+  this._lastUsedFilterData = this.filter.getData();
+};
+
+
+Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
+  var changes = this.filter.compareToFilterData(this._lastUsedFilterData);
+
+  var processLocalyOnly = 0;
+  var foundsignal = 0;
+  if (signal.signal === Filter.Messages.DATE_CHANGE) {  // only load events if date is wider
+    foundsignal = 1;
+    console.log('** DATE CHANGE ', changes.timeFrame);
+    if (changes.timeFrame === 0) {
+      return;
     }
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
+    if (changes.timeFrame < 0) {  // new timeFrame contains more data
+      processLocalyOnly = 1;
+    }
+
+  }
+
+  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
+    foundsignal = 1;
+    console.log('** STREAMS_CHANGE', changes.streams);
+    if (changes.streams === 0) {
+      return;
+    }
+    if (changes.streams < 0) {  // new timeFrame contains more data
+      processLocalyOnly = 1;
+    }
+  }
+
+
+  if (! foundsignal) {
+    throw new Error('Signal not found :' + signal.signal);
+  }
+
+  this._saveLastUsedFilter();
+
+
+
+  if (processLocalyOnly) {
+    this._refilterLocaly(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
+  } else {
+    this._connectionEventsGetAllAndCompare(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
+  }
+};
+
+// ----------- internal ----------------- //
 
 /**
- * TODO document
+ * Process events locally
  */
-Object.defineProperty(Event.prototype, 'url', {
-  get: function () {
-    var url = this.connection.settings.ssl ? 'https://' : 'http://';
-    url += this.connection.username + '.' + this.connection.settings.domain + '/events/' + this.id;
-    return url;
-  },
-  set: function () { throw new Error('Event.url property is read only'); }
-});
+Monitor.prototype._refilterLocaly = function (signal, extracontent, batch) {
+
+  var result = { enter : [], leave : [] };
+  _.extend(result, extracontent); // pass extracontent to receivers
+  _.each(_.clone(this._events.active), function (event) {
+    if (! this.filter.matchEvent(event)) {
+      result.leave.push(event);
+      delete this._events.active[event.id];
+    }
+  }.bind(this));
+  this._fireEvent(signal, result, batch);
+};
+
+
+Monitor.prototype._initEvents = function () {
+  this.lastSynchedST = this.connection.getServerTime();
+  this._events = { active : {}};
+  this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
+    function (error, events) {
+      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
+      _.each(events, function (event) {
+        this._events.active[event.id] = event;
+      }.bind(this));
+      this._fireEvent(Messages.ON_LOAD, events);
+    }.bind(this));
+};
+
+/**
+ * @private
+ */
+Monitor.prototype._connectionEventsGetChanges = function (signal) {
+  var options = { modifiedSince : this.lastSynchedST, state : 'all'};
+  this.lastSynchedST = this.connection.getServerTime();
+
+  var result = { created : [], trashed : [], modified: []};
+
+  this.connection.events.get(this.filter.getData(true, options),
+    function (error, events) {
+      if (error) {
+        this._fireEvent(Messages.ON_ERROR, error);
+      }
+
+      _.each(events, function (event) {
+        if (this._events.active[event.id]) {
+          if (event.trashed) { // trashed
+            result.trashed.push(event);
+            delete this._events.active[event.id];
+          } else {
+            result.modified.push(event);
+          }
+        } else {
+          result.created.push(event);
+        }
+      }.bind(this));
+
+      this._fireEvent(signal, result);
+    }.bind(this));
+};
+
+/**
+ * @private
+ */
+Monitor.prototype._connectionStreamsGetChanges = function (signal) {
+  var streams = {};
+  var created = [], modified = [], trashed = [];
+  var streamCompare = function (streamA, streamB) {
+    var sA = _.pick(streamA, ['id', 'name', 'parentId', 'singleActivity', 'clientData', 'trashed']);
+    var sB = _.pick(streamB, ['id', 'name', 'parentId', 'singleActivity', 'clientData', 'trashed']);
+    return _.isEqual(sA, sB);
+  };
+  var getFlatTree = function (stream) {
+    streams[stream.id] = stream;
+    _.each(stream.children, function (child) {
+      getFlatTree(child);
+    });
+  };
+  var checkChangedStatus = function (stream) {
+
+    if (!streams[stream.id]) {
+      created.push(stream);
+    } else if (!streamCompare(streams[stream.id], stream)) {
+      if (streams[stream.id].trashed !== stream.trashed) {
+        if (!stream.trashed) {
+          created.push(stream);
+        } else {
+          trashed.push(stream);
+        }
+      } else {
+        modified.push(stream);
+      }
+    }
+    _.each(stream.children, function (child) {
+      checkChangedStatus(child);
+    });
+  };
+  _.each(this.connection.datastore.getStreams(), function (rootStream) {
+    getFlatTree(rootStream);
+  });
+  this.connection.fetchStructure(function (error, result) {
+    _.each(result, function (rootStream) {
+      checkChangedStatus(rootStream);
+    });
+    this._fireEvent(signal, { created : created, trashed : trashed, modified: modified});
+  }.bind(this));
+};
+
+/**
+ * @private
+ */
+Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracontent, batch) {
+  this.lastSynchedST = this.connection.getServerTime();
+
+
+  if (false) {
+    // POC code to look into in-memory events for matching events..
+    // do not activate until cache handles DELETE
+    var result1 = { enter : [] };
+    _.extend(result1, extracontent);
+
+    var cachedEvents = this.connection.datastore.getEventsMatchingFilter(this.filter);
+    _.each(cachedEvents, function (event) {
+      if (! this._events.active[event.id]) {  // we don't care for already known event
+        this._events.active[event.id] = event; // store it
+        result1.enter.push(event);
+      }
+    }.bind(this));
+    if (result1.enter.length > 0) {
+      this._fireEvent(signal, result1, batch);
+    }
+  }
+
+  // look online
+
+  var result = { enter : [] };
+  _.extend(result, extracontent); // pass extracontent to receivers
+
+  var toremove = _.clone(this._events.active);
+
+  this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
+    function (error, events) {
+      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
+      _.each(events, function (event) {
+        if (this._events.active[event.id]) {  // already known event we don't care
+          delete toremove[event.id];
+        } else {
+          this._events.active[event.id] = event;
+          result.enter.push(event);
+        }
+      }.bind(this));
+      _.each(_.keys(toremove), function (streamid) {
+        delete this._events.active[streamid]; // cleanup not found streams
+      }.bind(this));
+      result.leave = _.values(toremove); // unmatched events are to be removed
+      this._fireEvent(signal, result, batch);
+    }.bind(this));
+
+};
 
 
 /**
- * An newly created Event (no id, not synched with API)
- * or an object with sufficient properties to be considered as an Event.
- * @typedef {(Event|Object)} NewEventLike
- * @property {String} streamId
- * @property {String} type
- * @property {number} [time]
+ * TODO write doc
+ * return informations on events
  */
+Monitor.prototype.stats = function (force, callback) {
+  this.connection.profile.getTimeLimits(force, callback);
+};
 
-},{"underscore":66}],16:[function(require,module,exports){
+module.exports = Monitor;
+
+
+
+},{"./Filter.js":17,"./utility/SignalEmitter.js":51,"underscore":43}],17:[function(require,module,exports){
 var _ = require('underscore'),
     SignalEmitter = require('./utility/SignalEmitter.js');
 
@@ -6539,548 +5865,359 @@ Filter.prototype.focusedOnSingleStream = function () {
  */
 
 
-},{"./utility/SignalEmitter.js":68,"underscore":66}],18:[function(require,module,exports){
+},{"./utility/SignalEmitter.js":51,"underscore":43}],21:[function(require,module,exports){
+(function(){/* global $, window, i18n */
 var _ = require('underscore'),
-  SignalEmitter = require('./utility/SignalEmitter.js'),
-  Filter = require('./Filter.js');
-
-
-var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
-
-/**
- * Monitoring
- * @type {Function}
- * @constructor
- */
-function Monitor(connection, filter) {
-  SignalEmitter.extend(this, Messages, 'Monitor');
+  SharingCollection = require('./SharingCollection.js'),
+  SharingModel = require('./SharingModel.js'),
+  SharingListView = require('./SharingListView.js'),
+  BookmarkCollection = require('./BookmarkCollection.js'),
+  BookmarkModel = require('./BookmarkModel.js'),
+  BookmarkListView = require('./BookmarkListView.js'),
+  Pryv = require('pryv');
+var Controller = module.exports = function ($modal, connection, target) {
+  this.sharings = {};
   this.connection = connection;
-  this.id = 'M' + Monitor.serial++;
+  this.sharingCollection =  new SharingCollection();
+  this.sharingListView = null;
+  this.bookmarkCollection =  new BookmarkCollection();
+  this.bookmarkListView = null;
+  this.$modal = $modal;
+  this.target = target;
+  $('.modal-content').empty();
+  $('.modal-content').prepend('<div class="modal-header">  ' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+    '&times;</button> ' +
+    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.manageSlices.header"></h4>' +
+    '<div class="modal-close"></div> ' +
+    '</div><div id="modal-content"><div id="creation-content">' +
+    '<div class="sharings container"></div></div>' +
+    '<div id="creation-footer" class="col-md-12">' +
+    '<button id="ok" class="btn btn-pryv-turquoise" ' +
+    'data-dismiss="modal" data-i18n="button.ok"></button>' +
+    '</div></div>');
+  $('body').i18n();
+  this.container = '.sharings';
 
-  this.filter = filter;
-
-  this._lastUsedFilterData = filter.getData();
-
-  if (this.filter.state) {
-    throw new Error('Monitors only work for default state, not trashed or all');
-  }
-
-  this.filter.addEventListener(Filter.Messages.ON_CHANGE, this._onFilterChange.bind(this));
-  this._events = null;
-
-}
-
-Monitor.serial = 0;
-
-var Messages = Monitor.Messages = {
-  /** content: events **/
-  ON_LOAD : 'started',
-  /** content: error **/
-  ON_ERROR : 'error',
-  /** content: { enter: [], leave: [], change } **/
-  ON_EVENT_CHANGE : 'eventsChanged',
-  /** content: streams **/
-  ON_STRUCTURE_CHANGE : 'streamsChanged',
-  /** content: ? **/
-  ON_FILTER_CHANGE : 'filterChanged'
 };
 
-// ----------- prototype  public ------------//
-
-Monitor.prototype.start = function (done) {
-  done = done || function () {};
-
-  this.lastSynchedST = -1000000000000;
-  this._initEvents();
-
-  //TODO move this logic to ConnectionMonitors ??
-  this.connection.monitors._monitors[this.id] = this;
-  this.connection.monitors._startMonitoring(done);
-};
-
-
-Monitor.prototype.destroy = function () {
-  //TODO move this logic to ConnectionMonitors ??
-  delete this.connection.monitors._monitors[this.id];
-  if (_.keys(this.connection.monitors._monitors).length === 0) {
-    this.connection.monitors._stopMonitoring();
-  }
-};
-
-Monitor.prototype.getEvents = function () {
-  if (! this._events || ! this._events.active) {return []; }
-  return _.toArray(this._events.active);
-};
-
-// ------------ private ----------//
-
-// ----------- iOSocket ------//
-Monitor.prototype._onIoConnect = function () {
-  console.log('Monitor onConnect');
-};
-Monitor.prototype._onIoError = function (error) {
-  console.log('Monitor _onIoError' + error);
-};
-Monitor.prototype._onIoEventsChanged = function () {
-  this._connectionEventsGetChanges(Messages.ON_EVENT_CHANGE);
-};
-Monitor.prototype._onIoStreamsChanged = function () {
-  console.log('SOCKETIO', '_onIoStreamsChanged');
-  this._connectionStreamsGetChanges(Messages.ON_STRUCTURE_CHANGE);
-};
-
-
-
-// -----------  filter changes ----------- //
-
-
-Monitor.prototype._saveLastUsedFilter = function () {
-  this._lastUsedFilterData = this.filter.getData();
-};
-
-
-Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
-  var changes = this.filter.compareToFilterData(this._lastUsedFilterData);
-
-  var processLocalyOnly = 0;
-  var foundsignal = 0;
-  if (signal.signal === Filter.Messages.DATE_CHANGE) {  // only load events if date is wider
-    foundsignal = 1;
-    console.log('** DATE CHANGE ', changes.timeFrame);
-    if (changes.timeFrame === 0) {
-      return;
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    $('.modal-content').hide();
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
+    if (!this.sharingListView) {
+      this.sharingListView = new SharingListView({
+        collection: this.sharingCollection
+      });
     }
-    if (changes.timeFrame < 0) {  // new timeFrame contains more data
-      processLocalyOnly = 1;
+    if (!this.bookmarkListView) {
+      this.bookmarkListView = new BookmarkListView({
+        collection: this.bookmarkCollection
+      });
+      this.bookmarkListView.on('bookmark:add', this._createBookmark.bind(this));
+      this.bookmarkListView.on('itemview:bookmark:delete', this._onDeleteBookmarkClick.bind(this));
+      this.sharingListView.on('itemview:sharing:delete', this._onDeleteSharingClick.bind(this));
+      this.sharingListView.on('itemview:sharing:update', this._onUpdateSharingClick.bind(this));
     }
-
-  }
-
-  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
-    foundsignal = 1;
-    console.log('** STREAMS_CHANGE', changes.streams);
-    if (changes.streams === 0) {
-      return;
-    }
-    if (changes.streams < 0) {  // new timeFrame contains more data
-      processLocalyOnly = 1;
-    }
-  }
-
-
-  if (! foundsignal) {
-    throw new Error('Signal not found :' + signal.signal);
-  }
-
-  this._saveLastUsedFilter();
-
-
-
-  if (processLocalyOnly) {
-    this._refilterLocaly(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
-  } else {
-    this._connectionEventsGetAllAndCompare(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
-  }
-};
-
-// ----------- internal ----------------- //
-
-/**
- * Process events locally
- */
-Monitor.prototype._refilterLocaly = function (signal, extracontent, batch) {
-
-  var result = { enter : [], leave : [] };
-  _.extend(result, extracontent); // pass extracontent to receivers
-  _.each(_.clone(this._events.active), function (event) {
-    if (! this.filter.matchEvent(event)) {
-      result.leave.push(event);
-      delete this._events.active[event.id];
-    }
-  }.bind(this));
-  this._fireEvent(signal, result, batch);
-};
-
-
-Monitor.prototype._initEvents = function () {
-  this.lastSynchedST = this.connection.getServerTime();
-  this._events = { active : {}};
-  this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
-    function (error, events) {
-      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
-      _.each(events, function (event) {
-        this._events.active[event.id] = event;
-      }.bind(this));
-      this._fireEvent(Messages.ON_LOAD, events);
-    }.bind(this));
-};
-
-/**
- * @private
- */
-Monitor.prototype._connectionEventsGetChanges = function (signal) {
-  var options = { modifiedSince : this.lastSynchedST, state : 'all'};
-  this.lastSynchedST = this.connection.getServerTime();
-
-  var result = { created : [], trashed : [], modified: []};
-
-  this.connection.events.get(this.filter.getData(true, options),
-    function (error, events) {
+    this.sharingListView.render();
+    this.bookmarkListView.render();
+    this.connection.accesses.get(function (error, result) {
       if (error) {
-        this._fireEvent(Messages.ON_ERROR, error);
-      }
-
-      _.each(events, function (event) {
-        if (this._events.active[event.id]) {
-          if (event.trashed) { // trashed
-            result.trashed.push(event);
-            delete this._events.active[event.id];
-          } else {
-            result.modified.push(event);
-          }
-        } else {
-          result.created.push(event);
-        }
-      }.bind(this));
-
-      this._fireEvent(signal, result);
-    }.bind(this));
-};
-
-/**
- * @private
- */
-Monitor.prototype._connectionStreamsGetChanges = function (signal) {
-  var streams = {};
-  var created = [], modified = [], trashed = [];
-  var streamCompare = function (streamA, streamB) {
-    var sA = _.pick(streamA, ['id', 'name', 'parentId', 'singleActivity', 'clientData', 'trashed']);
-    var sB = _.pick(streamB, ['id', 'name', 'parentId', 'singleActivity', 'clientData', 'trashed']);
-    return _.isEqual(sA, sB);
-  };
-  var getFlatTree = function (stream) {
-    streams[stream.id] = stream;
-    _.each(stream.children, function (child) {
-      getFlatTree(child);
-    });
-  };
-  var checkChangedStatus = function (stream) {
-
-    if (!streams[stream.id]) {
-      created.push(stream);
-    } else if (!streamCompare(streams[stream.id], stream)) {
-      if (streams[stream.id].trashed !== stream.trashed) {
-        if (!stream.trashed) {
-          created.push(stream);
-        } else {
-          trashed.push(stream);
-        }
+        console.error('GET ACCESSES:', error);
       } else {
-        modified.push(stream);
-      }
-    }
-    _.each(stream.children, function (child) {
-      checkChangedStatus(child);
-    });
-  };
-  _.each(this.connection.datastore.getStreams(), function (rootStream) {
-    getFlatTree(rootStream);
-  });
-  this.connection.fetchStructure(function (error, result) {
-    _.each(result, function (rootStream) {
-      checkChangedStatus(rootStream);
-    });
-    this._fireEvent(signal, { created : created, trashed : trashed, modified: modified});
-  }.bind(this));
-};
-
-/**
- * @private
- */
-Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracontent, batch) {
-  this.lastSynchedST = this.connection.getServerTime();
-
-
-  if (false) {
-    // POC code to look into in-memory events for matching events..
-    // do not activate until cache handles DELETE
-    var result1 = { enter : [] };
-    _.extend(result1, extracontent);
-
-    var cachedEvents = this.connection.datastore.getEventsMatchingFilter(this.filter);
-    _.each(cachedEvents, function (event) {
-      if (! this._events.active[event.id]) {  // we don't care for already known event
-        this._events.active[event.id] = event; // store it
-        result1.enter.push(event);
+        this.addSharings(result, this.connection);
       }
     }.bind(this));
-    if (result1.enter.length > 0) {
-      this._fireEvent(signal, result1, batch);
+    this.connection.bookmarks.get(function (error, result) {
+      if (error) {
+        console.error('GET ACCESSES:', error);
+      } else {
+        this.addBookmarks(result);
+      }
+    }.bind(this));
+  },
+  close: function () {
+    this.sharingListView.close();
+    this.sharingCollection.reset();
+    $(this.container).remove();
+    $('.modal-content').empty();
+    this.sharingCollection = null;
+    this.sharings = {};
+  },
+  addSharings: function (sharings, connection) {
+    if (!Array.isArray(sharings)) {
+      sharings = [sharings];
     }
-  }
-
-  // look online
-
-  var result = { enter : [] };
-  _.extend(result, extracontent); // pass extracontent to receivers
-
-  var toremove = _.clone(this._events.active);
-
-  this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
-    function (error, events) {
-      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
-      _.each(events, function (event) {
-        if (this._events.active[event.id]) {  // already known event we don't care
-          delete toremove[event.id];
+    sharings.forEach(function (sharing) {
+      if (sharing.type === 'shared') {
+        var url = connection.id.replace(/\?auth.*$/, '');
+        url = url.replace(/\.in/, '.li');
+        url = url.replace(/\.io/, '.me');
+        url += '#/sharings/' + sharing.token;
+        sharing.url = url;
+        var m = new SharingModel({
+          sharing: sharing
+        });
+        this.sharingCollection.add(m);
+      }
+    }.bind(this));
+  },
+  addBookmarks: function (bookmarks) {
+    console.log('addBookmarks', bookmarks);
+    if (!Array.isArray(bookmarks)) {
+      bookmarks = [bookmarks];
+    }
+    bookmarks.forEach(function (bookmark) {
+      var url = bookmark.settings.url;
+      url = url.replace(/\.in/, '.li');
+      url = url.replace(/\.io/, '.me');
+      bookmark.settings.url = url;
+      var m = new BookmarkModel({
+        bookmark: bookmark
+      });
+      this.bookmarkCollection.add(m);
+    }.bind(this));
+  },
+  _createBookmark: function (url, auth, name) {
+    if (url && auth && name) {
+      var conn = new Pryv.Connection({
+        url: url.replace('.li', '.in').replace('.me', '.io'),
+        auth: auth
+      });
+      conn.accessInfo(function (error) {
+        if (!error) {
+          this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
+          function (error, result) {
+            if (!error && result) {
+              this.addBookmarks(result);
+            }
+            if (error) {
+              console.error('Bookmarks creation error:', error);
+            }
+            this.bookmarkListView.endAddBookmark(error);
+          }.bind(this));
         } else {
-          this._events.active[event.id] = event;
-          result.enter.push(event);
+          this.bookmarkListView.endAddBookmark(error);
+          console.warn('Bookmark dont exist', url, auth);
         }
       }.bind(this));
-      _.each(_.keys(toremove), function (streamid) {
-        delete this._events.active[streamid]; // cleanup not found streams
-      }.bind(this));
-      result.leave = _.values(toremove); // unmatched events are to be removed
-      this._fireEvent(signal, result, batch);
+    }
+    else {
+      this.bookmarkListView.endAddBookmark({id: 'slice-unknown'});
+    }
+  },
+  _onDeleteBookmarkClick: function (e, bookmarkModel) {
+    this.connection.bookmarks.delete(bookmarkModel.get('bookmark').settings.bookmarkId,
+    function (error) {
+      if (!error) {
+        this.bookmarkCollection.remove(bookmarkModel);
+      } else { window.PryvBrowser.showAlert(this.container,
+        i18n.t('error.followedSlice.delete.' + error.id));
+        console.warn(error);
+      }
     }.bind(this));
+  },
+  _onDeleteSharingClick: function (e, sharingModel) {
+    this.connection.accesses.delete(sharingModel.get('sharing').id,
+    function (error) {
+      if (!error) {
+        this.sharingCollection.remove(sharingModel);
+      } else {
+        window.PryvBrowser.showAlert(this.container,
+          i18n.t('error.createdSlice.delete.' + error.id));
+        console.warn(error);
+      }
+    }.bind(this));
+  },
+  _onUpdateSharingClick: function (e, view) {
+    this.connection.accesses.update(view.model.get('sharing'), view.endUpdateSharing.bind(view));
+  }
+});
+})()
+},{"./BookmarkCollection.js":56,"./BookmarkListView.js":55,"./BookmarkModel.js":54,"./SharingCollection.js":57,"./SharingListView.js":53,"./SharingModel.js":52,"pryv":10,"underscore":9}],22:[function(require,module,exports){
+(function(){/* global $ */
+var _ = require('underscore'),
+  View = require('./View.js'),
+  Model = require('./EventModel.js'),
+  _ = require('underscore');
 
+var Controller = module.exports = function ($modal, connection, focusedStream, target) {
+  this.connection = connection;
+  this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
+  this.$modal = $modal;
+  this.target = target;
+  this.container = '.modal-content';
+  this.view = null;
+  this.newEvent = null;
 };
-
-
-/**
- * TODO write doc
- * return informations on events
- */
-Monitor.prototype.stats = function (force, callback) {
-  this.connection.profile.getTimeLimits(force, callback);
-};
-
-module.exports = Monitor;
-
-
-
-},{"./Filter.js":16,"./utility/SignalEmitter.js":68,"underscore":66}],31:[function(require,module,exports){
-(function(){/*global $ */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  UNIQUE_ID = 0;
-
-module.exports = Marionette.ItemView.extend({
-  template: '#filter-by-stream-template',
-  templateHelpers: function () {
-    return {
-      getStream: function () {
-        return this._getStream();
-      }.bind(this)
-    };
+_.extend(Controller.prototype, {
+  show: function () {
+    this.newEvent = new Model({event: this._defaultEvent()});
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).empty().hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
+    $(this.container).append('<div class="modal-header">  ' +
+      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+      '&times;</button> ' +
+      '<h4 class="modal-title" id="myModalLabel" ' +
+      'data-i18n="modal.addEvent.header.add-event"></h4>' +
+      '<div class="modal-close"></div> ' +
+      '</div>' +
+      '<div id="modal-content"></div>');
+    this.view = new View({model: this.newEvent});
+    this.view.connection = this.connection;
+    this.view.focusedStream = this.focusedStream;
+    this.view.render();
+    this.view.on('close', this.close.bind(this));
+    $('body').i18n();
   },
-  ui: {
-    label: 'label',
-    checkbox: 'input[type=checkbox]',
-    applyBtn: '#filter-by-stream-apply'
-  },
-  initialize: function (options) {
-    this.MainModel  = options.MainModel;
-  },
-  onRender: function () {
-    if (!this.MainModel.activeFilter) {
-      return;
-    }
-    var self = this;
-    self.ui.applyBtn.prop('disabled', true);
-    self.ui.applyBtn.click(this._applyFilter.bind(this));
-    this.ui.label.click(function (e) {
-      e.stopPropagation();
-      var input = $($(e.currentTarget).parent()).find('input');
-      var checked = input.prop('checked');
-      input.prop('checked', !checked);
-      input.trigger('change');
-    });
-    this.ui.checkbox.click(function (e) {
-      e.stopPropagation();
-    });
-    this.ui.checkbox.change(function (e) {
-      var checked = $(e.currentTarget).prop('checked'),
-        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
-      self.ui.applyBtn.prop('disabled', false);
-      container.find('input[type="checkbox"]').prop({
-        indeterminate: false,
-        checked: checked
-      });
-      self._isChildrenCheck(container.parent().parent());
-    });
-    this.bindUIElements();
-    this.onFocusStreamChanged();
-    setTimeout(function () {$('body').i18n(); }, 100);
-  },
-  onFocusStreamChanged: function () {
-    var focusedStreams = this.MainModel.activeFilter.getStreams();
-    var focusedStreamsIds = [];
-    try {
-      this.ui.checkbox.prop({
-        indeterminate: false,
-        checked: false
-      });
-    } catch (e) {
-      return false;
+  close: function () {
+    this.newEvent = null;
+    if (this.view) {
+      this.view.close();
+      this.view = null;
+      $(this.container).empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
     }
 
-    _.each(focusedStreams, function (stream) {
-      focusedStreamsIds.push(stream.connection.serialId + '/' + stream.id);
-    });
-    var $parent, c, s;
-    _.each(this.ui.checkbox, function (checkbox) {
-      checkbox = $(checkbox);
-      $parent = $(checkbox.parent().parent());
-      if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
-        c = this.MainModel.connections.get($parent.attr('data-connection'));
-        if (c) {
-          s = c.datastore.getStreamById($parent.attr('data-stream'));
-          if (s) {
-            if (focusedStreamsIds.indexOf(c.serialId + '/' + s.id) !== -1 ||
-              focusedStreamsIds.length === 0) {
-              checkbox.prop({
-                indeterminate: false,
-                checked: true
-              });
-              checkbox.trigger('change');
-            }
-          }
-        }
-      }
-    }.bind(this));
-    return true;
   },
-  _isChildrenCheck: function ($el) {
-    if ($el.attr('id') === 'collapseFilterByStream') {
-      return;
-    }
-    var allChecked = true;
-    var allUncheck = true;
-    var children  = $($el).find('input[type="checkbox"]');
-    for (var i = 0; i < children.length; i++) {
-      allChecked = allChecked && $(children[i]).prop('checked');
-      allUncheck = allUncheck && !$(children[i]).prop('checked');
-    }
-    if (allChecked || allUncheck) {
-      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
-        indeterminate: false,
-        checked: allChecked
-      });
-    } else {
-      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
-        indeterminate: true,
-        checked: false
-      });
-    }
-    this._isChildrenCheck($($($el).parent().parent()));
-  },
-  _applyFilter: function () {
-    var streams = [], $parent, connection, stream;
-    this.ui.applyBtn.prop('disabled', true);
-    _.each(this.ui.checkbox, function (checkbox) {
-      checkbox = $(checkbox);
-      if (checkbox.prop('checked')) {
-        $parent = $(checkbox.parent().parent());
-        if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
-          connection = this.MainModel.connections.get($parent.attr('data-connection'));
-          if (connection) {
-            stream = connection.datastore.getStreamById($parent.attr('data-stream'));
-            if (stream) {
-              streams.push(stream);
-            }
-          }
-        }
-      }
-    }.bind(this));
-    this.MainModel.activeFilter.focusOnStreams(streams);
-  },
-  _getStream: function () {
-    var connections = [],
-      result = '';
-    if (!this.MainModel.loggedConnection) {
-      return result;
-    }
-    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
-      connections.push(this.MainModel.loggedConnection);
-    }
-    _.each(this.MainModel.sharingsConnections, function (c) {
-      if (c._accessInfo) {
-        connections.push(c);
-      }
-    });
-    _.each(this.MainModel.bookmakrsConnections, function (c) {
-      if (c._accessInfo) {
-        connections.push(c);
-      }
-    });
-    _.each(connections, function (c) {
-      result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +
-        'data-target="#collapse' + UNIQUE_ID + '">' +
-        '<div class="pryv-checkbox">' +
-        '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
-        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
-      if (c._accessInfo.name !== 'pryv-browser') {
-        result += ' / ' + c._accessInfo.name;
-      }
-      result += '</label></div></li>';
-      result += '<ul id="collapse' + UNIQUE_ID +
-        '" class="panel-collapse  collapse in stream-tree-children">' +
-        '<div class="panel-body">';
-      UNIQUE_ID++;
-      result += this._getStreamStructure(c);
-      result += '</div></ul>';
-    }.bind(this));
-
-    return result;
-  },
-  _getStreamStructure: function (connection) {
-    var rootStreams = connection.datastore.getStreams(),
-      result = '';
-    for (var i = 0; i < rootStreams.length; i++) {
-      if (!rootStreams[i].virtual) {
-        result += this._walkStreamStructure(rootStreams[i]);
-      }
-    }
-    return result;
-  },
-  _walkStreamStructure: function (stream) {
-
-    var result = '<li data-connection="' +
-      stream.connection.serialId + '" data-stream="' +
-      stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
-      'data-target="#collapse' + UNIQUE_ID + '">' +
-      '<div class="pryv-checkbox">' +
-      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
-      '"><label for="afilterStream' + UNIQUE_ID + '">' +
-      stream.name + '</label></div></li>';
-    result += '<ul id="collapse' + UNIQUE_ID +
-      '" class="panel-collapse  collapse stream-tree-children">' +
-      '<div class="panel-body">';
-    UNIQUE_ID++;
-    for (var j = 0; j < stream.children.length; j++) {
-      if (!stream.children[j].virtual) {
-        result += this._walkStreamStructure(stream.children[j]);
-      }
-
-    }
-    result += '</div></ul>';
+  _defaultEvent: function () {
+    var result = {};
+    result.time = new Date().getTime() / 1000;
+    result.tags = [];
+    result.content = null;
+    result.desctiption = '';
     return result;
   }
-
 });
-
-
-
 })()
-},{"backbone.marionette":33,"underscore":9}],32:[function(require,module,exports){
-
-var Marionette = require('backbone.marionette');
-
+},{"./EventModel.js":59,"./View.js":58,"underscore":9}],27:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+/* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
 module.exports = Marionette.ItemView.extend({
-  template: '#actions-template'
+  template: '#onboardingView',
+  container: '#tree',
+  connection: null,
+  onRender: function () {
+    $(this.container).html(this.$el);
+    $('#onboarding-form').submit(function (e) {
+      e.preventDefault();
+      $('#onboarding-form .fa-spin').show();
+      var streamName = $('#onboarding-input-name').val().trim();
+      if (streamName && streamName.length > 0 && this.connection) {
+        this.connection.streams.create({name: streamName}, function (error) {
+          $('#onboarding-form .fa-spin').hide();
+          if (!error) {
+            this.trigger('done');
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+    $('body').i18n();
+  }
 });
-},{"backbone.marionette":33}],69:[function(require,module,exports){
+})()
+},{"backbone.marionette":34}],24:[function(require,module,exports){
+(function(){/* global $, window, i18n */
+var _ = require('underscore'),
+  Collection = require('./Collection.js'),
+  Model = require('./Model.js'),
+  ListView = require('./ListView.js');
+var Controller = module.exports = function ($modal, loggedConnection, sharingsConnections, target) {
+  this.loggedConnection = loggedConnection;
+  this.collection =  new Collection();
+  this.listView = null;
+  this.$modal = $modal;
+  this.target = target;
+  this.container = '.modal-content';
+  console.log(sharingsConnections);
+  this.addSharings(sharingsConnections);
+};
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).empty().hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
+    if (!this.listView) {
+      this.listView = new ListView({
+        collection: this.collection
+      });
+      this.listView.on('subscription:add', this._createSubscription.bind(this));
+      this.listView.on('close', this.close.bind(this));
+    }
+    this.listView.render();
+  },
+  close: function () {
+    this.listView.close();
+    if (this.collection) {
+      this.collection.reset();
+      this.collection = null;
+    }
+    $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+    $('.modal-backdrop').remove();
+  },
+  addSharings: function (sharings) {
+    if (!Array.isArray(sharings)) {
+      sharings = [sharings];
+    }
+    sharings.forEach(function (sharing) {
+      console.log(sharing);
+      sharing.url = sharing.id.replace(/\?auth.*$/, '')
+        .replace(/\.in/, '.li')
+        .replace(/\.io/, '.me');
+      sharing.url += '#/sharings/' + sharing.auth;
+      var m = new Model({
+        connection: sharing
+      });
+      this.collection.add(m);
+    }.bind(this));
+  },
+  _createSubscription: function (subscriptions) {
+    var subNumber = subscriptions.length;
+    var gotError = false;
+    subscriptions.forEach(function (model) {
+      var connection = model.get('connection');
+      if (!connection.name || connection.name.length === 0) {
+        connection.name = connection._accessInfo.name;
+      }
+      if (connection.name && connection.auth && connection.url) {
+        this.loggedConnection.bookmarks.create(
+          {url: connection.url, accessToken: connection.auth, name: connection.name},
+          function (error) {
+            console.log('create done');
+            if (error) {
+              window.PryvBrowser.showAlert(this.container,
+                i18n.t('error.subscribeSlice.') + error.id);
+              gotError = true;
+            }
+            model.set('error', error);
+            model.set('created', !error);
+            subNumber--;
+            if (subNumber === 0) {
+              this.listView.onCreateSubscriptionFinished(gotError);
+            }
+
+          }.bind(this));
+      }
+    }.bind(this));
+  }
+});
+})()
+},{"./Collection.js":60,"./ListView.js":62,"./Model.js":61,"underscore":9}],63:[function(require,module,exports){
 (function(){/* global document, navigator */
 /* jshint -W101*/
 
@@ -7315,7 +6452,316 @@ utility.domReady = require('./domReady');
 utility.request = require('./request-browser');
 
 })()
-},{"./docCookies":72,"./domReady":70,"./request-browser":71}],66:[function(require,module,exports){
+},{"./docCookies":65,"./domReady":66,"./request-browser":64}],29:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  NavView = require('./NavView.js'),
+  PasswordView = require('./PasswordView.js'),
+  ManageAppsView = require('./ManageAppsView.js'),
+  AppListView = require('./AppListView.js'),
+  _ = require('underscore');
+
+var Layout = Marionette.Layout.extend({
+  template: '#settings-modal-template',
+
+  regions: {
+    nav: '#settings-nav',
+    password: '#settings-password',
+    manageApps: '#settings-manage-apps',
+    otherApps: '#settings-other-apps'
+  },
+  initialize: function () {
+    this.$el =  $('.modal-content');
+  }
+});
+var Controller = module.exports  = function ($modal, connection, target) {
+  this.connection = connection;
+  this.$modal = $modal;
+  this.target = target;
+  this.view  = null;
+  this.nav = null;
+  this.password = null;
+  this.manageApps = null;
+  this.appList = null;
+  this.currentRegion = '';
+
+
+};
+_.extend(Controller.prototype, {
+  show: function (region) {
+    region = region || 'password';
+    this.$modal.modal({currentTarget: this.target});
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
+    this.view = new Layout();
+    this.view.on('close', this.close.bind(this));
+    this.nav = new NavView();
+    this.password = new PasswordView({connection: this.connection});
+    this.manageApps = new ManageAppsView({connection: this.connection});
+    this.appList = new AppListView({connection: this.connection});
+    this.view.render();
+    this.view.nav.show(this.nav);
+    this._showRegion(region);
+    this.nav.activeRegion(region);
+    this.nav.on('showRegion', this._showRegion.bind(this));
+  },
+  close: function () {
+    if (this.view) {
+      this.view = null;
+      $('.modal-content').empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
+      this.manageApps.reset();
+      this.appList.reset();
+    }
+  },
+  _showRegion: function (region) {
+    if (region && this.view && region !== this.currentRegion) {
+      this.password.close();
+      this.manageApps.close();
+      this.appList.close();
+      switch (region) {
+        case 'password':
+          this.view.password.show(this.password);
+          break;
+        case 'manageApps':
+          this.view.manageApps.show(this.manageApps);
+          this.view.otherApps.show(this.appList);
+          break;
+        default:
+          break;
+      }
+      this.currentRegion = region;
+      $('body').i18n();
+    }
+  }
+});
+
+})()
+},{"./AppListView.js":70,"./ManageAppsView.js":69,"./NavView.js":67,"./PasswordView.js":68,"backbone.marionette":34,"underscore":9}],33:[function(require,module,exports){
+
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#actions-template'
+});
+},{"backbone.marionette":34}],32:[function(require,module,exports){
+(function(){/*global $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  UNIQUE_ID = 0;
+
+module.exports = Marionette.ItemView.extend({
+  template: '#filter-by-stream-template',
+  templateHelpers: function () {
+    return {
+      getStream: function () {
+        return this._getStream();
+      }.bind(this)
+    };
+  },
+  ui: {
+    label: 'label',
+    checkbox: 'input[type=checkbox]',
+    applyBtn: '#filter-by-stream-apply'
+  },
+  initialize: function (options) {
+    this.MainModel  = options.MainModel;
+  },
+  onRender: function () {
+    if (!this.MainModel.activeFilter) {
+      return;
+    }
+    var self = this;
+    self.ui.applyBtn.prop('disabled', true);
+    self.ui.applyBtn.click(this._applyFilter.bind(this));
+    this.ui.label.click(function (e) {
+      e.stopPropagation();
+      var input = $($(e.currentTarget).parent()).find('input');
+      var checked = input.prop('checked');
+      input.prop('checked', !checked);
+      input.trigger('change');
+    });
+    this.ui.checkbox.click(function (e) {
+      e.stopPropagation();
+    });
+    this.ui.checkbox.change(function (e) {
+      var checked = $(e.currentTarget).prop('checked'),
+        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
+      self.ui.applyBtn.prop('disabled', false);
+      container.find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: checked
+      });
+      self._isChildrenCheck(container.parent().parent());
+    });
+    this.bindUIElements();
+    this.onFocusStreamChanged();
+    setTimeout(function () {$('body').i18n(); }, 100);
+  },
+  onFocusStreamChanged: function () {
+    var focusedStreams = this.MainModel.activeFilter.getStreams();
+    var focusedStreamsIds = [];
+    try {
+      this.ui.checkbox.prop({
+        indeterminate: false,
+        checked: false
+      });
+    } catch (e) {
+      return false;
+    }
+
+    _.each(focusedStreams, function (stream) {
+      focusedStreamsIds.push(stream.connection.serialId + '/' + stream.id);
+    });
+    var $parent, c, s;
+    _.each(this.ui.checkbox, function (checkbox) {
+      checkbox = $(checkbox);
+      $parent = $(checkbox.parent().parent());
+      if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
+        c = this.MainModel.connections.get($parent.attr('data-connection'));
+        if (c) {
+          s = c.datastore.getStreamById($parent.attr('data-stream'));
+          if (s) {
+            if (focusedStreamsIds.indexOf(c.serialId + '/' + s.id) !== -1 ||
+              focusedStreamsIds.length === 0) {
+              checkbox.prop({
+                indeterminate: false,
+                checked: true
+              });
+              checkbox.trigger('change');
+            }
+          }
+        }
+      }
+    }.bind(this));
+    return true;
+  },
+  _isChildrenCheck: function ($el) {
+    if ($el.attr('id') === 'collapseFilterByStream') {
+      return;
+    }
+    var allChecked = true;
+    var allUncheck = true;
+    var children  = $($el).find('input[type="checkbox"]');
+    for (var i = 0; i < children.length; i++) {
+      allChecked = allChecked && $(children[i]).prop('checked');
+      allUncheck = allUncheck && !$(children[i]).prop('checked');
+    }
+    if (allChecked || allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: allChecked
+      });
+    } else {
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+        indeterminate: true,
+        checked: false
+      });
+    }
+    this._isChildrenCheck($($($el).parent().parent()));
+  },
+  _applyFilter: function () {
+    var streams = [], $parent, connection, stream;
+    this.ui.applyBtn.prop('disabled', true);
+    _.each(this.ui.checkbox, function (checkbox) {
+      checkbox = $(checkbox);
+      if (checkbox.prop('checked')) {
+        $parent = $(checkbox.parent().parent());
+        if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
+          connection = this.MainModel.connections.get($parent.attr('data-connection'));
+          if (connection) {
+            stream = connection.datastore.getStreamById($parent.attr('data-stream'));
+            if (stream) {
+              streams.push(stream);
+            }
+          }
+        }
+      }
+    }.bind(this));
+    this.MainModel.activeFilter.focusOnStreams(streams);
+  },
+  _getStream: function () {
+    var connections = [],
+      result = '';
+    if (!this.MainModel.loggedConnection) {
+      return result;
+    }
+    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
+      connections.push(this.MainModel.loggedConnection);
+    }
+    _.each(this.MainModel.sharingsConnections, function (c) {
+      if (c._accessInfo) {
+        connections.push(c);
+      }
+    });
+    _.each(this.MainModel.bookmakrsConnections, function (c) {
+      if (c._accessInfo) {
+        connections.push(c);
+      }
+    });
+    _.each(connections, function (c) {
+      result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +
+        'data-target="#collapse' + UNIQUE_ID + '">' +
+        '<div class="pryv-checkbox">' +
+        '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
+      if (c._accessInfo.name !== 'pryv-browser') {
+        result += ' / ' + c._accessInfo.name;
+      }
+      result += '</label></div></li>';
+      result += '<ul id="collapse' + UNIQUE_ID +
+        '" class="panel-collapse  collapse in stream-tree-children">' +
+        '<div class="panel-body">';
+      UNIQUE_ID++;
+      result += this._getStreamStructure(c);
+      result += '</div></ul>';
+    }.bind(this));
+
+    return result;
+  },
+  _getStreamStructure: function (connection) {
+    var rootStreams = connection.datastore.getStreams(),
+      result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (!rootStreams[i].virtual) {
+        result += this._walkStreamStructure(rootStreams[i]);
+      }
+    }
+    return result;
+  },
+  _walkStreamStructure: function (stream) {
+
+    var result = '<li data-connection="' +
+      stream.connection.serialId + '" data-stream="' +
+      stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
+      'data-target="#collapse' + UNIQUE_ID + '">' +
+      '<div class="pryv-checkbox">' +
+      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+      '"><label for="afilterStream' + UNIQUE_ID + '">' +
+      stream.name + '</label></div></li>';
+    result += '<ul id="collapse' + UNIQUE_ID +
+      '" class="panel-collapse  collapse stream-tree-children">' +
+      '<div class="panel-body">';
+    UNIQUE_ID++;
+    for (var j = 0; j < stream.children.length; j++) {
+      if (!stream.children[j].virtual) {
+        result += this._walkStreamStructure(stream.children[j]);
+      }
+
+    }
+    result += '</div></ul>';
+    return result;
+  }
+
+});
+
+
+
+})()
+},{"backbone.marionette":34,"underscore":9}],43:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -8594,1581 +8040,395 @@ utility.request = require('./request-browser');
 }).call(this);
 
 })()
-},{}],30:[function(require,module,exports){
-(function(){//     Backbone.js 1.0.0
+},{}],66:[function(require,module,exports){
+/* jshint ignore:start */
 
-//     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
-//     Backbone may be freely distributed under the MIT license.
-//     For all details and documentation:
-//     http://backbonejs.org
+/*!
+ * domready (c) Dustin Diaz 2012 - License MIT
+ */
+module.exports = function (ready) {
 
-(function(){
 
-  // Initial Setup
-  // -------------
+  var fns = [], fn, f = false,
+      doc = document,
+      testEl = doc.documentElement,
+      hack = testEl.doScroll,
+      domContentLoaded = 'DOMContentLoaded',
+      addEventListener = 'addEventListener',
+      onreadystatechange = 'onreadystatechange',
+      readyState = 'readyState',
+      loaded = /^loade|c/.test(doc[readyState]);
 
-  // Save a reference to the global object (`window` in the browser, `exports`
-  // on the server).
-  var root = this;
-
-  // Save the previous value of the `Backbone` variable, so that it can be
-  // restored later on, if `noConflict` is used.
-  var previousBackbone = root.Backbone;
-
-  // Create local references to array methods we'll want to use later.
-  var array = [];
-  var push = array.push;
-  var slice = array.slice;
-  var splice = array.splice;
-
-  // The top-level namespace. All public Backbone classes and modules will
-  // be attached to this. Exported for both the browser and the server.
-  var Backbone;
-  if (typeof exports !== 'undefined') {
-    Backbone = exports;
-  } else {
-    Backbone = root.Backbone = {};
+  function flush(f) {
+    loaded = 1;
+    while (f = fns.shift()) {
+      f()
+    }
   }
 
-  // Current version of the library. Keep in sync with `package.json`.
-  Backbone.VERSION = '1.0.0';
+  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
+    doc.removeEventListener(domContentLoaded, fn, f);
+    flush();
+  }, f);
 
-  // Require Underscore, if we're on the server, and it's not already present.
-  var _ = root._;
-  if (!_ && (typeof require !== 'undefined')) _ = require('underscore');
 
-  // For Backbone's purposes, jQuery, Zepto, Ender, or My Library (kidding) owns
-  // the `$` variable.
-  Backbone.$ = root.jQuery || root.Zepto || root.ender || root.$;
+  hack && doc.attachEvent(onreadystatechange, fn = function () {
+    if (/^c/.test(doc[readyState])) {
+      doc.detachEvent(onreadystatechange, fn);
+      flush();
+    }
+  });
 
-  // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
-  // to its previous owner. Returns a reference to this Backbone object.
-  Backbone.noConflict = function() {
-    root.Backbone = previousBackbone;
-    return this;
-  };
-
-  // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
-  // will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
-  // set a `X-Http-Method-Override` header.
-  Backbone.emulateHTTP = false;
-
-  // Turn on `emulateJSON` to support legacy servers that can't deal with direct
-  // `application/json` requests ... will encode the body as
-  // `application/x-www-form-urlencoded` instead and will send the model in a
-  // form param named `model`.
-  Backbone.emulateJSON = false;
-
-  // Backbone.Events
-  // ---------------
-
-  // A module that can be mixed in to *any object* in order to provide it with
-  // custom events. You may bind with `on` or remove with `off` callback
-  // functions to an event; `trigger`-ing an event fires all callbacks in
-  // succession.
-  //
-  //     var object = {};
-  //     _.extend(object, Backbone.Events);
-  //     object.on('expand', function(){ alert('expanded'); });
-  //     object.trigger('expand');
-  //
-  var Events = Backbone.Events = {
-
-    // Bind an event to a `callback` function. Passing `"all"` will bind
-    // the callback to all events fired.
-    on: function(name, callback, context) {
-      if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
-      this._events || (this._events = {});
-      var events = this._events[name] || (this._events[name] = []);
-      events.push({callback: callback, context: context, ctx: context || this});
-      return this;
-    },
-
-    // Bind an event to only be triggered a single time. After the first time
-    // the callback is invoked, it will be removed.
-    once: function(name, callback, context) {
-      if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
-      var self = this;
-      var once = _.once(function() {
-        self.off(name, once);
-        callback.apply(this, arguments);
-      });
-      once._callback = callback;
-      return this.on(name, once, context);
-    },
-
-    // Remove one or many callbacks. If `context` is null, removes all
-    // callbacks with that function. If `callback` is null, removes all
-    // callbacks for the event. If `name` is null, removes all bound
-    // callbacks for all events.
-    off: function(name, callback, context) {
-      var retain, ev, events, names, i, l, j, k;
-      if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
-      if (!name && !callback && !context) {
-        this._events = {};
-        return this;
-      }
-
-      names = name ? [name] : _.keys(this._events);
-      for (i = 0, l = names.length; i < l; i++) {
-        name = names[i];
-        if (events = this._events[name]) {
-          this._events[name] = retain = [];
-          if (callback || context) {
-            for (j = 0, k = events.length; j < k; j++) {
-              ev = events[j];
-              if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
-                  (context && context !== ev.context)) {
-                retain.push(ev);
+  return (ready = hack ?
+      function (fn) {
+        self != top ?
+            loaded ? fn() : fns.push(fn) :
+            function () {
+              console.log("on dom ready 2");
+              try {
+                testEl.doScroll('left')
+              } catch (e) {
+                return setTimeout(function() { ready(fn) }, 50)
               }
-            }
-          }
-          if (!retain.length) delete this._events[name];
-        }
-      }
-
-      return this;
-    },
-
-    // Trigger one or many events, firing all bound callbacks. Callbacks are
-    // passed the same arguments as `trigger` is, apart from the event name
-    // (unless you're listening on `"all"`, which will cause your callback to
-    // receive the true name of the event as the first argument).
-    trigger: function(name) {
-      if (!this._events) return this;
-      var args = slice.call(arguments, 1);
-      if (!eventsApi(this, 'trigger', name, args)) return this;
-      var events = this._events[name];
-      var allEvents = this._events.all;
-      if (events) triggerEvents(events, args);
-      if (allEvents) triggerEvents(allEvents, arguments);
-      return this;
-    },
-
-    // Tell this object to stop listening to either specific events ... or
-    // to every object it's currently listening to.
-    stopListening: function(obj, name, callback) {
-      var listeners = this._listeners;
-      if (!listeners) return this;
-      var deleteListener = !name && !callback;
-      if (typeof name === 'object') callback = this;
-      if (obj) (listeners = {})[obj._listenerId] = obj;
-      for (var id in listeners) {
-        listeners[id].off(name, callback, this);
-        if (deleteListener) delete this._listeners[id];
-      }
-      return this;
-    }
-
-  };
-
-  // Regular expression used to split event strings.
-  var eventSplitter = /\s+/;
-
-  // Implement fancy features of the Events API such as multiple event
-  // names `"change blur"` and jQuery-style event maps `{change: action}`
-  // in terms of the existing API.
-  var eventsApi = function(obj, action, name, rest) {
-    if (!name) return true;
-
-    // Handle event maps.
-    if (typeof name === 'object') {
-      for (var key in name) {
-        obj[action].apply(obj, [key, name[key]].concat(rest));
-      }
-      return false;
-    }
-
-    // Handle space separated event names.
-    if (eventSplitter.test(name)) {
-      var names = name.split(eventSplitter);
-      for (var i = 0, l = names.length; i < l; i++) {
-        obj[action].apply(obj, [names[i]].concat(rest));
-      }
-      return false;
-    }
-
-    return true;
-  };
-
-  // A difficult-to-believe, but optimized internal dispatch function for
-  // triggering events. Tries to keep the usual cases speedy (most internal
-  // Backbone events have 3 arguments).
-  var triggerEvents = function(events, args) {
-    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
-    switch (args.length) {
-      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
-      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
-      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
-      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
-      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args);
-    }
-  };
-
-  var listenMethods = {listenTo: 'on', listenToOnce: 'once'};
-
-  // Inversion-of-control versions of `on` and `once`. Tell *this* object to
-  // listen to an event in another object ... keeping track of what it's
-  // listening to.
-  _.each(listenMethods, function(implementation, method) {
-    Events[method] = function(obj, name, callback) {
-      var listeners = this._listeners || (this._listeners = {});
-      var id = obj._listenerId || (obj._listenerId = _.uniqueId('l'));
-      listeners[id] = obj;
-      if (typeof name === 'object') callback = this;
-      obj[implementation](name, callback, this);
-      return this;
-    };
-  });
-
-  // Aliases for backwards compatibility.
-  Events.bind   = Events.on;
-  Events.unbind = Events.off;
-
-  // Allow the `Backbone` object to serve as a global event bus, for folks who
-  // want global "pubsub" in a convenient place.
-  _.extend(Backbone, Events);
-
-  // Backbone.Model
-  // --------------
-
-  // Backbone **Models** are the basic data object in the framework --
-  // frequently representing a row in a table in a database on your server.
-  // A discrete chunk of data and a bunch of useful, related methods for
-  // performing computations and transformations on that data.
-
-  // Create a new model with the specified attributes. A client id (`cid`)
-  // is automatically generated and assigned for you.
-  var Model = Backbone.Model = function(attributes, options) {
-    var defaults;
-    var attrs = attributes || {};
-    options || (options = {});
-    this.cid = _.uniqueId('c');
-    this.attributes = {};
-    _.extend(this, _.pick(options, modelOptions));
-    if (options.parse) attrs = this.parse(attrs, options) || {};
-    if (defaults = _.result(this, 'defaults')) {
-      attrs = _.defaults({}, attrs, defaults);
-    }
-    this.set(attrs, options);
-    this.changed = {};
-    this.initialize.apply(this, arguments);
-  };
-
-  // A list of options to be attached directly to the model, if provided.
-  var modelOptions = ['url', 'urlRoot', 'collection'];
-
-  // Attach all inheritable methods to the Model prototype.
-  _.extend(Model.prototype, Events, {
-
-    // A hash of attributes whose current and previous value differ.
-    changed: null,
-
-    // The value returned during the last failed validation.
-    validationError: null,
-
-    // The default name for the JSON `id` attribute is `"id"`. MongoDB and
-    // CouchDB users may want to set this to `"_id"`.
-    idAttribute: 'id',
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize: function(){},
-
-    // Return a copy of the model's `attributes` object.
-    toJSON: function(options) {
-      return _.clone(this.attributes);
-    },
-
-    // Proxy `Backbone.sync` by default -- but override this if you need
-    // custom syncing semantics for *this* particular model.
-    sync: function() {
-      return Backbone.sync.apply(this, arguments);
-    },
-
-    // Get the value of an attribute.
-    get: function(attr) {
-      return this.attributes[attr];
-    },
-
-    // Get the HTML-escaped value of an attribute.
-    escape: function(attr) {
-      return _.escape(this.get(attr));
-    },
-
-    // Returns `true` if the attribute contains a value that is not null
-    // or undefined.
-    has: function(attr) {
-      return this.get(attr) != null;
-    },
-
-    // Set a hash of model attributes on the object, firing `"change"`. This is
-    // the core primitive operation of a model, updating the data and notifying
-    // anyone who needs to know about the change in state. The heart of the beast.
-    set: function(key, val, options) {
-      var attr, attrs, unset, changes, silent, changing, prev, current;
-      if (key == null) return this;
-
-      // Handle both `"key", value` and `{key: value}` -style arguments.
-      if (typeof key === 'object') {
-        attrs = key;
-        options = val;
-      } else {
-        (attrs = {})[key] = val;
-      }
-
-      options || (options = {});
-
-      // Run validation.
-      if (!this._validate(attrs, options)) return false;
-
-      // Extract attributes and options.
-      unset           = options.unset;
-      silent          = options.silent;
-      changes         = [];
-      changing        = this._changing;
-      this._changing  = true;
-
-      if (!changing) {
-        this._previousAttributes = _.clone(this.attributes);
-        this.changed = {};
-      }
-      current = this.attributes, prev = this._previousAttributes;
-
-      // Check for changes of `id`.
-      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
-
-      // For each `set` attribute, update or delete the current value.
-      for (attr in attrs) {
-        val = attrs[attr];
-        if (!_.isEqual(current[attr], val)) changes.push(attr);
-        if (!_.isEqual(prev[attr], val)) {
-          this.changed[attr] = val;
-        } else {
-          delete this.changed[attr];
-        }
-        unset ? delete current[attr] : current[attr] = val;
-      }
-
-      // Trigger all relevant attribute changes.
-      if (!silent) {
-        if (changes.length) this._pending = true;
-        for (var i = 0, l = changes.length; i < l; i++) {
-          this.trigger('change:' + changes[i], this, current[changes[i]], options);
-        }
-      }
-
-      // You might be wondering why there's a `while` loop here. Changes can
-      // be recursively nested within `"change"` events.
-      if (changing) return this;
-      if (!silent) {
-        while (this._pending) {
-          this._pending = false;
-          this.trigger('change', this, options);
-        }
-      }
-      this._pending = false;
-      this._changing = false;
-      return this;
-    },
-
-    // Remove an attribute from the model, firing `"change"`. `unset` is a noop
-    // if the attribute doesn't exist.
-    unset: function(attr, options) {
-      return this.set(attr, void 0, _.extend({}, options, {unset: true}));
-    },
-
-    // Clear all attributes on the model, firing `"change"`.
-    clear: function(options) {
-      var attrs = {};
-      for (var key in this.attributes) attrs[key] = void 0;
-      return this.set(attrs, _.extend({}, options, {unset: true}));
-    },
-
-    // Determine if the model has changed since the last `"change"` event.
-    // If you specify an attribute name, determine if that attribute has changed.
-    hasChanged: function(attr) {
-      if (attr == null) return !_.isEmpty(this.changed);
-      return _.has(this.changed, attr);
-    },
-
-    // Return an object containing all the attributes that have changed, or
-    // false if there are no changed attributes. Useful for determining what
-    // parts of a view need to be updated and/or what attributes need to be
-    // persisted to the server. Unset attributes will be set to undefined.
-    // You can also pass an attributes object to diff against the model,
-    // determining if there *would be* a change.
-    changedAttributes: function(diff) {
-      if (!diff) return this.hasChanged() ? _.clone(this.changed) : false;
-      var val, changed = false;
-      var old = this._changing ? this._previousAttributes : this.attributes;
-      for (var attr in diff) {
-        if (_.isEqual(old[attr], (val = diff[attr]))) continue;
-        (changed || (changed = {}))[attr] = val;
-      }
-      return changed;
-    },
-
-    // Get the previous value of an attribute, recorded at the time the last
-    // `"change"` event was fired.
-    previous: function(attr) {
-      if (attr == null || !this._previousAttributes) return null;
-      return this._previousAttributes[attr];
-    },
-
-    // Get all of the attributes of the model at the time of the previous
-    // `"change"` event.
-    previousAttributes: function() {
-      return _.clone(this._previousAttributes);
-    },
-
-    // Fetch the model from the server. If the server's representation of the
-    // model differs from its current attributes, they will be overridden,
-    // triggering a `"change"` event.
-    fetch: function(options) {
-      options = options ? _.clone(options) : {};
-      if (options.parse === void 0) options.parse = true;
-      var model = this;
-      var success = options.success;
-      options.success = function(resp) {
-        if (!model.set(model.parse(resp, options), options)) return false;
-        if (success) success(model, resp, options);
-        model.trigger('sync', model, resp, options);
-      };
-      wrapError(this, options);
-      return this.sync('read', this, options);
-    },
-
-    // Set a hash of model attributes, and sync the model to the server.
-    // If the server returns an attributes hash that differs, the model's
-    // state will be `set` again.
-    save: function(key, val, options) {
-      var attrs, method, xhr, attributes = this.attributes;
-
-      // Handle both `"key", value` and `{key: value}` -style arguments.
-      if (key == null || typeof key === 'object') {
-        attrs = key;
-        options = val;
-      } else {
-        (attrs = {})[key] = val;
-      }
-
-      // If we're not waiting and attributes exist, save acts as `set(attr).save(null, opts)`.
-      if (attrs && (!options || !options.wait) && !this.set(attrs, options)) return false;
-
-      options = _.extend({validate: true}, options);
-
-      // Do not persist invalid models.
-      if (!this._validate(attrs, options)) return false;
-
-      // Set temporary attributes if `{wait: true}`.
-      if (attrs && options.wait) {
-        this.attributes = _.extend({}, attributes, attrs);
-      }
-
-      // After a successful server-side save, the client is (optionally)
-      // updated with the server-side state.
-      if (options.parse === void 0) options.parse = true;
-      var model = this;
-      var success = options.success;
-      options.success = function(resp) {
-        // Ensure attributes are restored during synchronous saves.
-        model.attributes = attributes;
-        var serverAttrs = model.parse(resp, options);
-        if (options.wait) serverAttrs = _.extend(attrs || {}, serverAttrs);
-        if (_.isObject(serverAttrs) && !model.set(serverAttrs, options)) {
-          return false;
-        }
-        if (success) success(model, resp, options);
-        model.trigger('sync', model, resp, options);
-      };
-      wrapError(this, options);
-
-      method = this.isNew() ? 'create' : (options.patch ? 'patch' : 'update');
-      if (method === 'patch') options.attrs = attrs;
-      xhr = this.sync(method, this, options);
-
-      // Restore attributes.
-      if (attrs && options.wait) this.attributes = attributes;
-
-      return xhr;
-    },
-
-    // Destroy this model on the server if it was already persisted.
-    // Optimistically removes the model from its collection, if it has one.
-    // If `wait: true` is passed, waits for the server to respond before removal.
-    destroy: function(options) {
-      options = options ? _.clone(options) : {};
-      var model = this;
-      var success = options.success;
-
-      var destroy = function() {
-        model.trigger('destroy', model, model.collection, options);
-      };
-
-      options.success = function(resp) {
-        if (options.wait || model.isNew()) destroy();
-        if (success) success(model, resp, options);
-        if (!model.isNew()) model.trigger('sync', model, resp, options);
-      };
-
-      if (this.isNew()) {
-        options.success();
-        return false;
-      }
-      wrapError(this, options);
-
-      var xhr = this.sync('delete', this, options);
-      if (!options.wait) destroy();
-      return xhr;
-    },
-
-    // Default URL for the model's representation on the server -- if you're
-    // using Backbone's restful methods, override this to change the endpoint
-    // that will be called.
-    url: function() {
-      var base = _.result(this, 'urlRoot') || _.result(this.collection, 'url') || urlError();
-      if (this.isNew()) return base;
-      return base + (base.charAt(base.length - 1) === '/' ? '' : '/') + encodeURIComponent(this.id);
-    },
-
-    // **parse** converts a response into the hash of attributes to be `set` on
-    // the model. The default implementation is just to pass the response along.
-    parse: function(resp, options) {
-      return resp;
-    },
-
-    // Create a new model with identical attributes to this one.
-    clone: function() {
-      return new this.constructor(this.attributes);
-    },
-
-    // A model is new if it has never been saved to the server, and lacks an id.
-    isNew: function() {
-      return this.id == null;
-    },
-
-    // Check if the model is currently in a valid state.
-    isValid: function(options) {
-      return this._validate({}, _.extend(options || {}, { validate: true }));
-    },
-
-    // Run validation against the next complete set of model attributes,
-    // returning `true` if all is well. Otherwise, fire an `"invalid"` event.
-    _validate: function(attrs, options) {
-      if (!options.validate || !this.validate) return true;
-      attrs = _.extend({}, this.attributes, attrs);
-      var error = this.validationError = this.validate(attrs, options) || null;
-      if (!error) return true;
-      this.trigger('invalid', this, error, _.extend(options || {}, {validationError: error}));
-      return false;
-    }
-
-  });
-
-  // Underscore methods that we want to implement on the Model.
-  var modelMethods = ['keys', 'values', 'pairs', 'invert', 'pick', 'omit'];
-
-  // Mix in each Underscore method as a proxy to `Model#attributes`.
-  _.each(modelMethods, function(method) {
-    Model.prototype[method] = function() {
-      var args = slice.call(arguments);
-      args.unshift(this.attributes);
-      return _[method].apply(_, args);
-    };
-  });
-
-  // Backbone.Collection
-  // -------------------
-
-  // If models tend to represent a single row of data, a Backbone Collection is
-  // more analagous to a table full of data ... or a small slice or page of that
-  // table, or a collection of rows that belong together for a particular reason
-  // -- all of the messages in this particular folder, all of the documents
-  // belonging to this particular author, and so on. Collections maintain
-  // indexes of their models, both in order, and for lookup by `id`.
-
-  // Create a new **Collection**, perhaps to contain a specific type of `model`.
-  // If a `comparator` is specified, the Collection will maintain
-  // its models in sort order, as they're added and removed.
-  var Collection = Backbone.Collection = function(models, options) {
-    options || (options = {});
-    if (options.url) this.url = options.url;
-    if (options.model) this.model = options.model;
-    if (options.comparator !== void 0) this.comparator = options.comparator;
-    this._reset();
-    this.initialize.apply(this, arguments);
-    if (models) this.reset(models, _.extend({silent: true}, options));
-  };
-
-  // Default options for `Collection#set`.
-  var setOptions = {add: true, remove: true, merge: true};
-  var addOptions = {add: true, merge: false, remove: false};
-
-  // Define the Collection's inheritable methods.
-  _.extend(Collection.prototype, Events, {
-
-    // The default model for a collection is just a **Backbone.Model**.
-    // This should be overridden in most cases.
-    model: Model,
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize: function(){},
-
-    // The JSON representation of a Collection is an array of the
-    // models' attributes.
-    toJSON: function(options) {
-      return this.map(function(model){ return model.toJSON(options); });
-    },
-
-    // Proxy `Backbone.sync` by default.
-    sync: function() {
-      return Backbone.sync.apply(this, arguments);
-    },
-
-    // Add a model, or list of models to the set.
-    add: function(models, options) {
-      return this.set(models, _.defaults(options || {}, addOptions));
-    },
-
-    // Remove a model, or a list of models from the set.
-    remove: function(models, options) {
-      models = _.isArray(models) ? models.slice() : [models];
-      options || (options = {});
-      var i, l, index, model;
-      for (i = 0, l = models.length; i < l; i++) {
-        model = this.get(models[i]);
-        if (!model) continue;
-        delete this._byId[model.id];
-        delete this._byId[model.cid];
-        index = this.indexOf(model);
-        this.models.splice(index, 1);
-        this.length--;
-        if (!options.silent) {
-          options.index = index;
-          model.trigger('remove', model, this, options);
-        }
-        this._removeReference(model);
-      }
-      return this;
-    },
-
-    // Update a collection by `set`-ing a new list of models, adding new ones,
-    // removing models that are no longer present, and merging models that
-    // already exist in the collection, as necessary. Similar to **Model#set**,
-    // the core operation for updating the data contained by the collection.
-    set: function(models, options) {
-      options = _.defaults(options || {}, setOptions);
-      if (options.parse) models = this.parse(models, options);
-      if (!_.isArray(models)) models = models ? [models] : [];
-      var i, l, model, attrs, existing, sort;
-      var at = options.at;
-      var sortable = this.comparator && (at == null) && options.sort !== false;
-      var sortAttr = _.isString(this.comparator) ? this.comparator : null;
-      var toAdd = [], toRemove = [], modelMap = {};
-
-      // Turn bare objects into model references, and prevent invalid models
-      // from being added.
-      for (i = 0, l = models.length; i < l; i++) {
-        if (!(model = this._prepareModel(models[i], options))) continue;
-
-        // If a duplicate is found, prevent it from being added and
-        // optionally merge it into the existing model.
-        if (existing = this.get(model)) {
-          if (options.remove) modelMap[existing.cid] = true;
-          if (options.merge) {
-            existing.set(model.attributes, options);
-            if (sortable && !sort && existing.hasChanged(sortAttr)) sort = true;
-          }
-
-        // This is a new model, push it to the `toAdd` list.
-        } else if (options.add) {
-          toAdd.push(model);
-
-          // Listen to added models' events, and index models for lookup by
-          // `id` and by `cid`.
-          model.on('all', this._onModelEvent, this);
-          this._byId[model.cid] = model;
-          if (model.id != null) this._byId[model.id] = model;
-        }
-      }
-
-      // Remove nonexistent models if appropriate.
-      if (options.remove) {
-        for (i = 0, l = this.length; i < l; ++i) {
-          if (!modelMap[(model = this.models[i]).cid]) toRemove.push(model);
-        }
-        if (toRemove.length) this.remove(toRemove, options);
-      }
-
-      // See if sorting is needed, update `length` and splice in new models.
-      if (toAdd.length) {
-        if (sortable) sort = true;
-        this.length += toAdd.length;
-        if (at != null) {
-          splice.apply(this.models, [at, 0].concat(toAdd));
-        } else {
-          push.apply(this.models, toAdd);
-        }
-      }
-
-      // Silently sort the collection if appropriate.
-      if (sort) this.sort({silent: true});
-
-      if (options.silent) return this;
-
-      // Trigger `add` events.
-      for (i = 0, l = toAdd.length; i < l; i++) {
-        (model = toAdd[i]).trigger('add', model, this, options);
-      }
-
-      // Trigger `sort` if the collection was sorted.
-      if (sort) this.trigger('sort', this, options);
-      return this;
-    },
-
-    // When you have more items than you want to add or remove individually,
-    // you can reset the entire set with a new list of models, without firing
-    // any granular `add` or `remove` events. Fires `reset` when finished.
-    // Useful for bulk operations and optimizations.
-    reset: function(models, options) {
-      options || (options = {});
-      for (var i = 0, l = this.models.length; i < l; i++) {
-        this._removeReference(this.models[i]);
-      }
-      options.previousModels = this.models;
-      this._reset();
-      this.add(models, _.extend({silent: true}, options));
-      if (!options.silent) this.trigger('reset', this, options);
-      return this;
-    },
-
-    // Add a model to the end of the collection.
-    push: function(model, options) {
-      model = this._prepareModel(model, options);
-      this.add(model, _.extend({at: this.length}, options));
-      return model;
-    },
-
-    // Remove a model from the end of the collection.
-    pop: function(options) {
-      var model = this.at(this.length - 1);
-      this.remove(model, options);
-      return model;
-    },
-
-    // Add a model to the beginning of the collection.
-    unshift: function(model, options) {
-      model = this._prepareModel(model, options);
-      this.add(model, _.extend({at: 0}, options));
-      return model;
-    },
-
-    // Remove a model from the beginning of the collection.
-    shift: function(options) {
-      var model = this.at(0);
-      this.remove(model, options);
-      return model;
-    },
-
-    // Slice out a sub-array of models from the collection.
-    slice: function(begin, end) {
-      return this.models.slice(begin, end);
-    },
-
-    // Get a model from the set by id.
-    get: function(obj) {
-      if (obj == null) return void 0;
-      return this._byId[obj.id != null ? obj.id : obj.cid || obj];
-    },
-
-    // Get the model at the given index.
-    at: function(index) {
-      return this.models[index];
-    },
-
-    // Return models with matching attributes. Useful for simple cases of
-    // `filter`.
-    where: function(attrs, first) {
-      if (_.isEmpty(attrs)) return first ? void 0 : [];
-      return this[first ? 'find' : 'filter'](function(model) {
-        for (var key in attrs) {
-          if (attrs[key] !== model.get(key)) return false;
-        }
-        return true;
-      });
-    },
-
-    // Return the first model with matching attributes. Useful for simple cases
-    // of `find`.
-    findWhere: function(attrs) {
-      return this.where(attrs, true);
-    },
-
-    // Force the collection to re-sort itself. You don't need to call this under
-    // normal circumstances, as the set will maintain sort order as each item
-    // is added.
-    sort: function(options) {
-      if (!this.comparator) throw new Error('Cannot sort a set without a comparator');
-      options || (options = {});
-
-      // Run sort based on type of `comparator`.
-      if (_.isString(this.comparator) || this.comparator.length === 1) {
-        this.models = this.sortBy(this.comparator, this);
-      } else {
-        this.models.sort(_.bind(this.comparator, this));
-      }
-
-      if (!options.silent) this.trigger('sort', this, options);
-      return this;
-    },
-
-    // Figure out the smallest index at which a model should be inserted so as
-    // to maintain order.
-    sortedIndex: function(model, value, context) {
-      value || (value = this.comparator);
-      var iterator = _.isFunction(value) ? value : function(model) {
-        return model.get(value);
-      };
-      return _.sortedIndex(this.models, model, iterator, context);
-    },
-
-    // Pluck an attribute from each model in the collection.
-    pluck: function(attr) {
-      return _.invoke(this.models, 'get', attr);
-    },
-
-    // Fetch the default set of models for this collection, resetting the
-    // collection when they arrive. If `reset: true` is passed, the response
-    // data will be passed through the `reset` method instead of `set`.
-    fetch: function(options) {
-      options = options ? _.clone(options) : {};
-      if (options.parse === void 0) options.parse = true;
-      var success = options.success;
-      var collection = this;
-      options.success = function(resp) {
-        var method = options.reset ? 'reset' : 'set';
-        collection[method](resp, options);
-        if (success) success(collection, resp, options);
-        collection.trigger('sync', collection, resp, options);
-      };
-      wrapError(this, options);
-      return this.sync('read', this, options);
-    },
-
-    // Create a new instance of a model in this collection. Add the model to the
-    // collection immediately, unless `wait: true` is passed, in which case we
-    // wait for the server to agree.
-    create: function(model, options) {
-      options = options ? _.clone(options) : {};
-      if (!(model = this._prepareModel(model, options))) return false;
-      if (!options.wait) this.add(model, options);
-      var collection = this;
-      var success = options.success;
-      options.success = function(resp) {
-        if (options.wait) collection.add(model, options);
-        if (success) success(model, resp, options);
-      };
-      model.save(null, options);
-      return model;
-    },
-
-    // **parse** converts a response into a list of models to be added to the
-    // collection. The default implementation is just to pass it through.
-    parse: function(resp, options) {
-      return resp;
-    },
-
-    // Create a new collection with an identical list of models as this one.
-    clone: function() {
-      return new this.constructor(this.models);
-    },
-
-    // Private method to reset all internal state. Called when the collection
-    // is first initialized or reset.
-    _reset: function() {
-      this.length = 0;
-      this.models = [];
-      this._byId  = {};
-    },
-
-    // Prepare a hash of attributes (or other model) to be added to this
-    // collection.
-    _prepareModel: function(attrs, options) {
-      if (attrs instanceof Model) {
-        if (!attrs.collection) attrs.collection = this;
-        return attrs;
-      }
-      options || (options = {});
-      options.collection = this;
-      var model = new this.model(attrs, options);
-      if (!model._validate(attrs, options)) {
-        this.trigger('invalid', this, attrs, options);
-        return false;
-      }
-      return model;
-    },
-
-    // Internal method to sever a model's ties to a collection.
-    _removeReference: function(model) {
-      if (this === model.collection) delete model.collection;
-      model.off('all', this._onModelEvent, this);
-    },
-
-    // Internal method called every time a model in the set fires an event.
-    // Sets need to update their indexes when models change ids. All other
-    // events simply proxy through. "add" and "remove" events that originate
-    // in other collections are ignored.
-    _onModelEvent: function(event, model, collection, options) {
-      if ((event === 'add' || event === 'remove') && collection !== this) return;
-      if (event === 'destroy') this.remove(model, options);
-      if (model && event === 'change:' + model.idAttribute) {
-        delete this._byId[model.previous(model.idAttribute)];
-        if (model.id != null) this._byId[model.id] = model;
-      }
-      this.trigger.apply(this, arguments);
-    }
-
-  });
-
-  // Underscore methods that we want to implement on the Collection.
-  // 90% of the core usefulness of Backbone Collections is actually implemented
-  // right here:
-  var methods = ['forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
-    'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
-    'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
-    'max', 'min', 'toArray', 'size', 'first', 'head', 'take', 'initial', 'rest',
-    'tail', 'drop', 'last', 'without', 'indexOf', 'shuffle', 'lastIndexOf',
-    'isEmpty', 'chain'];
-
-  // Mix in each Underscore method as a proxy to `Collection#models`.
-  _.each(methods, function(method) {
-    Collection.prototype[method] = function() {
-      var args = slice.call(arguments);
-      args.unshift(this.models);
-      return _[method].apply(_, args);
-    };
-  });
-
-  // Underscore methods that take a property name as an argument.
-  var attributeMethods = ['groupBy', 'countBy', 'sortBy'];
-
-  // Use attributes instead of properties.
-  _.each(attributeMethods, function(method) {
-    Collection.prototype[method] = function(value, context) {
-      var iterator = _.isFunction(value) ? value : function(model) {
-        return model.get(value);
-      };
-      return _[method](this.models, iterator, context);
-    };
-  });
-
-  // Backbone.View
-  // -------------
-
-  // Backbone Views are almost more convention than they are actual code. A View
-  // is simply a JavaScript object that represents a logical chunk of UI in the
-  // DOM. This might be a single item, an entire list, a sidebar or panel, or
-  // even the surrounding frame which wraps your whole app. Defining a chunk of
-  // UI as a **View** allows you to define your DOM events declaratively, without
-  // having to worry about render order ... and makes it easy for the view to
-  // react to specific changes in the state of your models.
-
-  // Creating a Backbone.View creates its initial element outside of the DOM,
-  // if an existing element is not provided...
-  var View = Backbone.View = function(options) {
-    this.cid = _.uniqueId('view');
-    this._configure(options || {});
-    this._ensureElement();
-    this.initialize.apply(this, arguments);
-    this.delegateEvents();
-  };
-
-  // Cached regex to split keys for `delegate`.
-  var delegateEventSplitter = /^(\S+)\s*(.*)$/;
-
-  // List of view options to be merged as properties.
-  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName', 'events'];
-
-  // Set up all inheritable **Backbone.View** properties and methods.
-  _.extend(View.prototype, Events, {
-
-    // The default `tagName` of a View's element is `"div"`.
-    tagName: 'div',
-
-    // jQuery delegate for element lookup, scoped to DOM elements within the
-    // current view. This should be prefered to global lookups where possible.
-    $: function(selector) {
-      return this.$el.find(selector);
-    },
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize: function(){},
-
-    // **render** is the core function that your view should override, in order
-    // to populate its element (`this.el`), with the appropriate HTML. The
-    // convention is for **render** to always return `this`.
-    render: function() {
-      return this;
-    },
-
-    // Remove this view by taking the element out of the DOM, and removing any
-    // applicable Backbone.Events listeners.
-    remove: function() {
-      this.$el.remove();
-      this.stopListening();
-      return this;
-    },
-
-    // Change the view's element (`this.el` property), including event
-    // re-delegation.
-    setElement: function(element, delegate) {
-      if (this.$el) this.undelegateEvents();
-      this.$el = element instanceof Backbone.$ ? element : Backbone.$(element);
-      this.el = this.$el[0];
-      if (delegate !== false) this.delegateEvents();
-      return this;
-    },
-
-    // Set callbacks, where `this.events` is a hash of
-    //
-    // *{"event selector": "callback"}*
-    //
-    //     {
-    //       'mousedown .title':  'edit',
-    //       'click .button':     'save'
-    //       'click .open':       function(e) { ... }
-    //     }
-    //
-    // pairs. Callbacks will be bound to the view, with `this` set properly.
-    // Uses event delegation for efficiency.
-    // Omitting the selector binds the event to `this.el`.
-    // This only works for delegate-able events: not `focus`, `blur`, and
-    // not `change`, `submit`, and `reset` in Internet Explorer.
-    delegateEvents: function(events) {
-      if (!(events || (events = _.result(this, 'events')))) return this;
-      this.undelegateEvents();
-      for (var key in events) {
-        var method = events[key];
-        if (!_.isFunction(method)) method = this[events[key]];
-        if (!method) continue;
-
-        var match = key.match(delegateEventSplitter);
-        var eventName = match[1], selector = match[2];
-        method = _.bind(method, this);
-        eventName += '.delegateEvents' + this.cid;
-        if (selector === '') {
-          this.$el.on(eventName, method);
-        } else {
-          this.$el.on(eventName, selector, method);
-        }
-      }
-      return this;
-    },
-
-    // Clears all callbacks previously bound to the view with `delegateEvents`.
-    // You usually don't need to use this, but may wish to if you have multiple
-    // Backbone views attached to the same DOM element.
-    undelegateEvents: function() {
-      this.$el.off('.delegateEvents' + this.cid);
-      return this;
-    },
-
-    // Performs the initial configuration of a View with a set of options.
-    // Keys with special meaning *(e.g. model, collection, id, className)* are
-    // attached directly to the view.  See `viewOptions` for an exhaustive
-    // list.
-    _configure: function(options) {
-      if (this.options) options = _.extend({}, _.result(this, 'options'), options);
-      _.extend(this, _.pick(options, viewOptions));
-      this.options = options;
-    },
-
-    // Ensure that the View has a DOM element to render into.
-    // If `this.el` is a string, pass it through `$()`, take the first
-    // matching element, and re-assign it to `el`. Otherwise, create
-    // an element from the `id`, `className` and `tagName` properties.
-    _ensureElement: function() {
-      if (!this.el) {
-        var attrs = _.extend({}, _.result(this, 'attributes'));
-        if (this.id) attrs.id = _.result(this, 'id');
-        if (this.className) attrs['class'] = _.result(this, 'className');
-        var $el = Backbone.$('<' + _.result(this, 'tagName') + '>').attr(attrs);
-        this.setElement($el, false);
-      } else {
-        this.setElement(_.result(this, 'el'), false);
+              fn()
+            }()
+      } :
+      function (fn) {
+        loaded ? fn() : fns.push(fn)
+      })
+}();
+
+},{}],65:[function(require,module,exports){
+/* jshint ignore:start */
+
+/*\
+ |*|
+ |*|  :: cookies.js ::
+ |*|
+ |*|  A complete cookies reader/writer framework with full unicode support.
+ |*|
+ |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
+ |*|
+ |*|  Syntaxes:
+ |*|
+ |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
+ |*|  * docCookies.getItem(name)
+ |*|  * docCookies.removeItem(name[, path])
+ |*|  * docCookies.hasItem(name)
+ |*|  * docCookies.keys()
+ |*|
+ \*/
+module.exports = {
+  getItem: function (sKey) {
+    if (!sKey || !this.hasItem(sKey)) { return null; }
+    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
+        escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+  },
+  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
+    var sExpires = "";
+    if (vEnd) {
+      switch (vEnd.constructor) {
+        case Number:
+          sExpires = vEnd === Infinity ?
+              "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
+          break;
+        case String:
+          sExpires = "; expires=" + vEnd;
+          break;
+        case Date:
+          sExpires = "; expires=" + vEnd.toGMTString();
+          break;
       }
     }
+    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
+  },
+  removeItem: function (sKey, sPath) {
+    if (!sKey || !this.hasItem(sKey)) { return; }
+    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
+  },
+  hasItem: function (sKey) {
+    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+  },
+  keys: /* optional method: you can safely remove it! */ function () {
+    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
+    return aKeys;
+  }
+};
 
-  });
+},{}],64:[function(require,module,exports){
+/**
+ *
+ * @param {Object} pack json with
+ * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
+ * @param {String} pack.host : fully qualified host name
+ * @param {Number} pack.port : port to use
+ * @param {String} pack.path : the request PATH
+ * @param {Object} [pack.headers] : key / value map of headers
+ * @param {Object} [pack.params] : the payload -- only with POST/PUT
+ * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
+ * @param {Function} pack.success : function (result, resultInfo)
+ * @param {Function} pack.error : function (error, resultInfo)
+ * @param {String} [pack.info] : a text
+ * @param {Boolean} [pack.async = true]
+ * @param {Number} [pack.expectedStatus] : http result code
+ * @param {Boolean} [pack.ssl = true]
+ * @param {Boolean} [pack.withoutCredentials = false]
+ */
+module.exports = function (pack)  {
+  pack.info = pack.info || '';
+  var parseResult = pack.parseResult || 'json';
 
-  // Backbone.sync
-  // -------------
+  if (!pack.hasOwnProperty('async')) {
+    pack.async = true;
+  }
 
-  // Override this function to change the manner in which Backbone persists
-  // models to the server. You will be passed the type of request, and the
-  // model in question. By default, makes a RESTful Ajax request
-  // to the model's `url()`. Some possible customizations could be:
-  //
-  // * Use `setTimeout` to batch rapid-fire updates into a single request.
-  // * Send up the models as XML instead of JSON.
-  // * Persist models via WebSockets instead of Ajax.
-  //
-  // Turn on `Backbone.emulateHTTP` in order to send `PUT` and `DELETE` requests
-  // as `POST`, with a `_method` parameter containing the true HTTP method,
-  // as well as all requests with the body as `application/x-www-form-urlencoded`
-  // instead of `application/json` with the model in a param named `model`.
-  // Useful when interfacing with server-side languages like **PHP** that make
-  // it difficult to read the body of `PUT` requests.
-  Backbone.sync = function(method, model, options) {
-    var type = methodMap[method];
+  // ------------ request TYPE
+  pack.method = pack.method || 'POST';
+  // method override test
+  if (false && pack.method === 'DELETE') {
+    pack.method = 'POST';
+    pack.params =  pack.params || {};
+    pack.params._method = 'DELETE';
+  }
 
-    // Default options, unless specified.
-    _.defaults(options || (options = {}), {
-      emulateHTTP: Backbone.emulateHTTP,
-      emulateJSON: Backbone.emulateJSON
-    });
+  // ------------- request HEADERS
 
-    // Default JSON-request options.
-    var params = {type: type, dataType: 'json'};
 
-    // Ensure that we have a URL.
-    if (!options.url) {
-      params.url = _.result(model, 'url') || urlError();
-    }
+  pack.headers = pack.headers || {};
 
-    // Ensure that we have the appropriate request data.
-    if (options.data == null && model && (method === 'create' || method === 'update' || method === 'patch')) {
-      params.contentType = 'application/json';
-      params.data = JSON.stringify(options.attrs || model.toJSON(options));
-    }
+  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
 
-    // For older servers, emulate JSON by encoding the request into an HTML-form.
-    if (options.emulateJSON) {
-      params.contentType = 'application/x-www-form-urlencoded';
-      params.data = params.data ? {model: params.data} : {};
-    }
-
-    // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
-    // And an `X-HTTP-Method-Override` header.
-    if (options.emulateHTTP && (type === 'PUT' || type === 'DELETE' || type === 'PATCH')) {
-      params.type = 'POST';
-      if (options.emulateJSON) params.data._method = type;
-      var beforeSend = options.beforeSend;
-      options.beforeSend = function(xhr) {
-        xhr.setRequestHeader('X-HTTP-Method-Override', type);
-        if (beforeSend) return beforeSend.apply(this, arguments);
-      };
-    }
-
-    // Don't process data on a non-GET request.
-    if (params.type !== 'GET' && !options.emulateJSON) {
-      params.processData = false;
-    }
-
-    // If we're sending a `PATCH` request, and we're in an old Internet Explorer
-    // that still has ActiveX enabled by default, override jQuery to use that
-    // for XHR instead. Remove this line when jQuery supports `PATCH` on IE8.
-    if (params.type === 'PATCH' && window.ActiveXObject &&
-          !(window.external && window.external.msActiveXFilteringEnabled)) {
-      params.xhr = function() {
-        return new ActiveXObject("Microsoft.XMLHTTP");
-      };
-    }
-
-    // Make the request, allowing the user to override any Ajax options.
-    var xhr = options.xhr = Backbone.ajax(_.extend(params, options));
-    model.trigger('request', model, xhr, options);
-    return xhr;
-  };
-
-  // Map from CRUD to HTTP for our default `Backbone.sync` implementation.
-  var methodMap = {
-    'create': 'POST',
-    'update': 'PUT',
-    'patch':  'PATCH',
-    'delete': 'DELETE',
-    'read':   'GET'
-  };
-
-  // Set the default implementation of `Backbone.ajax` to proxy through to `$`.
-  // Override this if you'd like to use a different library.
-  Backbone.ajax = function() {
-    return Backbone.$.ajax.apply(Backbone.$, arguments);
-  };
-
-  // Backbone.Router
-  // ---------------
-
-  // Routers map faux-URLs to actions, and fire events when routes are
-  // matched. Creating a new one sets its `routes` hash, if not set statically.
-  var Router = Backbone.Router = function(options) {
-    options || (options = {});
-    if (options.routes) this.routes = options.routes;
-    this._bindRoutes();
-    this.initialize.apply(this, arguments);
-  };
-
-  // Cached regular expressions for matching named param parts and splatted
-  // parts of route strings.
-  var optionalParam = /\((.*?)\)/g;
-  var namedParam    = /(\(\?)?:\w+/g;
-  var splatParam    = /\*\w+/g;
-  var escapeRegExp  = /[\-{}\[\]+?.,\\\^$|#\s]/g;
-
-  // Set up all inheritable **Backbone.Router** properties and methods.
-  _.extend(Router.prototype, Events, {
-
-    // Initialize is an empty function by default. Override it with your own
-    // initialization logic.
-    initialize: function(){},
-
-    // Manually bind a single named route to a callback. For example:
-    //
-    //     this.route('search/:query/p:num', 'search', function(query, num) {
-    //       ...
-    //     });
-    //
-    route: function(route, name, callback) {
-      if (!_.isRegExp(route)) route = this._routeToRegExp(route);
-      if (_.isFunction(name)) {
-        callback = name;
-        name = '';
-      }
-      if (!callback) callback = this[name];
-      var router = this;
-      Backbone.history.route(route, function(fragment) {
-        var args = router._extractParameters(route, fragment);
-        callback && callback.apply(router, args);
-        router.trigger.apply(router, ['route:' + name].concat(args));
-        router.trigger('route', name, args);
-        Backbone.history.trigger('route', router, name, args);
-      });
-      return this;
-    },
-
-    // Simple proxy to `Backbone.history` to save a fragment into the history.
-    navigate: function(fragment, options) {
-      Backbone.history.navigate(fragment, options);
-      return this;
-    },
-
-    // Bind all defined routes to `Backbone.history`. We have to reverse the
-    // order of the routes here to support behavior where the most general
-    // routes can be defined at the bottom of the route map.
-    _bindRoutes: function() {
-      if (!this.routes) return;
-      this.routes = _.result(this, 'routes');
-      var route, routes = _.keys(this.routes);
-      while ((route = routes.pop()) != null) {
-        this.route(route, this.routes[route]);
-      }
-    },
-
-    // Convert a route string into a regular expression, suitable for matching
-    // against the current location hash.
-    _routeToRegExp: function(route) {
-      route = route.replace(escapeRegExp, '\\$&')
-                   .replace(optionalParam, '(?:$1)?')
-                   .replace(namedParam, function(match, optional){
-                     return optional ? match : '([^\/]+)';
-                   })
-                   .replace(splatParam, '(.*?)');
-      return new RegExp('^' + route + '$');
-    },
-
-    // Given a route, and a URL fragment that it matches, return the array of
-    // extracted decoded parameters. Empty or unmatched parameters will be
-    // treated as `null` to normalize cross-browser behavior.
-    _extractParameters: function(route, fragment) {
-      var params = route.exec(fragment).slice(1);
-      return _.map(params, function(param) {
-        return param ? decodeURIComponent(param) : null;
-      });
-    }
-
-  });
-
-  // Backbone.History
-  // ----------------
-
-  // Handles cross-browser history management, based on either
-  // [pushState](http://diveintohtml5.info/history.html) and real URLs, or
-  // [onhashchange](https://developer.mozilla.org/en-US/docs/DOM/window.onhashchange)
-  // and URL fragments. If the browser supports neither (old IE, natch),
-  // falls back to polling.
-  var History = Backbone.History = function() {
-    this.handlers = [];
-    _.bindAll(this, 'checkUrl');
-
-    // Ensure that `History` can be used outside of the browser.
-    if (typeof window !== 'undefined') {
-      this.location = window.location;
-      this.history = window.history;
-    }
-  };
-
-  // Cached regex for stripping a leading hash/slash and trailing space.
-  var routeStripper = /^[#\/]|\s+$/g;
-
-  // Cached regex for stripping leading and trailing slashes.
-  var rootStripper = /^\/+|\/+$/g;
-
-  // Cached regex for detecting MSIE.
-  var isExplorer = /msie [\w.]+/;
-
-  // Cached regex for removing a trailing slash.
-  var trailingSlash = /\/$/;
-
-  // Has the history handling already been started?
-  History.started = false;
-
-  // Set up all inheritable **Backbone.History** properties and methods.
-  _.extend(History.prototype, Events, {
-
-    // The default interval to poll for hash changes, if necessary, is
-    // twenty times a second.
-    interval: 50,
-
-    // Gets the true hash value. Cannot use location.hash directly due to bug
-    // in Firefox where location.hash will always be decoded.
-    getHash: function(window) {
-      var match = (window || this).location.href.match(/#(.*)$/);
-      return match ? match[1] : '';
-    },
-
-    // Get the cross-browser normalized URL fragment, either from the URL,
-    // the hash, or the override.
-    getFragment: function(fragment, forcePushState) {
-      if (fragment == null) {
-        if (this._hasPushState || !this._wantsHashChange || forcePushState) {
-          fragment = this.location.pathname;
-          var root = this.root.replace(trailingSlash, '');
-          if (!fragment.indexOf(root)) fragment = fragment.substr(root.length);
-        } else {
-          fragment = this.getHash();
-        }
-      }
-      return fragment.replace(routeStripper, '');
-    },
-
-    // Start the hash change handling, returning `true` if the current URL matches
-    // an existing route, and `false` otherwise.
-    start: function(options) {
-      if (History.started) throw new Error("Backbone.history has already been started");
-      History.started = true;
-
-      // Figure out the initial configuration. Do we need an iframe?
-      // Is pushState desired ... is it available?
-      this.options          = _.extend({}, {root: '/'}, this.options, options);
-      this.root             = this.options.root;
-      this._wantsHashChange = this.options.hashChange !== false;
-      this._wantsPushState  = !!this.options.pushState;
-      this._hasPushState    = !!(this.options.pushState && this.history && this.history.pushState);
-      var fragment          = this.getFragment();
-      var docMode           = document.documentMode;
-      var oldIE             = (isExplorer.exec(navigator.userAgent.toLowerCase()) && (!docMode || docMode <= 7));
-
-      // Normalize root to always include a leading and trailing slash.
-      this.root = ('/' + this.root + '/').replace(rootStripper, '/');
-
-      if (oldIE && this._wantsHashChange) {
-        this.iframe = Backbone.$('<iframe src="javascript:0" tabindex="-1" />').hide().appendTo('body')[0].contentWindow;
-        this.navigate(fragment);
-      }
-
-      // Depending on whether we're using pushState or hashes, and whether
-      // 'onhashchange' is supported, determine how we check the URL state.
-      if (this._hasPushState) {
-        Backbone.$(window).on('popstate', this.checkUrl);
-      } else if (this._wantsHashChange && ('onhashchange' in window) && !oldIE) {
-        Backbone.$(window).on('hashchange', this.checkUrl);
-      } else if (this._wantsHashChange) {
-        this._checkUrlInterval = setInterval(this.checkUrl, this.interval);
-      }
-
-      // Determine if we need to change the base url, for a pushState link
-      // opened by a non-pushState browser.
-      this.fragment = fragment;
-      var loc = this.location;
-      var atRoot = loc.pathname.replace(/[^\/]$/, '$&/') === this.root;
-
-      // If we've started off with a route from a `pushState`-enabled browser,
-      // but we're currently in a browser that doesn't support it...
-      if (this._wantsHashChange && this._wantsPushState && !this._hasPushState && !atRoot) {
-        this.fragment = this.getFragment(null, true);
-        this.location.replace(this.root + this.location.search + '#' + this.fragment);
-        // Return immediately as browser will do redirect to new url
-        return true;
-
-      // Or if we've started out with a hash-based route, but we're currently
-      // in a browser where it could be `pushState`-based instead...
-      } else if (this._wantsPushState && this._hasPushState && atRoot && loc.hash) {
-        this.fragment = this.getHash().replace(routeStripper, '');
-        this.history.replaceState({}, document.title, this.root + this.fragment + loc.search);
-      }
-
-      if (!this.options.silent) return this.loadUrl();
-    },
-
-    // Disable Backbone.history, perhaps temporarily. Not useful in a real app,
-    // but possibly useful for unit testing Routers.
-    stop: function() {
-      Backbone.$(window).off('popstate', this.checkUrl).off('hashchange', this.checkUrl);
-      clearInterval(this._checkUrlInterval);
-      History.started = false;
-    },
-
-    // Add a route to be tested when the fragment changes. Routes added later
-    // may override previous routes.
-    route: function(route, callback) {
-      this.handlers.unshift({route: route, callback: callback});
-    },
-
-    // Checks the current URL to see if it has changed, and if it has,
-    // calls `loadUrl`, normalizing across the hidden iframe.
-    checkUrl: function(e) {
-      var current = this.getFragment();
-      if (current === this.fragment && this.iframe) {
-        current = this.getFragment(this.getHash(this.iframe));
-      }
-      if (current === this.fragment) return false;
-      if (this.iframe) this.navigate(current);
-      this.loadUrl() || this.loadUrl(this.getHash());
-    },
-
-    // Attempt to load the current URL fragment. If a route succeeds with a
-    // match, returns `true`. If no defined routes matches the fragment,
-    // returns `false`.
-    loadUrl: function(fragmentOverride) {
-      var fragment = this.fragment = this.getFragment(fragmentOverride);
-      var matched = _.any(this.handlers, function(handler) {
-        if (handler.route.test(fragment)) {
-          handler.callback(fragment);
-          return true;
-        }
-      });
-      return matched;
-    },
-
-    // Save a fragment into the hash history, or replace the URL state if the
-    // 'replace' option is passed. You are responsible for properly URL-encoding
-    // the fragment in advance.
-    //
-    // The options object can contain `trigger: true` if you wish to have the
-    // route callback be fired (not usually desirable), or `replace: true`, if
-    // you wish to modify the current URL without adding an entry to the history.
-    navigate: function(fragment, options) {
-      if (!History.started) return false;
-      if (!options || options === true) options = {trigger: options};
-      fragment = this.getFragment(fragment || '');
-      if (this.fragment === fragment) return;
-      this.fragment = fragment;
-      var url = this.root + fragment;
-
-      // If pushState is available, we use it to set the fragment as a real URL.
-      if (this._hasPushState) {
-        this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
-
-      // If hash changes haven't been explicitly disabled, update the hash
-      // fragment to store history.
-      } else if (this._wantsHashChange) {
-        this._updateHash(this.location, fragment, options.replace);
-        if (this.iframe && (fragment !== this.getFragment(this.getHash(this.iframe)))) {
-          // Opening and closing the iframe tricks IE7 and earlier to push a
-          // history entry on hash-tag change.  When replace is true, we don't
-          // want this.
-          if(!options.replace) this.iframe.document.open().close();
-          this._updateHash(this.iframe.location, fragment, options.replace);
-        }
-
-      // If you've told us that you explicitly don't want fallback hashchange-
-      // based history, then `navigate` becomes a page refresh.
-      } else {
-        return this.location.assign(url);
-      }
-      if (options.trigger) this.loadUrl(fragment);
-    },
-
-    // Update the hash location, either replacing the current entry, or adding
-    // a new one to the browser history.
-    _updateHash: function(location, fragment, replace) {
-      if (replace) {
-        var href = location.href.replace(/(javascript:|#).*$/, '');
-        location.replace(href + '#' + fragment);
-      } else {
-        // Some browsers require that `hash` contains a leading #.
-        location.hash = '#' + fragment;
-      }
-    }
-
-  });
-
-  // Create the default Backbone.history.
-  Backbone.history = new History;
-
-  // Helpers
-  // -------
-
-  // Helper function to correctly set up the prototype chain, for subclasses.
-  // Similar to `goog.inherits`, but uses a hash of prototype properties and
-  // class properties to be extended.
-  var extend = function(protoProps, staticProps) {
-    var parent = this;
-    var child;
-
-    // The constructor function for the new subclass is either defined by you
-    // (the "constructor" property in your `extend` definition), or defaulted
-    // by us to simply call the parent's constructor.
-    if (protoProps && _.has(protoProps, 'constructor')) {
-      child = protoProps.constructor;
+    if (pack.headers['Content-Type'] === 'multipart/form-data') {
+      delete pack.headers['Content-Type'];
     } else {
-      child = function(){ return parent.apply(this, arguments); };
+      pack.headers['Content-Type'] =
+          pack.headers['Content-Type'] || 'application/json; charset=utf-8';
     }
 
-    // Add static properties to the constructor function, if supplied.
-    _.extend(child, parent, staticProps);
+    //if (pack.method === 'POST') {
+    if (pack.params) {
+      pack.params = JSON.stringify(pack.params);
+    } else {
+      pack.params = pack.payload || {};
+    }
+  }
 
-    // Set the prototype chain to inherit from `parent`, without calling
-    // `parent`'s constructor function.
-    var Surrogate = function(){ this.constructor = child; };
-    Surrogate.prototype = parent.prototype;
-    child.prototype = new Surrogate;
 
-    // Add prototype properties (instance properties) to the subclass,
-    // if supplied.
-    if (protoProps) _.extend(child.prototype, protoProps);
 
-    // Set a convenience property in case the parent's prototype is needed
-    // later.
-    child.__super__ = parent.prototype;
-
-    return child;
+  // -------------- error
+  pack.error = pack.error || function (error) {
+    throw new Error(JSON.stringify(error, function (key, value) {
+      if (value === null) { return; }
+      if (value === '') { return; }
+      return value;
+    }, 2));
   };
 
-  // Set up inheritance for the model, collection, router, view and history.
-  Model.extend = Collection.extend = Router.extend = View.extend = History.extend = extend;
+  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
 
-  // Throw an error when a URL is needed, and none is supplied.
-  var urlError = function() {
-    throw new Error('A "url" property or function must be specified');
+  // --------------- request
+  var xhr = _initXHR(),
+      httpMode = pack.ssl ? 'https://' : 'http://',
+      url = httpMode + pack.host + pack.path;
+  xhr.open(pack.method, url, pack.async);
+  xhr.withCredentials = pack.withoutCredentials ? false : true;
+
+
+  xhr.onreadystatechange = function () {
+    detail += ' xhrstatus:' + xhr.statusText;
+    if (xhr.readyState === 0) {
+      pack.error({
+        message: 'pryvXHRCall unsent',
+        detail: detail,
+        id: 'INTERNAL_ERROR',
+        xhr: xhr
+      });
+    } else if (xhr.readyState === 4) {
+      var result = null;
+
+      if (parseResult === 'json') {
+        var response = xhr.responseText;
+        response = response.trim() === '' ? '{}' : response;
+        try { result = JSON.parse(response); } catch (e) {
+          return pack.error({
+            message: 'Data is not JSON',
+            detail: xhr.responseText + '\n' + detail,
+            id: 'RESULT_NOT_JSON',
+            xhr: xhr
+          });
+        }
+      }
+      var resultInfo = {
+        xhr : xhr,
+        code : xhr.status,
+        headers : parseResponseHeaders(xhr.getAllResponseHeaders())
+      };
+
+      pack.success(result, resultInfo);
+    }
   };
+  if (pack.progressCallback && typeof(pack.progressCallback) === 'function') {
+    xhr.upload.addEventListener('progress', function (e) {
+      return pack.progressCallback(e);
+    }, false);
+  }
+  for (var key in pack.headers) {
+    if (pack.headers.hasOwnProperty(key)) {
+      xhr.setRequestHeader(key, pack.headers[key]);
+    }
+  }
 
-  // Wrap an optional error callback with a fallback error event.
-  var wrapError = function (model, options) {
-    var error = options.error;
-    options.error = function(resp) {
-      if (error) error(model, resp, options);
-      model.trigger('error', model, resp, options);
-    };
-  };
+  //--- sending the request
+  try {
+    xhr.send(pack.params);
+  } catch (e) {
+    return pack.error({
+      message: 'pryvXHRCall unsent',
+      detail: detail,
+      id: 'INTERNAL_ERROR',
+      error: e,
+      xhr: xhr
+    });
+  }
+  return xhr;
+};
 
-}).call(this);
+/**
+ * Method to initialize XMLHttpRequest.
+ * @method _initXHR
+ * @access private
+ * @return object
+ */
+/* jshint -W117 */
+var _initXHR = function () {
+  var XHR = null;
 
-})()
-},{"underscore":9}],39:[function(require,module,exports){
+  try { XHR = new XMLHttpRequest(); }
+  catch (e) {
+    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
+    catch (e2) {
+      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
+      catch (e3) {
+        console.log('XMLHttpRequest implementation not found.');
+      }
+      console.log('XMLHttpRequest implementation not found.');
+    }
+    console.log('XMLHttpRequest implementation not found.');
+  }
+  return XHR;
+};
+
+
+/**
+ * XmlHttpRequest's getAllResponseHeaders() method returns a string of response
+ * headers according to the format described here:
+ * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method
+ * This method parses that string into a user-friendly key/value pair object.
+ */
+function parseResponseHeaders(headerStr) {
+  var headers = {};
+  if (!headerStr) {
+    return headers;
+  }
+  var headerPairs = headerStr.split('\u000d\u000a');
+  for (var i = 0; i < headerPairs.length; i++) {
+    var headerPair = headerPairs[i];
+    // Can't use split() here because it does the wrong thing
+    // if the header value has the string ": " in it.
+    var index = headerPair.indexOf('\u003a\u0020');
+    if (index > 0) {
+      var key = headerPair.substring(0, index).toLowerCase();
+      var val = headerPair.substring(index + 2);
+      headers[key] = val;
+    }
+  }
+  return headers;
+}
+
+},{}],16:[function(require,module,exports){
+var socketIO = require('socket.io-client'),
+    _ = require('underscore');
+
+function isBrowser() {
+  return typeof(window) !== 'undefined';
+}
+
+var utility = module.exports = isBrowser() ?
+  require('./utility-browser.js') : require('./utility-node.js');
+
+/**
+ * @returns {Boolean} `true` if we're in a web browser environment
+ */
+utility.isBrowser = isBrowser;
+
+utility.SignalEmitter = require('./SignalEmitter.js');
+
+/**
+ * Merges two object (key/value map) and remove "null" properties
+ *
+ * @param {Object} sourceA
+ * @param {Object} sourceB
+ * @returns {*|Block|Node|Tag}
+ */
+utility.mergeAndClean = function (sourceA, sourceB) {
+  sourceA = sourceA || {};
+  sourceB = sourceB || {};
+  var result = _.clone(sourceA);
+  _.extend(result, sourceB);
+  _.each(_.keys(result), function (key) {
+    if (result[key] === null) { delete result[key]; }
+  });
+  return result;
+};
+
+/**
+ * Creates a query string from an object (key/value map)
+ *
+ * @param {Object} data
+ * @returns {String} key1=value1&key2=value2....
+ */
+utility.getQueryParametersString = function (data) {
+  data = this.mergeAndClean(data);
+  return Object.keys(data).map(function (key) {
+    if (data[key] !== null) {
+      if (_.isArray(data[key])) {
+        data[key] = this.mergeAndClean(data[key]);
+        var keyE = encodeURIComponent(key + '[]');
+        return data[key].map(function (subData) {
+          return keyE + '=' + encodeURIComponent(subData);
+        }).join('&');
+      } else {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+      }
+    }
+  }, this).join('&');
+};
+
+utility.regex = require('./regex');
+
+/**
+ * Cross-platform string endsWith
+ *
+ * @param {String} string
+ * @param {String} suffix
+ * @returns {Boolean}
+ */
+utility.endsWith = function (string, suffix) {
+  return string.indexOf(suffix, string.length - suffix.length) !== -1;
+};
+
+utility.ioConnect = function (settings) {
+  var httpMode = settings.ssl ? 'https' : 'http';
+  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
+      settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
+
+  return socketIO.connect(url, {'force new connection': true});
+};
+
+
+},{"./SignalEmitter.js":51,"./regex":38,"./utility-browser.js":63,"./utility-node.js":71,"socket.io-client":72,"underscore":43}],39:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -10560,7 +8820,7 @@ try {
 }
 
 })()
-},{"../utility/treemap.js":74,"../view/NodeView.js":73,"backbone":30,"underscore":9}],40:[function(require,module,exports){
+},{"../utility/treemap.js":74,"../view/NodeView.js":73,"backbone":75,"underscore":9}],40:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -10868,7 +9128,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
-},{"./StreamNode":75,"./TreeNode":39,"./VirtualNode.js":26,"pryv":10,"underscore":9}],20:[function(require,module,exports){
+},{"./StreamNode":76,"./TreeNode":39,"./VirtualNode.js":28,"pryv":10,"underscore":9}],23:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   Collection = require('./EventCollection.js'),
@@ -11171,599 +9431,15 @@ _.extend(Controller.prototype, {
   }
 });
 })()
-},{"./CommonView.js":80,"./EventCollection.js":76,"./EventModel.js":78,"./ListView.js":77,"./contentView/Creation.js":85,"./contentView/Generic.js":79,"./contentView/Note.js":81,"./contentView/Picture.js":84,"./contentView/Position.js":86,"./contentView/Tweet.js":83,"./contentView/numercial/Controller.js":82,"underscore":9}],70:[function(require,module,exports){
-/* jshint ignore:start */
-
-/*!
- * domready (c) Dustin Diaz 2012 - License MIT
- */
-module.exports = function (ready) {
-
-
-  var fns = [], fn, f = false,
-      doc = document,
-      testEl = doc.documentElement,
-      hack = testEl.doScroll,
-      domContentLoaded = 'DOMContentLoaded',
-      addEventListener = 'addEventListener',
-      onreadystatechange = 'onreadystatechange',
-      readyState = 'readyState',
-      loaded = /^loade|c/.test(doc[readyState]);
-
-  function flush(f) {
-    loaded = 1;
-    while (f = fns.shift()) {
-      f()
-    }
-  }
-
-  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
-    doc.removeEventListener(domContentLoaded, fn, f);
-    flush();
-  }, f);
-
-
-  hack && doc.attachEvent(onreadystatechange, fn = function () {
-    if (/^c/.test(doc[readyState])) {
-      doc.detachEvent(onreadystatechange, fn);
-      flush();
-    }
-  });
-
-  return (ready = hack ?
-      function (fn) {
-        self != top ?
-            loaded ? fn() : fns.push(fn) :
-            function () {
-              console.log("on dom ready 2");
-              try {
-                testEl.doScroll('left')
-              } catch (e) {
-                return setTimeout(function() { ready(fn) }, 50)
-              }
-              fn()
-            }()
-      } :
-      function (fn) {
-        loaded ? fn() : fns.push(fn)
-      })
-}();
-
-},{}],71:[function(require,module,exports){
-/**
- *
- * @param {Object} pack json with
- * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
- * @param {String} pack.host : fully qualified host name
- * @param {Number} pack.port : port to use
- * @param {String} pack.path : the request PATH
- * @param {Object} [pack.headers] : key / value map of headers
- * @param {Object} [pack.params] : the payload -- only with POST/PUT
- * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
- * @param {Function} pack.success : function (result, resultInfo)
- * @param {Function} pack.error : function (error, resultInfo)
- * @param {String} [pack.info] : a text
- * @param {Boolean} [pack.async = true]
- * @param {Number} [pack.expectedStatus] : http result code
- * @param {Boolean} [pack.ssl = true]
- * @param {Boolean} [pack.withoutCredentials = false]
- */
-module.exports = function (pack)  {
-  pack.info = pack.info || '';
-  var parseResult = pack.parseResult || 'json';
-
-  if (!pack.hasOwnProperty('async')) {
-    pack.async = true;
-  }
-
-  // ------------ request TYPE
-  pack.method = pack.method || 'POST';
-  // method override test
-  if (false && pack.method === 'DELETE') {
-    pack.method = 'POST';
-    pack.params =  pack.params || {};
-    pack.params._method = 'DELETE';
-  }
-
-  // ------------- request HEADERS
-
-
-  pack.headers = pack.headers || {};
-
-  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
-
-    if (pack.headers['Content-Type'] === 'multipart/form-data') {
-      delete pack.headers['Content-Type'];
-    } else {
-      pack.headers['Content-Type'] =
-          pack.headers['Content-Type'] || 'application/json; charset=utf-8';
-    }
-
-    //if (pack.method === 'POST') {
-    if (pack.params) {
-      pack.params = JSON.stringify(pack.params);
-    } else {
-      pack.params = pack.payload || {};
-    }
-  }
-
-
-
-  // -------------- error
-  pack.error = pack.error || function (error) {
-    throw new Error(JSON.stringify(error, function (key, value) {
-      if (value === null) { return; }
-      if (value === '') { return; }
-      return value;
-    }, 2));
-  };
-
-  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
-
-  // --------------- request
-  var xhr = _initXHR(),
-      httpMode = pack.ssl ? 'https://' : 'http://',
-      url = httpMode + pack.host + pack.path;
-  xhr.open(pack.method, url, pack.async);
-  xhr.withCredentials = pack.withoutCredentials ? false : true;
-
-
-  xhr.onreadystatechange = function () {
-    detail += ' xhrstatus:' + xhr.statusText;
-    if (xhr.readyState === 0) {
-      pack.error({
-        message: 'pryvXHRCall unsent',
-        detail: detail,
-        id: 'INTERNAL_ERROR',
-        xhr: xhr
-      });
-    } else if (xhr.readyState === 4) {
-      var result = null;
-
-      if (parseResult === 'json') {
-        var response = xhr.responseText;
-        response = response.trim() === '' ? '{}' : response;
-        try { result = JSON.parse(response); } catch (e) {
-          return pack.error({
-            message: 'Data is not JSON',
-            detail: xhr.responseText + '\n' + detail,
-            id: 'RESULT_NOT_JSON',
-            xhr: xhr
-          });
-        }
-      }
-      var resultInfo = {
-        xhr : xhr,
-        code : xhr.status,
-        headers : parseResponseHeaders(xhr.getAllResponseHeaders())
-      };
-
-      pack.success(result, resultInfo);
-    }
-  };
-  if (pack.progressCallback && typeof(pack.progressCallback) === 'function') {
-    xhr.upload.addEventListener('progress', function (e) {
-      return pack.progressCallback(e);
-    }, false);
-  }
-  for (var key in pack.headers) {
-    if (pack.headers.hasOwnProperty(key)) {
-      xhr.setRequestHeader(key, pack.headers[key]);
-    }
-  }
-
-  //--- sending the request
-  try {
-    xhr.send(pack.params);
-  } catch (e) {
-    return pack.error({
-      message: 'pryvXHRCall unsent',
-      detail: detail,
-      id: 'INTERNAL_ERROR',
-      error: e,
-      xhr: xhr
-    });
-  }
-  return xhr;
-};
-
-/**
- * Method to initialize XMLHttpRequest.
- * @method _initXHR
- * @access private
- * @return object
- */
-/* jshint -W117 */
-var _initXHR = function () {
-  var XHR = null;
-
-  try { XHR = new XMLHttpRequest(); }
-  catch (e) {
-    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
-    catch (e2) {
-      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
-      catch (e3) {
-        console.log('XMLHttpRequest implementation not found.');
-      }
-      console.log('XMLHttpRequest implementation not found.');
-    }
-    console.log('XMLHttpRequest implementation not found.');
-  }
-  return XHR;
-};
-
-
-/**
- * XmlHttpRequest's getAllResponseHeaders() method returns a string of response
- * headers according to the format described here:
- * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method
- * This method parses that string into a user-friendly key/value pair object.
- */
-function parseResponseHeaders(headerStr) {
-  var headers = {};
-  if (!headerStr) {
-    return headers;
-  }
-  var headerPairs = headerStr.split('\u000d\u000a');
-  for (var i = 0; i < headerPairs.length; i++) {
-    var headerPair = headerPairs[i];
-    // Can't use split() here because it does the wrong thing
-    // if the header value has the string ": " in it.
-    var index = headerPair.indexOf('\u003a\u0020');
-    if (index > 0) {
-      var key = headerPair.substring(0, index).toLowerCase();
-      var val = headerPair.substring(index + 2);
-      headers[key] = val;
-    }
-  }
-  return headers;
-}
-
-},{}],72:[function(require,module,exports){
-/* jshint ignore:start */
-
-/*\
- |*|
- |*|  :: cookies.js ::
- |*|
- |*|  A complete cookies reader/writer framework with full unicode support.
- |*|
- |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
- |*|
- |*|  Syntaxes:
- |*|
- |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
- |*|  * docCookies.getItem(name)
- |*|  * docCookies.removeItem(name[, path])
- |*|  * docCookies.hasItem(name)
- |*|  * docCookies.keys()
- |*|
- \*/
-module.exports = {
-  getItem: function (sKey) {
-    if (!sKey || !this.hasItem(sKey)) { return null; }
-    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
-        escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
-  },
-  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
-    var sExpires = "";
-    if (vEnd) {
-      switch (vEnd.constructor) {
-        case Number:
-          sExpires = vEnd === Infinity ?
-              "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
-          break;
-        case String:
-          sExpires = "; expires=" + vEnd;
-          break;
-        case Date:
-          sExpires = "; expires=" + vEnd.toGMTString();
-          break;
-      }
-    }
-    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
-  },
-  removeItem: function (sKey, sPath) {
-    if (!sKey || !this.hasItem(sKey)) { return; }
-    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
-  },
-  hasItem: function (sKey) {
-    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
-  },
-  keys: /* optional method: you can safely remove it! */ function () {
-    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
-    return aKeys;
-  }
-};
-
-},{}],21:[function(require,module,exports){
-(function(){/* global $, window, i18n */
-var Backbone = require('backbone'),
-    Marionette = require('backbone.marionette'),
-    _ = require('underscore');
-var eachStream = function (collection, callback) {
-  collection.each(function (model) {
-    if (_.isFunction(callback)) {
-      callback(model);
-    }
-    if (model.children) {
-      eachStream(model.children, callback);
-    }
-  });
-};
-var TreeView = Marionette.CompositeView.extend({
-  template: '#node-template',
-  tagName: 'details',
-  ui: {
-    checkbox: '.input-checkbox'
-  },
-  initialize: function () {
-    // grab the child collection from the parent model
-    // so that we can render the collection as children
-    // of this parent node
-    this.collection = this.model.children;
-    this.listenTo(this.model, 'change', this.render);
-  },
-  appendHtml: function (collectionView, itemView) {
-    // ensure we nest the child list inside of 
-    // the current list item
-    collectionView.$('summary:first').after(itemView.el);
-  },
-  onRender: function () {
-    this.ui.checkbox[0].checked = this.model.get('checked');
-    this.ui.checkbox.click(this.toggleCheck.bind(this));
-    $('details').details();
-  },
-  toggleCheck: function () {
-    var checked = !this.model.get('checked');
-    this.model.set('checked', checked);
-    eachStream(this.collection, function (model) {
-      model.set('checked', checked);
-    });
-  }
-});
-
-// The tree's root: a simple collection view that renders 
-// a recursive tree structure for each item in the collection
-var TreeRoot = Marionette.CollectionView.extend({
-  itemView: TreeView,
-  id: '',
-  className: 'create-sharing full-height',
-  onRender: function () {
-    var dateFrom = new Date(this.options.timeFrom * 1000);
-    var dateTo = new Date(this.options.timeTo * 1000);
-    function toDateInputValue(date) {
-      var local = new Date(date);
-      local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-      return local.toJSON().slice(0, 10);
-    }
-
-    this.$el.prepend(
-      '<h5 data-i18n="modal.share.settings.title"></h5>' +
-      '<form role="form" id="form-create-sharing"' +
-      '<div class="form-horizontal">' +
-      '<div class="form-group">' +
-      '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-name" ' +
-        'data-i18n="[placeholder]modal.share.settings.name" required>' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<div class="col-sm-5">' +
-      '<select class="form-control" id="input-global-permission">' +
-      '  <option value="read" selected="selected" ' +
-        'data-i18n="modal.share.settings.read"></option>' +
-      '  <option value="contribute" ' +
-        'data-i18n="modal.share.settings.contribute"></option>' +
-      '  <option value="manage" ' +
-        'data-i18n="modal.share.settings.manage"></option>' +
-      '</select>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<div class="col-sm-5 panel panel-default advanced-settings">' +
-      '  <div class="panel-heading">' +
-      '    <h4 class="panel-title">' +
-      '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
-      '       Advanced settings ' +
-      '       </a>' +
-      '     </h4>' +
-      '   </div>' +
-      '   <div id="collapseOne" class="panel-collapse collapse">' +
-      '     <div class="panel-body">' +
-      '<div class="form-horizontal">' +
-      '<div class="form-group">' +
-      '<div class="col-sm-12">' +
-      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-
-      '<div class="form-inline">' +
-      '<div class="form-group">' +
-      '<input type="date" class="form-control" id="input-from-date" ' +
-      'value="' + toDateInputValue(dateFrom) + '" disabled>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<input type="time" class="form-control" id="input-from-time" ' +
-      'value="' + dateFrom.toLocaleTimeString() + '" disabled>' +
-      '</div>' +
-      '<label> < --- > </label>' +
-      '<div class="form-group">' +
-      '<input type="date" class="form-control" id="input-to-date" ' +
-      'value="' + toDateInputValue(dateTo) + '" disabled>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<input type="time" class="form-control" id="input-to-time" ' +
-      'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
-      '</div>' +
-      '</div>' +
-      '      </div>' +
-      ' </div> ' +
-      '  </div> ' +
-      '<input type="submit" style="opacity: 0; visibility: hidden;">' +
-      '<h5 data-i18n="modal.share.settings.selectStreams"></h5>' +
-      '');
-    var $form = $('#form-create-sharing', this.$el),
-      $name = $('#input-name', this.$el);
-    $form.submit(this.createSharing.bind(this));
-    $name.bind('change paste keyup', function () {
-      //$token.val(slugMe($name.val()));
-    });
-  },
-  createSharing: function (e, $btn) {
-    e.preventDefault();
-    $btn = $btn || $('#publish');
-    var $name = $('#input-name', this.$el),
-      $token = $('#input-token', this.$el),
-      $permission = $('#input-global-permission', this.$el),
-      $spin = $('.fa-spin', $btn);
-    var access = {}, name = $name.val().trim(), token = $token.val().trim(),
-      permission = $permission.val();
-    if (name.length === 0) {
-      $('#form-create-sharing', this.$el).find(':submit').click();
-      return;
-    }
-    if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
-      permission = 'read';
-    }
-    access.name = name;
-    access.token = token;
-    access.permissions = [];
-    if ($spin) {
-      $spin.show();
-    }
-    eachStream(this.collection, function (model) {
-      if (model.get('checked')) {
-        access.permissions.push({streamId : model.get('id'), level: permission});
-      }
-    });
-    this.options.connection.accesses.create(access, function (error, result) {
-      if ($spin) {
-        $spin.hide();
-      }
-      if (error || result.message) {
-        $btn.addClass('btn-pryv-alizarin');
-        window.PryvBrowser('.modal-content', i18n.t('error.createSlice.' + error.id));
-      } else {
-        $btn.removeClass('btn-pryv-alizarin');
-        this.trigger('sharing:createSuccess', result.token);
-      }
-    }.bind(this));
-  }
-});
-var TreeNode = Backbone.Model.extend({
-  defaults : {
-    checked: true
-  },
-  initialize: function () {
-    var children = this.get('children');
-    var c = [];
-    if (!children && this.get('connection') && this.get('childrenIds')) {
-      _.each(this.get('childrenIds'), function (childId) {
-        c.push(this.get('connection').streams.getById(childId));
-      }.bind(this));
-      children = c;
-    }
-    if (children) {
-      this.children = new TreeNodeCollection(children);
-      //this.unset('children');
-    }
-  }
-});
-var TreeNodeCollection = Backbone.Collection.extend({
-  model: TreeNode
-});
-var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {
-  this.$modal = $modal;
-  this.target = target;
-  this.connection = connection;
-
-  this.streams = streams;
-  this.timeFrom = timeFilter[1];
-  this.timeTo = timeFilter[0];
-  this.container = '.modal-content';
-  this.treeView = null;
-  // TODO: ignore stream if  stream.parentId is already present
-};
-Controller.prototype.show = function () {
-  this.$modal.modal({currentTarget: this.target});
-  $(this.container).empty().hide();
-  setTimeout(function () {
-    $(this.container).fadeIn();
-  }.bind(this), 500);
-  var tree = new TreeNodeCollection(this.streams);
-  this.treeView = new TreeRoot({
-    collection: tree,
-    timeFrom: this.timeFrom,
-    timeTo: this.timeTo,
-    connection: this.connection
-  });
-  this.treeView.render();
-  $(this.container).prepend('<div class="modal-header">  ' +
-    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
-    '&times;</button> ' +
-    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.share.header"></h4>' +
-    '<div class="modal-close"></div> ' +
-    '</div><div id="modal-content"><div id="creation-content"></div>' +
-    '<div id="creation-footer" class="col-md-12">' +
-    '<button id="publish" class="btn btn-pryv-turquoise">' +
-    '<span data-i18n="button.publish"></span> ' +
-    '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
-    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="button.cancel"></button>' +
-    '</div></div>');
-  $('#creation-content').html(this.treeView.el);
-  $('body').i18n();
-  $('#publish').click(function (e) {
-    this.treeView.createSharing(e, $('#publish'));
-  }.bind(this));
-  this.treeView.on('sharing:createSuccess', function (token) {
-    $('#publish').remove();
-    $('#cancel').text('Ok').addClass('btn-pryv-turquoise');
-    $('#creation-content').empty();
-    var url = this.connection.id.replace(/\?auth.*$/, '');
-    url = url.replace(/\.in/, '.li');
-    url = url.replace(/\.io/, '.me');
-    url += '#/sharings/' + token;
-    $('#creation-content').html('<div class="container">' +
-      '<h4 data-i18n="modal.share.success"></h4>' +
-      '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
-      '<p class="text-center share">' +
-      '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +
-      url.replace(/#/g, '%23') + '&t=" ' +
-      'onclick="javascript:window.open(this.href, \'\', ' +
-      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
-      'return false;">' +
-      '<i class="fa fa-facebook"></i></a>' +
-      '<a target="_blank" href="https://twitter.com/share?url=' +
-      url.replace(/#/g, '%23') + '&via=pryv" ' +
-      'onclick="javascript:window.open(this.href, \'\', ' +
-      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
-      'return false;">' +
-      '<i class="fa fa-twitter"></i></a>' +
-      '<a href="mailto:?subject=Slice of life&amp;body=' +
-      'I just shared a slice of life with you: ' + url +
-      '" title="Share by Email">' +
-      '<i class="fa fa-envelope"></i></a>' +
-      '</p></div>');
-    $('body').i18n();
-  }.bind(this));
-};
-Controller.prototype.close = function () {
-  this.treeView.close();
-  $(this.container).empty();
-};
-})()
-},{"backbone":30,"backbone.marionette":33,"underscore":9}],23:[function(require,module,exports){
+},{"./CommonView.js":81,"./EventCollection.js":78,"./EventModel.js":79,"./ListView.js":77,"./contentView/Creation.js":83,"./contentView/Generic.js":80,"./contentView/Note.js":85,"./contentView/Picture.js":84,"./contentView/Position.js":82,"./contentView/Tweet.js":86,"./contentView/numercial/Controller.js":87,"underscore":9}],26:[function(require,module,exports){
 (function(){/* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
   ChartView = require('./../numericals/ChartView.js'),
   Model = require('./../numericals/ChartModel.js'),
   TimeSeriesCollection = require('./../numericals/TimeSeriesCollection.js'),
-  TimeSeriesModel = require('./../numericals/TimeSeriesModel.js');
+  TimeSeriesModel = require('./../numericals/TimeSeriesModel.js'),
+  Settings = require('./../numericals/utils/ChartSettings.js');
 
 var Controller = module.exports = function ($modal, events, treemap) {
   this.$modal = $modal;
@@ -12048,13 +9724,20 @@ _.extend(Controller.prototype, {
           eventsModel = matching[0];
           eventsModel.get('events').push(eventsToAdd[i]);
         } else {
+          var s = new Settings(eventsToAdd[i].stream,
+            eventsToAdd[i].type, null);
           eventsModel = new TimeSeriesModel({
             events: [eventsToAdd[i]],
             connectionId: eventsToAdd[i].connection.id,
             streamId: eventsToAdd[i].streamId,
             streamName: eventsToAdd[i].stream.name,
             type: eventsToAdd[i].type,
-            category: this.getEventsCategory(eventsToAdd[i])
+            category: this.getEventsCategory(eventsToAdd[i]),
+            color: s.get('color'),
+            style: s.get('style'),
+            transform: s.get('transform'),
+            interval: s.get('interval'),
+            fitting: s.get('fitting')
           });
           eventsCollection.add(eventsModel);
         }
@@ -12250,243 +9933,285 @@ _.extend(Controller.prototype, {
 });
 
 })()
-},{"./../numericals/ChartModel.js":90,"./../numericals/ChartView.js":87,"./../numericals/TimeSeriesCollection.js":89,"./../numericals/TimeSeriesModel.js":88,"./ListView.js":91,"underscore":9}],17:[function(require,module,exports){
-var socketIO = require('socket.io-client'),
+},{"./../numericals/ChartModel.js":88,"./../numericals/ChartView.js":91,"./../numericals/TimeSeriesCollection.js":89,"./../numericals/TimeSeriesModel.js":92,"./../numericals/utils/ChartSettings.js":19,"./ListView.js":90,"underscore":9}],25:[function(require,module,exports){
+(function(){/* global $, window, i18n */
+var Backbone = require('backbone'),
+    Marionette = require('backbone.marionette'),
     _ = require('underscore');
-
-function isBrowser() {
-  return typeof(window) !== 'undefined';
-}
-
-var utility = module.exports = isBrowser() ?
-  require('./utility-browser.js') : require('./utility-node.js');
-
-/**
- * @returns {Boolean} `true` if we're in a web browser environment
- */
-utility.isBrowser = isBrowser;
-
-utility.SignalEmitter = require('./SignalEmitter.js');
-
-/**
- * Merges two object (key/value map) and remove "null" properties
- *
- * @param {Object} sourceA
- * @param {Object} sourceB
- * @returns {*|Block|Node|Tag}
- */
-utility.mergeAndClean = function (sourceA, sourceB) {
-  sourceA = sourceA || {};
-  sourceB = sourceB || {};
-  var result = _.clone(sourceA);
-  _.extend(result, sourceB);
-  _.each(_.keys(result), function (key) {
-    if (result[key] === null) { delete result[key]; }
+var eachStream = function (collection, callback) {
+  collection.each(function (model) {
+    if (_.isFunction(callback)) {
+      callback(model);
+    }
+    if (model.children) {
+      eachStream(model.children, callback);
+    }
   });
-  return result;
 };
+var TreeView = Marionette.CompositeView.extend({
+  template: '#node-template',
+  tagName: 'details',
+  ui: {
+    checkbox: '.input-checkbox'
+  },
+  initialize: function () {
+    // grab the child collection from the parent model
+    // so that we can render the collection as children
+    // of this parent node
+    this.collection = this.model.children;
+    this.listenTo(this.model, 'change', this.render);
+  },
+  appendHtml: function (collectionView, itemView) {
+    // ensure we nest the child list inside of 
+    // the current list item
+    collectionView.$('summary:first').after(itemView.el);
+  },
+  onRender: function () {
+    this.ui.checkbox[0].checked = this.model.get('checked');
+    this.ui.checkbox.click(this.toggleCheck.bind(this));
+    $('details').details();
+  },
+  toggleCheck: function () {
+    var checked = !this.model.get('checked');
+    this.model.set('checked', checked);
+    eachStream(this.collection, function (model) {
+      model.set('checked', checked);
+    });
+  }
+});
 
-/**
- * Creates a query string from an object (key/value map)
- *
- * @param {Object} data
- * @returns {String} key1=value1&key2=value2....
- */
-utility.getQueryParametersString = function (data) {
-  data = this.mergeAndClean(data);
-  return Object.keys(data).map(function (key) {
-    if (data[key] !== null) {
-      if (_.isArray(data[key])) {
-        data[key] = this.mergeAndClean(data[key]);
-        var keyE = encodeURIComponent(key + '[]');
-        return data[key].map(function (subData) {
-          return keyE + '=' + encodeURIComponent(subData);
-        }).join('&');
-      } else {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+// The tree's root: a simple collection view that renders 
+// a recursive tree structure for each item in the collection
+var TreeRoot = Marionette.CollectionView.extend({
+  itemView: TreeView,
+  id: '',
+  className: 'create-sharing full-height',
+  onRender: function () {
+    var dateFrom = new Date(this.options.timeFrom * 1000);
+    var dateTo = new Date(this.options.timeTo * 1000);
+    function toDateInputValue(date) {
+      var local = new Date(date);
+      local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      return local.toJSON().slice(0, 10);
+    }
+
+    this.$el.prepend(
+      '<h5 data-i18n="modal.share.settings.title"></h5>' +
+      '<form role="form" id="form-create-sharing"' +
+      '<div class="form-horizontal">' +
+      '<div class="form-group">' +
+      '<div class="col-sm-5">' +
+      '<input type="text" class="form-control" id="input-name" ' +
+        'data-i18n="[placeholder]modal.share.settings.name" required>' +
+      '</div>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<div class="col-sm-5">' +
+      '<select class="form-control" id="input-global-permission">' +
+      '  <option value="read" selected="selected" ' +
+        'data-i18n="modal.share.settings.read"></option>' +
+      '  <option value="contribute" ' +
+        'data-i18n="modal.share.settings.contribute"></option>' +
+      '  <option value="manage" ' +
+        'data-i18n="modal.share.settings.manage"></option>' +
+      '</select>' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="col-sm-5 panel panel-default advanced-settings">' +
+      '  <div class="panel-heading">' +
+      '    <h4 class="panel-title">' +
+      '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
+      '       Advanced settings ' +
+      '       </a>' +
+      '     </h4>' +
+      '   </div>' +
+      '   <div id="collapseOne" class="panel-collapse collapse">' +
+      '     <div class="panel-body">' +
+      '<div class="form-horizontal">' +
+      '<div class="form-group">' +
+      '<div class="col-sm-12">' +
+      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+
+      '<div class="form-inline">' +
+      '<div class="form-group">' +
+      '<input type="date" class="form-control" id="input-from-date" ' +
+      'value="' + toDateInputValue(dateFrom) + '" disabled>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<input type="time" class="form-control" id="input-from-time" ' +
+      'value="' + dateFrom.toLocaleTimeString() + '" disabled>' +
+      '</div>' +
+      '<label> < --- > </label>' +
+      '<div class="form-group">' +
+      '<input type="date" class="form-control" id="input-to-date" ' +
+      'value="' + toDateInputValue(dateTo) + '" disabled>' +
+      '</div>' +
+      '<div class="form-group">' +
+      '<input type="time" class="form-control" id="input-to-time" ' +
+      'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
+      '</div>' +
+      '</div>' +
+      '      </div>' +
+      ' </div> ' +
+      '  </div> ' +
+      '<input type="submit" style="opacity: 0; visibility: hidden;">' +
+      '<h5 data-i18n="modal.share.settings.selectStreams"></h5>' +
+      '');
+    var $form = $('#form-create-sharing', this.$el),
+      $name = $('#input-name', this.$el);
+    $form.submit(this.createSharing.bind(this));
+    $name.bind('change paste keyup', function () {
+      //$token.val(slugMe($name.val()));
+    });
+  },
+  createSharing: function (e, $btn) {
+    e.preventDefault();
+    $btn = $btn || $('#publish');
+    var $name = $('#input-name', this.$el),
+      $token = $('#input-token', this.$el),
+      $permission = $('#input-global-permission', this.$el),
+      $spin = $('.fa-spin', $btn);
+    var access = {}, name = $name.val().trim(), token = $token.val().trim(),
+      permission = $permission.val();
+    if (name.length === 0) {
+      $('#form-create-sharing', this.$el).find(':submit').click();
+      return;
+    }
+    if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
+      permission = 'read';
+    }
+    access.name = name;
+    access.token = token;
+    access.permissions = [];
+    if ($spin) {
+      $spin.show();
+    }
+    eachStream(this.collection, function (model) {
+      if (model.get('checked')) {
+        access.permissions.push({streamId : model.get('id'), level: permission});
       }
+    });
+    this.options.connection.accesses.create(access, function (error, result) {
+      if ($spin) {
+        $spin.hide();
+      }
+      if (error || result.message) {
+        $btn.addClass('btn-pryv-alizarin');
+        window.PryvBrowser('.modal-content', i18n.t('error.createSlice.' + error.id));
+      } else {
+        $btn.removeClass('btn-pryv-alizarin');
+        this.trigger('sharing:createSuccess', result.token);
+      }
+    }.bind(this));
+  }
+});
+var TreeNode = Backbone.Model.extend({
+  defaults : {
+    checked: true
+  },
+  initialize: function () {
+    var children = this.get('children');
+    var c = [];
+    if (!children && this.get('connection') && this.get('childrenIds')) {
+      _.each(this.get('childrenIds'), function (childId) {
+        c.push(this.get('connection').streams.getById(childId));
+      }.bind(this));
+      children = c;
     }
-  }, this).join('&');
-};
-
-utility.regex = require('./regex');
-
-/**
- * Cross-platform string endsWith
- *
- * @param {String} string
- * @param {String} suffix
- * @returns {Boolean}
- */
-utility.endsWith = function (string, suffix) {
-  return string.indexOf(suffix, string.length - suffix.length) !== -1;
-};
-
-utility.ioConnect = function (settings) {
-  var httpMode = settings.ssl ? 'https' : 'http';
-  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
-      settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
-
-  return socketIO.connect(url, {'force new connection': true});
-};
-
-
-},{"./SignalEmitter.js":68,"./regex":41,"./utility-browser.js":69,"./utility-node.js":92,"socket.io-client":93,"underscore":66}],64:[function(require,module,exports){
-/**
- * DataStore handles in memory caching of objects.
- * @private
- */
-
-var _ = require('underscore');
-var Event = require('./Event');
-
-function Datastore(connection) {
+    if (children) {
+      this.children = new TreeNodeCollection(children);
+      //this.unset('children');
+    }
+  }
+});
+var TreeNodeCollection = Backbone.Collection.extend({
+  model: TreeNode
+});
+var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {
+  this.$modal = $modal;
+  this.target = target;
   this.connection = connection;
-  this.streamsIndex = {}; // streams are linked to their object representation
-  this.eventIndex = {}; // events are store by their id
-  this.rootStreams = [];
-}
 
-module.exports = Datastore;
-
-Datastore.prototype.init = function (callback) {
-  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
-    if (error) { return callback('Datastore faild to init - '  + error); }
-    if (result) {
-      this._rebuildStreamIndex(result); // maybe done transparently
-    }
-    callback(null, result);
+  this.streams = streams;
+  this.timeFrom = timeFilter[1];
+  this.timeTo = timeFilter[0];
+  this.container = '.modal-content';
+  this.treeView = null;
+  // TODO: ignore stream if  stream.parentId is already present
+};
+Controller.prototype.show = function () {
+  this.$modal.modal({currentTarget: this.target});
+  $(this.container).empty().hide();
+  setTimeout(function () {
+    $(this.container).fadeIn();
+  }.bind(this), 500);
+  var tree = new TreeNodeCollection(this.streams);
+  this.treeView = new TreeRoot({
+    collection: tree,
+    timeFrom: this.timeFrom,
+    timeTo: this.timeTo,
+    connection: this.connection
+  });
+  this.treeView.render();
+  $(this.container).prepend('<div class="modal-header">  ' +
+    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+    '&times;</button> ' +
+    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.share.header"></h4>' +
+    '<div class="modal-close"></div> ' +
+    '</div><div id="modal-content"><div id="creation-content"></div>' +
+    '<div id="creation-footer" class="col-md-12">' +
+    '<button id="publish" class="btn btn-pryv-turquoise">' +
+    '<span data-i18n="button.publish"></span> ' +
+    '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
+    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="button.cancel"></button>' +
+    '</div></div>');
+  $('#creation-content').html(this.treeView.el);
+  $('body').i18n();
+  $('#publish').click(function (e) {
+    this.treeView.createSharing(e, $('#publish'));
   }.bind(this));
-
-  // TODO activate monitoring
-};
-
-Datastore.prototype._rebuildStreamIndex = function (streamArray) {
-  this.streamsIndex = {};
-  this.rootStreams = [];
-  this._indexStreamArray(streamArray);
-};
-
-Datastore.prototype._indexStreamArray = function (streamArray) {
-  _.each(streamArray, function (stream) {
-    this.indexStream(stream);
+  this.treeView.on('sharing:createSuccess', function (token) {
+    $('#publish').remove();
+    $('#cancel').text('Ok').addClass('btn-pryv-turquoise');
+    $('#creation-content').empty();
+    var url = this.connection.id.replace(/\?auth.*$/, '');
+    url = url.replace(/\.in/, '.li');
+    url = url.replace(/\.io/, '.me');
+    url += '#/sharings/' + token;
+    $('#creation-content').html('<div class="container">' +
+      '<h4 data-i18n="modal.share.success"></h4>' +
+      '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
+      '<p class="text-center share">' +
+      '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +
+      url.replace(/#/g, '%23') + '&t=" ' +
+      'onclick="javascript:window.open(this.href, \'\', ' +
+      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
+      'return false;">' +
+      '<i class="fa fa-facebook"></i></a>' +
+      '<a target="_blank" href="https://twitter.com/share?url=' +
+      url.replace(/#/g, '%23') + '&via=pryv" ' +
+      'onclick="javascript:window.open(this.href, \'\', ' +
+      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
+      'return false;">' +
+      '<i class="fa fa-twitter"></i></a>' +
+      '<a href="mailto:?subject=Slice of life&amp;body=' +
+      'I just shared a slice of life with you: ' + url +
+      '" title="Share by Email">' +
+      '<i class="fa fa-envelope"></i></a>' +
+      '</p></div>');
+    $('body').i18n();
   }.bind(this));
 };
-
-Datastore.prototype.indexStream = function (stream) {
-  this.streamsIndex[stream.id] = stream;
-  if (! stream.parentId) { this.rootStreams.push(stream); }
-  this._indexStreamArray(stream._children);
-  delete stream._children; // cleanup when in datastore mode
-  delete stream._parent;
+Controller.prototype.close = function () {
+  this.treeView.close();
+  $(this.container).empty();
 };
-
-/**
- *
- * @param streamId
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreams = function () {
-  return this.rootStreams;
-};
-
-
-/**
- *
- * @param streamId
- * @param test (do no throw error if Stream is not found
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreamById = function (streamId, test) {
-  var result = this.streamsIndex[streamId];
-  if (! test && ! result) {
-    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
-  }
-  return result;
-};
-
-//-------------------------
-
-/**
- * @param serialId
- * @returns Event or null if not found
- */
-Datastore.prototype.getEventBySerialId = function (serialId) {
-  var result = null;
-  _.each(this.eventIndex, function (event /*,eventId*/) {
-    if (event.serialId === serialId) { result = event; }
-    // TODO optimize and break
-  }.bind(this));
-  return result;
-};
-
-/**
- * @param eventID
- * @returns Event or null if not found
- */
-Datastore.prototype.getEventById = function (eventId) {
-  return this.eventIndex[eventId];
-
-};
-
-/**
- * @returns allEvents
- */
-Datastore.prototype.getEventsMatchingFilter = function (filter) {
-  var result = [];
-  _.each(this.eventIndex, function (event /*,eventId*/) {
-    if (filter.matchEvent(event)) { result.push(event); }
-  }.bind(this));
-  return result;
-};
-
-
-/**
- * @returns allEvents
- */
-Datastore.prototype.getAllEvents = function () {
-  return _.value(this.eventIndex);
-};
-
-/**
- * @param event
- */
-Datastore.prototype.addEvent = function (event) {
-  if (! event.id) {
-    throw new Error('Datastore.addEvent cannot add event with unkown id', event);
-  }
-  this.eventIndex[event.id] = event;
-};
-
-
-
-/**
- * @param {Object} data to map
- * @return {Event} event
- */
-Datastore.prototype.createOrReuseEvent = function (data) {
-  if (! data.id) {
-    console.log(data);
-    throw new Error('Datastore.createOrReuseEvent cannot create event with ' +
-      ' unkown id' + require('util').inspect(data));
-  }
-
-  var result = this.getEventById(data.id);
-  if (result) {  // found event
-    _.extend(result, data);
-    return result;
-  }
-  // create an event and register it
-  result = new Event(this.connection, data);
-  this.addEvent(result);
-
-  return result;
-
-};
-
-
-
-},{"./Event":13,"underscore":66,"util":42}],93:[function(require,module,exports){
+})()
+},{"backbone":75,"backbone.marionette":34,"underscore":9}],72:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -16362,15 +14087,161 @@ if (typeof define === "function" && define.amd) {
 })();
 })()
 },{}],49:[function(require,module,exports){
-var Backbone = require('backbone');
+/**
+ * DataStore handles in memory caching of objects.
+ * @private
+ */
 
-module.exports = Backbone.Model.extend({
-  defaults: {
-    bookmark: null,
-    collection: null
+var _ = require('underscore');
+var Event = require('./Event');
+
+function Datastore(connection) {
+  this.connection = connection;
+  this.streamsIndex = {}; // streams are linked to their object representation
+  this.eventIndex = {}; // events are store by their id
+  this.rootStreams = [];
+}
+
+module.exports = Datastore;
+
+Datastore.prototype.init = function (callback) {
+  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
+    if (error) { return callback('Datastore faild to init - '  + error); }
+    if (result) {
+      this._rebuildStreamIndex(result); // maybe done transparently
+    }
+    callback(null, result);
+  }.bind(this));
+
+  // TODO activate monitoring
+};
+
+Datastore.prototype._rebuildStreamIndex = function (streamArray) {
+  this.streamsIndex = {};
+  this.rootStreams = [];
+  this._indexStreamArray(streamArray);
+};
+
+Datastore.prototype._indexStreamArray = function (streamArray) {
+  _.each(streamArray, function (stream) {
+    this.indexStream(stream);
+  }.bind(this));
+};
+
+Datastore.prototype.indexStream = function (stream) {
+  this.streamsIndex[stream.id] = stream;
+  if (! stream.parentId) { this.rootStreams.push(stream); }
+  this._indexStreamArray(stream._children);
+  delete stream._children; // cleanup when in datastore mode
+  delete stream._parent;
+};
+
+/**
+ *
+ * @param streamId
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreams = function () {
+  return this.rootStreams;
+};
+
+
+/**
+ *
+ * @param streamId
+ * @param test (do no throw error if Stream is not found
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreamById = function (streamId, test) {
+  var result = this.streamsIndex[streamId];
+  if (! test && ! result) {
+    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
   }
-});
-},{"backbone":30}],48:[function(require,module,exports){
+  return result;
+};
+
+//-------------------------
+
+/**
+ * @param serialId
+ * @returns Event or null if not found
+ */
+Datastore.prototype.getEventBySerialId = function (serialId) {
+  var result = null;
+  _.each(this.eventIndex, function (event /*,eventId*/) {
+    if (event.serialId === serialId) { result = event; }
+    // TODO optimize and break
+  }.bind(this));
+  return result;
+};
+
+/**
+ * @param eventID
+ * @returns Event or null if not found
+ */
+Datastore.prototype.getEventById = function (eventId) {
+  return this.eventIndex[eventId];
+
+};
+
+/**
+ * @returns allEvents
+ */
+Datastore.prototype.getEventsMatchingFilter = function (filter) {
+  var result = [];
+  _.each(this.eventIndex, function (event /*,eventId*/) {
+    if (filter.matchEvent(event)) { result.push(event); }
+  }.bind(this));
+  return result;
+};
+
+
+/**
+ * @returns allEvents
+ */
+Datastore.prototype.getAllEvents = function () {
+  return _.value(this.eventIndex);
+};
+
+/**
+ * @param event
+ */
+Datastore.prototype.addEvent = function (event) {
+  if (! event.id) {
+    throw new Error('Datastore.addEvent cannot add event with unkown id', event);
+  }
+  this.eventIndex[event.id] = event;
+};
+
+
+
+/**
+ * @param {Object} data to map
+ * @return {Event} event
+ */
+Datastore.prototype.createOrReuseEvent = function (data) {
+  if (! data.id) {
+    console.log(data);
+    throw new Error('Datastore.createOrReuseEvent cannot create event with ' +
+      ' unkown id' + require('util').inspect(data));
+  }
+
+  var result = this.getEventById(data.id);
+  if (result) {  // found event
+    _.extend(result, data);
+    return result;
+  }
+  // create an event and register it
+  result = new Event(this.connection, data);
+  this.addEvent(result);
+
+  return result;
+
+};
+
+
+
+},{"./Event":13,"underscore":43,"util":41}],52:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -16379,7 +14250,55 @@ module.exports = Backbone.Model.extend({
     collection: null
   }
 });
-},{"backbone":30}],51:[function(require,module,exports){
+},{"backbone":75}],54:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    bookmark: null,
+    collection: null
+  }
+});
+},{"backbone":75}],53:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./SharingItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-sharingListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#sharing-list',
+
+  initialize: function () {
+    this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h5 data-i18n="modal.manageSlices.sharedSlices"></h5>' +
+    '<table class="table" >' +
+      '<thead><tr><th data-i18n="modal.manageSlices.name">Name</th>' +
+      '<th data-i18n="modal.manageSlices.link">Link</th>' +
+      '<th data-i18n="modal.manageSlices.share">Share</th><th></th></tr></thead>' +
+      '<tbody id="sharing-list"></tbody>' +
+    '</table>');
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./SharingItemView.js":93,"backbone.marionette":34,"underscore":9}],57:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./SharingModel.js');
 
@@ -16387,7 +14306,149 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./SharingModel.js":48,"backbone":30}],45:[function(require,module,exports){
+},{"./SharingModel.js":52,"backbone":75}],56:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./BookmarkModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./BookmarkModel.js":54,"backbone":75}],55:[function(require,module,exports){
+(function(){/* global $, window, i18n */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./BookmarkItemView.js'),
+  Pryv = require('pryv'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-bookmarkListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#bookmark-list',
+  $url: null,
+  $auth: null,
+  $name: null,
+  $tick: null,
+  $form: null,
+  _findAuthFromUrl: function () {
+
+    var url = this.$url.val(),
+      params = Pryv.utility.getParamsFromUrl(url),
+      sharings = Pryv.utility.getSharingsFromUrl(url);
+    if (params && params.auth) {
+      this.$auth.val(params.auth);
+    } else if (sharings && sharings.length > 0) {
+      this.$auth.val(sharings.join(','));
+    }
+
+  },
+  initialize: function () {
+    this.listenTo(this.collection, 'change', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h5 data-i18n="modal.manageSlices.followedSlices"></h5>' +
+      
+      '<table class="table" >' +
+      '<thead><tr><th data-i18n="modal.manageSlices.name"></th>' +
+      '<th data-i18n="modal.manageSlices.link"></th><th></th></tr></thead>' +
+      '<tbody id="bookmark-list"></tbody>' +
+      '</table>' +
+      '<button class="btn btn-default btn-sm" id="add-slice">' +
+      ' <i class="fa fa-plus-square-o"></i> ' +
+      '<span data-i18n="modal.manageSlices.newAdd"></span></button>' +
+      '<form class="form-inline" id="add-bookmark" role="form">' +
+      '<div class="form-group">' +
+      ' <label class="sr-only" for="add-bookmark-url">url</label>' +
+      ' <input type="url" class="form-control" id="add-bookmark-url" ' +
+      'data-i18n="[placeholder]modal.manageSlices.newLink" required>' +
+      '</div> ' +
+      '<div class="form-group">' +
+        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
+        '<input type="text" class="form-control" id="add-bookmark-name" ' +
+      'data-i18n="[placeholder]modal.manageSlices.newName" required>' +
+      '</div>' +
+      '<div class="form-group">' +
+        ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
+        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
+      '</div> ' +
+      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">' +
+      '<span data-i18n="button.add"></span> ' +
+      '<i class="fa fa-spinner fa-spin"></i></button>  ' +
+      '' +
+      ' </form>');
+    this.$url = $('#add-bookmark-url');
+    this.$auth = $('#add-bookmark-auth');
+    this.$name = $('#add-bookmark-name');
+    this.$btn = $('#add-bookmark-btn');
+    this.$form = $('#add-bookmark');
+    this.$spin = $('#add-bookmark-btn .fa-spin');
+    this.$spin.hide();
+    this.$form.toggle();
+    this.$addSlice = $('#add-slice');
+    this.$addSlice.click(function () {
+      this.$form.toggle();
+      this.$addSlice.toggle();
+    }.bind(this));
+    this.$form.bind('change paste keyup', function () {
+      this.$btn.removeClass('btn-danger btn-success').addClass('btn-default');
+    }.bind(this));
+    this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
+    this.$form.submit(function (e) {
+      e.preventDefault();
+      var auths = this.$auth.val().split(','),
+        url = this.$url.val(),
+        name = this.$name.val(),
+        sameNameExtension = '',
+        i = 0;
+      this.$spin.show();
+      this.$btn.removeClass('btn-pryv-alizarin');
+      auths.forEach(function (auth) {
+        this.trigger('bookmark:add', url, auth, name + sameNameExtension);
+        i += 1;
+        sameNameExtension = '-' + i;
+      }.bind(this));
+    }.bind(this));
+  },
+  endAddBookmark: function (error) {
+    this.$spin.hide();
+    if (error) {
+      var errorId;
+      console.log(error.id);
+      switch (error.id) {
+        case 'slice-unknown':
+        case 'API_UNREACHEABLE':
+          errorId = 'slice-unknown';
+          break;
+        case 'item-already-exists':
+          errorId = 'slice-already-exists';
+          break;
+        default:
+          errorId = 'slice-unknown';
+          break;
+      }
+      window.PryvBrowser.showAlert(this.container, i18n.t('error.followedSlice.add.' + errorId));
+      this.$btn.removeClass('btn-success').addClass('btn-pryv-alizarin');
+    } else {
+      this.$btn.removeClass('btn-pryv-alizarin').addClass('btn-success');
+    }
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./BookmarkItemView.js":94,"backbone.marionette":34,"pryv":10,"underscore":9}],58:[function(require,module,exports){
 (function(){/* global $, FileReader, document, window, i18n*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -17056,7 +15117,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"./EventModel.js":46,"backbone.marionette":33,"google-maps":94,"underscore":9}],46:[function(require,module,exports){
+},{"./EventModel.js":59,"backbone.marionette":34,"google-maps":95,"underscore":9}],59:[function(require,module,exports){
 (function(){/* global FormData */
 var Backbone = require('backbone');
 
@@ -17097,510 +15158,15 @@ module.exports = Backbone.Model.extend({
   }
 });
 })()
-},{"backbone":30}],50:[function(require,module,exports){
+},{"backbone":75}],60:[function(require,module,exports){
 var Backbone = require('backbone'),
-  Model = require('./BookmarkModel.js');
+  Model = require('./Model.js');
 
 module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./BookmarkModel.js":49,"backbone":30}],47:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./SharingItemView.js'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-sharingListCompositeView',
-  container: '.sharings',
-  itemView: ItemView,
-  itemViewContainer: '#sharing-list',
-
-  initialize: function () {
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h5 data-i18n="modal.manageSlices.sharedSlices"></h5>' +
-    '<table class="table" >' +
-      '<thead><tr><th data-i18n="modal.manageSlices.name">Name</th>' +
-      '<th data-i18n="modal.manageSlices.link">Link</th>' +
-      '<th data-i18n="modal.manageSlices.share">Share</th><th></th></tr></thead>' +
-      '<tbody id="sharing-list"></tbody>' +
-    '</table>');
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
-  onRender: function () {
-    $('body').i18n();
-  },
-  onBeforeClose: function () {
-    $(this.container).empty();
-    return true;
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-})()
-},{"./SharingItemView.js":95,"backbone.marionette":33,"underscore":9}],52:[function(require,module,exports){
-(function(){/* global $, window, i18n */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./BookmarkItemView.js'),
-  Pryv = require('pryv'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-bookmarkListCompositeView',
-  container: '.sharings',
-  itemView: ItemView,
-  itemViewContainer: '#bookmark-list',
-  $url: null,
-  $auth: null,
-  $name: null,
-  $tick: null,
-  $form: null,
-  _findAuthFromUrl: function () {
-
-    var url = this.$url.val(),
-      params = Pryv.utility.getParamsFromUrl(url),
-      sharings = Pryv.utility.getSharingsFromUrl(url);
-    if (params && params.auth) {
-      this.$auth.val(params.auth);
-    } else if (sharings && sharings.length > 0) {
-      this.$auth.val(sharings.join(','));
-    }
-
-  },
-  initialize: function () {
-    this.listenTo(this.collection, 'change', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h5 data-i18n="modal.manageSlices.followedSlices"></h5>' +
-      
-      '<table class="table" >' +
-      '<thead><tr><th data-i18n="modal.manageSlices.name"></th>' +
-      '<th data-i18n="modal.manageSlices.link"></th><th></th></tr></thead>' +
-      '<tbody id="bookmark-list"></tbody>' +
-      '</table>' +
-      '<button class="btn btn-default btn-sm" id="add-slice">' +
-      ' <i class="fa fa-plus-square-o"></i> ' +
-      '<span data-i18n="modal.manageSlices.newAdd"></span></button>' +
-      '<form class="form-inline" id="add-bookmark" role="form">' +
-      '<div class="form-group">' +
-      ' <label class="sr-only" for="add-bookmark-url">url</label>' +
-      ' <input type="url" class="form-control" id="add-bookmark-url" ' +
-      'data-i18n="[placeholder]modal.manageSlices.newLink" required>' +
-      '</div> ' +
-      '<div class="form-group">' +
-        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
-        '<input type="text" class="form-control" id="add-bookmark-name" ' +
-      'data-i18n="[placeholder]modal.manageSlices.newName" required>' +
-      '</div>' +
-      '<div class="form-group">' +
-        ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
-        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
-      '</div> ' +
-      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">' +
-      '<span data-i18n="button.add"></span> ' +
-      '<i class="fa fa-spinner fa-spin"></i></button>  ' +
-      '' +
-      ' </form>');
-    this.$url = $('#add-bookmark-url');
-    this.$auth = $('#add-bookmark-auth');
-    this.$name = $('#add-bookmark-name');
-    this.$btn = $('#add-bookmark-btn');
-    this.$form = $('#add-bookmark');
-    this.$spin = $('#add-bookmark-btn .fa-spin');
-    this.$spin.hide();
-    this.$form.toggle();
-    this.$addSlice = $('#add-slice');
-    this.$addSlice.click(function () {
-      this.$form.toggle();
-      this.$addSlice.toggle();
-    }.bind(this));
-    this.$form.bind('change paste keyup', function () {
-      this.$btn.removeClass('btn-danger btn-success').addClass('btn-default');
-    }.bind(this));
-    this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
-    this.$form.submit(function (e) {
-      e.preventDefault();
-      var auths = this.$auth.val().split(','),
-        url = this.$url.val(),
-        name = this.$name.val(),
-        sameNameExtension = '',
-        i = 0;
-      this.$spin.show();
-      this.$btn.removeClass('btn-pryv-alizarin');
-      auths.forEach(function (auth) {
-        this.trigger('bookmark:add', url, auth, name + sameNameExtension);
-        i += 1;
-        sameNameExtension = '-' + i;
-      }.bind(this));
-    }.bind(this));
-  },
-  endAddBookmark: function (error) {
-    this.$spin.hide();
-    if (error) {
-      var errorId;
-      console.log(error.id);
-      switch (error.id) {
-        case 'slice-unknown':
-        case 'API_UNREACHEABLE':
-          errorId = 'slice-unknown';
-          break;
-        case 'item-already-exists':
-          errorId = 'slice-already-exists';
-          break;
-        default:
-          errorId = 'slice-unknown';
-          break;
-      }
-      window.PryvBrowser.showAlert(this.container, i18n.t('error.followedSlice.add.' + errorId));
-      this.$btn.removeClass('btn-success').addClass('btn-pryv-alizarin');
-    } else {
-      this.$btn.removeClass('btn-pryv-alizarin').addClass('btn-success');
-    }
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
-  onRender: function () {
-    $('body').i18n();
-  },
-  onBeforeClose: function () {
-    $(this.container).empty();
-    return true;
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-})()
-},{"./BookmarkItemView.js":96,"backbone.marionette":33,"pryv":10,"underscore":9}],57:[function(require,module,exports){
-(function(){/* global window, i18n */
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#password-settings-modal-template',
-  ui: {
-    form: 'form',
-    save: 'button[type=submit]',
-    spinner: '.fa-spinner',
-    current: '#currentPassword',
-    new: '#newPassword',
-    reNew: '#reNewPassword'
-  },
-  onRender: function () {
-    this.bindUIElements();
-    this.ui.spinner.hide();
-    this.ui.form.submit(this._onFormSubmit.bind(this));
-  },
-  _onFormSubmit: function (e) {
-    e.preventDefault();
-    var newPass = this.ui.new.val();
-    var reNewPass = this.ui.reNew.val();
-    var currentPass = this.ui.current.val();
-    if (newPass && newPass.length > 0 && newPass === reNewPass) {
-      this.ui.reNew.parent().parent().removeClass('has-error');
-      this.ui.spinner.show();
-      this.ui.save.prop('disabled', true);
-      this.options.connection.account.changePassword(currentPass, newPass, function (error) {
-        this.ui.spinner.hide();
-        this.ui.save.prop('disabled', false);
-        if (error) {
-          console.warn(error);
-          this.ui.save.addClass('btn-pryv-alizarin');
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.changePassword.' + error.id));
-        }  else {
-          this.ui.save.removeClass('btn-pryv-alizarin');
-          this.ui.new.val('');
-          this.ui.reNew.val('');
-          this.ui.current.val('');
-        }
-      }.bind(this));
-    } else {
-      this.ui.reNew.parent().parent().addClass('has-error');
-      window.PryvBrowser.showAlert('.modal-content',
-        i18n.t('error.changePassword.pass-dont-match'));
-    }
-  }
-
-});
-
-
-
-})()
-},{"backbone.marionette":33}],56:[function(require,module,exports){
-(function(){/*global $ */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#nav-settings-modal-template',
-  ui: {
-    a: 'a'
-  },
-  onRender: function () {
-    this.ui.a.click(function (e) {
-      this._removeActive();
-      e.currentTarget.classList.add('active');
-      this.trigger('showRegion', e.currentTarget.getAttribute('data-name'));
-    }.bind(this));
-    setTimeout(function () {$('body').i18n(); }, 100);
-  },
-  _removeActive: function () {
-    _.each(this.ui.a, function (a) {
-      a.classList.remove('active');
-    });
-  },
-  activeRegion: function (regionName) {
-    for (var i = 0 ; i < this.ui.a.length; i++) {
-      if (this.ui.a[i].getAttribute('data-name') === regionName) {
-        this._removeActive();
-        this.ui.a[i].classList.add('active');
-        break;
-      }
-    }
-  }
-
-});
-
-
-
-})()
-},{"backbone.marionette":33,"underscore":9}],58:[function(require,module,exports){
-(function(){/* global window, i18n, $*/
-var Marionette = require('backbone.marionette');
-var Backbone = require('backbone');
-var _ = require('underscore');
-
-var GridRow = Marionette.ItemView.extend({
-  template: '#apps-item-settings-template',
-  tagName: 'tr',
-  events: {
-    'click .app-trash': '_onTrashClick'
-  },
-  _onTrashClick: function () {
-    this.trigger('app:delete', this.model);
-  }
-});
-
-
-
-var App = Backbone.Model.extend({});
-
-var AppList = Backbone.Collection.extend({
-  model: App
-});
-
-var allList = new AppList([]);
-
-
-// The grid view
-module.exports = Marionette.CompositeView.extend({
-  tagName: 'div',
-  template: '#apps-list-settings-template',
-  itemView: GridRow,
-  connection: null,
-
-  initialize: function () {
-    this.collection =  this.options.collection || allList;
-    this.listenTo(allList, 'change', this.debounceRender);
-    this.on('itemview:app:delete', this._onDeleteAppClick.bind(this));
-    this.connection = this.options.connection;
-    if (this.connection) {
-
-
-      var baseHref = $('base').attr('href');
-      var apps = {};
-      $.get(baseHref + 'locales/appList.json')
-        .done(function (result) {
-          result.forEach(function (app) {
-            apps[app.id] = app;
-          });
-
-          this.connection.accesses.get(function (error, result) {
-            if (error) {
-              window.PryvBrowser.showAlert('.modal-content',
-                i18n.t('error.manageApps.' + error.id));
-            } else {
-              result.forEach(function (access) {
-                if (access.type === 'app') {
-                  access.displayName = access.name;
-                  if (apps[access.name]) {
-                    access.displayName = apps[access.name].displayName;
-                    access.settingsPageURL = apps[access.name].settingsPageURL;
-                    access.iconURL = apps[access.name].iconURL;
-                  }
-
-                  var m = new App({
-                    app: access
-                  });
-                  allList.add(m);
-                }
-              }.bind(this));
-            }
-          }.bind(this));
-
-        }.bind(this))
-        .fail(function () {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.manageApps.cannot-load-app-list'));
-        });
-
-
-
-
-    }
-  },
-  appendHtml: function (collectionView, itemView) {
-    collectionView.$('tbody').append(itemView.el);
-  },
-  _onDeleteAppClick: function (e, model) {
-    this.connection.accesses.delete(model.get('app').id,
-      function (error) {
-        if (!error) {
-          allList.remove(model);
-          this.debounceRender();
-        } else {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.createdSlice.delete.' + error.id));
-          console.warn(error);
-        }
-      }.bind(this));
-  },
-  onRender: function () {
-    $('body').i18n();
-  },
-  reset: function () {
-    this.collection.reset();
-    allList.reset();
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-
-})()
-},{"backbone":30,"backbone.marionette":33,"underscore":9}],53:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    connection: null,
-    collection: null,
-    checked: true,
-    error: null,
-    created: false
-  }
-});
-},{"backbone":30}],59:[function(require,module,exports){
-(function(){/* global window, i18n, $*/
-var Marionette = require('backbone.marionette');
-var Backbone = require('backbone');
-var _ = require('underscore');
-
-var GridRow = Marionette.ItemView.extend({
-  template: '#other-apps-item-settings-template',
-  tagName: 'div',
-  className: 'col-sm-6 col-md-4'
-});
-
-
-
-var App = Backbone.Model.extend({});
-
-var AppList = Backbone.Collection.extend({
-  model: App
-});
-
-var allList = new AppList([]);
-
-
-// The grid view
-module.exports = Marionette.CompositeView.extend({
-  tagName: 'div',
-  template: '#other-apps-list-settings-template',
-  itemView: GridRow,
-  connection: null,
-  myAppsId: null,
-  apps: null,
-  initialize: function () {
-    this.myAppsId = [];
-    this.apps = [];
-    var sync = false;
-    this.collection =  this.options.collection || allList;
-    this.listenTo(allList, 'change', this.debounceRender);
-    this.connection = this.options.connection;
-    if (this.connection) {
-      this.connection.accesses.get(function (error, result) {
-        if (error) {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.manageApps.' + error.id));
-        } else {
-          result.forEach(function (access) {
-            if (access.type === 'app') {
-              this.myAppsId.push(access.name);
-            }
-          }.bind(this));
-          if (sync) {
-            this.showAppList();
-          } else {
-            sync = true;
-          }
-        }
-      }.bind(this));
-      var baseHref = $('base').attr('href');
-      $.get(baseHref + 'locales/appList.json')
-        .done(function (result) {
-          result.forEach(function (app) {
-            this.apps.push(app);
-          }.bind(this));
-          if (sync) {
-            this.showAppList();
-          } else {
-            sync = true;
-          }
-        }.bind(this))
-        .fail(function () {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.manageApps.cannot-load-app-list'));
-        });
-
-    }
-  },
-  showAppList: function () {
-    this.apps.forEach(function (app) {
-      if (this.myAppsId.indexOf(app.id) === -1) {
-        var m = new App({
-          app: app
-        });
-        allList.add(m);
-      }
-    }.bind(this));
-  },
-  appendHtml: function (collectionView, itemView) {
-    collectionView.$('#appList .panel-body').append(itemView.el);
-  },
-  onRender: function () {
-    $('body').i18n();
-  },
-  reset: function () {
-    this.collection.reset();
-    allList.reset();
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-
-})()
-},{"backbone":30,"backbone.marionette":33,"underscore":9}],55:[function(require,module,exports){
+},{"./Model.js":61,"backbone":75}],62:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -17671,449 +15237,334 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./ItemView.js":97,"backbone.marionette":33,"underscore":9}],54:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./Model.js');
+},{"./ItemView.js":96,"backbone.marionette":34,"underscore":9}],61:[function(require,module,exports){
+var Backbone = require('backbone');
 
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model
-});
-},{"./Model.js":53,"backbone":30}],73:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
- /* TODO This a the view for each node, with dynamic animation
- we can't re-render on change because animation would no be done
- If the model is a event Node we must include a new typed view
- */
-module.exports = Marionette.ItemView.extend({
-  template: '#nodeView',
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-
-    this.$el.attr('id', this.model.get('id'));
-    this.$el.attr('data-streamId', this.model.get('streamId'));
-    this.$el.attr('data-streamName', this.model.get('streamName'));
-    this.$el.attr('data-connectionId', this.model.get('connectionId'));
-    this.$el.addClass('node animated  fadeIn');
-    this.$el.addClass(this.model.get('className'));
-
-  },
-  triggers: {
-    'click .nodeHeader': 'headerClicked'
-  },
-  change: function () {
-
-    this._refreshStyle();
-  },
-
-  renderView: function () {
-
-    this.render();
-  },
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    this._refreshStyle();
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.html(html);
-
-    $('#' + this.model.get('containerId')).prepend(this.$el);
-    if (this.model.get('eventView')) {
-      this.model.get('eventView').render(this.model.get('id'));
-    }
-    this.bindUIElements();
-
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
-
-  },
-  _refreshStyle: function () {
-    if (this.model.get('weight') === 0) {
-      this.close();
-      return;
-    }
-    this.$el.attr('weight', this.model.get('weight'));
-    this.$el.attr('className', this.model.get('className'));
-    this.$el.css('width', this.model.get('width'));
-    this.$el.css('height', this.model.get('height'));
-    this.$el.css('left', this.model.get('x'));
-    this.$el.css('top', this.model.get('y'));
-    if (this.model.get('color')) {
-      this.$el.css('background-color', this.model.get('color'));
-    }
-  },
-  close: function () {
-
-    this.$el.removeClass('animated  fadeIn');
-    this.$el.addClass('animated  fadeOut');
-    this.remove();
+module.exports = Backbone.Model.extend({
+  defaults: {
+    connection: null,
+    collection: null,
+    checked: true,
+    error: null,
+    created: false
   }
 });
-})()
-},{"backbone.marionette":33}],74:[function(require,module,exports){
-
-var _ = require('underscore');
-var TreemapUtils = module.exports = TreemapUtils || {};
-TreemapUtils.sumArray = function (nodes) {
-  // Use one adding function rather than create a new one each
-  // time sumArray is called.
-  return _.reduce(TreemapUtils._extractWeight(nodes), function (memo, num) {
-    return memo + num;
-  }, 0);
-
-};
-TreemapUtils._getMaxWeight = function (nodes) {
-  return Math.max.apply(null, TreemapUtils._extractWeight(nodes));
-};
-TreemapUtils._getMinWeight = function (nodes) {
-  return Math.min.apply(null, TreemapUtils._extractWeight(nodes));
-};
-TreemapUtils._extractWeight = function (nodes) {
-  var result = [];
-  _.each(nodes, function (node) {
-    result.push(node.normalizedWeight);
-  });
-  return result;
-};
-//
-// Treemap squarify layout function.
-//  rect - containing rectangle; an array of 4 values x, y, width, height
-//  vals - array of (normalized) float values each representing percent contribution to
-//  total area of containing rectangle
-//
-// Non-recursive implementation of the squarify treemap layout algorithm published in:
-// "Squarified Treemaps" by Mark Bruls, Kees Huizing and Jarke J. van Wijk
-// http://www.win.tue.nl/~vanwijk/stm.pdf
-//
-// Includes tips and tricks from:
-// http://ejohn.org/blog/fast-javascript-maxmin/#postcomment
-//
-TreemapUtils.squarify = function (rect, vals) {
-  // console.log('squrify begin');
-
-  var Subrectangle = function (rect) {
-    this.setX = function (x) {
-      rect.width -= x - rect.x;
-      rect.x = x;
-    };
-    this.setY = function (y) {
-      rect.height -= y - rect.y;
-      rect.y = y;
-    };
-    this.getX = function () {
-      return rect.x;
-    };
-    this.getY = function () {
-      return rect.y;
-    };
-    this.getW = function () {
-      return rect.width;
-    };
-    this.getH = function () {
-      return rect.height;
-    };
-    this.getWidth = function () {
-      return Math.min(rect.width, rect.height);
-    };
-  };
-  //
-  // The function worst() gives the highest aspect ratio of a list
-  // of rectangles, given the length of the side along which they are to
-  // be laid out.
-  // Let a list of areas R be given and let s be their total sum. Then the function worst is
-  // defined by:
-  // worst(R,w) = max(max(w^2r=s^2; s^2=(w^2r)))
-  //              for all r in R
-  // Since one term is increasing in r and the other is decreasing, this is equal to
-  //              max(w^2r+=(s^2); s^2=(w^2r-))
-  // where r+ and r- are the maximum and minimum of R.
-  // Hence, the current maximum and minimum of the row that is being laid out.
-  //
-  var worst = function (r, w) {
-    var rMax = TreemapUtils._getMaxWeight(r);
-    var rMin = TreemapUtils._getMinWeight(r);
-
-    var s = TreemapUtils.sumArray(r);
-    var sSqr = s * s;
-    var wSqr = w * w;
-    return Math.max((wSqr * rMax) / sSqr, sSqr / (wSqr * rMin));
-  };
-
-  // Take row of values and calculate the set of rectangles
-  // that will fit in the current subrectangle.
-  var layoutrow = function (row) {
-    var x = subrect.getX(),
-      y = subrect.getY(),
-      maxX = x + subrect.getW(),
-      maxY = y + subrect.getH(),
-      rowHeight,
-      i,
-      w;
-
-    if (subrect.getW() < subrect.getH()) {
-      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getW());
-      if (y + rowHeight >= maxY) { rowHeight = maxY - y; }
-      for (i = 0; i < row.length; i++) {
-        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
-        if (x + w > maxX || i + 1 === row.length) { w = maxX - x; }
-        layout[row[i].uniqueId] = {x: x, y: y, width: w, height: rowHeight};
-
-        x = (x + w);
-      }
-      subrect.setY(y + rowHeight);
-    } else {
-      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getH());
-      if (x + rowHeight >= maxX) { rowHeight = maxX - x; }
-      for (i = 0; i < row.length; i++) {
-        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
-        if (y + w > maxY || i + 1 === row.length) { w = maxY - y; }
-        // layout.push({x: x, y: y, width: rowHeight, height: w});
-        layout[row[i].uniqueId] = {x: x, y: y, width: rowHeight, height: w};
-
-        y = (y + w);
-      }
-      subrect.setX(x + rowHeight);
-    }
-  };
-
-  // Pull values from input array until the aspect ratio of rectangles in row
-  // under construction degrades.
-  var buildRow = function (children) {
-    var row = [];
-    row.push(children.shift()); // descending input
-    //row.push(children.pop()); // ascending input
-    if (children.length === 0) {
-      return row;
-    }
-    var newRow = row.slice();
-    var w = subrect.getWidth();
-    do {
-      newRow.push(children[0]); // descending input
-      //newRow.push(children[children.length-1]); // ascending input
-      //  console.log('worst');
-//      console.log(worst(row, w));
-      if (worst(row, w) > worst(newRow, w)) {
-        row = newRow.slice();
-        children.shift(); // descending input
-        //children.pop(); // ascending input
-      }
-      else {
-        break;
-      }
-    } while (children.length > 0);
-    return row;
-  };
-
-  // Non recursive version of Bruls, Huizing and van Wijk
-  // squarify layout algorithim.
-  // While values exist in input array, make a row with good aspect
-  // ratios for its values then caclulate the row's geometry, repeat.
-  var nrSquarify = function (children) {
-    do {
-      layoutrow(buildRow(children));
-    } while (children.length > 0);
-  };
-
-
-  var layout = {};
-  var newVals;
-
-  newVals =  _.clone(_.sortBy(vals, function (num) {
-    return num.normalizedWeight;
-  }).reverse());
-
-  var i;
-
-  // if either height or width of containing rect are <= 0
-  // simply copy containing rect to layout rects
-  if (rect.width <= 0 || rect.height <= 0) {
-    for (i = 0; i < vals.length; i++) {
-      layout[vals[i].uniqueId] = rect;
-    }
-  } else { // else compute squarified layout
-    _.each(newVals, function (val) {
-      val.normalizedWeight = Math.round(val.normalizedWeight * rect.width * rect.height);
-
-    });
-    // vals come in normalized. convert them here to make them relative to containing rect
-    // newVals = vals.map(function(item){return item*(rect.width*rect.height);});
-    var subrect = new Subrectangle(rect);
-    nrSquarify(newVals);
-  }
-  return layout;
-};
-},{"underscore":9}],63:[function(require,module,exports){
-var _ = require('underscore'),
-    utility = require('../utility/utility'),
-    Monitor = require('../Monitor');
-
-/**
- * @class ConnectionMonitors
- * @private
- *
- * @param {Connection} connection
- * @constructor
- */
-function ConnectionMonitors(connection) {
-  this.connection = connection;
-  this._monitors = {};
-  this.ioSocket = null;
-}
-
-/**
- * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
- * will trigger an event. Changes to the filter will also trigger events if they have an impact on
- * the monitored data.
- * @param {Filter} filter - changes to this filter will be monitored.
- * @returns {Monitor}
- */
-ConnectionMonitors.prototype.create = function (filter) {
-  if (!this.connection.username) {
-    console.error('Cannot create a monitor for a connection without username:', this.connection);
-    return null;
-  }
-  return new Monitor(this.connection, filter);
-};
-
-
-
-/**
- * TODO
- * @private
- */
-ConnectionMonitors.prototype._stopMonitoring = function (/*callback*/) {
-
-};
-
-/**
- * Internal for Connection.Monitor
- * Maybe moved in Monitor by the way
- * @param callback
- * @private
- * @return {Object} XHR or Node http request
- */
-ConnectionMonitors.prototype._startMonitoring = function (callback) {
-  if (!this.connection.username) {
-    console.error('Cannot start monitoring for a connection without username:', this.connection);
-    return callback(true);
-  }
-  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
-
-  var settings = {
-    host : this.connection.username + '.' + this.connection.settings.domain,
-    port : this.connection.settings.port,
-    ssl : this.connection.settings.ssl,
-    path : this.connection.settings.extraPath + '/' + this.connection.username,
-    namespace : '/' + this.connection.username,
-    auth : this.connection.auth
-  };
-
-  this.ioSocket = utility.ioConnect(settings);
-
-  this.ioSocket.on('connect', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
-  }.bind(this));
-  this.ioSocket.on('error', function (error) {
-    _.each(this._monitors, function (monitor) { monitor._onIoError(error); });
-  }.bind(this));
-  this.ioSocket.on('eventsChanged', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoEventsChanged(); });
-  }.bind(this));
-  this.ioSocket.on('streamsChanged', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoStreamsChanged(); });
-  }.bind(this));
-  callback(null);
-};
-
-module.exports = ConnectionMonitors;
-
-
-
-},{"../Monitor":18,"../utility/utility":17,"underscore":66}],61:[function(require,module,exports){
-var apiPathBookmarks = '/followed-slices',
-  Connection = require('../Connection.js'),
+},{"backbone":75}],67:[function(require,module,exports){
+(function(){/*global $ */
+var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
-/**
- * @class Bookmarks
- * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
- * @param {Connection} connection
- * @constructor
- */
-function Bookmarks(connection, Conn) {
-  this.connection = connection;
-  Connection = Conn;
-}
-/**
- * @param {Connection~requestCallback} callback
- */
-Bookmarks.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathBookmarks, function (error, res) {
-    var result = [],
-      bookmarks = res.followedSlices || res.followedSlice;
-    _.each(bookmarks, function (bookmark) {
-      bookmark.url = bookmark.url.replace(/\.li/, '.in');
-      bookmark.url = bookmark.url.replace(/\.me/, '.io');
-      var conn =  new Connection({
-        auth: bookmark.accessToken,
-        url: bookmark.url,
-        name: bookmark.name,
-        bookmarkId: bookmark.id
-      });
-      result.push(conn);
+module.exports = Marionette.ItemView.extend({
+  template: '#nav-settings-modal-template',
+  ui: {
+    a: 'a'
+  },
+  onRender: function () {
+    this.ui.a.click(function (e) {
+      this._removeActive();
+      e.currentTarget.classList.add('active');
+      this.trigger('showRegion', e.currentTarget.getAttribute('data-name'));
+    }.bind(this));
+    setTimeout(function () {$('body').i18n(); }, 100);
+  },
+  _removeActive: function () {
+    _.each(this.ui.a, function (a) {
+      a.classList.remove('active');
     });
-    callback(error, result);
-  });
-};
-
-/**
- * TODO complete documentation
- * @param bookmark
- * @param callback
- * @returns {*}
- */
-Bookmarks.prototype.create = function (bookmark, callback) {
-  if (bookmark.name && bookmark.url && bookmark.accessToken) {
-    this.connection.request('POST', apiPathBookmarks, function (err, result) {
-      var error = err;
-      if (!error) {
-        var conn =  new Connection({
-          auth: bookmark.accessToken,
-          url: bookmark.url,
-          name: bookmark.name,
-          bookmarkId: result.followedSlice.id
-        });
-        bookmark = conn;
+  },
+  activeRegion: function (regionName) {
+    for (var i = 0 ; i < this.ui.a.length; i++) {
+      if (this.ui.a[i].getAttribute('data-name') === regionName) {
+        this._removeActive();
+        this.ui.a[i].classList.add('active');
+        break;
       }
-      callback(error, bookmark);
-    }, bookmark);
-    return bookmark;
-  }
-};
-
-/**
- * TODO complete documentation
- * @param bookmarkId
- * @param callback
- */
-Bookmarks.prototype.delete = function (bookmarkId, callback) {
-  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
-    var error = err;
-    if (result && result.message) {
-      error = result;
     }
-    callback(error, result);
-  });
-};
+  }
 
-module.exports = Bookmarks;
-},{"../Connection.js":12,"underscore":66}],60:[function(require,module,exports){
+});
+
+
+
+})()
+},{"backbone.marionette":34,"underscore":9}],68:[function(require,module,exports){
+(function(){/* global window, i18n */
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#password-settings-modal-template',
+  ui: {
+    form: 'form',
+    save: 'button[type=submit]',
+    spinner: '.fa-spinner',
+    current: '#currentPassword',
+    new: '#newPassword',
+    reNew: '#reNewPassword'
+  },
+  onRender: function () {
+    this.bindUIElements();
+    this.ui.spinner.hide();
+    this.ui.form.submit(this._onFormSubmit.bind(this));
+  },
+  _onFormSubmit: function (e) {
+    e.preventDefault();
+    var newPass = this.ui.new.val();
+    var reNewPass = this.ui.reNew.val();
+    var currentPass = this.ui.current.val();
+    if (newPass && newPass.length > 0 && newPass === reNewPass) {
+      this.ui.reNew.parent().parent().removeClass('has-error');
+      this.ui.spinner.show();
+      this.ui.save.prop('disabled', true);
+      this.options.connection.account.changePassword(currentPass, newPass, function (error) {
+        this.ui.spinner.hide();
+        this.ui.save.prop('disabled', false);
+        if (error) {
+          console.warn(error);
+          this.ui.save.addClass('btn-pryv-alizarin');
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.changePassword.' + error.id));
+        }  else {
+          this.ui.save.removeClass('btn-pryv-alizarin');
+          this.ui.new.val('');
+          this.ui.reNew.val('');
+          this.ui.current.val('');
+        }
+      }.bind(this));
+    } else {
+      this.ui.reNew.parent().parent().addClass('has-error');
+      window.PryvBrowser.showAlert('.modal-content',
+        i18n.t('error.changePassword.pass-dont-match'));
+    }
+  }
+
+});
+
+
+
+})()
+},{"backbone.marionette":34}],69:[function(require,module,exports){
+(function(){/* global window, i18n, $, document*/
+var Marionette = require('backbone.marionette');
+var Backbone = require('backbone');
+var _ = require('underscore');
+
+var GridRow = Marionette.ItemView.extend({
+  template: '#apps-item-settings-template',
+  tagName: 'tr',
+  events: {
+    'click .app-trash': '_onTrashClick'
+  },
+  _onTrashClick: function () {
+    this.trigger('app:delete', this.model);
+  }
+});
+
+
+
+var App = Backbone.Model.extend({});
+
+var AppList = Backbone.Collection.extend({
+  model: App
+});
+
+var allList = new AppList([]);
+
+
+// The grid view
+module.exports = Marionette.CompositeView.extend({
+  tagName: 'div',
+  template: '#apps-list-settings-template',
+  itemView: GridRow,
+  connection: null,
+
+  initialize: function () {
+    this.collection =  this.options.collection || allList;
+    this.listenTo(allList, 'change', this.debounceRender);
+    this.on('itemview:app:delete', this._onDeleteAppClick.bind(this));
+    this.connection = this.options.connection;
+    if (this.connection) {
+
+      var url = 'https://reg.pryv';
+      url += document.location.host.indexOf('.me') !== -1 ? '.io' : '.in';
+      url += '/apps';
+      var apps = {};
+      $.get(url)
+        .done(function (result) {
+          result = result.apps || [];
+          result.forEach(function (app) {
+            apps[app.id] = app;
+          });
+
+          this.connection.accesses.get(function (error, result) {
+            if (error) {
+              window.PryvBrowser.showAlert('.modal-content',
+                i18n.t('error.manageApps.' + error.id));
+            } else {
+              result.forEach(function (access) {
+                if (access.type === 'app') {
+                  access.displayName = access.name;
+                  if (apps[access.name]) {
+                    access.displayName = apps[access.name].displayName;
+                    access.settingsPageURL = apps[access.name].settingsPageURL;
+                    access.iconURL = apps[access.name].iconURL;
+                  }
+
+                  var m = new App({
+                    app: access
+                  });
+                  allList.add(m);
+                }
+              }.bind(this));
+            }
+          }.bind(this));
+
+        }.bind(this))
+        .fail(function () {
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.manageApps.cannot-load-app-list'));
+        });
+
+
+
+
+    }
+  },
+  appendHtml: function (collectionView, itemView) {
+    collectionView.$('tbody').append(itemView.el);
+  },
+  _onDeleteAppClick: function (e, model) {
+    this.connection.accesses.delete(model.get('app').id,
+      function (error) {
+        if (!error) {
+          allList.remove(model);
+          this.debounceRender();
+        } else {
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.createdSlice.delete.' + error.id));
+          console.warn(error);
+        }
+      }.bind(this));
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  reset: function () {
+    this.collection.reset();
+    allList.reset();
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+
+})()
+},{"backbone":75,"backbone.marionette":34,"underscore":9}],70:[function(require,module,exports){
+(function(){/* global window, i18n, $, document*/
+var Marionette = require('backbone.marionette');
+var Backbone = require('backbone');
+var _ = require('underscore');
+
+var GridRow = Marionette.ItemView.extend({
+  template: '#other-apps-item-settings-template',
+  tagName: 'div',
+  className: 'col-sm-6 col-md-4'
+});
+
+
+
+var App = Backbone.Model.extend({});
+
+var AppList = Backbone.Collection.extend({
+  model: App
+});
+
+var allList = new AppList([]);
+
+
+// The grid view
+module.exports = Marionette.CompositeView.extend({
+  tagName: 'div',
+  template: '#other-apps-list-settings-template',
+  itemView: GridRow,
+  connection: null,
+  myAppsId: null,
+  apps: null,
+  initialize: function () {
+    this.myAppsId = [];
+    this.apps = [];
+    var sync = false;
+    this.collection =  this.options.collection || allList;
+    this.listenTo(allList, 'change', this.debounceRender);
+    this.connection = this.options.connection;
+    if (this.connection) {
+      this.connection.accesses.get(function (error, result) {
+        if (error) {
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.manageApps.' + error.id));
+        } else {
+          result.forEach(function (access) {
+            if (access.type === 'app') {
+              this.myAppsId.push(access.name);
+            }
+          }.bind(this));
+          if (sync) {
+            this.showAppList();
+          } else {
+            sync = true;
+          }
+        }
+      }.bind(this));
+      var url = 'https://reg.pryv';
+      url += document.location.host.indexOf('.me') !== -1 ? '.io' : '.in';
+      url += '/apps';
+      $.get(url)
+        .done(function (result) {
+          result = result.apps || [];
+          result.forEach(function (app) {
+            this.apps.push(app);
+          }.bind(this));
+          if (sync) {
+            this.showAppList();
+          } else {
+            sync = true;
+          }
+        }.bind(this))
+        .fail(function () {
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.manageApps.cannot-load-app-list'));
+        });
+
+    }
+  },
+  showAppList: function () {
+    this.apps.forEach(function (app) {
+      if (this.myAppsId.indexOf(app.id) === -1) {
+        var m = new App({
+          app: app
+        });
+        allList.add(m);
+      }
+    }.bind(this));
+  },
+  appendHtml: function (collectionView, itemView) {
+    collectionView.$('#appList .panel-body').append(itemView.el);
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  reset: function () {
+    this.collection.reset();
+    allList.reset();
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+
+})()
+},{"backbone":75,"backbone.marionette":34,"underscore":9}],46:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('../utility/utility.js'),
     Stream = require('../Stream.js');
@@ -18469,70 +15920,162 @@ module.exports = ConnectionStreams;
  */
 
 
-},{"../Stream.js":14,"../utility/utility.js":17,"underscore":66}],65:[function(require,module,exports){
-var apiPathAccesses = '/accesses';
-var _ = require('underscore');
+},{"../Stream.js":15,"../utility/utility.js":16,"underscore":43}],47:[function(require,module,exports){
+var _ = require('underscore'),
+    utility = require('../utility/utility'),
+    Monitor = require('../Monitor');
 
 /**
- * @class Accesses
- * @link http://api.pryv.com/reference.html#methods-accesses
- * @link http://api.pryv.com/reference.html#data-structure-access
+ * @class ConnectionMonitors
+ * @private
+ *
  * @param {Connection} connection
  * @constructor
  */
-function Accesses(connection) {
+function ConnectionMonitors(connection) {
   this.connection = connection;
+  this._monitors = {};
+  this.ioSocket = null;
+}
+
+/**
+ * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
+ * will trigger an event. Changes to the filter will also trigger events if they have an impact on
+ * the monitored data.
+ * @param {Filter} filter - changes to this filter will be monitored.
+ * @returns {Monitor}
+ */
+ConnectionMonitors.prototype.create = function (filter) {
+  if (!this.connection.username) {
+    console.error('Cannot create a monitor for a connection without username:', this.connection);
+    return null;
+  }
+  return new Monitor(this.connection, filter);
+};
+
+
+
+/**
+ * TODO
+ * @private
+ */
+ConnectionMonitors.prototype._stopMonitoring = function (/*callback*/) {
+
+};
+
+/**
+ * Internal for Connection.Monitor
+ * Maybe moved in Monitor by the way
+ * @param callback
+ * @private
+ * @return {Object} XHR or Node http request
+ */
+ConnectionMonitors.prototype._startMonitoring = function (callback) {
+  if (!this.connection.username) {
+    console.error('Cannot start monitoring for a connection without username:', this.connection);
+    return callback(true);
+  }
+  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
+
+  var settings = {
+    host : this.connection.username + '.' + this.connection.settings.domain,
+    port : this.connection.settings.port,
+    ssl : this.connection.settings.ssl,
+    path : this.connection.settings.extraPath + '/' + this.connection.username,
+    namespace : '/' + this.connection.username,
+    auth : this.connection.auth
+  };
+
+  this.ioSocket = utility.ioConnect(settings);
+
+  this.ioSocket.on('connect', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
+  }.bind(this));
+  this.ioSocket.on('error', function (error) {
+    _.each(this._monitors, function (monitor) { monitor._onIoError(error); });
+  }.bind(this));
+  this.ioSocket.on('eventsChanged', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoEventsChanged(); });
+  }.bind(this));
+  this.ioSocket.on('streamsChanged', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoStreamsChanged(); });
+  }.bind(this));
+  callback(null);
+};
+
+module.exports = ConnectionMonitors;
+
+
+
+},{"../Monitor":18,"../utility/utility":16,"underscore":43}],45:[function(require,module,exports){
+var apiPathBookmarks = '/followed-slices',
+  Connection = require('../Connection.js'),
+  _ = require('underscore');
+
+/**
+ * @class Bookmarks
+ * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
+ * @param {Connection} connection
+ * @constructor
+ */
+function Bookmarks(connection, Conn) {
+  this.connection = connection;
+  Connection = Conn;
 }
 /**
  * @param {Connection~requestCallback} callback
  */
-Accesses.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathAccesses, function (err, res) {
-    var accesses = res.accesses || res.access;
-    if (typeof(callback) === 'function') {
-      callback(err, accesses);
-    }
+Bookmarks.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathBookmarks, function (error, res) {
+    var result = [],
+      bookmarks = res.followedSlices || res.followedSlice;
+    _.each(bookmarks, function (bookmark) {
+      bookmark.url = bookmark.url.replace(/\.li/, '.in');
+      bookmark.url = bookmark.url.replace(/\.me/, '.io');
+      var conn =  new Connection({
+        auth: bookmark.accessToken,
+        url: bookmark.url,
+        name: bookmark.name,
+        bookmarkId: bookmark.id
+      });
+      result.push(conn);
+    });
+    callback(error, result);
   });
 };
 
 /**
  * TODO complete documentation
- * @param access
+ * @param bookmark
  * @param callback
+ * @returns {*}
  */
-Accesses.prototype.create = function (access, callback) {
-  this.connection.request('POST', apiPathAccesses, function (err, res) {
-    var access = res.access;
-    if (typeof(callback) === 'function') {
-      callback(err, access);
-    }
-  }, access);
-};
-
-/**
- * TODO complete documentation
- * @param access
- * @param callback
- */
-Accesses.prototype.update = function (access, callback) {
-  if (access.id) {
-    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
-      _.pick(access, 'name', 'deviceName', 'permissions'));
-  } else {
-    if (callback && _.isFunction(callback)) {
-      return callback('No access id found');
-    }
-
+Bookmarks.prototype.create = function (bookmark, callback) {
+  if (bookmark.name && bookmark.url && bookmark.accessToken) {
+    this.connection.request('POST', apiPathBookmarks, function (err, result) {
+      var error = err;
+      if (!error) {
+        var conn =  new Connection({
+          auth: bookmark.accessToken,
+          url: bookmark.url,
+          name: bookmark.name,
+          bookmarkId: result.followedSlice.id
+        });
+        bookmark = conn;
+      }
+      callback(error, bookmark);
+    }, bookmark);
+    return bookmark;
   }
 };
 
 /**
  * TODO complete documentation
- * @param access
+ * @param bookmarkId
  * @param callback
  */
-Accesses.prototype.delete = function (sharingId, callback) {
-  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+Bookmarks.prototype.delete = function (bookmarkId, callback) {
+  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
     var error = err;
     if (result && result.message) {
       error = result;
@@ -18540,8 +16083,9 @@ Accesses.prototype.delete = function (sharingId, callback) {
     callback(error, result);
   });
 };
-module.exports = Accesses;
-},{"underscore":66}],62:[function(require,module,exports){
+
+module.exports = Bookmarks;
+},{"../Connection.js":12,"underscore":43}],44:[function(require,module,exports){
 var utility = require('../utility/utility.js'),
   _ = require('underscore'),
   Filter = require('../Filter'),
@@ -18892,7 +16436,79 @@ module.exports = ConnectionEvents;
  * @param {Event[]} events
  */
 
-},{"../Event":13,"../Filter":16,"../utility/utility.js":17,"./ConnectionConstants.js":38,"underscore":66}],68:[function(require,module,exports){
+},{"../Event":13,"../Filter":17,"../utility/utility.js":16,"./ConnectionConstants.js":37,"underscore":43}],48:[function(require,module,exports){
+var apiPathAccesses = '/accesses';
+var _ = require('underscore');
+
+/**
+ * @class Accesses
+ * @link http://api.pryv.com/reference.html#methods-accesses
+ * @link http://api.pryv.com/reference.html#data-structure-access
+ * @param {Connection} connection
+ * @constructor
+ */
+function Accesses(connection) {
+  this.connection = connection;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Accesses.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathAccesses, function (err, res) {
+    var accesses = res.accesses || res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, accesses);
+    }
+  });
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.create = function (access, callback) {
+  this.connection.request('POST', apiPathAccesses, function (err, res) {
+    var access = res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, access);
+    }
+  }, access);
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.update = function (access, callback) {
+  if (access.id) {
+    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
+      _.pick(access, 'name', 'deviceName', 'permissions'));
+  } else {
+    if (callback && _.isFunction(callback)) {
+      return callback('No access id found');
+    }
+
+  }
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.delete = function (sharingId, callback) {
+  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+module.exports = Accesses;
+},{"underscore":43}],51:[function(require,module,exports){
 (function(){/**
  * (event)Emitter renamed to avoid confusion with prvy's events
  */
@@ -19026,317 +16642,7 @@ SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
 };
 
 })()
-},{"underscore":66}],75:[function(require,module,exports){
-var TreeNode = require('./TreeNode');
-var _ = require('underscore');
-
-/**
- * Holder for Connection Nodes.
- * @type {*}
- */
-
-var StreamNode = module.exports = TreeNode.implement(
-  function (connectionNode, parentNode, stream) {
-    TreeNode.call(this, parentNode.treeMap, parentNode);
-    this.stream = stream;
-    this.connectionNode = connectionNode;
-    if (this.connectionNode.connection.accessInfo().type === 'personal') {
-
-      if (this.stream.clientData && this.stream.clientData['pryv-browser:bgColor']) {
-        this.stream.color = this.stream.clientData['pryv-browser:bgColor'];
-      } else if (parentNode.stream && parentNode.stream.clientData &&
-        parentNode.stream.clientData['pryv-browser:bgColor']) {
-        this.stream.color = parentNode.stream.clientData['pryv-browser:bgColor'];
-      } else if (parentNode.stream && parentNode.stream.color) {
-        this.stream.color = parentNode.stream.color;
-      }
-    }
-
-
-    /**
-     * eventsNodes are stored by their key
-     **/
-    this.eventsNodes = {};
-    this.eventsNodesAggregated = {};
-  },
-  {
-    className: 'StreamNode',
-
-
-    _needToAggregate: function () {
-      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
-        /* we don't need to aggregate if all the events are in the same stream
-         so we need to walk all the child of this stream with 3 stop condition:
-         - if a stream has more than one stream we aggregate it
-         - if a stream has one stream and one or more eventsNode we aggregate it
-         - if a stream has only eventsNode we don't aggregate it
-         */
-        var node = this, currentAggregated;
-        var numberOfStreamNode, numberOfEventsNode;
-        while (true) {
-          numberOfEventsNode = _.size(node.eventsNodes);
-          currentAggregated = node.aggregated;
-          // force aggregated to false for getChildren to return nonAggregated node
-          node.aggregated = false;
-          numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
-          node.aggregated = currentAggregated;
-          if (numberOfStreamNode === 0) {
-            return false;
-          }
-          if (numberOfStreamNode > 1) {
-            return true;
-          }
-          if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
-            return true;
-          }
-          // at this point the node has only one stream as child
-          node = node.getChildren()[0];
-        }
-      }  else {
-        return false;
-      }
-    },
-    _aggregate: function () {
-      _.each(this.getChildren(), function (child) {
-        child._closeView(false);
-      });
-      this.aggregated = true;
-      this.createEventsNodesFromAllEvents(this.getAllEvents());
-      _.each(this.eventsNodesAggregated, function (node) {
-        node._createView();
-      });
-    },
-    _desaggregate: function () {
-      _.each(this.eventsNodesAggregated, function (node) {
-        node._closeView(false);
-      });
-      this.aggregated = false;
-      _.each(this.getChildren(), function (child) {
-        child._createView();
-      });
-    },
-    getWeight: function () {
-      var children = [];
-      var weight = 0;
-      // Streams
-      _.each(this.stream.children, function (child) {
-        var childTemp =  this.connectionNode.streamNodes[child.id];
-        children.push(childTemp);
-      }, this);
-
-      // Events
-      _.each(this.eventsNodes, function (eventNode) {
-        children.push(eventNode);
-      });
-
-      children.forEach(function (child) {
-        weight += child.getWeight();
-      });
-
-      return weight;
-    },
-
-    getChildren: function () {
-      var children = [];
-
-      if (this.aggregated) {
-        var weight = this.getWeight();
-        var aggregatedWeight = 0;
-        _.each(this.eventsNodesAggregated, function (node) {
-          if (!node.originalWeight) {
-            node.originalWeight = node.getWeight;
-          }
-          aggregatedWeight += node.originalWeight();
-        });
-        _.each(this.eventsNodesAggregated, function (node) {
-          node.getWeight = function () {
-            return (node.originalWeight() / aggregatedWeight) * weight;
-          };
-          children.push(node);
-        });
-      } else {
-        // Streams
-        _.each(this.stream.children, function (child) {
-          var childTemp =  this.connectionNode.streamNodes[child.id];
-          children.push(childTemp);
-        }, this);
-
-        // Events
-        _.each(this.eventsNodes, function (eventNode) {
-          children.push(eventNode);
-        });
-      }
-      return children;
-    },
-    getAllEvents: function () {
-      var allEvents = [];
-      _.each(this.stream.children, function (streamChild) {
-        var streamChildNode = this.connectionNode.streamNodes[streamChild.id];
-        allEvents = _.union(allEvents, streamChildNode.getAllEvents());
-      }, this);
-
-      _.each(this.eventsNodes, function (eventNodeChild) {
-        _.each(eventNodeChild.events, function (event) {
-          allEvents.push(event);
-        });
-      });
-      return allEvents;
-    },
-    createEventsNodesFromAllEvents: function (events) {
-      this.eventsNodesAggregated = {};
-      _.each(events, function (event) {
-        var key = this._findEventNodeType(event);
-        var eventView = this._findEventNode(key, this.eventsNodesAggregated);
-        if (eventView === null) {
-          throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
-        }
-        eventView.eventEnterScope(event);
-      }, this);
-
-    },
-    eventEnterScope: function (event, reason, callback) {
-      var key = this._findEventNodeType(event);
-      var eventNode = this._findEventNode(key, this.eventsNodes);
-      if (eventNode === null) {
-        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
-      }
-      if (this.redirect) {
-        for (var i = 0, n = this.redirect.length; i < n; ++i) {
-          if (this.redirect[i].type === event.type &&
-            this.stream.id === event.streamId) {
-            this.connectionNode.streamNodes[this.redirect[i].to]
-              .eventEnterScope(event, reason, callback);
-          }
-        }
-      }
-      eventNode.eventEnterScope(event, reason, callback);
-      var aggregatedParent = this._findAggregatedParent();
-      if (aggregatedParent) {
-        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
-        if (eventNode === null) {
-          throw new Error('EventEnterScore: did not find an eventView for the aggregated stream');
-        }
-        eventNode.eventEnterScope(event, reason, callback);
-      }
-    },
-
-
-    eventLeaveScope: function (event, reason, callback) {
-      var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
-      if (!eventNode) {
-        if (_.isFunction(callback)) {
-          return callback();
-        }
-      }
-      if (this.redirect) {
-        for (var i = 0, n = this.redirect.length; i < n; ++i) {
-          if (this.redirect[i].type === event.type &&
-            this.stream.id === event.streamId) {
-            this.connectionNode.streamNodes[this.redirect[i].to]
-              .eventLeaveScope(event, reason, callback);
-          }
-        }
-      }
-      eventNode.eventLeaveScope(event, reason, callback);
-      if (eventNode.size === 0) {
-        eventNode._closeView();
-        delete this.eventsNodes[key];
-      }
-      var aggregatedParent = this._findAggregatedParent();
-      if (aggregatedParent) {
-        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
-        if (eventNode === null) {
-          throw new Error('EventLeaveScore: did not find an eventView for the aggregated stream');
-        }
-        eventNode.eventLeaveScope(event, reason, callback);
-        if (eventNode.size === 0) {
-          eventNode._closeView();
-          delete aggregatedParent.eventsNodesAggregated[key];
-        }
-
-      }
-    },
-
-    eventChange: function (event, reason, callback) {
-      var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
-      if (!eventNode) {
-        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
-      }
-      if (this.redirect) {
-        for (var i = 0, n = this.redirect.length; i < n; ++i) {
-          if (this.redirect[i].type === event.type &&
-            this.stream.id === event.streamId) {
-            this.connectionNode.streamNodes[this.redirect[i].to]
-              .eventChange(event, reason, callback);
-          }
-        }
-      }
-      eventNode.eventChange(event, reason, callback);
-      var aggregatedParent = this._findAggregatedParent();
-      if (aggregatedParent) {
-        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
-        if (eventNode === null) {
-          throw new Error('eventChange: did not find an eventView for the aggregated stream');
-        }
-        eventNode.eventChange(event, reason, callback);
-      }
-    },
-    _findAggregatedParent: function () {
-      var parent = this;
-      while (parent) {
-        if (parent.aggregated) {
-          return parent;
-        }
-        parent = parent.parent;
-      }
-      return null;
-    },
-    _findEventNodeType: function (event) {
-      var keys = _.keys(StreamNode.registeredEventNodeTypes);
-      for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        if (StreamNode.registeredEventNodeTypes[key].acceptThisEventType(event.type)) {
-          return key;
-        }
-      }
-      return;
-    },
-    _findEventNode: function (key, eventsNodeList) {
-      var eventNode = null;
-      if (key && _.has(eventsNodeList, key)) {
-        eventNode =  eventsNodeList[key]; // found one
-      }  else { // create is
-        eventNode = new StreamNode.registeredEventNodeTypes[key](this);
-        eventsNodeList[key] = eventNode;
-      }
-      return eventNode;
-    },
-
-    //----------- debug ------------//
-    _debugTree : function () {
-      var me = {
-        name : this.stream.name,
-        nullChildren : 0
-      };
-
-      _.extend(me, TreeNode.prototype._debugTree.call(this));
-
-
-      return me;
-    }
-  });
-
-
-StreamNode.registeredEventNodeTypes = {
-  'NotesEventsNode' : require('./eventsNode/NotesEventsNode.js'),
-  'ActivitiesEventsNode' : require('./eventsNode/ActivitiesEventsNode.js'),
-  'PositionsEventsNode' : require('./eventsNode/PositionsEventsNode.js'),
-  'PicturesEventsNode' : require('./eventsNode/PicturesEventsNode.js'),
-  'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),
-  'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
-  'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
-};
-},{"./TreeNode":39,"./eventsNode/ActivitiesEventsNode.js":103,"./eventsNode/GenericEventsNode.js":104,"./eventsNode/NotesEventsNode.js":99,"./eventsNode/NumericalsEventsNode.js":102,"./eventsNode/PicturesEventsNode.js":100,"./eventsNode/PositionsEventsNode.js":98,"./eventsNode/TweetsEventsNode.js":101,"underscore":9}],35:[function(require,module,exports){
+},{"underscore":43}],30:[function(require,module,exports){
 (function(){/* global confirm, document, navigator, location, window */
 
 var utility = require('../utility/utility.js');
@@ -19999,7 +17305,806 @@ Auth.prototype._cleanStatusFromURL = function () {
 module.exports = new Auth();
 
 })()
-},{"../Connection.js":12,"../utility/utility.js":17,"underscore":66}],80:[function(require,module,exports){
+},{"../Connection.js":12,"../utility/utility.js":16,"underscore":43}],73:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+ /* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
+module.exports = Marionette.ItemView.extend({
+  template: '#nodeView',
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+
+    this.$el.attr('id', this.model.get('id'));
+    this.$el.attr('data-streamId', this.model.get('streamId'));
+    this.$el.attr('data-streamName', this.model.get('streamName'));
+    this.$el.attr('data-connectionId', this.model.get('connectionId'));
+    this.$el.addClass('node animated  fadeIn');
+    this.$el.addClass(this.model.get('className'));
+
+  },
+  triggers: {
+    'click .nodeHeader': 'headerClicked'
+  },
+  change: function () {
+
+    this._refreshStyle();
+  },
+
+  renderView: function () {
+
+    this.render();
+  },
+  render: function () {
+    if (this.beforeRender) { this.beforeRender(); }
+    this.trigger('before:render', this);
+    this.trigger('item:before:render', this);
+    this._refreshStyle();
+    var data = this.serializeData();
+    var template = this.getTemplate();
+    var html = Marionette.Renderer.render(template, data);
+    this.$el.html(html);
+
+    $('#' + this.model.get('containerId')).prepend(this.$el);
+    if (this.model.get('eventView')) {
+      this.model.get('eventView').render(this.model.get('id'));
+    }
+    this.bindUIElements();
+
+    if (this.onRender) { this.onRender(); }
+    this.trigger('render', this);
+    this.trigger('item:rendered', this);
+    return this;
+
+  },
+  _refreshStyle: function () {
+    if (this.model.get('weight') === 0) {
+      this.close();
+      return;
+    }
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('className'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+    if (this.model.get('color')) {
+      this.$el.css('background-color', this.model.get('color'));
+    }
+  },
+  close: function () {
+
+    this.$el.removeClass('animated  fadeIn');
+    this.$el.addClass('animated  fadeOut');
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":34}],74:[function(require,module,exports){
+
+var _ = require('underscore');
+var TreemapUtils = module.exports = TreemapUtils || {};
+TreemapUtils.sumArray = function (nodes) {
+  // Use one adding function rather than create a new one each
+  // time sumArray is called.
+  return _.reduce(TreemapUtils._extractWeight(nodes), function (memo, num) {
+    return memo + num;
+  }, 0);
+
+};
+TreemapUtils._getMaxWeight = function (nodes) {
+  return Math.max.apply(null, TreemapUtils._extractWeight(nodes));
+};
+TreemapUtils._getMinWeight = function (nodes) {
+  return Math.min.apply(null, TreemapUtils._extractWeight(nodes));
+};
+TreemapUtils._extractWeight = function (nodes) {
+  var result = [];
+  _.each(nodes, function (node) {
+    result.push(node.normalizedWeight);
+  });
+  return result;
+};
+//
+// Treemap squarify layout function.
+//  rect - containing rectangle; an array of 4 values x, y, width, height
+//  vals - array of (normalized) float values each representing percent contribution to
+//  total area of containing rectangle
+//
+// Non-recursive implementation of the squarify treemap layout algorithm published in:
+// "Squarified Treemaps" by Mark Bruls, Kees Huizing and Jarke J. van Wijk
+// http://www.win.tue.nl/~vanwijk/stm.pdf
+//
+// Includes tips and tricks from:
+// http://ejohn.org/blog/fast-javascript-maxmin/#postcomment
+//
+TreemapUtils.squarify = function (rect, vals) {
+  // console.log('squrify begin');
+
+  var Subrectangle = function (rect) {
+    this.setX = function (x) {
+      rect.width -= x - rect.x;
+      rect.x = x;
+    };
+    this.setY = function (y) {
+      rect.height -= y - rect.y;
+      rect.y = y;
+    };
+    this.getX = function () {
+      return rect.x;
+    };
+    this.getY = function () {
+      return rect.y;
+    };
+    this.getW = function () {
+      return rect.width;
+    };
+    this.getH = function () {
+      return rect.height;
+    };
+    this.getWidth = function () {
+      return Math.min(rect.width, rect.height);
+    };
+  };
+  //
+  // The function worst() gives the highest aspect ratio of a list
+  // of rectangles, given the length of the side along which they are to
+  // be laid out.
+  // Let a list of areas R be given and let s be their total sum. Then the function worst is
+  // defined by:
+  // worst(R,w) = max(max(w^2r=s^2; s^2=(w^2r)))
+  //              for all r in R
+  // Since one term is increasing in r and the other is decreasing, this is equal to
+  //              max(w^2r+=(s^2); s^2=(w^2r-))
+  // where r+ and r- are the maximum and minimum of R.
+  // Hence, the current maximum and minimum of the row that is being laid out.
+  //
+  var worst = function (r, w) {
+    var rMax = TreemapUtils._getMaxWeight(r);
+    var rMin = TreemapUtils._getMinWeight(r);
+
+    var s = TreemapUtils.sumArray(r);
+    var sSqr = s * s;
+    var wSqr = w * w;
+    return Math.max((wSqr * rMax) / sSqr, sSqr / (wSqr * rMin));
+  };
+
+  // Take row of values and calculate the set of rectangles
+  // that will fit in the current subrectangle.
+  var layoutrow = function (row) {
+    var x = subrect.getX(),
+      y = subrect.getY(),
+      maxX = x + subrect.getW(),
+      maxY = y + subrect.getH(),
+      rowHeight,
+      i,
+      w;
+
+    if (subrect.getW() < subrect.getH()) {
+      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getW());
+      if (y + rowHeight >= maxY) { rowHeight = maxY - y; }
+      for (i = 0; i < row.length; i++) {
+        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
+        if (x + w > maxX || i + 1 === row.length) { w = maxX - x; }
+        layout[row[i].uniqueId] = {x: x, y: y, width: w, height: rowHeight};
+
+        x = (x + w);
+      }
+      subrect.setY(y + rowHeight);
+    } else {
+      rowHeight = Math.ceil(TreemapUtils.sumArray(row) / subrect.getH());
+      if (x + rowHeight >= maxX) { rowHeight = maxX - x; }
+      for (i = 0; i < row.length; i++) {
+        w = Math.ceil(row[i].normalizedWeight  / rowHeight);
+        if (y + w > maxY || i + 1 === row.length) { w = maxY - y; }
+        // layout.push({x: x, y: y, width: rowHeight, height: w});
+        layout[row[i].uniqueId] = {x: x, y: y, width: rowHeight, height: w};
+
+        y = (y + w);
+      }
+      subrect.setX(x + rowHeight);
+    }
+  };
+
+  // Pull values from input array until the aspect ratio of rectangles in row
+  // under construction degrades.
+  var buildRow = function (children) {
+    var row = [];
+    row.push(children.shift()); // descending input
+    //row.push(children.pop()); // ascending input
+    if (children.length === 0) {
+      return row;
+    }
+    var newRow = row.slice();
+    var w = subrect.getWidth();
+    do {
+      newRow.push(children[0]); // descending input
+      //newRow.push(children[children.length-1]); // ascending input
+      //  console.log('worst');
+//      console.log(worst(row, w));
+      if (worst(row, w) > worst(newRow, w)) {
+        row = newRow.slice();
+        children.shift(); // descending input
+        //children.pop(); // ascending input
+      }
+      else {
+        break;
+      }
+    } while (children.length > 0);
+    return row;
+  };
+
+  // Non recursive version of Bruls, Huizing and van Wijk
+  // squarify layout algorithim.
+  // While values exist in input array, make a row with good aspect
+  // ratios for its values then caclulate the row's geometry, repeat.
+  var nrSquarify = function (children) {
+    do {
+      layoutrow(buildRow(children));
+    } while (children.length > 0);
+  };
+
+
+  var layout = {};
+  var newVals;
+
+  newVals =  _.clone(_.sortBy(vals, function (num) {
+    return num.normalizedWeight;
+  }).reverse());
+
+  var i;
+
+  // if either height or width of containing rect are <= 0
+  // simply copy containing rect to layout rects
+  if (rect.width <= 0 || rect.height <= 0) {
+    for (i = 0; i < vals.length; i++) {
+      layout[vals[i].uniqueId] = rect;
+    }
+  } else { // else compute squarified layout
+    _.each(newVals, function (val) {
+      val.normalizedWeight = Math.round(val.normalizedWeight * rect.width * rect.height);
+
+    });
+    // vals come in normalized. convert them here to make them relative to containing rect
+    // newVals = vals.map(function(item){return item*(rect.width*rect.height);});
+    var subrect = new Subrectangle(rect);
+    nrSquarify(newVals);
+  }
+  return layout;
+};
+},{"underscore":9}],71:[function(require,module,exports){
+/**
+ * Node-only utils
+ */
+var FormData = require('form-data');
+
+var utility = module.exports = {};
+
+utility.request = require('./request-node');
+
+
+/**
+ * Create or complete FormData object for attachements
+ * @param id {String} id of the element to add (may be 'attachment0')
+ * @param data {Data} the data to send
+ * @param options {Object}
+ * @param options.filename {String}
+ * @param options.type {String}
+ */
+utility.forgeFormData = function (id, data, options, appendTo) {
+  var formData = appendTo || new FormData();
+  formData.append(id, data, options);
+  return formData;
+};
+},{"./request-node":97,"form-data":98}],76:[function(require,module,exports){
+var TreeNode = require('./TreeNode');
+var _ = require('underscore');
+
+/**
+ * Holder for Connection Nodes.
+ * @type {*}
+ */
+
+var StreamNode = module.exports = TreeNode.implement(
+  function (connectionNode, parentNode, stream) {
+    TreeNode.call(this, parentNode.treeMap, parentNode);
+    this.stream = stream;
+    this.connectionNode = connectionNode;
+    if (this.connectionNode.connection.accessInfo().type === 'personal') {
+
+      if (this.stream.clientData && this.stream.clientData['pryv-browser:bgColor']) {
+        this.stream.color = this.stream.clientData['pryv-browser:bgColor'];
+      } else if (parentNode.stream && parentNode.stream.clientData &&
+        parentNode.stream.clientData['pryv-browser:bgColor']) {
+        this.stream.color = parentNode.stream.clientData['pryv-browser:bgColor'];
+      } else if (parentNode.stream && parentNode.stream.color) {
+        this.stream.color = parentNode.stream.color;
+      }
+    }
+
+
+    /**
+     * eventsNodes are stored by their key
+     **/
+    this.eventsNodes = {};
+    this.eventsNodesAggregated = {};
+  },
+  {
+    className: 'StreamNode',
+
+
+    _needToAggregate: function () {
+      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
+        /* we don't need to aggregate if all the events are in the same stream
+         so we need to walk all the child of this stream with 3 stop condition:
+         - if a stream has more than one stream we aggregate it
+         - if a stream has one stream and one or more eventsNode we aggregate it
+         - if a stream has only eventsNode we don't aggregate it
+         */
+        var node = this, currentAggregated;
+        var numberOfStreamNode, numberOfEventsNode;
+        while (true) {
+          numberOfEventsNode = _.size(node.eventsNodes);
+          currentAggregated = node.aggregated;
+          // force aggregated to false for getChildren to return nonAggregated node
+          node.aggregated = false;
+          numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
+          node.aggregated = currentAggregated;
+          if (numberOfStreamNode === 0) {
+            return false;
+          }
+          if (numberOfStreamNode > 1) {
+            return true;
+          }
+          if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
+            return true;
+          }
+          // at this point the node has only one stream as child
+          node = node.getChildren()[0];
+        }
+      }  else {
+        return false;
+      }
+    },
+    _aggregate: function () {
+      _.each(this.getChildren(), function (child) {
+        child._closeView(false);
+      });
+      this.aggregated = true;
+      this.createEventsNodesFromAllEvents(this.getAllEvents());
+      _.each(this.eventsNodesAggregated, function (node) {
+        node._createView();
+      });
+    },
+    _desaggregate: function () {
+      _.each(this.eventsNodesAggregated, function (node) {
+        node._closeView(false);
+      });
+      this.aggregated = false;
+      _.each(this.getChildren(), function (child) {
+        child._createView();
+      });
+    },
+    getWeight: function () {
+      var children = [];
+      var weight = 0;
+      // Streams
+      _.each(this.stream.children, function (child) {
+        var childTemp =  this.connectionNode.streamNodes[child.id];
+        children.push(childTemp);
+      }, this);
+
+      // Events
+      _.each(this.eventsNodes, function (eventNode) {
+        children.push(eventNode);
+      });
+
+      children.forEach(function (child) {
+        weight += child.getWeight();
+      });
+
+      return weight;
+    },
+
+    getChildren: function () {
+      var children = [];
+
+      if (this.aggregated) {
+        var weight = this.getWeight();
+        var aggregatedWeight = 0;
+        _.each(this.eventsNodesAggregated, function (node) {
+          if (!node.originalWeight) {
+            node.originalWeight = node.getWeight;
+          }
+          aggregatedWeight += node.originalWeight();
+        });
+        _.each(this.eventsNodesAggregated, function (node) {
+          node.getWeight = function () {
+            return (node.originalWeight() / aggregatedWeight) * weight;
+          };
+          children.push(node);
+        });
+      } else {
+        // Streams
+        _.each(this.stream.children, function (child) {
+          var childTemp =  this.connectionNode.streamNodes[child.id];
+          children.push(childTemp);
+        }, this);
+
+        // Events
+        _.each(this.eventsNodes, function (eventNode) {
+          children.push(eventNode);
+        });
+      }
+      return children;
+    },
+    getAllEvents: function () {
+      var allEvents = [];
+      _.each(this.stream.children, function (streamChild) {
+        var streamChildNode = this.connectionNode.streamNodes[streamChild.id];
+        allEvents = _.union(allEvents, streamChildNode.getAllEvents());
+      }, this);
+
+      _.each(this.eventsNodes, function (eventNodeChild) {
+        _.each(eventNodeChild.events, function (event) {
+          allEvents.push(event);
+        });
+      });
+      return allEvents;
+    },
+    createEventsNodesFromAllEvents: function (events) {
+      this.eventsNodesAggregated = {};
+      _.each(events, function (event) {
+        var key = this._findEventNodeType(event);
+        var eventView = this._findEventNode(key, this.eventsNodesAggregated);
+        if (eventView === null) {
+          throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+        }
+        eventView.eventEnterScope(event);
+      }, this);
+
+    },
+    eventEnterScope: function (event, reason, callback) {
+      var key = this._findEventNodeType(event);
+      var eventNode = this._findEventNode(key, this.eventsNodes);
+      if (eventNode === null) {
+        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventEnterScope(event, reason, callback);
+          }
+        }
+      }
+      eventNode.eventEnterScope(event, reason, callback);
+      var aggregatedParent = this._findAggregatedParent();
+      if (aggregatedParent) {
+        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
+        if (eventNode === null) {
+          throw new Error('EventEnterScore: did not find an eventView for the aggregated stream');
+        }
+        eventNode.eventEnterScope(event, reason, callback);
+      }
+    },
+
+
+    eventLeaveScope: function (event, reason, callback) {
+      var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
+      if (!eventNode) {
+        if (_.isFunction(callback)) {
+          return callback();
+        }
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventLeaveScope(event, reason, callback);
+          }
+        }
+      }
+      eventNode.eventLeaveScope(event, reason, callback);
+      if (eventNode.size === 0) {
+        eventNode._closeView();
+        delete this.eventsNodes[key];
+      }
+      var aggregatedParent = this._findAggregatedParent();
+      if (aggregatedParent) {
+        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
+        if (eventNode === null) {
+          throw new Error('EventLeaveScore: did not find an eventView for the aggregated stream');
+        }
+        eventNode.eventLeaveScope(event, reason, callback);
+        if (eventNode.size === 0) {
+          eventNode._closeView();
+          delete aggregatedParent.eventsNodesAggregated[key];
+        }
+
+      }
+    },
+
+    eventChange: function (event, reason, callback) {
+      var key = this._findEventNodeType(event), eventNode = this.eventsNodes[key];
+      if (!eventNode) {
+        throw new Error('StreamNode: did not find an eventView for event: ' + event.id);
+      }
+      if (this.redirect) {
+        for (var i = 0, n = this.redirect.length; i < n; ++i) {
+          if (this.redirect[i].type === event.type &&
+            this.stream.id === event.streamId) {
+            this.connectionNode.streamNodes[this.redirect[i].to]
+              .eventChange(event, reason, callback);
+          }
+        }
+      }
+      eventNode.eventChange(event, reason, callback);
+      var aggregatedParent = this._findAggregatedParent();
+      if (aggregatedParent) {
+        eventNode =  aggregatedParent._findEventNode(key, aggregatedParent.eventsNodesAggregated);
+        if (eventNode === null) {
+          throw new Error('eventChange: did not find an eventView for the aggregated stream');
+        }
+        eventNode.eventChange(event, reason, callback);
+      }
+    },
+    _findAggregatedParent: function () {
+      var parent = this;
+      while (parent) {
+        if (parent.aggregated) {
+          return parent;
+        }
+        parent = parent.parent;
+      }
+      return null;
+    },
+    _findEventNodeType: function (event) {
+      var keys = _.keys(StreamNode.registeredEventNodeTypes);
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        if (StreamNode.registeredEventNodeTypes[key].acceptThisEventType(event.type)) {
+          return key;
+        }
+      }
+      return;
+    },
+    _findEventNode: function (key, eventsNodeList) {
+      var eventNode = null;
+      if (key && _.has(eventsNodeList, key)) {
+        eventNode =  eventsNodeList[key]; // found one
+      }  else { // create is
+        eventNode = new StreamNode.registeredEventNodeTypes[key](this);
+        eventsNodeList[key] = eventNode;
+      }
+      return eventNode;
+    },
+
+    //----------- debug ------------//
+    _debugTree : function () {
+      var me = {
+        name : this.stream.name,
+        nullChildren : 0
+      };
+
+      _.extend(me, TreeNode.prototype._debugTree.call(this));
+
+
+      return me;
+    }
+  });
+
+
+StreamNode.registeredEventNodeTypes = {
+  'NotesEventsNode' : require('./eventsNode/NotesEventsNode.js'),
+  //'ActivitiesEventsNode' : require('./eventsNode/ActivitiesEventsNode.js'),
+  'PositionsEventsNode' : require('./eventsNode/PositionsEventsNode.js'),
+  'PicturesEventsNode' : require('./eventsNode/PicturesEventsNode.js'),
+  'NumericalsEventsNode' : require('./eventsNode/NumericalsEventsNode.js'),
+  'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
+  'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
+};
+},{"./TreeNode":39,"./eventsNode/GenericEventsNode.js":103,"./eventsNode/NotesEventsNode.js":102,"./eventsNode/NumericalsEventsNode.js":101,"./eventsNode/PicturesEventsNode.js":100,"./eventsNode/PositionsEventsNode.js":99,"./eventsNode/TweetsEventsNode.js":104,"underscore":9}],77:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./ItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-detailListCompositeView',
+  container: '.modal-content',
+  itemView: ItemView,
+  itemViewContainer: '#detail-list',
+  checkAll: false,
+  events: {
+    'click #check-all': 'onCheckAllClick',
+    'scroll #detail-list' : '_showMore'
+  },
+  initialize: function () {
+    if ($('.modal-panel-right').length === 0) {
+      /* jshint -W101 */
+      $(this.container).append(
+        '<div class="modal-panel-right"> ' +
+        '    <div id="modal-right-content"> ' +
+        '        <div id="detail-list"></div> ' +
+        '        <div id="filter"> <input type="checkbox" id="check-all"> <span data-i18n="modal.detail.checkAll"></span> ' +
+          '      <button id ="trash-selected" type="button" class="btn btn-danger" data-i18n="modal.detail.trashSelected"></button></div>' +
+        '    </div> ' +
+        '</div>');
+
+    }
+    //this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    var $checkAll = $('#check-all');
+    this.checkAll = false;
+    $checkAll.off();
+    $checkAll[0].checked = false;
+    $checkAll.bind('click', this.onCheckAllClick.bind(this));
+    $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
+    $('#detail-list').bind('scroll', this._showMore.bind(this));
+  },
+  onTrashSelectedClick: function () {
+    var i = 0;
+    this.collection.each(function (model) {
+      if (model.get('checked')) {
+        i++;
+        model.trash(function () { i--; });
+      }
+    }.bind(this));
+  },
+  onCheckAllClick: function () {
+    this.checkAll = !this.checkAll;
+    this.collection.each(function (model) {
+      model.set('checked', this.checkAll);
+    }.bind(this));
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 100),
+  _showMore: function () {
+    var $detailList = $('#detail-list');
+    var height = $detailList.height();
+    var scrollHeight = $detailList[0].scrollHeight;
+    var scrollTop = $detailList.scrollTop();
+    var triggerOffset = 1.25;
+    var scrollBarHeight = height * height / scrollHeight;
+    var currentScroll = (scrollBarHeight + (scrollTop / (scrollHeight / height))) * triggerOffset;
+    // if we are closer than 'margin' to the end of the content, load more books
+    if (currentScroll >= height) {
+      this.trigger('showMore');
+    }
+  }
+});
+
+})()
+},{"./ItemView.js":105,"backbone.marionette":34,"underscore":9}],78:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./EventModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model,
+  highlightedDate: null,
+  currentElement: null,
+  comparator: function (a, b) {
+    var aTime = a.get('event').time;
+    var bTime = b.get('event').time;
+    return aTime > bTime ? -1
+      : aTime < bTime ? 1
+      : 0;
+  },
+  highlightEvent: function (time) {
+    var next =  this.getEventhighlighted(time);
+    if (!next || next === Infinity) {
+      return;
+    }
+    this.setCurrentElement(next);
+    return next;
+  },
+  getEventhighlighted: function (time) {
+    this.highlightedDate = time === Infinity ? 99999999999 : time;
+    return this.min(this._getTimeDifference.bind(this));
+  },
+  getTrashed: function () {
+    return this.filter(this._getTrashed);
+  },
+  getEventById: function (id) {
+    return this.find(function (e) {
+      return e.get('event').id === id;
+    });
+  },
+  getActive: function () {
+    return this.reject(this._getTrashed);
+  },
+  _getTimeDifference: function (event) {
+    return event.getTimeDifference(this.highlightedDate);
+  },
+  _getTrashed: function (event) {
+    return event.isTrashed();
+  },
+  getCurrentElement: function () {
+    return this.currentElement;
+  },
+  setCurrentElement: function (model) {
+    if (!model) {
+      return;
+    }
+    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
+      if (this.currentElement) {
+        this.currentElement.setHighlighted(false);
+      }
+      if (model) {
+        model.setHighlighted(true);
+      }
+    }
+    this.currentElement = model;
+  },
+  next: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
+    return this;
+  },
+  prev: function () {
+    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
+    return this;
+  }
+});
+},{"./EventModel.js":79,"backbone":75}],79:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    event: null,
+    collection: null,
+    highlighted: false,
+    checked: false
+  },
+  getTimeDifference: function (time) {
+    return Math.abs(time - this.get('event').time);
+  },
+  isTrashed: function () {
+    return this.get('event').trashed;
+  },
+  setHighlighted: function (highlight) {
+    this.set('highlighted', highlight);
+  },
+  save: function (callback) {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      this.get('event').addAttachment(file, callback);
+    }
+    event.update(callback);
+  },
+  create: function (callback) {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      event.connection.events.createWithAttachment(event, file, callback);
+    }  else {
+      event.connection.events.create(event, callback);
+    }
+  },
+  addAttachment: function (file) {
+    this.get('event').file = file;
+    console.log('addAttachment', file, this);
+  },
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
+  },
+  trash: function (callback) {
+    this.get('event').trash(callback);
+  }
+});
+},{"backbone":75}],81:[function(require,module,exports){
 (function(){/* global $, FormData, window, i18n */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -20165,227 +18270,37 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33,"underscore":9}],76:[function(require,module,exports){
+},{"backbone.marionette":34,"underscore":9}],89:[function(require,module,exports){
 var Backbone = require('backbone'),
-  Model = require('./EventModel.js');
+  Model = require('./TimeSeriesModel.js');
 
 module.exports = Backbone.Collection.extend({
-  url: '#',
   model: Model,
-  highlightedDate: null,
-  currentElement: null,
-  comparator: function (a, b) {
-    var aTime = a.get('event').time;
-    var bTime = b.get('event').time;
-    return aTime > bTime ? -1
-      : aTime < bTime ? 1
-      : 0;
+
+  initialize: function (models, options) {
+    this.type = options.type;
   },
-  highlightEvent: function (time) {
-    var next =  this.getEventhighlighted(time);
-    if (!next || next === Infinity) {
-      return;
-    }
-    this.setCurrentElement(next);
-    return next;
-  },
-  getEventhighlighted: function (time) {
-    this.highlightedDate = time === Infinity ? 99999999999 : time;
-    return this.min(this._getTimeDifference.bind(this));
-  },
-  getTrashed: function () {
-    return this.filter(this._getTrashed);
-  },
-  getEventById: function (id) {
-    return this.find(function (e) {
-      return e.get('event').id === id;
-    });
-  },
-  getActive: function () {
-    return this.reject(this._getTrashed);
-  },
-  _getTimeDifference: function (event) {
-    return event.getTimeDifference(this.highlightedDate);
-  },
-  _getTrashed: function (event) {
-    return event.isTrashed();
-  },
-  getCurrentElement: function () {
-    return this.currentElement;
-  },
-  setCurrentElement: function (model) {
-    if (!model) {
-      return;
-    }
-    if (!this.currentElement || this.currentElement.get('event').id !== model.get('event').id) {
-      if (this.currentElement) {
-        this.currentElement.setHighlighted(false);
-      }
-      if (model) {
-        model.setHighlighted(true);
-      }
-    }
-    this.currentElement = model;
-  },
-  next: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) + 1));
-    return this;
-  },
-  prev: function () {
-    this.setCurrentElement(this.at(this.indexOf(this.getCurrentElement()) - 1));
-    return this;
+
+  comparator: function () {
+
   }
 });
-},{"./EventModel.js":78,"backbone":30}],77:[function(require,module,exports){
-(function(){/* global $ */
+},{"./TimeSeriesModel.js":92,"backbone":75}],90:[function(require,module,exports){
 var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js'),
-  _ = require('underscore');
+  ItemView = require('./ItemView.js');
 
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-detailListCompositeView',
-  container: '.modal-content',
+module.exports = Marionette.CollectionView.extend({
+  tagName: 'ul',
   itemView: ItemView,
-  itemViewContainer: '#detail-list',
-  checkAll: false,
-  events: {
-    'click #check-all': 'onCheckAllClick',
-    'scroll #detail-list' : '_showMore'
-  },
-  initialize: function () {
-    if ($('.modal-panel-right').length === 0) {
-      /* jshint -W101 */
-      $(this.container).append(
-        '<div class="modal-panel-right"> ' +
-        '    <div id="modal-right-content"> ' +
-        '        <div id="detail-list"></div> ' +
-        '        <div id="filter"> <input type="checkbox" id="check-all"> <span data-i18n="modal.detail.checkAll"></span> ' +
-          '      <button id ="trash-selected" type="button" class="btn btn-danger" data-i18n="modal.detail.trashSelected"></button></div>' +
-        '    </div> ' +
-        '</div>');
 
-    }
-    //this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
   onRender: function () {
-    var $checkAll = $('#check-all');
-    this.checkAll = false;
-    $checkAll.off();
-    $checkAll[0].checked = false;
-    $checkAll.bind('click', this.onCheckAllClick.bind(this));
-    $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
-    $('#detail-list').bind('scroll', this._showMore.bind(this));
-  },
-  onTrashSelectedClick: function () {
-    var i = 0;
-    this.collection.each(function (model) {
-      if (model.get('checked')) {
-        i++;
-        model.trash(function () { i--; });
-      }
-    }.bind(this));
-  },
-  onCheckAllClick: function () {
-    this.checkAll = !this.checkAll;
-    this.collection.each(function (model) {
-      model.set('checked', this.checkAll);
-    }.bind(this));
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 100),
-  _showMore: function () {
-    var $detailList = $('#detail-list');
-    var height = $detailList.height();
-    var scrollHeight = $detailList[0].scrollHeight;
-    var scrollTop = $detailList.scrollTop();
-    var triggerOffset = 1.25;
-    var scrollBarHeight = height * height / scrollHeight;
-    var currentScroll = (scrollBarHeight + (scrollTop / (scrollHeight / height))) * triggerOffset;
-    // if we are closer than 'margin' to the end of the content, load more books
-    if (currentScroll >= height) {
-      this.trigger('showMore');
+    if (this.children.length === 0) {
+      this.$el.parent().css({visibility: 'hidden'});
     }
   }
 });
 
-})()
-},{"./ItemView.js":105,"backbone.marionette":33,"underscore":9}],78:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    event: null,
-    collection: null,
-    highlighted: false,
-    checked: false
-  },
-  getTimeDifference: function (time) {
-    return Math.abs(time - this.get('event').time);
-  },
-  isTrashed: function () {
-    return this.get('event').trashed;
-  },
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
-  },
-  save: function (callback) {
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      this.get('event').addAttachment(file, callback);
-    }
-    event.update(callback);
-  },
-  create: function (callback) {
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      event.connection.events.createWithAttachment(event, file, callback);
-    }  else {
-      event.connection.events.create(event, callback);
-    }
-  },
-  addAttachment: function (file) {
-    this.get('event').file = file;
-    console.log('addAttachment', file, this);
-  },
-  removeAttachment: function (fileName, callback) {
-    this.get('event').removeAttachment(fileName, callback);
-  },
-  trash: function (callback) {
-    this.get('event').trash(callback);
-  }
-});
-},{"backbone":30}],92:[function(require,module,exports){
-/**
- * Node-only utils
- */
-var FormData = require('form-data');
-
-var utility = module.exports = {};
-
-utility.request = require('./request-node');
-
-
-/**
- * Create or complete FormData object for attachements
- * @param id {String} id of the element to add (may be 'attachment0')
- * @param data {Data} the data to send
- * @param options {Object}
- * @param options.filename {String}
- * @param options.type {String}
- */
-utility.forgeFormData = function (id, data, options, appendTo) {
-  var formData = appendTo || new FormData();
-  formData.append(id, data, options);
-  return formData;
-};
-},{"./request-node":106,"form-data":107}],88:[function(require,module,exports){
+},{"./ItemView.js":106,"backbone.marionette":34}],92:[function(require,module,exports){
 
 var Backbone = require('backbone');
 
@@ -20415,7 +18330,66 @@ module.exports = Backbone.Model.extend({
   }
 
 });
-},{"backbone":30}],87:[function(require,module,exports){
+},{"backbone":75}],88:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    container: null,
+    view: null,
+
+    requiresDim: false,
+
+    collection: null,
+
+    highlighted: false,
+    highlightedTime: null,
+
+    allowPieChart: false,
+
+    singleNumberAsText: true,
+
+    // Chart dimensions
+    dimensions: null,
+
+    // Legend style
+    legendStyle: 'table', // Legend style: 'list', 'table'
+    legendButton: false,  // A button in the legend
+    legendButtonCount: ['edit', 'duplicate', 'remove'],
+    legendShow: true,     // Show legend on size/true/false
+    legendExtras: true,   // use extras in the legend
+
+    /* Events control */
+    onClick: null,
+    onHover: null,
+    onDnD: null,
+
+    // Panning and Zooming
+    allowPan: false,      // Allows navigation through the chart
+    allowZoom: false,     // Allows zooming on the chart
+    panZoomButton: false,
+
+    // Display X-axis
+    xaxis: null,
+
+    // Editable point mode
+    editPoint: false,
+
+    // Show node count
+    showNodeCount: true
+  },
+
+  initialize: function () {
+    this.on('remove', function () {
+      console.log('model: remove received');
+    });
+  },
+
+  setHighlighted: function (highlight) {
+    this.set('highlighted', highlight);
+  }
+});
+},{"backbone":75}],91:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
@@ -21266,96 +19240,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./utils/ChartTransform.js":108,"backbone.marionette":33,"pryv":10,"underscore":9}],90:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    container: null,
-    view: null,
-
-    requiresDim: false,
-
-    collection: null,
-
-    highlighted: false,
-    highlightedTime: null,
-
-    allowPieChart: false,
-
-    singleNumberAsText: true,
-
-    // Chart dimensions
-    dimensions: null,
-
-    // Legend style
-    legendStyle: 'table', // Legend style: 'list', 'table'
-    legendButton: false,  // A button in the legend
-    legendButtonCount: ['edit', 'duplicate', 'remove'],
-    legendShow: true,     // Show legend on size/true/false
-    legendExtras: true,   // use extras in the legend
-
-    /* Events control */
-    onClick: null,
-    onHover: null,
-    onDnD: null,
-
-    // Panning and Zooming
-    allowPan: false,      // Allows navigation through the chart
-    allowZoom: false,     // Allows zooming on the chart
-    panZoomButton: false,
-
-    // Display X-axis
-    xaxis: null,
-
-    // Editable point mode
-    editPoint: false,
-
-    // Show node count
-    showNodeCount: true
-  },
-
-  initialize: function () {
-    this.on('remove', function () {
-      console.log('model: remove received');
-    });
-  },
-
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
-  }
-});
-},{"backbone":30}],91:[function(require,module,exports){
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js');
-
-module.exports = Marionette.CollectionView.extend({
-  tagName: 'ul',
-  itemView: ItemView,
-
-  onRender: function () {
-    if (this.children.length === 0) {
-      this.$el.parent().css({visibility: 'hidden'});
-    }
-  }
-});
-
-},{"./ItemView.js":109,"backbone.marionette":33}],89:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./TimeSeriesModel.js');
-
-module.exports = Backbone.Collection.extend({
-  model: Model,
-
-  initialize: function (models, options) {
-    this.type = options.type;
-  },
-
-  comparator: function () {
-
-  }
-});
-},{"./TimeSeriesModel.js":88,"backbone":30}],95:[function(require,module,exports){
+},{"./utils/ChartTransform.js":107,"backbone.marionette":34,"pryv":10,"underscore":9}],93:[function(require,module,exports){
 (function(){/* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -21420,7 +19305,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33}],96:[function(require,module,exports){
+},{"backbone.marionette":34}],94:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -21440,7 +19325,7 @@ module.exports = Marionette.ItemView.extend({
     this.trigger('bookmark:delete', this.model);
   }
 });
-},{"backbone.marionette":33}],97:[function(require,module,exports){
+},{"backbone.marionette":34}],96:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -21466,7 +19351,131 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":33}],79:[function(require,module,exports){
+},{"backbone.marionette":34}],83:[function(require,module,exports){
+(function(){/* global $*/
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect'},
+  validType = ['note/txt', 'picture/attached', 'position/wgs84'];
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Creation',
+  step: creationStep.typeSelect,
+  getTemplate: function () {
+    if (this.step === creationStep.typeSelect) {
+      return '#template-detail-creation-type';
+    } else if (this.step === creationStep.streamSelect) {
+      return '#template-detail-creation-stream';
+    }
+  },
+  templateHelpers: function () {
+    return {
+      getStream: function () {
+        return this.getStream();
+      }.bind(this)
+    };
+  },
+  itemViewContainer: '#detail-content',
+  ui: {
+    type: '#type-select',
+    stream: 'ul#stream-select'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+    this.step = creationStep.typeSelect;
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    this.ui.type.bind('click', this.onTypeClick.bind(this));
+    this.ui.stream.bind('click', this.onStreamClick.bind(this));
+  },
+  onStreamClick: function (e) {
+    var streamSelected = $(e.target).attr('data-stream'),
+      connectionSelected = this.connection.get($(e.target).attr('data-connection')),
+      event = this.model.get('event');
+    event.streamId = streamSelected;
+    if (connectionSelected) {
+      event.connection = connectionSelected;
+      this.trigger('endOfSelection');
+    }
+    return true;
+  },
+  onTypeClick: function (e) {
+    var typeSelected =  $(e.target).attr('data-type') || $(e.target).parent().attr('data-type'),
+        event = this.model.get('event');
+
+    if (validType.indexOf(typeSelected) !== -1) {
+      event.type = typeSelected;
+      this.step = creationStep.streamSelect;
+      this.render();
+    }
+    return true;
+  },
+  getStream: function () {
+    var result = '<ul id="stream-select">',
+      connections  = this.connection._connections;
+    _.each(connections, function (c) {
+      if (!this._isWritePermission(c)) {
+        return;
+      }
+      result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
+      result += this.getStreamStructure(c);
+      result += '</ul>';
+
+    }.bind(this));
+    return result + '</ul>';
+  },
+  getStreamStructure: function (connection) {
+    var rootStreams = connection.datastore.getStreams(),
+      result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (this._isWritePermission(connection, rootStreams[i])) {
+        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
+      }
+    }
+    return result;
+
+  },
+  _walkStreamStructure: function (stream) {
+    var preSelected = this.connectionId === stream.connection.serialId &&
+      this.streamId === stream.id ? 'preSelected-stream' : '';
+    var result = '<li class="' + preSelected + '" data-connection="' +
+      stream.connection.serialId + '" data-stream="' +
+      stream.id + '">' + stream.name + '</li>';
+    for (var j = 0; j < stream.children.length; j++) {
+      if (this._isWritePermission(stream.connection, stream.children[j])) {
+        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
+      }
+    }
+    return result;
+  },
+  _isWritePermission: function (connection, streamId) {
+    if (!connection._accessInfo) {
+      return false;
+    }
+    if (connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId !== 'read') {
+      return true;
+    }
+    if (connection._accessInfo.permissions &&
+      connection._accessInfo.permissions[0].streamId === '*' &&
+      connection._accessInfo.permissions[0].streamId === 'read') {
+      return false;
+    }
+    if (streamId) {
+      return !!_.find(connection._accessInfo.permissions, function (p) {
+        return p.streamId === streamId && p.level !== 'read';
+      });
+    }
+    return false;
+  }
+});
+})()
+},{"backbone.marionette":34,"underscore":9}],80:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -21592,7 +19601,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33,"underscore":9}],81:[function(require,module,exports){
+},{"backbone.marionette":34,"underscore":9}],85:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -21638,7 +19647,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33,"underscore":9}],84:[function(require,module,exports){
+},{"backbone.marionette":34,"underscore":9}],84:[function(require,module,exports){
 (function(){/* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -21730,184 +19739,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33,"underscore":9}],83:[function(require,module,exports){
-(function(){/* global $, FormData */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Tweet',
-  template: '#template-detail-content-tweet',
-  itemViewContainer: '#detail-content',
-  templateHelpers: {
-    getUrl: function () {
-      var id = this.event.content.id,
-        screenName = this.event.content['screen-name'],
-        date = new Date(this.event.time * 1000);
-      return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
-        'data-datetime="' + date.toISOString() + '">' + date.toLocaleDateString() + '</a>';
-    }
-  },
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
-    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
-  },
-  onEditClick: function (e) {
-    $(e.currentTarget).addClass('editing');
-    this.ui.edit.focus();
-  },
-  onEditBlur: function (e) {
-    this.updateEvent(e.currentTarget);
-    return true;
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
-  }
-});
-})()
-},{"backbone.marionette":33,"underscore":9}],85:[function(require,module,exports){
-(function(){/* global $*/
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect'},
-  validType = ['note/txt', 'picture/attached', 'position/wgs84'];
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Creation',
-  step: creationStep.typeSelect,
-  getTemplate: function () {
-    if (this.step === creationStep.typeSelect) {
-      return '#template-detail-creation-type';
-    } else if (this.step === creationStep.streamSelect) {
-      return '#template-detail-creation-stream';
-    }
-  },
-  templateHelpers: function () {
-    return {
-      getStream: function () {
-        return this.getStream();
-      }.bind(this)
-    };
-  },
-  itemViewContainer: '#detail-content',
-  ui: {
-    type: '#type-select',
-    stream: 'ul#stream-select'
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-    this.step = creationStep.typeSelect;
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-    this.ui.type.bind('click', this.onTypeClick.bind(this));
-    this.ui.stream.bind('click', this.onStreamClick.bind(this));
-  },
-  onStreamClick: function (e) {
-    var streamSelected = $(e.target).attr('data-stream'),
-      connectionSelected = this.connection.get($(e.target).attr('data-connection')),
-      event = this.model.get('event');
-    event.streamId = streamSelected;
-    if (connectionSelected) {
-      event.connection = connectionSelected;
-      this.trigger('endOfSelection');
-    }
-    return true;
-  },
-  onTypeClick: function (e) {
-    var typeSelected =  $(e.target).attr('data-type') || $(e.target).parent().attr('data-type'),
-        event = this.model.get('event');
-
-    if (validType.indexOf(typeSelected) !== -1) {
-      event.type = typeSelected;
-      this.step = creationStep.streamSelect;
-      this.render();
-    }
-    return true;
-  },
-  getStream: function () {
-    var result = '<ul id="stream-select">',
-      connections  = this.connection._connections;
-    _.each(connections, function (c) {
-      if (!this._isWritePermission(c)) {
-        return;
-      }
-      result += '<ul>' + c.username + ' / ' + c._accessInfo.name;
-      result += this.getStreamStructure(c);
-      result += '</ul>';
-
-    }.bind(this));
-    return result + '</ul>';
-  },
-  getStreamStructure: function (connection) {
-    var rootStreams = connection.datastore.getStreams(),
-      result = '';
-    for (var i = 0; i < rootStreams.length; i++) {
-      if (this._isWritePermission(connection, rootStreams[i])) {
-        result += '<ul>' + this._walkStreamStructure(rootStreams[i]) + '</ul>';
-      }
-    }
-    return result;
-
-  },
-  _walkStreamStructure: function (stream) {
-    var preSelected = this.connectionId === stream.connection.serialId &&
-      this.streamId === stream.id ? 'preSelected-stream' : '';
-    var result = '<li class="' + preSelected + '" data-connection="' +
-      stream.connection.serialId + '" data-stream="' +
-      stream.id + '">' + stream.name + '</li>';
-    for (var j = 0; j < stream.children.length; j++) {
-      if (this._isWritePermission(stream.connection, stream.children[j])) {
-        result += '<ul>' + this._walkStreamStructure(stream.children[j]) + '</ul>';
-      }
-    }
-    return result;
-  },
-  _isWritePermission: function (connection, streamId) {
-    if (!connection._accessInfo) {
-      return false;
-    }
-    if (connection._accessInfo.type === 'personal') {
-      return true;
-    }
-    if (connection._accessInfo.permissions &&
-      connection._accessInfo.permissions[0].streamId === '*' &&
-      connection._accessInfo.permissions[0].streamId !== 'read') {
-      return true;
-    }
-    if (connection._accessInfo.permissions &&
-      connection._accessInfo.permissions[0].streamId === '*' &&
-      connection._accessInfo.permissions[0].streamId === 'read') {
-      return false;
-    }
-    if (streamId) {
-      return !!_.find(connection._accessInfo.permissions, function (p) {
-        return p.streamId === streamId && p.level !== 'read';
-      });
-    }
-    return false;
-  }
-});
-})()
-},{"backbone.marionette":33,"underscore":9}],86:[function(require,module,exports){
+},{"backbone.marionette":34,"underscore":9}],82:[function(require,module,exports){
 (function(){/* global $, document*/
 var Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps');
@@ -21998,7 +19830,254 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33,"google-maps":94}],110:[function(require,module,exports){
+},{"backbone.marionette":34,"google-maps":95}],86:[function(require,module,exports){
+(function(){/* global $, FormData */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Tweet',
+  template: '#template-detail-content-tweet',
+  itemViewContainer: '#detail-content',
+  templateHelpers: {
+    getUrl: function () {
+      var id = this.event.content.id,
+        screenName = this.event.content['screen-name'],
+        date = new Date(this.event.time * 1000);
+      return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
+        'data-datetime="' + date.toISOString() + '">' + date.toLocaleDateString() + '</a>';
+    }
+  },
+  ui: {
+    li: 'li.editable',
+    edit: '.edit'
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
+    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
+  },
+  onEditClick: function (e) {
+    $(e.currentTarget).addClass('editing');
+    this.ui.edit.focus();
+  },
+  onEditBlur: function (e) {
+    this.updateEvent(e.currentTarget);
+    return true;
+  },
+  /* jshint -W098, -W061 */
+  updateEvent: function ($elem) {
+    var event = this.model.get('event'),
+      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
+      value = $($elem).val().trim();
+    eval('event.' + key + ' = value');
+    this.completeEdit($($elem).parent());
+    this.render();
+
+  },
+  completeEdit: function ($elem) {
+    $($elem).removeClass('editing');
+  }
+});
+})()
+},{"backbone.marionette":34,"underscore":9}],108:[function(require,module,exports){
+(function(process){function filter (xs, fn) {
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (fn(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length; i >= 0; i--) {
+    var last = parts[i];
+    if (last == '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Regex to split a filename into [*, dir, basename, ext]
+// posix version
+var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+var resolvedPath = '',
+    resolvedAbsolute = false;
+
+for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
+  var path = (i >= 0)
+      ? arguments[i]
+      : process.cwd();
+
+  // Skip empty and invalid entries
+  if (typeof path !== 'string' || !path) {
+    continue;
+  }
+
+  resolvedPath = path + '/' + resolvedPath;
+  resolvedAbsolute = path.charAt(0) === '/';
+}
+
+// At this point the path should be resolved to a full absolute path, but
+// handle relative paths to be safe (might happen when process.cwd() fails)
+
+// Normalize the path
+resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+var isAbsolute = path.charAt(0) === '/',
+    trailingSlash = path.slice(-1) === '/';
+
+// Normalize the path
+path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+  
+  return (isAbsolute ? '/' : '') + path;
+};
+
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    return p && typeof p === 'string';
+  }).join('/'));
+};
+
+
+exports.dirname = function(path) {
+  var dir = splitPathRe.exec(path)[1] || '';
+  var isWindows = false;
+  if (!dir) {
+    // No dirname
+    return '.';
+  } else if (dir.length === 1 ||
+      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
+    // It is just a slash or a drive letter with a slash
+    return dir;
+  } else {
+    // It is a full dirname, strip trailing slash
+    return dir.substring(0, dir.length - 1);
+  }
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPathRe.exec(path)[2] || '';
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPathRe.exec(path)[3] || '';
+};
+
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+exports.sep = '/';
+
+})(require("__browserify_process"))
+},{"__browserify_process":50}],109:[function(require,module,exports){
+var http = require('http');
+
+var https = module.exports;
+
+for (var key in http) {
+    if (http.hasOwnProperty(key)) https[key] = http[key];
+};
+
+https.request = function (params, cb) {
+    if (!params) params = {};
+    params.scheme = 'https';
+    return http.request.call(this, params, cb);
+}
+},{"http":110}],111:[function(require,module,exports){
 var punycode = { encode : function (s) { return s } };
 
 exports.parse = urlParse;
@@ -22604,204 +20683,1584 @@ function parseHost(host) {
   return out;
 }
 
-},{"querystring":111}],112:[function(require,module,exports){
-(function(process){function filter (xs, fn) {
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (fn(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
-
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length; i >= 0; i--) {
-    var last = parts[i];
-    if (last == '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
-}
-
-// Regex to split a filename into [*, dir, basename, ext]
-// posix version
-var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-var resolvedPath = '',
-    resolvedAbsolute = false;
-
-for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
-  var path = (i >= 0)
-      ? arguments[i]
-      : process.cwd();
-
-  // Skip empty and invalid entries
-  if (typeof path !== 'string' || !path) {
-    continue;
-  }
-
-  resolvedPath = path + '/' + resolvedPath;
-  resolvedAbsolute = path.charAt(0) === '/';
-}
-
-// At this point the path should be resolved to a full absolute path, but
-// handle relative paths to be safe (might happen when process.cwd() fails)
-
-// Normalize the path
-resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-var isAbsolute = path.charAt(0) === '/',
-    trailingSlash = path.slice(-1) === '/';
-
-// Normalize the path
-path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-  
-  return (isAbsolute ? '/' : '') + path;
-};
-
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    return p && typeof p === 'string';
-  }).join('/'));
-};
-
-
-exports.dirname = function(path) {
-  var dir = splitPathRe.exec(path)[1] || '';
-  var isWindows = false;
-  if (!dir) {
-    // No dirname
-    return '.';
-  } else if (dir.length === 1 ||
-      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
-    // It is just a slash or a drive letter with a slash
-    return dir;
-  } else {
-    // It is a full dirname, strip trailing slash
-    return dir.substring(0, dir.length - 1);
-  }
-};
-
-
-exports.basename = function(path, ext) {
-  var f = splitPathRe.exec(path)[2] || '';
-  // TODO: make this comparison case-insensitive on windows?
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-
-exports.extname = function(path) {
-  return splitPathRe.exec(path)[3] || '';
-};
-
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-
-})(require("__browserify_process"))
-},{"__browserify_process":67}],113:[function(require,module,exports){
-var http = require('http');
-
-var https = module.exports;
-
-for (var key in http) {
-    if (http.hasOwnProperty(key)) https[key] = http[key];
-};
-
-https.request = function (params, cb) {
-    if (!params) params = {};
-    params.scheme = 'https';
-    return http.request.call(this, params, cb);
-}
-},{"http":114}],115:[function(require,module,exports){
+},{"querystring":112}],113:[function(require,module,exports){
 // nothing to see here... no file methods for the browser
 
-},{}],33:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
+(function(){//     Backbone.js 1.0.0
+
+//     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
+//     Backbone may be freely distributed under the MIT license.
+//     For all details and documentation:
+//     http://backbonejs.org
+
+(function(){
+
+  // Initial Setup
+  // -------------
+
+  // Save a reference to the global object (`window` in the browser, `exports`
+  // on the server).
+  var root = this;
+
+  // Save the previous value of the `Backbone` variable, so that it can be
+  // restored later on, if `noConflict` is used.
+  var previousBackbone = root.Backbone;
+
+  // Create local references to array methods we'll want to use later.
+  var array = [];
+  var push = array.push;
+  var slice = array.slice;
+  var splice = array.splice;
+
+  // The top-level namespace. All public Backbone classes and modules will
+  // be attached to this. Exported for both the browser and the server.
+  var Backbone;
+  if (typeof exports !== 'undefined') {
+    Backbone = exports;
+  } else {
+    Backbone = root.Backbone = {};
+  }
+
+  // Current version of the library. Keep in sync with `package.json`.
+  Backbone.VERSION = '1.0.0';
+
+  // Require Underscore, if we're on the server, and it's not already present.
+  var _ = root._;
+  if (!_ && (typeof require !== 'undefined')) _ = require('underscore');
+
+  // For Backbone's purposes, jQuery, Zepto, Ender, or My Library (kidding) owns
+  // the `$` variable.
+  Backbone.$ = root.jQuery || root.Zepto || root.ender || root.$;
+
+  // Runs Backbone.js in *noConflict* mode, returning the `Backbone` variable
+  // to its previous owner. Returns a reference to this Backbone object.
+  Backbone.noConflict = function() {
+    root.Backbone = previousBackbone;
+    return this;
+  };
+
+  // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
+  // will fake `"PUT"` and `"DELETE"` requests via the `_method` parameter and
+  // set a `X-Http-Method-Override` header.
+  Backbone.emulateHTTP = false;
+
+  // Turn on `emulateJSON` to support legacy servers that can't deal with direct
+  // `application/json` requests ... will encode the body as
+  // `application/x-www-form-urlencoded` instead and will send the model in a
+  // form param named `model`.
+  Backbone.emulateJSON = false;
+
+  // Backbone.Events
+  // ---------------
+
+  // A module that can be mixed in to *any object* in order to provide it with
+  // custom events. You may bind with `on` or remove with `off` callback
+  // functions to an event; `trigger`-ing an event fires all callbacks in
+  // succession.
+  //
+  //     var object = {};
+  //     _.extend(object, Backbone.Events);
+  //     object.on('expand', function(){ alert('expanded'); });
+  //     object.trigger('expand');
+  //
+  var Events = Backbone.Events = {
+
+    // Bind an event to a `callback` function. Passing `"all"` will bind
+    // the callback to all events fired.
+    on: function(name, callback, context) {
+      if (!eventsApi(this, 'on', name, [callback, context]) || !callback) return this;
+      this._events || (this._events = {});
+      var events = this._events[name] || (this._events[name] = []);
+      events.push({callback: callback, context: context, ctx: context || this});
+      return this;
+    },
+
+    // Bind an event to only be triggered a single time. After the first time
+    // the callback is invoked, it will be removed.
+    once: function(name, callback, context) {
+      if (!eventsApi(this, 'once', name, [callback, context]) || !callback) return this;
+      var self = this;
+      var once = _.once(function() {
+        self.off(name, once);
+        callback.apply(this, arguments);
+      });
+      once._callback = callback;
+      return this.on(name, once, context);
+    },
+
+    // Remove one or many callbacks. If `context` is null, removes all
+    // callbacks with that function. If `callback` is null, removes all
+    // callbacks for the event. If `name` is null, removes all bound
+    // callbacks for all events.
+    off: function(name, callback, context) {
+      var retain, ev, events, names, i, l, j, k;
+      if (!this._events || !eventsApi(this, 'off', name, [callback, context])) return this;
+      if (!name && !callback && !context) {
+        this._events = {};
+        return this;
+      }
+
+      names = name ? [name] : _.keys(this._events);
+      for (i = 0, l = names.length; i < l; i++) {
+        name = names[i];
+        if (events = this._events[name]) {
+          this._events[name] = retain = [];
+          if (callback || context) {
+            for (j = 0, k = events.length; j < k; j++) {
+              ev = events[j];
+              if ((callback && callback !== ev.callback && callback !== ev.callback._callback) ||
+                  (context && context !== ev.context)) {
+                retain.push(ev);
+              }
+            }
+          }
+          if (!retain.length) delete this._events[name];
+        }
+      }
+
+      return this;
+    },
+
+    // Trigger one or many events, firing all bound callbacks. Callbacks are
+    // passed the same arguments as `trigger` is, apart from the event name
+    // (unless you're listening on `"all"`, which will cause your callback to
+    // receive the true name of the event as the first argument).
+    trigger: function(name) {
+      if (!this._events) return this;
+      var args = slice.call(arguments, 1);
+      if (!eventsApi(this, 'trigger', name, args)) return this;
+      var events = this._events[name];
+      var allEvents = this._events.all;
+      if (events) triggerEvents(events, args);
+      if (allEvents) triggerEvents(allEvents, arguments);
+      return this;
+    },
+
+    // Tell this object to stop listening to either specific events ... or
+    // to every object it's currently listening to.
+    stopListening: function(obj, name, callback) {
+      var listeners = this._listeners;
+      if (!listeners) return this;
+      var deleteListener = !name && !callback;
+      if (typeof name === 'object') callback = this;
+      if (obj) (listeners = {})[obj._listenerId] = obj;
+      for (var id in listeners) {
+        listeners[id].off(name, callback, this);
+        if (deleteListener) delete this._listeners[id];
+      }
+      return this;
+    }
+
+  };
+
+  // Regular expression used to split event strings.
+  var eventSplitter = /\s+/;
+
+  // Implement fancy features of the Events API such as multiple event
+  // names `"change blur"` and jQuery-style event maps `{change: action}`
+  // in terms of the existing API.
+  var eventsApi = function(obj, action, name, rest) {
+    if (!name) return true;
+
+    // Handle event maps.
+    if (typeof name === 'object') {
+      for (var key in name) {
+        obj[action].apply(obj, [key, name[key]].concat(rest));
+      }
+      return false;
+    }
+
+    // Handle space separated event names.
+    if (eventSplitter.test(name)) {
+      var names = name.split(eventSplitter);
+      for (var i = 0, l = names.length; i < l; i++) {
+        obj[action].apply(obj, [names[i]].concat(rest));
+      }
+      return false;
+    }
+
+    return true;
+  };
+
+  // A difficult-to-believe, but optimized internal dispatch function for
+  // triggering events. Tries to keep the usual cases speedy (most internal
+  // Backbone events have 3 arguments).
+  var triggerEvents = function(events, args) {
+    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];
+    switch (args.length) {
+      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;
+      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;
+      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;
+      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;
+      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args);
+    }
+  };
+
+  var listenMethods = {listenTo: 'on', listenToOnce: 'once'};
+
+  // Inversion-of-control versions of `on` and `once`. Tell *this* object to
+  // listen to an event in another object ... keeping track of what it's
+  // listening to.
+  _.each(listenMethods, function(implementation, method) {
+    Events[method] = function(obj, name, callback) {
+      var listeners = this._listeners || (this._listeners = {});
+      var id = obj._listenerId || (obj._listenerId = _.uniqueId('l'));
+      listeners[id] = obj;
+      if (typeof name === 'object') callback = this;
+      obj[implementation](name, callback, this);
+      return this;
+    };
+  });
+
+  // Aliases for backwards compatibility.
+  Events.bind   = Events.on;
+  Events.unbind = Events.off;
+
+  // Allow the `Backbone` object to serve as a global event bus, for folks who
+  // want global "pubsub" in a convenient place.
+  _.extend(Backbone, Events);
+
+  // Backbone.Model
+  // --------------
+
+  // Backbone **Models** are the basic data object in the framework --
+  // frequently representing a row in a table in a database on your server.
+  // A discrete chunk of data and a bunch of useful, related methods for
+  // performing computations and transformations on that data.
+
+  // Create a new model with the specified attributes. A client id (`cid`)
+  // is automatically generated and assigned for you.
+  var Model = Backbone.Model = function(attributes, options) {
+    var defaults;
+    var attrs = attributes || {};
+    options || (options = {});
+    this.cid = _.uniqueId('c');
+    this.attributes = {};
+    _.extend(this, _.pick(options, modelOptions));
+    if (options.parse) attrs = this.parse(attrs, options) || {};
+    if (defaults = _.result(this, 'defaults')) {
+      attrs = _.defaults({}, attrs, defaults);
+    }
+    this.set(attrs, options);
+    this.changed = {};
+    this.initialize.apply(this, arguments);
+  };
+
+  // A list of options to be attached directly to the model, if provided.
+  var modelOptions = ['url', 'urlRoot', 'collection'];
+
+  // Attach all inheritable methods to the Model prototype.
+  _.extend(Model.prototype, Events, {
+
+    // A hash of attributes whose current and previous value differ.
+    changed: null,
+
+    // The value returned during the last failed validation.
+    validationError: null,
+
+    // The default name for the JSON `id` attribute is `"id"`. MongoDB and
+    // CouchDB users may want to set this to `"_id"`.
+    idAttribute: 'id',
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // Return a copy of the model's `attributes` object.
+    toJSON: function(options) {
+      return _.clone(this.attributes);
+    },
+
+    // Proxy `Backbone.sync` by default -- but override this if you need
+    // custom syncing semantics for *this* particular model.
+    sync: function() {
+      return Backbone.sync.apply(this, arguments);
+    },
+
+    // Get the value of an attribute.
+    get: function(attr) {
+      return this.attributes[attr];
+    },
+
+    // Get the HTML-escaped value of an attribute.
+    escape: function(attr) {
+      return _.escape(this.get(attr));
+    },
+
+    // Returns `true` if the attribute contains a value that is not null
+    // or undefined.
+    has: function(attr) {
+      return this.get(attr) != null;
+    },
+
+    // Set a hash of model attributes on the object, firing `"change"`. This is
+    // the core primitive operation of a model, updating the data and notifying
+    // anyone who needs to know about the change in state. The heart of the beast.
+    set: function(key, val, options) {
+      var attr, attrs, unset, changes, silent, changing, prev, current;
+      if (key == null) return this;
+
+      // Handle both `"key", value` and `{key: value}` -style arguments.
+      if (typeof key === 'object') {
+        attrs = key;
+        options = val;
+      } else {
+        (attrs = {})[key] = val;
+      }
+
+      options || (options = {});
+
+      // Run validation.
+      if (!this._validate(attrs, options)) return false;
+
+      // Extract attributes and options.
+      unset           = options.unset;
+      silent          = options.silent;
+      changes         = [];
+      changing        = this._changing;
+      this._changing  = true;
+
+      if (!changing) {
+        this._previousAttributes = _.clone(this.attributes);
+        this.changed = {};
+      }
+      current = this.attributes, prev = this._previousAttributes;
+
+      // Check for changes of `id`.
+      if (this.idAttribute in attrs) this.id = attrs[this.idAttribute];
+
+      // For each `set` attribute, update or delete the current value.
+      for (attr in attrs) {
+        val = attrs[attr];
+        if (!_.isEqual(current[attr], val)) changes.push(attr);
+        if (!_.isEqual(prev[attr], val)) {
+          this.changed[attr] = val;
+        } else {
+          delete this.changed[attr];
+        }
+        unset ? delete current[attr] : current[attr] = val;
+      }
+
+      // Trigger all relevant attribute changes.
+      if (!silent) {
+        if (changes.length) this._pending = true;
+        for (var i = 0, l = changes.length; i < l; i++) {
+          this.trigger('change:' + changes[i], this, current[changes[i]], options);
+        }
+      }
+
+      // You might be wondering why there's a `while` loop here. Changes can
+      // be recursively nested within `"change"` events.
+      if (changing) return this;
+      if (!silent) {
+        while (this._pending) {
+          this._pending = false;
+          this.trigger('change', this, options);
+        }
+      }
+      this._pending = false;
+      this._changing = false;
+      return this;
+    },
+
+    // Remove an attribute from the model, firing `"change"`. `unset` is a noop
+    // if the attribute doesn't exist.
+    unset: function(attr, options) {
+      return this.set(attr, void 0, _.extend({}, options, {unset: true}));
+    },
+
+    // Clear all attributes on the model, firing `"change"`.
+    clear: function(options) {
+      var attrs = {};
+      for (var key in this.attributes) attrs[key] = void 0;
+      return this.set(attrs, _.extend({}, options, {unset: true}));
+    },
+
+    // Determine if the model has changed since the last `"change"` event.
+    // If you specify an attribute name, determine if that attribute has changed.
+    hasChanged: function(attr) {
+      if (attr == null) return !_.isEmpty(this.changed);
+      return _.has(this.changed, attr);
+    },
+
+    // Return an object containing all the attributes that have changed, or
+    // false if there are no changed attributes. Useful for determining what
+    // parts of a view need to be updated and/or what attributes need to be
+    // persisted to the server. Unset attributes will be set to undefined.
+    // You can also pass an attributes object to diff against the model,
+    // determining if there *would be* a change.
+    changedAttributes: function(diff) {
+      if (!diff) return this.hasChanged() ? _.clone(this.changed) : false;
+      var val, changed = false;
+      var old = this._changing ? this._previousAttributes : this.attributes;
+      for (var attr in diff) {
+        if (_.isEqual(old[attr], (val = diff[attr]))) continue;
+        (changed || (changed = {}))[attr] = val;
+      }
+      return changed;
+    },
+
+    // Get the previous value of an attribute, recorded at the time the last
+    // `"change"` event was fired.
+    previous: function(attr) {
+      if (attr == null || !this._previousAttributes) return null;
+      return this._previousAttributes[attr];
+    },
+
+    // Get all of the attributes of the model at the time of the previous
+    // `"change"` event.
+    previousAttributes: function() {
+      return _.clone(this._previousAttributes);
+    },
+
+    // Fetch the model from the server. If the server's representation of the
+    // model differs from its current attributes, they will be overridden,
+    // triggering a `"change"` event.
+    fetch: function(options) {
+      options = options ? _.clone(options) : {};
+      if (options.parse === void 0) options.parse = true;
+      var model = this;
+      var success = options.success;
+      options.success = function(resp) {
+        if (!model.set(model.parse(resp, options), options)) return false;
+        if (success) success(model, resp, options);
+        model.trigger('sync', model, resp, options);
+      };
+      wrapError(this, options);
+      return this.sync('read', this, options);
+    },
+
+    // Set a hash of model attributes, and sync the model to the server.
+    // If the server returns an attributes hash that differs, the model's
+    // state will be `set` again.
+    save: function(key, val, options) {
+      var attrs, method, xhr, attributes = this.attributes;
+
+      // Handle both `"key", value` and `{key: value}` -style arguments.
+      if (key == null || typeof key === 'object') {
+        attrs = key;
+        options = val;
+      } else {
+        (attrs = {})[key] = val;
+      }
+
+      // If we're not waiting and attributes exist, save acts as `set(attr).save(null, opts)`.
+      if (attrs && (!options || !options.wait) && !this.set(attrs, options)) return false;
+
+      options = _.extend({validate: true}, options);
+
+      // Do not persist invalid models.
+      if (!this._validate(attrs, options)) return false;
+
+      // Set temporary attributes if `{wait: true}`.
+      if (attrs && options.wait) {
+        this.attributes = _.extend({}, attributes, attrs);
+      }
+
+      // After a successful server-side save, the client is (optionally)
+      // updated with the server-side state.
+      if (options.parse === void 0) options.parse = true;
+      var model = this;
+      var success = options.success;
+      options.success = function(resp) {
+        // Ensure attributes are restored during synchronous saves.
+        model.attributes = attributes;
+        var serverAttrs = model.parse(resp, options);
+        if (options.wait) serverAttrs = _.extend(attrs || {}, serverAttrs);
+        if (_.isObject(serverAttrs) && !model.set(serverAttrs, options)) {
+          return false;
+        }
+        if (success) success(model, resp, options);
+        model.trigger('sync', model, resp, options);
+      };
+      wrapError(this, options);
+
+      method = this.isNew() ? 'create' : (options.patch ? 'patch' : 'update');
+      if (method === 'patch') options.attrs = attrs;
+      xhr = this.sync(method, this, options);
+
+      // Restore attributes.
+      if (attrs && options.wait) this.attributes = attributes;
+
+      return xhr;
+    },
+
+    // Destroy this model on the server if it was already persisted.
+    // Optimistically removes the model from its collection, if it has one.
+    // If `wait: true` is passed, waits for the server to respond before removal.
+    destroy: function(options) {
+      options = options ? _.clone(options) : {};
+      var model = this;
+      var success = options.success;
+
+      var destroy = function() {
+        model.trigger('destroy', model, model.collection, options);
+      };
+
+      options.success = function(resp) {
+        if (options.wait || model.isNew()) destroy();
+        if (success) success(model, resp, options);
+        if (!model.isNew()) model.trigger('sync', model, resp, options);
+      };
+
+      if (this.isNew()) {
+        options.success();
+        return false;
+      }
+      wrapError(this, options);
+
+      var xhr = this.sync('delete', this, options);
+      if (!options.wait) destroy();
+      return xhr;
+    },
+
+    // Default URL for the model's representation on the server -- if you're
+    // using Backbone's restful methods, override this to change the endpoint
+    // that will be called.
+    url: function() {
+      var base = _.result(this, 'urlRoot') || _.result(this.collection, 'url') || urlError();
+      if (this.isNew()) return base;
+      return base + (base.charAt(base.length - 1) === '/' ? '' : '/') + encodeURIComponent(this.id);
+    },
+
+    // **parse** converts a response into the hash of attributes to be `set` on
+    // the model. The default implementation is just to pass the response along.
+    parse: function(resp, options) {
+      return resp;
+    },
+
+    // Create a new model with identical attributes to this one.
+    clone: function() {
+      return new this.constructor(this.attributes);
+    },
+
+    // A model is new if it has never been saved to the server, and lacks an id.
+    isNew: function() {
+      return this.id == null;
+    },
+
+    // Check if the model is currently in a valid state.
+    isValid: function(options) {
+      return this._validate({}, _.extend(options || {}, { validate: true }));
+    },
+
+    // Run validation against the next complete set of model attributes,
+    // returning `true` if all is well. Otherwise, fire an `"invalid"` event.
+    _validate: function(attrs, options) {
+      if (!options.validate || !this.validate) return true;
+      attrs = _.extend({}, this.attributes, attrs);
+      var error = this.validationError = this.validate(attrs, options) || null;
+      if (!error) return true;
+      this.trigger('invalid', this, error, _.extend(options || {}, {validationError: error}));
+      return false;
+    }
+
+  });
+
+  // Underscore methods that we want to implement on the Model.
+  var modelMethods = ['keys', 'values', 'pairs', 'invert', 'pick', 'omit'];
+
+  // Mix in each Underscore method as a proxy to `Model#attributes`.
+  _.each(modelMethods, function(method) {
+    Model.prototype[method] = function() {
+      var args = slice.call(arguments);
+      args.unshift(this.attributes);
+      return _[method].apply(_, args);
+    };
+  });
+
+  // Backbone.Collection
+  // -------------------
+
+  // If models tend to represent a single row of data, a Backbone Collection is
+  // more analagous to a table full of data ... or a small slice or page of that
+  // table, or a collection of rows that belong together for a particular reason
+  // -- all of the messages in this particular folder, all of the documents
+  // belonging to this particular author, and so on. Collections maintain
+  // indexes of their models, both in order, and for lookup by `id`.
+
+  // Create a new **Collection**, perhaps to contain a specific type of `model`.
+  // If a `comparator` is specified, the Collection will maintain
+  // its models in sort order, as they're added and removed.
+  var Collection = Backbone.Collection = function(models, options) {
+    options || (options = {});
+    if (options.url) this.url = options.url;
+    if (options.model) this.model = options.model;
+    if (options.comparator !== void 0) this.comparator = options.comparator;
+    this._reset();
+    this.initialize.apply(this, arguments);
+    if (models) this.reset(models, _.extend({silent: true}, options));
+  };
+
+  // Default options for `Collection#set`.
+  var setOptions = {add: true, remove: true, merge: true};
+  var addOptions = {add: true, merge: false, remove: false};
+
+  // Define the Collection's inheritable methods.
+  _.extend(Collection.prototype, Events, {
+
+    // The default model for a collection is just a **Backbone.Model**.
+    // This should be overridden in most cases.
+    model: Model,
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // The JSON representation of a Collection is an array of the
+    // models' attributes.
+    toJSON: function(options) {
+      return this.map(function(model){ return model.toJSON(options); });
+    },
+
+    // Proxy `Backbone.sync` by default.
+    sync: function() {
+      return Backbone.sync.apply(this, arguments);
+    },
+
+    // Add a model, or list of models to the set.
+    add: function(models, options) {
+      return this.set(models, _.defaults(options || {}, addOptions));
+    },
+
+    // Remove a model, or a list of models from the set.
+    remove: function(models, options) {
+      models = _.isArray(models) ? models.slice() : [models];
+      options || (options = {});
+      var i, l, index, model;
+      for (i = 0, l = models.length; i < l; i++) {
+        model = this.get(models[i]);
+        if (!model) continue;
+        delete this._byId[model.id];
+        delete this._byId[model.cid];
+        index = this.indexOf(model);
+        this.models.splice(index, 1);
+        this.length--;
+        if (!options.silent) {
+          options.index = index;
+          model.trigger('remove', model, this, options);
+        }
+        this._removeReference(model);
+      }
+      return this;
+    },
+
+    // Update a collection by `set`-ing a new list of models, adding new ones,
+    // removing models that are no longer present, and merging models that
+    // already exist in the collection, as necessary. Similar to **Model#set**,
+    // the core operation for updating the data contained by the collection.
+    set: function(models, options) {
+      options = _.defaults(options || {}, setOptions);
+      if (options.parse) models = this.parse(models, options);
+      if (!_.isArray(models)) models = models ? [models] : [];
+      var i, l, model, attrs, existing, sort;
+      var at = options.at;
+      var sortable = this.comparator && (at == null) && options.sort !== false;
+      var sortAttr = _.isString(this.comparator) ? this.comparator : null;
+      var toAdd = [], toRemove = [], modelMap = {};
+
+      // Turn bare objects into model references, and prevent invalid models
+      // from being added.
+      for (i = 0, l = models.length; i < l; i++) {
+        if (!(model = this._prepareModel(models[i], options))) continue;
+
+        // If a duplicate is found, prevent it from being added and
+        // optionally merge it into the existing model.
+        if (existing = this.get(model)) {
+          if (options.remove) modelMap[existing.cid] = true;
+          if (options.merge) {
+            existing.set(model.attributes, options);
+            if (sortable && !sort && existing.hasChanged(sortAttr)) sort = true;
+          }
+
+        // This is a new model, push it to the `toAdd` list.
+        } else if (options.add) {
+          toAdd.push(model);
+
+          // Listen to added models' events, and index models for lookup by
+          // `id` and by `cid`.
+          model.on('all', this._onModelEvent, this);
+          this._byId[model.cid] = model;
+          if (model.id != null) this._byId[model.id] = model;
+        }
+      }
+
+      // Remove nonexistent models if appropriate.
+      if (options.remove) {
+        for (i = 0, l = this.length; i < l; ++i) {
+          if (!modelMap[(model = this.models[i]).cid]) toRemove.push(model);
+        }
+        if (toRemove.length) this.remove(toRemove, options);
+      }
+
+      // See if sorting is needed, update `length` and splice in new models.
+      if (toAdd.length) {
+        if (sortable) sort = true;
+        this.length += toAdd.length;
+        if (at != null) {
+          splice.apply(this.models, [at, 0].concat(toAdd));
+        } else {
+          push.apply(this.models, toAdd);
+        }
+      }
+
+      // Silently sort the collection if appropriate.
+      if (sort) this.sort({silent: true});
+
+      if (options.silent) return this;
+
+      // Trigger `add` events.
+      for (i = 0, l = toAdd.length; i < l; i++) {
+        (model = toAdd[i]).trigger('add', model, this, options);
+      }
+
+      // Trigger `sort` if the collection was sorted.
+      if (sort) this.trigger('sort', this, options);
+      return this;
+    },
+
+    // When you have more items than you want to add or remove individually,
+    // you can reset the entire set with a new list of models, without firing
+    // any granular `add` or `remove` events. Fires `reset` when finished.
+    // Useful for bulk operations and optimizations.
+    reset: function(models, options) {
+      options || (options = {});
+      for (var i = 0, l = this.models.length; i < l; i++) {
+        this._removeReference(this.models[i]);
+      }
+      options.previousModels = this.models;
+      this._reset();
+      this.add(models, _.extend({silent: true}, options));
+      if (!options.silent) this.trigger('reset', this, options);
+      return this;
+    },
+
+    // Add a model to the end of the collection.
+    push: function(model, options) {
+      model = this._prepareModel(model, options);
+      this.add(model, _.extend({at: this.length}, options));
+      return model;
+    },
+
+    // Remove a model from the end of the collection.
+    pop: function(options) {
+      var model = this.at(this.length - 1);
+      this.remove(model, options);
+      return model;
+    },
+
+    // Add a model to the beginning of the collection.
+    unshift: function(model, options) {
+      model = this._prepareModel(model, options);
+      this.add(model, _.extend({at: 0}, options));
+      return model;
+    },
+
+    // Remove a model from the beginning of the collection.
+    shift: function(options) {
+      var model = this.at(0);
+      this.remove(model, options);
+      return model;
+    },
+
+    // Slice out a sub-array of models from the collection.
+    slice: function(begin, end) {
+      return this.models.slice(begin, end);
+    },
+
+    // Get a model from the set by id.
+    get: function(obj) {
+      if (obj == null) return void 0;
+      return this._byId[obj.id != null ? obj.id : obj.cid || obj];
+    },
+
+    // Get the model at the given index.
+    at: function(index) {
+      return this.models[index];
+    },
+
+    // Return models with matching attributes. Useful for simple cases of
+    // `filter`.
+    where: function(attrs, first) {
+      if (_.isEmpty(attrs)) return first ? void 0 : [];
+      return this[first ? 'find' : 'filter'](function(model) {
+        for (var key in attrs) {
+          if (attrs[key] !== model.get(key)) return false;
+        }
+        return true;
+      });
+    },
+
+    // Return the first model with matching attributes. Useful for simple cases
+    // of `find`.
+    findWhere: function(attrs) {
+      return this.where(attrs, true);
+    },
+
+    // Force the collection to re-sort itself. You don't need to call this under
+    // normal circumstances, as the set will maintain sort order as each item
+    // is added.
+    sort: function(options) {
+      if (!this.comparator) throw new Error('Cannot sort a set without a comparator');
+      options || (options = {});
+
+      // Run sort based on type of `comparator`.
+      if (_.isString(this.comparator) || this.comparator.length === 1) {
+        this.models = this.sortBy(this.comparator, this);
+      } else {
+        this.models.sort(_.bind(this.comparator, this));
+      }
+
+      if (!options.silent) this.trigger('sort', this, options);
+      return this;
+    },
+
+    // Figure out the smallest index at which a model should be inserted so as
+    // to maintain order.
+    sortedIndex: function(model, value, context) {
+      value || (value = this.comparator);
+      var iterator = _.isFunction(value) ? value : function(model) {
+        return model.get(value);
+      };
+      return _.sortedIndex(this.models, model, iterator, context);
+    },
+
+    // Pluck an attribute from each model in the collection.
+    pluck: function(attr) {
+      return _.invoke(this.models, 'get', attr);
+    },
+
+    // Fetch the default set of models for this collection, resetting the
+    // collection when they arrive. If `reset: true` is passed, the response
+    // data will be passed through the `reset` method instead of `set`.
+    fetch: function(options) {
+      options = options ? _.clone(options) : {};
+      if (options.parse === void 0) options.parse = true;
+      var success = options.success;
+      var collection = this;
+      options.success = function(resp) {
+        var method = options.reset ? 'reset' : 'set';
+        collection[method](resp, options);
+        if (success) success(collection, resp, options);
+        collection.trigger('sync', collection, resp, options);
+      };
+      wrapError(this, options);
+      return this.sync('read', this, options);
+    },
+
+    // Create a new instance of a model in this collection. Add the model to the
+    // collection immediately, unless `wait: true` is passed, in which case we
+    // wait for the server to agree.
+    create: function(model, options) {
+      options = options ? _.clone(options) : {};
+      if (!(model = this._prepareModel(model, options))) return false;
+      if (!options.wait) this.add(model, options);
+      var collection = this;
+      var success = options.success;
+      options.success = function(resp) {
+        if (options.wait) collection.add(model, options);
+        if (success) success(model, resp, options);
+      };
+      model.save(null, options);
+      return model;
+    },
+
+    // **parse** converts a response into a list of models to be added to the
+    // collection. The default implementation is just to pass it through.
+    parse: function(resp, options) {
+      return resp;
+    },
+
+    // Create a new collection with an identical list of models as this one.
+    clone: function() {
+      return new this.constructor(this.models);
+    },
+
+    // Private method to reset all internal state. Called when the collection
+    // is first initialized or reset.
+    _reset: function() {
+      this.length = 0;
+      this.models = [];
+      this._byId  = {};
+    },
+
+    // Prepare a hash of attributes (or other model) to be added to this
+    // collection.
+    _prepareModel: function(attrs, options) {
+      if (attrs instanceof Model) {
+        if (!attrs.collection) attrs.collection = this;
+        return attrs;
+      }
+      options || (options = {});
+      options.collection = this;
+      var model = new this.model(attrs, options);
+      if (!model._validate(attrs, options)) {
+        this.trigger('invalid', this, attrs, options);
+        return false;
+      }
+      return model;
+    },
+
+    // Internal method to sever a model's ties to a collection.
+    _removeReference: function(model) {
+      if (this === model.collection) delete model.collection;
+      model.off('all', this._onModelEvent, this);
+    },
+
+    // Internal method called every time a model in the set fires an event.
+    // Sets need to update their indexes when models change ids. All other
+    // events simply proxy through. "add" and "remove" events that originate
+    // in other collections are ignored.
+    _onModelEvent: function(event, model, collection, options) {
+      if ((event === 'add' || event === 'remove') && collection !== this) return;
+      if (event === 'destroy') this.remove(model, options);
+      if (model && event === 'change:' + model.idAttribute) {
+        delete this._byId[model.previous(model.idAttribute)];
+        if (model.id != null) this._byId[model.id] = model;
+      }
+      this.trigger.apply(this, arguments);
+    }
+
+  });
+
+  // Underscore methods that we want to implement on the Collection.
+  // 90% of the core usefulness of Backbone Collections is actually implemented
+  // right here:
+  var methods = ['forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
+    'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
+    'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
+    'max', 'min', 'toArray', 'size', 'first', 'head', 'take', 'initial', 'rest',
+    'tail', 'drop', 'last', 'without', 'indexOf', 'shuffle', 'lastIndexOf',
+    'isEmpty', 'chain'];
+
+  // Mix in each Underscore method as a proxy to `Collection#models`.
+  _.each(methods, function(method) {
+    Collection.prototype[method] = function() {
+      var args = slice.call(arguments);
+      args.unshift(this.models);
+      return _[method].apply(_, args);
+    };
+  });
+
+  // Underscore methods that take a property name as an argument.
+  var attributeMethods = ['groupBy', 'countBy', 'sortBy'];
+
+  // Use attributes instead of properties.
+  _.each(attributeMethods, function(method) {
+    Collection.prototype[method] = function(value, context) {
+      var iterator = _.isFunction(value) ? value : function(model) {
+        return model.get(value);
+      };
+      return _[method](this.models, iterator, context);
+    };
+  });
+
+  // Backbone.View
+  // -------------
+
+  // Backbone Views are almost more convention than they are actual code. A View
+  // is simply a JavaScript object that represents a logical chunk of UI in the
+  // DOM. This might be a single item, an entire list, a sidebar or panel, or
+  // even the surrounding frame which wraps your whole app. Defining a chunk of
+  // UI as a **View** allows you to define your DOM events declaratively, without
+  // having to worry about render order ... and makes it easy for the view to
+  // react to specific changes in the state of your models.
+
+  // Creating a Backbone.View creates its initial element outside of the DOM,
+  // if an existing element is not provided...
+  var View = Backbone.View = function(options) {
+    this.cid = _.uniqueId('view');
+    this._configure(options || {});
+    this._ensureElement();
+    this.initialize.apply(this, arguments);
+    this.delegateEvents();
+  };
+
+  // Cached regex to split keys for `delegate`.
+  var delegateEventSplitter = /^(\S+)\s*(.*)$/;
+
+  // List of view options to be merged as properties.
+  var viewOptions = ['model', 'collection', 'el', 'id', 'attributes', 'className', 'tagName', 'events'];
+
+  // Set up all inheritable **Backbone.View** properties and methods.
+  _.extend(View.prototype, Events, {
+
+    // The default `tagName` of a View's element is `"div"`.
+    tagName: 'div',
+
+    // jQuery delegate for element lookup, scoped to DOM elements within the
+    // current view. This should be prefered to global lookups where possible.
+    $: function(selector) {
+      return this.$el.find(selector);
+    },
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // **render** is the core function that your view should override, in order
+    // to populate its element (`this.el`), with the appropriate HTML. The
+    // convention is for **render** to always return `this`.
+    render: function() {
+      return this;
+    },
+
+    // Remove this view by taking the element out of the DOM, and removing any
+    // applicable Backbone.Events listeners.
+    remove: function() {
+      this.$el.remove();
+      this.stopListening();
+      return this;
+    },
+
+    // Change the view's element (`this.el` property), including event
+    // re-delegation.
+    setElement: function(element, delegate) {
+      if (this.$el) this.undelegateEvents();
+      this.$el = element instanceof Backbone.$ ? element : Backbone.$(element);
+      this.el = this.$el[0];
+      if (delegate !== false) this.delegateEvents();
+      return this;
+    },
+
+    // Set callbacks, where `this.events` is a hash of
+    //
+    // *{"event selector": "callback"}*
+    //
+    //     {
+    //       'mousedown .title':  'edit',
+    //       'click .button':     'save'
+    //       'click .open':       function(e) { ... }
+    //     }
+    //
+    // pairs. Callbacks will be bound to the view, with `this` set properly.
+    // Uses event delegation for efficiency.
+    // Omitting the selector binds the event to `this.el`.
+    // This only works for delegate-able events: not `focus`, `blur`, and
+    // not `change`, `submit`, and `reset` in Internet Explorer.
+    delegateEvents: function(events) {
+      if (!(events || (events = _.result(this, 'events')))) return this;
+      this.undelegateEvents();
+      for (var key in events) {
+        var method = events[key];
+        if (!_.isFunction(method)) method = this[events[key]];
+        if (!method) continue;
+
+        var match = key.match(delegateEventSplitter);
+        var eventName = match[1], selector = match[2];
+        method = _.bind(method, this);
+        eventName += '.delegateEvents' + this.cid;
+        if (selector === '') {
+          this.$el.on(eventName, method);
+        } else {
+          this.$el.on(eventName, selector, method);
+        }
+      }
+      return this;
+    },
+
+    // Clears all callbacks previously bound to the view with `delegateEvents`.
+    // You usually don't need to use this, but may wish to if you have multiple
+    // Backbone views attached to the same DOM element.
+    undelegateEvents: function() {
+      this.$el.off('.delegateEvents' + this.cid);
+      return this;
+    },
+
+    // Performs the initial configuration of a View with a set of options.
+    // Keys with special meaning *(e.g. model, collection, id, className)* are
+    // attached directly to the view.  See `viewOptions` for an exhaustive
+    // list.
+    _configure: function(options) {
+      if (this.options) options = _.extend({}, _.result(this, 'options'), options);
+      _.extend(this, _.pick(options, viewOptions));
+      this.options = options;
+    },
+
+    // Ensure that the View has a DOM element to render into.
+    // If `this.el` is a string, pass it through `$()`, take the first
+    // matching element, and re-assign it to `el`. Otherwise, create
+    // an element from the `id`, `className` and `tagName` properties.
+    _ensureElement: function() {
+      if (!this.el) {
+        var attrs = _.extend({}, _.result(this, 'attributes'));
+        if (this.id) attrs.id = _.result(this, 'id');
+        if (this.className) attrs['class'] = _.result(this, 'className');
+        var $el = Backbone.$('<' + _.result(this, 'tagName') + '>').attr(attrs);
+        this.setElement($el, false);
+      } else {
+        this.setElement(_.result(this, 'el'), false);
+      }
+    }
+
+  });
+
+  // Backbone.sync
+  // -------------
+
+  // Override this function to change the manner in which Backbone persists
+  // models to the server. You will be passed the type of request, and the
+  // model in question. By default, makes a RESTful Ajax request
+  // to the model's `url()`. Some possible customizations could be:
+  //
+  // * Use `setTimeout` to batch rapid-fire updates into a single request.
+  // * Send up the models as XML instead of JSON.
+  // * Persist models via WebSockets instead of Ajax.
+  //
+  // Turn on `Backbone.emulateHTTP` in order to send `PUT` and `DELETE` requests
+  // as `POST`, with a `_method` parameter containing the true HTTP method,
+  // as well as all requests with the body as `application/x-www-form-urlencoded`
+  // instead of `application/json` with the model in a param named `model`.
+  // Useful when interfacing with server-side languages like **PHP** that make
+  // it difficult to read the body of `PUT` requests.
+  Backbone.sync = function(method, model, options) {
+    var type = methodMap[method];
+
+    // Default options, unless specified.
+    _.defaults(options || (options = {}), {
+      emulateHTTP: Backbone.emulateHTTP,
+      emulateJSON: Backbone.emulateJSON
+    });
+
+    // Default JSON-request options.
+    var params = {type: type, dataType: 'json'};
+
+    // Ensure that we have a URL.
+    if (!options.url) {
+      params.url = _.result(model, 'url') || urlError();
+    }
+
+    // Ensure that we have the appropriate request data.
+    if (options.data == null && model && (method === 'create' || method === 'update' || method === 'patch')) {
+      params.contentType = 'application/json';
+      params.data = JSON.stringify(options.attrs || model.toJSON(options));
+    }
+
+    // For older servers, emulate JSON by encoding the request into an HTML-form.
+    if (options.emulateJSON) {
+      params.contentType = 'application/x-www-form-urlencoded';
+      params.data = params.data ? {model: params.data} : {};
+    }
+
+    // For older servers, emulate HTTP by mimicking the HTTP method with `_method`
+    // And an `X-HTTP-Method-Override` header.
+    if (options.emulateHTTP && (type === 'PUT' || type === 'DELETE' || type === 'PATCH')) {
+      params.type = 'POST';
+      if (options.emulateJSON) params.data._method = type;
+      var beforeSend = options.beforeSend;
+      options.beforeSend = function(xhr) {
+        xhr.setRequestHeader('X-HTTP-Method-Override', type);
+        if (beforeSend) return beforeSend.apply(this, arguments);
+      };
+    }
+
+    // Don't process data on a non-GET request.
+    if (params.type !== 'GET' && !options.emulateJSON) {
+      params.processData = false;
+    }
+
+    // If we're sending a `PATCH` request, and we're in an old Internet Explorer
+    // that still has ActiveX enabled by default, override jQuery to use that
+    // for XHR instead. Remove this line when jQuery supports `PATCH` on IE8.
+    if (params.type === 'PATCH' && window.ActiveXObject &&
+          !(window.external && window.external.msActiveXFilteringEnabled)) {
+      params.xhr = function() {
+        return new ActiveXObject("Microsoft.XMLHTTP");
+      };
+    }
+
+    // Make the request, allowing the user to override any Ajax options.
+    var xhr = options.xhr = Backbone.ajax(_.extend(params, options));
+    model.trigger('request', model, xhr, options);
+    return xhr;
+  };
+
+  // Map from CRUD to HTTP for our default `Backbone.sync` implementation.
+  var methodMap = {
+    'create': 'POST',
+    'update': 'PUT',
+    'patch':  'PATCH',
+    'delete': 'DELETE',
+    'read':   'GET'
+  };
+
+  // Set the default implementation of `Backbone.ajax` to proxy through to `$`.
+  // Override this if you'd like to use a different library.
+  Backbone.ajax = function() {
+    return Backbone.$.ajax.apply(Backbone.$, arguments);
+  };
+
+  // Backbone.Router
+  // ---------------
+
+  // Routers map faux-URLs to actions, and fire events when routes are
+  // matched. Creating a new one sets its `routes` hash, if not set statically.
+  var Router = Backbone.Router = function(options) {
+    options || (options = {});
+    if (options.routes) this.routes = options.routes;
+    this._bindRoutes();
+    this.initialize.apply(this, arguments);
+  };
+
+  // Cached regular expressions for matching named param parts and splatted
+  // parts of route strings.
+  var optionalParam = /\((.*?)\)/g;
+  var namedParam    = /(\(\?)?:\w+/g;
+  var splatParam    = /\*\w+/g;
+  var escapeRegExp  = /[\-{}\[\]+?.,\\\^$|#\s]/g;
+
+  // Set up all inheritable **Backbone.Router** properties and methods.
+  _.extend(Router.prototype, Events, {
+
+    // Initialize is an empty function by default. Override it with your own
+    // initialization logic.
+    initialize: function(){},
+
+    // Manually bind a single named route to a callback. For example:
+    //
+    //     this.route('search/:query/p:num', 'search', function(query, num) {
+    //       ...
+    //     });
+    //
+    route: function(route, name, callback) {
+      if (!_.isRegExp(route)) route = this._routeToRegExp(route);
+      if (_.isFunction(name)) {
+        callback = name;
+        name = '';
+      }
+      if (!callback) callback = this[name];
+      var router = this;
+      Backbone.history.route(route, function(fragment) {
+        var args = router._extractParameters(route, fragment);
+        callback && callback.apply(router, args);
+        router.trigger.apply(router, ['route:' + name].concat(args));
+        router.trigger('route', name, args);
+        Backbone.history.trigger('route', router, name, args);
+      });
+      return this;
+    },
+
+    // Simple proxy to `Backbone.history` to save a fragment into the history.
+    navigate: function(fragment, options) {
+      Backbone.history.navigate(fragment, options);
+      return this;
+    },
+
+    // Bind all defined routes to `Backbone.history`. We have to reverse the
+    // order of the routes here to support behavior where the most general
+    // routes can be defined at the bottom of the route map.
+    _bindRoutes: function() {
+      if (!this.routes) return;
+      this.routes = _.result(this, 'routes');
+      var route, routes = _.keys(this.routes);
+      while ((route = routes.pop()) != null) {
+        this.route(route, this.routes[route]);
+      }
+    },
+
+    // Convert a route string into a regular expression, suitable for matching
+    // against the current location hash.
+    _routeToRegExp: function(route) {
+      route = route.replace(escapeRegExp, '\\$&')
+                   .replace(optionalParam, '(?:$1)?')
+                   .replace(namedParam, function(match, optional){
+                     return optional ? match : '([^\/]+)';
+                   })
+                   .replace(splatParam, '(.*?)');
+      return new RegExp('^' + route + '$');
+    },
+
+    // Given a route, and a URL fragment that it matches, return the array of
+    // extracted decoded parameters. Empty or unmatched parameters will be
+    // treated as `null` to normalize cross-browser behavior.
+    _extractParameters: function(route, fragment) {
+      var params = route.exec(fragment).slice(1);
+      return _.map(params, function(param) {
+        return param ? decodeURIComponent(param) : null;
+      });
+    }
+
+  });
+
+  // Backbone.History
+  // ----------------
+
+  // Handles cross-browser history management, based on either
+  // [pushState](http://diveintohtml5.info/history.html) and real URLs, or
+  // [onhashchange](https://developer.mozilla.org/en-US/docs/DOM/window.onhashchange)
+  // and URL fragments. If the browser supports neither (old IE, natch),
+  // falls back to polling.
+  var History = Backbone.History = function() {
+    this.handlers = [];
+    _.bindAll(this, 'checkUrl');
+
+    // Ensure that `History` can be used outside of the browser.
+    if (typeof window !== 'undefined') {
+      this.location = window.location;
+      this.history = window.history;
+    }
+  };
+
+  // Cached regex for stripping a leading hash/slash and trailing space.
+  var routeStripper = /^[#\/]|\s+$/g;
+
+  // Cached regex for stripping leading and trailing slashes.
+  var rootStripper = /^\/+|\/+$/g;
+
+  // Cached regex for detecting MSIE.
+  var isExplorer = /msie [\w.]+/;
+
+  // Cached regex for removing a trailing slash.
+  var trailingSlash = /\/$/;
+
+  // Has the history handling already been started?
+  History.started = false;
+
+  // Set up all inheritable **Backbone.History** properties and methods.
+  _.extend(History.prototype, Events, {
+
+    // The default interval to poll for hash changes, if necessary, is
+    // twenty times a second.
+    interval: 50,
+
+    // Gets the true hash value. Cannot use location.hash directly due to bug
+    // in Firefox where location.hash will always be decoded.
+    getHash: function(window) {
+      var match = (window || this).location.href.match(/#(.*)$/);
+      return match ? match[1] : '';
+    },
+
+    // Get the cross-browser normalized URL fragment, either from the URL,
+    // the hash, or the override.
+    getFragment: function(fragment, forcePushState) {
+      if (fragment == null) {
+        if (this._hasPushState || !this._wantsHashChange || forcePushState) {
+          fragment = this.location.pathname;
+          var root = this.root.replace(trailingSlash, '');
+          if (!fragment.indexOf(root)) fragment = fragment.substr(root.length);
+        } else {
+          fragment = this.getHash();
+        }
+      }
+      return fragment.replace(routeStripper, '');
+    },
+
+    // Start the hash change handling, returning `true` if the current URL matches
+    // an existing route, and `false` otherwise.
+    start: function(options) {
+      if (History.started) throw new Error("Backbone.history has already been started");
+      History.started = true;
+
+      // Figure out the initial configuration. Do we need an iframe?
+      // Is pushState desired ... is it available?
+      this.options          = _.extend({}, {root: '/'}, this.options, options);
+      this.root             = this.options.root;
+      this._wantsHashChange = this.options.hashChange !== false;
+      this._wantsPushState  = !!this.options.pushState;
+      this._hasPushState    = !!(this.options.pushState && this.history && this.history.pushState);
+      var fragment          = this.getFragment();
+      var docMode           = document.documentMode;
+      var oldIE             = (isExplorer.exec(navigator.userAgent.toLowerCase()) && (!docMode || docMode <= 7));
+
+      // Normalize root to always include a leading and trailing slash.
+      this.root = ('/' + this.root + '/').replace(rootStripper, '/');
+
+      if (oldIE && this._wantsHashChange) {
+        this.iframe = Backbone.$('<iframe src="javascript:0" tabindex="-1" />').hide().appendTo('body')[0].contentWindow;
+        this.navigate(fragment);
+      }
+
+      // Depending on whether we're using pushState or hashes, and whether
+      // 'onhashchange' is supported, determine how we check the URL state.
+      if (this._hasPushState) {
+        Backbone.$(window).on('popstate', this.checkUrl);
+      } else if (this._wantsHashChange && ('onhashchange' in window) && !oldIE) {
+        Backbone.$(window).on('hashchange', this.checkUrl);
+      } else if (this._wantsHashChange) {
+        this._checkUrlInterval = setInterval(this.checkUrl, this.interval);
+      }
+
+      // Determine if we need to change the base url, for a pushState link
+      // opened by a non-pushState browser.
+      this.fragment = fragment;
+      var loc = this.location;
+      var atRoot = loc.pathname.replace(/[^\/]$/, '$&/') === this.root;
+
+      // If we've started off with a route from a `pushState`-enabled browser,
+      // but we're currently in a browser that doesn't support it...
+      if (this._wantsHashChange && this._wantsPushState && !this._hasPushState && !atRoot) {
+        this.fragment = this.getFragment(null, true);
+        this.location.replace(this.root + this.location.search + '#' + this.fragment);
+        // Return immediately as browser will do redirect to new url
+        return true;
+
+      // Or if we've started out with a hash-based route, but we're currently
+      // in a browser where it could be `pushState`-based instead...
+      } else if (this._wantsPushState && this._hasPushState && atRoot && loc.hash) {
+        this.fragment = this.getHash().replace(routeStripper, '');
+        this.history.replaceState({}, document.title, this.root + this.fragment + loc.search);
+      }
+
+      if (!this.options.silent) return this.loadUrl();
+    },
+
+    // Disable Backbone.history, perhaps temporarily. Not useful in a real app,
+    // but possibly useful for unit testing Routers.
+    stop: function() {
+      Backbone.$(window).off('popstate', this.checkUrl).off('hashchange', this.checkUrl);
+      clearInterval(this._checkUrlInterval);
+      History.started = false;
+    },
+
+    // Add a route to be tested when the fragment changes. Routes added later
+    // may override previous routes.
+    route: function(route, callback) {
+      this.handlers.unshift({route: route, callback: callback});
+    },
+
+    // Checks the current URL to see if it has changed, and if it has,
+    // calls `loadUrl`, normalizing across the hidden iframe.
+    checkUrl: function(e) {
+      var current = this.getFragment();
+      if (current === this.fragment && this.iframe) {
+        current = this.getFragment(this.getHash(this.iframe));
+      }
+      if (current === this.fragment) return false;
+      if (this.iframe) this.navigate(current);
+      this.loadUrl() || this.loadUrl(this.getHash());
+    },
+
+    // Attempt to load the current URL fragment. If a route succeeds with a
+    // match, returns `true`. If no defined routes matches the fragment,
+    // returns `false`.
+    loadUrl: function(fragmentOverride) {
+      var fragment = this.fragment = this.getFragment(fragmentOverride);
+      var matched = _.any(this.handlers, function(handler) {
+        if (handler.route.test(fragment)) {
+          handler.callback(fragment);
+          return true;
+        }
+      });
+      return matched;
+    },
+
+    // Save a fragment into the hash history, or replace the URL state if the
+    // 'replace' option is passed. You are responsible for properly URL-encoding
+    // the fragment in advance.
+    //
+    // The options object can contain `trigger: true` if you wish to have the
+    // route callback be fired (not usually desirable), or `replace: true`, if
+    // you wish to modify the current URL without adding an entry to the history.
+    navigate: function(fragment, options) {
+      if (!History.started) return false;
+      if (!options || options === true) options = {trigger: options};
+      fragment = this.getFragment(fragment || '');
+      if (this.fragment === fragment) return;
+      this.fragment = fragment;
+      var url = this.root + fragment;
+
+      // If pushState is available, we use it to set the fragment as a real URL.
+      if (this._hasPushState) {
+        this.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, url);
+
+      // If hash changes haven't been explicitly disabled, update the hash
+      // fragment to store history.
+      } else if (this._wantsHashChange) {
+        this._updateHash(this.location, fragment, options.replace);
+        if (this.iframe && (fragment !== this.getFragment(this.getHash(this.iframe)))) {
+          // Opening and closing the iframe tricks IE7 and earlier to push a
+          // history entry on hash-tag change.  When replace is true, we don't
+          // want this.
+          if(!options.replace) this.iframe.document.open().close();
+          this._updateHash(this.iframe.location, fragment, options.replace);
+        }
+
+      // If you've told us that you explicitly don't want fallback hashchange-
+      // based history, then `navigate` becomes a page refresh.
+      } else {
+        return this.location.assign(url);
+      }
+      if (options.trigger) this.loadUrl(fragment);
+    },
+
+    // Update the hash location, either replacing the current entry, or adding
+    // a new one to the browser history.
+    _updateHash: function(location, fragment, replace) {
+      if (replace) {
+        var href = location.href.replace(/(javascript:|#).*$/, '');
+        location.replace(href + '#' + fragment);
+      } else {
+        // Some browsers require that `hash` contains a leading #.
+        location.hash = '#' + fragment;
+      }
+    }
+
+  });
+
+  // Create the default Backbone.history.
+  Backbone.history = new History;
+
+  // Helpers
+  // -------
+
+  // Helper function to correctly set up the prototype chain, for subclasses.
+  // Similar to `goog.inherits`, but uses a hash of prototype properties and
+  // class properties to be extended.
+  var extend = function(protoProps, staticProps) {
+    var parent = this;
+    var child;
+
+    // The constructor function for the new subclass is either defined by you
+    // (the "constructor" property in your `extend` definition), or defaulted
+    // by us to simply call the parent's constructor.
+    if (protoProps && _.has(protoProps, 'constructor')) {
+      child = protoProps.constructor;
+    } else {
+      child = function(){ return parent.apply(this, arguments); };
+    }
+
+    // Add static properties to the constructor function, if supplied.
+    _.extend(child, parent, staticProps);
+
+    // Set the prototype chain to inherit from `parent`, without calling
+    // `parent`'s constructor function.
+    var Surrogate = function(){ this.constructor = child; };
+    Surrogate.prototype = parent.prototype;
+    child.prototype = new Surrogate;
+
+    // Add prototype properties (instance properties) to the subclass,
+    // if supplied.
+    if (protoProps) _.extend(child.prototype, protoProps);
+
+    // Set a convenience property in case the parent's prototype is needed
+    // later.
+    child.__super__ = parent.prototype;
+
+    return child;
+  };
+
+  // Set up inheritance for the model, collection, router, view and history.
+  Model.extend = Collection.extend = Router.extend = View.extend = History.extend = extend;
+
+  // Throw an error when a URL is needed, and none is supplied.
+  var urlError = function() {
+    throw new Error('A "url" property or function must be specified');
+  };
+
+  // Wrap an optional error callback with a fallback error event.
+  var wrapError = function (model, options) {
+    var error = options.error;
+    options.error = function(resp) {
+      if (error) error(model, resp, options);
+      model.trigger('error', model, resp, options);
+    };
+  };
+
+}).call(this);
+
+})()
+},{"underscore":9}],34:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -24763,232 +24222,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":118,"backbone.babysitter":117,"backbone.wreqr":116,"underscore":9}],82:[function(require,module,exports){
-(function(){/* global window, $ */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  Model = require('../../../numericals/TimeSeriesModel.js'),
-  Collection = require('../../../numericals/TimeSeriesCollection.js'),
-  Settings = require('../../../numericals/utils/ChartSettings.js'),
-  Sev = require('./SingleEditView.js'),
-  Gcv = require('./GeneralConfigView.js');
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Numerical',
-  template: '#template-detail-content-numerical-general',
-  itemViewContainer: '#detail-content',
-  //addAttachmentContainer: '#add-attachment',
-  //addAttachmentId: 0,
-  //attachmentId: {},
-  collection: new Collection([], {type: 'All'}),
-  view: null,
-  viewModel: null,
-  viewType: Gcv,
-  rendered: false,
-  needToRender: null,
-  firstRender: null,
-  virtual: null,
-  initialize: function () {
-    this.firstRender = true;
-    this.listenTo(this.model, 'change:collection', this.collectionChanged.bind(this));
-    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
-    this.updateCollection();
-    this.prepareGeneralConfigModel();
-    window.addEventListener('resize', this.debounceChildRender.bind(this));
-  },
-  highlightEvent: function () {
-    this.viewModel.set('event', this.model.get('event'));
-  },
-  onRender: function () {
-    this.view = new this.viewType({model: this.viewModel});
-
-    if (this.viewType === Gcv) {
-      this.view.bind('edit', this.editSeriesEvent.bind(this));
-      this.view.bind('duplicate', this.duplicateSeriesEvent.bind(this));
-      this.view.bind('remove', this.removeSeriesEvent.bind(this));
-    } else if (this.viewType === Sev) {
-      this.view.bind('ready', this.readySeriesEvent.bind(this));
-      this.view.bind('cancel', this.cancelSeriesEvent.bind(this));
-      this.view.bind('eventEdit', this.eventEdited.bind(this));
-    }
-    if (this.firstRender) {
-      this.firstRender = false;
-      this.debounceChildRender();
-    } else {
-      this.view.render();
-    }
-    $('body').i18n();
-  },
-  updateCollection: function () {
-    if (!this.collection) {
-      this.collection = new Collection([], {type: 'All'});
-    }
-
-    var c = this.collection;
-    this.model.get('collection').each(function (e) {
-      var ev = e.get('event');
-      var connectionId = ev.connection.id;
-      var streamId = ev.streamId;
-      var streamName = ev.stream.name;
-      var type = ev.type;
-
-      var filter = {
-        connectionId: connectionId,
-        streamId: streamId,
-        type: type
-      };
-
-      var m = c.where(filter);
-      if (m && m.length !== 0) {
-        for (var i = 0; i < m.length; ++i) {
-          if (_.indexOf(m[i].get('events'), ev) === -1) {
-            m[i].get('events').push(ev);
-          }
-        }
-      } else {
-        var s = new Settings(ev.stream, ev.type, this.model.get('virtual'));
-        c.add(new Model({
-            events: [ev],
-            connectionId: connectionId,
-            stream: ev.stream,
-            streamId: streamId,
-            streamName: streamName,
-            type: type,
-            category: 'any',
-            virtual: this.model.get('virtual'),
-            color: s.get('color'),
-            style: s.get('style'),
-            transform: s.get('transform'),
-            interval: s.get('interval'),
-            fitting: s.get('fitting')
-          })
-        );
-      }
-    }.bind(this));
-  },
-  onClose: function () {
-    this.view.close();
-    this.view = null;
-    this.viewType = Gcv;
-    this.viewModel = null;
-    this.collection.reset();
-    this.collection = null;
-    this.rendered = null;
-    this.needToRender = null;
-  },
-  editSeriesEvent: function (m) {
-
-    this.closeChild();
-    this.viewType = Sev;
-    this.prepareSingleEditModel(m);
-    this.render();
-  },
-  cancelSeriesEvent: function () {
-    this.closeChild();
-    this.viewType = Gcv;
-    this.prepareGeneralConfigModel();
-    this.render();
-  },
-  eventEdited: function (event) {
-    var c = this.model.get('collection');
-    var submitter = function () {
-      this.collectionChanged.bind(this);
-    }.bind(this);
-
-    for (var i = 0; i < c.length; ++i) {
-      var current = c.at(i);
-      var e = current.get('event');
-      if (e.id === event.eventId) {
-        e.content = event.value;
-        current.save(submitter);
-        break;
-      }
-    }
-
-
-  },
-  readySeriesEvent: function (m) {
-    var s = new Settings(m.get('stream'), m.get('type'), m.get('virtual'));
-    s.set('color', m.get('color'));
-    s.set('style', m.get('style'));
-    s.set('transform', m.get('transform'));
-    s.set('interval', m.get('interval'));
-    s.set('fitting', m.get('fitting'));
-
-    this.closeChild();
-    this.viewType = Gcv;
-    this.prepareGeneralConfigModel();
-    this.render();
-  },
-  duplicateSeriesEvent: function (m) {
-
-    this.closeChild();
-    this.viewType = Gcv;
-    var model = new Model({
-      events: m.get('events'),
-      connectionId: m.get('connectionId'),
-      streamId: m.get('streamId'),
-      streamName: m.get('streamName'),
-      type: m.get('type'),
-      category: m.get('category')
-    });
-    this.collection.add(model);
-    this.prepareGeneralConfigModel();
-    this.render();
-  },
-  removeSeriesEvent: function (m) {
-    var virtual = this.model.get('virtual');
-    var streamId = m.get('streamId');
-    var type = m.get('type');
-    var filters = virtual.filters;
-    var newFilter = [];
-    for (var i = 0; i < filters.length; ++i) {
-      if (!(filters[i].streamId === streamId &&
-        filters[i].type === type)) {
-        newFilter.push(filters[i]);
-      }
-    }
-    virtual.filters = newFilter;
-
-
-
-    this.closeChild();
-    this.viewType = Gcv;
-    this.collection.remove(m);
-    this.prepareGeneralConfigModel();
-    this.render();
-  },
-  collectionChanged: function () {
-    // TODO: depends on view type
-    this.updateCollection();
-    if (this.view) {
-      this.view.unbind();
-      this.view.close();
-    }
-    this.render();
-  },
-  prepareSingleEditModel: function (m) {
-    this.viewModel = new Model({
-      collection: this.collection,
-      edited: m
-    });
-  },
-  prepareGeneralConfigModel: function () {
-    this.viewModel = new Model({
-      collection: this.collection,
-      virtual: this.model.get('virtual')
-    });
-  },
-  closeChild: function () {
-    this.view.unbind();
-    this.view.close();
-  },
-  debounceChildRender: _.debounce(function () {
-    this.view.render();
-  }, 1000)
-});
-})()
-},{"../../../numericals/TimeSeriesCollection.js":89,"../../../numericals/TimeSeriesModel.js":88,"../../../numericals/utils/ChartSettings.js":44,"./GeneralConfigView.js":120,"./SingleEditView.js":119,"backbone.marionette":33,"underscore":9}],111:[function(require,module,exports){
+},{"backbone":116,"backbone.babysitter":115,"backbone.wreqr":114,"underscore":9}],112:[function(require,module,exports){
 
 /**
  * Object#toString() ref for stringify().
@@ -25307,7 +24541,7 @@ function decode(str) {
   }
 }
 
-},{}],121:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 require=(function(e,t,n,r){function i(r){if(!n[r]){if(!t[r]){if(e)return e(r);throw new Error("Cannot find module '"+r+"'")}var s=n[r]={exports:{}};t[r][0](function(e){var n=t[r][1][e];return i(n?n:e)},s,s.exports)}return n[r].exports}for(var s=0;s<r.length;s++)i(r[s]);return i})(typeof require!=="undefined"&&require,{1:[function(require,module,exports){
 exports.readIEEE754 = function(buffer, offset, isBE, mLen, nBytes) {
   var e, m,
@@ -29172,7 +28406,7 @@ SlowBuffer.prototype.writeDoubleBE = Buffer.prototype.writeDoubleBE;
 },{}]},{},[])
 ;;module.exports=require("buffer-browserify")
 
-},{}],106:[function(require,module,exports){
+},{}],97:[function(require,module,exports){
 (function(Buffer){//TODO align with XHR error
 
 //TODO: sort out the callback convention
@@ -29285,7 +28519,297 @@ module.exports = function (pack)  {
 };
 
 })(require("__browserify_buffer").Buffer)
-},{"__browserify_buffer":121,"form-data":107,"underscore":66}],105:[function(require,module,exports){
+},{"__browserify_buffer":117,"form-data":98,"underscore":43}],110:[function(require,module,exports){
+var http = module.exports;
+var EventEmitter = require('events').EventEmitter;
+var Request = require('./lib/request');
+
+http.request = function (params, cb) {
+    if (!params) params = {};
+    if (!params.host && !params.port) {
+        params.port = parseInt(window.location.port, 10);
+    }
+    if (!params.host) params.host = window.location.hostname;
+    if (!params.port) params.port = 80;
+    if (!params.scheme) params.scheme = window.location.protocol.split(':')[0];
+    
+    var req = new Request(new xhrHttp, params);
+    if (cb) req.on('response', cb);
+    return req;
+};
+
+http.get = function (params, cb) {
+    params.method = 'GET';
+    var req = http.request(params, cb);
+    req.end();
+    return req;
+};
+
+http.Agent = function () {};
+http.Agent.defaultMaxSockets = 4;
+
+var xhrHttp = (function () {
+    if (typeof window === 'undefined') {
+        throw new Error('no window object present');
+    }
+    else if (window.XMLHttpRequest) {
+        return window.XMLHttpRequest;
+    }
+    else if (window.ActiveXObject) {
+        var axs = [
+            'Msxml2.XMLHTTP.6.0',
+            'Msxml2.XMLHTTP.3.0',
+            'Microsoft.XMLHTTP'
+        ];
+        for (var i = 0; i < axs.length; i++) {
+            try {
+                var ax = new(window.ActiveXObject)(axs[i]);
+                return function () {
+                    if (ax) {
+                        var ax_ = ax;
+                        ax = null;
+                        return ax_;
+                    }
+                    else {
+                        return new(window.ActiveXObject)(axs[i]);
+                    }
+                };
+            }
+            catch (e) {}
+        }
+        throw new Error('ajax not supported in this browser')
+    }
+    else {
+        throw new Error('ajax not supported in this browser');
+    }
+})();
+
+},{"./lib/request":118,"events":42}],87:[function(require,module,exports){
+(function(){/* global window, $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  Model = require('../../../numericals/TimeSeriesModel.js'),
+  Collection = require('../../../numericals/TimeSeriesCollection.js'),
+  Settings = require('../../../numericals/utils/ChartSettings.js'),
+  Sev = require('./SingleEditView.js'),
+  Gcv = require('./GeneralConfigView.js');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Numerical',
+  template: '#template-detail-content-numerical-general',
+  itemViewContainer: '#detail-content',
+  //addAttachmentContainer: '#add-attachment',
+  //addAttachmentId: 0,
+  //attachmentId: {},
+  collection: new Collection([], {type: 'All'}),
+  view: null,
+  viewModel: null,
+  viewType: Gcv,
+  rendered: false,
+  needToRender: null,
+  firstRender: null,
+  virtual: null,
+  initialize: function () {
+    this.firstRender = true;
+    this.listenTo(this.model, 'change:collection', this.collectionChanged.bind(this));
+    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+    this.updateCollection();
+    this.prepareGeneralConfigModel();
+    window.addEventListener('resize', this.debounceChildRender.bind(this));
+  },
+  highlightEvent: function () {
+    this.viewModel.set('event', this.model.get('event'));
+  },
+  onRender: function () {
+    this.view = new this.viewType({model: this.viewModel});
+
+    if (this.viewType === Gcv) {
+      this.view.bind('edit', this.editSeriesEvent.bind(this));
+      this.view.bind('duplicate', this.duplicateSeriesEvent.bind(this));
+      this.view.bind('remove', this.removeSeriesEvent.bind(this));
+    } else if (this.viewType === Sev) {
+      this.view.bind('ready', this.readySeriesEvent.bind(this));
+      this.view.bind('cancel', this.cancelSeriesEvent.bind(this));
+      this.view.bind('eventEdit', this.eventEdited.bind(this));
+    }
+    if (this.firstRender) {
+      this.firstRender = false;
+      this.debounceChildRender();
+    } else {
+      this.view.render();
+    }
+    $('body').i18n();
+  },
+  updateCollection: function () {
+    if (!this.collection) {
+      this.collection = new Collection([], {type: 'All'});
+    }
+
+    var c = this.collection;
+    this.model.get('collection').each(function (e) {
+      var ev = e.get('event');
+      var connectionId = ev.connection.id;
+      var streamId = ev.streamId;
+      var streamName = ev.stream.name;
+      var type = ev.type;
+
+      var filter = {
+        connectionId: connectionId,
+        streamId: streamId,
+        type: type
+      };
+
+      var m = c.where(filter);
+      if (m && m.length !== 0) {
+        for (var i = 0; i < m.length; ++i) {
+          if (_.indexOf(m[i].get('events'), ev) === -1) {
+            m[i].get('events').push(ev);
+          }
+        }
+      } else {
+        var s = new Settings(ev.stream, ev.type, this.model.get('virtual'));
+        c.add(new Model({
+            events: [ev],
+            connectionId: connectionId,
+            stream: ev.stream,
+            streamId: streamId,
+            streamName: streamName,
+            type: type,
+            category: 'any',
+            virtual: this.model.get('virtual'),
+            color: s.get('color'),
+            style: s.get('style'),
+            transform: s.get('transform'),
+            interval: s.get('interval'),
+            fitting: s.get('fitting')
+          })
+        );
+      }
+    }.bind(this));
+  },
+  onClose: function () {
+    this.view.close();
+    this.view = null;
+    this.viewType = Gcv;
+    this.viewModel = null;
+    this.collection.reset();
+    this.collection = null;
+    this.rendered = null;
+    this.needToRender = null;
+  },
+  editSeriesEvent: function (m) {
+
+    this.closeChild();
+    this.viewType = Sev;
+    this.prepareSingleEditModel(m);
+    this.render();
+  },
+  cancelSeriesEvent: function () {
+    this.closeChild();
+    this.viewType = Gcv;
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  eventEdited: function (event) {
+    var c = this.model.get('collection');
+    var submitter = function () {
+      this.collectionChanged.bind(this);
+    }.bind(this);
+
+    for (var i = 0; i < c.length; ++i) {
+      var current = c.at(i);
+      var e = current.get('event');
+      if (e.id === event.eventId) {
+        e.content = event.value;
+        current.save(submitter);
+        break;
+      }
+    }
+
+
+  },
+  readySeriesEvent: function (m) {
+    var s = new Settings(m.get('stream'), m.get('type'), m.get('virtual'));
+    s.set('color', m.get('color'));
+    s.set('style', m.get('style'));
+    s.set('transform', m.get('transform'));
+    s.set('interval', m.get('interval'));
+    s.set('fitting', m.get('fitting'));
+
+    this.closeChild();
+    this.viewType = Gcv;
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  duplicateSeriesEvent: function (m) {
+
+    this.closeChild();
+    this.viewType = Gcv;
+    var model = new Model({
+      events: m.get('events'),
+      connectionId: m.get('connectionId'),
+      streamId: m.get('streamId'),
+      streamName: m.get('streamName'),
+      type: m.get('type'),
+      category: m.get('category')
+    });
+    this.collection.add(model);
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  removeSeriesEvent: function (m) {
+    var virtual = this.model.get('virtual');
+    var streamId = m.get('streamId');
+    var type = m.get('type');
+    var filters = virtual.filters;
+    var newFilter = [];
+    for (var i = 0; i < filters.length; ++i) {
+      if (!(filters[i].streamId === streamId &&
+        filters[i].type === type)) {
+        newFilter.push(filters[i]);
+      }
+    }
+    virtual.filters = newFilter;
+
+
+
+    this.closeChild();
+    this.viewType = Gcv;
+    this.collection.remove(m);
+    this.prepareGeneralConfigModel();
+    this.render();
+  },
+  collectionChanged: function () {
+    // TODO: depends on view type
+    this.updateCollection();
+    if (this.view) {
+      this.view.unbind();
+      this.view.close();
+    }
+    this.render();
+  },
+  prepareSingleEditModel: function (m) {
+    this.viewModel = new Model({
+      collection: this.collection,
+      edited: m
+    });
+  },
+  prepareGeneralConfigModel: function () {
+    this.viewModel = new Model({
+      collection: this.collection,
+      virtual: this.model.get('virtual')
+    });
+  },
+  closeChild: function () {
+    this.view.unbind();
+    this.view.close();
+  },
+  debounceChildRender: _.debounce(function () {
+    this.view.render();
+  }, 1000)
+});
+})()
+},{"../../../numericals/TimeSeriesCollection.js":89,"../../../numericals/TimeSeriesModel.js":92,"../../../numericals/utils/ChartSettings.js":19,"./GeneralConfigView.js":119,"./SingleEditView.js":120,"backbone.marionette":34,"underscore":9}],105:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 var Pryv = require('pryv');
 var UNIQUE_ID = 0;
@@ -29371,7 +28895,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":33,"pryv":10}],109:[function(require,module,exports){
+},{"backbone.marionette":34,"pryv":10}],106:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.CompositeView.extend({
@@ -29394,72 +28918,7 @@ module.exports = Marionette.CompositeView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":33}],114:[function(require,module,exports){
-var http = module.exports;
-var EventEmitter = require('events').EventEmitter;
-var Request = require('./lib/request');
-
-http.request = function (params, cb) {
-    if (!params) params = {};
-    if (!params.host && !params.port) {
-        params.port = parseInt(window.location.port, 10);
-    }
-    if (!params.host) params.host = window.location.hostname;
-    if (!params.port) params.port = 80;
-    if (!params.scheme) params.scheme = window.location.protocol.split(':')[0];
-    
-    var req = new Request(new xhrHttp, params);
-    if (cb) req.on('response', cb);
-    return req;
-};
-
-http.get = function (params, cb) {
-    params.method = 'GET';
-    var req = http.request(params, cb);
-    req.end();
-    return req;
-};
-
-http.Agent = function () {};
-http.Agent.defaultMaxSockets = 4;
-
-var xhrHttp = (function () {
-    if (typeof window === 'undefined') {
-        throw new Error('no window object present');
-    }
-    else if (window.XMLHttpRequest) {
-        return window.XMLHttpRequest;
-    }
-    else if (window.ActiveXObject) {
-        var axs = [
-            'Msxml2.XMLHTTP.6.0',
-            'Msxml2.XMLHTTP.3.0',
-            'Microsoft.XMLHTTP'
-        ];
-        for (var i = 0; i < axs.length; i++) {
-            try {
-                var ax = new(window.ActiveXObject)(axs[i]);
-                return function () {
-                    if (ax) {
-                        var ax_ = ax;
-                        ax = null;
-                        return ax_;
-                    }
-                    else {
-                        return new(window.ActiveXObject)(axs[i]);
-                    }
-                };
-            }
-            catch (e) {}
-        }
-        throw new Error('ajax not supported in this browser')
-    }
-    else {
-        throw new Error('ajax not supported in this browser');
-    }
-})();
-
-},{"./lib/request":122,"events":43}],94:[function(require,module,exports){
+},{"backbone.marionette":34}],95:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var Google, Q;
@@ -29532,57 +28991,7 @@ var xhrHttp = (function () {
 
 }).call(this);
 
-},{"q":123}],98:[function(require,module,exports){
-(function(){/* global window */
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/positions/Model.js'),
-  _ = require('underscore'),
-  DEFAULT_WEIGHT = 1;
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var PositionsEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'PositionsEventsNode EventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
-    }
-
-  });
-
-// we accept all kind of events
-PositionsEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'position/wgs84');
-};
-try {
-  Object.defineProperty(window.PryvBrowser, 'positionWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
-        }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
-    }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
-}
-
-
-})()
-},{"../../view/events-views/positions/Model.js":124,"../EventsNode":125,"underscore":9}],100:[function(require,module,exports){
+},{"q":121}],100:[function(require,module,exports){
 (function(){/*global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/pictures/Model.js'),
@@ -29633,7 +29042,57 @@ try {
 
 
 })()
-},{"../../view/events-views/pictures/Model.js":126,"../EventsNode":125,"underscore":9}],102:[function(require,module,exports){
+},{"../../view/events-views/pictures/Model.js":122,"../EventsNode":123,"underscore":9}],102:[function(require,module,exports){
+(function(){/* global window */
+var EventsNode = require('../EventsNode'),
+  EventsView = require('../../view/events-views/notes/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var NotesEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'NotesEventsNode EventsNode',
+    pluginView: EventsView,
+    getWeight: function () {
+      return DEFAULT_WEIGHT;
+    }
+
+  });
+
+// we accept all kind of events
+NotesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'note/txt' || eventType === 'note/text');
+};
+try {
+  Object.defineProperty(window.PryvBrowser, 'noteWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
+
+
+})()
+},{"../../view/events-views/notes/Model.js":124,"../EventsNode":123,"underscore":9}],101:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/numericals/Model.js'),
@@ -29714,159 +29173,7 @@ try {
 
 
 })()
-},{"../../view/events-views/numericals/Model.js":127,"../EventsNode":125,"underscore":9}],101:[function(require,module,exports){
-(function(){/* global window */
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/tweet/Model.js'),
-  _ = require('underscore'),
-  DEFAULT_WEIGHT = 1;
-
-/**
- * Holder for TweetsNode
- * @type {*}
- */
-var TweetsEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'TweetsEventsNode EventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
-    }
-
-  });
-
-// we accept all kind of events
-TweetsEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'message/twitter');
-};
-try {
-  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
-        }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
-    }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
-}
-
-
-})()
-},{"../../view/events-views/tweet/Model.js":128,"../EventsNode":125,"underscore":9}],99:[function(require,module,exports){
-(function(){/* global window */
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/notes/Model.js'),
-  _ = require('underscore'),
-  DEFAULT_WEIGHT = 1;
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var NotesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'NotesEventsNode EventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
-    }
-
-  });
-
-// we accept all kind of events
-NotesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'note/txt' || eventType === 'note/text');
-};
-try {
-  Object.defineProperty(window.PryvBrowser, 'noteWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
-        }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
-    }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
-}
-
-
-})()
-},{"../../view/events-views/notes/Model.js":129,"../EventsNode":125,"underscore":9}],103:[function(require,module,exports){
-(function(){/* global window */
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/activities/Model.js'),
-  _ = require('underscore'),
-  DEFAULT_WEIGHT = 1;
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var ActivitiesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'ActivityEventsNode EventsNode',
-    pluginView: EventsView,
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
-    }
-
-  });
-
-// we accept all kind of events
-ActivitiesEventsNode.acceptThisEventType = function (eventType) {
-  return (
-    eventType === 'activity/pryv'
-    );
-};
-try {
-  Object.defineProperty(window.PryvBrowser, 'activityWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
-        }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
-    }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
-}
-
-
-})()
-},{"../../view/events-views/activities/Model.js":130,"../EventsNode":125,"underscore":9}],104:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":125,"../EventsNode":123,"underscore":9}],103:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
   _ = require('underscore'),
@@ -29916,7 +29223,107 @@ try {
 }
 
 })()
-},{"../../view/events-views/generics/Model.js":131,"../EventsNode":125,"underscore":9}],123:[function(require,module,exports){
+},{"../../view/events-views/generics/Model.js":126,"../EventsNode":123,"underscore":9}],99:[function(require,module,exports){
+(function(){/* global window */
+var EventsNode = require('../EventsNode'),
+  EventsView = require('../../view/events-views/positions/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
+
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var PositionsEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'PositionsEventsNode EventsNode',
+    pluginView: EventsView,
+    getWeight: function () {
+      return DEFAULT_WEIGHT;
+    }
+
+  });
+
+// we accept all kind of events
+PositionsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'position/wgs84');
+};
+try {
+  Object.defineProperty(window.PryvBrowser, 'positionWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
+
+
+})()
+},{"../../view/events-views/positions/Model.js":127,"../EventsNode":123,"underscore":9}],104:[function(require,module,exports){
+(function(){/* global window */
+var EventsNode = require('../EventsNode'),
+  EventsView = require('../../view/events-views/tweet/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
+
+/**
+ * Holder for TweetsNode
+ * @type {*}
+ */
+var TweetsEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'TweetsEventsNode EventsNode',
+    pluginView: EventsView,
+    getWeight: function () {
+      return DEFAULT_WEIGHT;
+    }
+
+  });
+
+// we accept all kind of events
+TweetsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'message/twitter');
+};
+try {
+  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
+    }
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
+
+
+})()
+},{"../../view/events-views/tweet/Model.js":128,"../EventsNode":123,"underscore":9}],121:[function(require,module,exports){
 (function(process){// vim:ts=4:sts=4:sw=4:
 /*!
  *
@@ -31670,7 +31077,7 @@ return Q;
 });
 
 })(require("__browserify_process"))
-},{"__browserify_process":67}],108:[function(require,module,exports){
+},{"__browserify_process":50}],107:[function(require,module,exports){
 var _ = require('underscore');
 
 var ChartTransform = module.exports = {};
@@ -31895,7 +31302,7 @@ ChartTransform.avg = function (data) {
 
 
 
-},{"underscore":9}],132:[function(require,module,exports){
+},{"underscore":9}],129:[function(require,module,exports){
 var events = require('events');
 var util = require('util');
 
@@ -32016,197 +31423,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":43,"util":42}],125:[function(require,module,exports){
-(function(){var TreeNode = require('./TreeNode'),
-  RootNode = require('./RootNode'),
-  Backbone = require('backbone'),
-  NodeView = require('../view/NodeView.js'),
-  _ = require('underscore');
-
-/*
- If you want to bypass the plugin detection system (i.e not use EventsView.js)
- just remove EventsView = require... above and add to all the Events typed node:
- var EventsView = require( {path to the plugin view} );  as a global var
- pluginView: EventsView, as an instance var
- to create the view just do: new this.pluginView(params);
- */
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var EventsNode = module.exports = TreeNode.implement(
-  function (parentStreamNode) {
-    TreeNode.call(this, parentStreamNode.treeMap, parentStreamNode);
-    this.events = {};
-    this.trashedEvents = {};
-    this.eventDisplayed = null;
-    this.eventView = null;
-    this.model  = null;
-    this.size = 0;
-  },
-  {
-    className: 'EventsNode',
-    aggregated: false,
-    getChildren: function () {
-      return null;
-    },
-
-    eventEnterScope: function (event, reason, callback) {
-      this.size++;
-      event.streamName =
-        this.parent.connectionNode.connection.datastore.getStreamById(event.streamId).name;
-      this.events[event.id] = event;
-      if (!this.eventView) {
-        this._createEventView();
-      } else {
-        this.eventView.eventEnter(event);
-      }
-
-      if (callback) {
-        callback(null);
-      }
-    },
-    eventLeaveScope: function (event, reason, callback) {
-      if (this.events[event.id]) {
-        this.size--;
-        delete this.events[event.id];
-        if (this.eventView) {
-          this.eventView.eventLeave(event);
-        }
-      }
-    },
-    onDateHighLighted: function (time) {
-      if (this.eventView) {
-        this.eventView.OnDateHighlightedChange(time);
-      }
-    },
-    /*jshint -W098 */
-    eventChange: function (event, reason, callback) {
-      this.events[event.id] = event;
-      //console.log('eventChange', event);
-      if (this.eventView) {
-        this.eventView.eventChange(event);
-      }
-
-      if (callback) {
-        callback(null);
-      }
-    },
-
-    _refreshViewModel: function (recursive) {
-      if (!this.model) {
-        var BasicModel = Backbone.Model.extend({ });
-        this.model = new BasicModel({
-          containerId: this.parent.uniqueId,
-          id: this.uniqueId,
-          className: this.className,
-          width: this.width,
-          height: this.height,
-          x: this.x,
-          y: this.y,
-          depth: this.depth,
-          color: this.parent.stream.color,
-          weight: this.getWeight(),
-          content: this.events || this.stream || this.connection,
-          eventView: this.eventView,
-          streamId: this.parent.stream.id,
-          streamName: this.parent.stream.name,
-          connectionId: this.parent.connectionNode.id
-        });
-      } else {
-        // TODO For now empty nodes (i.e streams) are not displayed
-        // but we'll need to display them to create event, drag drop ...
-        /*if (this.getWeight() === 0) {
-         if (this.model) {
-         this.model.set('width', 0);
-         this.model.set('height', 0);
-         }
-         return;
-         } */
-        this.model.set('containerId', this.parent.uniqueId);
-        this.model.set('id', this.uniqueId);
-        this.model.set('name', this.className);
-        this.model.set('width', this.width);
-        this.model.set('height', this.height);
-        this.model.set('x', this.x);
-        this.model.set('y', this.y);
-        this.model.set('depth', this.depth);
-        this.model.set('weight', this.getWeight());
-        this.model.set('streamId', this.parent.stream.id);
-        this.model.set('connectionId', this.parent.connectionNode.id);
-        if (this.eventView) {
-          this.eventView.refresh({
-            width: this.width,
-            height: this.height
-          });
-        }
-      }
-      if (recursive && this.getChildren()) {
-        _.each(this.getChildren(), function (child) {
-          child._refreshViewModel(true);
-        });
-      }
-    },
-
-    _createEventView: function () {
-      this.eventView = new this.pluginView(this.events, {
-        width: this.width,
-        height: this.height,
-        id: this.uniqueId,
-        treeMap: this.treeMap,
-        stream: this.parent.stream
-      }, this);
-    },
-    /**
-     * Called on drag and drop
-     * @param nodeId
-     * @param streamId
-     * @param connectionId
-     */
-    dragAndDrop: function (nodeId, streamId, connectionId) {
-
-      if (!nodeId || !streamId || !connectionId) {
-        return this;
-      }
-
-      var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
-      var thisNode = this;
-
-      if (thisNode.isVirtual() || otherNode.isVirtual()) {
-        throw new Error('Creating virtual node out of virtual nodes currently not allowed.');
-      }
-      if (otherNode === thisNode) {
-        throw new Error('Creating virtual node with the same node not allowed.');
-      }
-
-      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
-    },
-    isVirtual: function () {
-      return (true && this.parent.stream.virtual);
-    },
-    getVirtual: function () {
-      console.log('getVirtual', this.parent.stream.virtual);
-      return this.parent.stream.virtual;
-    },
-
-    getSettings: function () {
-      console.log('getSettings');
-    }
-
-
-  });
-
-
-EventsNode.acceptThisEventType = function () {
-  throw new Error('EventsNode.acceptThisEventType nust be overriden');
-};
-
-
-
-
-
-})()
-},{"../view/NodeView.js":73,"./RootNode":19,"./TreeNode":39,"backbone":30,"underscore":9}],107:[function(require,module,exports){
+},{"events":42,"util":41}],98:[function(require,module,exports){
 (function(process,Buffer){var CombinedStream = require('combined-stream');
 var util = require('util');
 var path = require('path');
@@ -32534,7 +31751,197 @@ function populate(dst, src) {
 }
 
 })(require("__browserify_process"),require("__browserify_buffer").Buffer)
-},{"__browserify_buffer":121,"__browserify_process":67,"async":134,"combined-stream":135,"fs":115,"http":114,"https":113,"mime":133,"path":112,"url":110,"util":42}],136:[function(require,module,exports){
+},{"__browserify_buffer":117,"__browserify_process":50,"async":132,"combined-stream":131,"fs":113,"http":110,"https":109,"mime":130,"path":108,"url":111,"util":41}],123:[function(require,module,exports){
+(function(){var TreeNode = require('./TreeNode'),
+  RootNode = require('./RootNode'),
+  Backbone = require('backbone'),
+  NodeView = require('../view/NodeView.js'),
+  _ = require('underscore');
+
+/*
+ If you want to bypass the plugin detection system (i.e not use EventsView.js)
+ just remove EventsView = require... above and add to all the Events typed node:
+ var EventsView = require( {path to the plugin view} );  as a global var
+ pluginView: EventsView, as an instance var
+ to create the view just do: new this.pluginView(params);
+ */
+/**
+ * Holder for EventsNode
+ * @type {*}
+ */
+var EventsNode = module.exports = TreeNode.implement(
+  function (parentStreamNode) {
+    TreeNode.call(this, parentStreamNode.treeMap, parentStreamNode);
+    this.events = {};
+    this.trashedEvents = {};
+    this.eventDisplayed = null;
+    this.eventView = null;
+    this.model  = null;
+    this.size = 0;
+  },
+  {
+    className: 'EventsNode',
+    aggregated: false,
+    getChildren: function () {
+      return null;
+    },
+
+    eventEnterScope: function (event, reason, callback) {
+      this.size++;
+      event.streamName =
+        this.parent.connectionNode.connection.datastore.getStreamById(event.streamId).name;
+      this.events[event.id] = event;
+      if (!this.eventView) {
+        this._createEventView();
+      } else {
+        this.eventView.eventEnter(event);
+      }
+
+      if (callback) {
+        callback(null);
+      }
+    },
+    eventLeaveScope: function (event, reason, callback) {
+      if (this.events[event.id]) {
+        this.size--;
+        delete this.events[event.id];
+        if (this.eventView) {
+          this.eventView.eventLeave(event);
+        }
+      }
+    },
+    onDateHighLighted: function (time) {
+      if (this.eventView) {
+        this.eventView.OnDateHighlightedChange(time);
+      }
+    },
+    /*jshint -W098 */
+    eventChange: function (event, reason, callback) {
+      this.events[event.id] = event;
+      //console.log('eventChange', event);
+      if (this.eventView) {
+        this.eventView.eventChange(event);
+      }
+
+      if (callback) {
+        callback(null);
+      }
+    },
+
+    _refreshViewModel: function (recursive) {
+      if (!this.model) {
+        var BasicModel = Backbone.Model.extend({ });
+        this.model = new BasicModel({
+          containerId: this.parent.uniqueId,
+          id: this.uniqueId,
+          className: this.className,
+          width: this.width,
+          height: this.height,
+          x: this.x,
+          y: this.y,
+          depth: this.depth,
+          color: this.parent.stream.color,
+          weight: this.getWeight(),
+          content: this.events || this.stream || this.connection,
+          eventView: this.eventView,
+          streamId: this.parent.stream.id,
+          streamName: this.parent.stream.name,
+          connectionId: this.parent.connectionNode.id
+        });
+      } else {
+        // TODO For now empty nodes (i.e streams) are not displayed
+        // but we'll need to display them to create event, drag drop ...
+        /*if (this.getWeight() === 0) {
+         if (this.model) {
+         this.model.set('width', 0);
+         this.model.set('height', 0);
+         }
+         return;
+         } */
+        this.model.set('containerId', this.parent.uniqueId);
+        this.model.set('id', this.uniqueId);
+        this.model.set('name', this.className);
+        this.model.set('width', this.width);
+        this.model.set('height', this.height);
+        this.model.set('x', this.x);
+        this.model.set('y', this.y);
+        this.model.set('depth', this.depth);
+        this.model.set('weight', this.getWeight());
+        this.model.set('streamId', this.parent.stream.id);
+        this.model.set('connectionId', this.parent.connectionNode.id);
+        if (this.eventView) {
+          this.eventView.refresh({
+            width: this.width,
+            height: this.height
+          });
+        }
+      }
+      if (recursive && this.getChildren()) {
+        _.each(this.getChildren(), function (child) {
+          child._refreshViewModel(true);
+        });
+      }
+    },
+
+    _createEventView: function () {
+      this.eventView = new this.pluginView(this.events, {
+        width: this.width,
+        height: this.height,
+        id: this.uniqueId,
+        treeMap: this.treeMap,
+        stream: this.parent.stream
+      }, this);
+    },
+    /**
+     * Called on drag and drop
+     * @param nodeId
+     * @param streamId
+     * @param connectionId
+     */
+    dragAndDrop: function (nodeId, streamId, connectionId) {
+
+      if (!nodeId || !streamId || !connectionId) {
+        return this;
+      }
+
+      var otherNode =  this.treeMap.getNodeById(nodeId, streamId, connectionId);
+      var thisNode = this;
+
+      if (thisNode.isVirtual() || otherNode.isVirtual()) {
+        throw new Error('Creating virtual node out of virtual nodes currently not allowed.');
+      }
+      if (otherNode === thisNode) {
+        throw new Error('Creating virtual node with the same node not allowed.');
+      }
+
+      this.treeMap.requestAggregationOfNodes(thisNode, otherNode);
+    },
+    isVirtual: function () {
+      return (true && this.parent.stream.virtual);
+    },
+    getVirtual: function () {
+      console.log('getVirtual', this.parent.stream.virtual);
+      return this.parent.stream.virtual;
+    },
+
+    getSettings: function () {
+      console.log('getSettings');
+    }
+
+
+  });
+
+
+EventsNode.acceptThisEventType = function () {
+  throw new Error('EventsNode.acceptThisEventType nust be overriden');
+};
+
+
+
+
+
+})()
+},{"../view/NodeView.js":73,"./RootNode":20,"./TreeNode":39,"backbone":75,"underscore":9}],133:[function(require,module,exports){
 (function(){/* global window, google, document */
 /*jshint -W084 */
 /*jshint -W089 */
@@ -33848,7 +33255,7 @@ Object.keys = Object.keys || function (o) {
 };
 
 })()
-},{}],133:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 (function(process,__dirname){var path = require('path');
 var fs = require('fs');
 
@@ -33965,7 +33372,7 @@ mime.charsets = {
 module.exports = mime;
 
 })(require("__browserify_process"),"/..\\node_modules\\pryv\\node_modules\\form-data\\node_modules\\mime")
-},{"__browserify_process":67,"fs":115,"path":112}],134:[function(require,module,exports){
+},{"__browserify_process":50,"fs":113,"path":108}],132:[function(require,module,exports){
 (function(process){/*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
@@ -34926,7 +34333,220 @@ module.exports = mime;
 }());
 
 })(require("__browserify_process"))
-},{"__browserify_process":67}],119:[function(require,module,exports){
+},{"__browserify_process":50}],134:[function(require,module,exports){
+var Stream = require('stream');
+var util = require('util');
+
+var Response = module.exports = function (res) {
+    this.offset = 0;
+    this.readable = true;
+};
+
+util.inherits(Response, Stream);
+
+var capable = {
+    streaming : true,
+    status2 : true
+};
+
+function parseHeaders (res) {
+    var lines = res.getAllResponseHeaders().split(/\r?\n/);
+    var headers = {};
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line === '') continue;
+        
+        var m = line.match(/^([^:]+):\s*(.*)/);
+        if (m) {
+            var key = m[1].toLowerCase(), value = m[2];
+            
+            if (headers[key] !== undefined) {
+            
+                if (isArray(headers[key])) {
+                    headers[key].push(value);
+                }
+                else {
+                    headers[key] = [ headers[key], value ];
+                }
+            }
+            else {
+                headers[key] = value;
+            }
+        }
+        else {
+            headers[line] = true;
+        }
+    }
+    return headers;
+}
+
+Response.prototype.getResponse = function (xhr) {
+    var respType = String(xhr.responseType).toLowerCase();
+    if (respType === 'blob') return xhr.responseBlob || xhr.response;
+    if (respType === 'arraybuffer') return xhr.response;
+    return xhr.responseText;
+}
+
+Response.prototype.getHeader = function (key) {
+    return this.headers[key.toLowerCase()];
+};
+
+Response.prototype.handle = function (res) {
+    if (res.readyState === 2 && capable.status2) {
+        try {
+            this.statusCode = res.status;
+            this.headers = parseHeaders(res);
+        }
+        catch (err) {
+            capable.status2 = false;
+        }
+        
+        if (capable.status2) {
+            this.emit('ready');
+        }
+    }
+    else if (capable.streaming && res.readyState === 3) {
+        try {
+            if (!this.statusCode) {
+                this.statusCode = res.status;
+                this.headers = parseHeaders(res);
+                this.emit('ready');
+            }
+        }
+        catch (err) {}
+        
+        try {
+            this._emitData(res);
+        }
+        catch (err) {
+            capable.streaming = false;
+        }
+    }
+    else if (res.readyState === 4) {
+        if (!this.statusCode) {
+            this.statusCode = res.status;
+            this.emit('ready');
+        }
+        this._emitData(res);
+        
+        if (res.error) {
+            this.emit('error', this.getResponse(res));
+        }
+        else this.emit('end');
+        
+        this.emit('close');
+    }
+};
+
+Response.prototype._emitData = function (res) {
+    var respBody = this.getResponse(res);
+    if (respBody.toString().match(/ArrayBuffer/)) {
+        this.emit('data', new Uint8Array(respBody, this.offset));
+        this.offset = respBody.byteLength;
+        return;
+    }
+    if (respBody.length > this.offset) {
+        this.emit('data', respBody.slice(this.offset));
+        this.offset = respBody.length;
+    }
+};
+
+var isArray = Array.isArray || function (xs) {
+    return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+},{"stream":129,"util":41}],119:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  //Model = require('../../../numericals/TimeSeriesModel.js'),
+  ChartModel = require('../../../numericals/ChartModel.js'),
+  ChartView = require('../../../numericals/ChartView.js');
+
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Numerical',
+  template: '#template-detail-content-numerical-general',
+  itemViewContainer: '#detail-content',
+  chartView: null,
+  rendered: false,
+  initialize: function () {
+    this.listenTo(this.model, 'change:collection', this.render.bind(this));
+    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+
+    if (this.chartView) {
+      this.chartView.model.set('collection', this.model.get('collection'));
+    } else {
+      this.chartView = new ChartView({model:
+        new ChartModel({
+          container: '#detail-chart-container-general',
+          view: null,
+          requiresDim: false,
+          collection: this.model.get('collection'),
+          highlighted: false,
+          highlightedTime: null,
+          allowPieChart: false,
+          singleNumberAsText: false,
+          dimensions: null,
+          legendStyle: 'list', // Legend style: 'list', 'table'
+          legendButton: true,  // A button in the legend
+          legendButtonContent: this.model.get('virtual') ? ['remove', 'edit'] : ['edit'],
+          legendShow: true,     // Show legend or not
+          legendContainer: '#legend-container-general', //false or a a selector
+          legendExtras: true,   // use extras in the legend
+          onClick: false,
+          onHover: true,
+          onDnD: false,
+          allowPan: true,      // Allows navigation through the chart
+          allowZoom: true,     // Allows zooming on the chart
+          panZoomButton: true,
+          xaxis: true,
+          editPoint: false,
+          showNodeCount: false
+        })});
+
+      this.chartView.on('remove', function (m) {
+        this.trigger('remove', m);
+      }.bind(this));
+
+      this.chartView.on('edit', function (m) {
+        this.trigger('edit', m);
+      }.bind(this));
+
+      this.chartView.on('duplicate', function (m) {
+        this.trigger('duplicate', m);
+      }.bind(this));
+    }
+
+    if ($('#detail-chart-container-general').length !== 0) {
+      this.chartView.render();
+      this.highlightEvent();
+      this.rendered = true;
+    }
+  },
+  debounceRender: _.debounce(function () {
+    if (!this.rendered) {
+      this.render();
+      this.highlightEvent();
+    }
+  }, 1000),
+
+  highlightEvent: function () {
+    if (this.chartView && this.model.get('event')) {
+      this.chartView.highlightEvent(this.model.get('event'));
+    }
+  },
+  onClose: function () {
+    this.chartView.close();
+    this.chartView = null;
+    $(this.itemViewContainer).empty();
+  }
+});
+})()
+},{"../../../numericals/ChartModel.js":88,"../../../numericals/ChartView.js":91,"backbone.marionette":34,"underscore":9}],120:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -35150,220 +34770,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"../../../numericals/ChartModel.js":90,"../../../numericals/ChartView.js":87,"backbone.marionette":33,"underscore":9}],120:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  //Model = require('../../../numericals/TimeSeriesModel.js'),
-  ChartModel = require('../../../numericals/ChartModel.js'),
-  ChartView = require('../../../numericals/ChartView.js');
-
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Numerical',
-  template: '#template-detail-content-numerical-general',
-  itemViewContainer: '#detail-content',
-  chartView: null,
-  rendered: false,
-  initialize: function () {
-    this.listenTo(this.model, 'change:collection', this.render.bind(this));
-    this.listenTo(this.model, 'change:event', this.highlightEvent.bind(this));
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-
-    if (this.chartView) {
-      this.chartView.model.set('collection', this.model.get('collection'));
-    } else {
-      this.chartView = new ChartView({model:
-        new ChartModel({
-          container: '#detail-chart-container-general',
-          view: null,
-          requiresDim: false,
-          collection: this.model.get('collection'),
-          highlighted: false,
-          highlightedTime: null,
-          allowPieChart: false,
-          singleNumberAsText: false,
-          dimensions: null,
-          legendStyle: 'list', // Legend style: 'list', 'table'
-          legendButton: true,  // A button in the legend
-          legendButtonContent: this.model.get('virtual') ? ['remove', 'edit'] : ['edit'],
-          legendShow: true,     // Show legend or not
-          legendContainer: '#legend-container-general', //false or a a selector
-          legendExtras: true,   // use extras in the legend
-          onClick: false,
-          onHover: true,
-          onDnD: false,
-          allowPan: true,      // Allows navigation through the chart
-          allowZoom: true,     // Allows zooming on the chart
-          panZoomButton: true,
-          xaxis: true,
-          editPoint: false,
-          showNodeCount: false
-        })});
-
-      this.chartView.on('remove', function (m) {
-        this.trigger('remove', m);
-      }.bind(this));
-
-      this.chartView.on('edit', function (m) {
-        this.trigger('edit', m);
-      }.bind(this));
-
-      this.chartView.on('duplicate', function (m) {
-        this.trigger('duplicate', m);
-      }.bind(this));
-    }
-
-    if ($('#detail-chart-container-general').length !== 0) {
-      this.chartView.render();
-      this.highlightEvent();
-      this.rendered = true;
-    }
-  },
-  debounceRender: _.debounce(function () {
-    if (!this.rendered) {
-      this.render();
-      this.highlightEvent();
-    }
-  }, 1000),
-
-  highlightEvent: function () {
-    if (this.chartView && this.model.get('event')) {
-      this.chartView.highlightEvent(this.model.get('event'));
-    }
-  },
-  onClose: function () {
-    this.chartView.close();
-    this.chartView = null;
-    $(this.itemViewContainer).empty();
-  }
-});
-})()
-},{"../../../numericals/ChartModel.js":90,"../../../numericals/ChartView.js":87,"backbone.marionette":33,"underscore":9}],137:[function(require,module,exports){
-var Stream = require('stream');
-var util = require('util');
-
-var Response = module.exports = function (res) {
-    this.offset = 0;
-    this.readable = true;
-};
-
-util.inherits(Response, Stream);
-
-var capable = {
-    streaming : true,
-    status2 : true
-};
-
-function parseHeaders (res) {
-    var lines = res.getAllResponseHeaders().split(/\r?\n/);
-    var headers = {};
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (line === '') continue;
-        
-        var m = line.match(/^([^:]+):\s*(.*)/);
-        if (m) {
-            var key = m[1].toLowerCase(), value = m[2];
-            
-            if (headers[key] !== undefined) {
-            
-                if (isArray(headers[key])) {
-                    headers[key].push(value);
-                }
-                else {
-                    headers[key] = [ headers[key], value ];
-                }
-            }
-            else {
-                headers[key] = value;
-            }
-        }
-        else {
-            headers[line] = true;
-        }
-    }
-    return headers;
-}
-
-Response.prototype.getResponse = function (xhr) {
-    var respType = String(xhr.responseType).toLowerCase();
-    if (respType === 'blob') return xhr.responseBlob || xhr.response;
-    if (respType === 'arraybuffer') return xhr.response;
-    return xhr.responseText;
-}
-
-Response.prototype.getHeader = function (key) {
-    return this.headers[key.toLowerCase()];
-};
-
-Response.prototype.handle = function (res) {
-    if (res.readyState === 2 && capable.status2) {
-        try {
-            this.statusCode = res.status;
-            this.headers = parseHeaders(res);
-        }
-        catch (err) {
-            capable.status2 = false;
-        }
-        
-        if (capable.status2) {
-            this.emit('ready');
-        }
-    }
-    else if (capable.streaming && res.readyState === 3) {
-        try {
-            if (!this.statusCode) {
-                this.statusCode = res.status;
-                this.headers = parseHeaders(res);
-                this.emit('ready');
-            }
-        }
-        catch (err) {}
-        
-        try {
-            this._emitData(res);
-        }
-        catch (err) {
-            capable.streaming = false;
-        }
-    }
-    else if (res.readyState === 4) {
-        if (!this.statusCode) {
-            this.statusCode = res.status;
-            this.emit('ready');
-        }
-        this._emitData(res);
-        
-        if (res.error) {
-            this.emit('error', this.getResponse(res));
-        }
-        else this.emit('end');
-        
-        this.emit('close');
-    }
-};
-
-Response.prototype._emitData = function (res) {
-    var respBody = this.getResponse(res);
-    if (respBody.toString().match(/ArrayBuffer/)) {
-        this.emit('data', new Uint8Array(respBody, this.offset));
-        this.offset = respBody.byteLength;
-        return;
-    }
-    if (respBody.length > this.offset) {
-        this.emit('data', respBody.slice(this.offset));
-        this.offset = respBody.length;
-    }
-};
-
-var isArray = Array.isArray || function (xs) {
-    return Object.prototype.toString.call(xs) === '[object Array]';
-};
-
-},{"stream":132,"util":42}],118:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":88,"../../../numericals/ChartView.js":91,"backbone.marionette":34,"underscore":9}],116:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -36937,7 +36344,7 @@ var isArray = Array.isArray || function (xs) {
 }).call(this);
 
 })()
-},{"underscore":9}],126:[function(require,module,exports){
+},{"underscore":9}],122:[function(require,module,exports){
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -37065,133 +36472,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":139,"./View.js":138,"underscore":9}],129:[function(require,module,exports){
-var _ = require('underscore'),
-  PicturesView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-var minWidth = 300;
-var minHeight = 200;
-var maxWidth = 300;
-var maxHeight = 200;
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = PicturesView;
-    this.eventDisplayed = null;
-    this.modelContent = {};
-    this.nbrDisplayW = -1;
-    this.nbrDisplayH = -1;
-    this.change = false;
-  },
-
-  {
-    _howManyEventsCanBeDisplayed: function () {
-      if (this.width < minWidth || this.height < minHeight) {
-        this.nbrDisplayW = 1;
-        this.nbrDisplayH = 1;
-      }
-      if (Math.ceil(this.width / maxWidth) !== this.nbrDisplayW ||
-        Math.ceil(this.height / maxHeight) !== this.nbrDisplayH) {
-        this.nbrDisplayW = Math.ceil(this.width / maxWidth);
-        this.nbrDisplayH = Math.ceil(this.height / maxHeight);
-      }
-    },
-    _findEventToDisplay: function () {
-      this._howManyEventsCanBeDisplayed();
-      this.eventsToDisplay = [];
-      // sort events oldest first, latest last
-      var events = _.sortBy(_.toArray(this.events), function (event) {
-        return event.time;
-      });
-      var nbrEventToDisplay = this.nbrDisplayW * this.nbrDisplayH;
-      if (events.length < nbrEventToDisplay) {
-        this.nbrDisplayW = Math.ceil(Math.sqrt(events.length));
-        this.nbrDisplayH = Math.ceil(events.length / this.nbrDisplayW);
-        nbrEventToDisplay = events.length;
-      }
-      if (this.highlightedTime === Infinity) {
-        this.eventsToDisplay = events.splice(events.length - nbrEventToDisplay);
-      } else {
-        //find nearest event
-        var nearestIndex = 0;
-        var timeDiff = Infinity;
-        var nextTimeDiff = 0;
-        for (var i = 0; i < events.length; i++) {
-          nextTimeDiff = Math.abs(events[i].time - this.highlightedTime);
-          if (nextTimeDiff <= timeDiff) {
-            timeDiff = nextTimeDiff;
-            nearestIndex = i;
-          } else {
-            break;
-          }
-        }
-        this.eventsToDisplay.push(events[nearestIndex]);
-        var beforeIndex = nearestIndex - 1;
-        var afterIndex = nearestIndex + 1;
-        for (var j = 0; j < nbrEventToDisplay - 1; j++) {
-          if (!events[beforeIndex]) {
-            this.eventsToDisplay.push(events[afterIndex]);
-            afterIndex++;
-          } else if (!events[afterIndex]) {
-            this.eventsToDisplay.unshift(events[beforeIndex]);
-            beforeIndex--;
-          } else if (this.highlightedTime - events[beforeIndex].time >
-            events[afterIndex].time - this.highlightedTime) {
-            this.eventsToDisplay.push(events[afterIndex]);
-            afterIndex++;
-          } else {
-            this.eventsToDisplay.unshift(events[beforeIndex]);
-            beforeIndex--;
-          }
-        }
-
-      }
-      /* DEBUG
-       var times = [];
-       var diff = [];
-       var error = false;
-       for (var k = 0; k < this.eventsToDisplay.length; k++) {
-       times[k] = this.eventsToDisplay[k].time;
-       if (times[k - 1] && times[k - 1] > times[k]) {
-       error = true;
-       }
-       diff[k] = Math.abs(this.highlightedTime - this.eventsToDisplay[k].time);
-       }
-       if (error) {
-       console.error('highlight', this.highlightedTime, 'times', times, 'diff', diff);
-       } else {
-       console.log('highlight', this.highlightedTime, 'times', times, 'diff', diff);
-       }
-       */
-    },
-    beforeRefreshModelView: function () {
-      for (var i = 0; i < this.eventsToDisplay.length; ++i) {
-        var denomW = i >= (this.nbrDisplayH - 1) * this.nbrDisplayW &&
-          this.eventsToDisplay.length % this.nbrDisplayW !== 0 ?
-          this.eventsToDisplay.length % this.nbrDisplayW:
-          this.nbrDisplayW;
-
-        var border = 0;
-        var width = (100 - (border * (denomW - 1))) / denomW;
-        var left = (Math.floor(i % this.nbrDisplayW)) * (width + border);
-        var height = (100 - (border * (this.nbrDisplayH - 1))) / this.nbrDisplayH;
-        var top = (Math.floor(i / this.nbrDisplayW)) * (height + border);
-        this.eventsToDisplay[i].width = width * this.width / 100.0;
-        this.eventsToDisplay[i].height = height * this.height / 100.0;
-        this.eventsToDisplay[i].top = top * this.height / 100.0;
-        this.eventsToDisplay[i].left = left * this.width / 100.0;
-      }
-
-      this.modelContent = {
-        events: this.eventsToDisplay,
-        eventsNbr: _.size(this.events),
-        change: this.change
-      };
-      this.change = !this.change;
-    }
-  }
-);
-},{"../common/Model.js":139,"./View.js":140,"underscore":9}],127:[function(require,module,exports){
+},{"../common/Model.js":136,"./View.js":135,"underscore":9}],125:[function(require,module,exports){
 (function(){/* global window, $ */
 
 var _ = require('underscore'),
@@ -37546,53 +36827,133 @@ NumericalsPlugin.prototype.resize = function () {
 };
 
 })()
-},{"../detailed/Controller.js":20,"./ChartModel.js":90,"./ChartView.js":87,"./TimeSeriesCollection.js":89,"./TimeSeriesModel.js":88,"./utils/ChartSettings.js":44,"underscore":9}],124:[function(require,module,exports){
+},{"../detailed/Controller.js":23,"./ChartModel.js":88,"./ChartView.js":91,"./TimeSeriesCollection.js":89,"./TimeSeriesModel.js":92,"./utils/ChartSettings.js":19,"underscore":9}],124:[function(require,module,exports){
 var _ = require('underscore'),
-  PositionsView = require('./View.js'),
+  PicturesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
-
+var minWidth = 300;
+var minHeight = 200;
+var maxWidth = 300;
+var maxHeight = 200;
 module.exports = CommonModel.implement(
   function (events, params) {
     CommonModel.call(this, events, params);
-    this.typeView = PositionsView;
+    this.typeView = PicturesView;
+    this.eventDisplayed = null;
     this.modelContent = {};
-    this.positions = [];
+    this.nbrDisplayW = -1;
+    this.nbrDisplayH = -1;
+    this.change = false;
   },
 
   {
-    OnDateHighlightedChange: function (time) {
-      this.highlightedTime = time;
-      if (this.view) {
-        this.view.onDateHighLighted(time);
+    _howManyEventsCanBeDisplayed: function () {
+      if (this.width < minWidth || this.height < minHeight) {
+        this.nbrDisplayW = 1;
+        this.nbrDisplayH = 1;
       }
-      if (this.detailedView) {
-        this.detailedView.highlightDate(this.highlightedTime);
+      if (Math.ceil(this.width / maxWidth) !== this.nbrDisplayW ||
+        Math.ceil(this.height / maxHeight) !== this.nbrDisplayH) {
+        this.nbrDisplayW = Math.ceil(this.width / maxWidth);
+        this.nbrDisplayH = Math.ceil(this.height / maxHeight);
       }
     },
-
-    _findEventToDisplay: function () {},
-
-    beforeRefreshModelView: function () {
-      // if (this.positions.length !== _.size(this.events)) {
-      this.positions = [];
-      _.each(this.events, function (event) {
-        this.positions.push(event);
-      }, this);
-      this.positions = this.positions.sort(function (a, b) {
-        return a.time <= b.time ? -1 : 1;
+    _findEventToDisplay: function () {
+      this._howManyEventsCanBeDisplayed();
+      this.eventsToDisplay = [];
+      // sort events oldest first, latest last
+      var events = _.sortBy(_.toArray(this.events), function (event) {
+        return event.time;
       });
-      //  }
+      var nbrEventToDisplay = this.nbrDisplayW * this.nbrDisplayH;
+      if (events.length < nbrEventToDisplay) {
+        this.nbrDisplayW = Math.ceil(Math.sqrt(events.length));
+        this.nbrDisplayH = Math.ceil(events.length / this.nbrDisplayW);
+        nbrEventToDisplay = events.length;
+      }
+      if (this.highlightedTime === Infinity) {
+        this.eventsToDisplay = events.splice(events.length - nbrEventToDisplay);
+      } else {
+        //find nearest event
+        var nearestIndex = 0;
+        var timeDiff = Infinity;
+        var nextTimeDiff = 0;
+        for (var i = 0; i < events.length; i++) {
+          nextTimeDiff = Math.abs(events[i].time - this.highlightedTime);
+          if (nextTimeDiff <= timeDiff) {
+            timeDiff = nextTimeDiff;
+            nearestIndex = i;
+          } else {
+            break;
+          }
+        }
+        this.eventsToDisplay.push(events[nearestIndex]);
+        var beforeIndex = nearestIndex - 1;
+        var afterIndex = nearestIndex + 1;
+        for (var j = 0; j < nbrEventToDisplay - 1; j++) {
+          if (!events[beforeIndex]) {
+            this.eventsToDisplay.push(events[afterIndex]);
+            afterIndex++;
+          } else if (!events[afterIndex]) {
+            this.eventsToDisplay.unshift(events[beforeIndex]);
+            beforeIndex--;
+          } else if (this.highlightedTime - events[beforeIndex].time >
+            events[afterIndex].time - this.highlightedTime) {
+            this.eventsToDisplay.push(events[afterIndex]);
+            afterIndex++;
+          } else {
+            this.eventsToDisplay.unshift(events[beforeIndex]);
+            beforeIndex--;
+          }
+        }
+
+      }
+      /* DEBUG
+       var times = [];
+       var diff = [];
+       var error = false;
+       for (var k = 0; k < this.eventsToDisplay.length; k++) {
+       times[k] = this.eventsToDisplay[k].time;
+       if (times[k - 1] && times[k - 1] > times[k]) {
+       error = true;
+       }
+       diff[k] = Math.abs(this.highlightedTime - this.eventsToDisplay[k].time);
+       }
+       if (error) {
+       console.error('highlight', this.highlightedTime, 'times', times, 'diff', diff);
+       } else {
+       console.log('highlight', this.highlightedTime, 'times', times, 'diff', diff);
+       }
+       */
+    },
+    beforeRefreshModelView: function () {
+      for (var i = 0; i < this.eventsToDisplay.length; ++i) {
+        var denomW = i >= (this.nbrDisplayH - 1) * this.nbrDisplayW &&
+          this.eventsToDisplay.length % this.nbrDisplayW !== 0 ?
+          this.eventsToDisplay.length % this.nbrDisplayW:
+          this.nbrDisplayW;
+
+        var border = 0;
+        var width = (100 - (border * (denomW - 1))) / denomW;
+        var left = (Math.floor(i % this.nbrDisplayW)) * (width + border);
+        var height = (100 - (border * (this.nbrDisplayH - 1))) / this.nbrDisplayH;
+        var top = (Math.floor(i / this.nbrDisplayW)) * (height + border);
+        this.eventsToDisplay[i].width = width * this.width / 100.0;
+        this.eventsToDisplay[i].height = height * this.height / 100.0;
+        this.eventsToDisplay[i].top = top * this.height / 100.0;
+        this.eventsToDisplay[i].left = left * this.width / 100.0;
+      }
+
       this.modelContent = {
-        positions: this.positions,
-        posWidth: this.width,
-        posHeight: this.height,
-        id: this.id,
-        eventsNbr: this.positions.length
+        events: this.eventsToDisplay,
+        eventsNbr: _.size(this.events),
+        change: this.change
       };
+      this.change = !this.change;
     }
   }
 );
-},{"../common/Model.js":139,"./View.js":141,"underscore":9}],131:[function(require,module,exports){
+},{"../common/Model.js":136,"./View.js":137,"underscore":9}],126:[function(require,module,exports){
 var _ = require('underscore'),
   GenericsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -37620,7 +36981,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":139,"./View.js":142,"underscore":9}],128:[function(require,module,exports){
+},{"../common/Model.js":136,"./View.js":138,"underscore":9}],128:[function(require,module,exports){
 var _ = require('underscore'),
   TweetView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -37650,92 +37011,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":139,"./View.js":143,"underscore":9}],130:[function(require,module,exports){
-var _ = require('underscore'),
-  ActivityView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = ActivityView;
-    this.eventDisplayed = null;
-    this.modelContent = {};
-
-    console.log('CTOR activity pryv MODEL');
-    console.log('pryv activity MODEL events', this.events);
-  },
-  {
-    beforeRefreshModelView: function () {
-
-      var timeSumByStream = {};
-
-      // group by stream
-      _.each(this.events, function (e) {
-        if (timeSumByStream[e.streamId]) {
-          timeSumByStream[e.streamId].time += e.duration ?
-            e.duration : (new Date()).getSeconds() - e.duration;
-        } else {
-          timeSumByStream[e.streamId] = {
-            stream: e.stream,
-            time: e.duration ?
-              e.duration : (new Date()).getSeconds() - e.duration
-          };
-        }
-      });
-      // Merge childs into parent, such that all are a the same level
-
-      console.log('activities/model.js timeSumByStream', timeSumByStream);
-
-      this.data = [];
-      for (var s in timeSumByStream) {
-        if (timeSumByStream.hasOwnProperty(s)) {
-          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
-        }
-      }
-
-      console.log('activities/model.js this.data', this.data);
-
-
-
-
-      this.options = {
-        series: {
-          pie: {
-            show: true,
-            innerRadius: 0.15,
-            label: {
-              show: true,
-              radius: 3 / 4,
-              formatter: function (label) { return label; },
-              background: {
-                opacity: 0
-              }
-            }
-          }
-        },
-        legend: {
-          show: false
-        }
-      };
-
-      this.modelContent = {
-        options: this.options,
-        data: this.data,
-        content: this.eventDisplayed.content,
-        description: this.eventDisplayed.description,
-        id: this.eventDisplayed.id,
-        modified: this.eventDisplayed.modified,
-        streamId: this.eventDisplayed.streamId,
-        tags: this.eventDisplayed.tags,
-        time: this.eventDisplayed.time,
-        type: this.eventDisplayed.type,
-        eventsNbr: _.size(this.events)
-      };
-    }
-  }
-);
-},{"../common/Model.js":139,"./View.js":144,"underscore":9}],122:[function(require,module,exports){
+},{"../common/Model.js":136,"./View.js":139,"underscore":9}],118:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var concatStream = require('concat-stream');
@@ -37869,7 +37145,53 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":137,"Base64":145,"concat-stream":146,"stream":132,"util":42}],145:[function(require,module,exports){
+},{"./response":134,"Base64":141,"concat-stream":140,"stream":129,"util":41}],127:[function(require,module,exports){
+var _ = require('underscore'),
+  PositionsView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = PositionsView;
+    this.modelContent = {};
+    this.positions = [];
+  },
+
+  {
+    OnDateHighlightedChange: function (time) {
+      this.highlightedTime = time;
+      if (this.view) {
+        this.view.onDateHighLighted(time);
+      }
+      if (this.detailedView) {
+        this.detailedView.highlightDate(this.highlightedTime);
+      }
+    },
+
+    _findEventToDisplay: function () {},
+
+    beforeRefreshModelView: function () {
+      // if (this.positions.length !== _.size(this.events)) {
+      this.positions = [];
+      _.each(this.events, function (event) {
+        this.positions.push(event);
+      }, this);
+      this.positions = this.positions.sort(function (a, b) {
+        return a.time <= b.time ? -1 : 1;
+      });
+      //  }
+      this.modelContent = {
+        positions: this.positions,
+        posWidth: this.width,
+        posHeight: this.height,
+        id: this.id,
+        eventsNbr: this.positions.length
+      };
+    }
+  }
+);
+},{"../common/Model.js":136,"./View.js":142,"underscore":9}],141:[function(require,module,exports){
 ;(function () {
 
   var
@@ -37926,7 +37248,7 @@ var indexOf = function (xs, x) {
 
 }());
 
-},{}],116:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -38206,7 +37528,7 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":118,"underscore":9}],117:[function(require,module,exports){
+},{"backbone":116,"underscore":9}],115:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
 // v0.0.6
@@ -38386,7 +37708,7 @@ Backbone.ChildViewContainer = (function(Backbone, _){
 }));
 
 
-},{"backbone":118,"underscore":9}],135:[function(require,module,exports){
+},{"backbone":116,"underscore":9}],131:[function(require,module,exports){
 (function(Buffer){var util = require('util');
 var Stream = require('stream').Stream;
 var DelayedStream = require('delayed-stream');
@@ -38574,7 +37896,339 @@ CombinedStream.prototype._emitError = function(err) {
 };
 
 })(require("__browserify_buffer").Buffer)
-},{"__browserify_buffer":121,"delayed-stream":147,"stream":132,"util":42}],141:[function(require,module,exports){
+},{"__browserify_buffer":117,"delayed-stream":143,"stream":129,"util":41}],136:[function(require,module,exports){
+(function(){/* global $*/
+var _ = require('underscore'),
+  Backbone = require('backbone');
+var Model = module.exports = function (events, params) {
+  this.verbose = false;
+  this.events = {};
+  this.modelContent = {};
+  _.each(events, function (event) {
+    this.events[event.id] = event;
+  }, this);
+  this.highlightedTime = Infinity;
+  this.modelView = null;
+  this.view = null;
+  this.eventDisplayed = null;
+  this.container = null;
+  this.needToRender = null;
+  this.typeView = null;
+  this.animationIn = null;
+  this.animationOut = null;
+  this.hasDetailedView = false;
+  _.extend(this, params);
+  this.debounceRefresh = _.debounce(function () {
+    if (!_.isEmpty(this.events)) {
+      this._refreshModelView();
+    }
+  }, 100);
+  this.debounceRefresh();
+};
+
+Model.implement = function (constructor, members) {
+  var newImplementation = constructor;
+  if (typeof Object.create === 'undefined') {
+    Object.create = function (prototype) {
+      function C() { }
+      C.prototype = prototype;
+      return new C();
+    };
+  }
+  newImplementation.prototype = Object.create(this.prototype);
+  _.extend(newImplementation.prototype, members);
+  newImplementation.implement = this.implement;
+  return newImplementation;
+};
+
+_.extend(Model.prototype, {
+  eventEnter: function (event) {
+    if (this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventEnter: this eventId already exist:', event.id,
+        'current:', this.events[event.id], 'new:', event);
+    }
+    this.events[event.id] = event;
+    if (this.hasDetailedView) {
+      this.treeMap.addEventsDetailedView(event);
+    }
+
+    this.debounceRefresh();
+  },
+  eventLeave: function (event) {
+    if (!this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventLeave: this eventId dont exist:', event.id,
+        'event:', event);
+    }
+    delete this.events[event.id];
+    if (this.hasDetailedView) {
+      this.treeMap.deleteEventDetailedView(event);
+    }
+    //if (!_.isEmpty(this.events)) {
+    this.debounceRefresh();
+    //}
+  },
+  eventChange: function (event) {
+    if (!this.events[event.id] && this.verbose) {
+      console.log(this.container, 'eventChange: this eventId dont exist:', event.id,
+        'event:', event);
+    }
+    this.events[event.id] = event;
+    if (this.hasDetailedView) {
+      this.treeMap.updateEventDetailedView(event);
+    }
+    this.debounceRefresh();
+  },
+  OnDateHighlightedChange: function (time) {
+    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
+    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
+    this.highlightedTime = time;
+    if (this.hasDetailedView) {
+      this.treeMap.highlightDateDetailedView(this.highlightedTime);
+    }
+    this.debounceRefresh();
+  },
+  render: function (container) {
+    this.container = container;
+    if (this.view) {
+      this.view.renderView(this.container, this.animationIn);
+    } else {
+      this.needToRender = true;
+    }
+  },
+  refresh: function (newParams) {
+    _.extend(this, newParams);
+    this.debounceRefresh();
+  },
+  close: function () {
+    if (this.view) {
+      this.view.close(this.animationOut);
+    }
+    this.view = null;
+    this.events = null;
+    this.highlightedTime = Infinity;
+    this.modelView = null;
+    this.eventDisplayed = null;
+  },
+  beforeRefreshModelView: function () {},
+  afterRefreshModelView: function () {},
+  _refreshModelView: function () {
+    this._findEventToDisplay();
+    this.beforeRefreshModelView();
+    if (!this.modelView) {
+      var BasicModel = Backbone.Model.extend({});
+      this.modelView = new BasicModel({});
+    }
+
+    // Update the model
+    _.each(_.keys(this.modelContent), function (key) {
+      this.modelView.set(key, this.modelContent[key]);
+    }, this);
+
+    if (!this.view) {
+      if (typeof(document) !== 'undefined')  {
+        this.view = new this.typeView({model: this.modelView});
+        this.view.on('nodeClicked', function () {
+          if (!this.hasDetailedView) {
+            this.hasDetailedView = true;
+            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+              this.treeMap.closeDetailedView();
+              this.hasDetailedView = false;
+            }.bind(this));
+            this.treeMap.showDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
+          }
+        }.bind(this));
+      }
+    }
+    this.view.off('nodeClicked');
+    this.view.on('nodeClicked', function () {
+      if (!this.hasDetailedView) {
+        this.hasDetailedView = true;
+        var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+          this.treeMap.closeDetailedView();
+          this.hasDetailedView = false;
+        }.bind(this));
+        this.treeMap.showDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
+      }
+    }.bind(this));
+    if (this.needToRender) {
+      this.view.renderView(this.container, this.animationIn);
+      this.needToRender = false;
+    }
+    this.afterRefreshModelView();
+  },
+
+  _findEventToDisplay: function () {
+    if (this.highlightedTime === Infinity) {
+      var oldestTime = 0;
+      _.each(this.events, function (event) {
+        if (event.time >= oldestTime) {
+          oldestTime = event.time;
+          this.eventDisplayed = event;
+        }
+      }, this);
+
+    } else {
+      var timeDiff = Infinity, debounceRefresh = 0;
+      _.each(this.events, function (event) {
+        debounceRefresh = Math.abs(event.time - this.highlightedTime);
+        if (debounceRefresh <= timeDiff) {
+          timeDiff = debounceRefresh;
+          this.eventDisplayed = event;
+        }
+      }, this);
+    }
+  }
+
+});
+})()
+},{"backbone":75,"underscore":9}],138:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#genericsView',
+  container: null,
+  animation: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+  },
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'pulse';
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":34}],135:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette'),
+  _ = require('underscore');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#picturesView',
+  container: null,
+  animation: null,
+  currentId: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+
+  },
+  change: function () {
+    if (!this.currentId || this.currentId !== this.model.get('id')) {
+      $('#' + this.container).removeClass('animated ' + this.animation);
+      this.animation = '';
+      this.$el.attr('id', this.model.get('id'));
+      this.currentId = this.model.get('id');
+    } else {
+      this.animation = null;
+    }
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.currentId = this.model.get('id');
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      var $mosaics = $('#' + this.container + ' .mosaic');
+      var events = this.model.get('events');
+      var displayedIds  = [];
+      _.each($mosaics, function (mosaic) {
+        displayedIds.push($(mosaic).attr('id'));
+      });
+      _.each(events, function (event) {
+        var index = displayedIds.indexOf(event.id);
+        if (index !== -1) {
+          $('#' + event.id).css({
+            width: event.width,
+            height: event.height,
+            top: event.top,
+            left: event.left
+          });
+          displayedIds[index] = null;
+        } else {
+          var toAdd = $('<div></div>').addClass('mosaic node').attr('id', event.id)
+            .css({
+              'background': 'url(' + event.picUrl + ') no-repeat center center',
+              '-webkit-background-size': 'cover',
+              '-moz-background-size': 'cover',
+              '-o-background-size': 'cover',
+              'background-size': 'cover',
+              'width': event.width,
+              'height': event.height,
+              'top': event.top,
+              'left': event.left,
+              'position': 'absolute'
+            });
+          $('#' + this.container).append(toAdd.fadeIn());
+        }
+      }.bind(this));
+      _.each(displayedIds, function (id) {
+        if (id) {
+          $('#' + id).remove();
+        }
+      });
+      var $eventsNbr = $('#' + this.container + ' .aggregated-nbr-events');
+      if ($eventsNbr.length === 0) {
+        if (this.model.get('eventsNbr') > 1) {
+          $('#' + this.container).append('<span class="aggregated-nbr-events">' +
+          this.model.get('eventsNbr') + '</span>');
+        }
+        $('#' + this.container).bind('click', function () {
+          this.trigger('nodeClicked');
+        }.bind(this));
+      } else {
+        $eventsNbr.html(this.model.get('eventsNbr'));
+      }
+
+
+
+
+      $('#' + this.container).removeClass('animated fadeIn');
+
+      if (this.animation) {
+        $('#' + this.container).addClass('animated ' + this.animation);
+        setTimeout(function () {
+          $('#' + this.container).removeClass('animated ' + this.animation);
+        }.bind(this), 1000);
+      }
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":34,"underscore":9}],142:[function(require,module,exports){
 (function(){/* global document, $ */
 var  Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
@@ -38770,192 +38424,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"./utility/markerclusterer.js":136,"backbone.marionette":33,"google-maps":94,"underscore":9}],139:[function(require,module,exports){
-(function(){/* global $*/
-var _ = require('underscore'),
-  Backbone = require('backbone');
-var Model = module.exports = function (events, params) {
-  this.verbose = false;
-  this.events = {};
-  this.modelContent = {};
-  _.each(events, function (event) {
-    this.events[event.id] = event;
-  }, this);
-  this.highlightedTime = Infinity;
-  this.modelView = null;
-  this.view = null;
-  this.eventDisplayed = null;
-  this.container = null;
-  this.needToRender = null;
-  this.typeView = null;
-  this.animationIn = null;
-  this.animationOut = null;
-  this.hasDetailedView = false;
-  _.extend(this, params);
-  this.debounceRefresh = _.debounce(function () {
-    if (!_.isEmpty(this.events)) {
-      this._refreshModelView();
-    }
-  }, 100);
-  this.debounceRefresh();
-};
-
-Model.implement = function (constructor, members) {
-  var newImplementation = constructor;
-  if (typeof Object.create === 'undefined') {
-    Object.create = function (prototype) {
-      function C() { }
-      C.prototype = prototype;
-      return new C();
-    };
-  }
-  newImplementation.prototype = Object.create(this.prototype);
-  _.extend(newImplementation.prototype, members);
-  newImplementation.implement = this.implement;
-  return newImplementation;
-};
-
-_.extend(Model.prototype, {
-  eventEnter: function (event) {
-    if (this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventEnter: this eventId already exist:', event.id,
-        'current:', this.events[event.id], 'new:', event);
-    }
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.addEventsDetailedView(event);
-    }
-
-    this.debounceRefresh();
-  },
-  eventLeave: function (event) {
-    if (!this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventLeave: this eventId dont exist:', event.id,
-        'event:', event);
-    }
-    delete this.events[event.id];
-    if (this.hasDetailedView) {
-      this.treeMap.deleteEventDetailedView(event);
-    }
-    //if (!_.isEmpty(this.events)) {
-    this.debounceRefresh();
-    //}
-  },
-  eventChange: function (event) {
-    if (!this.events[event.id] && this.verbose) {
-      console.log(this.container, 'eventChange: this eventId dont exist:', event.id,
-        'event:', event);
-    }
-    this.events[event.id] = event;
-    if (this.hasDetailedView) {
-      this.treeMap.updateEventDetailedView(event);
-    }
-    this.debounceRefresh();
-  },
-  OnDateHighlightedChange: function (time) {
-    this.animationIn = time < this.highlightedTime ? 'fadeInLeftBig' : 'fadeInRightBig';
-    this.animationOut = time < this.highlightedTime ? 'fadeOutRightBig' : 'fadeOutLeftBig';
-    this.highlightedTime = time;
-    if (this.hasDetailedView) {
-      this.treeMap.highlightDateDetailedView(this.highlightedTime);
-    }
-    this.debounceRefresh();
-  },
-  render: function (container) {
-    this.container = container;
-    if (this.view) {
-      this.view.renderView(this.container, this.animationIn);
-    } else {
-      this.needToRender = true;
-    }
-  },
-  refresh: function (newParams) {
-    _.extend(this, newParams);
-    this.debounceRefresh();
-  },
-  close: function () {
-    if (this.view) {
-      this.view.close(this.animationOut);
-    }
-    this.view = null;
-    this.events = null;
-    this.highlightedTime = Infinity;
-    this.modelView = null;
-    this.eventDisplayed = null;
-  },
-  beforeRefreshModelView: function () {},
-  afterRefreshModelView: function () {},
-  _refreshModelView: function () {
-    this._findEventToDisplay();
-    this.beforeRefreshModelView();
-    if (!this.modelView) {
-      var BasicModel = Backbone.Model.extend({});
-      this.modelView = new BasicModel({});
-    }
-
-    // Update the model
-    _.each(_.keys(this.modelContent), function (key) {
-      this.modelView.set(key, this.modelContent[key]);
-    }, this);
-
-    if (!this.view) {
-      if (typeof(document) !== 'undefined')  {
-        this.view = new this.typeView({model: this.modelView});
-        this.view.on('nodeClicked', function () {
-          if (!this.hasDetailedView) {
-            this.hasDetailedView = true;
-            var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-              this.treeMap.closeDetailedView();
-              this.hasDetailedView = false;
-            }.bind(this));
-            this.treeMap.showDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
-          }
-        }.bind(this));
-      }
-    }
-    this.view.off('nodeClicked');
-    this.view.on('nodeClicked', function () {
-      if (!this.hasDetailedView) {
-        this.hasDetailedView = true;
-        var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
-          this.treeMap.closeDetailedView();
-          this.hasDetailedView = false;
-        }.bind(this));
-        this.treeMap.showDetailedView($modal, this.events, this.highlightedTime, this.view.$el);
-      }
-    }.bind(this));
-    if (this.needToRender) {
-      this.view.renderView(this.container, this.animationIn);
-      this.needToRender = false;
-    }
-    this.afterRefreshModelView();
-  },
-
-  _findEventToDisplay: function () {
-    if (this.highlightedTime === Infinity) {
-      var oldestTime = 0;
-      _.each(this.events, function (event) {
-        if (event.time >= oldestTime) {
-          oldestTime = event.time;
-          this.eventDisplayed = event;
-        }
-      }, this);
-
-    } else {
-      var timeDiff = Infinity, debounceRefresh = 0;
-      _.each(this.events, function (event) {
-        debounceRefresh = Math.abs(event.time - this.highlightedTime);
-        if (debounceRefresh <= timeDiff) {
-          timeDiff = debounceRefresh;
-          this.eventDisplayed = event;
-        }
-      }, this);
-    }
-  }
-
-});
-})()
-},{"backbone":30,"underscore":9}],140:[function(require,module,exports){
+},{"./utility/markerclusterer.js":133,"backbone.marionette":34,"google-maps":95,"underscore":9}],137:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -39064,200 +38533,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33,"underscore":9}],144:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#activityView',
-  container: null,
-  animation: null,
-  initialize: function () {
-    console.log('CTOR activity pryv VIEW');
-
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
-    this.$el.attr('id', this.model.get('id'));
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      $.plot('#' + this.container, this.model.get('data'), this.model.get('options'));
-      $('#' + this.container).bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":33}],138:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#picturesView',
-  container: null,
-  animation: null,
-  currentId: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-
-  },
-  change: function () {
-    if (!this.currentId || this.currentId !== this.model.get('id')) {
-      $('#' + this.container).removeClass('animated ' + this.animation);
-      this.animation = '';
-      this.$el.attr('id', this.model.get('id'));
-      this.currentId = this.model.get('id');
-    } else {
-      this.animation = null;
-    }
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.currentId = this.model.get('id');
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      var $mosaics = $('#' + this.container + ' .mosaic');
-      var events = this.model.get('events');
-      var displayedIds  = [];
-      _.each($mosaics, function (mosaic) {
-        displayedIds.push($(mosaic).attr('id'));
-      });
-      _.each(events, function (event) {
-        var index = displayedIds.indexOf(event.id);
-        if (index !== -1) {
-          $('#' + event.id).css({
-            width: event.width,
-            height: event.height,
-            top: event.top,
-            left: event.left
-          });
-          displayedIds[index] = null;
-        } else {
-          var toAdd = $('<div></div>').addClass('mosaic node').attr('id', event.id)
-            .css({
-              'background': 'url(' + event.picUrl + ') no-repeat center center',
-              '-webkit-background-size': 'cover',
-              '-moz-background-size': 'cover',
-              '-o-background-size': 'cover',
-              'background-size': 'cover',
-              'width': event.width,
-              'height': event.height,
-              'top': event.top,
-              'left': event.left,
-              'position': 'absolute'
-            });
-          $('#' + this.container).append(toAdd.fadeIn());
-        }
-      }.bind(this));
-      _.each(displayedIds, function (id) {
-        if (id) {
-          $('#' + id).remove();
-        }
-      });
-      var $eventsNbr = $('#' + this.container + ' .aggregated-nbr-events');
-      if ($eventsNbr.length === 0) {
-        if (this.model.get('eventsNbr') > 1) {
-          $('#' + this.container).append('<span class="aggregated-nbr-events">' +
-          this.model.get('eventsNbr') + '</span>');
-        }
-        $('#' + this.container).bind('click', function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
-      } else {
-        $eventsNbr.html(this.model.get('eventsNbr'));
-      }
-
-
-
-
-      $('#' + this.container).removeClass('animated fadeIn');
-
-      if (this.animation) {
-        $('#' + this.container).addClass('animated ' + this.animation);
-        setTimeout(function () {
-          $('#' + this.container).removeClass('animated ' + this.animation);
-        }.bind(this), 1000);
-      }
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":33,"underscore":9}],142:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#genericsView',
-  container: null,
-  animation: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'pulse';
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      $('#' + this.container).bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":33}],143:[function(require,module,exports){
+},{"backbone.marionette":34,"underscore":9}],139:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
 
@@ -39308,7 +38584,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":33}],147:[function(require,module,exports){
+},{"backbone.marionette":34}],143:[function(require,module,exports){
 var Stream = require('stream').Stream;
 var util = require('util');
 
@@ -39409,7 +38685,7 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
   this.emit('error', new Error(message));
 };
 
-},{"stream":132,"util":42}],146:[function(require,module,exports){
+},{"stream":129,"util":41}],140:[function(require,module,exports){
 var stream = require('stream')
 var bops = require('bops')
 var util = require('util')
@@ -39460,63 +38736,7 @@ module.exports = function(cb) {
 
 module.exports.ConcatStream = ConcatStream
 
-},{"bops":148,"stream":132,"util":42}],149:[function(require,module,exports){
-
-module.exports = function(buffer) {
-  return buffer instanceof Uint8Array;
-}
-
-},{}],150:[function(require,module,exports){
-module.exports = subarray
-
-function subarray(buf, from, to) {
-  return buf.subarray(from || 0, to || buf.length)
-}
-
-},{}],151:[function(require,module,exports){
-module.exports = join
-
-function join(targets, hint) {
-  if(!targets.length) {
-    return new Uint8Array(0)
-  }
-
-  var len = hint !== undefined ? hint : get_length(targets)
-    , out = new Uint8Array(len)
-    , cur = targets[0]
-    , curlen = cur.length
-    , curidx = 0
-    , curoff = 0
-    , i = 0
-
-  while(i < len) {
-    if(curoff === curlen) {
-      curoff = 0
-      ++curidx
-      cur = targets[curidx]
-      curlen = cur && cur.length
-      continue
-    }
-    out[i++] = cur[curoff++] 
-  }
-
-  return out
-}
-
-function get_length(targets) {
-  var size = 0
-  for(var i = 0, len = targets.length; i < len; ++i) {
-    size += targets[i].byteLength
-  }
-  return size
-}
-
-},{}],152:[function(require,module,exports){
-module.exports = function(size) {
-  return new Uint8Array(size)
-}
-
-},{}],148:[function(require,module,exports){
+},{"bops":144,"stream":129,"util":41}],144:[function(require,module,exports){
 var proto = {}
 module.exports = proto
 
@@ -39537,7 +38757,7 @@ function mix(from, into) {
   }
 }
 
-},{"./copy.js":155,"./create.js":152,"./from.js":153,"./is.js":149,"./join.js":151,"./read.js":156,"./subarray.js":150,"./to.js":154,"./write.js":157}],155:[function(require,module,exports){
+},{"./copy.js":146,"./create.js":149,"./from.js":145,"./is.js":152,"./join.js":148,"./read.js":147,"./subarray.js":151,"./to.js":150,"./write.js":153}],146:[function(require,module,exports){
 module.exports = copy
 
 var slice = [].slice
@@ -39591,7 +38811,63 @@ function slow_copy(from, to, j, i, jend) {
   }
 }
 
-},{}],156:[function(require,module,exports){
+},{}],148:[function(require,module,exports){
+module.exports = join
+
+function join(targets, hint) {
+  if(!targets.length) {
+    return new Uint8Array(0)
+  }
+
+  var len = hint !== undefined ? hint : get_length(targets)
+    , out = new Uint8Array(len)
+    , cur = targets[0]
+    , curlen = cur.length
+    , curidx = 0
+    , curoff = 0
+    , i = 0
+
+  while(i < len) {
+    if(curoff === curlen) {
+      curoff = 0
+      ++curidx
+      cur = targets[curidx]
+      curlen = cur && cur.length
+      continue
+    }
+    out[i++] = cur[curoff++] 
+  }
+
+  return out
+}
+
+function get_length(targets) {
+  var size = 0
+  for(var i = 0, len = targets.length; i < len; ++i) {
+    size += targets[i].byteLength
+  }
+  return size
+}
+
+},{}],149:[function(require,module,exports){
+module.exports = function(size) {
+  return new Uint8Array(size)
+}
+
+},{}],151:[function(require,module,exports){
+module.exports = subarray
+
+function subarray(buf, from, to) {
+  return buf.subarray(from || 0, to || buf.length)
+}
+
+},{}],152:[function(require,module,exports){
+
+module.exports = function(buffer) {
+  return buffer instanceof Uint8Array;
+}
+
+},{}],147:[function(require,module,exports){
 module.exports = {
     readUInt8:      read_uint8
   , readInt8:       read_int8
@@ -39680,7 +38956,7 @@ function read_double_be(target, at) {
   return dv.getFloat64(at + target.byteOffset, false)
 }
 
-},{"./mapped.js":158}],157:[function(require,module,exports){
+},{"./mapped.js":154}],153:[function(require,module,exports){
 module.exports = {
     writeUInt8:      write_uint8
   , writeInt8:       write_int8
@@ -39768,7 +39044,7 @@ function write_double_be(target, value, at) {
   return dv.setFloat64(at + target.byteOffset, value, false)
 }
 
-},{"./mapped.js":158}],158:[function(require,module,exports){
+},{"./mapped.js":154}],154:[function(require,module,exports){
 var proto
   , map
 
@@ -39790,45 +39066,7 @@ function get(target) {
   return out
 }
 
-},{}],154:[function(require,module,exports){
-module.exports = to
-
-var base64 = require('base64-js')
-  , toutf8 = require('to-utf8')
-
-var encoders = {
-    hex: to_hex
-  , utf8: to_utf
-  , base64: to_base64
-}
-
-function to(buf, encoding) {
-  return encoders[encoding || 'utf8'](buf)
-}
-
-function to_hex(buf) {
-  var str = ''
-    , byt
-
-  for(var i = 0, len = buf.length; i < len; ++i) {
-    byt = buf[i]
-    str += ((byt & 0xF0) >>> 4).toString(16)
-    str += (byt & 0x0F).toString(16)
-  }
-
-  return str
-}
-
-function to_utf(buf) {
-  return toutf8(buf)
-}
-
-function to_base64(buf) {
-  return base64.fromByteArray(buf)
-}
-
-
-},{"base64-js":160,"to-utf8":159}],153:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
 module.exports = from
 
 var base64 = require('base64-js')
@@ -39888,82 +39126,45 @@ function from_base64(str) {
   return new Uint8Array(base64.toByteArray(str)) 
 }
 
-},{"base64-js":160}],159:[function(require,module,exports){
-module.exports = to_utf8
+},{"base64-js":155}],150:[function(require,module,exports){
+module.exports = to
 
-var out = []
-  , col = []
-  , fcc = String.fromCharCode
-  , mask = [0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
-  , unmask = [
-      0x00
-    , 0x01
-    , 0x02 | 0x01
-    , 0x04 | 0x02 | 0x01
-    , 0x08 | 0x04 | 0x02 | 0x01
-    , 0x10 | 0x08 | 0x04 | 0x02 | 0x01
-    , 0x20 | 0x10 | 0x08 | 0x04 | 0x02 | 0x01
-    , 0x40 | 0x20 | 0x10 | 0x08 | 0x04 | 0x02 | 0x01
-  ]
+var base64 = require('base64-js')
+  , toutf8 = require('to-utf8')
 
-function to_utf8(bytes, start, end) {
-  start = start === undefined ? 0 : start
-  end = end === undefined ? bytes.length : end
-
-  var idx = 0
-    , hi = 0x80
-    , collecting = 0
-    , pos
-    , by
-
-  col.length =
-  out.length = 0
-
-  while(idx < bytes.length) {
-    by = bytes[idx]
-    if(!collecting && by & hi) {
-      pos = find_pad_position(by)
-      collecting += pos
-      if(pos < 8) {
-        col[col.length] = by & unmask[6 - pos]
-      }
-    } else if(collecting) {
-      col[col.length] = by & unmask[6]
-      --collecting
-      if(!collecting && col.length) {
-        out[out.length] = fcc(reduced(col, pos))
-        col.length = 0
-      }
-    } else { 
-      out[out.length] = fcc(by)
-    }
-    ++idx
-  }
-  if(col.length && !collecting) {
-    out[out.length] = fcc(reduced(col, pos))
-    col.length = 0
-  }
-  return out.join('')
+var encoders = {
+    hex: to_hex
+  , utf8: to_utf
+  , base64: to_base64
 }
 
-function find_pad_position(byt) {
-  for(var i = 0; i < 7; ++i) {
-    if(!(byt & mask[i])) {
-      break
-    }
-  }
-  return i
+function to(buf, encoding) {
+  return encoders[encoding || 'utf8'](buf)
 }
 
-function reduced(list) {
-  var out = 0
-  for(var i = 0, len = list.length; i < len; ++i) {
-    out |= list[i] << ((len - i - 1) * 6)
+function to_hex(buf) {
+  var str = ''
+    , byt
+
+  for(var i = 0, len = buf.length; i < len; ++i) {
+    byt = buf[i]
+    str += ((byt & 0xF0) >>> 4).toString(16)
+    str += (byt & 0x0F).toString(16)
   }
-  return out
+
+  return str
 }
 
-},{}],160:[function(require,module,exports){
+function to_utf(buf) {
+  return toutf8(buf)
+}
+
+function to_base64(buf) {
+  return base64.fromByteArray(buf)
+}
+
+
+},{"base64-js":155,"to-utf8":156}],155:[function(require,module,exports){
 (function (exports) {
 	'use strict';
 
@@ -40048,6 +39249,81 @@ function reduced(list) {
 	module.exports.toByteArray = b64ToByteArray;
 	module.exports.fromByteArray = uint8ToBase64;
 }());
+
+},{}],156:[function(require,module,exports){
+module.exports = to_utf8
+
+var out = []
+  , col = []
+  , fcc = String.fromCharCode
+  , mask = [0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01]
+  , unmask = [
+      0x00
+    , 0x01
+    , 0x02 | 0x01
+    , 0x04 | 0x02 | 0x01
+    , 0x08 | 0x04 | 0x02 | 0x01
+    , 0x10 | 0x08 | 0x04 | 0x02 | 0x01
+    , 0x20 | 0x10 | 0x08 | 0x04 | 0x02 | 0x01
+    , 0x40 | 0x20 | 0x10 | 0x08 | 0x04 | 0x02 | 0x01
+  ]
+
+function to_utf8(bytes, start, end) {
+  start = start === undefined ? 0 : start
+  end = end === undefined ? bytes.length : end
+
+  var idx = 0
+    , hi = 0x80
+    , collecting = 0
+    , pos
+    , by
+
+  col.length =
+  out.length = 0
+
+  while(idx < bytes.length) {
+    by = bytes[idx]
+    if(!collecting && by & hi) {
+      pos = find_pad_position(by)
+      collecting += pos
+      if(pos < 8) {
+        col[col.length] = by & unmask[6 - pos]
+      }
+    } else if(collecting) {
+      col[col.length] = by & unmask[6]
+      --collecting
+      if(!collecting && col.length) {
+        out[out.length] = fcc(reduced(col, pos))
+        col.length = 0
+      }
+    } else { 
+      out[out.length] = fcc(by)
+    }
+    ++idx
+  }
+  if(col.length && !collecting) {
+    out[out.length] = fcc(reduced(col, pos))
+    col.length = 0
+  }
+  return out.join('')
+}
+
+function find_pad_position(byt) {
+  for(var i = 0; i < 7; ++i) {
+    if(!(byt & mask[i])) {
+      break
+    }
+  }
+  return i
+}
+
+function reduced(list) {
+  var out = 0
+  for(var i = 0, len = list.length; i < len; ++i) {
+    out |= list[i] << ((len - i - 1) * 6)
+  }
+  return out
+}
 
 },{}]},{},["3XoGqR"])
 ;

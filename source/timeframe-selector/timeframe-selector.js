@@ -176,6 +176,11 @@ module.exports = (function () {
       $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
           'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + ' - ' +
           moment.unix(_to).format(DATE_FORMAT[_scale].selected) + '</li>');
+      $('.timeItem.selected').click(_openHighlight);
+      if (_mode === 'highlight') {
+        _mode = 'timeline';
+        _openHighlight();
+      }
       return;
     }
 
@@ -203,6 +208,10 @@ module.exports = (function () {
     $('.timeItem').off();
     $('.timeItem.selected').click(_openHighlight);
     $('.timeItem').click(_changeTime);
+    if (_mode === 'highlight') {
+      _mode = 'timeline';
+      _openHighlight();
+    }
   };
 
   var _changeTime = function () {
@@ -320,7 +329,7 @@ module.exports = (function () {
     _initHtml();
     _updateDateScale();
     $('.timeScale').click(_changeScale);
-    $(window).resize(_updateDateScale);
+    $(window).resize(_.debounce(_updateDateScale, 500));
 
   };
 

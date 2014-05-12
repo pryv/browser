@@ -65,7 +65,6 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       }
     });
     this.timeView = TimeLine;
-    console.log('TIMELINE', this.timeView);
     this.timeView.init();
     initTimeAndFilter(this.timeView, this.activeFilter);
     this.timeView.on('timeBoundsChanged', this.onFiltersChanged.bind(this));
@@ -278,6 +277,7 @@ Model.prototype.togglePanel = function (callback) {
   }
 };
 Model.prototype.openPanel = function (callback) {
+  var callbackCalled = false;
   var $container = $('#main-container');
   this.renderPanel(this);
   $container.addClass('slideRight').data('panel-opened', true);
@@ -285,18 +285,25 @@ Model.prototype.openPanel = function (callback) {
     $container.one(
       'transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd',
       function () {
-        callback();
+        if (!callbackCalled && typeof(callback) === 'function') {
+          callbackCalled = true;
+          callback();
+        }
       });
   }
 };
 Model.prototype.closePanel = function (callback) {
+  var callbackCalled = false;
   var $container = $('#main-container');
   $container.removeClass('slideRight').data('panel-opened', false);
   if (_.isFunction(callback)) {
     $container.one(
       'transitionend webkitTransitionEnd oTransitionEnd otransitionend MSTransitionEnd',
       function () {
-        callback();
+        if (!callbackCalled && typeof(callback) === 'function') {
+          callbackCalled = true;
+          callback();
+        }
       });
   }
 };

@@ -85,6 +85,48 @@
 }
 
 
+.timeItem {
+  position: relative;
+}
+.highlight.popover {
+  top:25px;
+  color: #000;
+  margin-left: -77px;
+  margin-right: -77px;
+  font-size: 12px;
+  text-align: center;
+}
+/*.highlight#bar {
+    position: absolute;
+    margin-left: -75px;
+    margin-right: -75px;
+
+    height: 100%;
+    top: 0;
+    left: 0;
+}*/
+/*.highlight#bar:after {
+    width: 6px;
+    margin-left: -3px;
+    height: 100%;
+    background-color: #FF00AD;
+    content:" ";
+    position: absolute;
+}*/
+.highlight.popover:before {
+  content: "|";
+  position: absolute;
+  width: 100%;
+  font-size: 30px;
+  font-weight: 900;
+  /* height: 80px; */
+  color: magenta;
+  left: 0;
+  top: -45px;
+}
+.highlight .content {
+  float: left;
+}
 
 /*!
  * Datetimepicker for Bootstrap v3
@@ -290,3 +332,4 @@
 .bootstrap-datetimepicker-widget ul.list-unstyled li div.timepicker div.timepicker-picker table.table-condensed tbody > tr > td {
   padding: 0px !important;
 }
+

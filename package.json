@@ -2,7 +2,7 @@
   "author": "Pryv <tech@pryv.com>",
   "name": "browser",
   "description": "At glance",
-  "version": "0.8.6",
+  "version": "0.9.0",
   "private": true,
   "homepage": "http://w.pryv.com",
   "engines": {

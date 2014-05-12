@@ -47,7 +47,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
   this.onDateHighlighted = _.throttle(function () {
     if (this.treemap) {
-      this.treemap.onDateHighLighted(arguments[0].getTime() / 1000);
+      this.treemap.onDateHighLighted(arguments[0]);
     }
   }, 100);
   this.initBrowser = function () {

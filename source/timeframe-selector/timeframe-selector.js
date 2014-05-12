@@ -6,6 +6,11 @@ module.exports = (function () {
     left: 0,
     right: 0
   };
+  var HIGHLIGHT_MARGIN = {
+    left: 80,
+    right: 80
+  };
+  var HIGHLIGHT_SIZE = 150;
   var DATE_FORMAT = {
     'day': {
       'selected': 'D.M.YYYY',
@@ -57,12 +62,14 @@ module.exports = (function () {
   var _to;
   var _scale;
   var _highlight;
+  var _mode; // 'timeSelection' || 'highlight'
   var init = function () {
     if (_isInit === true) {
       return;
     }
     _isInit = true;
     moment.lang(i18n.lng());
+    _mode = 'timeSelection';
     _callbacks = {};
     _initTimeFrame();
   };
@@ -166,9 +173,8 @@ module.exports = (function () {
         'width': $datesWidth + 'px',
         'margin-left': $datesMargin + 'px'
       });
-      $dates.append('<li class="timeItem selected" style="width: ' +
-          DATE_SIZE[_scale].selected + 'px;">' +
-          moment.unix(_from).format(DATE_FORMAT[_scale].selected) + ' - ' +
+      $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
+          'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + ' - ' +
           moment.unix(_to).format(DATE_FORMAT[_scale].selected) + '</li>');
       return;
     }
@@ -194,6 +200,8 @@ module.exports = (function () {
       'width': $datesWidth + 'px',
       'margin-left': $datesMargin + 'px'
     });
+    $('.timeItem').off();
+    $('.timeItem.selected').click(_openHighlight);
     $('.timeItem').click(_changeTime);
   };
 
@@ -205,9 +213,12 @@ module.exports = (function () {
     if (diff === 0) {
       return;
     }
+    if (_mode === 'highlight') {
+      return;
+    }
     var c = centerIndex + 1;
     $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from)
-        .format(DATE_FORMAT[_scale].others))
+            .format(DATE_FORMAT[_scale].others))
         .css('width', DATE_SIZE[_scale].others).removeClass('selected');
     var $dates = $('#dates');
     if (diff > 0) {
@@ -220,10 +231,10 @@ module.exports = (function () {
       $('.timeItem:gt(-' + d + ')').remove();
       for (var i = 0; i < diff; i++) {
         $('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
-            moment.unix(_from).subtract(_scale, totalIndex - centerIndex + i)
-                .format(DATE_FORMAT[_scale].others) + '</li>').hide().prependTo('#dates').animate({
-          width: 'toggle'
-        });
+          moment.unix(_from).subtract(_scale, totalIndex - centerIndex + i)
+          .format(DATE_FORMAT[_scale].others) + '</li>').hide().prependTo('#dates').animate({
+            width: 'toggle'
+          });
       }
       setTimeBounds(moment.unix(_from)
           .subtract(_scale, diff).startOf(_scale),
@@ -233,7 +244,7 @@ module.exports = (function () {
 
       c = clickedIndex + 1;
       $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from).add(_scale, -diff)
-          .format(DATE_FORMAT[_scale].selected))
+              .format(DATE_FORMAT[_scale].selected))
           .css('width', DATE_SIZE[_scale].selected).addClass('selected');
 
 
@@ -247,15 +258,16 @@ module.exports = (function () {
       });
 
       for (var j = 0; j < -diff; j++) {
-        $dates.append('<li class="timeItem" style="width: ' +
-            DATE_SIZE[_scale].others + 'px;">' +
+        $dates.append('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
             moment.unix(_from).add(_scale, totalIndex - centerIndex + j)
-                .format(DATE_FORMAT[_scale].others) + '</li>');
+            .format(DATE_FORMAT[_scale].others) + '</li>');
       }
       setTimeBounds(moment.unix(_from).add(_scale, -diff)
           .startOf(_scale), moment.unix(_to).add(_scale, -diff).endOf(_scale));
     }
-    $('.timeItem').off().click(_changeTime);
+    $('.timeItem').off();
+    $('.timeItem.selected').click(_openHighlight);
+    $('.timeItem').click(_changeTime);
   };
   var _changeScale = function () {
     var scale = $(this).attr('data-timeScale');
@@ -265,36 +277,32 @@ module.exports = (function () {
     $('.timeScale').removeClass('selected');
     $(this).addClass('selected');
     if (scale === 'day') {
-      if ((_scale === 'custom') ||
-          (moment().unix() >= moment.unix(_from).unix() &&
-              moment().unix() <= moment.unix(_to).unix())) {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
         setTimeBounds(moment().startOf('day'), moment().endOf('day'));
       } else {
         setTimeBounds(moment.unix(_from).startOf('day'), moment.unix(_from).endOf('day'));
       }
       _scale = 'day';
     } else if (scale === 'week') {
-      if ((_scale === 'custom') ||
-          (moment().unix() >= moment.unix(_from).unix() &&
-              moment().unix() <= moment.unix(_to).unix())) {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
         setTimeBounds(moment().startOf('week'), moment().endOf('week'));
       } else {
         setTimeBounds(moment.unix(_from).startOf('week'), moment.unix(_from).endOf('week'));
       }
       _scale = 'week';
     } else if (scale === 'month') {
-      if ((_scale === 'custom') ||
-          (moment().unix() >= moment.unix(_from).unix() &&
-              moment().unix() <= moment.unix(_to).unix())) {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
         setTimeBounds(moment().startOf('month'), moment().endOf('month'));
       } else {
         setTimeBounds(moment.unix(_from).startOf('month'), moment.unix(_from).endOf('month'));
       }
       _scale = 'month';
     } else if (scale === 'year') {
-      if ((_scale === 'custom') ||
-          (moment().unix() >= moment.unix(_from).unix() &&
-              moment().unix() <= moment.unix(_to).unix())) {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
         setTimeBounds(moment().startOf('year'), moment().endOf('year'));
       } else {
         setTimeBounds(moment.unix(_from).startOf('year'), moment.unix(_from).endOf('year'));
@@ -306,7 +314,6 @@ module.exports = (function () {
   // set time frame to current month and highlight to now
   var _initTimeFrame = function () {
     _scale = 'month';
-    setHighlight(moment());
     setTimeBounds(moment().startOf('month'),
         moment().endOf('month'));
 
@@ -315,6 +322,77 @@ module.exports = (function () {
     $('.timeScale').click(_changeScale);
     $(window).resize(_updateDateScale);
 
+  };
+
+  var marginOffset;
+  var widthOffset;
+  var _openHighlight = function () {
+    if (_mode === 'highlight') {
+      return;
+    }
+    _mode = 'highlight';
+    var html = $('<div class="highlight popover bottom"><div class="arrow"></div>' +
+        '<div class="content"></div><span class="fa fa-times"></span></div>');
+    $('.timeItem.selected').append(html.fadeIn());
+    $('.highlight').width(HIGHLIGHT_SIZE);
+    $('.highlight .fa-times').off().click(_closeHighlight);
+    $('#dates').css('overflow', 'visible');
+    var containerWidth = $('#timeframe').width();
+    var width = containerWidth - HIGHLIGHT_MARGIN.left - HIGHLIGHT_MARGIN.right;
+    marginOffset = (width - DATE_SIZE[_scale].selected) / 2;
+    widthOffset = width - DATE_SIZE[_scale].selected;
+    $('.timeScale').fadeOut();
+    $('.timeItem.selected').animate({
+      width: width
+    });
+    $('#dates').animate({
+      'margin-left': '-=' + marginOffset + 'px',
+      'width': '+=' + widthOffset + 'px'
+    });
+
+    //init position of highlighter
+    var left = 100 * (_highlight - _from) / (_to - _from);
+    $('.highlight').css('left', left + '%');
+    $('.highlight .content').text(moment.unix(_highlight).format('lll'));
+    //init drag
+    $('.highlight').draggable({containment: 'parent', axis: 'x', drag: _onHighlightDrag});
+  };
+  var _onHighlightDrag = function (e, object) {
+    var left = object.position.left;
+    var width = $('.timeItem.selected').width();
+    var newHighlight = _from + ((left / width) * (_to - _from));
+    setHighlight(moment.unix(newHighlight));
+    $('.highlight .content').text(moment.unix(newHighlight).format('lll'));
+  };
+  var _closeHighlight = function (e) {
+    if (_mode !== 'highlight') {
+      return;
+    }
+    e.stopPropagation();
+    _mode = 'timeline';
+    $('.highlight').fadeOut(function () {
+      $(this).remove();
+    });
+    $('.timeScale').fadeIn();
+    $('.timeItem.selected').animate({
+      width: DATE_SIZE[_scale].selected
+    });
+    $('#dates').animate({
+      'margin-left': '+=' + marginOffset + 'px',
+      'width': '-=' + widthOffset + 'px'
+    });
+  };
+  var _updateHighlight = function () {
+    var now = moment().unix();
+    var highlight;
+    if (now >= _from && now <= _to) {
+      highlight = moment();
+    } else if (now <= _from) {
+      highlight = moment.unix(_from);
+    } else if (now >= _to) {
+      highlight = moment.unix(_to);
+    }
+    setHighlight(highlight);
   };
   var setHighlight = function (time) {
     init();
@@ -327,16 +405,20 @@ module.exports = (function () {
   };
   var setTimeBounds = function (from, to) {
     init();
-    if (moment(from).isValid() && moment(to).isValid()) {
+    if (moment(from).isValid() && moment(to).isValid() && moment(from).unix() < moment(to).unix()) {
       _from = moment(from).unix();
       _to = moment(to).unix();
       trigger('timeBoundsChanged', _from, _to);
+      _updateHighlight();
     } else {
       console.warn('setTimeBounds(): invalid argument', from, to);
     }
   };
-  var getTimeBounds  = function () {
-    return {from: _from, to: _to};
+  var getTimeBounds = function () {
+    return {
+      from: _from,
+      to: _to
+    };
   };
   var on = function (event, callback) {
     init();

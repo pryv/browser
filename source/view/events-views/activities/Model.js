@@ -9,33 +9,16 @@ module.exports = CommonModel.implement(
     this.typeView = ActivityView;
     this.eventDisplayed = null;
     this.modelContent = {};
+    this.data = [];
+    this.options = {};
+    this.totalTime = 0;
+    this.updateEachSecond = false;
+    this.updateTime = _.debounce(this.updateEachSecondTime.bind(this), 2000);
+    this.updateFull = _.debounce(this.fullRefresh.bind(this), 30000);
   },
   {
     beforeRefreshModelView: function () {
-
-      var timeSumByStream = {};
-
-      // group by stream
-      _.each(this.events, function (e) {
-        if (timeSumByStream[e.streamId]) {
-          timeSumByStream[e.streamId].time += e.duration ?
-            e.duration : (new Date()).getSeconds() - e.duration;
-        } else {
-          timeSumByStream[e.streamId] = {
-            stream: e.stream,
-            time: e.duration ?
-              e.duration : (new Date()).getSeconds() - e.duration
-          };
-        }
-      });
-      // Merge childs into parent, such that all are a the same level
-
-      this.data = [];
-      for (var s in timeSumByStream) {
-        if (timeSumByStream.hasOwnProperty(s)) {
-          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
-        }
-      }
+      this.sumTime();
 
       this.options = {
         series: {
@@ -53,7 +36,6 @@ module.exports = CommonModel.implement(
           }
         }
       };
-
       this.modelContent = {
         options: this.options,
         data: this.data,
@@ -66,8 +48,14 @@ module.exports = CommonModel.implement(
         time: this.eventDisplayed.time,
         type: this.eventDisplayed.type,
         eventsNbr: _.size(this.events),
-        dimensions: this.computeDimension()
+        dimensions: this.computeDimension(),
+        totalTime: this.totalTime
       };
+
+      if (this.updateEachSecond) {
+        this.updateTime();
+        this.updateFull();
+      }
     },
     computeDimension: function () {
       var chartSizeWidth = null;
@@ -88,10 +76,61 @@ module.exports = CommonModel.implement(
       } else if ($('#' + this.container).length)  {
         chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
       }
-
-      console.log('computeDimensions model', {width: chartSizeWidth, height: chartSizeHeight});
-
       return {width: chartSizeWidth, height: chartSizeHeight};
+    },
+    sumTime : function () {
+      this.updateEachSecond = false;
+      var timeSumByStream = {};
+
+      // group by stream
+      _.each(this.events, function (e) {
+        if (!timeSumByStream[e.streamId]) {
+          timeSumByStream[e.streamId] = {
+            stream: e.stream,
+            time: 0
+          };
+        }
+        var toAdd = 0;
+
+        if (e.hasOwnProperty('duration') && e.duration >= 0) {
+          toAdd = e.duration;
+        } else {
+          this.updateEachSecond = true;
+          toAdd = (((new Date()).getTime() / 1000) - e.created);
+        }
+        timeSumByStream[e.streamId].time += toAdd;
+      }.bind(this));
+
+
+      // Merge childs into parent, such that all are a the same level
+
+      this.data = [];
+      for (var s in timeSumByStream) {
+        if (timeSumByStream.hasOwnProperty(s)) {
+          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
+        }
+      }
+
+      this.totalTime = 0;
+      _.each(this.data, function (e) {
+        this.totalTime += e.data;
+      }.bind(this));
+    },
+    updateEachSecondTime: function () {
+      if (this.container && $('#' + this.container).length !== 0  && this.updateEachSecond) {
+        this.sumTime();
+        if (this.modelView) {
+          this.modelView.set('totalTime', this.totalTime);
+        }
+        this.updateTime();
+      }
+    },
+    fullRefresh: function () {
+      if (this.container && $('#' + this.container).length !== 0 && this.updateEachSecond) {
+        this.refresh();
+        this.updateFull();
+      }
     }
+
   }
 );

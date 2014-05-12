@@ -557,7 +557,7 @@
     </summary>
   </script>
 <script type="template" id="left-panel-template">
-  <h3></h3>
+  <h3 class="header-title">Manage</h3>
   <div id="actions">
 
   </div>
@@ -570,9 +570,9 @@
   </div>
 </script>
 <script type="template" id="actions-template">
-    <li><button type="button" class="logo-subscribe btn btn-pryv-turquoise"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.follow"></span></button></li>
-    <li><button type="button" class="logo-sharing btn btn-pryv-turquoise"><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></button></li>
-    <li><button type="button" class="logo-create-sharing btn btn-pryv-turquoise"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></button></li>
+    <li><button type="button" class="logo-subscribe btn btn-default btn-block"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.follow"></span></button></li>
+    <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-star"></span> <span data-i18n="nav.manageSlices"></span></button></li>
+    <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="nav.share"></span></button></li>
 
 </script>
 <script type="template" id="filter-by-stream-template">
@@ -610,8 +610,8 @@
 <script type="template" id="password-settings-modal-template">
   <div class="panel panel-default settings-panel">
     <div class="panel-heading">
-      <h2 class="panel-title" data-i18n="modal.settings.password.title"></h2>
-      <h6 class="panel-subtitle" data-i18n="modal.settings.password.subtitle"></h6>
+      <h4 data-i18n="modal.settings.password.title"></h4>
+      <p class="panel-subtitle" data-i18n="modal.settings.password.subtitle"></p>
     </div>
     <div class="panel-body">
       <form class="form-horizontal" role="form">
@@ -635,7 +635,7 @@
         </div>
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-5">
-            <button type="submit" class="btn btn-pryv-turquoise"><span data-i18n="button.save"></span> <span class="fa fa-spinner fa-spin"></span></button>
+            <button type="submit" class="btn btn-default"><span data-i18n="button.save"></span> <span class="fa fa-spinner fa-spin"></span></button>
           </div>
         </div>
       </form>
@@ -644,38 +644,39 @@
 </script>
 <script type="template" id="apps-item-settings-template">
   <td class="app-icon col-md-1">
+    <% if (app.iconURL) { %>
     <img src="<%= app.iconURL %>">
-  </td>
-  <td class="col-md-4">
-    <%= app.displayName %>
-  </td>
-  <td class="app-settings">
-    <% if (app.settingsPageURL && app.settingsPageURL.length > 0) { %>
-    <a href="<%= app.settingsPageURL %>" target="_blank"><i class="fa fa-cog"></i></a>
     <% } %>
   </td>
-  <td class="app-trash">
-    <a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a>
+  <td class="col-md-7">
+    <%= app.displayName %>
+  </td>
+  <td class="col-md-2 app-settings">
+    <% if (app.settingsPageURL && app.settingsPageURL.length > 0) { %>
+      <a class="btn btn-default btn-xs" href="<%= app.settingsPageURL %>" target="_blank"><i class="fa fa-cog fa-xs"></i> <span data-i18n="button.settings"></span></a>
+    <% } %>
+  </td>
+  <td class="col-md-2 app-trash">
+    <a class="btn btn-default btn-xs" href="javascript:void(0)"><i class="fa fa-times fa-xs"></i> <span data-i18n="button.disconnect"></span></a>
   </td>
 </script>
   <script type="template" id="apps-list-settings-template">
 
     <div class="panel panel-default seetings-panel">
       <div class="panel-heading">
-        <h2 class="panel-title"
-          data-i18n="modal.settings.manageApps.title">
-        </h2>
-        <h6 class="panel-subtitle"
+        <h4 data-i18n="modal.settings.manageApps.title">
+        </h4>
+        <p class="panel-subtitle"
           data-i18n="modal.settings.manageApps.subtitle">
-        </h6>
+        </p>
       </div>
         <div class="panel-body">
           <table class="table">
             <thead><tr>
               <th></th>
               <th data-i18n="modal.settings.manageApps.name"></th>
-              <th data-i18n="modal.settings.manageApps.settings"></th>
-              <th data-i18n="modal.settings.manageApps.trash"></th></tr></thead>
+              <th data-i18n="modal.settings.manageApps.action"></th>
+              <th></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -686,26 +687,22 @@
 <script type="template" id="other-apps-item-settings-template">
     <div class="thumbnail">
       <div class="app-icon">
-      <img src="<%= app.iconURL %>">
+        <img src="<%= app.iconURL %>">
       </div>
-      <div class="caption">
-        <h3><%= app.displayName %></h3>
+      <div class="">
+        <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
-        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="button.website"></a></p>
+        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="button.connect"></a></p>
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">
-  <div class="panel panel-default seetings-panel">
-    <div class="panel-heading">
-      <h2 class="panel-title">
-       <a data-toggle="collapse" data-target="#appList" data-i18n="modal.settings.manageApps.otherApps" href="javascript:void(0)"></a>
-      </h2>
-    </div>
+  <a class="btn btn-default btn-lg" data-toggle="collapse" data-target="#appList" data-i18n="modal.settings.manageApps.otherApps" href="javascript:void(0)"></a>
+  
     <div id="appList" class="panel-collapse collapse">
       <div class="panel-body">
       </div>
     </div>
-  </div>
+  
 </script>
 </head>
 
@@ -714,6 +711,8 @@
 <div class="ob_text" style="margin: 15px;">
   <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
   <p style="font-size: 16px;" data-i18n="[html]mobile"></p>
+  <p style="text-align: center;"><a href="https://itunes.apple.com/fr/app/pryv/id826320447?mt=8">
+    <img style="width: auto" src="./images/available-on-the-app-store.png"></a></p>
 </div>
 </div>
 <div id="main-container" class="hidden-xs">
@@ -779,7 +778,7 @@
     <h1 data-i18n="noEvents.title"></h1>
   </div>
 </div>
-<div id="timeframe"></div>
+<div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"
      aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-animation">

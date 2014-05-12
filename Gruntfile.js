@@ -43,18 +43,22 @@ module.exports = function (grunt) {
           '<%= grunt.template.today("yyyy-mm-dd") %> */'
       },
       dist: {
-        src: ['source/vendor/jquery-1.9.1.js',
+        src: [
+          'source/vendor/require.js',
+          'source/vendor/jquery-1.9.1.js',
           'source/vendor/jquery-ui-1.10.3.custom.min.js',
+          'source/vendor/moment.min.js',
           'source/vendor/jquery.details.min.js',
           'source/vendor/bootstrap.min.js',
-          'source/vendor/require.js',
           'source/vendor/i18next-1.7.2.min.js',
           'source/vendor/jquery.flot.js',
           'source/vendor/jquery.flot.time.js',
           'source/vendor/jquery.flot.curvedLines.js',
           'source/vendor/jquery.flot.navigate.js',
           'source/vendor/jquery.flot.pie.js',
-          'source/vendor/md5.js'],
+          'source/vendor/md5.js',
+          'source/vendor/bootstrap-datetimepicker.js'
+        ],
         dest: 'dist/script/vendor.js'
       }
     },

@@ -40,8 +40,8 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
   }
   // create connection handler and filter
-  this.onFiltersChanged = function () {
-    this.activeFilter.timeFrameLT = [arguments[0].from, arguments[0].to];
+  this.onFiltersChanged = function (from, to) {
+    this.activeFilter.timeFrameLT = [new Date(from * 1000), new Date(to * 1000)];
   };
 
 
@@ -64,11 +64,12 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         $('#logo-reload').removeClass('loading');
       }
     });
-    this.timeView = new TimeLine();
-    this.timeView.render();
+    this.timeView = TimeLine;
+    console.log('TIMELINE', this.timeView);
+    this.timeView.init();
     initTimeAndFilter(this.timeView, this.activeFilter);
-    this.timeView.on('filtersChanged', this.onFiltersChanged, this);
-    this.timeView.on('dateHighlighted', this.onDateHighlighted, this);
+    this.timeView.on('timeBoundsChanged', this.onFiltersChanged.bind(this));
+    this.timeView.on('highlightChanged', this.onDateHighlighted.bind(this));
     this.timeView.on('dateMasked', this.onDateMasked, this);
 
     this.onDateMasked = function () {
@@ -244,8 +245,8 @@ Model.prototype.removeConnections = function (connections) {
  */
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
-    this.activeFilter.stats(false, function (stats) {
-      this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
+    this.activeFilter.stats(false, function () {
+      //this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
     }.bind(this));
   }.bind(this), 100))();
 };
@@ -303,21 +304,13 @@ Model.prototype.renderPanel = function () {
   PanelMenu.render(this);
 };
 function initTimeAndFilter(timeView, filter) {
-  var spanTime = 86400000,
-    fromTime = new Date(),
-    start = new Date(fromTime.getFullYear(), fromTime.getMonth(), fromTime.getDate());
-
-  fromTime = new Date(start.getTime() - (spanTime * 365));
-  var toTime = new Date(start.getTime() + spanTime - 1);
+  var fromTime = new Date(timeView.getTimeBounds().from * 1000),
+      toTime = new Date(timeView.getTimeBounds().to * 1000);
   filter.timeFrameLT = [fromTime, toTime];
   filter.set({
     limit: 50000
   });
 
-  timeView.onFiltersChanged({
-    from:     fromTime,
-    to:       toTime
-  });
 }
 
 

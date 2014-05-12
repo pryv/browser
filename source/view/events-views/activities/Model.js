@@ -89,6 +89,8 @@ module.exports = CommonModel.implement(
         chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
       }
 
+      console.log('computeDimensions model', {width: chartSizeWidth, height: chartSizeHeight});
+
       return {width: chartSizeWidth, height: chartSizeHeight};
     }
   }

@@ -1,6 +1,6 @@
-/* global $ */
+/* global $, moment*/
 var  Marionette = require('backbone.marionette');
-
+var Moment = moment;
 module.exports = Marionette.ItemView.extend({
   template: '#activityView',
   container: null,
@@ -12,17 +12,22 @@ module.exports = Marionette.ItemView.extend({
   data: null,
   initialize: function () {
 
-    this.listenTo(this.model, 'change', this.change);
+    //this.listenTo(this.model, 'change', this.change);
+    this.listenTo(this.model, 'change:totalTime', this.updateTotalTime);
+    this.listenTo(this.model, 'change:dimensions', this.change);
+    this.listenTo(this.model, 'change:data', this.change);
     this.$el.css('height', '100%');
     this.$el.css('width', '100%');
     this.$el.addClass('animated node');
 
     this.plot = null;
-
     this.options = this.model.get('options');
     this.data = this.model.get('data');
   },
   change: function () {
+    this.plot = null;
+    this.options = this.model.get('options');
+    this.data = this.model.get('data');
     $('#' + this.container).removeClass('animated ' + this.animation);
     this.animation = 'tada';
     this.$el.attr('id', this.model.get('id'));
@@ -75,8 +80,6 @@ module.exports = Marionette.ItemView.extend({
       $(this.legendContainer).css(cssLegendContainer);
       $(this.chartContainer).css(cssChartContainer);
 
-
-
       $('#' + this.container).bind('click', function () {
         this.trigger('nodeClicked');
       }.bind(this));
@@ -87,10 +90,29 @@ module.exports = Marionette.ItemView.extend({
           container: $(this.legendContainer)
         };
         this.plot = $.plot(this.chartContainer, this.data, this.options);
+        setTimeout(this.updateTotalTime.bind(this), 200);
       }.bind(this), 1000);
     }
   },
   close: function () {
     this.remove();
+  },
+  updateTotalTime: function () {
+    var m = Moment.duration(this.model.get('totalTime') * 1000);
+    var text =
+      (m.years() !== 0 ? m.years() + ' years <br />' : '') +
+      (m.months() !== 0 ? m.months() + ' months <br />' : '') +
+      (m.days() !== 0 ? m.days() + ' days <br />' : '') +
+      (m.hours() !== 0 ? m.hours() + ' hours <br />' : '') +
+      (m.minutes() !== 0 ? m.minutes() + ' minutes <br />' : '') +
+      (m.seconds() !== 0 ? m.seconds() + ' seconds <br />' : '');
+
+    if ($(this.legendContainer) && $(this.legendContainer + ' > .pie-chart-sum').length !== 0) {
+      $(this.legendContainer + ' > .pie-chart-sum')
+        .html(text);
+    } else {
+      $(this.legendContainer).append('<span class="pie-chart-sum">' +
+        text + '</span>');
+    }
   }
 });

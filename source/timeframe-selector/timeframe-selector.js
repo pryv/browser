@@ -76,15 +76,28 @@ module.exports = (function () {
   var _initHtml = function () {
     $(CONTAINER).html('<div id="timeframe" style="margin-left: ' + MARGIN.left +
         'px; margin-right: ' + MARGIN.right + 'px;"><div id="upperLayout"></div>' +
-        '<div id="datesContainer"><div id="dates"></div></div><div id="scales">' +
-        '<a href="javascript:void(0)" class="timeScale" data-timeScale="day">Day</a>' +
-        '<a href="javascript:void(0)" class="timeScale" data-timeScale="week">Week</a>' +
-        '<a href="javascript:void(0)" class="timeScale selected" data-timeScale="month">Month</a>' +
-        '<a href="javascript:void(0)" class="timeScale" data-timeScale="year">Year</a>' +
-        '</div><div id="custom" class="timeScale" data-timeScale="custom">Custom</div></div>');
+        '<div id="datesContainer"><div id="dates"></div></div>' +
+        '<div id="scalesContainer" class="btn-toolbar">' +
+        '<div id="scales" class="btn-group btn-group-xs">' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        'data-timeScale="day">Day</a>' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        'data-timeScale="week">Week</a>' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale selected"' +
+        'data-timeScale="month">Month</a>' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        'data-timeScale="year">Year</a>' +
+        '</div>' +
+        '<div class="btn-group btn-group-xs">' +
+        '<a href="javascript:void(0)" id="custom" class="btn btn-default timeScale"' +
+        'data-timeScale="custom">Custom</a>' +
+        '</div>' +
+        '</div>' +
+        '</div>');
     $('#custom').popover({
       html: true,
       placement: 'top',
+      container: 'body',
       content: function () {
         return $('<div>' +
 

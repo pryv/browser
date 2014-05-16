@@ -16,9 +16,11 @@
   text-align: center;
   list-style: none;
   white-space: nowrap;
-  cursor: pointer;
-  margin-bottom: 5px;
-  margin-top: 5px;
+  cursor: pointer; 
+}
+.timeItem:hover {
+  color:#ffffff;
+  /*background-color: #000000;*/
 }
 .timeItem.selected {
   background-color: #00a8e2;
@@ -31,8 +33,8 @@
   border-bottom: 1px solid #bdc3c7;
   overflow: hidden;
   white-space: nowrap;
-  font-size: 25px;
-  height: 40px;
+  font-size: 17px;
+  height: 25px;
 }
 #datesContainer {
   position:absolute;
@@ -42,8 +44,8 @@
 }
 #timeframe {
   position: relative;
-  height: 80px;
-  background: #534c47;
+  height: 60px;
+  background: #3f3f3f;
   color: #fff;
   text-transform: uppercase;
   -webkit-touch-callout: none;
@@ -56,24 +58,31 @@
 .timeScale {
   margin-left: 5px;
   bottom: 0;
-  padding: 5px;
-  background-color: #7f8c8d;
+  padding: 2px 5px;
+  background-color: transparent;
   display: inline-block;
+  font-size:12px;
 }
 #timeframe a {
   text-decoration: none;
   color: #fff;
 }
+#timeframe .btn-toolbar .btn-group{float:none;}
+#scalesContainer{
+  text-align: center;
+  padding-top: 32px;
+}
 #scales {
-  bottom: 0px;
+  /*bottom: 5px;
   position: absolute;
   text-align: center;
   width: 100%;
+  float:none;*/
 }
 #custom {
   cursor: pointer;
-  position: absolute;
-  right: 150px;
+  /*position: absolute;
+  right: 150px;*/
 }
 #upperLayout {
   position: absolute;

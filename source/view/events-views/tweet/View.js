@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, PryvBrowser */
 var  Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -11,7 +11,8 @@ module.exports = Marionette.ItemView.extend({
       screenName = this.content['screen-name'],
       date = new Date(this.time * 1000);
       return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
-        'data-datetime="' + date.toISOString() + '">' + date.toLocaleDateString() + '</a>';
+        'data-datetime="' + date.toISOString() + '">' +
+          PryvBrowser.getTimeString(this.time) + '</a>';
     }
   },
   initialize: function () {

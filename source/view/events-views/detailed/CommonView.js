@@ -48,7 +48,7 @@ module.exports = Marionette.ItemView.extend({
   onEditBlur: function (e) {
     this.updateEvent(e.currentTarget);
     this.ui.submit.show();
-    if (e.relatedTarget.id === 'submit-edit') {
+    if (e.relatedTarget && e.relatedTarget.id === 'submit-edit') {
       this.submit();
     }
     return true;
@@ -76,9 +76,8 @@ module.exports = Marionette.ItemView.extend({
       value = value.getTime() / 1000;
     } else if (key === 'tags') {
       value = value.split(',');
-      value = value.map(function (e) {
-        return e.trim();
-      });
+      value = value.map(function (e) {return e.trim(); })
+          .filter(function (e) {return e.length > 0; });
     }
     eval('event.' + key + ' = value');
     this.completeEdit($($elem).parent());

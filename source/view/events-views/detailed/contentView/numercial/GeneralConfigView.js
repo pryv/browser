@@ -68,6 +68,7 @@ module.exports = Marionette.ItemView.extend({
       this.highlightEvent();
       this.rendered = true;
     }
+    $('body').i18n();
   },
   debounceRender: _.debounce(function () {
     if (!this.rendered) {

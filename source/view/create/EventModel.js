@@ -18,7 +18,6 @@ module.exports = Backbone.Model.extend({
     });
   },
   create: function (callback, progressCallback) {
-    console.log('CREATE', this);
     var event = this.get('event'),
       file = event.file;
     if (file) {

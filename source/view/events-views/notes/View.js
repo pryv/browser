@@ -1,7 +1,7 @@
 /* global $ */
 var  Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
+    _ = require('underscore'),
+    marked = require('marked');
 module.exports = Marionette.ItemView.extend({
   template: '#picturesView',
   container: null,
@@ -47,7 +47,7 @@ module.exports = Marionette.ItemView.extend({
             height: event.height,
             top: event.top,
             left: event.left
-          }).find('.Center-Block').text(event.content);
+          }).find('.Center-Block').html(marked(event.content));
 
           displayedIds[index] = null;
         } else {
@@ -57,7 +57,7 @@ module.exports = Marionette.ItemView.extend({
             .append(
               '<div class="Table-Cell">' +
               '<div class="Center-Block">' +
-              event.content +
+              marked(event.content) +
               '</div>' +
               '</div>')
             .css({
@@ -68,6 +68,7 @@ module.exports = Marionette.ItemView.extend({
               'position': 'absolute'
             });
           $('#' + this.container).append(toAdd.fadeIn());
+          $('#' + event.id).dotdotdot({watch: true});
         }
       }.bind(this));
       _.each(displayedIds, function (id) {

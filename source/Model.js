@@ -1,4 +1,4 @@
-/* global $, window, location, i18n */
+/* global $, window, location, i18n, moment */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
   _ = require('underscore'),
   ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -160,7 +160,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     }
     $('#login form button[type=submit]').prop('disabled', true);
     $('#login form button[type=submit] .fa-spinner').css('display', 'inherit');
-    settings.username = $('#login-username').val();
+    settings.username = $('#login-username').val().trim().toLowerCase();
     settings.password = $('#login-password').val();
     Pryv.Auth.login(settings);
   }.bind(this));
@@ -173,7 +173,6 @@ Model.prototype.signedIn = function (connection) {
   this.loggedConnection = connection;
   $('#login-button').html(connection.username + ' <i class="fa fa-chevron-down"></i>');
   this.loggedConnection.account.getInfo(function (error, result) {
-    console.log('ACCOUNT', arguments);
     if (!error && result && result.email) {
       $('#login-button').prepend('<img  class="gravatar" src="https://www.gravatar.com/avatar/' +
          result.email.md5() +
@@ -334,6 +333,10 @@ function initTimeAndFilter(timeView, filter) {
 var closeLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
+  var $timeframeContainer = $('#timeframeContainer');
+  var $nav = $('nav');
+  $nav.animate({'top': '0px'});
+  $timeframeContainer.animate({'bottom': '0px'});
   $login.removeClass('animated slideInRight');
   $tree.removeClass('animated slideOutLeft');
   $login.addClass('animated slideOutRight');
@@ -348,12 +351,17 @@ var closeLogin = function () {
 var openLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
+  var $timeframeContainer = $('#timeframeContainer');
+  var $nav = $('nav');
+
   $login.css('display', 'block');
   $('#login form button[type=submit] .fa-spinner').hide();
   $login.removeClass('animated slideOutRight');
   $tree.removeClass('animated slideInLeft');
   $login.addClass('animated slideInRight');
   $tree.addClass('animated slideOutLeft');
+  $nav.animate({'top': -$nav.height() + 'px'});
+  $timeframeContainer.animate({'bottom': -$timeframeContainer.height() + 'px'});
   if (detectIE()) {
     $tree.fadeOut('slow', function () {
       $login.fadeIn('slow');
@@ -387,4 +395,13 @@ window.PryvBrowser.showAlert = function (containerSelector, html) {
   $container.append('<div class="alert alert-danger">' +
     '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
     html + '</div>');
+};
+window.PryvBrowser.getTimeString = function (time) {
+  var result = '';
+  if (moment) {
+    result = moment.unix(time).calendar();
+  } else {
+    result = new Date(time * 1000).toLocalDateString();
+  }
+  return result;
 };

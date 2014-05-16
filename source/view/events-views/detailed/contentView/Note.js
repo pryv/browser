@@ -1,14 +1,23 @@
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
+    _ = require('underscore'),
+    marked = require('marked');
 
 module.exports = Marionette.ItemView.extend({
   type: 'Note',
   template: '#template-detail-content-note',
   itemViewContainer: '#detail-content',
+  className: 'note-content',
   ui: {
     li: 'li.editable',
     edit: '.edit'
+  },
+  templateHelpers: function () {
+    return {
+      getContent: function () {
+        return marked(this.model.get('event').content);
+      }.bind(this)
+    };
   },
   initialize: function () {
     this.listenTo(this.model, 'change', this.render);
@@ -32,7 +41,7 @@ module.exports = Marionette.ItemView.extend({
   updateEvent: function ($elem) {
     var event = this.model.get('event'),
       key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
+      value = $($elem).val();
     eval('event.' + key + ' = value');
     this.completeEdit($($elem).parent());
     this.render();

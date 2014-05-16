@@ -14,7 +14,7 @@ module.exports = Marionette.ItemView.extend({
         return '';
       }
       if (type.indexOf('note') === 0 && typeof(this.event.content) === 'string') {
-        var text = this.event.content.trim();
+        var text = this.event.content;
         if (text.length > MAX_TEXT_CHAR) {
           text = text.slice(0, MAX_TEXT_CHAR) + '...';
         }

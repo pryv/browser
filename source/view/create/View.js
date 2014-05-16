@@ -1,12 +1,12 @@
-/* global $, FileReader, document, window, i18n*/
+/* global $, FileReader, document, window, i18n, navigator*/
 var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  Model = require('./EventModel.js'),
-  MapLoader = require('google-maps'),
-  creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect',
-    pictureSelect: 'pictureSelect', eventEdit: 'eventEdit'},
-  validType = ['note/txt', 'picture/attached', 'position/wgs84'],
-  UNIQUE_ID = 0;
+    _ = require('underscore'),
+    Model = require('./EventModel.js'),
+    MapLoader = require('google-maps'),
+    creationStep = {typeSelect: 'typeSelect', streamSelect: 'streamSelect',
+      pictureSelect: 'pictureSelect', eventEdit: 'eventEdit'},
+    validType = ['note/txt', 'picture/attached', 'position/wgs84'],
+    UNIQUE_ID = 0;
 
 module.exports = Marionette.ItemView.extend({
   type: 'Creation',
@@ -129,25 +129,25 @@ module.exports = Marionette.ItemView.extend({
           parentId = input.attr('data-parentId') || null;
           this.connectionSelected = this.connection.get(input.attr('data-connection'));
           this.connectionSelected.streams.create({parentId: parentId, name: name},
-          function (err, res) {
-            if (err) {
-              console.warn(err);
-              this.ui.publish.addClass('btn-pryv-alizarin');
-              this.ui.spin.hide();
-              this.ui.publish.prop('disabled', false);
-              window.PryvBrowser.showAlert(this.itemViewContainer,
-                i18n.t('error.addEvent.createStream.' + err.id));
-            } else {
-              this.streamSelected = res.id;
-              this.onPublishClick();
-            }
-          }.bind(this));
+              function (err, res) {
+                if (err) {
+                  console.warn(err);
+                  this.ui.publish.addClass('btn-pryv-alizarin');
+                  this.ui.spin.hide();
+                  this.ui.publish.prop('disabled', false);
+                  window.PryvBrowser.showAlert(this.itemViewContainer,
+                      i18n.t('error.addEvent.createStream.' + err.id));
+                } else {
+                  this.streamSelected = res.id;
+                  this.onPublishClick();
+                }
+              }.bind(this));
           break;
         }
       }
       if (!name) {
         window.PryvBrowser.showAlert(this.itemViewContainer,
-          i18n.t('error.addEvent.select-stream'));
+            i18n.t('error.addEvent.select-stream'));
       }
     }
   },
@@ -156,7 +156,7 @@ module.exports = Marionette.ItemView.extend({
     var event = this.newEvents.get('event');
     var tags = $('#tags-0').val().trim().split(',');
     var description = $('#description-0').val().trim();
-    var content = $('#content-0').val().trim();
+    var content = $('#content-0').val();
     var time = new Date($('#edit-time-0').val()).getTime() / 1000;
     event.content = content;
     event.tags = tags;
@@ -211,29 +211,32 @@ module.exports = Marionette.ItemView.extend({
     var create = function (model, $progressBar) {
       var error = false;
       model.create(function (err) {
-        asyncCount--;
-        $progressBar.removeClass('progress-striped', 'active');
-        if (err) {
-          error = true;
-          window.PryvBrowser.showAlert(this.itemViewContainer, i18n.t('error.addEvent.' + err.id));
-          $progressBar.find('.progress-bar').css({'background-color': '#e74c3c', 'width' : '100%'});
-        } else {
-          $progressBar.find('.progress-bar').css({'background-color': '#2ecc71', 'width' : '100%'});
-          model.set('published', true);
-        }
-        if (error && asyncCount === 0) {
-          self.ui.spin.hide();
-          self.canPublish = true;
-        } else if (!error && asyncCount === 0) {
-          self.ui.spin.hide();
-          self._close();
-        }
-      },
-        function (e) {
-          $progressBar.find('.progress-bar').css(
-            {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
-          );
-        });
+            asyncCount--;
+            $progressBar.removeClass('progress-striped', 'active');
+            if (err) {
+              error = true;
+              window.PryvBrowser.showAlert(this.itemViewContainer,
+                  i18n.t('error.addEvent.' + err.id));
+              $progressBar.find('.progress-bar')
+                  .css({'background-color': '#e74c3c', 'width' : '100%'});
+            } else {
+              $progressBar.find('.progress-bar')
+                  .css({'background-color': '#2ecc71', 'width' : '100%'});
+              model.set('published', true);
+            }
+            if (error && asyncCount === 0) {
+              self.ui.spin.hide();
+              self.canPublish = true;
+            } else if (!error && asyncCount === 0) {
+              self.ui.spin.hide();
+              self._close();
+            }
+          },
+          function (e) {
+            $progressBar.find('.progress-bar').css(
+                {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
+            );
+          });
     };
     var tags, description, time, event, $progressBar;
     $('.td-tags, .td-time, .td-description').hide();
@@ -263,11 +266,11 @@ module.exports = Marionette.ItemView.extend({
 
   onStreamClick: function (e) {
     var streamSelected = $(e.target).attr('data-stream') ||
-                         $(e.target).parent().attr('data-stream') ||
-                         $(e.target).parent().parent().attr('data-stream'),
-      connectionSelected = this.connection.get($(e.target).attr('data-connection') ||
-                           $(e.target).parent().attr('data-connection') ||
-                           $(e.target).parent().parent().attr('data-connection'));
+            $(e.target).parent().attr('data-stream') ||
+            $(e.target).parent().parent().attr('data-stream'),
+        connectionSelected = this.connection.get($(e.target).attr('data-connection') ||
+            $(e.target).parent().attr('data-connection') ||
+            $(e.target).parent().parent().attr('data-connection'));
     if (streamSelected && connectionSelected) {
       this.ui.inputStream.val('');
       $(e.target).find('input[type="radio"]').prop('checked', true);
@@ -280,12 +283,12 @@ module.exports = Marionette.ItemView.extend({
   },
   onTypeClick: function (e) {
     var typeSelected =  $(e.target).attr('data-type') || $(e.target).parent().attr('data-type'),
-      event = this.model.get('event');
+        event = this.model.get('event');
 
     if (validType.indexOf(typeSelected) !== -1) {
       event.type = this.eventType =  typeSelected;
       $('#myModalLabel').attr('data-i18n',
-        'modal.addEvent.header.add-' + this.eventType.split('/')[0]);
+          'modal.addEvent.header.add-' + this.eventType.split('/')[0]);
       if (typeSelected === validType[1]) {
         this.step = creationStep.pictureSelect;
       } else  if (typeSelected === validType[2]) {
@@ -339,8 +342,8 @@ module.exports = Marionette.ItemView.extend({
     this.streamSelected  = this.focusedStream ? this.focusedStream.id : null;
     this.connectionSelected  = this.focusedStream ? this.focusedStream.connection : null;
     var result = '<div id="stream-select"><form>',
-      connections  = this.connection._connections,
-      open = '';
+        connections  = this.connection._connections,
+        open = '';
     if (this.focusedStream && this.focusedStream.length === 1) {
       this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream[0]);
     }
@@ -349,7 +352,7 @@ module.exports = Marionette.ItemView.extend({
         return;
       }
       if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
-        this.focusedStream.ancestor[0].serialId === c.serialId) {
+          this.focusedStream.ancestor[0].serialId === c.serialId) {
         open = 'in';
         this.focusedStream.ancestor.shift();
       } else {
@@ -358,25 +361,25 @@ module.exports = Marionette.ItemView.extend({
 
       UNIQUE_ID++;
       result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +
-        'data-target="#collapse' + UNIQUE_ID + '">' +
-        '<label for="selectStream' + UNIQUE_ID + '">' +
-        c.username;
+          'data-target="#collapse' + UNIQUE_ID + '">' +
+          '<label for="selectStream' + UNIQUE_ID + '">' +
+          c.username;
       if (c._accessInfo.name !== 'pryv-browser') {
         result += ' / ' + c._accessInfo.name;
       }
       result += '</label></li>';
       result += '<ul id="collapse' + UNIQUE_ID +
-        '" class="panel-collapse  collapse in stream-tree-children">' +
-        '<div class="panel-body">';
+          '" class="panel-collapse  collapse in stream-tree-children">' +
+          '<div class="panel-body">';
       result += this.getStreamStructure(c);
       UNIQUE_ID++;
       result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
-        '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
-        '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
-        '<input type="text" class="form-control create-stream" ' +
-        'data-i18n="[placeholder]modal.addEvent.createStream;"' +
-        ' data-parentId="" data-connection="' + c.serialId + '">' +
-        '</label></div></li>';
+          '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
+          '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
+          '<input type="text" class="form-control create-stream" ' +
+          'data-i18n="[placeholder]modal.addEvent.createStream;"' +
+          ' data-parentId="" data-connection="' + c.serialId + '">' +
+          '</label></div></li>';
       result += '</div></ul>';
 
     }.bind(this));
@@ -384,11 +387,11 @@ module.exports = Marionette.ItemView.extend({
   },
   getStreamStructure: function (connection) {
     var rootStreams = connection.datastore.getStreams(),
-      result = '', open = '', checked = '';
+        result = '', open = '', checked = '';
     for (var i = 0; i < rootStreams.length; i++) {
       if (this._isWritePermission(connection, rootStreams[i])) {
         if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
-          this.focusedStream.ancestor[0].id === rootStreams[i].id) {
+            this.focusedStream.ancestor[0].id === rootStreams[i].id) {
           open = 'in';
           this.focusedStream.ancestor.shift();
           if (this.focusedStream.ancestor.length === 0) {
@@ -407,23 +410,23 @@ module.exports = Marionette.ItemView.extend({
   _walkStreamStructure: function (stream, checked, open) {
     UNIQUE_ID++;
     var result = '<li data-connection="' +
-      stream.connection.serialId + '" data-stream="' +
-      stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
-      'data-target="#collapse' + UNIQUE_ID + '">' +
-      '<div class="pryv-radio">' +
-      '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
-      '" class="select-stream" ' +
-      checked + '><label for="selectStream' + UNIQUE_ID + '">' +
-      stream.name + '</label></div></li>';
+        stream.connection.serialId + '" data-stream="' +
+        stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
+        'data-target="#collapse' + UNIQUE_ID + '">' +
+        '<div class="pryv-radio">' +
+        '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
+        '" class="select-stream" ' +
+        checked + '><label for="selectStream' + UNIQUE_ID + '">' +
+        stream.name + '</label></div></li>';
     result += '<ul id="collapse' + UNIQUE_ID +
-      '" class="panel-collapse  collapse ' + open + ' stream-tree-children">' +
-      '<div class="panel-body">';
+        '" class="panel-collapse  collapse ' + open + ' stream-tree-children">' +
+        '<div class="panel-body">';
     open = '';
     checked = '';
     for (var j = 0; j < stream.children.length; j++) {
       if (this._isWritePermission(stream.connection, stream.children[j])) {
         if (this.focusedStream && this.focusedStream.ancestor && this.focusedStream.ancestor[0] &&
-          this.focusedStream.ancestor[0].id === stream.children[j].id) {
+            this.focusedStream.ancestor[0].id === stream.children[j].id) {
           open = 'in';
           this.focusedStream.ancestor.shift();
           if (this.focusedStream.ancestor.length === 0) {
@@ -438,13 +441,13 @@ module.exports = Marionette.ItemView.extend({
     }
     UNIQUE_ID++;
     result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
-      '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
-      '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
-      '<input type="text" class="form-control create-stream" ' +
-      'data-i18n="[placeholder]modal.addEvent.createStream;"' +
-      ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
-      '</label></div></li>' +
-      '</div></ul>';
+        '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
+        '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
+        '<input type="text" class="form-control create-stream" ' +
+        'data-i18n="[placeholder]modal.addEvent.createStream;"' +
+        ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
+        '</label></div></li>' +
+        '</div></ul>';
     return result;
   },
   _isWritePermission: function (connection, streamId) {
@@ -455,13 +458,13 @@ module.exports = Marionette.ItemView.extend({
       return true;
     }
     if (connection._accessInfo.permissions &&
-      connection._accessInfo.permissions[0].streamId === '*' &&
-      connection._accessInfo.permissions[0].streamId !== 'read') {
+        connection._accessInfo.permissions[0].streamId === '*' &&
+        connection._accessInfo.permissions[0].streamId !== 'read') {
       return true;
     }
     if (connection._accessInfo.permissions &&
-      connection._accessInfo.permissions[0].streamId === '*' &&
-      connection._accessInfo.permissions[0].streamId === 'read') {
+        connection._accessInfo.permissions[0].streamId === '*' &&
+        connection._accessInfo.permissions[0].streamId === 'read') {
       return false;
     }
     if (streamId) {
@@ -483,21 +486,18 @@ module.exports = Marionette.ItemView.extend({
     return result;
   },
   _initPositionView: function () {
+
     if (!this.google) {
       _.delay(this._initPositionView.bind(this), 100);
       return;
     }
     var map, elevator, marker, lat, lng;
-    this.newEvents = new Model({event: {
-      time: new Date().getTime() / 1000,
-      type: this.eventType,
-      tags: [],
-      content: {},
-      description: ''
-    }});
-    if (this.newEvents.get('event')) {
-      this.newEvents.get('event').content.latitude = lat = 46.51759;
-      this.newEvents.get('event').content.longitude = lng = 6.56267;
+
+
+    var initMap = function () {
+
+      this.newEvents.get('event').content.latitude = lat;
+      this.newEvents.get('event').content.longitude = lng;
 
       map = new this.google.maps.Map(document.getElementById('creation-position'), {
         zoom: 16,
@@ -529,6 +529,33 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this));
       map.setCenter(marker.position);
       marker.setMap(map);
+    };
+
+
+    this.newEvents = new Model({event: {
+      time: new Date().getTime() / 1000,
+      type: this.eventType,
+      tags: [],
+      content: {},
+      description: ''
+    }});
+    if (this.newEvents.get('event')) {
+      // default position of LaForge
+      lat = 46.51759;
+      lng = 6.56267;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          var coords = position.coords;
+          lat = coords.latitude;
+          lng = coords.longitude;
+          initMap.apply(this);
+        }.bind(this), function () {
+          initMap.apply(this);
+        }.bind(this));
+      }
+      else {
+        initMap.apply(this);
+      }
     }
   },
   _getNoteView: function () {
@@ -541,51 +568,51 @@ module.exports = Marionette.ItemView.extend({
     }});
     var result = '';
     result += '<form id="creation-form" role="form">' +
-      '      <div class="form-group td-content">' +
-      '        <label class="sr-only" for="content">Content</label>' +
-      '        <textarea rows="15" class="form-control" id="content-0" ' +
-      'data-i18n="[placeholder]modal.addEvent.editForm.noteContent"></textarea>' +
-      '      </div>' +
-      '  <div class="form-group td-tags">' +
-      '    <label class="sr-only" for="tags">Tags</label>' +
-      '    <input type="text" class="form-control" id="tags-0" ' +
-      'data-i18n="[placeholder]modal.addEvent.editForm.tags">' +
-      '    </div>' +
-      '    <div class="form-group td-time">' +
-      '      <label class="sr-only" for="edit-time">Time</label>' +
-      '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
-      'value="' + new Date().toISOString().slice(0, -5) +
-      '">' +
-      '      </div>' +
-      '      <div class="form-group td-description">' +
-      '        <label class="sr-only" for="description">Description</label>' +
-      '        <textarea rows="3" class="form-control" id="description-0" ' +
-      'data-i18n="[placeholder]modal.addEvent.editForm.description"></textarea>' +
-      '      </div>' +
-      '    </form>';
+        '      <div class="form-group td-content">' +
+        '        <label class="sr-only" for="content">Content</label>' +
+        '        <textarea rows="15" class="form-control" id="content-0" ' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.noteContent"></textarea>' +
+        '      </div>' +
+        '  <div class="form-group td-tags">' +
+        '    <label class="sr-only" for="tags">Tags</label>' +
+        '    <input type="text" class="form-control" id="tags-0" ' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.tags">' +
+        '    </div>' +
+        '    <div class="form-group td-time">' +
+        '      <label class="sr-only" for="edit-time">Time</label>' +
+        '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+        'value="' + new Date().toISOString().slice(0, -5) +
+        '">' +
+        '      </div>' +
+        '      <div class="form-group td-description">' +
+        '        <label class="sr-only" for="description">Description</label>' +
+        '        <textarea rows="3" class="form-control" id="description-0" ' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.description"></textarea>' +
+        '      </div>' +
+        '    </form>';
     return result;
   },
   _getPositionView: function () {
     var result = '';
     result += '<div id="creation-position" class="col-md-12"></div>';
     result += '<form id="creation-form" role="form">' +
-      '  <div class="form-group td-tags">' +
-      '    <label class="sr-only" for="tags">Tags</label>' +
-      '    <input type="text" class="form-control" id="tags-0" ' +
-      'data-i18n="[placeholder]modal.addEvent.editForm.tags">' +
-      '    </div>' +
-      '    <div class="form-group td-time">' +
-      '      <label class="sr-only" for="edit-time">Time</label>' +
-      '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
-      'value="' + new Date().toISOString().slice(0, -5) +
-      '">' +
-      '      </div>' +
-      '      <div class="form-group td-description">' +
-      '        <label class="sr-only" for="description">Description</label>' +
-      '        <textarea rows="3" class="form-control" id="description-0" ' +
-      'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea>' +
-      '      </div>' +
-      '    </form>';
+        '  <div class="form-group td-tags">' +
+        '    <label class="sr-only" for="tags">Tags</label>' +
+        '    <input type="text" class="form-control" id="tags-0" ' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.tags">' +
+        '    </div>' +
+        '    <div class="form-group td-time">' +
+        '      <label class="sr-only" for="edit-time">Time</label>' +
+        '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+        'value="' + new Date().toISOString().slice(0, -5) +
+        '">' +
+        '      </div>' +
+        '      <div class="form-group td-description">' +
+        '        <label class="sr-only" for="description">Description</label>' +
+        '        <textarea rows="3" class="form-control" id="description-0" ' +
+        'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea>' +
+        '      </div>' +
+        '    </form>';
     return result;
   },
   _getPictureView: function () {
@@ -607,56 +634,56 @@ module.exports = Marionette.ItemView.extend({
     if (this.newEvents.length === 1) {
       var event = this.newEvents[0].get('event');
       result += '<div id="creation-picture" class="col-md-12">' +
-        '<img src="#" id="preview-0"></div>';
+          '<img src="#" id="preview-0"></div>';
       result += '<form id="creation-form" role="form">' +
-        '<div id="progress-0' +
-        '" class="td-progress progress progress-striped active" >' +
-        '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
-        'aria-valuemax="100" style="width: 0%"></div></div>' +
-        '  <div class="form-group td-tags">' +
-        '    <label class="sr-only" for="tags">Tags</label>' +
-        '    <input type="text" class="form-control" id="tags-0" ' +
-        'data-i18n="[placeholder]modal.addEvent.editForm.tags;">' +
-        '    </div>' +
-        '    <div class="form-group td-time">' +
-        '      <label class="sr-only" for="edit-time">Time</label>' +
-        '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
-        'value="' + new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) +
-        '">' +
-        '      </div>' +
-        '      <div class="form-group td-description">' +
-        '        <label class="sr-only" for="description">Description</label>' +
-        '        <textarea rows="3" class="form-control" id="description-0" ' +
-        'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea>' +
-        '      </div>' +
-        '    </form>';
+          '<div id="progress-0' +
+          '" class="td-progress progress progress-striped active" >' +
+          '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
+          'aria-valuemax="100" style="width: 0%"></div></div>' +
+          '  <div class="form-group td-tags">' +
+          '    <label class="sr-only" for="tags">Tags</label>' +
+          '    <input type="text" class="form-control" id="tags-0" ' +
+          'data-i18n="[placeholder]modal.addEvent.editForm.tags;">' +
+          '    </div>' +
+          '    <div class="form-group td-time">' +
+          '      <label class="sr-only" for="edit-time">Time</label>' +
+          '      <input type="datetime-local" class="edit" id="edit-time-0" ' +
+          'value="' + new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) +
+          '">' +
+          '      </div>' +
+          '      <div class="form-group td-description">' +
+          '        <label class="sr-only" for="description">Description</label>' +
+          '        <textarea rows="3" class="form-control" id="description-0" ' +
+          'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea>' +
+          '      </div>' +
+          '    </form>';
       toRead.push({file: event.previewFile, selector: '#preview-0'});
     } else {
       result = '<table id="creation-picture-table" class="table table-striped">';
       for (var i = 0; i < this.newEvents.length; i++) {
         var model = this.newEvents[i];
         result += '<tr>' +
-          '<td class="td-preview"><div class="preview"><img src="#" id="preview-' + i +
-          '"></div></td>' +
-          '<td class="td-progress"><div id="progress-' + i +
-          '" class="progress progress-striped active" >' +
-          '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
-          'aria-valuemax="100" style="width: 0%"></div></div></td>' +
-          '<td class="td-tags"><div class="form-group"><label class="sr-only" ' +
-          'for="tags">Tags</label>' +
-          '<input type="text" class="form-control" id="tags-' + i +
-          '" data-i18n="[placeholder]modal.addEvent.editForm.tags;">' +
-          '</div></td>' +
-          '<td class="td-time"><div class="form-group"><label class="sr-only" ' +
-          'for="edit-time">Time</label>' +
-          '<input type="datetime-local" class="edit" id="edit-time-' + i + '" value="' +
-          new Date(Math.round(model.get('event').time * 1000)).toISOString().slice(0, -5) +
-          '"></div></td>' +
-          '<td class="td-description"><div class="form-group"><label class="sr-only" ' +
-          'for="description">Description' +
-          '</label><textarea row="3" class="form-control" id="description-' + i + '" ' +
-          'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea></div></td>' +
-          '</tr>';
+            '<td class="td-preview"><div class="preview"><img src="#" id="preview-' + i +
+            '"></div></td>' +
+            '<td class="td-progress"><div id="progress-' + i +
+            '" class="progress progress-striped active" >' +
+            '<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" ' +
+            'aria-valuemax="100" style="width: 0%"></div></div></td>' +
+            '<td class="td-tags"><div class="form-group"><label class="sr-only" ' +
+            'for="tags">Tags</label>' +
+            '<input type="text" class="form-control" id="tags-' + i +
+            '" data-i18n="[placeholder]modal.addEvent.editForm.tags;">' +
+            '</div></td>' +
+            '<td class="td-time"><div class="form-group"><label class="sr-only" ' +
+            'for="edit-time">Time</label>' +
+            '<input type="datetime-local" class="edit" id="edit-time-' + i + '" value="' +
+            new Date(Math.round(model.get('event').time * 1000)).toISOString().slice(0, -5) +
+            '"></div></td>' +
+            '<td class="td-description"><div class="form-group"><label class="sr-only" ' +
+            'for="description">Description' +
+            '</label><textarea row="3" class="form-control" id="description-' + i + '" ' +
+            'data-i18n="[placeholder]modal.addEvent.editForm.description;"></textarea></div></td>' +
+            '</tr>';
         toRead.push({file: model.get('event').previewFile, selector: '#preview-' + i});
       }
       result += '</table>';

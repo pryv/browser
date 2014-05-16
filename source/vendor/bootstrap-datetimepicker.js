@@ -26,6 +26,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  */
+window.define = null;
 ; (function (factory) {
     // AMD is not used - Attempt to fetch dependencies from scope.
     if (!jQuery) {

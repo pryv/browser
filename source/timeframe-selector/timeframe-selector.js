@@ -104,6 +104,9 @@ module.exports = (function () {
             '</div>').html();
       }
     });
+    $('#custom').on('hidden.bs.popover', function () {
+      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
+    });
     $('#custom').on('shown.bs.popover', function () {
       var fromDate = moment.unix(_from),
           toDate = moment.unix(_to);
@@ -361,6 +364,7 @@ module.exports = (function () {
 
     //init position of highlighter
     var left = 100 * (_highlight - _from) / (_to - _from);
+    left = left === 100 ? 99 : left;
     $('.highlight').css('left', left + '%');
     $('.highlight .content').text(moment.unix(_highlight).format('lll'));
     //init drag

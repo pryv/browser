@@ -1,4 +1,4 @@
-/* global $, FormData */
+/* global $, FormData, PryvBrowser */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
 
@@ -12,7 +12,8 @@ module.exports = Marionette.ItemView.extend({
         screenName = this.event.content['screen-name'],
         date = new Date(this.event.time * 1000);
       return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
-        'data-datetime="' + date.toISOString() + '">' + date.toLocaleDateString() + '</a>';
+        'data-datetime="' + date.toISOString() + '">' +
+          PryvBrowser.getTimeString(this.event.time) + '</a>';
     }
   },
   ui: {

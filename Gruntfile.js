@@ -56,6 +56,7 @@ module.exports = function (grunt) {
           'source/vendor/jquery.flot.curvedLines.js',
           'source/vendor/jquery.flot.navigate.js',
           'source/vendor/jquery.flot.pie.js',
+          'source/vendor/jquery.dotdotdot.min.js',
           'source/vendor/md5.js',
           'source/vendor/bootstrap-datetimepicker.js'
         ],

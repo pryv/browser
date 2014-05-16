@@ -33,7 +33,8 @@ module.exports = Marionette.ItemView.extend({
       var checked = input.prop('checked');
       input.prop('checked', !checked);
       input.trigger('change');
-    });
+      this._applyFilter();
+    }.bind(this));
     this.ui.checkbox.click(function (e) {
       e.stopPropagation();
     });

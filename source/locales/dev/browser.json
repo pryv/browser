@@ -89,7 +89,7 @@
                 "<p>To get started, create streams that matter to you:</p>"],
     "streamInput": "Create Your Stream"
   },
-  "mobile": "Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.",
+  "mobile": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS.",
   "login": {
     "title": "Login",
     "username": "Username",

@@ -3,3 +3,4 @@ dist
 test/coverage.html
 .idea
 browser.iml
+npm-debug.log

@@ -67,7 +67,6 @@ _.extend(Controller.prototype, {
         this.loggedConnection.bookmarks.create(
           {url: connection.url, accessToken: connection.auth, name: connection.name},
           function (error) {
-            console.log('create done');
             if (error) {
               window.PryvBrowser.showAlert(this.container,
                 i18n.t('error.subscribeSlice.') + error.id);

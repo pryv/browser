@@ -182,7 +182,6 @@ _.extend(Controller.prototype, {
 
   },
   updateSingleView: function (model) {
-    console.log('DETAILED', model);
     if (model) {
       if (model.get('event').type !== 'Creation') {
         this.commonView.model.set('event', model.get('event'));

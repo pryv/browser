@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.9.1/">
+  <base href="{browser-source}_v0.9.2/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.9.1/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.9.1/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.9.2/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.9.2/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -23,7 +23,6 @@
   <script type="text/javascript">
     $(function () {
       var baseHref = $('base').attr('href');
-
       var i18nOptions = {
         ns: {
           namespaces: ['browser'],
@@ -115,7 +114,7 @@
       </div>
     </div>
     <div class="tags"><%= tags %></div>
-    <div class="date"><%= new Date(time * 1000).toLocaleDateString() %></div>
+    <div class="date"><%= PryvBrowser.getTimeString(time) %></div>
   </script>
 
   <script id="activityView" type="template">
@@ -193,8 +192,7 @@
   <script type="text/html" id="template-detailItemView">
     <div class="row detail-item-date">
       <div>
-        <span class="date"><%= new Date(event.time * 1000).toLocaleDateString() %></span>
-        <span class="time"><%= new Date(event.time * 1000).toLocaleTimeString() %></span>
+        <span class="date"><%= PryvBrowser.getTimeString(event.time) %></span>
       </div>
     </div>
     <div class="row detail-item-content">
@@ -348,11 +346,9 @@
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
-    <ul>
-      <li class="event-structure editable" id="current-content"><span data-i18n="modal.detail.content"></span>: <label><%= event.content %></label>
-        <textarea class="edit form-control" rows="5" id="edit-content" value="<%= event.content %>"><%= event.content %></textarea>
+      <li class="event-structure editable" id="current-content"  style="height:100%"><label><%= getContent() %></label>
+        <textarea class="edit form-control" id="edit-content" value="<%= event.content %>" style="height:100%"><%= event.content %></textarea>
       </li>
-    </ul>
     <% } %>
   </script>
   <script type="template" id="template-detail-content-picture">
@@ -463,7 +459,7 @@
               </div>
             </li>
             <li>
-              <div class="form-group">
+              <div class="form-group hide">
                 <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.fitting"></label>
                 <div class="col-sm-10">
                   <div class="onoffswitch">
@@ -496,9 +492,7 @@
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
         </li> -->
-        <li class="event-structure editable" id="current-time"><span data-i18n="modal.detail.editForm.time"></span>: <label><%= new Date(event.time *
-          1000).toLocaleDateString() %> <%= new Date(event.time * 1000).toLocaleTimeString()
-          %></label>
+        <li class="event-structure editable" id="current-time"><span data-i18n="modal.detail.editForm.time"></span>: <label><%= PryvBrowser.getTimeString(event.time) %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
         </li> <!--
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
@@ -540,7 +534,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.9.1</span>
+    <span class="version">Browser v0.9.2</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -555,7 +549,7 @@
   <div id="collapseFilterByStream" class="panel-collapse collapse in">
     <div class="panel-body">
       <%= getStream() %>
-      <button class="btn" id="filter-by-stream-apply" data-i18n="button.apply"></button>
+      <button class="btn hide" id="filter-by-stream-apply" data-i18n="button.apply"></button>
     </div>
   </div>
 </script>
@@ -686,8 +680,17 @@
 <div class="ob_text" style="margin: 15px;">
   <i class="fa fa-mobile" style="font-size: 106px;text-align: center;display: block;"></i>
   <p style="font-size: 16px;" data-i18n="[html]mobile"></p>
-  <p style="text-align: center;"><a href="https://itunes.apple.com/fr/app/pryv/id826320447?mt=8">
-    <img style="width: auto" src="./images/available-on-the-app-store.png"></a></p>
+  <p style="text-align: center;">
+    <a href="https://itunes.apple.com/us/app/pryv/id826320447?mt=8&uo=4" target="itunes_store"
+      style="display:inline-block;
+      overflow:hidden;
+      background:url(https://linkmaker.itunes.apple.com/htmlResources/assets/en_us//images/web/linkmaker/badge_appstore-lrg.png) no-repeat;
+      width:135px;
+      height:40px;
+      @media only screen{background-image:url(https://linkmaker.itunes.apple.com/htmlResources/assets/en_us//images/web/linkmaker/badge_appstore-lrg.svg);}
+      ">
+    </a>
+  </p>
 </div>
 </div>
 <div id="main-container" class="hidden-xs">
@@ -756,12 +759,5 @@
 </div>
 <!-- /.modal -->
 </div>
-<!-- Google Analytics -->
-<script>
-  var _gaq=[['_setAccount','UA-36589447-3'],['_trackPageview']];
-  (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
 </body>
 </html>

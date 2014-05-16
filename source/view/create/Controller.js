@@ -25,7 +25,7 @@ _.extend(Controller.prototype, {
       '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
       '&times;</button> ' +
       '<h4 class="modal-title" id="myModalLabel" ' +
-      'data-i18n="modal.addEvent.header.add-event"></h4>' +
+      'data-i18n="events.common.labels.addEventTitle"></h4>' +
       '<div class="modal-close"></div> ' +
       '</div>' +
       '<div id="modal-content"></div>');

@@ -1,23 +1,129 @@
 {
-  "button": {
-    "action": "Action",
-    "add": "Add",
-    "apply": "Apply",
-    "cancel": "Cancel",
-    "connect": "Connect",
-    "disconnect": "Disconnect",
-    "login": "Sign in",
-    "ok": "Ok",
-    "publish": "Publish",
-    "save": "Save",
-    "selectPicture": "Select Picture",
-    "settings": "Settings",
-    "share": "Share",
-    "start": "START",
-    "submit": "Submit",
-    "trash": "Trash",
-    "website": "Website"
+  "atGlance": {
+    "messages": {
+      "noData": "There is nothing to show for this period of time."
+    }
   },
+  "common": {
+    "actions": {
+      "add": "Add",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "ok": "OK",
+      "save": "Save"
+    },
+    "labels": {
+      "action": "Action"
+    },
+    "messages": {
+      "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS."
+    }
+  },
+  "detailedView": {
+
+  },
+  "events": {
+    "common": {
+      "actions": {
+        "addNewStream": "Add new stream"
+      },
+      "labels": {
+        "addEventTitle": "Add content",
+        "descriptionPlaceholder": "Description (optional)",
+        "streamSelection": "Select a stream",
+        "tagsPlaceholder": "Tags, separated by commas (optional)"
+      }
+    },
+    "note": {
+      "actions": {
+        "addNew": "Note"
+      },
+      "labels": {
+        "addTitle": "Add note",
+        "contentPlaceholder": "Enter your note"
+      }
+    },
+    "picture": {
+      "actions": {
+        "addNew": "Picture(s)",
+        "selectFiles": "Select picture(s) to upload"
+      },
+      "labels": {
+        "addTitle": "Add picture(s)",
+        "uploadTitle": "File upload"
+      }
+    },
+    "position": {
+      "actions": {
+        "addNew": "Position"
+      },
+      "labels": {
+        "addTitle": "Add position"
+      }
+    }
+  },
+  "login": {
+    "actions": {
+      "login": "Sign in",
+      "resetPassword": "Forgot your password?"
+    },
+    "labels": {
+      "password": "Password",
+      "title": "Login",
+      "username": "Username"
+    },
+    "messages": {
+    }
+  },
+  "nav": {
+    "actions": {
+      "addEvent": "Add content",
+      "follow": "Follow this slice",
+      "goToMyPryv": "Me",
+      "manageSlices": "Manage slices",
+      "settings": "Settings",
+      "shareSlice": "Share a slice of life",
+      "signIn": "Sign in",
+      "signOut": "Sign out"
+    }
+  },
+  "onboarding": {
+    "actions": {
+      "start": "Start"
+    },
+    "labels": {
+      "streamInput": "Create your stream",
+      "title": "What matters in your life?"
+    },
+    "messages": {
+      "gettingStarted": [
+        "<p>To get started, create streams that matter to you:</p>",
+        "<p>Your life is made of streams. <span class=\"stream_color_1\">Travel</span>, <span class=\"stream_color_2\">Friends</span>, <span class=\"stream_color_3\">Family</span>, <span class=\"stream_color_4\">Sports</span>...</p>"
+      ]
+    }
+  },
+  "settings": {
+    "connectedApps": {
+      "actions": {
+        "connect": "Connect",
+        "disconnect": "Disconnect"
+      }
+    },
+    "security": {
+    }
+  },
+  "slices": {
+    "actions": {
+      "follow": "Follow",
+      "share": "Share"
+    },
+    "labels": {
+      "streams": "Streams"
+    }
+  },
+
+
   "error": {
     "addEvent": {
       "createStream": {
@@ -41,24 +147,24 @@
     },
     "detailed": {
       "create": {
-        "invalid-operation": "The selected stream is in the trash, and we prevent the recording of new events into trashed streams",
-        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+        "invalid-operation": "The selected stream is deleted! You can't add content into a deleted stream.",
+        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context."
       },
       "update": {
-        "forbidden": "You don't have permission to update this event",
-        "invalid-access-token": "You don't have permission to update this event",
-        "invalid-operation": "The duration of the period event cannot be set to null",
-        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+        "forbidden": "You don't have permission to update this item.",
+        "invalid-access-token": "You don't have permission to update this item.",
+        "invalid-operation": "You must set a valid duration.",
+        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context."
       },
       "trash": {
-        "invalid-access-token": "You don't have permission to trash this event",
-        "unknown-resource": "Event has already been trashed"
+        "invalid-access-token": "You don't have permission to delete this item.",
+        "unknown-resource": "The item has already been deleted."
       }
     },
     "followedSlice": {
       "add": {
-        "slice-already-exists": "You already follow this slice or the given name already exists",
-        "slice-unknown": "The given slice do not exists"
+        "slice-already-exists": "You already follow this slice or the chosen name already exists.",
+        "slice-unknown": "The slice does not exist."
       },
       "delete": {}
     },
@@ -75,38 +181,7 @@
       "slice-unknown": "The given slice do not exists"
     }
   },
-  "leftPanel": {
-    "filterByStream": "Filter by stream"
-  },
-  "login": {
-    "password": "Password",
-    "resetPassword": "Forgot your password?",
-    "title": "Login",
-    "username": "Username"
-  },
-  "mobile": "Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.",
   "modal": {
-    "addEvent": {
-      "createStream": "Create a new stream",
-      "editForm": {
-        "description": "Enter a description",
-        "noteContent": "Enter your note...",
-        "tags": "Enter tags (comma separated)"
-      },
-      "header": {
-        "add-event": "Add Event",
-        "add-note": "Add Note",
-        "add-picture": "Add Picture",
-        "add-position": "Add Position"
-      },
-      "selectStream": "Select a Stream",
-      "selectType": {
-        "note": "Note",
-        "picture": "Picture",
-        "position": "Position"
-      },
-      "uploadPicture": "Upload photo"
-    },
     "detail": {
       "checkAll": "Check All",
       "content": "Content",
@@ -172,8 +247,8 @@
     "share": {
       "header": "Share a slice of life",
       "settings": {
-        "contribute": "Allow contributing events",
-        "manage": "Allow managing events and streams",
+        "contribute": "Allow contributing content",
+        "manage": "Allow managing content and streams",
         "name": "Name",
         "read": "Allow read only",
         "selectStreams": "Select Streams",
@@ -181,27 +256,5 @@
       },
       "success": "Your sharing was successfully created, share it via Facebook, Twitter, mail or this link:"
     }
-  },
-  "nav": {
-    "addEvent": "Add event",
-    "bugReport": "Report a bug",
-    "follow": "Follow this slice",
-    "manageSlices": "Manage slices",
-    "myPryv": "Me",
-    "settings": "Settings",
-    "share": "Share a slice of life",
-    "signIn": "Sign in",
-    "signOut": "Sign out"
-  },
-  "noEvents": {
-    "title": "No events to display"
-  },
-  "onboarding": {
-    "content": [
-      "<p>To get started, create streams that matter to you:</p>",
-      "<p>Your life is made of streams.<span class=\"stream_color_1\">Travel</span>,<span class=\"stream_color_2\"> Friends</span>,<span class=\"stream_color_3\"> Family</span>,<span class=\"stream_color_4\"> Sports...</span></p>"
-    ],
-    "streamInput": "Create Your Stream",
-    "title": "What matters in your life ?"
   }
 }

@@ -30,7 +30,7 @@ module.exports = Marionette.CompositeView.extend({
     this.listenTo(this.collection, 'change', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
     $(this.container).append('<h5 data-i18n="modal.manageSlices.followedSlices"></h5>' +
-      
+
       '<table class="table" >' +
       '<thead><tr><th data-i18n="modal.manageSlices.name"></th>' +
       '<th data-i18n="modal.manageSlices.link"></th><th></th></tr></thead>' +
@@ -55,7 +55,7 @@ module.exports = Marionette.CompositeView.extend({
         ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
       '</div> ' +
       ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">' +
-      '<span data-i18n="button.add"></span> ' +
+      '<span data-i18n="common.actions.add"></span> ' +
       '<i class="fa fa-spinner fa-spin"></i></button>  ' +
       '' +
       ' </form>');

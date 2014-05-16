@@ -102,7 +102,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login-button').html('<i class="fa fa-sign-in"></i> ' + i18n.t('nav.signIn'));
+        $('#login-button').html('<i class="fa fa-sign-in"></i> ' + i18n.t('nav.actions.signIn'));
         this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {

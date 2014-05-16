@@ -26,7 +26,7 @@ var TreeView = Marionette.CompositeView.extend({
     this.listenTo(this.model, 'change', this.render);
   },
   appendHtml: function (collectionView, itemView) {
-    // ensure we nest the child list inside of 
+    // ensure we nest the child list inside of
     // the current list item
     collectionView.$('summary:first').after(itemView.el);
   },
@@ -44,7 +44,7 @@ var TreeView = Marionette.CompositeView.extend({
   }
 });
 
-// The tree's root: a simple collection view that renders 
+// The tree's root: a simple collection view that renders
 // a recursive tree structure for each item in the collection
 var TreeRoot = Marionette.CollectionView.extend({
   itemView: TreeView,
@@ -229,10 +229,10 @@ Controller.prototype.show = function () {
     '</div><div id="modal-content"><div id="creation-content"></div>' +
     '<div id="creation-footer" class="col-md-12">' +
     '<button id="publish" class="btn btn-pryv-turquoise">' +
-    '<span data-i18n="button.publish"></span> ' +
+    '<span data-i18n="slices.actions.share"></span> ' +
     '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
-    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="button.cancel"></button>' +
-    '</div></div>');
+    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="common.actions.cancel">' +
+    '</button></div></div>');
   $('#creation-content').html(this.treeView.el);
   $('body').i18n();
   $('#publish').click(function (e) {

@@ -312,19 +312,20 @@ line-height: 27px;
   -ms-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
 }
-.loading + #tree > #empty-events {
+.loading + #tree > #empty-tree-notice {
   display: none;
 }
-.node + #empty-events {
+.node + #empty-tree-notice {
  display: none;
 }
-#empty-events {
-  text-align: center;
-  width: 100%;
+#empty-tree-notice {
   position: relative;
-  left: 0;
   top: 50%;
-  margin-top: -10px;
+  left: 0;
+  width: 100%;
+  margin-top: -0.75em;
+  text-align: center;
+  font-size: 1.5em;
 }
 .Center-Container.is-Table {
   display: inline-block;

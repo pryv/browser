@@ -26,7 +26,7 @@ var Controller = module.exports = function ($modal, connection, target) {
     '<div class="sharings container"></div></div>' +
     '<div id="creation-footer" class="col-md-12">' +
     '<button id="ok" class="btn btn-pryv-turquoise" ' +
-    'data-dismiss="modal" data-i18n="button.ok"></button>' +
+    'data-dismiss="modal" data-i18n="common.actions.ok"></button>' +
     '</div></div>');
   $('body').i18n();
   this.container = '.sharings';

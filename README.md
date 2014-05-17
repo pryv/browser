@@ -5,7 +5,7 @@ The Pryv web app, featuring @glance view.
 
 ## Setting up the development environment
 
-`./scripts/setup-environment-dev.sh`
+`scripts/setup-environment-dev.sh`
 
 
 ## Building
@@ -22,4 +22,6 @@ Build output goes to `./dist`
 Requires a working copy of our [dev tools repo](https://github.com/pryv/dev-tools).
 
 1. Start the dev web server, pointing it to your built app (in `./dist`), for example: `node ../dev-tools/web-server/source/server.js --staticRootPath ./dist`
-2. Open `https://{username}.rec.la`, where `{username}` points to an existing staging user
+2. Open `https://{username}.rec.la:4443`, where `{username}` points to an existing staging user
+
+`scripts/start-server.sh [username]` will do the above automatically if your dev tools copy is in `../dev-tools`.

@@ -461,6 +461,7 @@ padding: 0px 15px;
 }
 
 .NotesEventsNode .content {
+  padding: 15px;
   text-align: center;
   overflow: hidden;
   word-break: break-word;
@@ -1217,6 +1218,9 @@ ul.modal-dnd-legend > li {
 }
 #login-form form {
   text-align: initial;
+}
+#login-form button[type=submit] {
+  margin-right: 12px;
 }
 #login:before {
   content:'';

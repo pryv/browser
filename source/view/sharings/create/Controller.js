@@ -60,24 +60,24 @@ var TreeRoot = Marionette.CollectionView.extend({
     }
 
     this.$el.prepend(
-      '<h5 data-i18n="modal.share.settings.title"></h5>' +
+      '<h5 data-i18n="slices.labels.nameAndPermissionsTitle"></h5>' +
       '<form role="form" id="form-create-sharing"' +
       '<div class="form-horizontal">' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
       '<input type="text" class="form-control" id="input-name" ' +
-        'data-i18n="[placeholder]modal.share.settings.name" required>' +
+        'data-i18n="[placeholder]slices.labels.sliceNamePlaceholder" required>' +
       '</div>' +
       '</div>' +
       '<div class="form-group">' +
       '<div class="col-sm-5">' +
       '<select class="form-control" id="input-global-permission">' +
       '  <option value="read" selected="selected" ' +
-        'data-i18n="modal.share.settings.read"></option>' +
+        'data-i18n="slices.labels.permissionRead"></option>' +
       '  <option value="contribute" ' +
-        'data-i18n="modal.share.settings.contribute"></option>' +
+        'data-i18n="slices.labels.permissionContribute"></option>' +
       '  <option value="manage" ' +
-        'data-i18n="modal.share.settings.manage"></option>' +
+        'data-i18n="slices.labels.permissionManage"></option>' +
       '</select>' +
       '</div>' +
       '</div>' +
@@ -123,7 +123,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       ' </div> ' +
       '  </div> ' +
       '<input type="submit" style="opacity: 0; visibility: hidden;">' +
-      '<h5 data-i18n="modal.share.settings.selectStreams"></h5>' +
+      '<h5 data-i18n="slices.labels.sharedStreams"></h5>' +
       '');
     var $form = $('#form-create-sharing', this.$el),
       $name = $('#input-name', this.$el);
@@ -224,7 +224,7 @@ Controller.prototype.show = function () {
   $(this.container).prepend('<div class="modal-header">  ' +
     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
     '&times;</button> ' +
-    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.share.header"></h4>' +
+    '<h4 class="modal-title" id="myModalLabel" data-i18n="slices.labels.shareTitle"></h4>' +
     '<div class="modal-close"></div> ' +
     '</div><div id="modal-content"><div id="creation-content"></div>' +
     '<div id="creation-footer" class="col-md-12">' +
@@ -247,7 +247,7 @@ Controller.prototype.show = function () {
     url = url.replace(/\.io/, '.me');
     url += '#/sharings/' + token;
     $('#creation-content').html('<div class="container">' +
-      '<h4 data-i18n="modal.share.success"></h4>' +
+      '<h4 data-i18n="slices.messages.sharingSuccessful"></h4>' +
       '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
       '<p class="text-center share">' +
       '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +

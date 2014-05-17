@@ -70,7 +70,7 @@
     },
     "labels": {
       "password": "Password",
-      "title": "Login",
+      "title": "Sign in",
       "username": "Username"
     },
     "messages": {
@@ -119,7 +119,17 @@
       "share": "Share"
     },
     "labels": {
+      "nameAndPermissionsTitle": "Name and permissions",
+      "permissionContribute": "Allow contributing content",
+      "permissionManage": "Allow managing content and streams",
+      "permissionRead": "Allow read only",
+      "sharedStreams": "Shared streams",
+      "shareTitle": "Share a slice of life",
+      "sliceNamePlaceholder": "Name this slice",
       "streams": "Streams"
+    },
+    "messages": {
+      "sharingSuccessful": "Your slice is ready. Share it via Facebook, Twitter, e-mail, or manually with this link:"
     }
   },
 
@@ -243,18 +253,6 @@
         "subtitle": "Change your account password",
         "title": "Password"
       }
-    },
-    "share": {
-      "header": "Share a slice of life",
-      "settings": {
-        "contribute": "Allow contributing content",
-        "manage": "Allow managing content and streams",
-        "name": "Name",
-        "read": "Allow read only",
-        "selectStreams": "Select Streams",
-        "title": "Settings"
-      },
-      "success": "Your sharing was successfully created, share it via Facebook, Twitter, mail or this link:"
     }
   }
 }

@@ -20,19 +20,44 @@
       "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS."
     }
   },
-  "detailedView": {
-
-  },
   "events": {
     "common": {
       "actions": {
-        "addNewStream": "Add new stream"
+        "addNewStream": "Add new stream",
+        "all": "All",
+        "deleteSelected": "Delete selected",
+        "none": "None"
       },
       "labels": {
         "addEventTitle": "Add content",
+        "description": "Description",
         "descriptionPlaceholder": "Description (optional)",
+        "detailViewTitle": "Detailed view",
         "streamSelection": "Select a stream",
-        "tagsPlaceholder": "Tags, separated by commas (optional)"
+        "stream": "Stream",
+        "tags": "Tags",
+        "tagsPlaceholder": "Tags, separated by commas (optional)",
+        "time": "Time"
+      }
+    },
+    "charts": {
+      "labels": {
+        "color": "Color",
+        "fitting": "Fitting",
+        "operation": "Operation",
+        "operationAverage": "Average",
+        "operationNone": "None",
+        "operationSum": "Sum",
+        "period": "Period",
+        "periodDaily": "Daily",
+        "periodMonthly": "Monthly",
+        "periodNone": "None",
+        "periodWeekly": "Weekly",
+        "periodYearly": "Yearly",
+        "type": "Type",
+        "typeBar": "Bar",
+        "typeLine": "Line",
+        "typePoint": "Point"
       }
     },
     "note": {
@@ -192,35 +217,6 @@
     }
   },
   "modal": {
-    "detail": {
-      "checkAll": "Check All",
-      "content": "Content",
-      "editForm": {
-        "description": "Description",
-        "stream": "Stream",
-        "tags": "Tags",
-        "time": "Time"
-      },
-      "graph": {
-        "average": "Average",
-        "bar": "Bar",
-        "color": "Color",
-        "daily": "Daily",
-        "fitting": "Fitting",
-        "interval": "Interval",
-        "line": "Line",
-        "monthly": "Monthly",
-        "none": "None",
-        "operation": "Operation",
-        "point": "Point",
-        "style": "Style",
-        "sum": "Sum",
-        "weekly": "Weekly",
-        "yearly": "Yearly"
-      },
-      "header": "Detailed View",
-      "trashSelected": "Trash Selected"
-    },
     "manageSlices": {
       "followedSlices": "Followed slices",
       "header": "Slices",

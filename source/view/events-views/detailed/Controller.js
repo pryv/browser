@@ -73,7 +73,7 @@ _.extend(Controller.prototype, {
     /*jshint -W101 */
     $(this.container).append('<div class="modal-header">  ' +
       '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
-      '        <h4 class="modal-title" id="myModalLabel" data-i18n="modal.detail.header"></h4>' +
+      '        <h4 class="modal-title" id="myModalLabel" data-i18n="events.common.labels.detailViewTitle"></h4>' +
       '        <div class="modal-close"></div> ' +
       '    </div>      ' +
       '<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');

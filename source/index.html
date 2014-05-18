@@ -418,7 +418,7 @@
           <ul>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.color"></label>
+                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.color"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-color" class="form-control">
                     <option value="#1abc9c" style="background-color: #1abc9c">&nbsp;</option>
@@ -447,45 +447,45 @@
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.style"></label>
+                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.type"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-style" class="form-control">
-                    <option value="line" data-i18n="modal.detail.graph.line"></option>
-                    <option value="point" data-i18n="modal.detail.graph.point"></option>
-                    <option value="bar" data-i18n="modal.detail.graph.bar"></option>
+                    <option value="line" data-i18n="events.charts.labels.typeLine"></option>
+                    <option value="point" data-i18n="events.charts.labels.typePoint"></option>
+                    <option value="bar" data-i18n="events.charts.labels.typeBar"></option>
                   </select>
                 </div>
               </div>
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.operation"></label>
+                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.operation"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-operation" class="form-control">
-                    <option value="none" data-i18n="modal.detail.graph.none"></option>
-                    <option value="sum" data-i18n="modal.detail.graph.sum"></option>
-                    <option value="average" data-i18n="modal.detail.graph.average"></option>
+                    <option value="none" data-i18n="events.charts.labels.operationNone"></option>
+                    <option value="sum" data-i18n="events.charts.labels.operationSum"></option>
+                    <option value="average" data-i18n="events.charts.labels.operationAverage"></option>
                   </select>
                 </div>
               </div>
             </li>
             <li>
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.interval"></label>
+                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.period"></label>
                 <div class="col-sm-10">
                   <select id="detailed-view-chart-interval" class="form-control">
-                    <option value="none" data-i18n="modal.detail.graph.none"></option>
-                    <option value="daily" data-i18n="modal.detail.graph.daily"></option>
-                    <option value="weekly" data-i18n="modal.detail.graph.weekly"></option>
-                    <option value="monthly" data-i18n="modal.detail.graph.monthly"></option>
-                    <option value="yearly" data-i18n="modal.detail.graph.yearly"></option>
+                    <option value="none" data-i18n="events.charts.labels.periodNone"></option>
+                    <option value="daily" data-i18n="events.charts.labels.periodDaily"></option>
+                    <option value="weekly" data-i18n="events.charts.labels.periodWeekly"></option>
+                    <option value="monthly" data-i18n="events.charts.labels.periodMonthly"></option>
+                    <option value="yearly" data-i18n="events.charts.labels.periodYearly"></option>
                   </select>
                 </div>
               </div>
             </li>
             <li>
               <div class="form-group hide">
-                <label class="col-sm-2 control-label" data-i18n="modal.detail.graph.fitting"></label>
+                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.fitting"></label>
                 <div class="col-sm-10">
                   <div class="onoffswitch">
                     <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
@@ -509,7 +509,7 @@
   <script type="template" id="template-detail-full">
       <% if (event) {%>
       <ul>
-        <li class="event-structure editable" id="current-streamId"><span data-i18n="modal.detail.editForm.stream"></span>: <label><%= event.streamName
+        <li class="event-structure editable" id="current-streamId"><span data-i18n="events.common.labels.stream"></span>: <label><%= event.streamName
           %></label>
           <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
         </li>
@@ -517,16 +517,16 @@
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
         </li> -->
-        <li class="event-structure editable" id="current-time"><span data-i18n="modal.detail.editForm.time"></span>: <label><%= PryvBrowser.getTimeString(event.time) %></label>
+        <li class="event-structure editable" id="current-time"><span data-i18n="events.common.labels.time"></span>: <label><%= PryvBrowser.getTimeString(event.time) %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
         </li> <!--
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
           <input class="edit" id="edit-type" value="<%= event.type %>">
         </li> -->
-        <li class="event-structure editable" id="current-description"><span data-i18n="modal.detail.editForm.description"></span>: <label><%=
+        <li class="event-structure editable" id="current-description"><span data-i18n="events.common.labels.description"></span>: <label><%=
           event.description %></label>
           <input class="edit" id="edit-description" value="<%= event.description %>"></li>
-        <li class="event-structure editable" id="current-tags"><span data-i18n="modal.detail.editForm.tags"></span>:
+        <li class="event-structure editable" id="current-tags"><span data-i18n="events.common.labels.tags"></span>:
           <% event.tags.forEach(function (tag) { %>
           <label><%= tag %></label>
           <% }) %>

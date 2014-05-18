@@ -581,7 +581,7 @@
 <script type="template" id="settings-modal-template">
    <div class="modal-header">
      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-     <h4 class="modal-title" id="myModalLabel" data-i18n="modal.settings.header"></h4>
+     <h4 class="modal-title" id="myModalLabel" data-i18n="settings.common.labels.title"></h4>
      <div class="modal-close"></div>
    </div>
   <div id="modal-content">
@@ -595,34 +595,34 @@
 </script>
 <script type="template" id="nav-settings-modal-template">
   <ul class="nav">
-    <li><a href="javascript:void(0)" data-name="password" data-i18n="modal.settings.nav.password"></a></li>
+    <li><a href="javascript:void(0)" data-name="manageApps" data-i18n="settings.connectedApps.labels.title"></a></li>
   </ul>
   <ul class="nav">
-    <li><a href="javascript:void(0)" data-name="manageApps" data-i18n="modal.settings.nav.manageApps"></a></li>
+    <li><a href="javascript:void(0)" data-name="password" data-i18n="settings.security.labels.title"></a></li>
   </ul>
 </script>
 <script type="template" id="password-settings-modal-template">
   <div class="panel panel-default settings-panel">
     <div class="panel-heading">
-      <h4 data-i18n="modal.settings.password.title"></h4>
-      <p class="panel-subtitle" data-i18n="modal.settings.password.subtitle"></p>
+      <h4 data-i18n="settings.security.labels.passwordTitle"></h4>
+      <p class="panel-subtitle" data-i18n="settings.security.labels.passwordSubtitle"></p>
     </div>
     <div class="panel-body">
       <form class="form-horizontal" role="form">
         <div class="form-group">
-          <label for="currentPassword" class="col-sm-2 control-label" data-i18n="modal.settings.password.current"></label>
+          <label for="currentPassword" class="col-sm-2 control-label" data-i18n="settings.security.labels.currentPassword"></label>
           <div class="col-sm-5">
             <input type="password" class="form-control" id="currentPassword" required>
           </div>
         </div>
         <div class="form-group">
-          <label for="newPassword" class="col-sm-2 control-label" data-i18n="modal.settings.password.new"></label>
+          <label for="newPassword" class="col-sm-2 control-label" data-i18n="settings.security.labels.newPassword"></label>
           <div class="col-sm-5">
             <input type="password" class="form-control" id="newPassword" required>
           </div>
         </div>
         <div class="form-group">
-          <label for="reNewPassword" class="col-sm-2 control-label" data-i18n="modal.settings.password.reNew"></label>
+          <label for="reNewPassword" class="col-sm-2 control-label" data-i18n="settings.security.labels.newPasswordConfirm"></label>
           <div class="col-sm-5">
             <input type="password" class="form-control" id="reNewPassword" required>
           </div>
@@ -658,18 +658,18 @@
 
     <div class="panel panel-default seetings-panel">
       <div class="panel-heading">
-        <h4 data-i18n="modal.settings.manageApps.title">
+        <h4 data-i18n="settings.connectedApps.labels.title">
         </h4>
         <p class="panel-subtitle"
-          data-i18n="modal.settings.manageApps.subtitle">
+          data-i18n="settings.connectedApps.labels.subtitle">
         </p>
       </div>
         <div class="panel-body">
           <table class="table">
             <thead><tr>
               <th></th>
-              <th data-i18n="modal.settings.manageApps.name"></th>
-              <th data-i18n="modal.settings.manageApps.action"></th>
+              <th data-i18n="settings.connectedApps.labels.name"></th>
+              <th data-i18n="settings.connectedApps.labels.action"></th>
               <th></th></tr></thead>
             <tbody></tbody>
           </table>
@@ -690,7 +690,7 @@
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">
-  <a class="btn btn-default btn-lg" data-toggle="collapse" data-target="#appList" data-i18n="modal.settings.manageApps.otherApps" href="javascript:void(0)"></a>
+  <a class="btn btn-default btn-lg" data-toggle="collapse" data-target="#appList" data-i18n="settings.connectedApps.actions.connectMoreApps" href="javascript:void(0)"></a>
 
     <div id="appList" class="panel-collapse collapse">
       <div class="panel-body">

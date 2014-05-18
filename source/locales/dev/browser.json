@@ -130,13 +130,34 @@
     }
   },
   "settings": {
+    "common": {
+      "labels": {
+        "title": "Settings"
+      }
+    },
     "connectedApps": {
       "actions": {
         "connect": "Connect",
+        "connectMoreApps": "Connect more apps",
         "disconnect": "Disconnect"
+      },
+      "labels": {
+        "action": "Action",
+        "name": "Name",
+        "settings": "Settings",
+        "subtitle": "The following apps are connected and authorized to access your account.",
+        "title": "Connected apps"
       }
     },
     "security": {
+      "labels": {
+        "currentPassword": "Current",
+        "newPassword": "New",
+        "newPasswordConfirm": "Confirm new",
+        "passwordSubtitle": "Change your password",
+        "passwordTitle": "Password",
+        "title": "Security"
+      }
     }
   },
   "slices": {
@@ -224,30 +245,6 @@
     "subscribeSlice": {
       "slice-already-exists": "You already follow this slice or the given name already exists",
       "slice-unknown": "The given slice do not exists"
-    }
-  },
-  "modal": {
-    "settings": {
-      "header": "Settings",
-      "manageApps": {
-        "action": "Action",
-        "name": "Name",
-        "otherApps": "Connect more apps",
-        "settings": "Settings",
-        "subtitle": "The following apps are connected and authorized to access your account.",
-        "title": "Connected apps"
-      },
-      "nav": {
-        "manageApps": "Connected apps",
-        "password": "Password"
-      },
-      "password": {
-        "current": "Current",
-        "new": "New",
-        "reNew": "Re-type new",
-        "subtitle": "Change your account password",
-        "title": "Password"
-      }
     }
   }
 }

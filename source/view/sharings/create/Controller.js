@@ -159,20 +159,25 @@ var TreeRoot = Marionette.CollectionView.extend({
         access.permissions.push({streamId : model.get('id'), level: permission});
       }
     });
+
     this.options.connection.accesses.create(access, function (error, result) {
       if ($spin) {
         $spin.hide();
       }
+
       if (error || result.message) {
+        // TODO: check actual error and handle it properly
         $btn.addClass('btn-pryv-alizarin');
-        window.PryvBrowser('.modal-content', i18n.t('error.createSlice.' + error.id));
-      } else {
-        $btn.removeClass('btn-pryv-alizarin');
-        this.trigger('sharing:createSuccess', result.token);
+        window.PryvBrowser('.modal-content', i18n.t('slices.messages.errInvalidSharingToken'));
+        return;
       }
+
+      $btn.removeClass('btn-pryv-alizarin');
+      this.trigger('sharing:createSuccess', result.token);
     }.bind(this));
   }
 });
+
 var TreeNode = Backbone.Model.extend({
   defaults : {
     checked: true

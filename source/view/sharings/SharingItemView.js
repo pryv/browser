@@ -47,17 +47,19 @@ module.exports = Marionette.ItemView.extend({
       this.trigger('sharing:update', this);
     }
   },
-  endUpdateSharing: function (error) {
+  endUpdateSharing: function (err) {
     this.ui.editNameSpinner.hide();
-    if (error) {
+    if (err) {
       this.ui.editNameButton.removeClass('btn-default').addClass('btn-danger');
       this.model.get('sharing').name = this.model.get('sharing').oldName;
-      window.PryvBrowser.showAlert('.modal-content', i18n.t('error.createdSlice.edit.' + error.id));
-    } else {
-      this.ui.editNameInput.hide();
-      this.ui.editNameSpan.hide();
-      this.ui.editName.show();
-      this.render();
+      // TODO proper error handling
+      window.PryvBrowser.showAlert('.modal-content',
+          i18n.t('slices.messages.errSliceNameAlreadyExists'));
+      return;
     }
+    this.ui.editNameInput.hide();
+    this.ui.editNameSpan.hide();
+    this.ui.editName.show();
+    this.render();
   }
 });

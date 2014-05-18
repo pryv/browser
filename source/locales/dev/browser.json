@@ -18,7 +18,8 @@
       "action": "Action"
     },
     "messages": {
-      "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS."
+      "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS.",
+      "errUnexpected": "Something went wrong! We've been automatically notified, but you can always help us improve by posting an error report."
     }
   },
   "events": {
@@ -39,6 +40,10 @@
         "tags": "Tags",
         "tagsPlaceholder": "Tags, separated by commas (optional)",
         "time": "Time"
+      },
+      "messages": {
+        "errStreamNameAlreadyExists": "A stream with the same name already exists",
+        "errNoStreamSelected": "Please select a stream"
       }
     },
     "charts": {
@@ -157,6 +162,11 @@
         "passwordSubtitle": "Change your password",
         "passwordTitle": "Password",
         "title": "Security"
+      },
+      "messages": {
+        "errCurrentPasswordInvalid": "The current password is wrong",
+        "errPasswordRequirements": "The new password does not match the minimum security requirements; try a longer one",
+        "errPasswordsDontMatch": "The password and its confirmation do not match"
       }
     }
   },
@@ -185,52 +195,34 @@
       "streams": "Streams"
     },
     "messages": {
-      "sharingSuccessful": "Your slice is ready. Share it via Facebook, Twitter, e-mail, or manually with this link:"
+      "sharingSuccessful": "Your slice is ready. Share it via Facebook, Twitter, e-mail, or manually with this link: ",
+      "errInvalidSharingToken": "The given sharing token cannot be used",
+      "errSliceNameAlreadyExists": "A slice with the same name already exists"
     }
   },
 
 
   "error": {
-    "addEvent": {
-      "createStream": {
-        "invalid-item-id": "The specified stream id is invalid",
-        "item-already-exists": "The stream name already exists"
-      },
-      "select-stream": "Please select a stream"
-    },
-    "changePassword": {
-      "invalid-operation": "Your current password is invalid",
-      "pass-dont-match": "Passwords do not match"
-    },
-    "createSlice": {
-      "invalid-item-id": "The specified token is invalid (e.g. it's a reserved word such as null)"
-    },
-    "createdSlice": {
-      "delete": {},
-      "edit": {
-        "item-already-exists": "The slice name already exists"
-      }
-    },
     "detailed": {
       "create": {
         "invalid-operation": "The selected stream is deleted! You can't add content into a deleted stream.",
-        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context."
+        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context"
       },
       "update": {
-        "forbidden": "You don't have permission to update this item.",
-        "invalid-access-token": "You don't have permission to update this item.",
-        "invalid-operation": "You must set a valid duration.",
-        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context."
+        "forbidden": "You don't have permission to update this item",
+        "invalid-access-token": "You don't have permission to update this item",
+        "invalid-operation": "You must set a valid duration",
+        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context"
       },
       "trash": {
-        "invalid-access-token": "You don't have permission to delete this item.",
-        "unknown-resource": "The item has already been deleted."
+        "invalid-access-token": "You don't have permission to delete this item",
+        "unknown-resource": "The item has already been deleted"
       }
     },
     "followedSlice": {
       "add": {
-        "slice-already-exists": "You already follow this slice or the chosen name already exists.",
-        "slice-unknown": "The slice does not exist."
+        "slice-already-exists": "You are already following this slice, or the chosen name already exists",
+        "slice-unknown": "The given slice does not exist"
       },
       "delete": {}
     },
@@ -240,11 +232,11 @@
       "unknown-username": "Unknown username"
     },
     "manageApps": {
-      "cannot-load-app-list": "Cannot load app list"
+      "cannot-load-app-list": "Something went wrong with loading the list of apps"
     },
     "subscribeSlice": {
-      "slice-already-exists": "You already follow this slice or the given name already exists",
-      "slice-unknown": "The given slice do not exists"
+      "slice-already-exists": "You are already following this slice, or the chosen name already exists",
+      "slice-unknown": "The given slice does not exist"
     }
   }
 }

@@ -154,14 +154,17 @@ _.extend(Controller.prototype, {
   },
   _onDeleteSharingClick: function (e, sharingModel) {
     this.connection.accesses.delete(sharingModel.get('sharing').id,
-    function (error) {
-      if (!error) {
-        this.sharingCollection.remove(sharingModel);
-      } else {
-        window.PryvBrowser.showAlert(this.container,
-          i18n.t('error.createdSlice.delete.' + error.id));
-        console.warn(error);
+    function (err) {
+      if (err) {
+        // TODO: check actual error and handle it properly
+        window.PryvBrowser.reportError(err, {
+          component: 'slices management',
+          action: 'delete shared access'
+        });
+        window.PryvBrowser.showAlert(this.container, i18n.t('common.messages.errUnexpected'));
+        return;
       }
+      this.sharingCollection.remove(sharingModel);
     }.bind(this));
   },
   _onUpdateSharingClick: function (e, view) {

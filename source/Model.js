@@ -389,6 +389,27 @@ var detectIE = function detectIE() {
   return false;
 };
 
+/**
+ * Notifies the error reporting service of the given error.
+ *
+ * @param {Error} error
+ * @param {Object} context
+ */
+window.PryvBrowser.reportError = function (error, context) {
+  if (! window.Airbrake) {
+    console.error('Airbrake not loaded; cannot report error: ' + error.message);
+    return;
+  }
+  window.Airbrake.push({
+    error: error,
+    // TODO: extend context with username, access name etc.
+    context: context,
+    environment: {
+      'navigator.vendor': window.navigator.vendor
+    }
+  });
+};
+
 window.PryvBrowser.showAlert = function (containerSelector, html) {
   $('.alert').alert('close');
   var $container = $(containerSelector);

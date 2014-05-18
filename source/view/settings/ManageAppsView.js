@@ -89,15 +89,18 @@ module.exports = Marionette.CompositeView.extend({
   },
   _onDeleteAppClick: function (e, model) {
     this.connection.accesses.delete(model.get('app').id,
-      function (error) {
-        if (!error) {
-          allList.remove(model);
-          this.debounceRender();
-        } else {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.createdSlice.delete.' + error.id));
-          console.warn(error);
+      function (err) {
+        if (err) {
+          // TODO: check actual error and handle it properly
+          window.PryvBrowser.reportError(err, {
+            component: 'connected apps',
+            action: 'delete app access'
+          });
+          window.PryvBrowser.showAlert('.modal-content', i18n.t('common.messages.errUnexpected'));
+          return;
         }
+        allList.remove(model);
+        this.debounceRender();
       }.bind(this));
   },
   onRender: function () {

@@ -131,28 +131,41 @@ module.exports = Marionette.ItemView.extend({
           this.connectionSelected.streams.create({parentId: parentId, name: name},
               function (err, res) {
                 if (err) {
-                  console.warn(err);
+                  var errMsg;
+                  switch (err.id) {
+                  case 'item-already-exists':
+                    errMsg = i18n.t('events.common.messages.errStreamNameAlreadyExists');
+                    break;
+                  default:
+                    errMsg = i18n.t('common.messages.errUnexpected');
+                    window.PryvBrowser.reportError(err, {
+                      component: 'event creation',
+                      action: 'create stream'
+                    });
+                    break;
+                  }
+
                   this.ui.publish.addClass('btn-pryv-alizarin');
                   this.ui.spin.hide();
                   this.ui.publish.prop('disabled', false);
-                  window.PryvBrowser.showAlert(this.itemViewContainer,
-                      i18n.t('error.addEvent.createStream.' + err.id));
-                } else {
-                  this.streamSelected = res.id;
-                  this.onPublishClick();
+                  window.PryvBrowser.showAlert(this.itemViewContainer, errMsg);
+                  return;
                 }
+
+                this.streamSelected = res.id;
+                this.onPublishClick();
               }.bind(this));
           break;
         }
       }
-      if (!name) {
+      if (! name) {
         window.PryvBrowser.showAlert(this.itemViewContainer,
-            i18n.t('error.addEvent.select-stream'));
+            i18n.t('events.common.messages.errNoStreamSelected'));
       }
     }
   },
-  _publishNote: function () {
 
+  _publishNote: function () {
     var event = this.newEvents.get('event');
     var tags = $('#tags-0').val().trim().split(',');
     var description = $('#description-0').val().trim();
@@ -167,16 +180,23 @@ module.exports = Marionette.ItemView.extend({
     this.newEvents.create(function (err) {
       this.ui.spin.hide();
       this.ui.publish.prop('disabled', false);
+
       if (err) {
-        console.warn(err);
+        window.PryvBrowser.reportError(err, {
+          component: 'event creation',
+          action: 'create note'
+        });
         this.ui.publish.addClass('btn-pryv-alizarin');
-        window.PryvBrowser.showAlert(this.itemViewContainer, i18n.t('error.addEvent.' + err.id));
-      } else {
-        this.ui.publish.removeClass('btn-pryv-alizarin');
-        this._close();
+        window.PryvBrowser.showAlert(this.itemViewContainer,
+            i18n.t('common.messages.errUnexpected'));
+        return;
       }
+
+      this.ui.publish.removeClass('btn-pryv-alizarin');
+      this._close();
     }.bind(this));
   },
+
   _publishPosition: function () {
     var event = this.newEvents.get('event');
     var tags = $('#tags-0').val().trim().split(',');
@@ -191,16 +211,21 @@ module.exports = Marionette.ItemView.extend({
       this.ui.spin.hide();
       this.ui.publish.prop('disabled', false);
       if (err) {
-        console.warn(err);
+        window.PryvBrowser.reportError(err, {
+          component: 'event creation',
+          action: 'create position'
+        });
         this.ui.publish.addClass('btn-pryv-alizarin');
-        window.PryvBrowser.showAlert(this.itemViewContainer, i18n.t('error.addEvent.' + err.id));
-      } else {
-        this.ui.publish.removeClass('btn-pryv-alizarin');
-        this._close();
+        window.PryvBrowser.showAlert(this.itemViewContainer,
+            i18n.t('common.messages.errUnexpected'));
+        return;
       }
-    }.bind(this));
 
+      this.ui.publish.removeClass('btn-pryv-alizarin');
+      this._close();
+    }.bind(this));
   },
+
   _publishPicture: function () {
     var self = this;
     if (!this.canPublish) {
@@ -211,32 +236,36 @@ module.exports = Marionette.ItemView.extend({
     var create = function (model, $progressBar) {
       var error = false;
       model.create(function (err) {
-            asyncCount--;
-            $progressBar.removeClass('progress-striped', 'active');
-            if (err) {
-              error = true;
-              window.PryvBrowser.showAlert(this.itemViewContainer,
-                  i18n.t('error.addEvent.' + err.id));
-              $progressBar.find('.progress-bar')
-                  .css({'background-color': '#e74c3c', 'width' : '100%'});
-            } else {
-              $progressBar.find('.progress-bar')
-                  .css({'background-color': '#2ecc71', 'width' : '100%'});
-              model.set('published', true);
-            }
-            if (error && asyncCount === 0) {
-              self.ui.spin.hide();
-              self.canPublish = true;
-            } else if (!error && asyncCount === 0) {
-              self.ui.spin.hide();
-              self._close();
-            }
-          },
-          function (e) {
-            $progressBar.find('.progress-bar').css(
-                {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
-            );
+        asyncCount--;
+        $progressBar.removeClass('progress-striped', 'active');
+        if (err) {
+          error = true;
+          window.PryvBrowser.reportError(err, {
+            component: 'event creation',
+            action: 'create picture'
           });
+          window.PryvBrowser.showAlert(this.itemViewContainer,
+              i18n.t('common.messages.errUnexpected'));
+          $progressBar.find('.progress-bar')
+              .css({'background-color': '#e74c3c', 'width' : '100%'});
+        } else {
+          $progressBar.find('.progress-bar')
+              .css({'background-color': '#2ecc71', 'width' : '100%'});
+          model.set('published', true);
+        }
+        if (error && asyncCount === 0) {
+          self.ui.spin.hide();
+          self.canPublish = true;
+        } else if (!error && asyncCount === 0) {
+          self.ui.spin.hide();
+          self._close();
+        }
+      },
+      function (e) {
+        $progressBar.find('.progress-bar').css(
+            {'width' : Math.ceil(100 * (e.loaded / e.total)) + '%'}
+        );
+      });
     };
     var tags, description, time, event, $progressBar;
     $('.td-tags, .td-time, .td-description').hide();

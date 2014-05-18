@@ -20,13 +20,13 @@ var Controller = module.exports = function ($modal, connection, target) {
   $('.modal-content').prepend('<div class="modal-header">  ' +
     '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
     '&times;</button> ' +
-    '<h4 class="modal-title" id="myModalLabel" data-i18n="modal.manageSlices.header"></h4>' +
+    '<h4 class="modal-title" id="myModalLabel" data-i18n="slices.labels.manageTitle"></h4>' +
     '<div class="modal-close"></div> ' +
     '</div><div id="modal-content"><div id="creation-content">' +
     '<div class="sharings container"></div></div>' +
     '<div id="creation-footer" class="col-md-12">' +
     '<button id="ok" class="btn btn-pryv-turquoise" ' +
-    'data-dismiss="modal" data-i18n="common.actions.ok"></button>' +
+    'data-dismiss="modal" data-i18n="common.actions.close"></button>' +
     '</div></div>');
   $('body').i18n();
   this.container = '.sharings';

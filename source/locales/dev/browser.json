@@ -9,6 +9,7 @@
       "add": "Add",
       "apply": "Apply",
       "cancel": "Cancel",
+      "close": "Close",
       "delete": "Delete",
       "ok": "OK",
       "save": "Save"
@@ -140,14 +141,23 @@
   },
   "slices": {
     "actions": {
+      "addNewFollowedSlice": "Add a new slice",
       "follow": "Follow",
       "share": "Share"
     },
     "labels": {
+      "followedSlices": "Followed slices",
+      "link": "Link",
+      "linkPlaceholder": "Paste link",
+      "manageTitle": "Slices",
+      "name": "Name",
       "nameAndPermissionsTitle": "Name and permissions",
+      "namePlaceholder": "Name this slice",
       "permissionContribute": "Allow contributing content",
       "permissionManage": "Allow managing content and streams",
       "permissionRead": "Allow read only",
+      "share": "Share",
+      "sharedSlices": "Shared slices",
       "sharedStreams": "Shared streams",
       "shareTitle": "Share a slice of life",
       "sliceNamePlaceholder": "Name this slice",
@@ -217,17 +227,6 @@
     }
   },
   "modal": {
-    "manageSlices": {
-      "followedSlices": "Followed slices",
-      "header": "Slices",
-      "link": "Link",
-      "name": "Name",
-      "newAdd": "Add a new slice",
-      "newLink": "Link",
-      "newName": "Name this slice",
-      "share": "Share",
-      "sharedSlices": "Shared slices"
-    },
     "settings": {
       "header": "Settings",
       "manageApps": {

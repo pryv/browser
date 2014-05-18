@@ -29,26 +29,26 @@ module.exports = Marionette.CompositeView.extend({
   initialize: function () {
     this.listenTo(this.collection, 'change', this.debounceRender);
     //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h5 data-i18n="modal.manageSlices.followedSlices"></h5>' +
+    $(this.container).append('<h5 data-i18n="slices.labels.followedSlices"></h5>' +
 
       '<table class="table" >' +
-      '<thead><tr><th data-i18n="modal.manageSlices.name"></th>' +
-      '<th data-i18n="modal.manageSlices.link"></th><th></th></tr></thead>' +
+      '<thead><tr><th data-i18n="slices.labels.name"></th>' +
+      '<th data-i18n="slices.labels.link"></th><th></th></tr></thead>' +
       '<tbody id="bookmark-list"></tbody>' +
       '</table>' +
       '<button class="btn btn-default btn-sm" id="add-slice">' +
-      ' <i class="fa fa-plus-square-o"></i> ' +
-      '<span data-i18n="modal.manageSlices.newAdd"></span></button>' +
+      ' <i class="fa fa-plus"></i> ' +
+      '<span data-i18n="slices.actions.addNewFollowedSlice"></span></button>' +
       '<form class="form-inline" id="add-bookmark" role="form">' +
       '<div class="form-group">' +
       ' <label class="sr-only" for="add-bookmark-url">url</label>' +
       ' <input type="url" class="form-control" id="add-bookmark-url" ' +
-      'data-i18n="[placeholder]modal.manageSlices.newLink" required>' +
+      'data-i18n="[placeholder]slices.labels.linkPlaceholder" required>' +
       '</div> ' +
       '<div class="form-group">' +
         '<label class="sr-only" for="add-bookmark-name">Name</label>' +
         '<input type="text" class="form-control" id="add-bookmark-name" ' +
-      'data-i18n="[placeholder]modal.manageSlices.newName" required>' +
+      'data-i18n="[placeholder]slices.labels.namePlaceholder" required>' +
       '</div>' +
       '<div class="form-group">' +
         ' <label class="sr-only" for="add-bookmark-auth">token</label>' +

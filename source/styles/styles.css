@@ -1370,12 +1370,11 @@ h5 {text-transform: uppercase;color: #DFDFDF;}
 .table-striped>tbody>tr:nth-child(odd)>td, .table-striped>tbody>tr:nth-child(odd)>th {
 background-color: #F7F9FA;
 }
-/* Removed as harmful; TODO: cleanup when clarified
-.btn-default {
+td > .btn-default {
 border-radius: 14px;
 padding:6px 22px;
 }
-.btn-default.btn-xs  {
+td > .btn-default.btn-xs  {
 border-radius: 14px;
 padding: 2px 13px;
 }

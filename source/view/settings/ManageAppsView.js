@@ -70,6 +70,7 @@ module.exports = Marionette.CompositeView.extend({
                   allList.add(m);
                 }
               }.bind(this));
+              this.debounceRender();
             }
           }.bind(this));
 

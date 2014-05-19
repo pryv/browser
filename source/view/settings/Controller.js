@@ -34,7 +34,7 @@ var Controller = module.exports  = function ($modal, connection, target) {
 };
 _.extend(Controller.prototype, {
   show: function (region) {
-    region = region || 'password';
+    region = region || 'manageApps';
     this.$modal.modal({currentTarget: this.target});
     setTimeout(function () {
       $('.modal-content').fadeIn();

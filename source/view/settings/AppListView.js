@@ -84,6 +84,7 @@ module.exports = Marionette.CompositeView.extend({
         allList.add(m);
       }
     }.bind(this));
+    this.debounceRender();
   },
   appendHtml: function (collectionView, itemView) {
     collectionView.$('#appList .panel-body').append(itemView.el);

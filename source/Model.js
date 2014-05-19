@@ -417,6 +417,7 @@ window.PryvBrowser.showAlert = function (containerSelector, html) {
     '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
     html + '</div>');
 };
+
 window.PryvBrowser.getTimeString = function (time) {
   var result = '';
   if (moment) {
@@ -425,4 +426,63 @@ window.PryvBrowser.getTimeString = function (time) {
     result = new Date(time * 1000).toLocalDateString();
   }
   return result;
+};
+
+/* jshint -W101 */
+/**
+ * Event type utilities
+ * TODO: this should be abstracted and split into type-specific plugins
+ * follow-up: https://trello.com/c/0P6lmhsS/299-as-a-dev-i-need-event-type-specific-components-to-be-properly-abstracted
+ */
+window.PryvBrowser.eventTypes = {
+  isNote: function (event) {
+    if (! event) { return false; }
+    var t = event.type;
+    return (t === 'note/txt' || t === 'note/text');
+  },
+
+  isNumerical: function (event) {
+    if (! event || ! event.type) { return false; }
+    var typeClass = event.type.split('/')[0];
+    return typeClass === 'money' ||
+        typeClass === 'absorbed-dose' ||
+        typeClass === 'absorbed-dose-equivalent' ||
+        typeClass === 'absorbed-dose-rate' ||
+        typeClass === 'absorbed-dose-rate' ||
+        typeClass === 'area' ||
+        typeClass === 'capacitance' ||
+        typeClass === 'catalytic-activity' ||
+        typeClass === 'count' ||
+        typeClass === 'data-quantity' ||
+        typeClass === 'density' ||
+        typeClass === 'dynamic-viscosity' ||
+        typeClass === 'electric-charge' ||
+        typeClass === 'electric-charge-line-density' ||
+        typeClass === 'electric-current' ||
+        typeClass === 'electrical-conductivity' ||
+        typeClass === 'electromotive-force' ||
+        typeClass === 'energy' ||
+        typeClass === 'force' ||
+        typeClass === 'length' ||
+        typeClass === 'luminous-intensity' ||
+        typeClass === 'mass' ||
+        typeClass === 'mol' ||
+        typeClass === 'power' ||
+        typeClass === 'pressure' ||
+        typeClass === 'speed' ||
+        typeClass === 'temperature' ||
+        typeClass === 'volume';
+  },
+
+  isPicture: function (event) {
+    if (! event) { return false; }
+    var t = event.type;
+    return (t === 'note/txt' || t === 'note/text');
+  },
+
+  isPosition: function (event) {
+    if (! event) { return false; }
+    var t = event.type;
+    return (t === 'note/txt' || t === 'note/text');
+  }
 };

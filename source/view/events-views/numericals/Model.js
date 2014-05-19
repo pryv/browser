@@ -272,7 +272,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       this.view.on('chart:resize', this.resize.bind(this));
       this.view.on('nodeClicked', function () {
         if (!this.detailedView) {
-          this.detailedView = new DetailView(this.$modal);
+          this.detailedView = new DetailView(this.$modal, null, this.stream);
         }
         this.detailedView.addEvents(this.events);
         this.detailedView.show();

@@ -400,13 +400,13 @@ _.extend(Controller.prototype, {
   }, 100),
 
   getEventsCategory: function (event) {
-    if (this.eventIsNote(event)) {
+    if (window.PryvBrowser.eventTypes.isNote(event)) {
       return 'note';
-    } else if (this.eventIsNumerical(event)) {
+    } else if (window.PryvBrowser.eventTypes.isNumerical(event)) {
       return 'numerical';
-    } else if (this.eventIsPicture(event)) {
+    } else if (window.PryvBrowser.eventTypes.isPicture(event)) {
       return 'picture';
-    } else if (this.eventIsPosition(event)) {
+    } else if (window.PryvBrowser.eventTypes.isPosition(event)) {
       return 'position';
     } else {
       return null;
@@ -414,67 +414,17 @@ _.extend(Controller.prototype, {
   },
 
   getTimeSeriesCollectionByEvent: function (event) {
-    if (this.eventIsNote(event)) {
+    if (window.PryvBrowser.eventTypes.isNote(event)) {
       return this.eventCollections.note;
-    } else if (this.eventIsNumerical(event)) {
+    } else if (window.PryvBrowser.eventTypes.isNumerical(event)) {
       return this.eventCollections.numerical;
-    } else if (this.eventIsPicture(event)) {
+    } else if (window.PryvBrowser.eventTypes.isPicture(event)) {
       return this.eventCollections.picture;
-    } else if (this.eventIsPosition(event)) {
+    } else if (window.PryvBrowser.eventTypes.isPosition(event)) {
       return this.eventCollections.position;
     } else {
       return null;
     }
-  },
-
-  /* Functions to the event category */
-  eventIsNote: function (e) {
-    var eventType = e.type;
-    return (eventType === 'note/txt' || eventType === 'note/text');
-  },
-
-  eventIsNumerical: function (e) {
-    var eventTypeClass = e.type.split('/')[0];
-    return (
-      eventTypeClass === 'money' ||
-        eventTypeClass === 'absorbed-dose' ||
-        eventTypeClass === 'absorbed-dose-equivalent' ||
-        eventTypeClass === 'absorbed-dose-rate' ||
-        eventTypeClass === 'absorbed-dose-rate' ||
-        eventTypeClass === 'area' ||
-        eventTypeClass === 'capacitance' ||
-        eventTypeClass === 'catalytic-activity' ||
-        eventTypeClass === 'count' ||
-        eventTypeClass === 'data-quantity' ||
-        eventTypeClass === 'density' ||
-        eventTypeClass === 'dynamic-viscosity' ||
-        eventTypeClass === 'electric-charge' ||
-        eventTypeClass === 'electric-charge-line-density' ||
-        eventTypeClass === 'electric-current' ||
-        eventTypeClass === 'electrical-conductivity' ||
-        eventTypeClass === 'electromotive-force' ||
-        eventTypeClass === 'energy' ||
-        eventTypeClass === 'force' ||
-        eventTypeClass === 'length' ||
-        eventTypeClass === 'luminous-intensity' ||
-        eventTypeClass === 'mass' ||
-        eventTypeClass === 'mol' ||
-        eventTypeClass === 'power' ||
-        eventTypeClass === 'pressure' ||
-        eventTypeClass === 'speed' ||
-        eventTypeClass === 'temperature' ||
-        eventTypeClass === 'volume'
-      );
-  },
-
-  eventIsPicture: function (e) {
-    var eventType = e.type;
-    return (eventType === 'note/txt' || eventType === 'note/text');
-  },
-
-  eventIsPosition: function (e) {
-    var eventType = e.type;
-    return (eventType === 'note/txt' || eventType === 'note/text');
   },
 
   close: function () {

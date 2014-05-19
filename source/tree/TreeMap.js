@@ -1,5 +1,5 @@
-
 /* global $, window, location */
+
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
   _ = require('underscore'),
@@ -13,12 +13,14 @@ var RootNode = require('./RootNode.js'),
   OnboardingView = require('../view/onboarding/View.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
+
 var MARGIN_TOP = 50;
 var MARGIN_RIGHT = 40;
 var MARGIN_BOTTOM = 80;
 var MARGIN_LEFT = 40;
 var IGNORE_TRASHED_EVENT  = true;
 var IGNORE_PARAM_CHANGED = false;
+
 var TreeMap = module.exports = function (model) {
   this.model = model;
   this.dialog = null;
@@ -37,7 +39,6 @@ var TreeMap = module.exports = function (model) {
   this.root.x =  MARGIN_LEFT;
   this.root.y =  MARGIN_TOP;
 
-
   $('#logo-reload').click(function (e) {
     e.preventDefault();
     if (this.model.sharingsConnections &&
@@ -55,6 +56,7 @@ var TreeMap = module.exports = function (model) {
       this.focusOnStreams(null);
     }
   }.bind(this));
+
   $('nav #addEvent').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
@@ -63,6 +65,7 @@ var TreeMap = module.exports = function (model) {
     this.showCreateEventView($modal, this.model.connections,
       this.getFocusedStreams(), e.currentTarget);
   }.bind(this));
+
   $('.logo-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
@@ -70,6 +73,7 @@ var TreeMap = module.exports = function (model) {
     }.bind(this));
     this.showSharingView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
+
   $('nav #settings').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
@@ -77,6 +81,7 @@ var TreeMap = module.exports = function (model) {
     }.bind(this));
     this.showSettingsView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
+
   $('.logo-subscribe').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
@@ -85,6 +90,7 @@ var TreeMap = module.exports = function (model) {
     this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
       e.currentTarget);
   }.bind(this));
+
   $('.logo-create-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
@@ -113,6 +119,7 @@ var TreeMap = module.exports = function (model) {
         this.model.activeFilter.timeFrameST, e.currentTarget);
     }
   }.bind(this));
+
   this._onIgnoreParamChanged = function () {
     IGNORE_PARAM_CHANGED = false;
     if (IGNORE_TRASHED_EVENT) {
@@ -129,6 +136,7 @@ var TreeMap = module.exports = function (model) {
       this.trashedEvents = {};
     }
   };
+
   //window.PryvBrowser = _.extend({}, window.PryvBrowser);
   var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
     var start = new Date().getTime();
@@ -164,7 +172,6 @@ var TreeMap = module.exports = function (model) {
     this.root._refreshViewModel(true);
     this.root.renderView(true);
   }.bind(this), 100));
-
 
   //----------- init the model with all events --------//
   this.eventEnterScope = function (content) {
@@ -239,6 +246,7 @@ var TreeMap = module.exports = function (model) {
   this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_ENTER,
     this.streamEnterScope);
 };
+
 TreeMap.prototype.isOnboarding = function () {
   this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
     if (!error && result.length === 0 &&
@@ -247,6 +255,7 @@ TreeMap.prototype.isOnboarding = function () {
     }
   }.bind(this));
 };
+
 TreeMap.prototype.focusOnConnections = function (connection) {
   this.model.activeFilter.focusOnConnections(connection);
   this.setFocusedStreams(null);
@@ -256,12 +265,15 @@ TreeMap.prototype.focusOnStreams = function (stream) {
   this.model.activeFilter.focusOnStreams(stream);
   this.setFocusedStreams(stream);
 };
+
 TreeMap.prototype.setFocusedStreams = function (stream) {
   this.focusedStreams = stream;
 };
+
 TreeMap.prototype.getFocusedStreams = function () {
   return this.model.activeFilter.getStreams();
 };
+
 TreeMap.prototype.onDateHighLighted = function (time) {
   if (this.root) {
     this.root.onDateHighLighted(time);
@@ -307,7 +319,6 @@ TreeMap.prototype.getNodeById = function (nodeId, streamId, connectionId) {
   }
   return that;
 };
-
 
 /**
  * Sets up all the controlling to aggregate two nodes.
@@ -355,6 +366,7 @@ TreeMap.prototype.getFiltersFromNode = function (node) {
 };
 
 //======== MODALS VIEW ========\\
+
 TreeMap.prototype.closeViews = function () {
   this.closeSharingView();
   this.closeCreateSharingView();
@@ -363,50 +375,66 @@ TreeMap.prototype.closeViews = function () {
   this.closeSettingsView();
   this.closeSubscribeView();
 };
+
 //======== Detailed View ========\\
+
 TreeMap.prototype.hasDetailedView = function () {
   return typeof this.detailedView !== 'undefined' && this.detailedView !== null;
 };
-TreeMap.prototype.showDetailedView = function ($modal, events, highlightedTime, target) {
+
+/**
+ * @param $modal
+ * @param {Object} model Must have `events`, `stream` and `highlightedTime` properties
+ * @param target
+ */
+TreeMap.prototype.showDetailedView = function ($modal, model, target) {
   this.closeViews();
-  if (!this.hasDetailedView()) {
-    this.detailedView = new DetailView($modal, this.model.connections, target);
-    this.addEventsDetailedView(events);
+  if (! this.hasDetailedView()) {
+    this.detailedView = new DetailView($modal, this.model.connections, model.stream, target);
+    this.addEventsDetailedView(model.events);
     this.detailedView.show();
-    this.highlightDateDetailedView(highlightedTime);
+    this.highlightDateDetailedView(model.highlightedTime);
   }
 };
+
 TreeMap.prototype.closeDetailedView = function () {
   if (this.hasDetailedView()) {
     this.detailedView.close();
     this.detailedView = null;
   }
 };
+
 TreeMap.prototype.addEventsDetailedView = function (events) {
   if (this.hasDetailedView()) {
     this.detailedView.addEvents(events);
   }
 };
+
 TreeMap.prototype.deleteEventDetailedView = function (event) {
   if (this.hasDetailedView()) {
     this.detailedView.deleteEvent(event);
   }
 };
+
 TreeMap.prototype.updateEventDetailedView = function (event) {
   if (this.hasDetailedView()) {
     this.detailedView.updateEvent(event);
   }
 };
+
 TreeMap.prototype.highlightDateDetailedView = function (time) {
   if (this.hasDetailedView()) {
     this.detailedView.highlightDate(time);
   }
 };
+
 /*=================================*/
 //======= CREATE EVENT VIEW ======\\
+
 TreeMap.prototype.hasCreateEventView = function () {
   return typeof this.createEventView !== 'undefined' && this.createEventView !== null;
 };
+
 TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStream, target) {
   this.closeViews();
   if ($modal && connection && !this.hasCreateEventView()) {
@@ -414,17 +442,21 @@ TreeMap.prototype.showCreateEventView = function ($modal, connection, focusedStr
     this.createEventView.show();
   }
 };
+
 TreeMap.prototype.closeCreateEventView = function () {
   if (this.hasCreateEventView()) {
     this.createEventView.close();
     this.createEventView = null;
   }
 };
+
 /*=================================*/
 //========== SHARING VIEW =========\\
+
 TreeMap.prototype.hasSharingView = function () {
   return typeof this.sharingView !== 'undefined' && this.sharingView !== null;
 };
+
 TreeMap.prototype.showSharingView = function ($modal, connection, target) {
   this.closeViews();
   if ($modal && connection) {
@@ -432,17 +464,21 @@ TreeMap.prototype.showSharingView = function ($modal, connection, target) {
     this.sharingView.show();
   }
 };
+
 TreeMap.prototype.closeSharingView = function () {
   if (this.hasSharingView()) {
     this.sharingView.close();
     this.sharingView = null;
   }
 };
+
 /*=================================*/
 //========== SETTINGS VIEW =========\\
+
 TreeMap.prototype.hasSettingsView = function () {
   return typeof this.settingsView !== 'undefined' && this.settingsView !== null;
 };
+
 TreeMap.prototype.showSettingsView = function ($modal, connection, target) {
   this.closeViews();
   if ($modal && connection) {
@@ -450,17 +486,21 @@ TreeMap.prototype.showSettingsView = function ($modal, connection, target) {
     this.settingsView.show();
   }
 };
+
 TreeMap.prototype.closeSettingsView = function () {
   if (this.hasSettingsView()) {
     this.settingsView.close();
     this.settingsView = null;
   }
 };
+
 /*=================================*/
 //========== CREATE SHARING VIEW =========\\
+
 TreeMap.prototype.hasCreateSharingView = function () {
   return typeof this.createSharingView !== 'undefined' && this.createSharingView !== null;
 };
+
 TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilter, streams,
                                                     target) {
   this.closeViews();
@@ -469,17 +509,21 @@ TreeMap.prototype.showCreateSharingView = function ($modal, connection, timeFilt
     this.createSharingView.show();
   }
 };
+
 TreeMap.prototype.closeCreateSharingView = function () {
   if (this.hasCreateSharingView()) {
     this.createSharingView.close();
     this.createSharingView = null;
   }
 };
+
 /*=================================*/
 //========== SUBSCRIBE VIEW =========\\
+
 TreeMap.prototype.hasSubscribeView = function () {
   return typeof this.subscribeView !== 'undefined' && this.subscribeView !== null;
 };
+
 TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharingsConnections,
                                                 target) {
   this.closeViews();
@@ -488,14 +532,17 @@ TreeMap.prototype.showSubscribeView = function ($modal, loggedConnection, sharin
     this.subscribeView.show();
   }
 };
+
 TreeMap.prototype.closeSubscribeView = function () {
   if (this.hasSubscribeView()) {
     this.subscribeView.close();
     this.subscribeView = null;
   }
 };
+
 /*=================================*/
 //========== ONBOARDING VIEW =========\\
+
 TreeMap.prototype.showOnboarding = function () {
   this.model.hideLoggedInElement();
   var view = new OnboardingView();

@@ -1,22 +1,25 @@
-/* global $, window */
+/* global $, i18n, window */
 var _ = require('underscore'),
-  Collection = require('./EventCollection.js'),
-  Model = require('./EventModel.js'),
-  ListView = require('./ListView.js'),
-  CommonView = require('./CommonView.js'),
-  GenericContentView = require('./contentView/Generic.js'),
-  TweetContentView = require('./contentView/Tweet.js'),
-  NoteContentView = require('./contentView/Note.js'),
-  NumericalContentView = require('./contentView/numercial/Controller.js'),
-  PictureContentView = require('./contentView/Picture.js'),
-  PositionContentView = require('./contentView/Position.js'),
-  CreationView = require('./contentView/Creation.js');
+    Collection = require('./EventCollection.js'),
+    Model = require('./EventModel.js'),
+    ListView = require('./ListView.js'),
+    CommonView = require('./CommonView.js'),
+    GenericContentView = require('./contentView/Generic.js'),
+    TweetContentView = require('./contentView/Tweet.js'),
+    NoteContentView = require('./contentView/Note.js'),
+    NumericalContentView = require('./contentView/numercial/Controller.js'),
+    PictureContentView = require('./contentView/Picture.js'),
+    PositionContentView = require('./contentView/Position.js'),
+    CreationView = require('./contentView/Creation.js');
+
 var EVENTS_PER_SCROLL = 20;
-var Controller = module.exports = function ($modal, connections, target) {
+
+var Controller = module.exports = function ($modal, connections, stream, target) {
   this.events = {};
   this.eventsToAdd = [];
   this.eventsToAddToListView = [];
   this.connection = connections;
+  this.stream = stream;
   this.newEvent = null;
   this.collection =  new Collection();
   this.listViewcollection =  new Collection();
@@ -47,6 +50,8 @@ var Controller = module.exports = function ($modal, connections, target) {
       this.highlightDate(this.highlightedDate);
       once = false;
     }
+
+    $('#myModalLabel').html(this._getModalTitle());
   }.bind(this), 100);
   $(window).resize(this.resizeModal);
 };
@@ -70,12 +75,12 @@ _.extend(Controller.prototype, {
         this.updateSingleView(this.collection.getCurrentElement());
       }.bind(this));
     }
-    /*jshint -W101 */
-    $(this.container).append('<div class="modal-header">  ' +
-      '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
-      '        <h4 class="modal-title" id="myModalLabel" data-i18n="events.common.labels.detailViewTitle"></h4>' +
-      '        <div class="modal-close"></div> ' +
-      '    </div>      ' +
+    /* jshint -W101 */
+    $(this.container).append('<div class="modal-header">' +
+      '  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> ' +
+      '  <h4 class="modal-title" id="myModalLabel">' + this._getModalTitle() + '</h4>' +
+      '  <div class="modal-close"></div>' +
+      '</div>' +
       '<div class="modal-panel-left"><div id="modal-left-content"><div id="detail-content"></div><div id="detail-common"></div></div></div>');
     this.listView.render();
     if (!_.isEmpty(this.events)) {
@@ -103,6 +108,7 @@ _.extend(Controller.prototype, {
     }.bind(this));
     $('body').i18n();
   },
+
   close: function () {
     if (this.commonView && this.contentView) {
       if (this.commonView) {this.commonView.close(); this.commonView = null; }
@@ -119,10 +125,12 @@ _.extend(Controller.prototype, {
       this.$modal.trigger('hidden.bs.modal');
     }
   },
+
   getEventById: function (event) {
     return [this.collection.getEventById(event.id),
       this.listViewcollection.getEventById(event.id)];
   },
+
   addEvents: function (event) {
     if (!event) {
       return;
@@ -147,6 +155,7 @@ _.extend(Controller.prototype, {
     }, this);
     this.debounceAdd();
   },
+
   deleteEvent: function (event) {
     delete this.events[event.id];
     var currentElement = this.collection.getCurrentElement();
@@ -165,6 +174,7 @@ _.extend(Controller.prototype, {
       toDelete.forEach(function (e) {e.destroy(); });
     }
   },
+
   updateEvent: function (event) {
     this.events[event.id] = event;
     var toUpdate = this.getEventById(event);
@@ -174,6 +184,7 @@ _.extend(Controller.prototype, {
       this.listViewcollection.sort();
     }
   },
+
   highlightDate: function (time) {
     this.highlightedDate = time;
     var model = this.collection.highlightEvent(time);
@@ -181,6 +192,7 @@ _.extend(Controller.prototype, {
     this.updateSingleView(model);
 
   },
+
   updateSingleView: function (model) {
     if (model) {
       if (model.get('event').type !== 'Creation') {
@@ -228,10 +240,12 @@ _.extend(Controller.prototype, {
       this.contentView.model.set('collection', this.collection);
     }
   },
+
   createNewEvent: function () {
     this.newEvent = new Model({event: this._defaultEvent()});
     this.updateSingleView(this.newEvent);
   },
+
   _defaultEvent: function () {
     var result = {};
     result.type = 'Creation';
@@ -241,60 +255,57 @@ _.extend(Controller.prototype, {
     result.desctiption = '';
     return result;
   },
+
+  /* jshint -W101 */
+  // TODO (this & next method): type-specific stuff must be properly abstracted in type plugins
+  // follow up: https://trello.com/c/0P6lmhsS/299-as-a-dev-i-need-event-type-specific-components-to-be-properly-abstracted
   _getContentView: function (model) {
-    var eventType = model.get('event').type;
-    if (eventType === 'note/txt' || eventType === 'note/text') {
+    var evt = model.get('event');
+    var t = evt.type;
+    if (t === 'note/txt' || t === 'note/text') {
       return {type: 'Note', view: NoteContentView};
-    } else if (eventType === 'picture/attached') {
+    } else if (t === 'picture/attached') {
       return {type: 'Picture', view: PictureContentView};
-    } else if (eventType === 'position/wgs84') {
+    } else if (t === 'position/wgs84') {
       return {type: 'Position', view: PositionContentView};
-    } else if (eventType === 'message/twitter') {
+    } else if (t === 'message/twitter') {
       return {type: 'Tweet', view: TweetContentView};
-    } else if (eventType === 'Creation') {
+    } else if (t === 'Creation') {
       return {type: 'Creation', view: CreationView};
-    } else if (this.eventIsNumerical(eventType)) {
+    } else if (window.PryvBrowser.eventTypes.isNumerical(evt)) {
       return {type: 'Numerical', view: NumericalContentView};
     } else {
       return {type: 'Generic', view: GenericContentView};
     }
   },
+  _getModalTitle: function () {
+    var eModel = this.collection.length > 0 ? this.collection.getCurrentElement() : null;
+    var evt = eModel ? eModel.get('event') : null;
+    var t = evt ? evt.type : null;
+    var tKey;
+    if (t === 'note/txt' || t === 'note/text') {
+      tKey = 'note';
+    } else if (t === 'picture/attached') {
+      tKey = 'picture';
+    } else if (t === 'position/wgs84') {
+      tKey = 'position';
+    } else if (t === 'message/twitter') {
+      tKey = 'message';
+    } else if (window.PryvBrowser.eventTypes.isNumerical(evt)) {
+      tKey = 'numerical';
+    } else {
+      tKey = 'generic';
+    }
+    $('#myModalLabel').html(i18n.t('events.common.labels.detailViewTitle', {
+      count: this.collection.length,
+      type: i18n.t('events.' + tKey + '.labels.items'),
+      stream: this.stream.name
+    }));
+  },
+
   resizeModal: _.debounce(function () {
     $('.modal-panel-left').css({
       width: $('.modal-content').width() - $('.modal-panel-right').width()
     });
-  }.bind(this), 1000),
-  eventIsNumerical: function (e) {
-    var eventTypeClass = e.split('/')[0];
-    return (
-      eventTypeClass === 'money' ||
-        eventTypeClass === 'absorbed-dose' ||
-        eventTypeClass === 'absorbed-dose-equivalent' ||
-        eventTypeClass === 'absorbed-dose-rate' ||
-        eventTypeClass === 'absorbed-dose-rate' ||
-        eventTypeClass === 'area' ||
-        eventTypeClass === 'capacitance' ||
-        eventTypeClass === 'catalytic-activity' ||
-        eventTypeClass === 'count' ||
-        eventTypeClass === 'data-quantity' ||
-        eventTypeClass === 'density' ||
-        eventTypeClass === 'dynamic-viscosity' ||
-        eventTypeClass === 'electric-charge' ||
-        eventTypeClass === 'electric-charge-line-density' ||
-        eventTypeClass === 'electric-current' ||
-        eventTypeClass === 'electrical-conductivity' ||
-        eventTypeClass === 'electromotive-force' ||
-        eventTypeClass === 'energy' ||
-        eventTypeClass === 'force' ||
-        eventTypeClass === 'length' ||
-        eventTypeClass === 'luminous-intensity' ||
-        eventTypeClass === 'mass' ||
-        eventTypeClass === 'mol' ||
-        eventTypeClass === 'power' ||
-        eventTypeClass === 'pressure' ||
-        eventTypeClass === 'speed' ||
-        eventTypeClass === 'temperature' ||
-        eventTypeClass === 'volume'
-      );
-  }
+  }.bind(this), 1000)
 });

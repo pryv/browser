@@ -15,7 +15,8 @@
       "save": "Save"
     },
     "labels": {
-      "action": "Action"
+      "action": "Action",
+      "loadingPlaceholder": "Loading..."
     },
     "messages": {
       "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS.",
@@ -34,7 +35,7 @@
         "addEventTitle": "Add content",
         "description": "Description",
         "descriptionPlaceholder": "Description (optional)",
-        "detailViewTitle": "Detailed view",
+        "detailViewTitle": "__count__ __type__ in <strong>__stream__</strong>",
         "streamSelection": "Select a stream",
         "stream": "Stream",
         "tags": "Tags",
@@ -66,13 +67,29 @@
         "typePoint": "Point"
       }
     },
+    "generic": {
+      "labels": {
+        "items": "item(s)"
+      }
+    },
+    "message": {
+      "labels": {
+        "items": "message(s)"
+      }
+    },
     "note": {
       "actions": {
         "addNew": "Note"
       },
       "labels": {
         "addTitle": "Add note",
-        "contentPlaceholder": "Enter your note"
+        "contentPlaceholder": "Enter your note",
+        "items": "note(s)"
+      }
+    },
+    "numerical": {
+      "labels": {
+        "items": "value(s)"
       }
     },
     "picture": {
@@ -82,6 +99,7 @@
       },
       "labels": {
         "addTitle": "Add picture(s)",
+        "items": "picture(s)",
         "uploadTitle": "File upload"
       }
     },
@@ -90,7 +108,8 @@
         "addNew": "Position"
       },
       "labels": {
-        "addTitle": "Add position"
+        "addTitle": "Add position",
+        "items": "position(s)"
       }
     }
   },

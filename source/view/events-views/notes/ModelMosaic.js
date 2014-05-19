@@ -122,6 +122,7 @@ NotesPlugin.prototype.close = function () {
   }
   this.eventsDisplayed = [];
 };
+
 NotesPlugin.prototype._refreshModelView = function () {
   this._findEventToDisplay();
   var BasicModel = Backbone.Model.extend({ });
@@ -162,7 +163,11 @@ NotesPlugin.prototype._refreshModelView = function () {
               this.treeMap.closeDetailedView();
               this.hasDetailedView = false;
             }.bind(this));
-            this.treeMap.showDetailedView($modal, this.events, this.highlightedTime);
+            this.treeMap.showDetailedView($modal, {
+              events: this.events,
+              stream: this.stream,
+              highlightedTime: this.highlightedTime
+            });
           }
         }.bind(this));
       }

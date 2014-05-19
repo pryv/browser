@@ -1190,12 +1190,20 @@ ul.modal-dnd-legend > li {
 #dc-editor-appearance .form-control {
     width: 100%;
 }
-
-
-
-
-
 /** END of CSS for Drag and Drop Dialog using the modal **/
+
+/** BEGIN CSS for pie chart time sum **/
+.pie-chart-sum-parent {
+
+}
+
+.pie-chart-sum {
+    position: relative;
+}
+/** END CSS for pie chart time sum **/
+
+
+
 
 /** Login btn */
 
@@ -1446,3 +1454,4 @@ nav .gravatar {
   margin: 0 5px;
   border-radius: 2px;
 }
+

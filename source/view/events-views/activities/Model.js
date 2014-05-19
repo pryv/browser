@@ -92,7 +92,7 @@ module.exports = CommonModel.implement(
         }
         var toAdd = 0;
 
-        if (e.hasOwnProperty('duration') && e.duration >= 0) {
+        if (e.hasOwnProperty('duration') && !isNaN(e.duration)) {
           toAdd = e.duration;
         } else {
           this.updateEachSecond = true;

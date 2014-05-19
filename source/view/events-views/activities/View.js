@@ -89,6 +89,9 @@ module.exports = Marionette.ItemView.extend({
           show: true,
           container: $(this.legendContainer)
         };
+        if (this.model.get('totalTime') === 0) {
+          this.data[0].data = 1;
+        }
         this.plot = $.plot(this.chartContainer, this.data, this.options);
         setTimeout(this.updateTotalTime.bind(this), 200);
       }.bind(this), 1000);
@@ -100,19 +103,19 @@ module.exports = Marionette.ItemView.extend({
   updateTotalTime: function () {
     var m = Moment.duration(this.model.get('totalTime') * 1000);
     var text =
-      (m.years() !== 0 ? m.years() + ' years <br />' : '') +
-      (m.months() !== 0 ? m.months() + ' months <br />' : '') +
-      (m.days() !== 0 ? m.days() + ' days <br />' : '') +
-      (m.hours() !== 0 ? m.hours() + ' hours <br />' : '') +
-      (m.minutes() !== 0 ? m.minutes() + ' minutes <br />' : '') +
-      (m.seconds() !== 0 ? m.seconds() + ' seconds <br />' : '');
+      (m.years() !== 0 ? m.years() + ' y ' : '') +
+      (m.months() !== 0 ? m.months() + ' m <br />' : '') +
+      (m.days() !== 0 ? m.days() + ' d ' : '') +
+      (m.hours() !== 0 ? m.hours() + ' h <br />' : '') +
+      (m.minutes() !== 0 ? m.minutes() + ' min ' : '') +
+      (m.seconds() + ' s');
 
     if ($(this.legendContainer) && $(this.legendContainer + ' > .pie-chart-sum').length !== 0) {
       $(this.legendContainer + ' > .pie-chart-sum')
         .html(text);
     } else {
-      $(this.legendContainer).append('<span class="pie-chart-sum">' +
-        text + '</span>');
+      $(this.chartContainer).append('<div class="pie-chart-sum-parent Table-Cell">' +
+        '<span class="pie-chart-sum Center-Block">' + text + '</span></div>');
     }
   }
 });

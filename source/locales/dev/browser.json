@@ -222,6 +222,20 @@
       "errSliceNameAlreadyExists": "A slice with the same name already exists"
     }
   },
+  "timeframe": {
+    "actions": {
+      "go": "Go"
+    },
+    "labels": {
+      "custom": "Custom",
+      "day": "Day",
+      "fromTime": "From",
+      "month": "Month",
+      "toTime": "To",
+      "week": "Week",
+      "year": "Year"
+    }
+  },
 
 
   "error": {

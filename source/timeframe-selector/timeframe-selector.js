@@ -80,17 +80,17 @@ module.exports = (function () {
         '<div id="scalesContainer" class="btn-toolbar">' +
         '<div id="scales" class="btn-group btn-group-xs">' +
         '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
-        'data-timeScale="day">Day</a>' +
+        'data-timeScale="day" data-i18n="timeframe.labels.day"></a>' +
         '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
-        'data-timeScale="week">Week</a>' +
+        'data-timeScale="week" data-i18n="timeframe.labels.week"></a>' +
         '<a href="javascript:void(0)" class="btn btn-default timeScale selected"' +
-        'data-timeScale="month">Month</a>' +
+        'data-timeScale="month" data-i18n="timeframe.labels.month"></a>' +
         '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
-        'data-timeScale="year">Year</a>' +
+        'data-timeScale="year" data-i18n="timeframe.labels.year"></a>' +
         '</div>' +
         '<div class="btn-group btn-group-xs">' +
         '<a href="javascript:void(0)" id="custom" class="btn btn-default timeScale"' +
-        'data-timeScale="custom">Custom</a>' +
+        'data-timeScale="custom" data-i18n="timeframe.labels.custom"></a>' +
         '</div>' +
         '</div>' +
         '</div>');
@@ -99,22 +99,28 @@ module.exports = (function () {
       placement: 'top',
       container: 'body',
       content: function () {
-        return $('<div>' +
-
-            '<div class="input-group date picker" id="fromPicker">' +
-            '<input type="text" class="form-control" placeholder="From"/> ' +
-            '<span id="fromButton" class="input-group-addon">' +
-            '<span class="fa fa-calendar"></span>' +
-            '</span>' +
+        return $('<form class="form-horizontal">' +
+            '<div class="form-group">' +
+            '  <label for="fromPicker">' + i18n.t('timeframe.labels.fromTime') + '</label>' +
+            '  <div class="input-group date picker" id="fromPicker">' +
+            '    <input type="text" class="form-control"/> ' +
+            '    <span id="fromButton" class="input-group-addon">' +
+            '      <span class="fa fa-calendar"></span>' +
+            '    </span>' +
+            '  </div>' +
             '</div>' +
-            '<div class="input-group date picker" id="toPicker">' +
-            '<input type="text" class="form-control" placeholder="To"/> ' +
-            '<span id="toButton" class="input-group-addon">' +
-            '<span class="fa fa-calendar"></span>' +
-            '</span>' +
+            '<div class="form-group">' +
+            '  <label for="fromPicker">' + i18n.t('timeframe.labels.toTime') + '</label>' +
+            '  <div class="input-group date picker" id="toPicker">' +
+            '    <input type="text" class="form-control"/> ' +
+            '    <span id="toButton" class="input-group-addon">' +
+            '      <span class="fa fa-calendar"></span>' +
+            '    </span>' +
+            '  </div>' +
             '</div>' +
-            '<div id="ok" class="btn btn-default">OK</div>' +
-            '</div>').html();
+            '<button type="button" id="ok" class="btn btn-default btn-block">' +
+                i18n.t('timeframe.actions.go') + '</button>' +
+            '</form>').html();
       }
     });
     $('#custom').on('hidden.bs.popover', function () {

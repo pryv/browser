@@ -174,9 +174,12 @@
     "actions": {
       "addNewFollowedSlice": "Add a new slice",
       "follow": "Follow",
-      "share": "Share"
+      "manageSlices": "Manage slices",
+      "share": "Share",
+      "shareSlice": "Share a slice"
     },
     "labels": {
+      "drawerTitle": "Slice of life",
       "followedSlices": "Followed slices",
       "link": "Link",
       "linkPlaceholder": "Paste link",

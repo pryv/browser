@@ -1,64 +1,264 @@
 {
-  "button": {
-    "action": "Action",
-    "add": "Add",
-    "apply": "Apply",
-    "cancel": "Cancel",
-    "connect": "Connect",
-    "disconnect": "Disconnect",
-    "login": "Sign in",
-    "ok": "Ok",
-    "publish": "Publish",
-    "save": "Save",
-    "selectPicture": "Select Picture",
-    "settings": "Settings",
-    "share": "Share",
-    "start": "START",
-    "submit": "Submit",
-    "trash": "Trash",
-    "website": "Website"
+  "atGlance": {
+    "messages": {
+      "noData": "There is nothing to show for this period of time."
+    }
   },
-  "error": {
-    "addEvent": {
-      "createStream": {
-        "invalid-item-id": "The specified stream id is invalid",
-        "item-already-exists": "The stream name already exists"
+  "common": {
+    "actions": {
+      "add": "Add",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "close": "Close",
+      "delete": "Delete",
+      "ok": "OK",
+      "save": "Save"
+    },
+    "labels": {
+      "action": "Action",
+      "loadingPlaceholder": "Loading..."
+    },
+    "messages": {
+      "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS.",
+      "errUnexpected": "Something went wrong! We've been automatically notified, but you can always help us improve by posting an error report."
+    }
+  },
+  "events": {
+    "common": {
+      "actions": {
+        "addNewStream": "Add new stream",
+        "all": "All",
+        "deleteSelected": "Delete selected",
+        "none": "None"
       },
-      "select-stream": "Please select a stream"
-    },
-    "changePassword": {
-      "invalid-operation": "Your current password is invalid",
-      "pass-dont-match": "Passwords do not match"
-    },
-    "createSlice": {
-      "invalid-item-id": "The specified token is invalid (e.g. it's a reserved word such as null)"
-    },
-    "createdSlice": {
-      "delete": {},
-      "edit": {
-        "item-already-exists": "The slice name already exists"
+      "labels": {
+        "addEventTitle": "Add content",
+        "description": "Description",
+        "descriptionPlaceholder": "Description (optional)",
+        "detailViewTitle": "__count__ __type__ in <strong>__stream__</strong>",
+        "streamSelection": "Select a stream",
+        "stream": "Stream",
+        "tags": "Tags",
+        "tagsPlaceholder": "Tags, separated by commas (optional)",
+        "time": "Time"
+      },
+      "messages": {
+        "errStreamNameAlreadyExists": "A stream with the same name already exists",
+        "errNoStreamSelected": "Please select a stream"
       }
     },
+    "charts": {
+      "labels": {
+        "color": "Color",
+        "fitting": "Fitting",
+        "operation": "Operation",
+        "operationAverage": "Average",
+        "operationNone": "None",
+        "operationSum": "Sum",
+        "period": "Period",
+        "periodDaily": "Daily",
+        "periodMonthly": "Monthly",
+        "periodNone": "None",
+        "periodWeekly": "Weekly",
+        "periodYearly": "Yearly",
+        "type": "Type",
+        "typeBar": "Bar",
+        "typeLine": "Line",
+        "typePoint": "Point"
+      }
+    },
+    "generic": {
+      "labels": {
+        "items": "item(s)"
+      }
+    },
+    "message": {
+      "labels": {
+        "items": "message(s)"
+      }
+    },
+    "note": {
+      "actions": {
+        "addNew": "Note"
+      },
+      "labels": {
+        "addTitle": "Add note",
+        "contentPlaceholder": "Enter your note",
+        "items": "note(s)"
+      }
+    },
+    "numerical": {
+      "labels": {
+        "items": "value(s)"
+      }
+    },
+    "picture": {
+      "actions": {
+        "addNew": "Picture(s)",
+        "selectFiles": "Select picture(s) to upload"
+      },
+      "labels": {
+        "addTitle": "Add picture(s)",
+        "items": "picture(s)",
+        "uploadTitle": "File upload"
+      }
+    },
+    "position": {
+      "actions": {
+        "addNew": "Position"
+      },
+      "labels": {
+        "addTitle": "Add position",
+        "items": "position(s)"
+      }
+    }
+  },
+  "login": {
+    "actions": {
+      "login": "Sign in",
+      "resetPassword": "Forgot your password?"
+    },
+    "labels": {
+      "password": "Password",
+      "title": "Sign in",
+      "username": "Username"
+    },
+    "messages": {
+    }
+  },
+  "nav": {
+    "actions": {
+      "addEvent": "Add content",
+      "follow": "Follow this slice",
+      "goToMyPryv": "Me",
+      "manageSlices": "Manage slices",
+      "settings": "Settings",
+      "shareSlice": "Share a slice of life",
+      "signIn": "Sign in",
+      "signOut": "Sign out"
+    }
+  },
+  "onboarding": {
+    "actions": {
+      "start": "Start"
+    },
+    "labels": {
+      "streamInput": "Create your stream",
+      "title": "What matters in your life?"
+    },
+    "messages": {
+      "gettingStarted": [
+        "<p>To get started, create streams that matter to you:</p>",
+        "<p>Your life is made of streams. <span class=\"stream_color_1\">Travel</span>, <span class=\"stream_color_2\">Friends</span>, <span class=\"stream_color_3\">Family</span>, <span class=\"stream_color_4\">Sports</span>...</p>"
+      ]
+    }
+  },
+  "settings": {
+    "common": {
+      "labels": {
+        "title": "Settings"
+      }
+    },
+    "connectedApps": {
+      "actions": {
+        "connect": "Connect",
+        "connectMoreApps": "Connect more apps",
+        "disconnect": "Disconnect"
+      },
+      "labels": {
+        "action": "Action",
+        "name": "Name",
+        "settings": "Settings",
+        "subtitle": "The following apps are connected and authorized to access your account.",
+        "title": "Connected apps"
+      }
+    },
+    "security": {
+      "labels": {
+        "currentPassword": "Current",
+        "newPassword": "New",
+        "newPasswordConfirm": "Confirm new",
+        "passwordSubtitle": "Change your password",
+        "passwordTitle": "Password",
+        "title": "Security"
+      },
+      "messages": {
+        "errCurrentPasswordInvalid": "The current password is wrong",
+        "errPasswordRequirements": "The new password does not match the minimum security requirements; try a longer one",
+        "errPasswordsDontMatch": "The password and its confirmation do not match"
+      }
+    }
+  },
+  "slices": {
+    "actions": {
+      "addNewFollowedSlice": "Add a new slice",
+      "follow": "Follow",
+      "manageSlices": "Manage slices",
+      "share": "Share",
+      "shareSlice": "Share a slice"
+    },
+    "labels": {
+      "drawerTitle": "Slice of life",
+      "followedSlices": "Followed slices",
+      "link": "Link",
+      "linkPlaceholder": "Paste link",
+      "manageTitle": "Slices",
+      "name": "Name",
+      "nameAndPermissionsTitle": "Name and permissions",
+      "namePlaceholder": "Name this slice",
+      "permissionContribute": "Allow contributing content",
+      "permissionManage": "Allow managing content and streams",
+      "permissionRead": "Allow read only",
+      "share": "Share",
+      "sharedSlices": "Shared slices",
+      "sharedStreams": "Shared streams",
+      "shareTitle": "Share a slice of life",
+      "sliceNamePlaceholder": "Name this slice",
+      "streams": "Streams"
+    },
+    "messages": {
+      "sharingSuccessful": "Your slice is ready. Share it via Facebook, Twitter, e-mail, or manually with this link: ",
+      "errInvalidSharingToken": "The given sharing token cannot be used",
+      "errSliceNameAlreadyExists": "A slice with the same name already exists"
+    }
+  },
+  "timeframe": {
+    "actions": {
+      "go": "Go"
+    },
+    "labels": {
+      "custom": "Custom",
+      "day": "Day",
+      "fromTime": "From",
+      "month": "Month",
+      "toTime": "To",
+      "week": "Week",
+      "year": "Year"
+    }
+  },
+
+
+  "error": {
     "detailed": {
       "create": {
-        "invalid-operation": "The selected stream is in the trash, and we prevent the recording of new events into trashed streams",
-        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+        "invalid-operation": "The selected stream is deleted! You can't add content into a deleted stream.",
+        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context"
       },
       "update": {
-        "forbidden": "You don't have permission to update this event",
-        "invalid-access-token": "You don't have permission to update this event",
-        "invalid-operation": "The duration of the period event cannot be set to null",
-        "periods-overlap": "The time and/or duration of the period event cannot be set to overlap with other period events"
+        "forbidden": "You don't have permission to update this item",
+        "invalid-access-token": "You don't have permission to update this item",
+        "invalid-operation": "You must set a valid duration",
+        "periods-overlap": "The time and/or duration of this item cannot overlap that of other existing items in the context"
       },
       "trash": {
-        "invalid-access-token": "You don't have permission to trash this event",
-        "unknown-resource": "Event has already been trashed"
+        "invalid-access-token": "You don't have permission to delete this item",
+        "unknown-resource": "The item has already been deleted"
       }
     },
     "followedSlice": {
       "add": {
-        "slice-already-exists": "You already follow this slice or the given name already exists",
-        "slice-unknown": "The given slice do not exists"
+        "slice-already-exists": "You are already following this slice, or the chosen name already exists",
+        "slice-unknown": "The given slice does not exist"
       },
       "delete": {}
     },
@@ -68,140 +268,11 @@
       "unknown-username": "Unknown username"
     },
     "manageApps": {
-      "cannot-load-app-list": "Cannot load app list"
+      "cannot-load-app-list": "Something went wrong with loading the list of apps"
     },
     "subscribeSlice": {
-      "slice-already-exists": "You already follow this slice or the given name already exists",
-      "slice-unknown": "The given slice do not exists"
+      "slice-already-exists": "You are already following this slice, or the chosen name already exists",
+      "slice-unknown": "The given slice does not exist"
     }
-  },
-  "leftPanel": {
-    "filterByStream": "Filter by stream"
-  },
-  "login": {
-    "password": "Password",
-    "resetPassword": "Forgot your password?",
-    "title": "Login",
-    "username": "Username"
-  },
-  "mobile": "Pryv browser is not yet optimized on the iPhone. You can experience Pryv browser from your computer <strong>username.pryv.me</strong> or use Pryv iOS.",
-  "modal": {
-    "addEvent": {
-      "createStream": "Create a new stream",
-      "editForm": {
-        "description": "Enter a description",
-        "noteContent": "Enter your note...",
-        "tags": "Enter tags (comma separated)"
-      },
-      "header": {
-        "add-event": "Add Event",
-        "add-note": "Add Note",
-        "add-picture": "Add Picture",
-        "add-position": "Add Position"
-      },
-      "selectStream": "Select a Stream",
-      "selectType": {
-        "note": "Note",
-        "picture": "Picture",
-        "position": "Position"
-      },
-      "uploadPicture": "Upload photo"
-    },
-    "detail": {
-      "checkAll": "Check All",
-      "content": "Content",
-      "editForm": {
-        "description": "Description",
-        "stream": "Stream",
-        "tags": "Tags",
-        "time": "Time"
-      },
-      "graph": {
-        "average": "Average",
-        "bar": "Bar",
-        "color": "Color",
-        "daily": "Daily",
-        "fitting": "Fitting",
-        "interval": "Interval",
-        "line": "Line",
-        "monthly": "Monthly",
-        "none": "None",
-        "operation": "Operation",
-        "point": "Point",
-        "style": "Style",
-        "sum": "Sum",
-        "weekly": "Weekly",
-        "yearly": "Yearly"
-      },
-      "header": "Detailed View",
-      "trashSelected": "Trash Selected"
-    },
-    "manageSlices": {
-      "followedSlices": "Followed slices",
-      "header": "Slices",
-      "link": "Link",
-      "name": "Name",
-      "newAdd": "Add a new slice",
-      "newLink": "Link",
-      "newName": "Name this slice",
-      "share": "Share",
-      "sharedSlices": "Shared slices"
-    },
-    "settings": {
-      "header": "Settings",
-      "manageApps": {
-        "action": "Action",
-        "name": "Name",
-        "otherApps": "Connect more apps",
-        "settings": "Settings",
-        "subtitle": "The following apps are connected and authorized to access your account.",
-        "title": "Connected apps"
-      },
-      "nav": {
-        "manageApps": "Connected apps",
-        "password": "Password"
-      },
-      "password": {
-        "current": "Current",
-        "new": "New",
-        "reNew": "Re-type new",
-        "subtitle": "Change your account password",
-        "title": "Password"
-      }
-    },
-    "share": {
-      "header": "Share a slice of life",
-      "settings": {
-        "contribute": "Allow contributing events",
-        "manage": "Allow managing events and streams",
-        "name": "Name",
-        "read": "Allow read only",
-        "selectStreams": "Select Streams",
-        "title": "Settings"
-      },
-      "success": "Your sharing was successfully created, share it via Facebook, Twitter, mail or this link:"
-    }
-  },
-  "nav": {
-    "addEvent": "Add event",
-    "bugReport": "Report a bug",
-    "follow": "Follow this slice",
-    "manageSlices": "Manage slices",
-    "myPryv": "Me",
-    "settings": "Settings",
-    "share": "Share a slice of life",
-    "signIn": "Sign in",
-    "signOut": "Sign out"
-  },
-  "noEvents": {
-    "title": "No events to display"
-  },
-  "onboarding": {
-    "content": [
-      "<p>To get started, create streams that matter to you:</p>",
-      "<p>Your life is made of streams.<span class=\"stream_color_1\">Travel</span>,<span class=\"stream_color_2\"> Friends</span>,<span class=\"stream_color_3\"> Family</span>,<span class=\"stream_color_4\"> Sports...</span></p>"
-    ],
-    "streamInput": "Create Your Stream",
-    "title": "What matters in your life ?"
   }
 }

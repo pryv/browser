@@ -312,19 +312,20 @@ line-height: 27px;
   -ms-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
 }
-.loading + #tree > #empty-events {
+.loading + #tree > #empty-tree-notice {
   display: none;
 }
-.node + #empty-events {
+.node + #empty-tree-notice {
  display: none;
 }
-#empty-events {
-  text-align: center;
-  width: 100%;
+#empty-tree-notice {
   position: relative;
-  left: 0;
   top: 50%;
-  margin-top: -10px;
+  left: 0;
+  width: 100%;
+  margin-top: -0.75em;
+  text-align: center;
+  font-size: 1.5em;
 }
 .Center-Container.is-Table {
   display: inline-block;
@@ -460,6 +461,7 @@ padding: 0px 15px;
 }
 
 .NotesEventsNode .content {
+  padding: 15px;
   text-align: center;
   overflow: hidden;
   word-break: break-word;
@@ -730,7 +732,7 @@ text-align: center;*/
   top: 0;
   right: 0;
   left: 0;
-  bottom: 105px;
+  bottom: 100px;
   background-color: #ecf0f1;
 }
 #detail-list li {
@@ -1217,6 +1219,9 @@ ul.modal-dnd-legend > li {
 #login-form form {
   text-align: initial;
 }
+#login-form button[type=submit] {
+  margin-right: 12px;
+}
 #login:before {
   content:'';
   display: inline-block;
@@ -1365,14 +1370,15 @@ h5 {text-transform: uppercase;color: #DFDFDF;}
 .table-striped>tbody>tr:nth-child(odd)>td, .table-striped>tbody>tr:nth-child(odd)>th {
 background-color: #F7F9FA;
 }
-.btn-default {
+td > .btn-default {
 border-radius: 14px;
 padding:6px 22px;
 }
-.btn-default.btn-xs  {
+td > .btn-default.btn-xs  {
 border-radius: 14px;
 padding: 2px 13px;
 }
+*/
 .table tbody>tr>td, .table tbody>tr>th, .table tfoot>tr>td, .table tfoot>tr>th, .table thead>tr>td, .table thead>tr>th {
 border-top: 1px solid #EFF4F7;
 font-weight: bold;

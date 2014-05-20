@@ -1455,4 +1455,8 @@ nav .gravatar {
   border-radius: 2px;
 }
 #togglePanel{border-right: 1px solid #F1F1F1;}
+.navbar-inverse .navbar-nav>li.function-highlight>a {
+background-color: #BD1727;
+color: #FFF;
+}
 

@@ -53,6 +53,13 @@ MonitorsHandler.prototype._streamsChange = function (reason, streams, batch) {
   this._fireEvent(MSGs.SIGNAL.STREAM_CHANGE, {reason: reason, streams: streams}, batch);
 };
 
+
+MonitorsHandler.prototype._filteredStreamsChange = function (streams, batch) {
+  this._fireEvent(MSGs.SIGNAL.FILTERED_STREAMS_CHANGE, streams, batch);
+};
+
+
+
 // ----------------------------- Events from monitors ------------------ //
 
 MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, batch) {
@@ -254,6 +261,7 @@ MonitorsHandler.prototype.focusOnStreams = function (streams) {
     this._eachMonitor(function (monitor) {  // clear all
       monitor.filter.set({'streamsIds' : null}, batchU);
     });
+    this._filteredStreamsChange(streams, batchU);
     batchU.done();
     return 1;
   }
@@ -281,6 +289,7 @@ MonitorsHandler.prototype.focusOnStreams = function (streams) {
       monitor.filter.set({'streamsIds': []}, batch); // shush the connection
     }
   });
+  this._filteredStreamsChange(streams, batch);
   batch.done();
 };
 

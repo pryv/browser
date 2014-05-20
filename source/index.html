@@ -24,6 +24,7 @@
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
+  <link rel="stylesheet" href="fonts/ss-gizmo.css">
 
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
   <!-- @if NODE_ENV == 'PRODUCTION' -->
@@ -777,7 +778,10 @@
 <!-- @endif -->
 
 <div id="tree">
-  <div id="empty-tree-notice" data-i18n="atGlance.messages.noData"></div>
+  <div id="empty-tree-notice" class="user-msg-box">
+    <div class="icon ss-book"></div>
+    <p data-i18n="atGlance.messages.noData"></p>
+  </div>
 </div>
 <div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"

@@ -1,10 +1,5 @@
-@import url('http://getbootstrap.com/dist/css/bootstrap.css');
-@import url('http://tarruda.github.io/bootstrap-datetimepicker/assets/css/bootstrap-datetimepicker.min.css');
 .popover {
   width: 100%;
-}
-.timeScale.selected {
-  background-color: #bdc3c7;
 }
 #tree {
   position: absolute;
@@ -19,22 +14,24 @@
   cursor: pointer; 
 }
 .timeItem:hover {
-  color:#ffffff;
-  /*background-color: #000000;*/
+  color:#BD1727;
 }
 .timeItem.selected {
-  background-color: #00a8e2;
+  background-color: #BD1727;
   color: #fff;
   font-weight: 700;
+  border-radius: 15px;
+  border: 1px solid #8D0606;
 }
 #dates {
-  color: #bdc3c7;
+  color: #666E77;
   position: absolute;
-  border-bottom: 1px solid #bdc3c7;
+  /*border-bottom: 1px solid #bdc3c7;*/
+  border-top: 1px solid #BDC3C7;
   overflow: hidden;
   white-space: nowrap;
   font-size: 17px;
-  height: 25px;
+  height: 28px;
 }
 #datesContainer {
   position:absolute;
@@ -45,8 +42,6 @@
 #timeframe {
   position: relative;
   height: 60px;
-  background: #3f3f3f;
-  color: #fff;
   text-transform: uppercase;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -55,6 +50,12 @@
   -ms-user-select: none;
   user-select: none;
 }
+a.timeScale:hover {
+  color: #BD1727;
+}
+a.timeScale.selected:hover {
+  color: #ffffff;
+}
 .timeScale {
   margin-left: 5px;
   bottom: 0;
@@ -62,15 +63,20 @@
   background-color: transparent;
   display: inline-block;
   font-size:12px;
-}
-#timeframe a {
   text-decoration: none;
-  color: #fff;
+  color: #666E77;
+}
+.timeScale.selected {
+  background-color: #BD1727;
+  color:#ffffff;
 }
 #timeframe .btn-toolbar .btn-group{float:none;}
 #scalesContainer{
   text-align: center;
-  padding-top: 32px;
+  padding-top: 35px;
+}
+.btn-toolbar>.btn+.btn, .btn-toolbar>.btn+.btn-group, .btn-toolbar>.btn-group+.btn, .btn-toolbar>.btn-group+.btn-group {
+margin-left: 20px;
 }
 #scales {
   /*bottom: 5px;
@@ -90,7 +96,8 @@
   height:100%;
   z-index: 999;
   pointer-events: none;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 15%, rgba(0, 0, 0, 0) 85%, rgba(0, 0, 0, 0.65) 100%);
+  background: linear-gradient(to right, rgba(238, 240, 242, 1.0) 0%, rgba(238, 240, 242, 0) 15%, rgba(0, 0, 0, 0) 85%, rgba(238, 240, 242, 1.0) 100%);
+  
 }
 
 

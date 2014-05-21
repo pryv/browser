@@ -1,7 +1,6 @@
-/* global $ */
+/* global $, window */
 var  Marionette = require('backbone.marionette'),
-    _ = require('underscore'),
-    marked = require('marked');
+    _ = require('underscore');
 module.exports = Marionette.ItemView.extend({
   template: '#picturesView',
   container: null,
@@ -47,7 +46,7 @@ module.exports = Marionette.ItemView.extend({
             height: event.height,
             top: event.top,
             left: event.left
-          }).find('.Center-Block').html(marked(event.content));
+          }).find('.Center-Block').html(window.PryvBrowser.renderNote(event.content));
 
           displayedIds[index] = null;
         } else {
@@ -57,7 +56,7 @@ module.exports = Marionette.ItemView.extend({
             .append(
               '<div class="Table-Cell">' +
               '<div class="Center-Block">' +
-              marked(event.content) +
+                  window.PryvBrowser.renderNote(event.content) +
               '</div>' +
               '</div>')
             .css({

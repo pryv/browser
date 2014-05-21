@@ -1,7 +1,6 @@
-/* global $, FormData */
+/* global $, FormData, window */
 var Marionette = require('backbone.marionette'),
-    _ = require('underscore'),
-    marked = require('marked');
+    _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
   type: 'Note',
@@ -15,7 +14,7 @@ module.exports = Marionette.ItemView.extend({
   templateHelpers: function () {
     return {
       getContent: function () {
-        return marked(this.model.get('event').content);
+        return window.PryvBrowser.renderNote(this.model.get('event').content);
       }.bind(this)
     };
   },

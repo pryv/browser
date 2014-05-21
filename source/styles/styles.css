@@ -756,7 +756,8 @@ text-align: center;*/
   margin: 0;
 }
 #detail-list .detail-item-content, #detail-list .Center-Container  {
-  min-height: 60px;
+  height: 60px;
+  overflow: hidden;
 }
 #detail-list .detail-item-date div {
   text-align: center;

@@ -11,7 +11,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
   PUBLIC_TOKEN = 'public',
   STAGING,
   toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
-    'nav #togglePanel', 'nav #settings'],
+    'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
   toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
@@ -485,4 +485,11 @@ window.PryvBrowser.eventTypes = {
     var t = event.type;
     return (t === 'note/txt' || t === 'note/text');
   }
+};
+
+window.PryvBrowser.renderNote = function (content, options) {
+  var marked = require('marked');
+  options = _.extend({sanitize: true}, options);
+  marked.setOptions(options);
+  return marked(content);
 };

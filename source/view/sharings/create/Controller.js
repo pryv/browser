@@ -145,7 +145,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       $('#form-create-sharing', this.$el).find(':submit').click();
       return;
     }
-    if (permission !== 'read' || permission !== 'manage' || permission !== 'contribute') {
+    if (permission !== 'read' && permission !== 'manage' && permission !== 'contribute') {
       permission = 'read';
     }
     access.name = name;

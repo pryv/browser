@@ -1,4 +1,11 @@
 {
+  "apps": {
+    "common": {
+      "labels": {
+        "title": "Change Me"
+      }
+    }
+  },
   "atGlance": {
     "messages": {
       "noData": "There is nothing to show for this period of time."
@@ -129,6 +136,7 @@
   "nav": {
     "actions": {
       "addEvent": "Add content",
+      "connectApps": "Connect apps",
       "follow": "Follow this slice",
       "goToMyPryv": "Me",
       "manageSlices": "Manage slices",

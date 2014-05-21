@@ -593,6 +593,19 @@
     </div>
   </div>
 </script>
+<script type="template" id="apps-modal-template">
+   <div class="modal-header">
+     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+     <h4 class="modal-title" id="myModalLabel" data-i18n="apps.common.labels.title"></h4>
+     <div class="modal-close"></div>
+   </div>
+  <div id="modal-content">
+    <div id="settings-content" class="col-md-12" >
+      <div id="settings-manage-apps"></div>
+      <div id="settings-other-apps"></div>
+    </div>
+  </div>
+</script>
 <script type="template" id="nav-settings-modal-template">
   <ul class="nav">
     <li><a href="javascript:void(0)" data-name="manageApps" data-i18n="settings.connectedApps.labels.title"></a></li>
@@ -755,6 +768,9 @@
         </li>
         <li id="addEvent">
           <a href="javascript:void(0)" ><span class="fa fa-plus-circle fa-lg"></span> <span data-i18n="nav.actions.addEvent"></span></a>
+        </li>
+        <li id="connectApps">
+          <a href="javascript:void(0)" ><span class="fa fa-random fa-lg"></span> <span data-i18n="nav.actions.connectApps"></span></a>
         </li>
       </ul>
     <ul class="nav navbar-nav navbar-right">

@@ -9,6 +9,7 @@ var RootNode = require('./RootNode.js'),
   CreateSharingView = require('../view/sharings/create/Controller.js'),
   SubscribeView = require('../view/subscribe/Controller.js'),
   SettingsView = require('../view/settings/Controller.js'),
+  ConnectAppsView = require('../view/connect-apps/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
   OnboardingView = require('../view/onboarding/View.js'),
   VirtualNode = require('./VirtualNode.js'),
@@ -28,6 +29,7 @@ var TreeMap = module.exports = function (model) {
   this.sharingView = null;
   this.subscribeView = null;
   this.settingsView = null;
+  this.connectAppsView = null;
   this.createSharingView = null;
   this.createEventView = null;
   this.focusedStreams = null;
@@ -64,6 +66,14 @@ var TreeMap = module.exports = function (model) {
     }.bind(this));
     this.showCreateEventView($modal, this.model.connections,
       this.getFocusedStreams(), e.currentTarget);
+  }.bind(this));
+
+  $('nav #connectApps').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeConnectAppsView();
+    }.bind(this));
+    this.showConnectAppsView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
 
   $('.logo-sharing').click(function (e) {
@@ -374,6 +384,7 @@ TreeMap.prototype.closeViews = function () {
   this.closeCreateEventView();
   this.closeSettingsView();
   this.closeSubscribeView();
+  this.closeConnectAppsView();
 };
 
 //======== Detailed View ========\\
@@ -491,6 +502,28 @@ TreeMap.prototype.closeSettingsView = function () {
   if (this.hasSettingsView()) {
     this.settingsView.close();
     this.settingsView = null;
+  }
+};
+
+/*=================================*/
+//========== CONNECT APPS VIEW =========\\
+
+TreeMap.prototype.hasConnectAppsView = function () {
+  return typeof this.connectApps !== 'undefined' && this.connectApps !== null;
+};
+
+TreeMap.prototype.showConnectAppsView = function ($modal, connection, target) {
+  this.closeViews();
+  if ($modal && connection) {
+    this.connectApps = new ConnectAppsView($modal, connection, target);
+    this.connectApps.show();
+  }
+};
+
+TreeMap.prototype.closeConnectAppsView = function () {
+  if (this.hasConnectAppsView()) {
+    this.connectApps.close();
+    this.connectApps = null;
   }
 };
 

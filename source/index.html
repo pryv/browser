@@ -24,6 +24,7 @@
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
+  <link rel="stylesheet" href="fonts/ss-gizmo.css">
 
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
   <!-- @if NODE_ENV == 'PRODUCTION' -->
@@ -149,7 +150,7 @@
       <% } %>
       <div class="fullChart">
           <div class="pieLegendContainer"></div>
-          <div class="pieChartContainer"></div>
+          <div class="pieChartContainer Center-Container is-Table"></div>
       </div>
   </script>
 
@@ -766,7 +767,7 @@
         <li id="togglePanel">
         <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
         </li>
-        <li id="addEvent">
+        <li id="addEvent" class="function-highlight">
           <a href="javascript:void(0)" ><span class="fa fa-plus-circle fa-lg"></span> <span data-i18n="nav.actions.addEvent"></span></a>
         </li>
         <li id="connectApps">
@@ -793,7 +794,10 @@
 <!-- @endif -->
 
 <div id="tree">
-  <div id="empty-tree-notice" data-i18n="atGlance.messages.noData"></div>
+  <div id="empty-tree-notice" class="user-msg-box">
+    <div class="icon ss-book"></div>
+    <p data-i18n="atGlance.messages.noData"></p>
+  </div>
 </div>
 <div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"

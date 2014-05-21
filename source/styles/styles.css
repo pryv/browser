@@ -27,11 +27,7 @@ body{
   font-family: 'Roboto',Georgia,Arial,sans-serif;
   font-size:14px;
   overflow: hidden;
-  background: url(../images/bg3.jpg) no-repeat center fixed;
-  -webkit-background-size: cover; /* pour Chrome et Safari */
-  -moz-background-size: cover; /* pour Firefox */
-  -o-background-size: cover; /* pour Opera */
-  background-size: cover; /* version standardisée */
+  background-color: #eef0f2;
   font-weight: 300;
   /*letter-spacing: 1px;*/
 }
@@ -88,8 +84,7 @@ body{
 }
 /* DRAWER */
 .menu-panel {
-  background: #f5f7fa;
-  color: #8a8a8a;
+  background: #ffffff;
   width: 240px;
   height: 100%;
   position: absolute;
@@ -97,6 +92,7 @@ body{
   top: 0;
   left: -240px;
   overflow: auto;
+  border-right: 1px solid #DBDBDB;
 }
 .header-title{
   margin: 15px 5px 20px;
@@ -235,8 +231,8 @@ body{
   display: block;
   width: 40px;
   height: 40px;
-  background:url(../images/logo-pryv.png) 0 0 no-repeat;
-  background-color: #3e3e3e;
+  background:url(../images/logo-pryv.png) 1px no-repeat;
+  background-color: #bd1727;
   margin-left: -20px;
 }
 .logo:hover{
@@ -306,7 +302,6 @@ line-height: 27px;
   z-index: 1;
   width: 100%;
   height: 100%;
-  color: white;
   -webkit-animation-duration: 0.5s;
   -moz-animation-duration: 0.5s;
   -ms-animation-duration: 0.5s;
@@ -325,7 +320,11 @@ line-height: 27px;
   width: 100%;
   margin-top: -0.75em;
   text-align: center;
-  font-size: 1.5em;
+}
+.user-msg-box{color:#d0d5db;}
+.user-msg-box .icon {
+  font-size: 120px;
+  line-height: 74px;
 }
 .Center-Container.is-Table {
   display: inline-block;
@@ -659,7 +658,7 @@ text-align: center;*/
   line-height: 30px !important;
 }
 
-.modal, .modal-backdrop, .modal-content {
+.modal, .modal-backdrop {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -669,6 +668,7 @@ text-align: center;*/
   bottom: 80px;
   overflow: hidden;
   overflow-y: hidden;
+  background-color: rgba(75, 80, 83, 0.93);
 }
 .modal-backdrop {
   background: none;
@@ -697,6 +697,7 @@ text-align: center;*/
   position: relative;
   width: 100%;
   height: 100%;
+  background-color: #ffffff;
 }
 .note-content {
   position: relative;
@@ -1191,12 +1192,20 @@ ul.modal-dnd-legend > li {
 #dc-editor-appearance .form-control {
     width: 100%;
 }
-
-
-
-
-
 /** END of CSS for Drag and Drop Dialog using the modal **/
+
+/** BEGIN CSS for pie chart time sum **/
+.pie-chart-sum-parent {
+
+}
+
+.pie-chart-sum {
+    position: relative;
+}
+/** END CSS for pie chart time sum **/
+
+
+
 
 /** Login btn */
 
@@ -1414,16 +1423,15 @@ nav .icon-only{
   padding: 5px 0 2px;
 }
 .navbar-inverse {
-   background-color: #3F3F3F;
-   border-color: #373736;
-   font-weight: 400;
+   background-color: #ffffff;
+   border-color: #DBDBDB;
 }
-.navbar-inverse .navbar-nav>li>a, .navbar-inverse .navbar-text {
+/*.navbar-inverse .navbar-nav>li>a, .navbar-inverse .navbar-text {
   color: #e3e3e3;
-}
+}*/
 .navbar-inverse .navbar-nav>li>a:focus, .navbar-inverse .navbar-nav>li>a:hover {
 color: #FFF;
-background-color: #FFB800;
+background-color: #BD1727;
 }
 .navbar-inverse .dropdown-menu {
   background-color: #3e3e3e;
@@ -1447,3 +1455,9 @@ nav .gravatar {
   margin: 0 5px;
   border-radius: 2px;
 }
+#togglePanel{border-right: 1px solid #F1F1F1;}
+.navbar-inverse .navbar-nav>li.function-highlight>a {
+background-color: #BD1727;
+color: #FFF;
+}
+

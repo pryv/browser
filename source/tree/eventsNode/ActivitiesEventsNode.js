@@ -25,7 +25,7 @@ var ActivitiesEventsNode = module.exports = EventsNode.implement(
 ActivitiesEventsNode.acceptThisEventType = function (eventType) {
   return (
     eventType === 'activity/pryv' ||
-                  'activity/plain'
+    eventType === 'activity/plain'
     );
 };
 try {

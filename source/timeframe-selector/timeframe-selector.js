@@ -37,20 +37,20 @@ module.exports = (function () {
   };
   var DATE_SIZE = {
     'day': {
-      'selected': 150,
-      'others': 75
+      'selected': 140,
+      'others': 70
     },
     'month': {
-      'selected': 175,
-      'others': 100
+      'selected': 140,
+      'others': 90
     },
     'week': {
       'selected': 150,
-      'others': 100
+      'others': 90
     },
     'year': {
-      'selected': 175,
-      'others': 100
+      'selected': 100,
+      'others': 90
     },
     'custom': {
       'selected': 500

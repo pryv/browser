@@ -26,8 +26,8 @@
       "loadingPlaceholder": "Loading..."
     },
     "messages": {
-      "smallScreensNotice": "Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS.",
-      "errUnexpected": "Something went wrong! We've been automatically notified, but you can always help us improve by posting an error report."
+      "smallScreensNotice": "<strong>Bummer.</strong><br>Pryv browser is not yet optimized for small screens. You can experience Pryv browser from your computer or use Pryv iOS.",
+      "errUnexpected": "<strong>Ahem... something went wrong.</strong> We've been automatically notified, but you can always help us improve your experience by posting an error report."
     }
   },
   "events": {
@@ -135,7 +135,7 @@
   },
   "nav": {
     "actions": {
-      "addEvent": "Add content",
+      "addEvent": "Add",
       "connectApps": "Connect apps",
       "follow": "Follow this slice",
       "goToMyPryv": "Me",

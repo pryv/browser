@@ -5,17 +5,18 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.9.4/">
+  <base href="{browser-source}_v0.9.5/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.9.4/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.9.4/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.9.5/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.9.5/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
+  <link rel="stylesheet" href="fonts/ss-gizmo.css">
 
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
   <script src="script/airbrake-shim.js" data-airbrake-project-id="95886" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="staging"></script>
@@ -124,7 +125,7 @@
       <% } %>
       <div class="fullChart">
           <div class="pieLegendContainer"></div>
-          <div class="pieChartContainer"></div>
+          <div class="pieChartContainer Center-Container is-Table"></div>
       </div>
   </script>
 
@@ -534,7 +535,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.9.4</span>
+    <span class="version">Browser v0.9.5</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -563,6 +564,19 @@
     <div id="settings-nav"></div>
     <div id="settings-content" class="col-md-10" >
       <div id="settings-password"></div>
+      <div id="settings-manage-apps"></div>
+      <div id="settings-other-apps"></div>
+    </div>
+  </div>
+</script>
+<script type="template" id="apps-modal-template">
+   <div class="modal-header">
+     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+     <h4 class="modal-title" id="myModalLabel" data-i18n="apps.common.labels.title"></h4>
+     <div class="modal-close"></div>
+   </div>
+  <div id="modal-content">
+    <div id="settings-content" class="col-md-12" >
       <div id="settings-manage-apps"></div>
       <div id="settings-other-apps"></div>
     </div>
@@ -722,8 +736,11 @@
         <li id="togglePanel">
         <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
         </li>
-        <li id="addEvent">
+        <li id="addEvent" class="function-highlight">
           <a href="javascript:void(0)" ><span class="fa fa-plus-circle fa-lg"></span> <span data-i18n="nav.actions.addEvent"></span></a>
+        </li>
+        <li id="connectApps">
+          <a href="javascript:void(0)" ><span class="fa fa-random fa-lg"></span> <span data-i18n="nav.actions.connectApps"></span></a>
         </li>
       </ul>
     <ul class="nav navbar-nav navbar-right">
@@ -742,7 +759,10 @@
   </nav>
 
 <div id="tree">
-  <div id="empty-tree-notice" data-i18n="atGlance.messages.noData"></div>
+  <div id="empty-tree-notice" class="user-msg-box">
+    <div class="icon ss-book"></div>
+    <p data-i18n="atGlance.messages.noData"></p>
+  </div>
 </div>
 <div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"

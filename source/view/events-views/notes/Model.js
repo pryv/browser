@@ -1,5 +1,5 @@
 var _ = require('underscore'),
-  PicturesView = require('./View.js'),
+  NotesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
 var minWidth = 300;
 var minHeight = 200;
@@ -8,7 +8,7 @@ var maxHeight = 200;
 module.exports = CommonModel.implement(
   function (events, params) {
     CommonModel.call(this, events, params);
-    this.typeView = PicturesView;
+    this.typeView = NotesView;
     this.eventDisplayed = null;
     this.modelContent = {};
     this.nbrDisplayW = -1;
@@ -78,23 +78,6 @@ module.exports = CommonModel.implement(
         }
 
       }
-      /* DEBUG
-       var times = [];
-       var diff = [];
-       var error = false;
-       for (var k = 0; k < this.eventsToDisplay.length; k++) {
-       times[k] = this.eventsToDisplay[k].time;
-       if (times[k - 1] && times[k - 1] > times[k]) {
-       error = true;
-       }
-       diff[k] = Math.abs(this.highlightedTime - this.eventsToDisplay[k].time);
-       }
-       if (error) {
-       console.error('highlight', this.highlightedTime, 'times', times, 'diff', diff);
-       } else {
-       console.log('highlight', this.highlightedTime, 'times', times, 'diff', diff);
-       }
-       */
     },
     beforeRefreshModelView: function () {
       for (var i = 0; i < this.eventsToDisplay.length; ++i) {

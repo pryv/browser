@@ -6,6 +6,7 @@ module.exports = Marionette.ItemView.extend({
   type: 'Tweet',
   template: '#template-detail-content-tweet',
   itemViewContainer: '#detail-content',
+  className: 'note-content',
   templateHelpers: {
     getUrl: function () {
       var id = this.event.content.id,

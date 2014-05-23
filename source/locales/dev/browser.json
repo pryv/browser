@@ -135,7 +135,7 @@
   },
   "nav": {
     "actions": {
-      "addEvent": "Add",
+      "addEvent": "Add content",
       "connectApps": "Connect apps",
       "follow": "Follow this slice",
       "goToMyPryv": "Me",

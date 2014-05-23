@@ -236,7 +236,7 @@ Controller.prototype.show = function () {
     '<button id="publish" class="btn btn-pryv-turquoise">' +
     '<span data-i18n="slices.actions.share"></span> ' +
     '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
-    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="common.actions.cancel">' +
+    '<button id="cancel" class="btn" data-dismiss="modal">' + i18n.t('common.actions.cancel') +
     '</button></div></div>');
   $('#creation-content').html(this.treeView.el);
   $('body').i18n();
@@ -245,7 +245,7 @@ Controller.prototype.show = function () {
   }.bind(this));
   this.treeView.on('sharing:createSuccess', function (token) {
     $('#publish').remove();
-    $('#cancel').text('Ok').addClass('btn-pryv-turquoise');
+    $('#cancel').text(i18n.t('common.actions.close')).addClass('btn-pryv-turquoise');
     $('#creation-content').empty();
     var url = this.connection.id.replace(/\?auth.*$/, '');
     url = url.replace(/\.in/, '.li');

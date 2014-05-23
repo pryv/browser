@@ -173,7 +173,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       }
 
       $btn.removeClass('btn-pryv-alizarin');
-      this.trigger('sharing:createSuccess', result.token);
+      this.trigger('sharing:createSuccess', { name: name, token: token });
     }.bind(this));
   }
 });
@@ -236,21 +236,21 @@ Controller.prototype.show = function () {
     '<button id="publish" class="btn btn-pryv-turquoise">' +
     '<span data-i18n="slices.actions.share"></span> ' +
     '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
-    '<button id="cancel" class="btn" data-dismiss="modal" data-i18n="common.actions.cancel">' +
+    '<button id="cancel" class="btn" data-dismiss="modal">' + i18n.t('common.actions.cancel') +
     '</button></div></div>');
   $('#creation-content').html(this.treeView.el);
   $('body').i18n();
   $('#publish').click(function (e) {
     this.treeView.createSharing(e, $('#publish'));
   }.bind(this));
-  this.treeView.on('sharing:createSuccess', function (token) {
+  this.treeView.on('sharing:createSuccess', function (sharingInfo) {
     $('#publish').remove();
-    $('#cancel').text('Ok').addClass('btn-pryv-turquoise');
+    $('#cancel').text(i18n.t('common.actions.close')).addClass('btn-pryv-turquoise');
     $('#creation-content').empty();
     var url = this.connection.id.replace(/\?auth.*$/, '');
     url = url.replace(/\.in/, '.li');
     url = url.replace(/\.io/, '.me');
-    url += '#/sharings/' + token;
+    url += '#/sharings/' + sharingInfo.token;
     $('#creation-content').html('<div class="container">' +
       '<h4 data-i18n="slices.messages.sharingSuccessful"></h4>' +
       '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
@@ -259,17 +259,19 @@ Controller.prototype.show = function () {
       url.replace(/#/g, '%23') + '&t=" ' +
       'onclick="javascript:window.open(this.href, \'\', ' +
       '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
-      'return false;">' +
+      'return false;" title="' + i18n.t('slices.actions.shareOnFacebook') + '">' +
       '<i class="fa fa-facebook"></i></a>' +
       '<a target="_blank" href="https://twitter.com/share?url=' +
       url.replace(/#/g, '%23') + '&via=pryv" ' +
       'onclick="javascript:window.open(this.href, \'\', ' +
       '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
-      'return false;">' +
+      'return false;" title="' + i18n.t('slices.actions.shareOnTwitter') + '">' +
       '<i class="fa fa-twitter"></i></a>' +
-      '<a href="mailto:?subject=Slice of life&amp;body=' +
-      'I just shared a slice of life with you: ' + url +
-      '" title="Share by Email">' +
+      '<a href="mailto:?subject=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
+          {sliceName: sharingInfo.name})) +
+        '&amp;body=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
+          {sliceURL: url})) +
+      '" title="' + i18n.t('slices.actions.shareViaEmail') + '">' +
       '<i class="fa fa-envelope"></i></a>' +
       '</p></div>');
     $('body').i18n();

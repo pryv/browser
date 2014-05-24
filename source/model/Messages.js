@@ -10,16 +10,17 @@ Messages.MonitorsHandler = {
     /** called when a batch of changes is done, content: <batchId> unique**/
     BATCH_DONE : SignalEmitter.Messages.BATCH_DONE,
 
-    /** called when some streams are hidden, content: Array of Stream**/
-    STREAM_HIDE : 'hideStream',
-    STREAM_SHOW : 'hideShow',
     /** called when events Enter Scope, content: {reason: one of .., content: array of Event }**/
     EVENT_SCOPE_ENTER : 'eventEnterScope',
     STREAM_SCOPE_ENTER : 'streamEnterScope',
     EVENT_SCOPE_LEAVE : 'eventLeaveScope',
     STREAM_SCOPE_LEAVE : 'streamLeaveScope',
     EVENT_CHANGE : 'eventChange',
-    STREAM_CHANGE : 'streamChange'
+    STREAM_CHANGE : 'streamChange',
+
+    /** filtered streams changed **/
+    FILTERED_STREAMS_CHANGE: 'filteredStreamsChange'
+
   },
   REASON : {
     EVENT_SCOPE_ENTER_ADD_CONNECTION : 'connectionAdded',

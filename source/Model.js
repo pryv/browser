@@ -1,27 +1,39 @@
 /* global $, window, location, i18n, moment */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
-  _ = require('underscore'),
-  ConnectionsHandler = require('./model/ConnectionsHandler.js'),
-  SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
-  TreeMap = require('./tree/TreeMap.js'),
-  Controller = require('./orchestrator/Controller.js'),
-  PanelMenu = require('./view/left-panel/Controller.js'),
-  Pryv = require('pryv'),
-  TimeLine = require('./timeframe-selector/timeframe-selector.js'),
-  PUBLIC_TOKEN = 'public',
-  STAGING,
-  toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
-    'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
-  toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
+    _ = require('underscore'),
+    ConnectionsHandler = require('./model/ConnectionsHandler.js'),
+    SIGNAL = require('./model/Messages').MonitorsHandler.SIGNAL,
+    TreeMap = require('./tree/TreeMap.js'),
+    Controller = require('./orchestrator/Controller.js'),
+    PanelMenu = require('./view/left-panel/Controller.js'),
+    Pryv = require('pryv'),
+    TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+    PUBLIC_TOKEN = 'public',
+    STAGING,
+    toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
+      'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
+    toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
+
+// temp fix for jQuery not being setup properly in Backbone/Marionette with Browserify
+// probable references:
+// - https://github.com/jashkenas/backbone/issues/2997
+// - https://github.com/jashkenas/backbone/pull/3038
+require('backbone').$ = $;
+require('backbone.marionette').$ = $;
+
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
-  this.urlUsername = Pryv.utility.getUsernameFromUrl();
-  this.urlSharings = Pryv.utility.getSharingsFromUrl();
-  if (Pryv.utility.isSignInFromUrl()) {
+
+  var urlInfo = Pryv.utility.urls.parseClientURL();
+  this.urlUsername = urlInfo.username;
+  this.urlSharings = urlInfo.parseSharingTokens();
+
+  if (urlInfo.username && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
     $('#login-username').val(this.urlUsername);
     openLogin();
   }
+
   this.publicConnection = null;
   this.loggedConnection = null;
   this.sharingsConnections = null;

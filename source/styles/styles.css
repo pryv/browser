@@ -178,6 +178,16 @@ body{
 .stream-tree-summary:hover {
   background-color:  #edf8fe;
 }
+.stream-tree-summary.disclosure::before {
+  float: right;
+  font-family: FontAwesome;
+  content: "\f078";
+}
+.stream-tree-summary.disclosure.collapsed::before {
+  float: right;
+  content: "\f054";
+  font-family: FontAwesome;
+}
 #stream-select .create-stream {
   width: auto;
 }

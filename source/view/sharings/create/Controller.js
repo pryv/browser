@@ -166,9 +166,9 @@ var TreeRoot = Marionette.CollectionView.extend({
       }
 
       if (error || result.message) {
-        // TODO: check actual error and handle it properly
         $btn.addClass('btn-pryv-alizarin');
-        window.PryvBrowser('.modal-content', i18n.t('slices.messages.errInvalidSharingToken'));
+        window.PryvBrowser.showAlert('.modal-content',
+          i18n.t('slices.messages.errInvalidSharingToken'));
         return;
       }
 

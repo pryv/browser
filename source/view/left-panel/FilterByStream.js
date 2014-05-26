@@ -31,7 +31,10 @@ module.exports = Marionette.ItemView.extend({
       e.stopPropagation();
       var input = $($(e.currentTarget).parent()).find('input');
       var checked = input.prop('checked');
-      input.prop('checked', !checked);
+      input.prop({
+        indeterminate: false,
+        checked: !checked
+      });
       input.trigger('change');
       this._applyFilter();
     }.bind(this));
@@ -46,7 +49,7 @@ module.exports = Marionette.ItemView.extend({
         indeterminate: false,
         checked: checked
       });
-      self._isChildrenCheck(container.parent().parent());
+      //self._isChildrenCheck(container.parent().parent());
     });
     this.bindUIElements();
     this.onFocusStreamChanged();
@@ -101,12 +104,12 @@ module.exports = Marionette.ItemView.extend({
       allChecked = allChecked && $(children[i]).prop('checked');
       allUncheck = allUncheck && !$(children[i]).prop('checked');
     }
-    if (allChecked || allUncheck) {
+    if (allUncheck) {
       $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
         indeterminate: false,
-        checked: allChecked
+        checked: false
       });
-    } else {
+    } else if (!allChecked && !allUncheck) {
       $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
         indeterminate: true,
         checked: false
@@ -154,7 +157,8 @@ module.exports = Marionette.ItemView.extend({
       }
     });
     _.each(connections, function (c) {
-      result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +
+      result += '<li class="stream-tree-summary connection disclosure"' +
+        ' data-toggle="collapse" ' +
         'data-target="#collapse' + UNIQUE_ID + '">' +
         '<div class="pryv-checkbox">' +
         '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
@@ -184,10 +188,14 @@ module.exports = Marionette.ItemView.extend({
     return result;
   },
   _walkStreamStructure: function (stream) {
-
+    var disclosure = '';
+    if (stream.children.length > 0) {
+      disclosure = 'disclosure';
+    }
     var result = '<li data-connection="' +
       stream.connection.serialId + '" data-stream="' +
-      stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
+      stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
+      '" data-toggle="collapse" ' +
       'data-target="#collapse' + UNIQUE_ID + '">' +
       '<div class="pryv-checkbox">' +
       '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +

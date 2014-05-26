@@ -740,6 +740,7 @@ text-align: center;*/
 #detail-list li {
   border-bottom: silver solid 1px;
   list-style: none;
+  position:relative;
 }
 .preview img {
   max-width: 80px;
@@ -757,19 +758,28 @@ text-align: center;*/
 #detail-list .row {
   margin: 0;
 }
+#detail-list .row.detail-item-date{
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 12px;
+  background-color: #FFF;
+  padding: 0 5px;
+
+}
 #detail-list .detail-item-content, #detail-list .Center-Container  {
   height: 60px;
   overflow: hidden;
 }
 #detail-list .detail-item-date div {
-  text-align: center;
-  background-color: rgba(50, 58, 66, 0.20);
-  color: #fff;
+  /*text-align: center;*/
+  background-color: #ffffff;
+  color: #000000;
   border-radius: 2px;
 }
-#detail-list .detail-item-checkbox {
+/*#detail-list .detail-item-checkbox {
   text-align: right;
-}
+}*/
 #detail-list .pryv-checkbox label {
   padding-left: 17px;
   margin: 0;

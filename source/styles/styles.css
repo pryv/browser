@@ -910,7 +910,7 @@ text-align: center;*/
 }
 #current-picture {
   text-align: center;
-  background-color: black;
+  background-color: #eef0f2;
 }
 #current-picture #add-attachment {
   float: left;

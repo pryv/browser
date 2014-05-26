@@ -24,11 +24,11 @@ listView.initialize = function () {
       '    <div id="detail-list"></div>' +
       '    <div id="filter" class="btn-toolbar">' +
       '      <div class="btn-group">' +
-      '        <button id="select-all" type="button" class="btn btn-default btn-sm" data-i18n="events.common.actions.all"></button> ' +
-      '        <button id="select-none" type="button" class="btn btn-default btn-sm" data-i18n="events.common.actions.none"></button> ' +
+      '        <button id="select-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.all"></button> ' +
+      '        <button id="select-none" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.none"></button> ' +
       '      </div>' +
       '      <div class="btn-group">' +
-      '        <button id="trash-selected" type="button" class="btn btn-danger btn-sm" data-i18n="events.common.actions.deleteSelected"></button>' +
+      '        <button id="trash-selected" type="button" class="btn btn-danger btn-xs" data-i18n="events.common.actions.deleteSelected"></button>' +
       '      </div>' +
       '    </div>' +
       '  </div>' +

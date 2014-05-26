@@ -736,11 +736,12 @@
   <div class="menu-panel"></div>
 <span id="pryvButton"></span>
 <div id="login">
-  <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
+  <div id="login-caret" class="centered"><span class="ss-navigateleft"></span>
   </div>
   <div id="login-form" class="centered">
     <form role="form">
-      <h3 data-i18n="login.labels.title"></h3>
+      <div class="icon ss-user" style="text-align: center;"></div>
+      <h3 data-i18n="login.labels.title" style="text-align: center;margin: 0 0 20px;font-weight: 400;"></h3>
 
       <div class="form-group">
         <label class="sr-only" for="login-username">Username</label>
@@ -750,13 +751,13 @@
         <label class="sr-only" for="login-password">Password</label>
         <input type="password" class="form-control" id="login-password" data-i18n="[placeholder]login.labels.password">
       </div>
-      <button type="submit" class="btn btn-pryv-turquoise"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
       <!-- @if NODE_ENV == 'PRODUCTION' -->
       <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
       <!-- @endif -->
       <!-- @if NODE_ENV != 'PRODUCTION' -->
       <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
       <!-- @endif -->
+      <button type="submit" class="btn btn-primary"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
 
     </form>
   </div>
@@ -767,7 +768,7 @@
         <li id="togglePanel">
         <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
         </li>
-        <li id="addEvent" class="function-highlight">
+        <li id="addEvent">
           <a href="javascript:void(0)" ><span class="fa fa-plus-circle fa-lg"></span> <span data-i18n="nav.actions.addEvent"></span></a>
         </li>
         <li id="connectApps">
@@ -779,7 +780,7 @@
         <a href="javascript:void(0)"><span class="fa fa-user"></span>  <span data-i18n="nav.actions.goToMyPryv"></span></a>
         </li>
         <li class="dropdown">
-          <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" id="login-button"><i class="fa fa-sign-in"></i> </a>
+          <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" id="login-button"><i class="ss-user"></i> </a>
           <ul class="dropdown-menu">
             <li id="settings"><a href="javascript:void(0)" ><span class="fa fa-cog fa-lg"></span> <span data-i18n="nav.actions.settings"></span></a></li>
             <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out fa-lg"></i> <span data-i18n="nav.actions.signOut"></span></a></li>

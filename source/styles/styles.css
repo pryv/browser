@@ -261,6 +261,7 @@ line-height: 27px;
 #login-button:hover, #login-button:focus {
   text-decoration: none;
   color: white;
+  background-color: #BD1727;
 }
 #login-dropdown .dropdown-menu {
   right: 0;
@@ -322,8 +323,8 @@ line-height: 27px;
   text-align: center;
 }
 .user-msg-box{color:#d0d5db;}
-.user-msg-box .icon {
-  font-size: 120px;
+.icon {
+  font-size: 76px;
   line-height: 74px;
 }
 .Center-Container.is-Table {
@@ -1220,7 +1221,9 @@ ul.modal-dnd-legend > li {
   -moz-animation-duration: 0.5s;
   -ms-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
-  color: #FFF;
+}
+span.ss-navigateleft:hover {
+color: #BD1727;
 }
 #login-caret {
   font-size: 40px;
@@ -1230,7 +1233,7 @@ ul.modal-dnd-legend > li {
   text-align: initial;
 }
 #login-form button[type=submit] {
-  margin-right: 12px;
+  margin-left: 12px;
 }
 #login:before {
   content:'';
@@ -1239,7 +1242,7 @@ ul.modal-dnd-legend > li {
   vertical-align: middle;
 }
 #resetPassword, #resetPassword:hover, #resetPassword:focus {
-  color: #fff;
+  color: #000000;
 }
 .centered {
   display: inline-block;
@@ -1433,14 +1436,14 @@ nav .icon-only{
 color: #FFF;
 background-color: #BD1727;
 }
-.navbar-inverse .dropdown-menu {
+/*.navbar-inverse .dropdown-menu {
   background-color: #3e3e3e;
-}
-.navbar-inverse .dropdown-menu a {
+}*/
+/*.navbar-inverse .dropdown-menu a {
   color: #e3e3e3;
-}
+}*/
 .navbar-inverse .dropdown-menu a:hover {
-  background-color: #FFB800;
+  background-color: #BD1727;
   color: #fff;
 }
 .navbar-nav>li>a {

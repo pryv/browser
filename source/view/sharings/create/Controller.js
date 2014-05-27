@@ -173,7 +173,7 @@ var TreeRoot = Marionette.CollectionView.extend({
       }
 
       $btn.removeClass('btn-pryv-alizarin');
-      this.trigger('sharing:createSuccess', { name: name, token: token });
+      this.trigger('sharing:createSuccess', { name: result.name, token: result.token });
     }.bind(this));
   }
 });

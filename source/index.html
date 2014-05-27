@@ -78,7 +78,7 @@
 <!-- ONBOARDING V2 -->
   <script id="onboardingView" type="template">
     <header>
-      <a href="#">Skip Intro <span class="ss-fastforward"></span></a>
+      <a id="onboarding-skip" href="javascript:void(0)">Skip Intro <span class="ss-fastforward"></span></a>
     </header>
 
     <div id="onboarding-carousel" class="carousel slide" data-ride="carousel">
@@ -112,9 +112,9 @@
               <div class="col-md-8">
                 <h1>Let’s get started</h1>
                 <p>Add pics, notes, your position from here or from the app.</p>
-                <a class="btn btn-primary btn-lg" href="#onboarding-carousel">Add</a>
+                <a id="onboarding-add" class="btn btn-primary btn-lg" href="javascript:void(0)">Add</a>
                 <p>Connect apps and devices.</p>
-                <a class="btn btn-primary btn-lg" href="#onboarding-carousel">Connect</a>
+                <a id="onboarding-connect" class="btn btn-primary btn-lg" href="javascript:void(0)">Connect</a>
               </div>
             </div>
           </div>
@@ -943,6 +943,9 @@
     <div class="icon ss-book"></div>
     <p data-i18n="atGlance.messages.noData"></p>
   </div>
+</div>
+<div id="onboarding" class="hidden">
+
 </div>
 <div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"

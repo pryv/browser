@@ -6,28 +6,25 @@ var  Marionette = require('backbone.marionette');
  */
 module.exports = Marionette.ItemView.extend({
   template: '#onboardingView',
-  container: '#tree',
+  container: '#onboarding',
   className: 'onboarding',
   connection: null,
   onRender: function () {
     $(this.container).html(this.$el);
-    $('#onboarding-form').submit(function (e) {
-      e.preventDefault();
-      $('#onboarding-form .fa-spin').show();
-      var streamName = $('#onboarding-input-name').val().trim();
-      if (streamName && streamName.length > 0 && this.connection) {
-        this.connection.streams.create({name: streamName}, function (error) {
-          $('#onboarding-form .fa-spin').hide();
-          if (!error) {
-            this.trigger('done');
-          }
-        }.bind(this));
-      }
+    $('#onboarding-add').click(function () {
+      this.trigger('clickAdd');
+    }.bind(this));
+    $('#onboarding-connect').click(function () {
+      this.trigger('clickConnect');
+    }.bind(this));
+    $('#onboarding-skip').click(function () {
+      this.trigger('clickSkip');
     }.bind(this));
     $('.carousel').carousel({
       interval: false,
       wrap: false
     });
+    $('#onboarding').removeClass('hidden');
     $('body').i18n();
   }
 });

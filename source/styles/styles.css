@@ -308,7 +308,7 @@ line-height: 27px;
   display: block;
   list-style-type: none;
 }
-#tree {
+#tree, #onboarding {
   position: absolute;
   top: 0;
   z-index: 1;

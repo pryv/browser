@@ -75,26 +75,80 @@
 
     });
   </script>
+<!-- ONBOARDING V2 -->
   <script id="onboardingView" type="template">
-    <div class="container">
-    <div class="row onboarding">
-      <div class="col-md-4"><h1 class="hidden-xs" data-i18n="onboarding.labels.title"></h1>
-        <div class="ob_text hidden-xs" >
-          <div data-i18n="[html]onboarding.messages.gettingStarted"></div>
-          <form class="form-inline" role="form" id="onboarding-form">
-            <div class="form-group">
-              <input type="text" id='onboarding-input-name' class="form-control" data-i18n="[placeholder]onboarding.labels.streamInput" style="width: 152px;" required>
-            </div>
-            <button type="submit" class="btn btn-primary"><span data-i18n="button.start"></span>  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
-          </form>
+    <header>
+      <a href="#">Skip Intro <span class="ss-fastforward"></span></a>
+    </header>
+
+    <div id="onboarding-carousel" class="carousel slide" data-ride="carousel">
+
+      <div class="carousel-inner">
+
+        <div class="item active slide1">
+          <div class="container">
+            <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Get Started <span class="ss-fastforward"></span></a>
+            <img src="images/onboarding_image.png"/>
+          </div>
         </div>
 
+        <div class="item slide2">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-4"><img src="images/pryvapp.png"/></div>
+              <div class="col-md-8">
+                <h1>Pryv app</h1>
+                <p> You can also download our iOS app to collect data and browse your Pryv from your Iphone.</p>
+                <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Next <span class="ss-fastforward"></span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="item slide3">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-4"><img src="images/pryvapp.png"/></div>
+              <div class="col-md-8">
+                <h1>Let’s get started</h1>
+                <p>Add pics, notes, your position from here or from the app.</p>
+                <a class="btn btn-primary btn-lg" href="#onboarding-carousel">Add</a>
+                <p>Connect apps and devices.</p>
+                <a class="btn btn-primary btn-lg" href="#onboarding-carousel">Connect</a>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
-      <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
+
     </div>
-    </div>
+
+    <footer>
+      <a href="https://christine.pryv.me/#/sharings/chvgqb98b0aop6npn2qdpjgjy" target="_blank">Click here to visualize Christine, Pryv’s demo account</a>
+    </footer>
+
+    <!--<div class="container">
+      <div class="row onboarding">
+        <div class="col-md-4"><h1 class="hidden-xs" data-i18n="onboarding.labels.title"></h1>
+          <div class="ob_text hidden-xs" >
+            <div data-i18n="[html]onboarding.messages.gettingStarted"></div>
+            <form class="form-inline" role="form" id="onboarding-form">
+              <div class="form-group">
+                <input type="text" id='onboarding-input-name' class="form-control" data-i18n="[placeholder]onboarding.labels.streamInput" style="width: 152px;" required>
+              </div>
+              <button type="submit" class="btn btn-primary"><span data-i18n="button.start"></span>  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+            </form>
+          </div>
+
+
+        </div>
+        <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
+      </div>
+    </div>-->
   </script>
+<!-- END ONBOARDING V2 -->
+
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
     <% if(eventsNbr > 1) { %>

@@ -1304,6 +1304,73 @@ color: #BD1727;
   padding: 15px;
   text-align: center;
 }
+
+.onboarding {
+  margin-top:50px;
+  background-color: #FFF;
+  height: 100%;
+  font-size: 18px;
+}
+.onboarding .carousel, .onboarding .carousel-inner  {height:100%;}
+.onboarding header {
+  text-align: right;
+  padding: 30px 40px;
+}
+  .onboarding header a{
+    color:#BD1727;
+    font-weight: 700;
+  }
+.onboarding .container {
+}
+.onboarding .container h1 {
+  font-size: 60px;
+  margin: 0 0 20px 0;
+  line-height: 40px;
+}
+.onboarding .container p {
+  font-size: 40px;
+  margin: 0 0 20px 0;
+  font-weight: 400;
+}
+.onboarding .container img {
+  width:100%;
+}
+.onboarding .slide1 .container img {
+  max-width: 1050px;
+  margin: 0 auto;
+  display: block;
+}
+
+.onboarding .container .btn.btn-primary {
+  background-color: #BD1727;
+  font-size: 40px;
+  padding: 10px 60px;
+  border: 0;
+}
+.onboarding .container .btn.btn-primary:hover {
+  background-color: #FC3649;
+}
+.onboarding .slide1 .container .btn-primary {
+  position: absolute;
+  top: 380px;
+  left: 50%;
+  margin-left: -180px;
+}
+.onboarding .slide1 .container .btn-primary span {
+  font-size:28px;
+}
+.onboarding footer {
+  background-color: #BD1727;
+  position: absolute;
+  bottom: 60px;
+  width: 100%;
+  text-align: center;
+  padding: 30px;
+}
+  .onboarding footer a{
+    color:#ffffff;
+  }
+/*
 .onboarding {
   padding-top: 20px;
 }
@@ -1336,7 +1403,7 @@ color: #BD1727;
 .onboarding .stream_color_2{color:#E77E23;}
 .onboarding .stream_color_3{color:#9C59B8;}
 .onboarding .stream_color_4{color:#E84C3D;}
-
+*/
 
 #add-bookmark-auth {
   display: none;

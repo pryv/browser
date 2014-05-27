@@ -7,6 +7,7 @@ var  Marionette = require('backbone.marionette');
 module.exports = Marionette.ItemView.extend({
   template: '#onboardingView',
   container: '#tree',
+  className: 'onboarding',
   connection: null,
   onRender: function () {
     $(this.container).html(this.$el);
@@ -23,6 +24,10 @@ module.exports = Marionette.ItemView.extend({
         }.bind(this));
       }
     }.bind(this));
+    $('.carousel').carousel({
+      interval: false,
+      wrap: false
+    });
     $('body').i18n();
   }
 });

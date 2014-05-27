@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.9.5/">
+  <base href="{browser-source}_v0.10.0/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.9.5/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.9.5/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.10.0/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.10.0/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -50,26 +50,80 @@
       wrapped();
     });
   </script>
+<!-- ONBOARDING V2 -->
   <script id="onboardingView" type="template">
-    <div class="container">
-    <div class="row onboarding">
-      <div class="col-md-4"><h1 class="hidden-xs" data-i18n="onboarding.labels.title"></h1>
-        <div class="ob_text hidden-xs" >
-          <div data-i18n="[html]onboarding.messages.gettingStarted"></div>
-          <form class="form-inline" role="form" id="onboarding-form">
-            <div class="form-group">
-              <input type="text" id='onboarding-input-name' class="form-control" data-i18n="[placeholder]onboarding.labels.streamInput" style="width: 152px;" required>
-            </div>
-            <button type="submit" class="btn btn-primary"><span data-i18n="button.start"></span>  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
-          </form>
+    <header>
+      <a id="onboarding-skip" href="javascript:void(0)">Skip Intro <span class="ss-fastforward"></span></a>
+    </header>
+
+    <div id="onboarding-carousel" class="carousel slide" data-ride="carousel">
+
+      <div class="carousel-inner">
+
+        <div class="item active slide1">
+          <div class="container">
+            <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Get Started <span class="ss-fastforward"></span></a>
+            <img src="images/onboarding_image.png"/>
+          </div>
         </div>
 
+        <div class="item slide2">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-4"><img src="images/pryvapp.png"/></div>
+              <div class="col-md-8">
+                <h1>Pryv app</h1>
+                <p> You can also download our iOS app to collect data and browse your Pryv from your Iphone.</p>
+                <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Next <span class="ss-fastforward"></span></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="item slide3">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-4"><img src="images/pryvapp.png"/></div>
+              <div class="col-md-8">
+                <h1>Let’s get started</h1>
+                <p>Add pics, notes, your position from here or from the app.</p>
+                <a id="onboarding-add" class="btn btn-primary btn-lg" href="javascript:void(0)">Add</a>
+                <p>Connect apps and devices.</p>
+                <a id="onboarding-connect" class="btn btn-primary btn-lg" href="javascript:void(0)">Connect</a>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
-      <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
+
     </div>
-    </div>
+
+    <footer>
+      <a href="https://christine.pryv.me/#/sharings/chvgqb98b0aop6npn2qdpjgjy" target="_blank">Click here to visualize Christine, Pryv’s demo account</a>
+    </footer>
+
+    <!--<div class="container">
+      <div class="row onboarding">
+        <div class="col-md-4"><h1 class="hidden-xs" data-i18n="onboarding.labels.title"></h1>
+          <div class="ob_text hidden-xs" >
+            <div data-i18n="[html]onboarding.messages.gettingStarted"></div>
+            <form class="form-inline" role="form" id="onboarding-form">
+              <div class="form-group">
+                <input type="text" id='onboarding-input-name' class="form-control" data-i18n="[placeholder]onboarding.labels.streamInput" style="width: 152px;" required>
+              </div>
+              <button type="submit" class="btn btn-primary"><span data-i18n="button.start"></span>  <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+            </form>
+          </div>
+
+
+        </div>
+        <div class="col-md-8 hidden-xs"><img src="images/onboarding_image.png"/></div>
+      </div>
+    </div>-->
   </script>
+<!-- END ONBOARDING V2 -->
+
   <script id="super-condensed-view" type="template">
     <div class="aggregated-icon Numericals"></div>
     <% if(eventsNbr > 1) { %>
@@ -159,11 +213,10 @@
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
-          <blockquote class="twitter-tweet" align="center" width="<%= width %>" height="<%= height %>">
+          <blockquote >
             <p><%= content.text %> </p>&mdash;
             <%= content['screen-name'] %> (@<%= content['screen-name'] %>) <%= getUrl()%>
           </blockquote>
-          <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
         </div>
       </div>
     </div>
@@ -173,13 +226,13 @@
     <%
     if (typeof(content) != "undefined") {
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
-    <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
+    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1"></span><%= content.name %></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
-    <div class='nodeHeader '><%= content.name %></div>
+    <div class='nodeHeader '><span class="pins-color 2"></span><%= content.name %></div>
     <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
-    <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <div class='nodeHeader'><span class="pins-color 3"></span><%= content.username %> / <%= content._accessInfo.name %></div>
     <% } else if (typeof(content.username) != "undefined") { %>
-    <div class='nodeHeader'><%= content.username %></div>
+    <div class='nodeHeader'><span class="pins-color 4"></span><%= content.username %></div>
     <% } } %>
     <span></span>
   </script>
@@ -192,9 +245,7 @@
   </script>
   <script type="text/html" id="template-detailItemView">
     <div class="row detail-item-date">
-      <div>
         <span class="date"><%= PryvBrowser.getTimeString(event.time) %></span>
-      </div>
     </div>
     <div class="row detail-item-content">
       <%= getPreview() %>
@@ -218,12 +269,12 @@
      <td class="share share-small">
 
       <a target="_blank" href="https://www.facebook.com/sharer.php?u=<%= sharing.url.replace(/#/g, '%23') %>&t="
-       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;">
+       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;" title="<%= i18n.t('slices.actions.shareOnFacebook') %>">
       <i class="fa fa-facebook"></i></a>
        <a target="_blank" href="https://twitter.com/share?url=<%= sharing.url.replace(/#/g, '%23') %>&via=pryv"
-       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;">
+       onclick="javascript:window.open(this.href, '', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700');return false;" title="<%= i18n.t('slices.actions.shareOnTwitter') %>">
       <i class="fa fa-twitter"></i></a>
-       <a href="mailto:?subject=Sharing from PrYv&amp;body=Here is a sharing for you: <%= sharing.url %>" title="Share by Email"><i class="fa fa-envelope"></i></a>
+       <a href="mailto:?subject=<%= encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject', {sliceName: sharing.name})) %>&amp;body=<%= encodeURIComponent(i18n.t('slices.messages.sharingEmailBody', {sliceURL: sharing.url})) %>" title="<%= i18n.t('slices.actions.shareViaEmail') %>"><i class="fa fa-envelope"></i></a>
      </td>
     <td class="sharing-trash"><a href="javascript:void(0)"><i class="fa fa-trash-o"></i></a></td>
 
@@ -535,7 +586,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.9.5</span>
+    <span class="version">Browser v0.10.0</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -581,6 +632,93 @@
       <div id="settings-other-apps"></div>
     </div>
   </div>
+</script>
+<script type="template" id="create-sharings-modal-template">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h4 class="modal-title" id="myModalLabel" data-i18n="slices.labels.shareTitle"></h4>
+    <div class="modal-close"></div>
+  </div>
+  <div id="modal-content">
+    <div id="create-sharings-form"></div>
+    <div id="success-sharings"></div>
+    <div id="creation-footer" class="col-md-12">
+      <button id="publish" class="btn btn-pryv-turquoise">
+        <span data-i18n="slices.actions.share"></span>
+        <i class="fa fa-spinner fa-spin" style="display: none;"></i>
+      </button>
+      <button id="cancel" class="btn" data-dismiss="modal"><% i18n.t('common.actions.cancel') %></button>
+    </div>
+  </div>
+</script>
+<script type="template" id="create-sharings-form-template">
+  <h5 data-i18n="slices.labels.nameAndPermissionsTitle"></h5>
+  <form role="form" id="form-create-sharing">
+  <div class="form-horizontal">
+    <div class="form-group">
+      <div class="col-sm-5">
+        <input type="text" class="form-control" id="input-name"
+               data-i18n="[placeholder]slices.labels.sliceNamePlaceholder" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-5">
+        <select class="form-control" id="input-global-permission">
+          <option value="read" selected="selected"
+                  data-i18n="slices.labels.permissionRead"></option>
+          <option value="contribute"
+                  data-i18n="slices.labels.permissionContribute"></option>
+          <option value="manage"
+                  data-i18n="slices.labels.permissionManage"></option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-5 panel panel-default advanced-settings">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+          Advanced settings
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse">
+      <div class="panel-body">
+        <div class="form-horizontal">
+          <div class="form-group">
+            <div class="col-sm-12">
+              <input type="text" class="form-control" id="input-token" placeholder="Token">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="submit" style="opacity: 0; visibility: hidden;">
+  </form>
+  <h5 data-i18n="slices.labels.sharedStreams"></h5>
+  <%= getStream() %>
+</script>
+<script type="template" id="sucess-shraings-template">
+  <div class="container">
+      <h4 data-i18n="slices.messages.sharingSuccessful"></h4>
+      <h3 class="share-link"><a href="<%= getUrl() %>"><%= getUrl() %></a></h3>
+  <p class="text-center share">
+      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<% getUrl().replace(/#/g, '%23') %>&t="
+  onclick="javascript:window.open(this.href, \'\',
+  \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
+  return false;" title="<% i18n.t('slices.actions.shareOnFacebook') %>">
+  <i class="fa fa-facebook"></i></a>
+  <a target="_blank" href="https://twitter.com/share?url=<% getUrl().replace(/#/g, '%23')%>&via=pryv"
+  onclick="javascript:window.open(this.href, \'\',
+  \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
+  return false;" title="<% i18n.t('slices.actions.shareOnTwitter') %>">
+  <i class="fa fa-twitter"></i></a>
+  <a href="mailto:?subject=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
+  {sliceName: sharingInfo.name})) %>&amp;body=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
+      {sliceURL: url})) %>" title="<% i18n.t('slices.actions.shareViaEmail') %>">
+  <i class="fa fa-envelope"></i></a>
+  </p></div>
 </script>
 <script type="template" id="nav-settings-modal-template">
   <ul class="nav">
@@ -687,6 +825,12 @@
     </div>
 
 </script>
+<script type="template" id="other-apps-list-template">
+    <div id="appList">
+      <div class="panel-body">
+      </div>
+    </div>
+</script>
 </head>
 
 <body>
@@ -711,11 +855,12 @@
   <div class="menu-panel"></div>
 <span id="pryvButton"></span>
 <div id="login">
-  <div id="login-caret" class="centered"><span class="glyphicon glyphicon-chevron-left"></span>
+  <div id="login-caret" class="centered"><span class="ss-navigateleft"></span>
   </div>
   <div id="login-form" class="centered">
     <form role="form">
-      <h3 data-i18n="login.labels.title"></h3>
+      <div class="icon ss-user" style="text-align: center;"></div>
+      <h3 data-i18n="login.labels.title" style="text-align: center;margin: 0 0 20px;font-weight: 400;"></h3>
 
       <div class="form-group">
         <label class="sr-only" for="login-username">Username</label>
@@ -725,8 +870,9 @@
         <label class="sr-only" for="login-password">Password</label>
         <input type="password" class="form-control" id="login-password" data-i18n="[placeholder]login.labels.password">
       </div>
-      <button type="submit" class="btn btn-pryv-turquoise"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
       <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
+      <button type="submit" class="btn btn-primary"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
+
     </form>
   </div>
 </div>
@@ -736,22 +882,22 @@
         <li id="togglePanel">
         <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
         </li>
-        <li id="addEvent" class="function-highlight">
-          <a href="javascript:void(0)" ><span class="fa fa-plus-circle fa-lg"></span> <span data-i18n="nav.actions.addEvent"></span></a>
+        <li id="addEvent">
+          <a href="javascript:void(0)" ><span class="ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>
         </li>
         <li id="connectApps">
-          <a href="javascript:void(0)" ><span class="fa fa-random fa-lg"></span> <span data-i18n="nav.actions.connectApps"></span></a>
+          <a href="javascript:void(0)" ><span class="ss-piechart"></span> <span data-i18n="nav.actions.connectApps"></span></a>
         </li>
       </ul>
     <ul class="nav navbar-nav navbar-right">
         <li id="toMyPryv">
-        <a href="javascript:void(0)"><span class="fa fa-user"></span>  <span data-i18n="nav.actions.goToMyPryv"></span></a>
+        <a href="javascript:void(0)"><span class="ss-user"></span>  <span data-i18n="nav.actions.goToMyPryv"></span></a>
         </li>
         <li class="dropdown">
-          <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" id="login-button"><i class="fa fa-sign-in"></i> </a>
+          <a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" id="login-button"><i class="ss-user"></i> </a>
           <ul class="dropdown-menu">
             <li id="settings"><a href="javascript:void(0)" ><span class="fa fa-cog fa-lg"></span> <span data-i18n="nav.actions.settings"></span></a></li>
-            <li id="sign-out"><a href="javascript:void(0)" ><i class="fa fa-sign-out fa-lg"></i> <span data-i18n="nav.actions.signOut"></span></a></li>
+            <li id="sign-out"><a href="javascript:void(0)" ><i class="ss-logout"></i> <span data-i18n="nav.actions.signOut"></span></a></li>
           </ul>
         </li>
 
@@ -763,6 +909,9 @@
     <div class="icon ss-book"></div>
     <p data-i18n="atGlance.messages.noData"></p>
   </div>
+</div>
+<div id="onboarding" class="hidden">
+
 </div>
 <div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"

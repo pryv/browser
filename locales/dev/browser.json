@@ -2,7 +2,7 @@
   "apps": {
     "common": {
       "labels": {
-        "title": "Change Me"
+        "title": "Connect apps"
       }
     }
   },
@@ -135,7 +135,7 @@
   },
   "nav": {
     "actions": {
-      "addEvent": "Add",
+      "addEvent": "Add content",
       "connectApps": "Connect apps",
       "follow": "Follow this slice",
       "goToMyPryv": "Me",
@@ -203,7 +203,10 @@
       "follow": "Follow",
       "manageSlices": "Manage slices",
       "share": "Share",
-      "shareSlice": "Share a slice"
+      "shareSlice": "Share a slice",
+      "shareViaEmail": "Share via e-mail",
+      "shareOnFacebook": "Share on Facebook",
+      "shareOnTwitter": "Share on Twitter"
     },
     "labels": {
       "drawerTitle": "Slice of life",
@@ -225,6 +228,8 @@
       "streams": "Streams"
     },
     "messages": {
+      "sharingEmailSubject": "Shared slice: __sliceName__",
+      "sharingEmailBody": "Hello!\n\nI shared a slice of life with you: __sliceURL__",
       "sharingSuccessful": "Your slice is ready. Share it via Facebook, Twitter, e-mail, or manually with this link: ",
       "errInvalidSharingToken": "The given sharing token cannot be used",
       "errSliceNameAlreadyExists": "A slice with the same name already exists"

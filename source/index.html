@@ -251,13 +251,13 @@
     <%
     if (typeof(content) != "undefined") {
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
-    <div class='nodeHeader <%= content.clientData.color %>'><%= content.name %></div>
+    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1"></span><%= content.name %></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
-    <div class='nodeHeader '><%= content.name %></div>
+    <div class='nodeHeader '><span class="pins-color 2"></span><%= content.name %></div>
     <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
-    <div class='nodeHeader'><%= content.username %> / <%= content._accessInfo.name %></div>
+    <div class='nodeHeader'><span class="pins-color 3"></span><%= content.username %> / <%= content._accessInfo.name %></div>
     <% } else if (typeof(content.username) != "undefined") { %>
-    <div class='nodeHeader'><%= content.username %></div>
+    <div class='nodeHeader'><span class="pins-color 4"></span><%= content.username %></div>
     <% } } %>
     <span></span>
   </script>

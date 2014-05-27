@@ -1,7 +1,7 @@
 /* global $, window, i18n */
 var Backbone = require('backbone'),
-    Marionette = require('backbone.marionette'),
-    _ = require('underscore');
+  Marionette = require('backbone.marionette'),
+  _ = require('underscore');
 var eachStream = function (collection, callback) {
   collection.each(function (model) {
     if (_.isFunction(callback)) {
@@ -61,70 +61,70 @@ var TreeRoot = Marionette.CollectionView.extend({
 
     this.$el.prepend(
       '<h5 data-i18n="slices.labels.nameAndPermissionsTitle"></h5>' +
-      '<form role="form" id="form-create-sharing"' +
-      '<div class="form-horizontal">' +
-      '<div class="form-group">' +
-      '<div class="col-sm-5">' +
-      '<input type="text" class="form-control" id="input-name" ' +
+        '<form role="form" id="form-create-sharing"' +
+        '<div class="form-horizontal">' +
+        '<div class="form-group">' +
+        '<div class="col-sm-5">' +
+        '<input type="text" class="form-control" id="input-name" ' +
         'data-i18n="[placeholder]slices.labels.sliceNamePlaceholder" required>' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<div class="col-sm-5">' +
-      '<select class="form-control" id="input-global-permission">' +
-      '  <option value="read" selected="selected" ' +
+        '</div>' +
+        '</div>' +
+        '<div class="form-group">' +
+        '<div class="col-sm-5">' +
+        '<select class="form-control" id="input-global-permission">' +
+        '  <option value="read" selected="selected" ' +
         'data-i18n="slices.labels.permissionRead"></option>' +
-      '  <option value="contribute" ' +
+        '  <option value="contribute" ' +
         'data-i18n="slices.labels.permissionContribute"></option>' +
-      '  <option value="manage" ' +
+        '  <option value="manage" ' +
         'data-i18n="slices.labels.permissionManage"></option>' +
-      '</select>' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
-      '<div class="col-sm-5 panel panel-default advanced-settings">' +
-      '  <div class="panel-heading">' +
-      '    <h4 class="panel-title">' +
-      '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
-      '       Advanced settings ' +
-      '       </a>' +
-      '     </h4>' +
-      '   </div>' +
-      '   <div id="collapseOne" class="panel-collapse collapse">' +
-      '     <div class="panel-body">' +
-      '<div class="form-horizontal">' +
-      '<div class="form-group">' +
-      '<div class="col-sm-12">' +
-      '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
-      '</div>' +
-      '</div>' +
-      '</div>' +
+        '</select>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="col-sm-5 panel panel-default advanced-settings">' +
+        '  <div class="panel-heading">' +
+        '    <h4 class="panel-title">' +
+        '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
+        '       Advanced settings ' +
+        '       </a>' +
+        '     </h4>' +
+        '   </div>' +
+        '   <div id="collapseOne" class="panel-collapse collapse">' +
+        '     <div class="panel-body">' +
+        '<div class="form-horizontal">' +
+        '<div class="form-group">' +
+        '<div class="col-sm-12">' +
+        '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
 
-      '<div class="form-inline">' +
-      '<div class="form-group">' +
-      '<input type="date" class="form-control" id="input-from-date" ' +
-      'value="' + toDateInputValue(dateFrom) + '" disabled>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<input type="time" class="form-control" id="input-from-time" ' +
-      'value="' + dateFrom.toLocaleTimeString() + '" disabled>' +
-      '</div>' +
-      '<label> < --- > </label>' +
-      '<div class="form-group">' +
-      '<input type="date" class="form-control" id="input-to-date" ' +
-      'value="' + toDateInputValue(dateTo) + '" disabled>' +
-      '</div>' +
-      '<div class="form-group">' +
-      '<input type="time" class="form-control" id="input-to-time" ' +
-      'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
-      '</div>' +
-      '</div>' +
-      '      </div>' +
-      ' </div> ' +
-      '  </div> ' +
-      '<input type="submit" style="opacity: 0; visibility: hidden;">' +
-      '<h5 data-i18n="slices.labels.sharedStreams"></h5>' +
-      '');
+        '<div class="form-inline">' +
+        '<div class="form-group">' +
+        '<input type="date" class="form-control" id="input-from-date" ' +
+        'value="' + toDateInputValue(dateFrom) + '" disabled>' +
+        '</div>' +
+        '<div class="form-group">' +
+        '<input type="time" class="form-control" id="input-from-time" ' +
+        'value="' + dateFrom.toLocaleTimeString() + '" disabled>' +
+        '</div>' +
+        '<label> < --- > </label>' +
+        '<div class="form-group">' +
+        '<input type="date" class="form-control" id="input-to-date" ' +
+        'value="' + toDateInputValue(dateTo) + '" disabled>' +
+        '</div>' +
+        '<div class="form-group">' +
+        '<input type="time" class="form-control" id="input-to-time" ' +
+        'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
+        '</div>' +
+        '</div>' +
+        '      </div>' +
+        ' </div> ' +
+        '  </div> ' +
+        '<input type="submit" style="opacity: 0; visibility: hidden;">' +
+        '<h5 data-i18n="slices.labels.sharedStreams"></h5>' +
+        '');
     var $form = $('#form-create-sharing', this.$el),
       $name = $('#input-name', this.$el);
     $form.submit(this.createSharing.bind(this));
@@ -166,9 +166,9 @@ var TreeRoot = Marionette.CollectionView.extend({
       }
 
       if (error || result.message) {
+        // TODO: check actual error and handle it properly
         $btn.addClass('btn-pryv-alizarin');
-        window.PryvBrowser.showAlert('.modal-content',
-          i18n.t('slices.messages.errInvalidSharingToken'));
+        window.PryvBrowser('.modal-content', i18n.t('slices.messages.errInvalidSharingToken'));
         return;
       }
 
@@ -268,9 +268,9 @@ Controller.prototype.show = function () {
       'return false;" title="' + i18n.t('slices.actions.shareOnTwitter') + '">' +
       '<i class="fa fa-twitter"></i></a>' +
       '<a href="mailto:?subject=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
-          {sliceName: sharingInfo.name})) +
-        '&amp;body=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
-          {sliceURL: url})) +
+      {sliceName: sharingInfo.name})) +
+      '&amp;body=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
+      {sliceURL: url})) +
       '" title="' + i18n.t('slices.actions.shareViaEmail') + '">' +
       '<i class="fa fa-envelope"></i></a>' +
       '</p></div>');

@@ -4,6 +4,7 @@
   width: 100%;
   bottom: 0;
   z-index: 1000;
+  background-color: #ffffff;
   /*margin-bottom: -35px;*/
 }
 /*@font-face {
@@ -1249,8 +1250,8 @@ span.ss-navigateleft:hover {
 color: #BD1727;
 }
 #login-caret {
-  font-size: 40px;
-  cursor: pointer;
+  /*font-size: 40px;
+  cursor: pointer;*/
 }
 #login-form form {
   text-align: initial;

@@ -17,8 +17,28 @@ module.exports = Marionette.ItemView.extend({
     checkbox: 'input[type=checkbox]',
     applyBtn: '#filter-by-stream-apply'
   },
+  shushListenerOnce: false, //used to note trigger the render when we click on a checkbox
   initialize: function (options) {
     this.MainModel  = options.MainModel;
+    var initListener = setInterval(function () {
+      if (this.MainModel.activeFilter) {
+        clearInterval(initListener);
+        this.MainModel.activeFilter.addEventListener('filteredStreamsChange', function () {
+          if (!this.shushListenerOnce) {
+            this.render();
+          } else {
+            this.shushListenerOnce = false;
+          }
+        }.bind(this));
+        this.MainModel.activeFilter.addEventListener('streamEnterScope', function () {
+          if (!this.shushListenerOnce) {
+            this.render();
+          } else {
+            this.shushListenerOnce = false;
+          }
+        }.bind(this));
+      }
+    }.bind(this), 100);
   },
   onRender: function () {
     if (!this.MainModel.activeFilter) {
@@ -36,12 +56,13 @@ module.exports = Marionette.ItemView.extend({
         checked: !checked
       });
       input.trigger('change');
+      this.shushListenerOnce = true;
       this._applyFilter();
     }.bind(this));
     this.ui.checkbox.click(function (e) {
       e.stopPropagation();
     });
-    this.ui.checkbox.change(function (e) {
+    this.ui.checkbox.change(function (e, options) {
       var checked = $(e.currentTarget).prop('checked'),
         container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
       self.ui.applyBtn.prop('disabled', false);
@@ -49,7 +70,9 @@ module.exports = Marionette.ItemView.extend({
         indeterminate: false,
         checked: checked
       });
-      //self._isChildrenCheck(container.parent().parent());
+      if (!options || !options.noIndeterminate) {
+        self._isChildrenCheck(container.parent().parent());
+      }
     });
     this.bindUIElements();
     this.onFocusStreamChanged();
@@ -85,7 +108,7 @@ module.exports = Marionette.ItemView.extend({
                 indeterminate: false,
                 checked: true
               });
-              checkbox.trigger('change');
+              checkbox.trigger('change', {noIndeterminate: true});
             }
           }
         }

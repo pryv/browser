@@ -114,7 +114,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         if (this.publicConnection) {
           this.addConnection(this.publicConnection);
         }
-        $('#login-button').html('<i class="fa fa-sign-in"></i> ' + i18n.t('nav.actions.signIn'));
+        $('#login-button').html('<i class="ss-login"></i> ' + i18n.t('nav.actions.signIn'));
         this.loggedConnection = null;
       }.bind(this),
       refused: function (reason) {
@@ -183,7 +183,7 @@ Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit] .fa-spinner').hide();
   console.log('Successfully signed in', connection);
   this.loggedConnection = connection;
-  $('#login-button').html(connection.username + ' <i class="fa fa-chevron-down"></i>');
+  $('#login-button').html(connection.username + ' <i class="ss-navigatedown"></i>');
   this.loggedConnection.account.getInfo(function (error, result) {
     if (!error && result && result.email) {
       $('#login-button').prepend('<img  class="gravatar" src="https://www.gravatar.com/avatar/' +

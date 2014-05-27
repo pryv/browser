@@ -271,6 +271,7 @@ line-height: 27px;
 #login-button:hover, #login-button:focus {
   text-decoration: none;
   color: white;
+  background-color: #BD1727;
 }
 #login-dropdown .dropdown-menu {
   right: 0;
@@ -332,8 +333,8 @@ line-height: 27px;
   text-align: center;
 }
 .user-msg-box{color:#d0d5db;}
-.user-msg-box .icon {
-  font-size: 120px;
+.icon {
+  font-size: 76px;
   line-height: 74px;
 }
 .Center-Container.is-Table {
@@ -752,6 +753,7 @@ text-align: center;*/
 #detail-list li {
   border-bottom: silver solid 1px;
   list-style: none;
+  position:relative;
 }
 .preview img {
   max-width: 80px;
@@ -769,19 +771,28 @@ text-align: center;*/
 #detail-list .row {
   margin: 0;
 }
+#detail-list .row.detail-item-date{
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  font-size: 12px;
+  background-color: #FFF;
+  padding: 0 5px;
+
+}
 #detail-list .detail-item-content, #detail-list .Center-Container  {
   height: 60px;
   overflow: hidden;
 }
 #detail-list .detail-item-date div {
-  text-align: center;
-  background-color: rgba(50, 58, 66, 0.20);
-  color: #fff;
+  /*text-align: center;*/
+  background-color: #ffffff;
+  color: #000000;
   border-radius: 2px;
 }
-#detail-list .detail-item-checkbox {
+/*#detail-list .detail-item-checkbox {
   text-align: right;
-}
+}*/
 #detail-list .pryv-checkbox label {
   padding-left: 17px;
   margin: 0;
@@ -922,7 +933,7 @@ text-align: center;*/
 }
 #current-picture {
   text-align: center;
-  background-color: black;
+  background-color: #eef0f2;
 }
 #current-picture #add-attachment {
   float: left;
@@ -1233,7 +1244,9 @@ ul.modal-dnd-legend > li {
   -moz-animation-duration: 0.5s;
   -ms-animation-duration: 0.5s;
   -o-animation-duration: 0.5s;
-  color: #FFF;
+}
+span.ss-navigateleft:hover {
+color: #BD1727;
 }
 #login-caret {
   font-size: 40px;
@@ -1243,7 +1256,7 @@ ul.modal-dnd-legend > li {
   text-align: initial;
 }
 #login-form button[type=submit] {
-  margin-right: 12px;
+  margin-left: 12px;
 }
 #login:before {
   content:'';
@@ -1252,7 +1265,7 @@ ul.modal-dnd-legend > li {
   vertical-align: middle;
 }
 #resetPassword, #resetPassword:hover, #resetPassword:focus {
-  color: #fff;
+  color: #000000;
 }
 .centered {
   display: inline-block;
@@ -1446,14 +1459,14 @@ nav .icon-only{
 color: #FFF;
 background-color: #BD1727;
 }
-.navbar-inverse .dropdown-menu {
+/*.navbar-inverse .dropdown-menu {
   background-color: #3e3e3e;
-}
-.navbar-inverse .dropdown-menu a {
+}*/
+/*.navbar-inverse .dropdown-menu a {
   color: #e3e3e3;
-}
+}*/
 .navbar-inverse .dropdown-menu a:hover {
-  background-color: #FFB800;
+  background-color: #BD1727;
   color: #fff;
 }
 .navbar-nav>li>a {

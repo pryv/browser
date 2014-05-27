@@ -20,8 +20,8 @@
   background-color: #BD1727;
   color: #fff;
   font-weight: 700;
-  border-radius: 15px;
-  border: 1px solid #8D0606;
+  /*border-radius: 15px;*/
+  border: 1px solid #BD1727;
 }
 #dates {
   color: #666E77;

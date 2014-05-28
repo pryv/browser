@@ -183,11 +183,13 @@ body{
   float: right;
   font-family: FontAwesome;
   content: "\f078";
+  margin-right: 0.7em;
 }
 .stream-tree-summary.disclosure.collapsed::before {
   float: right;
   content: "\f054";
   font-family: FontAwesome;
+  margin-right: 0.7em;
 }
 #stream-select .create-stream {
   width: auto;
@@ -405,6 +407,10 @@ padding: 0px 15px;
   height: 10px;
   border-radius: 5px;
   margin-right: 3px;
+}
+.ConnectionNode>.nodeHeader>.pins-color {
+  /* No pins for connection */
+  display: none;
 }
 /*-----------------theme Connection*/
 .EventsNode{background-color: #ffffff;}

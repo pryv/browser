@@ -22,6 +22,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
     this.waitForStream = {};
     this.waitForParentStream = {};
     this.margin = STREAM_MARGIN;
+    this.offset = 25;
     this.uniqueId = 'node_connection_' + SERIAL;
     SERIAL++;
   }, {

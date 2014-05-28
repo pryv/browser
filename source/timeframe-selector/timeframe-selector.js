@@ -118,7 +118,12 @@ module.exports = (function () {
             '    </span>' +
             '  </div>' +
             '</div>' +
-            '<button type="button" id="ok" class="btn btn-default btn-block">' +
+            '<button type="button" id="cancel" ' +
+            'class="btn btn-default btn-pryv-alizarin col-md-4"  style="float: none">' +
+                i18n.t('common.actions.cancel') + '</button>' +
+
+            '<button type="button" id="ok" class="btn btn-default col-md-7 col-md-offset-1"' +
+            ' style="float: none">' +
                 i18n.t('timeframe.actions.go') + '</button>' +
             '</form>').html();
       }
@@ -139,6 +144,10 @@ module.exports = (function () {
           setTimeBounds(fromDate, toDate);
           _updateDateScale();
         }
+      });
+      $(document.body).off('click', '#cancel');
+      $(document.body).on('click', '#cancel', function () {
+        $('#custom').popover('toggle');
       });
       $(document.body).off('click', '#fromButton');
       $(document.body).on('click', '#fromButton', function () {

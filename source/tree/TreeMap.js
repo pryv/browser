@@ -602,9 +602,12 @@ TreeMap.prototype.showOnboarding = function () {
   }.bind(this));
 };
 TreeMap.prototype.closeOnboardingView = function () {
-  this.onboardingView.close();
-  $('#onboarding').addClass('hidden');
-  $('#timeframeContainer').animate({'bottom': '0px'});
+  if (this.onboardingView) {
+    this.onboardingView.close();
+    $('#onboarding').addClass('hidden');
+    $('#timeframeContainer').animate({'bottom': '0px'});
+    this.onboardingView = null;
+  }
 };
 /*=================================*/
 /* jshint -W098 */

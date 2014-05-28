@@ -1355,11 +1355,20 @@ color: #BD1727;
   bottom: 0px;
   width: 100%;
   text-align: center;
-  padding: 30px;
+  padding: 15px;
 }
   .onboarding footer a{
     color:#ffffff;
   }
+  .onboarding footer img{
+    width: 60px;
+    border-radius: 30px;
+    border: 2px solid #D87777;
+    padding: 3px;
+    margin-right: 10px;
+  }
+
+
 @media only screen and (max-width : 1224px){
   .onboarding .slide1 .container img {
     width:680px;
@@ -1381,7 +1390,7 @@ color: #BD1727;
     width: 280px;
   }
   .onboarding footer {
-    padding: 20px;
+    padding: 10px;
   }
   .onboarding .slide1 .container .btn-primary{
     position: absolute;
@@ -1390,6 +1399,13 @@ color: #BD1727;
     margin-left: -125px;
   }
   .onboarding {font-size:14px;}
+  .onboarding footer img{
+    width: 50px;
+    border-radius: 25px;
+    border: 2px solid #D87777;
+    padding: 3px;
+    margin-right: 10px;
+  }
 }
 @media only screen and (max-width : 991px){
     .onboarding .container img {

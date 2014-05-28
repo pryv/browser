@@ -335,7 +335,7 @@ line-height: 27px;
   margin-top: -0.75em;
   text-align: center;
 }
-.user-msg-box{color:#d0d5db;}
+.user-msg-box{color:#9CA6B3;}
 .icon {
   font-size: 76px;
   line-height: 74px;
@@ -1348,7 +1348,7 @@ color: #BD1727;
 }
 .onboarding .slide1 .container .btn-primary {
   position: absolute;
-  top: 380px;
+  bottom:50px;
   left: 50%;
   margin-left: -180px;
 }
@@ -1358,13 +1358,49 @@ color: #BD1727;
 .onboarding footer {
   background-color: #BD1727;
   position: absolute;
-  bottom: 60px;
+  bottom: 0px;
   width: 100%;
   text-align: center;
   padding: 30px;
 }
   .onboarding footer a{
     color:#ffffff;
+  }
+@media only screen and (max-width : 1224px){
+  .onboarding .slide1 .container img {
+    width:680px;
+    }
+  .onboarding .container h1 {
+    font-size: 40px;
+    margin: 0 0 10px 0;
+    line-height: 30px;
+  }
+  .onboarding .container p {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+    font-weight: 400;
+  }
+  .onboarding .container .btn.btn-primary {
+    font-size: 20px;
+  }
+  .onboarding .container img {
+    width: 280px;
+  }
+  .onboarding footer {
+    padding: 20px;
+  }
+  .onboarding .slide1 .container .btn-primary{
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    margin-left: -125px;
+  }
+  .onboarding {font-size:14px;}
+}
+@media only screen and (max-width : 991px){
+    .onboarding .container img {
+    width: 140px;
+    }
   }
 /*
 .onboarding {

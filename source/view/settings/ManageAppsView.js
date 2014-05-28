@@ -1,4 +1,4 @@
-/* global window, i18n, $, document*/
+/* global window, i18n, $*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -39,9 +39,8 @@ module.exports = Marionette.CompositeView.extend({
     this.connection = this.options.connection;
     if (this.connection) {
 
-      var url = 'https://reg.pryv';
-      url += document.location.host.indexOf('.me') !== -1 ? '.io' : '.in';
-      url += '/apps';
+      var baseHref = $('base').attr('href');
+      var url = baseHref + 'locales/appList.json';
       var apps = {};
       $.get(url)
         .done(function (result) {

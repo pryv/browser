@@ -251,7 +251,10 @@
     <%
     if (typeof(content) != "undefined") {
     var findColor = function (c) {
-    if (typeof(c.clientData) != "undefined" && typeof(c.clientData['pryv-browser:bgColor']) !="undefined") {
+    if (typeof(c) == "undefined" || !c) {
+    return '';
+    }
+    if ( typeof(c.clientData) != "undefined" && typeof(c.clientData['pryv-browser:bgColor']) !="undefined") {
      return c.clientData['pryv-browser:bgColor'];
     }
     if (typeof(c.parent) != "undefined") {

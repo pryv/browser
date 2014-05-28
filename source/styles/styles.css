@@ -1367,6 +1367,16 @@ color: #BD1727;
     padding: 3px;
     margin-right: 10px;
   }
+  .onboarding footer p{
+    display: inline-block;
+    text-align: left;
+    font-weight: 700;
+    line-height: 20px;
+  }
+  .onboarding footer p span{
+    display: block;
+    font-weight: 200;
+  }
 
 
 @media only screen and (max-width : 1224px){

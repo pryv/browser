@@ -438,9 +438,14 @@ module.exports = Marionette.ItemView.extend({
   },
   _walkStreamStructure: function (stream, checked, open) {
     UNIQUE_ID++;
+    var disclosure = '';
+    if (stream.children.length > 0) {
+      disclosure = 'disclosure';
+    }
     var result = '<li data-connection="' +
         stream.connection.serialId + '" data-stream="' +
-        stream.id + '" class="stream-tree-summary" data-toggle="collapse" ' +
+        stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
+        '" data-toggle="collapse" ' +
         'data-target="#collapse' + UNIQUE_ID + '">' +
         '<div class="pryv-radio">' +
         '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +

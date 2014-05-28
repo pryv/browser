@@ -67,7 +67,9 @@ module.exports = Marionette.ItemView.extend({
               'position': 'absolute'
             });
           $('#' + this.container).append(toAdd.fadeIn());
-          $('#' + event.id).dotdotdot({watch: true});
+          setTimeout(function () {
+            $('#' + event.id).dotdotdot({watch: true});
+          }, 800);
         }
       }.bind(this));
       _.each(displayedIds, function (id) {

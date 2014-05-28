@@ -23,7 +23,7 @@ var allList = new AppList([]);
 // The grid view
 module.exports = Marionette.CompositeView.extend({
   tagName: 'div',
-  template: '#other-apps-list-settings-template',
+  template: '#other-apps-list-template',
   itemView: GridRow,
   connection: null,
   myAppsId: null,

@@ -2,8 +2,8 @@
 var Marionette = require('backbone.marionette'),
   NavView = require('./NavView.js'),
   PasswordView = require('./PasswordView.js'),
-  ManageAppsView = require('../connect-apps/ManageAppsView.js'),
-  AppListView = require('../connect-apps/AppListView.js'),
+  ManageAppsView = require('./ManageAppsView.js'),
+  AppListView = require('./AppListView.js'),
   _ = require('underscore');
 
 var Layout = Marionette.Layout.extend({

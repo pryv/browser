@@ -1,6 +1,5 @@
 /* global $ */
 var Marionette = require('backbone.marionette'),
-    ManageAppsView = require('./ManageAppsView.js'),
     AppListView = require('./AppListView.js'),
     _ = require('underscore');
 
@@ -8,7 +7,6 @@ var Layout = Marionette.Layout.extend({
   template: '#apps-modal-template',
 
   regions: {
-    manageApps: '#settings-manage-apps',
     otherApps: '#settings-other-apps'
   },
   initialize: function () {
@@ -20,7 +18,6 @@ var Controller = module.exports  = function ($modal, connection, target) {
   this.$modal = $modal;
   this.target = target;
   this.view  = null;
-  this.manageApps = null;
   this.appList = null;
 
 
@@ -33,10 +30,8 @@ _.extend(Controller.prototype, {
     }.bind(this), 500);
     this.view = new Layout();
     this.view.on('close', this.close.bind(this));
-    this.manageApps = new ManageAppsView({connection: this.connection});
     this.appList = new AppListView({connection: this.connection});
     this.view.render();
-    this.view.manageApps.show(this.manageApps);
     this.view.otherApps.show(this.appList);
   },
   close: function () {
@@ -46,7 +41,6 @@ _.extend(Controller.prototype, {
       $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
       $('.modal-backdrop').remove();
       this.$modal.trigger('hidden.bs.modal');
-      this.manageApps.reset();
       this.appList.reset();
     }
   }

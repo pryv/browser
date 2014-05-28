@@ -78,7 +78,7 @@
 <!-- ONBOARDING V2 -->
   <script id="onboardingView" type="template">
     <header>
-      <a href="#">Skip Intro <span class="ss-fastforward"></span></a>
+      <a id="onboarding-skip" href="javascript:void(0)">Skip Intro <span class="ss-fastforward"></span></a>
     </header>
 
     <div id="onboarding-carousel" class="carousel slide" data-ride="carousel">
@@ -112,9 +112,9 @@
               <div class="col-md-8">
                 <h1>Let’s get started</h1>
                 <p>Add pics, notes, your position from here or from the app.</p>
-                <a class="btn btn-primary btn-lg" href="#onboarding-carousel">Add</a>
+                <a id="onboarding-add" class="btn btn-primary btn-lg" href="javascript:void(0)">Add</a>
                 <p>Connect apps and devices.</p>
-                <a class="btn btn-primary btn-lg" href="#onboarding-carousel">Connect</a>
+                <a id="onboarding-connect" class="btn btn-primary btn-lg" href="javascript:void(0)">Connect</a>
               </div>
             </div>
           </div>
@@ -238,11 +238,10 @@
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
-          <blockquote class="twitter-tweet" align="center" width="<%= width %>" height="<%= height %>">
+          <blockquote >
             <p><%= content.text %> </p>&mdash;
             <%= content['screen-name'] %> (@<%= content['screen-name'] %>) <%= getUrl()%>
           </blockquote>
-          <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
         </div>
       </div>
     </div>
@@ -659,6 +658,93 @@
     </div>
   </div>
 </script>
+<script type="template" id="create-sharings-modal-template">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h4 class="modal-title" id="myModalLabel" data-i18n="slices.labels.shareTitle"></h4>
+    <div class="modal-close"></div>
+  </div>
+  <div id="modal-content">
+    <div id="create-sharings-form"></div>
+    <div id="success-sharings"></div>
+    <div id="creation-footer" class="col-md-12">
+      <button id="publish" class="btn btn-pryv-turquoise">
+        <span data-i18n="slices.actions.share"></span>
+        <i class="fa fa-spinner fa-spin" style="display: none;"></i>
+      </button>
+      <button id="cancel" class="btn" data-dismiss="modal"><% i18n.t('common.actions.cancel') %></button>
+    </div>
+  </div>
+</script>
+<script type="template" id="create-sharings-form-template">
+  <h5 data-i18n="slices.labels.nameAndPermissionsTitle"></h5>
+  <form role="form" id="form-create-sharing">
+  <div class="form-horizontal">
+    <div class="form-group">
+      <div class="col-sm-5">
+        <input type="text" class="form-control" id="input-name"
+               data-i18n="[placeholder]slices.labels.sliceNamePlaceholder" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-5">
+        <select class="form-control" id="input-global-permission">
+          <option value="read" selected="selected"
+                  data-i18n="slices.labels.permissionRead"></option>
+          <option value="contribute"
+                  data-i18n="slices.labels.permissionContribute"></option>
+          <option value="manage"
+                  data-i18n="slices.labels.permissionManage"></option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-5 panel panel-default advanced-settings">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+          Advanced settings
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse">
+      <div class="panel-body">
+        <div class="form-horizontal">
+          <div class="form-group">
+            <div class="col-sm-12">
+              <input type="text" class="form-control" id="input-token" placeholder="Token">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <input type="submit" style="opacity: 0; visibility: hidden;">
+  </form>
+  <h5 data-i18n="slices.labels.sharedStreams"></h5>
+  <%= getStream() %>
+</script>
+<script type="template" id="sucess-shraings-template">
+  <div class="container">
+      <h4 data-i18n="slices.messages.sharingSuccessful"></h4>
+      <h3 class="share-link"><a href="<%= getUrl() %>"><%= getUrl() %></a></h3>
+  <p class="text-center share">
+      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<% getUrl().replace(/#/g, '%23') %>&t="
+  onclick="javascript:window.open(this.href, \'\',
+  \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
+  return false;" title="<% i18n.t('slices.actions.shareOnFacebook') %>">
+  <i class="fa fa-facebook"></i></a>
+  <a target="_blank" href="https://twitter.com/share?url=<% getUrl().replace(/#/g, '%23')%>&via=pryv"
+  onclick="javascript:window.open(this.href, \'\',
+  \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
+  return false;" title="<% i18n.t('slices.actions.shareOnTwitter') %>">
+  <i class="fa fa-twitter"></i></a>
+  <a href="mailto:?subject=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
+  {sliceName: sharingInfo.name})) %>&amp;body=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
+      {sliceURL: url})) %>" title="<% i18n.t('slices.actions.shareViaEmail') %>">
+  <i class="fa fa-envelope"></i></a>
+  </p></div>
+</script>
 <script type="template" id="nav-settings-modal-template">
   <ul class="nav">
     <li><a href="javascript:void(0)" data-name="manageApps" data-i18n="settings.connectedApps.labels.title"></a></li>
@@ -764,6 +850,12 @@
     </div>
 
 </script>
+<script type="template" id="other-apps-list-template">
+    <div id="appList">
+      <div class="panel-body">
+      </div>
+    </div>
+</script>
 </head>
 
 <body>
@@ -851,6 +943,9 @@
     <div class="icon ss-book"></div>
     <p data-i18n="atGlance.messages.noData"></p>
   </div>
+</div>
+<div id="onboarding" class="hidden">
+
 </div>
 <div id="timeframeContainer"></div>
 <div class="modal" id="pryv-modal" tabindex="-1" role="dialog"

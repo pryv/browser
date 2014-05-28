@@ -1,11 +1,6 @@
 .popover {
   width: 100%;
 }
-#tree {
-  position: absolute;
-  width: 100%;
-  height: 400px;
-}
 .timeItem {
   float: left;
   text-align: center;

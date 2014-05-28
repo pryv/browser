@@ -1,10 +1,11 @@
-/*global $ */
+
+/*
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   UNIQUE_ID = 0;
 
 module.exports = Marionette.ItemView.extend({
-  template: '#filter-by-stream-template',
+  template: '#create-sharings-form-template',
   templateHelpers: function () {
     return {
       getStream: function () {
@@ -14,39 +15,14 @@ module.exports = Marionette.ItemView.extend({
   },
   ui: {
     label: 'label',
-    checkbox: 'input[type=checkbox]',
-    applyBtn: '#filter-by-stream-apply'
+    checkbox: 'input[type=checkbox]'
   },
-  shushListenerOnce: false, //used to note trigger the render when we click on a checkbox
-  initialize: function (options) {
-    this.MainModel  = options.MainModel;
-    var initListener = setInterval(function () {
-      if (this.MainModel.activeFilter) {
-        clearInterval(initListener);
-        this.MainModel.activeFilter.addEventListener('filteredStreamsChange', function () {
-          if (!this.shushListenerOnce) {
-            this.render();
-          } else {
-            this.shushListenerOnce = false;
-          }
-        }.bind(this));
-        this.MainModel.activeFilter.addEventListener('streamEnterScope', function () {
-          if (!this.shushListenerOnce) {
-            this.render();
-          } else {
-            this.shushListenerOnce = false;
-          }
-        }.bind(this));
-      }
-    }.bind(this), 100);
+  initialize: function () {
+    this.connection = this.options.connection;
+    this.streams = this.options.streams
   },
   onRender: function () {
-    if (!this.MainModel.activeFilter) {
-      return;
-    }
     var self = this;
-    self.ui.applyBtn.prop('disabled', true);
-    self.ui.applyBtn.click(this._applyFilter.bind(this));
     this.ui.label.click(function (e) {
       e.stopPropagation();
       var input = $($(e.currentTarget).parent()).find('input');
@@ -56,7 +32,6 @@ module.exports = Marionette.ItemView.extend({
         checked: !checked
       });
       input.trigger('change');
-      this.shushListenerOnce = true;
       this._applyFilter();
     }.bind(this));
     this.ui.checkbox.click(function (e) {
@@ -79,7 +54,7 @@ module.exports = Marionette.ItemView.extend({
     setTimeout(function () {$('body').i18n(); }, 100);
   },
   onFocusStreamChanged: function () {
-    var focusedStreams = this.MainModel.activeFilter.getStreams();
+    var focusedStreams = this.streams;
     var focusedStreamsIds = [];
     try {
       this.ui.checkbox.prop({
@@ -140,45 +115,9 @@ module.exports = Marionette.ItemView.extend({
     }
     this._isChildrenCheck($($($el).parent().parent()));
   },
-  _applyFilter: function () {
-    var streams = [], $parent, connection, stream;
-    this.ui.applyBtn.prop('disabled', true);
-    _.each(this.ui.checkbox, function (checkbox) {
-      checkbox = $(checkbox);
-      if (checkbox.prop('checked')) {
-        $parent = $(checkbox.parent().parent());
-        if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
-          connection = this.MainModel.connections.get($parent.attr('data-connection'));
-          if (connection) {
-            stream = connection.datastore.getStreamById($parent.attr('data-stream'));
-            if (stream) {
-              streams.push(stream);
-            }
-          }
-        }
-      }
-    }.bind(this));
-    this.MainModel.activeFilter.focusOnStreams(streams);
-  },
   _getStream: function () {
-    var connections = [],
+    var connections = [this.connection],
       result = '';
-    if (!this.MainModel.loggedConnection) {
-      return result;
-    }
-    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
-      connections.push(this.MainModel.loggedConnection);
-    }
-    _.each(this.MainModel.sharingsConnections, function (c) {
-      if (c._accessInfo) {
-        connections.push(c);
-      }
-    });
-    _.each(this.MainModel.bookmakrsConnections, function (c) {
-      if (c._accessInfo) {
-        connections.push(c);
-      }
-    });
     _.each(connections, function (c) {
       result += '<li class="stream-tree-summary connection disclosure"' +
         ' data-toggle="collapse" ' +
@@ -194,14 +133,14 @@ module.exports = Marionette.ItemView.extend({
         '" class="panel-collapse  collapse in stream-tree-children">' +
         '<div class="panel-body">';
       UNIQUE_ID++;
-      result += this._getStreamStructure(c);
+      result += this._getStreamStructure();
       result += '</div></ul>';
     }.bind(this));
 
     return result;
   },
-  _getStreamStructure: function (connection) {
-    var rootStreams = connection.datastore.getStreams(),
+  _getStreamStructure: function () {
+    var rootStreams = this.streams,
       result = '';
     for (var i = 0; i < rootStreams.length; i++) {
       if (!rootStreams[i].virtual) {
@@ -241,3 +180,4 @@ module.exports = Marionette.ItemView.extend({
 });
 
 
+           */

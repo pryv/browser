@@ -179,6 +179,16 @@ body{
 .stream-tree-summary:hover {
   background-color:  #edf8fe;
 }
+.stream-tree-summary.disclosure::before {
+  float: right;
+  font-family: FontAwesome;
+  content: "\f078";
+}
+.stream-tree-summary.disclosure.collapsed::before {
+  float: right;
+  content: "\f054";
+  font-family: FontAwesome;
+}
 #stream-select .create-stream {
   width: auto;
 }
@@ -298,7 +308,7 @@ line-height: 27px;
   display: block;
   list-style-type: none;
 }
-#tree {
+#tree, #onboarding {
   position: absolute;
   top: 0;
   z-index: 1;
@@ -450,7 +460,10 @@ padding: 0px 15px;
   /*background-color: #40E0D0;*/
   pointer-events: all;
 }
-
+.TweetsEventsNode .content {
+  overflow: hidden;
+  word-break: break-word;
+}
 .NotesEventsNode .content {
   padding: 15px;
   text-align: center;

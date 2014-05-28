@@ -577,18 +577,31 @@ TreeMap.prototype.closeSubscribeView = function () {
 //========== ONBOARDING VIEW =========\\
 
 TreeMap.prototype.showOnboarding = function () {
+  var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();
+  $timeframeContainer.animate({'bottom': -$timeframeContainer.height() + 'px'});
   var view = new OnboardingView();
   view.connection = this.model.loggedConnection;
   view.render();
-  view.on('done', function () {
-    $('#logo-add').click();
-    $('#tree').empty();
-    this.createEventView.view.on('close', function () {
-      if (location) {
-        location.reload();
-      }
-    });
+  view.on('clickAdd', function () {
+    this.model.showLoggedInElement();
+    $('nav #addEvent').click();
+    view.close();
+    $('#onboarding').addClass('hidden');
+    $timeframeContainer.animate({'bottom': '0px'});
+  }.bind(this));
+  view.on('clickConnect', function () {
+    this.model.showLoggedInElement();
+    $('nav #connectApps').click();
+    view.close();
+    $('#onboarding').addClass('hidden');
+    $timeframeContainer.animate({'bottom': '0px'});
+  }.bind(this));
+  view.on('clickSkip', function () {
+    this.model.showLoggedInElement();
+    view.close();
+    $('#onboarding').addClass('hidden');
+    $timeframeContainer.animate({'bottom': '0px'});
   }.bind(this));
 };
 

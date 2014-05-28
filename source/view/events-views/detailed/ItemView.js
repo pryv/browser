@@ -29,11 +29,10 @@ module.exports = Marionette.ItemView.extend({
       } else  if (type === 'message/twitter') {
         result += this.event.content.text;
       } else if (type === 'position/wgs84') {
-        var apiKey = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
         result += '<span id="' + this.event.id + '" class="fa fa-spinner fa-spin"></span>';
-        var url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' +
-            this.event.content.latitude + ',' +
-            this.event.content.longitude + '&sensor=false&key=' + apiKey;
+        var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' +
+          this.event.content.latitude + '&lon=' +
+          this.event.content.longitude + '&zoom=15&addressdetails=0';
         setTimeout(function () {
           $.get(url, function () {
           })
@@ -41,7 +40,7 @@ module.exports = Marionette.ItemView.extend({
                 if (data.error_message) {
                   $('#' + this.event.id).addClass('bg-danger').text(data.error_message);
                 } else {
-                  $('#' + this.event.id).text(data.results[0].formatted_address);
+                  $('#' + this.event.id).text(data.display_name);
                 }
               }.bind(this))
               .fail(function () {

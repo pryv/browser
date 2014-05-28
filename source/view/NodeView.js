@@ -62,9 +62,8 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('height', this.model.get('height'));
     this.$el.css('left', this.model.get('x'));
     this.$el.css('top', this.model.get('y'));
-    if (this.model.get('color')) {
-      $(this.$el.parent()).find('.pins-color').css('background-color', this.model.get('color'));
-    }
+
+
   },
   close: function () {
 

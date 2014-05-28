@@ -32,6 +32,7 @@ var TreeMap = module.exports = function (model) {
   this.connectAppsView = null;
   this.createSharingView = null;
   this.createEventView = null;
+  this.onboardingView = null;
   this.focusedStreams = null;
   this.trashedEvents = {};
   this.events = {};
@@ -385,6 +386,7 @@ TreeMap.prototype.closeViews = function () {
   this.closeSettingsView();
   this.closeSubscribeView();
   this.closeConnectAppsView();
+  this.closeOnboardingView();
 };
 
 //======== Detailed View ========\\
@@ -580,31 +582,30 @@ TreeMap.prototype.showOnboarding = function () {
   var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();
   $timeframeContainer.animate({'bottom': -$timeframeContainer.height() + 'px'});
-  var view = new OnboardingView();
+  this.onboardingView = new OnboardingView();
+  var view = this.onboardingView;
   view.connection = this.model.loggedConnection;
   view.render();
   view.on('clickAdd', function () {
     this.model.showLoggedInElement();
     $('nav #addEvent').click();
-    view.close();
-    $('#onboarding').addClass('hidden');
-    $timeframeContainer.animate({'bottom': '0px'});
+    this.closeOnboardingView();
   }.bind(this));
   view.on('clickConnect', function () {
     this.model.showLoggedInElement();
     $('nav #connectApps').click();
-    view.close();
-    $('#onboarding').addClass('hidden');
-    $timeframeContainer.animate({'bottom': '0px'});
+    this.closeOnboardingView();
   }.bind(this));
   view.on('clickSkip', function () {
     this.model.showLoggedInElement();
-    view.close();
-    $('#onboarding').addClass('hidden');
-    $timeframeContainer.animate({'bottom': '0px'});
+    this.closeOnboardingView();
   }.bind(this));
 };
-
+TreeMap.prototype.closeOnboardingView = function () {
+  this.onboardingView.close();
+  $('#onboarding').addClass('hidden');
+  $('#timeframeContainer').animate({'bottom': '0px'});
+};
 /*=================================*/
 /* jshint -W098 */
 

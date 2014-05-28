@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.10.0/">
+  <base href="{browser-source}_v0.10.1/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.10.0/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.10.0/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.10.1/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.10.1/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -53,7 +53,7 @@
 <!-- ONBOARDING V2 -->
   <script id="onboardingView" type="template">
     <header>
-      <a id="onboarding-skip" href="javascript:void(0)">Skip Intro <span class="ss-fastforward"></span></a>
+      <a id="onboarding-skip" href="javascript:void(0)">Skip intro <span class="ss-fastforward"></span></a>
     </header>
 
     <div id="onboarding-carousel" class="carousel slide" data-ride="carousel">
@@ -62,7 +62,7 @@
 
         <div class="item active slide1">
           <div class="container">
-            <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Get Started <span class="ss-fastforward"></span></a>
+            <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Get started <span class="ss-navigateright"></span></a>
             <img src="images/onboarding_image.png"/>
           </div>
         </div>
@@ -72,9 +72,9 @@
             <div class="row">
               <div class="col-md-4"><img src="images/pryvapp.png"/></div>
               <div class="col-md-8">
-                <h1>Pryv app</h1>
-                <p> You can also download our iOS app to collect data and browse your Pryv from your Iphone.</p>
-                <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Next <span class="ss-fastforward"></span></a>
+                <h1>iPhone app</h1>
+                <p>You can also download Pryv for iOS to collect data and browse your Pryv from your iPhone.</p>
+                <a class="btn btn-primary btn-lg" href="#onboarding-carousel" data-slide="next">Next <span class="ss-navigateright"></span></a>
               </div>
             </div>
           </div>
@@ -86,10 +86,10 @@
               <div class="col-md-4"><img src="images/pryvapp.png"/></div>
               <div class="col-md-8">
                 <h1>Let’s get started</h1>
-                <p>Add pics, notes, your position from here or from the app.</p>
-                <a id="onboarding-add" class="btn btn-primary btn-lg" href="javascript:void(0)">Add</a>
-                <p>Connect apps and devices.</p>
-                <a id="onboarding-connect" class="btn btn-primary btn-lg" href="javascript:void(0)">Connect</a>
+                <p>Add pics, notes, your position from here...</p>
+                <a id="onboarding-add" class="btn btn-primary btn-lg" href="javascript:void(0)"><span class="ss-plus"></span> Add content</a>
+                <p>...or connect apps and devices</p>
+                <a id="onboarding-connect" class="btn btn-primary btn-lg" href="javascript:void(0)"><span class="ss-piechart"></span> Connect apps</a>
               </div>
             </div>
           </div>
@@ -100,7 +100,7 @@
     </div>
 
     <footer>
-      <a href="https://christine.pryv.me/#/sharings/chvgqb98b0aop6npn2qdpjgjy" target="_blank">Click here to visualize Christine, Pryv’s demo account</a>
+      <a href="https://christine.pryv.me/#/sharings/chvgqb98b0aop6npn2qdpjgjy" target="_blank"><img src="images/christine-avatar.jpg"><p><strong>Want to have a look?</strong><span>Take a quick tour of Pryv through the eyes of Christine, a young mother passionate about visual arts and self-tracking</span></p></a>
     </footer>
 
     <!--<div class="container">
@@ -586,7 +586,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.10.0</span>
+    <span class="version">Browser v0.10.1</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>

@@ -137,7 +137,7 @@
     "actions": {
       "addEvent": "Add content",
       "connectApps": "Connect apps",
-      "follow": "Follow this slice",
+      "followSlice": "Follow this slice",
       "goToMyPryv": "Me",
       "manageSlices": "Manage slices",
       "settings": "Settings",

@@ -346,7 +346,7 @@
   <script type="text/html" id="template-draganddrop">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-      <h4 class="modal-title" id="myModalLabel">Create your own node</h4>
+      <h4 class="modal-title" id="myModalLabel">Merged view</h4>
       <div class="modal-close"></div>
     </div>
     <div class="modal-dnd-middle">
@@ -356,23 +356,22 @@
       </div>
       <div class="modal-dnd-right">
         <div class="modal-dnd-values">
-          <span><h2>Your Values</h2></span>
-          <span><h4>Add your value and create your node</h4></span>
+          <h4>Available content</h4>
         </div>
         <div class="modal-dnd-list"></div>
       </div>
     </div>
     <div class="modal-dnd-footer">
-      <div class="input-group input-group-lg">
-        <input type="text" class="form-control " id="dnd-field-name" placeholder="Enter the Node's name here">
+      <div class="input-group">
+        <input type="text" class="form-control " id="dnd-field-name" placeholder="Enter a name for this view">
         <span class="input-group-btn">
-          <button class="btn btn-danger" id="dnd-btn-cancel" type="button">Cancel</button>
-          <button class="btn btn-success" id="dnd-btn-create" type="button">Create!</button>
+          <button class="btn" id="dnd-btn-cancel" type="button">Cancel</button>
+          <button class="btn btn-success" id="dnd-btn-create" type="button">Create</button>
         </span>
       </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
-    <a class="btn btn-primary btn-xs DnD-legend-button" href="javascript:;">
+    <a class="btn btn-default btn-sm DnD-legend-button" href="javascript:;">
       <span class="fa fa-plus"></span>
     </a>
     <span class="DnD-legend-text"><%= displayName() %></span>
@@ -480,12 +479,12 @@
       <div class="legend-container" id="legend-container-edit"></div>
       <div class="detail-chart-container" id="detail-chart-container-edit"></div>
       <div class="editor-container">
-        <div id="dc-editor-appearance">
-          <ul>
-            <li>
+        <div id="dc-editor-appearance" class="form-horizontal">
+          <div class="row">
+            <div class="col-sm-3">
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.color"></label>
-                <div class="col-sm-10">
+                <label class="col-sm-5 control-label" data-i18n="events.charts.labels.color"></label>
+                <div class="col-sm-7">
                   <select id="detailed-view-chart-color" class="form-control">
                     <option value="#1abc9c" style="background-color: #1abc9c">&nbsp;</option>
                     <option value="#2ecc71" style="background-color: #2ecc71">&nbsp;</option>
@@ -510,11 +509,11 @@
                   </select>
                 </div>
               </div>
-            </li>
-            <li>
+            </div>
+            <div class="col-sm-3">
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.type"></label>
-                <div class="col-sm-10">
+                <label class="col-sm-5 control-label" data-i18n="events.charts.labels.type"></label>
+                <div class="col-sm-7">
                   <select id="detailed-view-chart-style" class="form-control">
                     <option value="line" data-i18n="events.charts.labels.typeLine"></option>
                     <option value="point" data-i18n="events.charts.labels.typePoint"></option>
@@ -522,11 +521,11 @@
                   </select>
                 </div>
               </div>
-            </li>
-            <li>
+            </div>
+            <div class="col-sm-3">
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.operation"></label>
-                <div class="col-sm-10">
+                <label class="col-sm-5 control-label" data-i18n="events.charts.labels.operation"></label>
+                <div class="col-sm-7">
                   <select id="detailed-view-chart-operation" class="form-control">
                     <option value="none" data-i18n="events.charts.labels.operationNone"></option>
                     <option value="sum" data-i18n="events.charts.labels.operationSum"></option>
@@ -534,11 +533,11 @@
                   </select>
                 </div>
               </div>
-            </li>
-            <li>
+            </div>
+            <div class="col-sm-3">
               <div class="form-group">
-                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.period"></label>
-                <div class="col-sm-10">
+                <label class="col-sm-5 control-label" data-i18n="events.charts.labels.period"></label>
+                <div class="col-sm-7">
                   <select id="detailed-view-chart-interval" class="form-control">
                     <option value="none" data-i18n="events.charts.labels.periodNone"></option>
                     <option value="daily" data-i18n="events.charts.labels.periodDaily"></option>
@@ -548,26 +547,24 @@
                   </select>
                 </div>
               </div>
-            </li>
-            <li>
-              <div class="form-group hide">
-                <label class="col-sm-2 control-label" data-i18n="events.charts.labels.fitting"></label>
-                <div class="col-sm-10">
-                  <div class="onoffswitch">
-                    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
-                    <label class="onoffswitch-label" for="detailed-view-chart-fitting">
-                      <div class="onoffswitch-inner"></div>
-                      <div class="onoffswitch-switch"></div>
-                    </label>
-                  </div>
-                </div>
+            </div>
+          </div>
+          <div class="form-group hide">
+            <label class="col-sm-6 control-label" data-i18n="events.charts.labels.fitting"></label>
+            <div class="col-sm-6">
+              <div class="onoffswitch">
+                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
+                <label class="onoffswitch-label" for="detailed-view-chart-fitting">
+                  <div class="onoffswitch-inner"></div>
+                  <div class="onoffswitch-switch"></div>
+                </label>
               </div>
-            </li>
-            <li>
-              <button id="detailed-view-chart-cancel"type="button" class="btn btn-danger" data-i18n="common.actions.cancel"></button>
-              <button id="detailed-view-chart-ok" type="button" class="btn btn-success" data-i18n="common.actions.ok"></button>
-            </li>
-          </ul>
+            </div>
+          </div>
+          <div class="form-footer">
+            <button id="detailed-view-chart-ok" type="button" class="btn btn-success" data-i18n="common.actions.apply"></button>
+            <button id="detailed-view-chart-cancel" type="button" class="btn" data-i18n="common.actions.cancel"></button>
+          </div>
         </div>
       </div>
   </script>

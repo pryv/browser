@@ -10,7 +10,7 @@ module.exports = Marionette.CompositeView.extend({
   state: false,
   templateHelpers: {
     displayName: function () {
-      return this.streamName + ' / ' + this.type;
+      return this.streamName + ' (' + this.type + ')';
     }
   },
   onRender: function () {

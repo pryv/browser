@@ -122,7 +122,6 @@ module.exports = Marionette.CompositeView.extend({
    * Generates the general plot options based on the model
    */
   makeOptions: function () {
-
     var collection = this.model.get('collection');
     var seriesCounts = collection.length;
     this.options = {};
@@ -138,14 +137,16 @@ module.exports = Marionette.CompositeView.extend({
     this.options.xaxes = [ {
       show: (this.model.get('xaxis') && seriesCounts !== 0),
       mode: 'time',
-      timeformat: '%y/%m/%d %h:%M:%S',
+      timeformat: '%e %b %Y %H:%M',
       ticks: this.getExtremeTimes()
     } ];
     this.options.yaxes = [];
     this.options.xaxis = {};
 
 
-    this.options.legend = {};
+    this.options.legend = {
+      labelBoxBorderColor: 'transparent'
+    };
     if (this.model.get('legendButton')) {
       var model = this.model;
       this.options.legend.labelFormatter = function (label) {
@@ -154,22 +155,22 @@ module.exports = Marionette.CompositeView.extend({
         for (var i = 0; i < buttons.length; ++i) {
           switch (buttons[i]) {
           case 'ready':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+            legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
               'DnD-legend-button-ready" ' +
               'href="javascript:;"><span class="fa fa-check"></span></a>';
             break;
           case 'duplicate':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+            legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
               'DnD-legend-button-duplicate" ' +
               'href="javascript:;"><span class="fa fa-files-o"></span></a>';
             break;
           case 'remove':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+            legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
               'DnD-legend-button-remove" ' +
               'href="javascript:;"><span class="fa fa-minus"></span></a>';
             break;
           case 'edit':
-            legend = legend + '<a class="btn btn-primary btn-xs DnD-legend-button ' +
+            legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
               'DnD-legend-button-edit" ' +
               'href="javascript:;"><span class="fa fa-pencil-square-o"></span></a>';
             break;
@@ -251,11 +252,11 @@ module.exports = Marionette.CompositeView.extend({
    * @param seriesIndex, its index
    */
   addSeries: function (series, seriesIndex) {
-
     series.sortData();
     var data = this.transform(series);
-    var label = this.useExtras ?
-      Pryv.eventTypes.extras(series.get('type')).symbol : series.get('type');
+    var label = series.get('streamName') + ' (' +
+        (this.useExtras ? Pryv.eventTypes.extras(series.get('type')).symbol : series.get('type')) +
+        ')';
 
     // Configures series
     this.data.push({
@@ -694,9 +695,7 @@ module.exports = Marionette.CompositeView.extend({
     return { top: coordY, left: coordX};
   },
 
-
-
-  setUpPanZoomUI: function () {
+  setUpPanZoomUI: function () {}, /* function () {
     if (this.model.get('panZoomButton')) {
       $(this.container + ' .chartContainer').prepend($('#chartview-zoompan-ui').html());
 
@@ -725,7 +724,7 @@ module.exports = Marionette.CompositeView.extend({
         thePlot.zoomOut();
       });
     }
-  },
+  },*/
 
 
 

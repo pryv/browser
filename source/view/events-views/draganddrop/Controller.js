@@ -143,7 +143,7 @@ _.extend(Controller.prototype, {
 
     if (this.eventCollections.numerical.notNull) {
       $ul.append('<li>');
-      $('li:last', $ul).text('Numericals');
+      $('li:last', $ul).text('Values');
       this.eventCollectionsViews.numerical.ul = $('li:last', $ul);
       this.eventCollectionsViews.numerical.render();
       el = this.eventCollectionsViews.numerical.el;

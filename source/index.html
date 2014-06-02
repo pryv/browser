@@ -849,7 +849,9 @@
       <div class="">
         <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
+        <% if (app.appURL && app.appURL.length > 0) { %>
         <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="settings.connectedApps.actions.connect"></a></p>
+        <% } %>
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">

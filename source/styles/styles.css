@@ -80,6 +80,9 @@ body{
   float: left;
   margin-right: 20px;
 }
+#settings-other-apps .apps-item-content {
+  margin-left:120px;
+}
 #settings-manage-apps .app-icon img {
   height: 22px;
 }

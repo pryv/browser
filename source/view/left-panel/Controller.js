@@ -55,11 +55,11 @@ Controller.render = function (MainModel) {
 var isConnectionsNumberChange = function (MainModel) {
   // hack: need to have an onStream change and onConnection change;
   var logged = 0;
-  if (MainModel.loggedConnection.datastore) {
+  if (MainModel.loggedConnection && MainModel.loggedConnection.datastore) {
     logged = _.size(MainModel.loggedConnection.datastore.getStreams());
   }
   var pub = 0;
-  if (MainModel.publicConnection.datastore) {
+  if (MainModel.publicConnection && MainModel.publicConnection.datastore) {
     pub = _.size(MainModel.publicConnection.datastore.getStreams());
   }
   var sharings = 0;

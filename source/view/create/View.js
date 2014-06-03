@@ -484,26 +484,30 @@ module.exports = Marionette.ItemView.extend({
         '</div></ul>';
     return result;
   },
-  _isWritePermission: function (connection, streamId) {
+  _isWritePermission: function (connection, stream) {
     if (!connection._accessInfo) {
       return false;
     }
+
     if (connection._accessInfo.type === 'personal') {
       return true;
     }
-    if (connection._accessInfo.permissions &&
-        connection._accessInfo.permissions[0].streamId === '*' &&
-        connection._accessInfo.permissions[0].streamId !== 'read') {
-      return true;
+    if (!stream) {
+      if (connection._accessInfo.permissions &&
+        connection._accessInfo.permissions[0].level !== 'read') {
+        return true;
+      } else {
+        return false;
+      }
     }
-    if (connection._accessInfo.permissions &&
+    if (stream) {
+      if (connection._accessInfo.permissions &&
         connection._accessInfo.permissions[0].streamId === '*' &&
-        connection._accessInfo.permissions[0].streamId === 'read') {
-      return false;
-    }
-    if (streamId) {
+        connection._accessInfo.permissions[0].level !== 'read') {
+        return true;
+      }
       return !!_.find(connection._accessInfo.permissions, function (p) {
-        return p.streamId === streamId && p.level !== 'read';
+        return p.streamId === stream.id && p.level !== 'read';
       });
     }
     return false;

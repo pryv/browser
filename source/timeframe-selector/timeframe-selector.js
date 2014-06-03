@@ -7,10 +7,10 @@ module.exports = (function () {
     right: 0
   };
   var HIGHLIGHT_MARGIN = {
-    left: 80,
-    right: 80
+    left: 90,
+    right: 90
   };
-  var HIGHLIGHT_SIZE = 150;
+  var HIGHLIGHT_SIZE = 180;
   var DATE_FORMAT = {
     'day': {
       'selected': 'D.M.YYYY',
@@ -392,7 +392,6 @@ module.exports = (function () {
 
     //init position of highlighter
     var left = 100 * (_highlight - _from) / (_to - _from);
-    left = left === 100 ? 99 : left;
     $('.highlight').css('left', left + '%');
     $('.highlight .content').text(moment.unix(_highlight).format('lll'));
     //init drag
@@ -441,7 +440,7 @@ module.exports = (function () {
       _highlight = moment(time).unix();
       trigger('highlightChanged', _highlight);
     } else {
-      console.warn('setHilghlight(): invalid argument', time);
+      console.warn('setHighlight(): invalid argument', time);
     }
   };
   var setTimeBounds = function (from, to) {

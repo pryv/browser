@@ -1,11 +1,12 @@
+/* global $ */
 
-/*
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
   UNIQUE_ID = 0;
 
 module.exports = Marionette.ItemView.extend({
   template: '#create-sharings-form-template',
+  className: 'create-sharing full-height',
   templateHelpers: function () {
     return {
       getStream: function () {
@@ -19,10 +20,17 @@ module.exports = Marionette.ItemView.extend({
   },
   initialize: function () {
     this.connection = this.options.connection;
-    this.streams = this.options.streams
+    this.streams = this.options.streams;
   },
   onRender: function () {
     var self = this;
+    this.bindUIElements();
+    _.each(this.$el.find('input[type=checkbox]'), function (checkbox) {
+      $(checkbox).prop({
+        indeterminate: false,
+        checked: true
+      });
+    });
     this.ui.label.click(function (e) {
       e.stopPropagation();
       var input = $($(e.currentTarget).parent()).find('input');
@@ -32,7 +40,6 @@ module.exports = Marionette.ItemView.extend({
         checked: !checked
       });
       input.trigger('change');
-      this._applyFilter();
     }.bind(this));
     this.ui.checkbox.click(function (e) {
       e.stopPropagation();
@@ -40,7 +47,6 @@ module.exports = Marionette.ItemView.extend({
     this.ui.checkbox.change(function (e, options) {
       var checked = $(e.currentTarget).prop('checked'),
         container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
-      self.ui.applyBtn.prop('disabled', false);
       container.find('input[type="checkbox"]').prop({
         indeterminate: false,
         checked: checked
@@ -49,50 +55,11 @@ module.exports = Marionette.ItemView.extend({
         self._isChildrenCheck(container.parent().parent());
       }
     });
-    this.bindUIElements();
-    this.onFocusStreamChanged();
+
     setTimeout(function () {$('body').i18n(); }, 100);
   },
-  onFocusStreamChanged: function () {
-    var focusedStreams = this.streams;
-    var focusedStreamsIds = [];
-    try {
-      this.ui.checkbox.prop({
-        indeterminate: false,
-        checked: false
-      });
-    } catch (e) {
-      return false;
-    }
-
-    _.each(focusedStreams, function (stream) {
-      focusedStreamsIds.push(stream.connection.serialId + '/' + stream.id);
-    });
-    var $parent, c, s;
-    _.each(this.ui.checkbox, function (checkbox) {
-      checkbox = $(checkbox);
-      $parent = $(checkbox.parent().parent());
-      if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
-        c = this.MainModel.connections.get($parent.attr('data-connection'));
-        if (c) {
-          s = c.datastore.getStreamById($parent.attr('data-stream'));
-          if (s) {
-            if (focusedStreamsIds.indexOf(c.serialId + '/' + s.id) !== -1 ||
-              focusedStreamsIds.length === 0) {
-              checkbox.prop({
-                indeterminate: false,
-                checked: true
-              });
-              checkbox.trigger('change', {noIndeterminate: true});
-            }
-          }
-        }
-      }
-    }.bind(this));
-    return true;
-  },
   _isChildrenCheck: function ($el) {
-    if ($el.attr('id') === 'collapseFilterByStream') {
+    if (!$el.hasClass('stream-tree-children')) {
       return;
     }
     var allChecked = true;
@@ -103,12 +70,12 @@ module.exports = Marionette.ItemView.extend({
       allUncheck = allUncheck && !$(children[i]).prop('checked');
     }
     if (allUncheck) {
-      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+      $('li[data-target=#' + $el.attr('id') + ']').find('input[type="checkbox"]').prop({
         indeterminate: false,
         checked: false
       });
     } else if (!allChecked && !allUncheck) {
-      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+      $('li[data-target=#' + $el.attr('id') + ']').find('input[type="checkbox"]').prop({
         indeterminate: true,
         checked: false
       });
@@ -121,7 +88,7 @@ module.exports = Marionette.ItemView.extend({
     _.each(connections, function (c) {
       result += '<li class="stream-tree-summary connection disclosure"' +
         ' data-toggle="collapse" ' +
-        'data-target="#collapse' + UNIQUE_ID + '">' +
+        'data-target="#collapse-sharing' + UNIQUE_ID + '">' +
         '<div class="pryv-checkbox">' +
         '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
         '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
@@ -129,7 +96,7 @@ module.exports = Marionette.ItemView.extend({
         result += ' / ' + c._accessInfo.name;
       }
       result += '</label></div></li>';
-      result += '<ul id="collapse' + UNIQUE_ID +
+      result += '<ul id="collapse-sharing' + UNIQUE_ID +
         '" class="panel-collapse  collapse in stream-tree-children">' +
         '<div class="panel-body">';
       UNIQUE_ID++;
@@ -154,16 +121,18 @@ module.exports = Marionette.ItemView.extend({
     if (stream.children.length > 0) {
       disclosure = 'disclosure';
     }
-    var result = '<li data-connection="' +
-      stream.connection.serialId + '" data-stream="' +
+    if (stream.name.length === 0) {
+      stream.name = '&nbsp;&nbsp;';
+    }
+    var result = '<li data-stream="' +
       stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
       '" data-toggle="collapse" ' +
-      'data-target="#collapse' + UNIQUE_ID + '">' +
+      'data-target="#collapse-sharing' + UNIQUE_ID + '">' +
       '<div class="pryv-checkbox">' +
       '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
       '"><label for="afilterStream' + UNIQUE_ID + '">' +
       stream.name + '</label></div></li>';
-    result += '<ul id="collapse' + UNIQUE_ID +
+    result += '<ul id="collapse-sharing' + UNIQUE_ID +
       '" class="panel-collapse  collapse stream-tree-children">' +
       '<div class="panel-body">';
     UNIQUE_ID++;
@@ -180,4 +149,3 @@ module.exports = Marionette.ItemView.extend({
 });
 
 
-           */

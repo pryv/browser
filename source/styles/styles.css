@@ -867,7 +867,7 @@ text-align: center;*/
 .full-width {
   width: 100%;
 }
-#creation-content {
+#creation-content, #create-sharings-form, #success-sharings {
   height: 100%;
   margin-bottom: -60px;
   padding-bottom: 60px;

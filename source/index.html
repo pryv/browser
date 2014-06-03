@@ -683,7 +683,7 @@
         <span data-i18n="slices.actions.share"></span>
         <i class="fa fa-spinner fa-spin" style="display: none;"></i>
       </button>
-      <button id="cancel" class="btn" data-dismiss="modal"><% i18n.t('common.actions.cancel') %></button>
+      <button id="cancel" class="btn" data-dismiss="modal"><%= i18n.t('common.actions.cancel') %></button>
     </div>
   </div>
 </script>
@@ -733,26 +733,28 @@
   <input type="submit" style="opacity: 0; visibility: hidden;">
   </form>
   <h5 data-i18n="slices.labels.sharedStreams"></h5>
-  <%= getStream() %>
+      <div id="sharing-stream-list">
+         <%= getStream() %>
+      </div>
 </script>
-<script type="template" id="sucess-shraings-template">
+<script type="template" id="success-sharings-template">
   <div class="container">
-      <h4 data-i18n="slices.messages.sharingSuccessful"></h4>
+      <h4><%= i18n.t('slices.messages.sharingSuccessful') %></h4>
       <h3 class="share-link"><a href="<%= getUrl() %>"><%= getUrl() %></a></h3>
   <p class="text-center share">
-      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<% getUrl().replace(/#/g, '%23') %>&t="
+      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<%= getUrl().replace(/#/g, '%23') %>&t="
   onclick="javascript:window.open(this.href, \'\',
   \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
-  return false;" title="<% i18n.t('slices.actions.shareOnFacebook') %>">
+  return false;" title="<%= i18n.t('slices.actions.shareOnFacebook') %>">
   <i class="fa fa-facebook"></i></a>
-  <a target="_blank" href="https://twitter.com/share?url=<% getUrl().replace(/#/g, '%23')%>&via=pryv"
+  <a target="_blank" href="https://twitter.com/share?url=<%= getUrl().replace(/#/g, '%23')%>&via=pryv"
   onclick="javascript:window.open(this.href, \'\',
   \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
-  return false;" title="<% i18n.t('slices.actions.shareOnTwitter') %>">
+  return false;" title="<%= i18n.t('slices.actions.shareOnTwitter') %>">
   <i class="fa fa-twitter"></i></a>
-  <a href="mailto:?subject=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
-  {sliceName: sharingInfo.name})) %>&amp;body=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
-      {sliceURL: url})) %>" title="<% i18n.t('slices.actions.shareViaEmail') %>">
+  <a href="mailto:?subject=<%= encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
+  {sliceName: name})) %>&amp;body=<%= encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
+      {sliceURL: getUrl() })) %>" title="<%= i18n.t('slices.actions.shareViaEmail') %>">
   <i class="fa fa-envelope"></i></a>
   </p></div>
 </script>

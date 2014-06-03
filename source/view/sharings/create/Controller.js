@@ -1,140 +1,34 @@
-/* global $, window, i18n */
-var Backbone = require('backbone'),
-  Marionette = require('backbone.marionette'),
+/* global $, i18n, window */
+var Marionette = require('backbone.marionette'),
+  CreateFormView = require('./CreateFormView.js'),
+  SuccessView = require('./SuccessView.js'),
   _ = require('underscore');
-var eachStream = function (collection, callback) {
-  collection.each(function (model) {
-    if (_.isFunction(callback)) {
-      callback(model);
-    }
-    if (model.children) {
-      eachStream(model.children, callback);
-    }
-  });
-};
-var TreeView = Marionette.CompositeView.extend({
-  template: '#node-template',
-  tagName: 'details',
-  ui: {
-    checkbox: '.input-checkbox'
+
+
+var Layout = Marionette.Layout.extend({
+  template: '#create-sharings-modal-template',
+
+  regions: {
+    createForm: '#create-sharings-form',
+    success: '#success-sharings'
   },
   initialize: function () {
-    // grab the child collection from the parent model
-    // so that we can render the collection as children
-    // of this parent node
-    this.collection = this.model.children;
-    this.listenTo(this.model, 'change', this.render);
+    this.$el =  $('.modal-content');
+    this.connection = this.options.connection;
   },
-  appendHtml: function (collectionView, itemView) {
-    // ensure we nest the child list inside of
-    // the current list item
-    collectionView.$('summary:first').after(itemView.el);
+  ui: {
+    cancel: '#cancel',
+    publish: '#publish',
+    submit: '#publish',
+    checkbox: 'input[type=checkbox]'
   },
   onRender: function () {
-    this.ui.checkbox[0].checked = this.model.get('checked');
-    this.ui.checkbox.click(this.toggleCheck.bind(this));
-    $('details').details();
+    this.bindUIElements();
+    this.ui.submit.click(this.createSharing.bind(this));
   },
-  toggleCheck: function () {
-    var checked = !this.model.get('checked');
-    this.model.set('checked', checked);
-    eachStream(this.collection, function (model) {
-      model.set('checked', checked);
-    });
-  }
-});
-
-// The tree's root: a simple collection view that renders
-// a recursive tree structure for each item in the collection
-var TreeRoot = Marionette.CollectionView.extend({
-  itemView: TreeView,
-  id: '',
-  className: 'create-sharing full-height',
-  onRender: function () {
-    var dateFrom = new Date(this.options.timeFrom * 1000);
-    var dateTo = new Date(this.options.timeTo * 1000);
-    function toDateInputValue(date) {
-      var local = new Date(date);
-      local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-      return local.toJSON().slice(0, 10);
-    }
-
-    this.$el.prepend(
-      '<h5 data-i18n="slices.labels.nameAndPermissionsTitle"></h5>' +
-        '<form role="form" id="form-create-sharing"' +
-        '<div class="form-horizontal">' +
-        '<div class="form-group">' +
-        '<div class="col-sm-5">' +
-        '<input type="text" class="form-control" id="input-name" ' +
-        'data-i18n="[placeholder]slices.labels.sliceNamePlaceholder" required>' +
-        '</div>' +
-        '</div>' +
-        '<div class="form-group">' +
-        '<div class="col-sm-5">' +
-        '<select class="form-control" id="input-global-permission">' +
-        '  <option value="read" selected="selected" ' +
-        'data-i18n="slices.labels.permissionRead"></option>' +
-        '  <option value="contribute" ' +
-        'data-i18n="slices.labels.permissionContribute"></option>' +
-        '  <option value="manage" ' +
-        'data-i18n="slices.labels.permissionManage"></option>' +
-        '</select>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '<div class="col-sm-5 panel panel-default advanced-settings">' +
-        '  <div class="panel-heading">' +
-        '    <h4 class="panel-title">' +
-        '       <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">' +
-        '       Advanced settings ' +
-        '       </a>' +
-        '     </h4>' +
-        '   </div>' +
-        '   <div id="collapseOne" class="panel-collapse collapse">' +
-        '     <div class="panel-body">' +
-        '<div class="form-horizontal">' +
-        '<div class="form-group">' +
-        '<div class="col-sm-12">' +
-        '<input type="text" class="form-control" id="input-token" placeholder="Token">' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-
-        '<div class="form-inline">' +
-        '<div class="form-group">' +
-        '<input type="date" class="form-control" id="input-from-date" ' +
-        'value="' + toDateInputValue(dateFrom) + '" disabled>' +
-        '</div>' +
-        '<div class="form-group">' +
-        '<input type="time" class="form-control" id="input-from-time" ' +
-        'value="' + dateFrom.toLocaleTimeString() + '" disabled>' +
-        '</div>' +
-        '<label> < --- > </label>' +
-        '<div class="form-group">' +
-        '<input type="date" class="form-control" id="input-to-date" ' +
-        'value="' + toDateInputValue(dateTo) + '" disabled>' +
-        '</div>' +
-        '<div class="form-group">' +
-        '<input type="time" class="form-control" id="input-to-time" ' +
-        'value="' + dateTo.toLocaleTimeString() + '" disabled>' +
-        '</div>' +
-        '</div>' +
-        '      </div>' +
-        ' </div> ' +
-        '  </div> ' +
-        '<input type="submit" style="opacity: 0; visibility: hidden;">' +
-        '<h5 data-i18n="slices.labels.sharedStreams"></h5>' +
-        '');
-    var $form = $('#form-create-sharing', this.$el),
-      $name = $('#input-name', this.$el);
-    $form.submit(this.createSharing.bind(this));
-    $name.bind('change paste keyup', function () {
-      //$token.val(slugMe($name.val()));
-    });
-  },
-  createSharing: function (e, $btn) {
+  createSharing: function (e) {
     e.preventDefault();
-    $btn = $btn || $('#publish');
+    var $btn = this.ui.publish;
     var $name = $('#input-name', this.$el),
       $token = $('#input-token', this.$el),
       $permission = $('#input-global-permission', this.$el),
@@ -154,51 +48,32 @@ var TreeRoot = Marionette.CollectionView.extend({
     if ($spin) {
       $spin.show();
     }
-    eachStream(this.collection, function (model) {
-      if (model.get('checked')) {
-        access.permissions.push({streamId : model.get('id'), level: permission});
-      }
-    });
 
-    this.options.connection.accesses.create(access, function (error, result) {
+    _.each($('#sharing-stream-list input[type=checkbox]'), function (checkbox) {
+      var streamId = $($(checkbox).parent().parent()).attr('data-stream');
+      if ($(checkbox).prop('checked') && streamId) {
+        access.permissions.push({streamId : streamId, level: permission});
+      }
+    }.bind(this));
+
+
+
+    this.connection.accesses.create(access, function (error, result) {
       if ($spin) {
         $spin.hide();
       }
 
       if (error || result.message) {
-        // TODO: check actual error and handle it properly
         $btn.addClass('btn-pryv-alizarin');
-        window.PryvBrowser('.modal-content', i18n.t('slices.messages.errInvalidSharingToken'));
+        window.PryvBrowser.showAlert('.modal-content',
+          i18n.t('slices.messages.errInvalidSharingToken'));
         return;
       }
 
       $btn.removeClass('btn-pryv-alizarin');
-      this.trigger('sharing:createSuccess', { name: result.name, token: result.token });
+      this.trigger('sharing:createSuccess', { name: name, token: result.token });
     }.bind(this));
   }
-});
-
-var TreeNode = Backbone.Model.extend({
-  defaults : {
-    checked: true
-  },
-  initialize: function () {
-    var children = this.get('children');
-    var c = [];
-    if (!children && this.get('connection') && this.get('childrenIds')) {
-      _.each(this.get('childrenIds'), function (childId) {
-        c.push(this.get('connection').streams.getById(childId));
-      }.bind(this));
-      children = c;
-    }
-    if (children) {
-      this.children = new TreeNodeCollection(children);
-      //this.unset('children');
-    }
-  }
-});
-var TreeNodeCollection = Backbone.Collection.extend({
-  model: TreeNode
 });
 var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {
   this.$modal = $modal;
@@ -209,75 +84,44 @@ var Controller = module.exports = function ($modal, connection, streams, timeFil
   this.timeFrom = timeFilter[1];
   this.timeTo = timeFilter[0];
   this.container = '.modal-content';
-  this.treeView = null;
-  // TODO: ignore stream if  stream.parentId is already present
+  this.view = null;
+  this.createForm = null;
+  this.success = null;
 };
-Controller.prototype.show = function () {
-  this.$modal.modal({currentTarget: this.target});
-  $(this.container).empty().hide();
-  setTimeout(function () {
-    $(this.container).fadeIn();
-  }.bind(this), 500);
-  var tree = new TreeNodeCollection(this.streams);
-  this.treeView = new TreeRoot({
-    collection: tree,
-    timeFrom: this.timeFrom,
-    timeTo: this.timeTo,
-    connection: this.connection
-  });
-  this.treeView.render();
-  $(this.container).prepend('<div class="modal-header">  ' +
-    '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
-    '&times;</button> ' +
-    '<h4 class="modal-title" id="myModalLabel" data-i18n="slices.labels.shareTitle"></h4>' +
-    '<div class="modal-close"></div> ' +
-    '</div><div id="modal-content"><div id="creation-content"></div>' +
-    '<div id="creation-footer" class="col-md-12">' +
-    '<button id="publish" class="btn btn-pryv-turquoise">' +
-    '<span data-i18n="slices.actions.share"></span> ' +
-    '<i class="fa fa-spinner fa-spin" style="display: none;"></i></button>' +
-    '<button id="cancel" class="btn" data-dismiss="modal">' + i18n.t('common.actions.cancel') +
-    '</button></div></div>');
-  $('#creation-content').html(this.treeView.el);
-  $('body').i18n();
-  $('#publish').click(function (e) {
-    this.treeView.createSharing(e, $('#publish'));
-  }.bind(this));
-  this.treeView.on('sharing:createSuccess', function (sharingInfo) {
-    $('#publish').remove();
-    $('#cancel').text(i18n.t('common.actions.close')).addClass('btn-pryv-turquoise');
-    $('#creation-content').empty();
-    var url = this.connection.id.replace(/\?auth.*$/, '');
-    url = url.replace(/\.in/, '.li');
-    url = url.replace(/\.io/, '.me');
-    url += '#/sharings/' + sharingInfo.token;
-    $('#creation-content').html('<div class="container">' +
-      '<h4 data-i18n="slices.messages.sharingSuccessful"></h4>' +
-      '<h3 class="share-link"><a href="' + url + '">' + url + '</a></h3>' +
-      '<p class="text-center share">' +
-      '<a target="_blank" href="https://www.facebook.com/sharer.php?u=' +
-      url.replace(/#/g, '%23') + '&t=" ' +
-      'onclick="javascript:window.open(this.href, \'\', ' +
-      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
-      'return false;" title="' + i18n.t('slices.actions.shareOnFacebook') + '">' +
-      '<i class="fa fa-facebook"></i></a>' +
-      '<a target="_blank" href="https://twitter.com/share?url=' +
-      url.replace(/#/g, '%23') + '&via=pryv" ' +
-      'onclick="javascript:window.open(this.href, \'\', ' +
-      '\'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');' +
-      'return false;" title="' + i18n.t('slices.actions.shareOnTwitter') + '">' +
-      '<i class="fa fa-twitter"></i></a>' +
-      '<a href="mailto:?subject=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
-      {sliceName: sharingInfo.name})) +
-      '&amp;body=' + encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
-      {sliceURL: url})) +
-      '" title="' + i18n.t('slices.actions.shareViaEmail') + '">' +
-      '<i class="fa fa-envelope"></i></a>' +
-      '</p></div>');
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
+    this.view = new Layout({connection: this.connection});
+    this.view.on('close', this.close.bind(this));
+    this.view.on('sharing:createSuccess', this.createSuccess.bind(this));
+    this.createForm = new CreateFormView({connection: this.connection, streams: this.streams});
+    this.view.render();
+    this.view.createForm.show(this.createForm);
+    $(this.view.regions.success).hide();
     $('body').i18n();
-  }.bind(this));
-};
-Controller.prototype.close = function () {
-  this.treeView.close();
-  $(this.container).empty();
-};
+  },
+  close: function () {
+    if (this.view) {
+      this.view = null;
+      $('.modal-content').empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
+      this.createForm.reset();
+      this.success.reset();
+    }
+  },
+  createSuccess: function (params) {
+    this.success = new SuccessView({connection: this.connection,
+     token: params.token, name: params.name});
+    $(this.view.regions.createForm).hide();
+    $(this.view.regions.success).show();
+    this.createForm.close();
+    this.view.success.show(this.success);
+    this.view.ui.publish.remove();
+    this.view.ui.cancel.text(i18n.t('common.actions.close')).addClass('btn-pryv-turquoise');
+  }
+});

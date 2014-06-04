@@ -185,14 +185,13 @@ body{
 .stream-tree-summary.disclosure::before {
   float: right;
   font-family: FontAwesome;
-  content: "\f078";
   margin-right: 0.7em;
 }
+.stream-tree-summary.disclosure::before {
+  content: "\f078";
+}
 .stream-tree-summary.disclosure.collapsed::before {
-  float: right;
   content: "\f054";
-  font-family: FontAwesome;
-  margin-right: 0.7em;
 }
 #stream-select .create-stream {
   width: auto;

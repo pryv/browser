@@ -186,14 +186,13 @@ var TreeMap = module.exports = function (model) {
 
   //----------- init the model with all events --------//
   this.eventEnterScope = function (content) {
-    console.log('eventEnter', content);
     var start = new Date().getTime();
     _.each(content.events, function (event) {
       if (!event.streamId) {
         return;
       }
       if (!IGNORE_TRASHED_EVENT || !event.trashed) {
-        this.events[event.id] = event;
+        this.events[event.id] = _.extend({}, event);
         this.root.eventEnterScope(event, content.reason, function () {});
       } else {
         this.trashedEvents[event.id] = event;
@@ -232,13 +231,29 @@ var TreeMap = module.exports = function (model) {
 
   this.eventChange = function (content) {
     var start = new Date().getTime();
+    var isStreamChanged = function (oldEvent, newEvent) {
+      return oldEvent.streamId !== newEvent.streamId;
+    };
+    var isTrashedChanged = function (oldEvent, newEvent) {
+      return oldEvent.trashed !== newEvent.trashed;
+    };
     _.each(content.events, function (event) {
-      if (!IGNORE_TRASHED_EVENT || !event.trashed) {
-        this.root.eventChange(event, content.reason, function () {});
-      } else {
+      var oldEvent = this.events[event.id];
+      if (isTrashedChanged(oldEvent, event) && IGNORE_TRASHED_EVENT) {
         this.trashedEvents[event.id] = event;
-        this.root.eventLeaveScope(event, content.reason, function () {});
       }
+      if (!isStreamChanged(oldEvent, event) && !isTrashedChanged(oldEvent, event)) {
+        this.root.eventChange(event, content.reason, function () {});
+      }
+      if ((isTrashedChanged(oldEvent, event) && IGNORE_TRASHED_EVENT) ||
+        isStreamChanged(oldEvent, event))   {
+        this.root.eventLeaveScope(oldEvent, content.reason, function () {});
+      }
+      if (isStreamChanged(oldEvent, event) &&
+        (!IGNORE_TRASHED_EVENT || !isTrashedChanged(oldEvent, event))) {
+        this.root.eventEnterScope(event, content.reason, function () {});
+      }
+      this.events[event.id] = _.extend({}, event);
     }, this);
     var end = new Date().getTime();
     var time = end - start;

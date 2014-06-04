@@ -159,12 +159,12 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
 
     eventEnterScope: function (event, reason, callback) {
-      var node =  this.streamNodes[event.stream.id]; // do we already know this stream?
+      var node =  this.streamNodes[event.streamId]; // do we already know this stream?
       if (typeof node === 'undefined') {
-        if (!this.waitForStream[event.stream.id]) {
-          this.waitForStream[event.stream.id] = [];
+        if (!this.waitForStream[event.streamId]) {
+          this.waitForStream[event.streamId] = [];
         }
-        this.waitForStream[event.stream.id].push(event);
+        this.waitForStream[event.streamId].push(event);
         if (typeof(callback) === 'function') {
           return callback();
         } else {
@@ -213,7 +213,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
     },
 
     eventLeaveScope: function (event, reason, callback) {
-      var node = this.streamNodes[event.stream.id];
+      var node = this.streamNodes[event.streamId];
       if (node === 'undefined') {
         throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
       }
@@ -222,7 +222,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
     },
 
     eventChange: function (event, reason, callback) {
-      var node = this.streamNodes[event.stream.id];
+      var node = this.streamNodes[event.streamId];
       if (node === 'undefined') {
         throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
       }

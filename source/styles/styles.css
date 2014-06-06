@@ -133,9 +133,15 @@ body{
   margin: 0;
   font-weight: inherit;
   margin-left: 5px;
-  padding-left: 25px;
+  padding: 0 25px;
   position: relative;
   cursor: pointer;
+}
+.connection > .pryv-checkbox > label {
+  font-weight: 700;
+}
+.pryv-radio label {
+  padding-left: 0;
 }
 .pryv-radio label:before {
   content: "\f10c";
@@ -203,7 +209,6 @@ body{
   padding: 0;
 }
 #sharing-stream-list {
-  max-width: 300px;
   position: relative;
 }
 #stream-select {

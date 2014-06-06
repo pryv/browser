@@ -55,11 +55,10 @@ module.exports = Marionette.ItemView.extend({
             height: event.height,
             top: event.top,
             left: event.left
-          }).find('.Center-Block').html('<blockquote >' +
-                  '<p>' + event.content.text + '</p>&mdash;' +
-                  event.content['screen-name'] +
-                  '(@' + event.content['screen-name'] + ')' + getUrl(event) +
-                  '</blockquote>');
+          }).find('.Center-Block').html('<div class="tweet" >' +
+                  '<p>' + event.content.text + '</p><p>&mdash;' +
+                  '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
+                  '</p></div>');
 
           displayedIds[index] = null;
         } else {
@@ -70,11 +69,10 @@ module.exports = Marionette.ItemView.extend({
               '<div class="content Center-Container is-Table">' +
               '<div class="Table-Cell">' +
               '<div class="Center-Block">' +
-              '<blockquote >' +
-              '<p>' + event.content.text + '</p>&mdash;' +
-              event.content['screen-name'] +
-              '(@' + event.content['screen-name'] + ')' + getUrl(event) +
-              '</blockquote>' +
+              '<div class="tweet" >' +
+              '<p>' + event.content.text + '</p><p>&mdash;' +
+              '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
+              '</p></div>' +
               '</div>' +
               '</div>' +
               '</div>')

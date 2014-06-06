@@ -662,8 +662,9 @@ module.exports = Marionette.ItemView.extend({
         file = elem.file;
         selector = elem.selector;
         reader.onload = function (e) {
-          $(selector).attr('src', e.target.result);
-          readFile(elems);
+          $(selector).attr('src', e.target.result).load(function () {
+            readFile(elems);
+          });
         };
         reader.readAsDataURL(file);
       }
@@ -726,7 +727,7 @@ module.exports = Marionette.ItemView.extend({
       }
       result += '</table>';
     }
-    _.delay(readFile(toRead), 1000);
+    _.delay(function () { readFile(toRead); }, 1000);
     return result;
   }
 });

@@ -80,6 +80,9 @@ body{
   float: left;
   margin-right: 20px;
 }
+#settings-other-apps .apps-item-content {
+  margin-left:120px;
+}
 #settings-manage-apps .app-icon img {
   height: 22px;
 }
@@ -126,10 +129,19 @@ body{
 .pryv-checkbox input[type=checkbox], .pryv-radio input[type=radio] {
   display: none;
 }
-.pryv-checkbox label, pryv-radio label {
-  padding-left: 25px;
+.pryv-checkbox label, .pryv-radio label {
+  margin: 0;
+  font-weight: inherit;
+  margin-left: 5px;
+  padding: 0 25px;
   position: relative;
   cursor: pointer;
+}
+.connection > .pryv-checkbox > label {
+  font-weight: 700;
+}
+.pryv-radio label {
+  padding-left: 0;
 }
 .pryv-radio label:before {
   content: "\f10c";
@@ -180,34 +192,31 @@ body{
   background-color:  #edf8fe;
 }
 .stream-tree-summary.disclosure::before {
-  float: right;
+  position: absolute;
   font-family: FontAwesome;
+  right: 10px;
+}
+.stream-tree-summary.disclosure::before {
   content: "\f078";
-  margin-right: 0.7em;
 }
 .stream-tree-summary.disclosure.collapsed::before {
-  float: right;
   content: "\f054";
-  font-family: FontAwesome;
-  margin-right: 0.7em;
 }
 #stream-select .create-stream {
   width: auto;
 }
-#collapseFilterByStream .panel-body, #stream-select .panel-body{
+#collapseFilterByStream .panel-body, #stream-select .panel-body, #sharing-stream-list .panel-body{
   padding: 0;
 }
-#stream-select label,#collapseFilterByStream label {
-  margin: 0;
-  font-weight: inherit;
+#sharing-stream-list {
+  position: relative;
+}
+#stream-select {
+  position: relative;
 }
 #collapseFilterByStream {
   /*padding-left: 20px;*/
   background-color: #e6e9ed;
-}
-#collapseFilterByStream label {
-  color: #4f4e4e;
-  margin-left: 5px;
 }
 #filter-by-stream-apply {
   margin: 10px;
@@ -470,6 +479,10 @@ padding: 0px 15px;
   overflow: hidden;
   word-break: break-word;
 }
+.tweet {
+  border-left: 5px solid #eee;
+  margin: 0 10px 0 5px;
+}
 .NotesEventsNode .content {
   padding: 15px;
   text-align: center;
@@ -676,7 +689,7 @@ text-align: center;*/
   top: 0;
   left: 0;
   right: 0;
-  bottom: 80px;
+  bottom: 40px !important; /* HACK, TODO: do it cleanly */
   overflow: hidden;
   overflow-y: hidden;
   background-color: rgba(75, 80, 83, 0.93);
@@ -694,7 +707,7 @@ text-align: center;*/
   top: 0;
   right: 0;
   left: 0;
-  bottom: 80px;
+  bottom: 40px !important; /* HACK, TODO: do it cleanly */
   /*min-width: 600px;*/
   padding: 0;
   width: auto;
@@ -867,7 +880,7 @@ text-align: center;*/
 .full-width {
   width: 100%;
 }
-#creation-content {
+#creation-content, #create-sharings-form, #success-sharings {
   height: 100%;
   margin-bottom: -60px;
   padding-bottom: 60px;
@@ -1048,18 +1061,18 @@ details.open > summary:first-child::before {
 .modal-dnd-middle {
     position: absolute;
     top: 60px;
-    bottom: 60px;
+    bottom: 0;/*60px;*/
     width: 100%;
 }
 
 .modal-dnd-footer {
-    display: none;
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-    height: 60px;
-    padding: 7px;
-    border-top: 1px solid #e5e5e5;
+  display: none;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  padding: 10px 15px;
+  border-top: 1px solid #e5e5e5;
 }
 
 .modal-dnd-left {
@@ -1086,51 +1099,37 @@ details.open > summary:first-child::before {
 
 
 .modal-dnd-chart {
-    position: absolute;
-    top: 0px;
-    bottom: 60px;
-    right: 240px;
-    left: 0px;
+  position: absolute;
+  top: 60px;
+  bottom: 0px;
+  right: 240px;
+  left: 0px;
 }
 
 .modal-dnd-legend {
-    position: absolute;
-    height: 60px;
-    bottom: 0px;
-    right: 240px;
-    left: 0px;
+  position: absolute;
+  height: 60px;
+  top: 0px;
+  right: 240px;
+  left: 0px;
 }
 
 .modal-dnd-values {
-    position: absolute;
-    top: 0px;
-    width: 100%;
-    height: 100px;
 }
 
 .modal-dnd-list {
-    position: absolute;
-    top: 100px;
-    bottom: 0px;
-    width: 100%;
 }
 
 .legend-container ul, .modal-dnd-legend ul {
-    list-style-type: none;
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-#modal-dnd-legend ul {
-    list-style-type: none;
-
+  margin: 5px 15px;
+  list-style-type: none;
+  text-align: right;
 }
 
 .legend-container li, .modal-dnd-legend li{
-    float: left;
-    margin-right: 10px;
-    border: 1px solid #C2C2C2;
-    padding: 3px 5px 3px 0;
+  display: inline-block;
+  margin-left: 10px;
+  padding: 5px 0 5px 5px;
 }
 
 .modal-dnd-legend .btn {
@@ -1138,24 +1137,29 @@ details.open > summary:first-child::before {
 }
 
 .DnD-legend-color {
-    display: inline;
+    display: inline-block;
 }
 
 .DnD-legend-text {
     margin-left: 5px;
 }
 
+.DnD-legend-button {
+  padding: 5px;
+  margin-left: 5px;
+}
+
 ul.modal-dnd-legend {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 ul.modal-dnd-legend > li {
-    position: relative;
-    padding: 10px 5px;
-    border-bottom: 1px solid #474747;
-    cursor: pointer;
+  position: relative;
+  padding: 10px 5px;
+  border-bottom: 1px solid #474747;
+  cursor: pointer;
 }
 
 
@@ -1163,56 +1167,43 @@ ul.modal-dnd-legend > li {
 /** CSS for detailed view for charts using the modal **/
 
 #detail-chart-container-general {
-    position: absolute;
-    width: 100%;
-    top: 35px;
-    bottom: 0px;
+  position: absolute;
+  width: 100%;
+  top: 40px;
+  bottom: 0px;
 }
 
 .legend-container {
-    position: absolute;
-    width: 100%;
-    height: 35px;
-    top: 0px;
+  position: absolute;
+  width: 100%;
+  height: 40px;
+  top: 0px;
 }
 
 #detail-chart-container-edit {
-    position: absolute;
-    width: 100%;
-    top: 35px;
-    bottom:120px;
+  position: absolute;
+  width: 100%;
+  top: 140px;
+  bottom: 0px;
 }
 
 .editor-container {
-    position: absolute;
-    border-top: 1px solid #e5e5e5;
-    width: 100%;
-    height: 120px;
-    bottom: 0px;
+  position: absolute;
+  border-bottom: 1px solid #e5e5e5;
+  width: 100%;
+  height: 100px;
+  top: 40px;
 }
 
 #dc-editor-appearance {
-    width:100%;
-    padding-left: 5px;
-    height: 120px;
-    float: left;
+  margin: 0px 15px;
 }
 
-#dc-editor-appearance > ul {
-    list-style-type: none;
+.form-footer button {
+  float: right;
+  margin-left: 10px;
 }
 
-#dc-editor-appearance > ul > li {
-    list-style-type: none;
-}
-
-
-#dc-editor-appearance .col-sm-10 {
-    width:33%;
-}
-#dc-editor-appearance .form-control {
-    width: 100%;
-}
 /** END of CSS for Drag and Drop Dialog using the modal **/
 
 /** BEGIN CSS for pie chart time sum **/

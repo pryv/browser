@@ -227,25 +227,6 @@
     </div>
 
   </script>
-  <script id="tweetView" type="template">
-    <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-    <% if(eventsNbr > 1) { %>
-    <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-    <% } %>
-    <div class="aggregated-icon-page"></div>
-
-
-    <div class="content Center-Container is-Table">
-      <div class="Table-Cell">
-        <div class="Center-Block">
-          <blockquote >
-            <p><%= content.text %> </p>&mdash;
-            <%= content['screen-name'] %> (@<%= content['screen-name'] %>) <%= getUrl()%>
-          </blockquote>
-        </div>
-      </div>
-    </div>
-  </script>
   <script id="nodeView" type="template">
 
     <%

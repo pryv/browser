@@ -80,6 +80,9 @@ body{
   float: left;
   margin-right: 20px;
 }
+#settings-other-apps .apps-item-content {
+  margin-left:120px;
+}
 #settings-manage-apps .app-icon img {
   height: 22px;
 }
@@ -182,14 +185,13 @@ body{
 .stream-tree-summary.disclosure::before {
   float: right;
   font-family: FontAwesome;
-  content: "\f078";
   margin-right: 0.7em;
 }
+.stream-tree-summary.disclosure::before {
+  content: "\f078";
+}
 .stream-tree-summary.disclosure.collapsed::before {
-  float: right;
   content: "\f054";
-  font-family: FontAwesome;
-  margin-right: 0.7em;
 }
 #stream-select .create-stream {
   width: auto;
@@ -469,6 +471,10 @@ padding: 0px 15px;
 .TweetsEventsNode .content {
   overflow: hidden;
   word-break: break-word;
+}
+.tweet {
+  border-left: 5px solid #eee;
+  margin: 0 10px 0 5px;
 }
 .NotesEventsNode .content {
   padding: 15px;
@@ -867,7 +873,7 @@ text-align: center;*/
 .full-width {
   width: 100%;
 }
-#creation-content {
+#creation-content, #create-sharings-form, #success-sharings {
   height: 100%;
   margin-bottom: -60px;
   padding-bottom: 60px;

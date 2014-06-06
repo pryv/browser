@@ -5,13 +5,13 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.10.3/">
+  <base href="{browser-source}_v0.10.4/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.10.3/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.10.3/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.10.4/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.10.4/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -201,25 +201,6 @@
       </div>
     </div>
 
-  </script>
-  <script id="tweetView" type="template">
-    <div class="aggregated-icon <%= type.split("/")[0] %> <%= type.split("/")[1] %>"></div>
-    <% if(eventsNbr > 1) { %>
-    <span class="aggregated-nbr-events"><%=eventsNbr%></span>
-    <% } %>
-    <div class="aggregated-icon-page"></div>
-
-
-    <div class="content Center-Container is-Table">
-      <div class="Table-Cell">
-        <div class="Center-Block">
-          <blockquote >
-            <p><%= content.text %> </p>&mdash;
-            <%= content['screen-name'] %> (@<%= content['screen-name'] %>) <%= getUrl()%>
-          </blockquote>
-        </div>
-      </div>
-    </div>
   </script>
   <script id="nodeView" type="template">
 
@@ -597,7 +578,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.10.3</span>
+    <span class="version">Browser v0.10.4</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -658,7 +639,7 @@
         <span data-i18n="slices.actions.share"></span>
         <i class="fa fa-spinner fa-spin" style="display: none;"></i>
       </button>
-      <button id="cancel" class="btn" data-dismiss="modal"><% i18n.t('common.actions.cancel') %></button>
+      <button id="cancel" class="btn" data-dismiss="modal"><%= i18n.t('common.actions.cancel') %></button>
     </div>
   </div>
 </script>
@@ -708,26 +689,28 @@
   <input type="submit" style="opacity: 0; visibility: hidden;">
   </form>
   <h5 data-i18n="slices.labels.sharedStreams"></h5>
-  <%= getStream() %>
+      <div id="sharing-stream-list">
+         <%= getStream() %>
+      </div>
 </script>
-<script type="template" id="sucess-shraings-template">
+<script type="template" id="success-sharings-template">
   <div class="container">
-      <h4 data-i18n="slices.messages.sharingSuccessful"></h4>
+      <h4><%= i18n.t('slices.messages.sharingSuccessful') %></h4>
       <h3 class="share-link"><a href="<%= getUrl() %>"><%= getUrl() %></a></h3>
   <p class="text-center share">
-      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<% getUrl().replace(/#/g, '%23') %>&t="
+      <a target="_blank" href="https://www.facebook.com/sharer.php?u=<%= getUrl().replace(/#/g, '%23') %>&t="
   onclick="javascript:window.open(this.href, \'\',
   \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
-  return false;" title="<% i18n.t('slices.actions.shareOnFacebook') %>">
+  return false;" title="<%= i18n.t('slices.actions.shareOnFacebook') %>">
   <i class="fa fa-facebook"></i></a>
-  <a target="_blank" href="https://twitter.com/share?url=<% getUrl().replace(/#/g, '%23')%>&via=pryv"
+  <a target="_blank" href="https://twitter.com/share?url=<%= getUrl().replace(/#/g, '%23')%>&via=pryv"
   onclick="javascript:window.open(this.href, \'\',
   \'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height=400,width=700\');
-  return false;" title="<% i18n.t('slices.actions.shareOnTwitter') %>">
+  return false;" title="<%= i18n.t('slices.actions.shareOnTwitter') %>">
   <i class="fa fa-twitter"></i></a>
-  <a href="mailto:?subject=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
-  {sliceName: sharingInfo.name})) %>&amp;body=<% encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
-      {sliceURL: url})) %>" title="<% i18n.t('slices.actions.shareViaEmail') %>">
+  <a href="mailto:?subject=<%= encodeURIComponent(i18n.t('slices.messages.sharingEmailSubject',
+  {sliceName: name})) %>&amp;body=<%= encodeURIComponent(i18n.t('slices.messages.sharingEmailBody',
+      {sliceURL: getUrl() })) %>" title="<%= i18n.t('slices.actions.shareViaEmail') %>">
   <i class="fa fa-envelope"></i></a>
   </p></div>
 </script>
@@ -821,7 +804,7 @@
       <div class="app-icon">
         <img src="<%= app.iconURL %>">
       </div>
-      <div class="">
+      <div class="apps-item-content">
         <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
         <% if (app.appURL && app.appURL.length > 0) { %>

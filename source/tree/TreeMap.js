@@ -210,6 +210,7 @@ var TreeMap = module.exports = function (model) {
     _.each(content.streams, function (stream) {
       this.root.streamEnterScope(stream, content.reason, function () {});
     }, this);
+    var focusedStream = this.getFocusedStreams();
     this.root._createView();
     var end = new Date().getTime();
     var time = end - start;

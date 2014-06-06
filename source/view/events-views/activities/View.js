@@ -92,7 +92,12 @@ module.exports = Marionette.ItemView.extend({
         if (this.model.get('totalTime') === 0) {
           this.data[0].data = 1;
         }
-        this.plot = $.plot(this.chartContainer, this.data, this.options);
+        try {
+          this.plot = $.plot(this.chartContainer, this.data, this.options);
+        } catch (e) {
+          console.warn(e);
+        }
+
         setTimeout(this.updateTotalTime.bind(this), 200);
       }.bind(this), 1000);
     }

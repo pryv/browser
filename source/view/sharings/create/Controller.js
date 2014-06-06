@@ -30,10 +30,11 @@ var Layout = Marionette.Layout.extend({
     e.preventDefault();
     var $btn = this.ui.publish;
     var $name = $('#input-name', this.$el),
-      $token = $('#input-token', this.$el),
+      //$token = $('#input-token', this.$el),
       $permission = $('#input-global-permission', this.$el),
       $spin = $('.fa-spin', $btn);
-    var access = {}, name = $name.val().trim(), token = $token.val().trim(),
+    var access = {}, name = $name.val().trim(),
+      //token = $token.val().trim(),
       permission = $permission.val();
     if (name.length === 0) {
       $('#form-create-sharing', this.$el).find(':submit').click();
@@ -43,7 +44,7 @@ var Layout = Marionette.Layout.extend({
       permission = 'read';
     }
     access.name = name;
-    access.token = token;
+   // access.token = token;
     access.permissions = [];
     if ($spin) {
       $spin.show();
@@ -110,8 +111,6 @@ _.extend(Controller.prototype, {
       $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
       $('.modal-backdrop').remove();
       this.$modal.trigger('hidden.bs.modal');
-      this.createForm.reset();
-      this.success.reset();
     }
   },
   createSuccess: function (params) {

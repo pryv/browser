@@ -129,7 +129,10 @@ body{
 .pryv-checkbox input[type=checkbox], .pryv-radio input[type=radio] {
   display: none;
 }
-.pryv-checkbox label, pryv-radio label {
+.pryv-checkbox label, .pryv-radio label {
+  margin: 0;
+  font-weight: inherit;
+  margin-left: 5px;
   padding-left: 25px;
   position: relative;
   cursor: pointer;
@@ -183,9 +186,9 @@ body{
   background-color:  #edf8fe;
 }
 .stream-tree-summary.disclosure::before {
-  float: right;
+  position: absolute;
   font-family: FontAwesome;
-  margin-right: 0.7em;
+  right: 10px;
 }
 .stream-tree-summary.disclosure::before {
   content: "\f078";
@@ -196,20 +199,19 @@ body{
 #stream-select .create-stream {
   width: auto;
 }
-#collapseFilterByStream .panel-body, #stream-select .panel-body{
+#collapseFilterByStream .panel-body, #stream-select .panel-body, #sharing-stream-list .panel-body{
   padding: 0;
 }
-#stream-select label,#collapseFilterByStream label {
-  margin: 0;
-  font-weight: inherit;
+#sharing-stream-list {
+  max-width: 300px;
+  position: relative;
+}
+#stream-select {
+  position: relative;
 }
 #collapseFilterByStream {
   /*padding-left: 20px;*/
   background-color: #e6e9ed;
-}
-#collapseFilterByStream label {
-  color: #4f4e4e;
-  margin-left: 5px;
 }
 #filter-by-stream-apply {
   margin: 10px;

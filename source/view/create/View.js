@@ -390,25 +390,27 @@ module.exports = Marionette.ItemView.extend({
 
       UNIQUE_ID++;
       result += '<li class="stream-tree-summary connection" data-toggle="collapse" ' +
-          'data-target="#collapse' + UNIQUE_ID + '">' +
+          'data-target="#collapse-create' + UNIQUE_ID + '">' +
           '<label for="selectStream' + UNIQUE_ID + '">' +
           c.username;
       if (c._accessInfo.name !== 'pryv-browser') {
         result += ' / ' + c._accessInfo.name;
       }
       result += '</label></li>';
-      result += '<ul id="collapse' + UNIQUE_ID +
+      result += '<ul id="collapse-create' + UNIQUE_ID +
           '" class="panel-collapse  collapse in stream-tree-children">' +
           '<div class="panel-body">';
       result += this.getStreamStructure(c);
-      UNIQUE_ID++;
-      result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
+      if (this._isManagePermission(c)) {
+        UNIQUE_ID++;
+        result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
           '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
           '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
           '<input type="text" class="form-control create-stream" ' +
           'data-i18n="[placeholder]events.common.actions.addNewStream;"' +
           ' data-parentId="" data-connection="' + c.serialId + '">' +
           '</label></div></li>';
+      }
       result += '</div></ul>';
 
     }.bind(this));
@@ -438,7 +440,7 @@ module.exports = Marionette.ItemView.extend({
   },
   _walkStreamStructure: function (stream, checked, open) {
     UNIQUE_ID++;
-    var disclosure = '';
+    var disclosure = 'disclosure';
     if (stream.children.length > 0) {
       disclosure = 'disclosure';
     }
@@ -446,13 +448,13 @@ module.exports = Marionette.ItemView.extend({
         stream.connection.serialId + '" data-stream="' +
         stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
         '" data-toggle="collapse" ' +
-        'data-target="#collapse' + UNIQUE_ID + '">' +
+        'data-target="#collapse-create' + UNIQUE_ID + '">' +
         '<div class="pryv-radio">' +
         '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
         '" class="select-stream" ' +
         checked + '><label for="selectStream' + UNIQUE_ID + '">' +
         stream.name + '</label></div></li>';
-    result += '<ul id="collapse' + UNIQUE_ID +
+    result += '<ul id="collapse-create' + UNIQUE_ID +
         '" class="panel-collapse  collapse ' + open + ' stream-tree-children">' +
         '<div class="panel-body">';
     open = '';
@@ -473,16 +475,46 @@ module.exports = Marionette.ItemView.extend({
         result += this._walkStreamStructure(stream.children[j], checked, open);
       }
     }
-    UNIQUE_ID++;
-    result +=  '<li class="stream-tree-summary"><div class="pryv-radio">' +
+    if (this._isManagePermission(stream.connection, stream)) {
+      UNIQUE_ID++;
+      result += '<li class="stream-tree-summary"><div class="pryv-radio">' +
         '<input type="radio" name="selectStream" id="selectStream' + UNIQUE_ID +
         '" class="select-stream"><label for="selectStream' + UNIQUE_ID + '">' +
         '<input type="text" class="form-control create-stream" ' +
         'data-i18n="[placeholder]events.common.actions.addNewStream;"' +
         ' data-parentId="' + stream.id + '" data-connection="' + stream.connection.serialId + '">' +
-        '</label></div></li>' +
-        '</div></ul>';
+        '</label></div></li>';
+    }
+    result += '</div></ul>';
     return result;
+  },
+  _isManagePermission: function (connection, stream) {
+    if (!connection._accessInfo) {
+      return false;
+    }
+
+    if (connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (!stream) {
+      if (connection._accessInfo.permissions &&
+        connection._accessInfo.permissions[0].level === 'manage') {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    if (stream) {
+      if (connection._accessInfo.permissions &&
+        connection._accessInfo.permissions[0].streamId === '*' &&
+        connection._accessInfo.permissions[0].level === 'manage') {
+        return true;
+      }
+      return !!_.find(connection._accessInfo.permissions, function (p) {
+        return p.streamId === stream.id && p.level === 'manage';
+      });
+    }
+    return false;
   },
   _isWritePermission: function (connection, stream) {
     if (!connection._accessInfo) {

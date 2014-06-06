@@ -90,8 +90,12 @@ module.exports = Marionette.CompositeView.extend({
     if (this.model.get('showNodeCount')) {
       $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
     }
+    try {
+      this.plot = $.plot($(this.chartContainer), this.data, this.options);
+    } catch (e) {
+      console.warn(e);
+    }
 
-    this.plot = $.plot($(this.chartContainer), this.data, this.options);
 
     this.createEventBindings();
 

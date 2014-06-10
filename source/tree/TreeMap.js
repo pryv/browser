@@ -42,7 +42,7 @@ var TreeMap = module.exports = function (model) {
   this.root.x =  MARGIN_LEFT;
   this.root.y =  MARGIN_TOP;
 
-  $('#logo-reload').click(function (e) {
+  $('#back-tree').click(function (e) {
     e.preventDefault();
     if (this.model.sharingsConnections &&
       this.model.urlUsername === this.model.loggedConnection.username) {

@@ -828,13 +828,14 @@
     <div class="thumbnail">
       <div class="app-icon">
         <img src="<%= app.iconURL %>">
+        <% if (app.appURL && app.appURL.length > 0) { %>
+          <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="settings.connectedApps.actions.connect"></a></p>
+        <% } %>
       </div>
       <div class="apps-item-content">
         <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
-        <% if (app.appURL && app.appURL.length > 0) { %>
-        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="settings.connectedApps.actions.connect"></a></p>
-        <% } %>
+        
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">
@@ -903,7 +904,7 @@
   </div>
 </div>
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
-    <a href="#" id="logo-reload" class="logo">Pryv</a>
+    <div href="#" id="logo-reload" class="logo">Pryv</div>
       <ul class="nav navbar-nav navbar-left">
         <li id="togglePanel">
         <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
@@ -928,6 +929,7 @@
         </li>
 
       </ul>
+      <a id="back-tree" class="btn-back-tree ss-home" href="#" ></a>
   </nav>
 
 <!-- @if NODE_ENV == 'DEVELOPMENT' -->

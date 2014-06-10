@@ -80,6 +80,10 @@ body{
   float: left;
   margin-right: 20px;
 }
+#settings-other-apps .app-icon p a {
+  width:100px;
+  margin-top:10px;
+}
 #settings-other-apps .apps-item-content {
   margin-left:120px;
 }
@@ -247,21 +251,20 @@ body{
 .logo{
   z-index: 90000;
   position: absolute;
-  top: 5px;
+  top: 10px;
   left: 50%;
   text-indent: -9999em;
   display: block;
-  width: 40px;
-  height: 40px;
-  background:url(../images/logo-pryv.png) 1px no-repeat;
-  background-color: #bd1727;
-  margin-left: -20px;
+  width: 30px;
+  height: 30px;
+  background: url(../images/logo-pryv.png) 0 no-repeat;
+  margin-left: -15px;
 }
 .logo:hover{
   /*background-position: -40px 0px;*/
 }
 .logo.loading {
-  background:url(../images/loader2.gif) 0 0 no-repeat;
+  background:url(../images/loader3.gif) 0 0 no-repeat;
   background-color: #3e3e3e;
 }
 .menu-button {
@@ -408,6 +411,17 @@ padding: 0px 15px;
 -o-transition: font 0.1s ease;
 -ms-transition: font 0.1s ease; */
 }
+.btn-back-tree {
+  position: absolute;
+  top: 72px;
+  left: 10px;
+  font-size: 20px;
+  /* background-color: #F00; */
+  display: block;
+  height: 30px;
+  color: #696969;
+}
+.btn-back-tree:hover{}
 /* COLOR DEFAULT PINS */
 .pins-color{
   display: inline-block;

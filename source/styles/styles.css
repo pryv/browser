@@ -948,8 +948,8 @@ text-align: center;*/
 #creation-footer button {
   margin: 12px;
   float: right;
-  font-weight: bold;
-  color: white;
+  /*font-weight: bold;
+  color: white;*/
 }
 #current-picture img {
   max-height: 100%;

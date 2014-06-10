@@ -121,6 +121,6 @@ _.extend(Controller.prototype, {
     this.createForm.close();
     this.view.success.show(this.success);
     this.view.ui.publish.remove();
-    this.view.ui.cancel.text(i18n.t('common.actions.close')).addClass('btn-pryv-turquoise');
+    this.view.ui.cancel.text(i18n.t('common.actions.close')).addClass('btn-primary');
   }
 });

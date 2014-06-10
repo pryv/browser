@@ -413,7 +413,7 @@
     </div>
     <div id="creation-select-stream" class="full-height col-md-3"><h3 data-i18n="events.common.labels.streamSelection"></h3><%= getStream() %></div>
     </div>
-    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise" ><span data-i18n="common.actions.add"></span> <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn" data-i18n="common.actions.cancel"></button></div>
+    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-primary" ><span data-i18n="common.actions.add"></span> <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn btn-default" data-i18n="common.actions.cancel"></button></div>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
@@ -576,7 +576,7 @@
           <% }) %>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>"></li>
 
-        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise"><span data-i18n="common.actions.save"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+        <button id ="submit-edit" type="button" class="btn btn-primary"><span data-i18n="common.actions.save"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
         <button id ="trash-edit" type="button" class="btn btn-danger"><span data-i18n="common.actions.delete"></span><i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
       </ul>
       <% } %>
@@ -609,8 +609,8 @@
 </script>
 <script type="template" id="actions-template">
     <li><button type="button" class="logo-subscribe btn btn-default btn-block"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.actions.followSlice"></span></button></li>
-    <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="slices.actions.shareSlice"></span></button></li>
-    <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-star"></span> <span data-i18n="slices.actions.manageSlices"></span></button></li>
+    <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="ss-share"></span> <span data-i18n="slices.actions.shareSlice"></span></button></li>
+    <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="ss-star"></span> <span data-i18n="slices.actions.manageSlices"></span></button></li>
 
 </script>
 <script type="template" id="filter-by-stream-template">
@@ -660,11 +660,11 @@
     <div id="create-sharings-form"></div>
     <div id="success-sharings"></div>
     <div id="creation-footer" class="col-md-12">
-      <button id="publish" class="btn btn-pryv-turquoise">
+      <button id="publish" class="btn btn-primary">
         <span data-i18n="slices.actions.share"></span>
         <i class="fa fa-spinner fa-spin" style="display: none;"></i>
       </button>
-      <button id="cancel" class="btn" data-dismiss="modal"><%= i18n.t('common.actions.cancel') %></button>
+      <button id="cancel" class="btn btn-default" data-dismiss="modal"><%= i18n.t('common.actions.cancel') %></button>
     </div>
   </div>
 </script>

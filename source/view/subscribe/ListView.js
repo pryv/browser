@@ -20,9 +20,9 @@ module.exports = Marionette.CompositeView.extend({
       '<div id="modal-content">' +
       '<div id="creation-content"><ul id="subscribe-list"></ul></div>' +
       '<div id="creation-footer" class="col-md-12">' +
-      '<button class="btn btn-pryv-turquoise" id="add-subscribe">Add ' +
+      '<button class="btn btn-primary" id="add-subscribe">Add ' +
       '<i class="fa fa-spinner fa-spin"></i></button>' +
-      '<button id="cancel" class="btn" data-dismiss="modal">Cancel</button>' +
+      '<button id="cancel" class="btn btn-default" data-dismiss="modal">Cancel</button>' +
       '</div></div>');
     this.$addButton = $('#add-subscribe');
     $('.fa-spin', this.$addButton).hide();

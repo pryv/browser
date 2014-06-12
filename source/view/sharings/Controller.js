@@ -25,7 +25,7 @@ var Controller = module.exports = function ($modal, connection, target) {
     '</div><div id="modal-content"><div id="creation-content">' +
     '<div class="sharings container"></div></div>' +
     '<div id="creation-footer" class="col-md-12">' +
-    '<button id="ok" class="btn btn-pryv-turquoise" ' +
+    '<button id="ok" class="btn btn-primary" ' +
     'data-dismiss="modal" data-i18n="common.actions.close"></button>' +
     '</div></div>');
   $('body').i18n();

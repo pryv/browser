@@ -119,7 +119,7 @@ module.exports = (function () {
             '  </div>' +
             '</div>' +
             '<button type="button" id="cancel" ' +
-            'class="btn col-md-4"  style="float: none">' +
+            'class="btn btn-default col-md-4"  style="float: none">' +
                 i18n.t('common.actions.cancel') + '</button>' +
 
             '<button type="button" id="ok" class="btn btn-default col-md-7 col-md-offset-1"' +

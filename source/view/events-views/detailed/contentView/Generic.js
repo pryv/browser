@@ -28,7 +28,7 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    this.addAttachment();
+    //this.addAttachment();
     this.ui.li.bind('dblclick', this.onEditClick.bind(this));
     this.ui.edit.bind('blur', this.onEditBlur.bind(this));
     this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
@@ -74,12 +74,17 @@ module.exports = Marionette.ItemView.extend({
     var html = '';
     if (attachments) {
       html += '<ul> attachments:';
-      _.each(_.keys(attachments), function (k) {
-        html += '<li id="' + k + '">' + k + ': <a href="' + event.url + '/' +
-          attachments[k].fileName + '?auth=' + event.connection.auth + '" target="_blank"> ' +
+      var keys = _.keys(attachments);
+      var href = event.url + '/' + attachments[keys[0]].id + '?readToken=' +
+        attachments[keys[0]].readToken;
+      html += '<li id="' + keys[0] + '"> <a href="' + href + '" target="_blank">' +
+        '<span class="fa fa-file-o"></span> ' + attachments[keys[0]].fileName + '</a></li>';
+      this.attachmentId[keys[0]] = attachments[keys[0]].fileName;
+     /* _.each(_.keys(attachments), function (k) {
+        html += '<li id="' + k + '">' + k + ': <a href="' + href + '" target="_blank"> ' +
           attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
         this.attachmentId[k] = attachments[k].fileName;
-      }.bind(this));
+      }.bind(this));  */
       html += '</ul>';
     } else {
       return '';

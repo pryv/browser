@@ -97,12 +97,12 @@ _.extend(Controller.prototype, {
       var DOWN_KEY = 40;
       if (e.which === LEFT_KEY || e.which === UP_KEY) {
         this.updateSingleView(this.collection.prev().getCurrentElement());
-        //this.updateSingleView(this.listViewcollection.prev().getCurrentElement());
+        this.listViewcollection.prev();
         return false;
       }
       if (e.which === RIGHT_KEY || e.which === DOWN_KEY) {
         this.updateSingleView(this.collection.next().getCurrentElement());
-        //this.updateSingleView(this.listViewcollection.next().getCurrentElement());
+        this.listViewcollection.next();
         return false;
       }
     }.bind(this));

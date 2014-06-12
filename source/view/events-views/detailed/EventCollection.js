@@ -55,6 +55,7 @@ module.exports = Backbone.Collection.extend({
       }
       if (model) {
         model.setHighlighted(true);
+        this.trigger('highlightIndex');
       }
     }
     this.currentElement = model;

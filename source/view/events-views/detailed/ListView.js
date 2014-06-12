@@ -37,7 +37,9 @@ listView.initialize = function () {
   //this.listenTo(this.collection, 'add remove', this.debounceRender);
   //this.listenTo(this.collection, 'change', this.bindClick);
 };
-
+listView.scrollTo = function () {
+  $('#detail-list').scrollTo('.detail-item.highlighted');
+};
 listView.appendHtml = function (collectionView, itemView) {
   $(this.itemViewContainer).append(itemView.el);
 };
@@ -47,6 +49,7 @@ listView.onRender = function () {
   $('#select-none').bind('click', this.onSelectNone.bind(this));
   $('#trash-selected').bind('click', this.onTrashSelectedClick.bind(this));
   $('#detail-list').bind('scroll', this._showMore.bind(this));
+  this.collection.on('highlightIndex', this.scrollTo.bind(this));
 };
 
 listView.onTrashSelectedClick = function () {

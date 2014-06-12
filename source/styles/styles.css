@@ -811,7 +811,9 @@ text-align: center;*/
   margin: 0;
 }
 #detail-list li.highlighted{
-  background-color: #95a5a6 !important;
+  /*background-color: #95a5a6 !important; */
+  outline: rgb(8, 156, 255) solid 5px;
+  outline-offset: -5px;
 }
 #detail-list li:hover{
   background-color: #bdc3c7;

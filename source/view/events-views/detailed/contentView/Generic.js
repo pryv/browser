@@ -75,10 +75,10 @@ module.exports = Marionette.ItemView.extend({
     if (attachments) {
       html += '<ul> attachments:';
       var keys = _.keys(attachments);
-      var href = event.url + '/' + attachments[keys[0]].id + '?readToken=' +
-        attachments[keys[0]].readToken;
+      var href = event.url + '/' + attachments[keys[0]].id + '/' +
+        attachments[keys[0]].fileName + '?readToken=' + attachments[keys[0]].readToken;
       html += '<li id="' + keys[0] + '"> <a href="' + href + '" target="_blank">' +
-        '<span class="fa fa-file-o"></span> ' + attachments[keys[0]].fileName + '</a></li>';
+        '<span class="fa fa-paperclip"></span> ' + attachments[keys[0]].fileName + '</a></li>';
       this.attachmentId[keys[0]] = attachments[keys[0]].fileName;
      /* _.each(_.keys(attachments), function (k) {
         html += '<li id="' + k + '">' + k + ': <a href="' + href + '" target="_blank"> ' +

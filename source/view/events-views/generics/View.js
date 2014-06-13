@@ -63,6 +63,7 @@ module.exports = Marionette.ItemView.extend({
       setTimeout(function () {
         $('#' + this.container).removeClass('animated ' + this.animation);
       }.bind(this), 1000);
+      $('#' + this.container).find('.content').dotdotdot();
     }
   },
   close: function () {

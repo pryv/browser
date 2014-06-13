@@ -19,7 +19,8 @@
       "close": "Close",
       "delete": "Delete",
       "ok": "OK",
-      "save": "Save"
+      "save": "Save",
+      "edit": "Edit"
     },
     "labels": {
       "action": "Action",

@@ -55,8 +55,15 @@ module.exports = Marionette.ItemView.extend({
           result += this.event.content;
         } else if (_.isNumber(this.event.content)) {
           result += '<span class="value">' + this.event.content + '</span>';
-        } else {
+        } else if (_.isObject(this.event.content)) {
           result += JSON.stringify(this.event.content, null, 2);
+        } else if (this.event.attachments) {
+          var keys = _.keys(this.event.attachments);
+          result += '<span class="fa fa-paperclip"></span> ' +
+            this.event.attachments[keys[0]].fileName;
+        } else {
+          result += '<span class="fa fa-question"></span> ' +
+           this.event.type;
         }
       }
       result += '</div>' +

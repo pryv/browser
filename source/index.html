@@ -217,11 +217,7 @@
     <div class="content Center-Container is-Table">
       <div class="Table-Cell">
         <div class="Center-Block">
-          <% if (type.split("/")[0] === 'url') { %>
-          <a href="<%= content %>" target="_blank"><%= content %></a>
-          <% } else { %>
-          <%= content %>
-          <% } %>
+          <%= getContent() %>
         </div>
       </div>
     </div>

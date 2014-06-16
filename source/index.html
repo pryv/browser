@@ -853,7 +853,7 @@
       <div class="apps-item-content">
         <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
-        
+
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">
@@ -976,5 +976,23 @@
 </div>
 <!-- /.modal -->
 </div>
+
+<!-- Zendesk "help" tab snippet -->
+<script type="text/javascript" src="//assets.zendesk.com/external/zenbox/v2.6/zenbox.js"></script>
+<style type="text/css" media="screen, projection">
+  @import url(//assets.zendesk.com/external/zenbox/v2.6/zenbox.css);
+</style>
+<script type="text/javascript">
+  if (typeof(Zenbox) !== "undefined") {
+    Zenbox.init({
+      dropboxID:   "20259791",
+      url:         "https://pryv.zendesk.com",
+      tabTooltip:  "Help",
+      tabImageURL: "https://p3.zdassets.com/external/zenbox/images/tab_help_right.png",
+      tabColor:    "#333",
+      tabPosition: "Right"
+    });
+  }
+</script>
 </body>
 </html>

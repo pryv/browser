@@ -1616,3 +1616,10 @@ color: #FFF;
 #full-content:not(:empty), #full-attachment:not(:empty), #add-attachment:not(:empty) {
   padding: 10px 15px;
 }
+
+
+/* Zendesk tab */
+#zenbox_tab {
+  border: none !important;
+  right: -10px;
+}

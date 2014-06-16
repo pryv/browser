@@ -757,12 +757,15 @@ text-align: center;*/
 }
 .modal-panel-left {
   float: left;
+  position: absolute;
+  left: 230px;
+  top: 0;
 }
 .modal-panel-right {
   border-left: 1px solid #e5e5e5;
   position: absolute;
   width: 230px;
-  right: 0;
+  left: 0;
   top: 51px;
   border-right: 0;
 }
@@ -773,7 +776,7 @@ text-align: center;*/
   top: 0;
   right: 0;
   left: 0;
-  bottom: 100px;
+  bottom: 50px;
   background-color: #ecf0f1;
 }
 #detail-list li {

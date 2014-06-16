@@ -37,6 +37,18 @@ module.exports = Marionette.ItemView.extend({
       this.map.setCenter(this.marker.position);
     }
   },
+  editOn: function () {
+    if (this.marker) {
+      this.marker.setDraggable(true);
+      this.marker.setTitle('Drag me!');
+    }
+  },
+  editOff: function () {
+    if (this.marker) {
+      this.marker.setDraggable(false);
+      this.marker.setTitle('');
+    }
+  },
   onRender: function () {
     if (!this.google) {
       this.waitForGoogle = true;
@@ -56,12 +68,10 @@ module.exports = Marionette.ItemView.extend({
           });
           var elevator = new this.google.maps.ElevationService();
           this.marker = new this.google.maps.Marker({
-            position: new this.google.maps.LatLng(lat, lng),
-            draggable: true
+            position: new this.google.maps.LatLng(lat, lng)
           });
 
           this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
-            $('#submit-edit').show();
             var event = this.model.get('event');
             event.content.latitude = evt.latLng.lat();
             event.content.longitude = evt.latLng.lng();
@@ -78,7 +88,13 @@ module.exports = Marionette.ItemView.extend({
               }
             }.bind(this));
           }.bind(this));
-
+          $('#modal-left-content').on('editing:on', this.editOn.bind(this));
+          $('#modal-left-content').on('editing:off', this.editOff.bind(this));
+          if ($('#modal-left-content').hasClass('editing')) {
+            this.editOn();
+          } else {
+            this.editOff();
+          }
           this.map.setCenter(this.marker.position);
           this.marker.setMap(this.map);
         }

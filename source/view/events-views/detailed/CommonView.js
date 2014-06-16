@@ -56,11 +56,13 @@ module.exports = Marionette.ItemView.extend({
   },
   showEdit: function () {
     $('#modal-left-content').addClass('editing');
+    $('#modal-left-content').trigger('editing:on');
     this.ui.editOff.hide();
     this.ui.editOn.show();
   },
   hideEdit: function () {
     $('#modal-left-content').removeClass('editing');
+    $('#modal-left-content').trigger('editing:off');
     this.ui.editOn.hide();
     this.ui.editOff.show();
   },

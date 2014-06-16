@@ -1,7 +1,7 @@
-/* global $, FormData, window, i18n */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
+/* global $, moment, window, i18n */
+var Marionette = require('backbone.marionette');
+var EDIT_MODE_HEIGHT = '120px';
+var NON_EDIT_MODE_HEIGHT = '60px';
 module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
   itemViewContainer: '#detail-common',
@@ -9,15 +9,22 @@ module.exports = Marionette.ItemView.extend({
   id: 'detail-full',
   // addAttachmentContainer: '#add-attachment',
   waitSubmit: false,
+  editMode: false,
   // addAttachmentId: 0,
   // attachmentId: {},
   ui: {
-    li: 'li.editable',
-    edit: '.edit',
-    submit: '#submit-edit',
-    submitSpin: '#submit-edit .fa-spin',
-    trash: '#trash-edit',
-    trashSpin: '#trash-edit .fa-spin'
+    editBtn: '#edit-button',
+    editForm: '#edit-form',
+    editOff: '#edit-off',
+    editOn: '#edit-on',
+    editDone: '#edit-done',
+    saveSpin: '#edit-save .fa-spin',
+    saveBtn: '#edit-save',
+    editStream: '#edit-stream',
+    editTime: '#edit-time',
+    editTimePicker: '#edit-time-picker',
+    editTags: '#edit-tags',
+    editDescription: '#edit-description',
   },
   templateHelpers: function () {
     return {
@@ -32,107 +39,58 @@ module.exports = Marionette.ItemView.extend({
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
     //  this.addAttachment();
-    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
-    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
-    this.ui.edit.bind('keypress', this.onEditKeypress.bind(this));
-    this.ui.submit.bind('click', this.submit.bind(this));
-    this.ui.trash.bind('click', this.trash.bind(this));
-    this.ui.submit.hide();
+    this.ui.editBtn.bind('click', this.showEdit.bind(this));
+    this.ui.editDone.bind('click', this.hideEdit.bind(this));
+    this.ui.editForm.bind('submit', this.submit.bind(this));
+    if (this.editMode) {
+      this.showEdit();
+    } else {
+      this.hideEdit();
+    }
+    this.ui.editTimePicker.datetimepicker({
+      direction: 'auto',
+      language: i18n.lng()
+    });
+    if (this.model.get('event')) {
+      var evtDate = moment.unix(this.model.get('event').time);
+      this.ui.editTimePicker.data('DateTimePicker').setDate(evtDate);
+    }
     $('body').i18n();
   },
-  onEditClick: function (e) {
-    this.ui.submit.show();
-    $(e.currentTarget).addClass('editing');
-    this.ui.edit.focus();
+  showEdit: function () {
+    this.editMode = true;
+    this.ui.editOff.hide();
+    $('#detail-full').css('height', EDIT_MODE_HEIGHT);
+    $('#detail-content').css('bottom', EDIT_MODE_HEIGHT);
+    this.ui.editOn.show();
   },
-  onEditBlur: function (e) {
-    this.updateEvent(e.currentTarget);
-    this.ui.submit.show();
-    if (e.relatedTarget && e.relatedTarget.id === 'submit-edit') {
-      this.submit();
-    }
-    return true;
+  hideEdit: function () {
+    this.editMode = false;
+    this.ui.editOn.hide();
+    $('#detail-full').css('height', NON_EDIT_MODE_HEIGHT);
+    $('#detail-content').css('bottom', NON_EDIT_MODE_HEIGHT);
+    this.ui.editOff.show();
   },
-  onEditKeypress: function (e) {
-    var ENTER_KEY = 13;
-    if (e.which === ENTER_KEY) {
-      this.updateEvent(e.currentTarget);
-      this.ui.submit.show();
-    }
-  },
-
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
-    console.log('DEBUG', key, value);
-    if (key === 'time') {
-      value = new Date(value);
-      if (isNaN(value)) {
-        // TODO input is not a date decide what to do
-        return;
-      }
-      value = value.getTime() / 1000;
-    } else if (key === 'tags') {
-      value = value.split(',');
-      value = value.map(function (e) {return e.trim(); })
-          .filter(function (e) {return e.length > 0; });
-    }
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-    if (key === 'streamId') {
-      $('#current-streamId label').text($('#edit-streamId option:selected').text().trim());
-    }
-    if (this.waitSubmit) {
-      this.waitSubmit = false;
-      this.submit();
-    }
-  },
-  submit: _.throttle(function () {
-    if ($('.editing').length !== 0) {
-      this.waitSubmit = true;
-      return;
-    }
+  submit: function (e) {
+    e.preventDefault();
+    this.ui.saveBtn.prop('disabled', true);
+    this.ui.saveSpin.show();
     var event = this.model.get('event');
-    this.ui.submitSpin.show();
-    this.ui.submit.prop('disabled', true);
-    if (event.id) {
-      this.model.set('event', event).save(function (err) {
-        this.ui.submit.prop('disabled', false);
-        this.ui.submitSpin.hide();
-        if (err) {
-          window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.update.' + err.id));
-        }
-      }.bind(this));
-    } else if (event.connection && event.type && event.streamId) {
-      this.model.set('event', event).create(function (err) {
-        this.ui.submit.prop('disabled', false);
-        this.ui.submitSpin.hide();
-        if (err) {
-          window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.create.' + err.id));
-        }
-      }.bind(this));
-    } else {
-
-      console.err('Creation event failed, missing valid properties', event);
-    }
-  }, 5 * 1000),
-
-  trash: function () {
-    this.ui.trashSpin.show();
-    this.ui.trash.prop('disabled', true);
-    this.model.trash(function (err) {
-      this.ui.trash.prop('disabled', false);
+    var tags = this.ui.editTags.val();
+    tags = tags.split(',');
+    tags = tags.map(function (e) {return e.trim(); })
+      .filter(function (e) {return e.length > 0; });
+    event.tags = tags;
+    event.description = this.ui.editDescription.val().trim();
+    event.streamId = this.ui.editStream.val().trim();
+    event.time = moment(this.ui.editTimePicker.data('DateTimePicker').getDate()).unix();
+    this.model.set('event', event).save(function (err) {
+      this.ui.saveBtn.prop('disabled', false);
+      this.ui.saveSpin.hide();
       if (err) {
-        window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.trash.' + err.id));
+        window.PryvBrowser.showAlert('.modal-content', i18n.t('error.detailed.update.' + err.id));
       }
-      this.ui.trashSpin.hide();
     }.bind(this));
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
   },
   getStreamStructure: function () {
     var rootStreams = this.model.get('event').connection.datastore.getStreams(),

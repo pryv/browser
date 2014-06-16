@@ -1,7 +1,5 @@
 /* global $, moment, window, i18n */
 var Marionette = require('backbone.marionette');
-var EDIT_MODE_HEIGHT = '120px';
-var NON_EDIT_MODE_HEIGHT = '60px';
 module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
   itemViewContainer: '#detail-common',
@@ -9,7 +7,6 @@ module.exports = Marionette.ItemView.extend({
   id: 'detail-full',
   // addAttachmentContainer: '#add-attachment',
   waitSubmit: false,
-  editMode: false,
   // addAttachmentId: 0,
   // attachmentId: {},
   ui: {
@@ -42,7 +39,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.editBtn.bind('click', this.showEdit.bind(this));
     this.ui.editDone.bind('click', this.hideEdit.bind(this));
     this.ui.editForm.bind('submit', this.submit.bind(this));
-    if (this.editMode) {
+    if ($('#modal-left-content').hasClass('edit')) {
       this.showEdit();
     } else {
       this.hideEdit();
@@ -58,17 +55,13 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
   },
   showEdit: function () {
-    this.editMode = true;
+    $('#modal-left-content').addClass('edit');
     this.ui.editOff.hide();
-    $('#detail-full').css('height', EDIT_MODE_HEIGHT);
-    $('#detail-content').css('bottom', EDIT_MODE_HEIGHT);
     this.ui.editOn.show();
   },
   hideEdit: function () {
-    this.editMode = false;
+    $('#modal-left-content').removeClass('edit');
     this.ui.editOn.hide();
-    $('#detail-full').css('height', NON_EDIT_MODE_HEIGHT);
-    $('#detail-content').css('bottom', NON_EDIT_MODE_HEIGHT);
     this.ui.editOff.show();
   },
   submit: function (e) {

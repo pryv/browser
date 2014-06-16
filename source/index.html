@@ -413,7 +413,8 @@
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
-      <li class="event-structure editable" id="current-content"  style="height:100%"><label><%= getContent() %></label>
+      <li class="event-structure editable" id="current-content"  style="height:100%">
+        <label class="non-editable"><%= getContent() %></label>
         <textarea class="edit form-control" id="edit-content" value="<%= event.content %>" style="height:100%"><%= event.content %></textarea>
       </li>
     <% } %>

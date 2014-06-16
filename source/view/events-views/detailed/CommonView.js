@@ -39,7 +39,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.editBtn.bind('click', this.showEdit.bind(this));
     this.ui.editDone.bind('click', this.hideEdit.bind(this));
     this.ui.editForm.bind('submit', this.submit.bind(this));
-    if ($('#modal-left-content').hasClass('edit')) {
+    if ($('#modal-left-content').hasClass('editing')) {
       this.showEdit();
     } else {
       this.hideEdit();
@@ -55,12 +55,12 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
   },
   showEdit: function () {
-    $('#modal-left-content').addClass('edit');
+    $('#modal-left-content').addClass('editing');
     this.ui.editOff.hide();
     this.ui.editOn.show();
   },
   hideEdit: function () {
-    $('#modal-left-content').removeClass('edit');
+    $('#modal-left-content').removeClass('editing');
     this.ui.editOn.hide();
     this.ui.editOff.show();
   },

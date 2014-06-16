@@ -1,6 +1,5 @@
-/* global $, FormData, window */
-var Marionette = require('backbone.marionette'),
-    _ = require('underscore');
+/* global $, window */
+var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
   type: 'Note',
@@ -8,8 +7,7 @@ module.exports = Marionette.ItemView.extend({
   itemViewContainer: '#detail-content',
   className: 'note-content',
   ui: {
-    li: 'li.editable',
-    edit: '.edit'
+    content: '#edit-content'
   },
   templateHelpers: function () {
     return {
@@ -23,30 +21,9 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    this.ui.li.bind('dblclick', this.onEditClick.bind(this));
-    this.ui.edit.bind('blur', this.onEditBlur.bind(this));
+    this.ui.content.bind('keyup input paste', function () {
+      this.model.get('event').content = this.ui.content.val();
+    }.bind(this));
     $('body').i18n();
   },
-  onEditClick: function (e) {
-    $('#submit-edit').show();
-    $(e.currentTarget).addClass('editing');
-    this.ui.edit.focus();
-  },
-  onEditBlur: function (e) {
-    this.updateEvent(e.currentTarget);
-    return true;
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val();
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
-  }
 });

@@ -30,16 +30,16 @@
   }, {
     "id": "ifttt-all",
     "displayName": "IFTTT",
-    "description": "<strong>Coming soon</strong><br>Connect to over 100 other services via IFTTT triggers and actions",
+    "description": "Connect Pryv to over 100 other products and services with Pryv Recipes on IFTTT",
     "iconURL": "https://d3gblc8a9weyfb.cloudfront.net:443/apps/ifttt-all/icon512.png",
-    "appURL": "",
-    "settingsPageURL": ""
+    "appURL": "https://ifttt.com/channels/pryv",
+    "settingsPageURL": "https://ifttt.com/channels/pryv"
   }, {
     "id": "pryv-integration-osx",
     "displayName": "Pryv OSX",
     "description": "Integrate Pryv with your desktop",
     "iconURL": "https://d3gblc8a9weyfb.cloudfront.net:443/apps/pryv-integration-osx/icon512.png",
-    "appURL": "http://dist.pryv.net/integration-osx/PryvInstaller-0.0.1.dmg",
+    "appURL": "https://itunes.apple.com/app/pryv/id881452044",
     "settingsPageURL": ""
   }]
 }

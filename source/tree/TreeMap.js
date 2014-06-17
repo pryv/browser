@@ -244,15 +244,30 @@ var TreeMap = module.exports = function (model) {
         this.trashedEvents[event.id] = event;
       }
       if (!isStreamChanged(oldEvent, event) && !isTrashedChanged(oldEvent, event)) {
-        this.root.eventChange(event, content.reason, function () {});
+        try {
+          this.root.eventChange(event, content.reason, function () {
+          });
+        } catch (e) {
+          console.warn('EventChange error:', e);
+        }
       }
       if ((isTrashedChanged(oldEvent, event) && IGNORE_TRASHED_EVENT) ||
         isStreamChanged(oldEvent, event))   {
-        this.root.eventLeaveScope(oldEvent, content.reason, function () {});
+        try {
+          this.root.eventLeaveScope(oldEvent, content.reason, function () {
+          });
+        } catch (e) {
+          console.warn('EventLeave error:', e);
+        }
       }
       if (isStreamChanged(oldEvent, event) &&
         (!IGNORE_TRASHED_EVENT || !isTrashedChanged(oldEvent, event))) {
-        this.root.eventEnterScope(event, content.reason, function () {});
+        try {
+          this.root.eventEnterScope(event, content.reason, function () {
+          });
+        } catch (e) {
+          console.warn('EventLeave error:', e);
+        }
       }
       this.events[event.id] = _.extend({}, event);
     }, this);

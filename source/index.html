@@ -561,18 +561,18 @@
   </script>
   <script type="template" id="template-detail-full">
     <% if (event) { %>
-    <div id="edit-off" class="col-xs-12">
-      <div id="stream-name" class="col-xs-1"><%= event.streamName %></div>
+    <div id="edit-off" class="edit-off">
+      <div id="stream-name" class="col-xs-2"><%= event.streamName %></div>
       <div id="date" class="col-xs-2"><%= PryvBrowser.getTimeString(event.time) %></div>
       <div id="description" class="col-xs-5"><%= event.description %></div>
-      <div id="tags" class="col-xs-3">
+      <div id="tags" class="col-xs-2">
         <% event.tags.forEach(function (tag) { %>
         <span><%= tag %></span>
         <% }) %>
       </div>
-      <div id="edit-button" class="col-xs-1"><span class="btn btn-default pull-right"  data-i18n="common.actions.edit"></span></div>
+      <div id="edit-button" class="col-xs-1"><span class="btn btn-default pull-right"><i class="ss-write"></i><span data-i18n="common.actions.edit"></span></span></div>
     </div>
-    <div id="edit-on" class="col-xs-12">
+    <div id="edit-on" class="">
       <form id="edit-form" role="form">
         <div class="form-group col-xs-4">
           <label for="edit-stream" data-i18n="common.messages.changeMe"></label>
@@ -593,8 +593,10 @@
           <label for="edit-description" data-i18n="common.messages.changeMe"></label>
           <input type="text" id="edit-description" class="form-control" value="<%= event.description %>">
         </div>
-        <a id="edit-done" data-i18n="common.messages.changeMe"></a>
-        <button id="edit-save" type="submit" class="btn btn-default"><i class="fa fa-spinner fa-spin" style="display: none"></i><span data-i18n="common.actions.save"></span></button>
+        <div class="form-group col-xs-8" style="text-align:right;">
+          <button id="edit-done" type="button" class="btn btn-default">Return to preview</button>
+          <button id="edit-save" type="submit" class="btn btn-primary"><i class="fa fa-spinner fa-spin" style="display: none"></i><span data-i18n="common.actions.save"></span></button>
+        </div>
       </form>
     </div>
     <% } %>

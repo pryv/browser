@@ -44,6 +44,8 @@ module.exports = Marionette.ItemView.extend({
     } else {
       this.hideEdit();
     }
+    // Can cause problem if custom time selector is open
+    $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
     this.ui.editTimePicker.datetimepicker({
       direction: 'auto',
       language: i18n.lng()

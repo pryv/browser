@@ -788,15 +788,6 @@ text-align: center;*/
   max-width: 80px;
   max-height: 80px;
 }
-#filter {
-  bottom: 51px;
-  /*height: 40px;*/
-  background-color: #bdc3c7;
-  position: absolute;
-  width: 100%;
-  color: #ecf0f1;
-  padding: 10px;
-}
 #detail-list .row {
   margin: 0;
 }
@@ -886,8 +877,21 @@ text-align: center;*/
   display: none;
 }
 
+/* Detail Action view */
 
+#action-view {
+  position: absolute;
+  width: 100%;
+  top: 51px;
+  background-color: #fff;
+  bottom: 0;
+}
 
+#filter {
+  width: 100%;
+  color: #ecf0f1;
+  padding: 10px;
+}
 .preSelected-stream {
   background: #1D9BD7;
 }

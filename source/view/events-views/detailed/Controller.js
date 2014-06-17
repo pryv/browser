@@ -4,6 +4,7 @@ var _ = require('underscore'),
     Model = require('./EventModel.js'),
     ListView = require('./ListView.js'),
     CommonView = require('./CommonView.js'),
+    ActionView = require('./ActionView.js'),
     GenericContentView = require('./contentView/Generic.js'),
     TweetContentView = require('./contentView/Tweet.js'),
     NoteContentView = require('./contentView/Note.js'),
@@ -27,6 +28,7 @@ var Controller = module.exports = function ($modal, connections, stream, target)
   this.listView = null;
   this.commonView = null;
   this.contentView = null;
+  this.actionView = null;
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';
@@ -69,6 +71,10 @@ _.extend(Controller.prototype, {
         collection: this.listViewcollection
       });
       this.listView.on('showMore', this.debounceAdd.bind(this));
+      this.listView.on('itemview:item:checked', function () {
+        console.log('DEBUG', 'on checked');
+        this.openActionView();
+      }.bind(this));
       this.listView.on('itemview:date:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
         this.listViewcollection.setCurrentElement(evt.model);
@@ -125,7 +131,17 @@ _.extend(Controller.prototype, {
       this.$modal.trigger('hidden.bs.modal');
     }
   },
-
+  openActionView: function () {
+    if (!this.actionView) {
+      console.log('DEBUG', 'actionView render');
+      this.actionView = new ActionView({collection: this.collection});
+      this.actionView.render();
+      this.actionView.on('close', function () {
+        this.actionView.close();
+        this.actionView = null;
+      }.bind(this));
+    }
+  },
   getEventById: function (event) {
     return [this.collection.getEventById(event.id),
       this.listViewcollection.getEventById(event.id)];

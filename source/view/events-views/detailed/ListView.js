@@ -27,7 +27,17 @@ listView.initialize = function () {
   //this.listenTo(this.collection, 'change', this.bindClick);
 };
 listView.scrollTo = function () {
-  $('#detail-list').scrollTo('.detail-item.highlighted');
+  var $detailList = $('#detail-list');
+  var listHeight = $detailList.height();
+  var $item = $('.detail-item.highlighted');
+  var itemHeight = $item.height();
+  var itemPosition = $item.position().top;
+  if (itemPosition < 0) {
+    $detailList.scrollTo($item, 100);
+  } else if (itemPosition > listHeight - itemHeight) {
+    $detailList.scrollTo($item, 100, {offset: itemHeight - listHeight});
+  }
+  //$('#detail-list').scrollTo('.detail-item.highlighted');
 };
 listView.appendHtml = function (collectionView, itemView) {
   $(this.itemViewContainer).append(itemView.el);

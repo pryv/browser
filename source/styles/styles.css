@@ -139,7 +139,7 @@ body{
   margin-left: 5px;
   padding: 0 25px;
   position: relative;
-  cursor: pointer;
+ /* cursor: pointer; */ 
 }
 .connection > .pryv-checkbox > label {
   /*font-weight: 700;*/
@@ -160,7 +160,9 @@ body{
 .pryv-radio input[type=radio]:checked + label:before {
   content: "\f192";
 }
-
+.pryv-checkbox label:hover:before {
+background-color: #00A8E2;
+}
 .pryv-checkbox label:before {
   width: 20px;
   margin-top: 10px;
@@ -784,6 +786,7 @@ text-align: center;*/
   border-bottom: silver solid 1px;
   list-style: none;
   position:relative;
+  cursor: pointer;
 }
 .preview img {
   max-width: 80px;
@@ -827,7 +830,8 @@ text-align: center;*/
   outline-offset: -5px;
 }
 #detail-list li:hover{
-  background-color: #bdc3c7;
+  /*outline: red solid 5px;*/
+  opacity:.7;
 }
 #modal-left-content, #detail-common {
   width: inherit;
@@ -884,14 +888,12 @@ text-align: center;*/
   position: absolute;
   width: 100%;
   top: 51px;
-  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.8);
   bottom: 0;
+  padding: 20px;
 }
 
 #filter {
-  width: 100%;
-  color: #ecf0f1;
-  padding: 10px;
 }
 .preSelected-stream {
   background: #1D9BD7;

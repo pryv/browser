@@ -83,7 +83,9 @@ module.exports = Marionette.ItemView.extend({
     }
   },
   onClose: function () {
-    this.chartView.close();
+    if (this.chartView) {
+      this.chartView.close();
+    }
     this.chartView = null;
     $(this.itemViewContainer).empty();
   }

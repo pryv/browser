@@ -88,7 +88,6 @@ module.exports = Marionette.ItemView.extend({
   check: function () {
     this.ui.checkbox[0].checked = !!this.model.get('checked');
     this.ui.checkbox[0].checked = !!this.model.get('checked');
-    console.log('DEBUG', 'ui.check', !!this.ui.checkbox[0].checked);
   },
   highlight: function () {
     if (this.model.get('highlighted')) {
@@ -111,7 +110,6 @@ module.exports = Marionette.ItemView.extend({
           });
     }
     this.$el.bind('click', function () {
-      console.log('DEBUG', 'trigger date');
       this.trigger('date:clicked', this.model);
     }.bind(this));
 
@@ -121,6 +119,9 @@ module.exports = Marionette.ItemView.extend({
       this.check();
       this.trigger('item:checked');
     }.bind(this));
+    this.$('label').bind('click', function (e) {
+      e.stopPropagation();
+    });
     $(this.$el).find('.Center-Container').dotdotdot({watch: true, wrap: 'letter'});
   }
 });

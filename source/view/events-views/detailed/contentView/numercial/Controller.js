@@ -218,6 +218,8 @@ module.exports = Marionette.ItemView.extend({
     this.view.close();
   },
   debounceChildRender: _.debounce(function () {
-    this.view.render();
+    if (this.view) {
+      this.view.render();
+    }
   }, 1000)
 });

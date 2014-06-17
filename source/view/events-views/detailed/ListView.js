@@ -33,9 +33,9 @@ listView.scrollTo = function () {
   var itemHeight = $item.height();
   var itemPosition = $item.position().top;
   if (itemPosition < 0) {
-    $detailList.scrollTo($item, 100);
+    $detailList.scrollTo($item, 0);
   } else if (itemPosition > listHeight - itemHeight) {
-    $detailList.scrollTo($item, 100, {offset: itemHeight - listHeight});
+    $detailList.scrollTo($item, 0, {offset: itemHeight - listHeight});
   }
   //$('#detail-list').scrollTo('.detail-item.highlighted');
 };

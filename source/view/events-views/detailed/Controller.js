@@ -72,7 +72,6 @@ _.extend(Controller.prototype, {
       });
       this.listView.on('showMore', this.debounceAdd.bind(this));
       this.listView.on('itemview:item:checked', function () {
-        console.log('DEBUG', 'on checked');
         this.openActionView();
       }.bind(this));
       this.listView.on('itemview:date:clicked', function (evt) {
@@ -133,7 +132,6 @@ _.extend(Controller.prototype, {
   },
   openActionView: function () {
     if (!this.actionView) {
-      console.log('DEBUG', 'actionView render');
       this.actionView = new ActionView({collection: this.collection});
       this.actionView.render();
       this.actionView.on('close', function () {

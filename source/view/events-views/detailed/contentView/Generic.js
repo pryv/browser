@@ -16,7 +16,9 @@ module.exports = Marionette.ItemView.extend({
   templateHelpers: function () {
     return {
       showContent: function () {
-        return this.objectToHtml(null, this.model.get('event').content, 'content');
+        var result = '<h5>Content</h5>';
+        result += this.renderContent(this.model.get('event').content);
+        return result;
       }.bind(this),
       showAttachment: function () {
         return this.showAttachment();
@@ -81,11 +83,11 @@ module.exports = Marionette.ItemView.extend({
       html += '<li id="' + keys[0] + '"> <a href="' + href + '" target="_blank">' +
         '<span class="fa fa-paperclip"></span> ' + attachments[keys[0]].fileName + '</a></li>';
       this.attachmentId[keys[0]] = attachments[keys[0]].fileName;
-     /* _.each(_.keys(attachments), function (k) {
-        html += '<li id="' + k + '">' + k + ': <a href="' + href + '" target="_blank"> ' +
-          attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
-        this.attachmentId[k] = attachments[k].fileName;
-      }.bind(this));  */
+      /* _.each(_.keys(attachments), function (k) {
+       html += '<li id="' + k + '">' + k + ': <a href="' + href + '" target="_blank"> ' +
+       attachments[k].fileName + '</a>  <i class="delete"></i> </li>';
+       this.attachmentId[k] = attachments[k].fileName;
+       }.bind(this));  */
       html += '</ul>';
     } else {
       return '';
@@ -112,32 +114,47 @@ module.exports = Marionette.ItemView.extend({
   completeEdit: function ($elem) {
     $($elem).removeClass('editing');
   },
-  objectToHtml: function (key, value, id) {
-    if (! value) {
-      return '';
-    }
-    var result = '';
-    if (! key) { // HACK: i.e. is root
-      result += '<h5>Content</h5>';
-    }
-    if (_.isObject(value)) {
-      if (key) {
-        result += '<strong>' + key + '</strong>';
-      }
-      result += '<ul>';
-      _.each(_.keys(value), function (k) {
-        var subId = id + '-' + k;
-        result += '<li class="editable" id="current-' + subId + '">' +
-            this.objectToHtml(k, value[k], subId) +
-            '</li>';
-      }.bind(this));
-      result += '</ul>';
+  renderContent: function (content, cssExtraClass) {
+    var classSuffix = cssExtraClass ? (' ' + cssExtraClass) : '';
+    if (_.isBoolean(content)) {
+      return this.renderSimpleValue(content, 'generic-bool' + classSuffix);
+    } else if (_.isNumber(content)) {
+      return this.renderSimpleValue(content, 'generic-num' + classSuffix);
+    } else if (_.isString(content)) {
+      return this.renderSimpleValue(content, 'generic-str' + classSuffix);
+    } else if (_.isArray(content)) {
+      return this.renderArray(content, 'generic-arr' + classSuffix);
+    } else if (_.isObject(content)) {
+      return this.renderObject(content, 'generic-obj' + classSuffix);
     } else {
-      if (key) {
-        result += '<span class="obj-key">' + key + ':</span> ';
-      }
-      result += '<label>' + value + '</label>'; // removed input here, wasn't usable anyway
+      throw new Error('Unknown content type: ' + content);
     }
-    return result;
+  },
+
+  renderSimpleValue: function (value, cssClass) {
+    return '<span class="' + cssClass + '">' + value + '</span>';
+  },
+
+  renderObject: function (obj, cssClass) {
+    var res = '<ul class="' + cssClass + '">';
+    _.each(obj, function (value, key) {
+      res += '<li class="generic-prop">';
+      res += '<span class="generic-prop-key">' + key + '</span>';
+      res += this.renderContent(value, 'generic-prop-val');
+      res += '</li>';
+    }.bind(this));
+    res += '</ul>';
+    return res;
+  },
+
+  renderArray: function (arr, cssClass) {
+    var res = '<ol class="' + cssClass + '">';
+    _.each(arr, function (item) {
+      res += '<li class="generic-arr-item">';
+      res += this.renderContent(item);
+      res += '</li>';
+    }.bind(this));
+    res += '</ol>';
+    return res;
   }
 });

@@ -893,6 +893,31 @@ text-align: center;*/
   display: none;
 }
 
+ul.generic-obj {
+  padding-left: 0;
+  list-style-type: none;
+}
+ol.generic-arr {
+  padding-left: 1.25em;
+}
+ul.generic-obj.generic-prop-val, ol.generic-arr.generic-prop-val {
+  margin-top: 0.3em;
+  margin-left: 1.25em;
+}
+li.generic-arr-item > ul {
+  margin: 0;
+}
+li.generic-prop, li.generic-arr-item {
+  margin-bottom: 0.3em;
+}
+.generic-prop-key {
+  margin-right: 0.3em;
+  padding: 2px 0.3em;
+  border: 1px solid #CCC;
+  border-radius: 3px;
+  font-size: 0.9em;
+  font-weight: bold;
+}
 /* Detail Action view */
 
 #action-view {

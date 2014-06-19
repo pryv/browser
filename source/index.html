@@ -575,26 +575,27 @@
     <div id="edit-on" class="">
       <form id="edit-form" role="form">
         <div class="form-group col-xs-4">
-          <label for="edit-stream" data-i18n="common.messages.changeMe"></label>
+          <label for="edit-stream" data-i18n="events.common.labels.stream"></label>
           <select id="edit-stream" class="form-control" ><%= getStreamStructure() %></select>
         </div>
         <div class="form-group col-xs-4">
+          <label for="edit-time" data-i18n="events.common.labels.time"></label>
           <div class='input-group' id='edit-time-picker'>
-            <label for="edit-time" data-i18n="common.messages.changeMe"></label>
             <input type='text' class="form-control" id="edit-time"/>
             <span class="input-group-addon"><span class="fa fa-calendar"></span></span>
           </div>
         </div>
         <div class="form-group col-xs-4">
-          <label for="edit-tags" data-i18n="common.messages.changeMe"></label>
-          <input type="text" id="edit-tags" class="form-control" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>">
+          <label for="edit-tags" data-i18n="events.common.labels.tags"></label>
+          <input type="text" id="edit-tags" class="form-control" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>" data-i18n="[placeholder]events.common.labels.tagsPlaceholder">
         </div>
         <div class="form-group col-xs-4">
-          <label for="edit-description" data-i18n="common.messages.changeMe"></label>
-          <input type="text" id="edit-description" class="form-control" value="<%= event.description %>">
+          <label for="edit-description" data-i18n="events.common.labels.description"></label>
+          <input type="text" id="edit-description" class="form-control" value="<%= event.description %>" data-i18n="[placeholder]events.common.labels.descriptionPlaceholder">
         </div>
         <div class="form-group col-xs-8" style="text-align:right;">
-          <button id="edit-done" type="button" class="btn btn-default">Return to preview</button>
+          <!-- TODO: this button should be named "...cancel", "...done" is misleading -->
+          <button id="edit-done" type="button" class="btn btn-default" data-i18n="common.actions.cancel"></button>
           <button id="edit-save" type="submit" class="btn btn-primary"><i class="fa fa-spinner fa-spin" style="display: none"></i><span data-i18n="common.actions.save"></span></button>
         </div>
       </form>

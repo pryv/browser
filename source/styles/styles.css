@@ -747,12 +747,15 @@ text-align: center;*/
   position: relative;
   height: 100%;
   overflow: auto;
-  padding: 30px;
+  padding: 15px;
   list-style-type: none;
 }
 .note-content label{
   font-weight: normal;
   font-size: 22px;
+}
+.note-content textarea {
+  resize: none;
 }
 .modal-body {
   padding: 0;
@@ -1651,7 +1654,8 @@ color: #FFF;
   overflow: hidden;
 }
 #zenbox_tab:hover, #zenbox_tab:focus {
-  outline: 1px solid #FFF;
+  -webkit-box-shadow: 0 0 0 1px #FFF;
+  box-shadow: 0 0 0 1px #FFF;
 }
 #zenbox_tab img {
   margin: -2px;

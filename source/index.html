@@ -402,12 +402,14 @@
       </div>
     </div>
   </script>
-  <script type="template" id="template-detail-action-view">
-    <div id="filter">
-      <p>You have selected <span>12</span> item</p>
-      <p class="btn-group">
-        <button id="select-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.all">All</button>
-        <button id="unselect-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.none">None</button>
+  <script type="template" id="template-detail-batch-action-view">
+    <div id="batch-action">
+      <p>
+        <span id="batch-action-items-selected">* items selected</span>
+        <span class="btn-group">
+          <button id="select-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.selectAll">Select all</button>
+          <button id="unselect-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.selectNone">Select none</button>
+        </span>
       </p>
       <p>
         <button id="cancel" type="button" class="btn btn-default" data-i18n="common.actions.cancel">Cancel</button>

@@ -893,19 +893,17 @@ text-align: center;*/
   display: none;
 }
 
-/* Detail Action view */
+/* Detail batch action view */
 
-#action-view {
+#batch-action-view {
   position: absolute;
   width: 100%;
-  top: 51px;
-  background-color: rgba(255, 255, 255, 0.8);
+  top: 0;
   bottom: 0;
   padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
-#filter {
-}
 .preSelected-stream {
   background: #1D9BD7;
 }

@@ -36,12 +36,13 @@
     "common": {
       "actions": {
         "addNewStream": "Add new stream",
-        "all": "All",
         "deleteSelected": "Delete selected",
-        "none": "None"
+        "selectAll": "All",
+        "selectNone": "None"
       },
       "labels": {
         "addEventTitle": "Add content",
+        "batchActionItemsSelected": "<strong>__count__</strong> item(s) selected",
         "description": "Description",
         "descriptionPlaceholder": "Description (optional)",
         "detailViewTitle": "__count__ __type__ in <strong>__stream__</strong>",

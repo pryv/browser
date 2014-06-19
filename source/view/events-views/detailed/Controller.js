@@ -4,7 +4,7 @@ var _ = require('underscore'),
     Model = require('./EventModel.js'),
     ListView = require('./ListView.js'),
     CommonView = require('./CommonView.js'),
-    ActionView = require('./ActionView.js'),
+    BatchActionView = require('./BatchActionView.js'),
     GenericContentView = require('./contentView/Generic.js'),
     TweetContentView = require('./contentView/Tweet.js'),
     NoteContentView = require('./contentView/Note.js'),
@@ -28,7 +28,7 @@ var Controller = module.exports = function ($modal, connections, stream, target)
   this.listView = null;
   this.commonView = null;
   this.contentView = null;
-  this.actionView = null;
+  this.batchActionView = null;
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';
@@ -72,7 +72,7 @@ _.extend(Controller.prototype, {
       });
       this.listView.on('showMore', this.debounceAdd.bind(this));
       this.listView.on('itemview:item:checked', function () {
-        this.openActionView();
+        this.updateBatchActionView();
       }.bind(this));
       this.listView.on('itemview:date:clicked', function (evt) {
         this.collection.setCurrentElement(evt.model);
@@ -130,14 +130,16 @@ _.extend(Controller.prototype, {
       this.$modal.trigger('hidden.bs.modal');
     }
   },
-  openActionView: function () {
-    if (!this.actionView) {
-      this.actionView = new ActionView({collection: this.collection});
-      this.actionView.render();
-      this.actionView.on('close', function () {
-        this.actionView.close();
-        this.actionView = null;
+  updateBatchActionView: function () {
+    if (!this.batchActionView) {
+      this.batchActionView = new BatchActionView({collection: this.collection});
+      this.batchActionView.render();
+      this.batchActionView.on('close', function () {
+        this.batchActionView.close();
+        this.batchActionView = null;
       }.bind(this));
+    } else {
+      this.batchActionView.render();
     }
   },
   getEventById: function (event) {

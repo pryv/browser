@@ -893,7 +893,8 @@ text-align: center;*/
   display: none;
 }
 
-ul.generic-obj {
+/* Generic event content display */
+ul.generic-obj, ul.generic-attachments {
   padding-left: 0;
   list-style-type: none;
 }
@@ -901,22 +902,25 @@ ol.generic-arr {
   padding-left: 1.25em;
 }
 ul.generic-obj.generic-prop-val, ol.generic-arr.generic-prop-val {
-  margin-top: 0.3em;
+  margin-top: 0.5em;
   margin-left: 1.25em;
 }
 li.generic-arr-item > ul {
   margin: 0;
 }
 li.generic-prop, li.generic-arr-item {
-  margin-bottom: 0.3em;
+  margin-bottom: 0.5em;
 }
 .generic-prop-key {
-  margin-right: 0.3em;
-  padding: 2px 0.3em;
-  border: 1px solid #CCC;
-  border-radius: 3px;
+  margin-right: 0.5em;
+  padding: 1px 0.5em;
+  background-color: #DFDFDF;
   font-size: 0.9em;
   font-weight: bold;
+}
+.generic-type {
+  padding: 2px 0.5em;
+  background-color: #DFDFDF;
 }
 
 #batch-action-view {
@@ -1568,37 +1572,35 @@ color: #BD1727;
 
 
 /* OVERIDE BOOTSTRAP*/
-.table tbody {
-/*font-weight: bold;*/
+h5 {
+  text-transform: uppercase;
 }
-h5 {text-transform: uppercase;color: #DFDFDF;}
 .table-striped>tbody>tr:nth-child(odd)>td, .table-striped>tbody>tr:nth-child(odd)>th {
-background-color: #F7F9FA;
+  background-color: #F7F9FA;
 }
 td > .btn-default {
-border-radius: 14px;
-padding:6px 22px;
+  border-radius: 14px;
+  padding:6px 22px;
 }
 td > .btn-default.btn-xs  {
-border-radius: 14px;
-padding: 2px 13px;
+  border-radius: 14px;
+  padding: 2px 13px;
 }
-*/
 .table tbody>tr>td, .table tbody>tr>th, .table tfoot>tr>td, .table tfoot>tr>th, .table thead>tr>td, .table thead>tr>th {
-border-top: 1px solid #EFF4F7;
-font-weight: bold;
+  border-top: 1px solid #EFF4F7;
+  font-weight: bold;
 }
 .table thead>tr>th {
-border-bottom: 0px solid #DDD;
-font-weight: 300;
-font-size: 11px;
+  border-bottom: 0px solid #DDD;
+  font-weight: 300;
+  font-size: 11px;
 }
 .modal-title {
-font-size: 14px;
-font-weight: normal;
+  font-size: 14px;
+  font-weight: normal;
 }
 .chartview-zoompan-ui {
-    float: right;
+  float: right;
 }
 
 span.value {
@@ -1663,7 +1665,7 @@ color: #FFF;
 }
 
 /* temp stuff for generic events detailed view, TODO: cleanup */
-#full-content:not(:empty), #full-attachment:not(:empty), #add-attachment:not(:empty) {
+#full-type, #full-content, #full-attachment, #add-attachment:not(:empty) {
   padding: 10px 15px;
 }
 

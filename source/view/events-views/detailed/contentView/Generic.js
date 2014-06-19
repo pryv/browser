@@ -15,13 +15,11 @@ module.exports = Marionette.ItemView.extend({
   },
   templateHelpers: function () {
     return {
-      showContent: function () {
-        var result = '<h5>Content</h5>';
-        result += this.renderContent(this.model.get('event').content);
-        return result;
+      renderContent: function () {
+        return this.renderContent(this.model.get('event').content);
       }.bind(this),
-      showAttachment: function () {
-        return this.showAttachment();
+      renderAttachments: function () {
+        return this.renderAttachments();
       }.bind(this)
     };
   },
@@ -70,13 +68,12 @@ module.exports = Marionette.ItemView.extend({
     this.model.addAttachment(file);
     this.addAttachment();
   },
-  showAttachment: function () {
+  renderAttachments: function () {
     var event =  this.model.get('event');
     var attachments = event.attachments;
     var html = '';
     if (attachments) {
-      html += '<h5>File(s)</h5>';
-      html += '<ul>';
+      html += '<ul class="generic-attachments">';
       var keys = _.keys(attachments);
       var href = event.url + '/' + attachments[keys[0]].id + '/' +
         attachments[keys[0]].fileName + '?readToken=' + attachments[keys[0]].readToken;

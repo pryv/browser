@@ -359,10 +359,25 @@
   <script type="template" id="template-detail-content-position">
   </script>
   <script type="template" id="template-detail-content-generic">
-    <% if (event) {%>
-    <div class="event-structure" id="full-content"><%= showContent() %></div>
-    <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
-    <div class="event-structure" id="add-attachment"></div>
+    <!-- TODO: cleanup this markup (there should be just one wrapping div handling padding etc.); also applies to other places using "event-structure" -->
+    <% if (event) { %>
+      <% if (event.content) { %>
+        <div class="event-structure" id="full-content">
+          <h5 data-i18n="events.generic.labels.contentTitle">Content</h5>
+          <%= renderContent() %>
+        </div>
+      <% } %>
+      <% if (event.attachments) { %>
+        <div class="event-structure" id="full-attachment">
+          <h5 data-i18n="events.generic.labels.attachmentsTitle">File(s)</h5>
+          <%= renderAttachments() %>
+        </div>
+      <% } %>
+      <div class="event-structure" id="full-type">
+        <h5 data-i18n="events.generic.labels.typeTitle">Type</h5>
+        <p><span class="generic-type"><%= event.type %></span></p>
+      </div>
+      <div class="event-structure" id="add-attachment"></div>
     <% } %>
   </script>
   <script type="template" id="template-detail-creation-type">

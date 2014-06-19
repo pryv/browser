@@ -79,7 +79,10 @@
     },
     "generic": {
       "labels": {
-        "items": "item(s)"
+        "attachmentsTitle": "File(s)",
+        "contentTitle": "Content",
+        "items": "item(s)",
+        "typeTitle": "Type"
       }
     },
     "message": {

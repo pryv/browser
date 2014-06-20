@@ -5,13 +5,14 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.10.10/">
+  <base href="{browser-source}_v0.11.1/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+  <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.10.10/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.10.10/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.11.1/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.11.1/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -334,10 +335,25 @@
   <script type="template" id="template-detail-content-position">
   </script>
   <script type="template" id="template-detail-content-generic">
-    <% if (event) {%>
-    <div class="event-structure" id="full-content"><%= showContent() %></div>
-    <div class="event-structure" id="full-attachment"><%= showAttachment() %></div>
-    <div class="event-structure" id="add-attachment"></div>
+    <!-- TODO: cleanup this markup (there should be just one wrapping div handling padding etc.); also applies to other places using "event-structure" -->
+    <% if (event) { %>
+      <% if (event.content) { %>
+        <div class="event-structure" id="full-content">
+          <h5 data-i18n="events.generic.labels.contentTitle">Content</h5>
+          <%= renderContent() %>
+        </div>
+      <% } %>
+      <% if (event.attachments) { %>
+        <div class="event-structure" id="full-attachment">
+          <h5 data-i18n="events.generic.labels.attachmentsTitle">File(s)</h5>
+          <%= renderAttachments() %>
+        </div>
+      <% } %>
+      <div class="event-structure" id="full-type">
+        <h5 data-i18n="events.generic.labels.typeTitle">Type</h5>
+        <p><span class="generic-type"><%= event.type %></span></p>
+      </div>
+      <div class="event-structure" id="add-attachment"></div>
     <% } %>
   </script>
   <script type="template" id="template-detail-creation-type">
@@ -377,6 +393,21 @@
       </div>
     </div>
   </script>
+  <script type="template" id="template-detail-batch-action-view">
+    <div id="batch-action">
+      <p>
+        <span id="batch-action-items-selected">* items selected</span>
+        <span class="btn-group">
+          <button id="select-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.selectAll">Select all</button>
+          <button id="unselect-all" type="button" class="btn btn-default btn-xs" data-i18n="events.common.actions.selectNone">Select none</button>
+        </span>
+      </p>
+      <p>
+        <button id="cancel" type="button" class="btn btn-default" data-i18n="common.actions.cancel">Cancel</button>
+        <button id="trash" type="button" class="btn btn-danger"><i class="fa fa-spin fa-spinner" style="display: none;"></i><span data-i18n="events.common.actions.deleteSelected">Delete selected</span></button>
+      </p>
+    </div>
+  </script>
   <script type="template" id="template-detail-creation-event">
     <div id="creation-content">
     <div class="creation-typed creation-typed-<%= getEventType() %> full-height col-md-9">
@@ -384,11 +415,12 @@
     </div>
     <div id="creation-select-stream" class="full-height col-md-3"><h3 data-i18n="events.common.labels.streamSelection"></h3><%= getStream() %></div>
     </div>
-    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-pryv-turquoise" ><span data-i18n="common.actions.add"></span> <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn" data-i18n="common.actions.cancel"></button></div>
+    <div id="creation-footer" class="col-md-12"><button id="publish" class="btn btn-primary" ><span data-i18n="common.actions.add"></span> <i class="fa fa-spinner fa-spin"></i></button><button id="cancel" class="btn btn-default" data-i18n="common.actions.cancel"></button></div>
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
-      <li class="event-structure editable" id="current-content"  style="height:100%"><label><%= getContent() %></label>
+      <li class="event-structure editable" id="current-content"  style="height:100%">
+        <label class="non-editable"><%= getContent() %></label>
         <textarea class="edit form-control" id="edit-content" value="<%= event.content %>" style="height:100%"><%= event.content %></textarea>
       </li>
     <% } %>
@@ -396,8 +428,8 @@
   <script type="template" id="template-detail-content-picture">
     <% if (event) { %>
       <div class="event-structure full-height full-width" id="current-picture">
-        <span class="fa fa-angle-left picture-icon"></span>
-        <span class="fa fa-angle-right picture-icon"></span>
+        <!--<span class="fa fa-angle-left picture-icon"></span>
+        <span class="fa fa-angle-right picture-icon"></span> -->
             <img src="<%= getSrc() %>" alt="<%= getAlt()%>">
             <!--<div class="event-structure" id="add-attachment"></div> -->
       </div>
@@ -520,9 +552,66 @@
         </div>
       </div>
   </script>
-
   <script type="template" id="template-detail-full">
-      <% if (event) {%>
+    <% if (event) { %>
+    <div id="edit-off" class="edit-off">
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <%= event.streamName %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <%= PryvBrowser.getTimeString(event.time) %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-5">
+        <div class="event-detail-prop-inner">
+          <%= event.description %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <% event.tags.forEach(function (tag) { %>
+          <span class="tag"><%= tag %></span>
+          <% }) %>
+        </div>
+      </div>
+      <div id="edit-button" class="col-xs-1"><span class="btn btn-default pull-right"><i class="ss-write"></i><span data-i18n="common.actions.edit"></span></span></div>
+    </div>
+    <div id="edit-on" class="">
+      <form id="edit-form" role="form">
+        <div class="form-group col-xs-4">
+          <label for="edit-stream" data-i18n="events.common.labels.stream"></label>
+          <select id="edit-stream" class="form-control" ><%= getStreamStructure() %></select>
+        </div>
+        <div class="form-group col-xs-4">
+          <label for="edit-time" data-i18n="events.common.labels.time"></label>
+          <div class='input-group' id='edit-time-picker'>
+            <input type='text' class="form-control" id="edit-time"/>
+            <span class="input-group-addon"><span class="fa fa-calendar"></span></span>
+          </div>
+        </div>
+        <div class="form-group col-xs-4">
+          <label for="edit-tags" data-i18n="events.common.labels.tags"></label>
+          <input type="text" id="edit-tags" class="form-control" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>" data-i18n="[placeholder]events.common.labels.tagsPlaceholder">
+        </div>
+        <div class="form-group col-xs-4">
+          <label for="edit-description" data-i18n="events.common.labels.description"></label>
+          <input type="text" id="edit-description" class="form-control" value="<%= event.description %>" data-i18n="[placeholder]events.common.labels.descriptionPlaceholder">
+        </div>
+        <div class="form-group col-xs-8" style="text-align:right;">
+          <!-- HACK to align with other inputs -->
+          <label>&nbsp;</label><br>
+          <button id="edit-stop-editing" type="button" class="btn btn-default" data-i18n="common.actions.stopEditing"></button>
+          <button id="edit-save" type="submit" class="btn btn-primary"><i class="fa fa-spinner fa-spin" style="display: none"></i><span data-i18n="common.actions.save"></span></button>
+        </div>
+      </form>
+    </div>
+    <% } %>
+  </script>
+  <script type="template" id="template-detail-fullqqqq">
+      <% if (event) { %>
       <ul>
         <li class="event-structure editable" id="current-streamId"><span data-i18n="events.common.labels.stream"></span>: <label><%= event.streamName
           %></label>
@@ -547,7 +636,7 @@
           <% }) %>
           <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>"></li>
 
-        <button id ="submit-edit" type="button" class="btn btn-pryv-turquoise"><span data-i18n="common.actions.save"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
+        <button id ="submit-edit" type="button" class="btn btn-primary"><span data-i18n="common.actions.save"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
         <button id ="trash-edit" type="button" class="btn btn-danger"><span data-i18n="common.actions.delete"></span><i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
       </ul>
       <% } %>
@@ -574,14 +663,14 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.10.10</span>
+    <span class="version">Browser v0.11.1</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
 <script type="template" id="actions-template">
     <li><button type="button" class="logo-subscribe btn btn-default btn-block"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.actions.followSlice"></span></button></li>
-    <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-share-alt"></span> <span data-i18n="slices.actions.shareSlice"></span></button></li>
-    <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="glyphicon glyphicon-star"></span> <span data-i18n="slices.actions.manageSlices"></span></button></li>
+    <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="ss-share"></span> <span data-i18n="slices.actions.shareSlice"></span></button></li>
+    <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="ss-star"></span> <span data-i18n="slices.actions.manageSlices"></span></button></li>
 
 </script>
 <script type="template" id="filter-by-stream-template">
@@ -631,11 +720,11 @@
     <div id="create-sharings-form"></div>
     <div id="success-sharings"></div>
     <div id="creation-footer" class="col-md-12">
-      <button id="publish" class="btn btn-pryv-turquoise">
+      <button id="publish" class="btn btn-primary">
         <span data-i18n="slices.actions.share"></span>
         <i class="fa fa-spinner fa-spin" style="display: none;"></i>
       </button>
-      <button id="cancel" class="btn" data-dismiss="modal"><%= i18n.t('common.actions.cancel') %></button>
+      <button id="cancel" class="btn btn-default" data-dismiss="modal"><%= i18n.t('common.actions.cancel') %></button>
     </div>
   </div>
 </script>
@@ -799,13 +888,14 @@
     <div class="thumbnail">
       <div class="app-icon">
         <img src="<%= app.iconURL %>">
+        <% if (app.appURL && app.appURL.length > 0) { %>
+          <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="settings.connectedApps.actions.connect"></a></p>
+        <% } %>
       </div>
       <div class="apps-item-content">
         <h4><%= app.displayName %></h4>
         <p><%= app.description %></p>
-        <% if (app.appURL && app.appURL.length > 0) { %>
-        <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="settings.connectedApps.actions.connect"></a></p>
-        <% } %>
+
       </div>
     </div></script>
 <script type="template" id="other-apps-list-settings-template">
@@ -869,16 +959,16 @@
   </div>
 </div>
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
-    <a href="#" id="logo-reload" class="logo">Pryv</a>
+    <div href="#" id="logo-reload" class="logo">Pryv</div>
       <ul class="nav navbar-nav navbar-left">
         <li id="togglePanel">
         <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
         </li>
         <li id="addEvent">
-          <a href="javascript:void(0)" ><span class="ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>
+          <a href="javascript:void(0)" ><span class="icon ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>
         </li>
         <li id="connectApps">
-          <a href="javascript:void(0)" ><span class="ss-piechart"></span> <span data-i18n="nav.actions.connectApps"></span></a>
+          <a href="javascript:void(0)" ><span class="icon ss-piechart"></span> <span data-i18n="nav.actions.connectApps"></span></a>
         </li>
       </ul>
     <ul class="nav navbar-nav navbar-right">
@@ -894,6 +984,7 @@
         </li>
 
       </ul>
+      <a id="back-tree" class="btn-back-tree ss-home" href="#" ></a>
   </nav>
 
 <div id="tree">
@@ -918,5 +1009,23 @@
 </div>
 <!-- /.modal -->
 </div>
+
+<!-- Zendesk "help" tab snippet -->
+<script type="text/javascript" src="//assets.zendesk.com/external/zenbox/v2.6/zenbox.js"></script>
+<style type="text/css" media="screen, projection">
+  @import url(//assets.zendesk.com/external/zenbox/v2.6/zenbox.css);
+</style>
+<script type="text/javascript">
+  if (typeof(Zenbox) !== "undefined") {
+    Zenbox.init({
+      dropboxID:   "20259791",
+      url:         "https://pryv.zendesk.com",
+      tabTooltip:  "Help",
+      tabImageURL: "https://p3.zdassets.com/external/zenbox/images/tab_help_right.png",
+      tabColor:    "#333",
+      tabPosition: "Right"
+    });
+  }
+</script>
 </body>
 </html>

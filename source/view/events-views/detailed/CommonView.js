@@ -14,7 +14,7 @@ module.exports = Marionette.ItemView.extend({
     editForm: '#edit-form',
     editOff: '#edit-off',
     editOn: '#edit-on',
-    editDone: '#edit-done',
+    editStopEditing: '#edit-stop-editing',
     saveSpin: '#edit-save .fa-spin',
     saveBtn: '#edit-save',
     editStream: '#edit-stream',
@@ -37,7 +37,7 @@ module.exports = Marionette.ItemView.extend({
     $(this.itemViewContainer).html(this.el);
     //  this.addAttachment();
     this.ui.editBtn.bind('click', this.showEdit.bind(this));
-    this.ui.editDone.bind('click', this.hideEdit.bind(this));
+    this.ui.editStopEditing.bind('click', this.hideEdit.bind(this));
     this.ui.editForm.bind('submit', this.submit.bind(this));
     if ($('#modal-left-content').hasClass('editing')) {
       this.showEdit();

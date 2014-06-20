@@ -195,7 +195,7 @@ _.extend(Controller.prototype, {
     this.events[event.id] = event;
     var toUpdate = this.getEventById(event);
     if (toUpdate.length > 0) {
-      _.each(toUpdate, function (e) {e.set('event', event); e.trigger('change'); });
+      _.each(toUpdate, function (e) {e.set('event', event); e.trigger('change:content'); });
       this.collection.sort();
       this.listViewcollection.sort();
       this.commonView.model.trigger('change');

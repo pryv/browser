@@ -83,7 +83,7 @@ module.exports = Marionette.ItemView.extend({
     //this.listenTo(this.model, 'change', this.render);
     this.listenTo(this.model, 'change:highlighted', this.highlight);
     this.listenTo(this.model, 'change:checked', this.check);
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'change:content', this.render);
 
   },
   check: function () {

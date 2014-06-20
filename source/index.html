@@ -611,8 +611,9 @@
           <input type="text" id="edit-description" class="form-control" value="<%= event.description %>" data-i18n="[placeholder]events.common.labels.descriptionPlaceholder">
         </div>
         <div class="form-group col-xs-8" style="text-align:right;">
-          <!-- TODO: this button should be named "...cancel", "...done" is misleading -->
-          <button id="edit-done" type="button" class="btn btn-default" data-i18n="common.actions.cancel"></button>
+          <!-- HACK to align with other inputs -->
+          <label>&nbsp;</label><br>
+          <button id="edit-stop-editing" type="button" class="btn btn-default" data-i18n="common.actions.stopEditing"></button>
           <button id="edit-save" type="submit" class="btn btn-primary"><i class="fa fa-spinner fa-spin" style="display: none"></i><span data-i18n="common.actions.save"></span></button>
         </div>
       </form>

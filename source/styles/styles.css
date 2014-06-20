@@ -853,8 +853,15 @@ text-align: center;*/
   /*border-top: 1px solid #e5e5e5;*/
   padding: 10px 0px 0px 0px;
 }
+.edit-off, .edit-off div {
+  height: 100%;
+}
 .edit-off div{
-  border-right: 1px solid #D5D5D5;
+  border-left: 1px solid #D5D5D5;
+  overflow: auto;
+}
+.edit-off div:first-child {
+  border-left: none;
 }
 #detail-content {
   position: absolute;

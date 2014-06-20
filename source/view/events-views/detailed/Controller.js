@@ -195,9 +195,11 @@ _.extend(Controller.prototype, {
     this.events[event.id] = event;
     var toUpdate = this.getEventById(event);
     if (toUpdate.length > 0) {
-      toUpdate.forEach(function (e) {e.set('event', event); });
+      _.each(toUpdate, function (e) {e.set('event', event); e.trigger('change'); });
       this.collection.sort();
       this.listViewcollection.sort();
+      this.commonView.model.trigger('change');
+      this.contentView.model.trigger('change');
     }
   },
 

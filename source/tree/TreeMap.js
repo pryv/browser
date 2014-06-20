@@ -41,7 +41,7 @@ var TreeMap = module.exports = function (model) {
     $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
   this.root.x =  MARGIN_LEFT;
   this.root.y =  MARGIN_TOP;
-
+  $('#back-tree').hide();
   $('#back-tree').click(function (e) {
     e.preventDefault();
     if (this.model.sharingsConnections &&
@@ -301,11 +301,17 @@ TreeMap.prototype.isOnboarding = function () {
 TreeMap.prototype.focusOnConnections = function (connection) {
   this.model.activeFilter.focusOnConnections(connection);
   this.setFocusedStreams(null);
+  $('#back-tree').show();
 };
 
 TreeMap.prototype.focusOnStreams = function (stream) {
   this.model.activeFilter.focusOnStreams(stream);
   this.setFocusedStreams(stream);
+  if (!stream) {
+    $('#back-tree').hide();
+  } else {
+    $('#back-tree').show();
+  }
 };
 
 TreeMap.prototype.setFocusedStreams = function (stream) {

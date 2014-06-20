@@ -579,13 +579,27 @@
   <script type="template" id="template-detail-full">
     <% if (event) { %>
     <div id="edit-off" class="edit-off">
-      <div id="stream-name" class="col-xs-2"><%= event.streamName %></div>
-      <div id="date" class="col-xs-2"><%= PryvBrowser.getTimeString(event.time) %></div>
-      <div id="description" class="col-xs-5"><%= event.description %></div>
-      <div id="tags" class="col-xs-2">
-        <% event.tags.forEach(function (tag) { %>
-        <span><%= tag %></span>
-        <% }) %>
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <%= event.streamName %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <%= PryvBrowser.getTimeString(event.time) %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-5">
+        <div class="event-detail-prop-inner">
+          <%= event.description %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <% event.tags.forEach(function (tag) { %>
+          <span class="tag"><%= tag %></span>
+          <% }) %>
+        </div>
       </div>
       <div id="edit-button" class="col-xs-1"><span class="btn btn-default pull-right"><i class="ss-write"></i><span data-i18n="common.actions.edit"></span></span></div>
     </div>

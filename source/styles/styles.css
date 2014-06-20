@@ -853,14 +853,18 @@ text-align: center;*/
   /*border-top: 1px solid #e5e5e5;*/
   padding: 10px 0px 0px 0px;
 }
-.edit-off, .edit-off div {
+.edit-off, .edit-off .event-detail-prop-outer {
   height: 100%;
 }
-.edit-off div{
-  border-left: 1px solid #D5D5D5;
+.edit-off .event-detail-prop-outer {
   overflow: auto;
 }
-.edit-off div:first-child {
+.edit-off .event-detail-prop-outer .event-detail-prop-inner {
+  margin-left: -15px;
+  padding-left: 15px;
+  border-left: 1px solid #D5D5D5;
+}
+.edit-off .event-detail-prop-outer:first-child .event-detail-prop-inner {
   border-left: none;
 }
 #detail-content {
@@ -891,7 +895,7 @@ text-align: center;*/
   display: none;
 }
 /* Detail view Edit mode off */
-#edit-off #tags span {
+#edit-off .tag {
   background-color: rgb(35, 166, 228);
   padding: 2px 5px;
   color: #fff;

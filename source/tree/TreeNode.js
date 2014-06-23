@@ -11,8 +11,8 @@ var _ = require('underscore'),
  */
 var DEFAULT_OFFSET = 18;
 var DEFAULT_MARGIN = 2;
-var DEFAULT_MIN_WIDTH = 550;
-var DEFAULT_MIN_HEIGHT = 500;
+var DEFAULT_MIN_WIDTH = 350;
+var DEFAULT_MIN_HEIGHT = 300;
 var MAIN_CONTAINER_ID = 'tree';
 var TreeNode = module.exports = function (treemap, parent) {
   //Init all the instance variables

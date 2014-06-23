@@ -606,7 +606,7 @@ window.PryvBrowser.renderNote = function (content, options) {
 };
 
 })()
-},{"./model/ConnectionsHandler.js":2,"./model/Messages":8,"./model/MonitorsHandler.js":4,"./orchestrator/Controller.js":3,"./timeframe-selector/timeframe-selector.js":7,"./tree/TreeMap.js":5,"./view/left-panel/Controller.js":6,"backbone":13,"backbone.marionette":11,"marked":12,"pryv":10,"underscore":9}],9:[function(require,module,exports){
+},{"./model/ConnectionsHandler.js":2,"./model/Messages":8,"./model/MonitorsHandler.js":4,"./orchestrator/Controller.js":3,"./timeframe-selector/timeframe-selector.js":7,"./tree/TreeMap.js":5,"./view/left-panel/Controller.js":6,"backbone":12,"backbone.marionette":11,"marked":13,"pryv":10,"underscore":9}],9:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -1885,7 +1885,7 @@ window.PryvBrowser.renderNote = function (content, options) {
 }).call(this);
 
 })()
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function(global){/**
  * marked - a markdown parser
  * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
@@ -3170,7 +3170,7 @@ module.exports = {
   }
 };
 
-},{"./Connection.js":15,"./Event.js":16,"./Filter.js":17,"./Monitor.js":20,"./Stream.js":19,"./auth/Auth.js":14,"./eventTypes.js":18,"./utility/utility.js":21}],4:[function(require,module,exports){
+},{"./Connection.js":14,"./Event.js":21,"./Filter.js":15,"./Monitor.js":20,"./Stream.js":17,"./auth/Auth.js":16,"./eventTypes.js":18,"./utility/utility.js":19}],4:[function(require,module,exports){
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
@@ -3532,522 +3532,7 @@ MonitorsHandler.prototype.stats = function (force, callback) {
     });
   });
 };
-},{"./Messages":8,"pryv":10,"underscore":9}],7:[function(require,module,exports){
-(function(){/* global $, document, i18n, window, moment */
-var _ = require('underscore');
-module.exports = (function () {
-  var CONTAINER = '#timeframeContainer';
-  var MARGIN = {
-    left: 0,
-    right: 0
-  };
-  var HIGHLIGHT_MARGIN = {
-    left: 90,
-    right: 90
-  };
-  var HIGHLIGHT_SIZE = 180;
-  var DATE_FORMAT = {
-    'day': {
-      'selected': 'D.M.YYYY',
-      'others': 'D'
-    },
-    'month': {
-      'selected': 'MMM YYYY',
-      'others': 'MMM'
-    },
-    'week': {
-      'selected': 'D.M.YYYY',
-      'others': 'D.M'
-    },
-    'year': {
-      'selected': 'YYYY',
-      'others': 'YYYY'
-    },
-    'custom': {
-      'selected': 'D.M.YYYY LT'
-    },
-    'all': {
-      'selected': 'D.M.YYYY LT'
-    }
-  };
-  var DATE_SIZE = {
-    'day': {
-      'selected': 140,
-      'others': 70
-    },
-    'month': {
-      'selected': 140,
-      'others': 90
-    },
-    'week': {
-      'selected': 150,
-      'others': 90
-    },
-    'year': {
-      'selected': 100,
-      'others': 90
-    },
-    'custom': {
-      'selected': 500
-    }
-  };
-  var _isInit = false;
-  var _callbacks;
-  var _from;
-  var _to;
-  var _scale;
-  var _highlight;
-  var _mode; // 'timeSelection' || 'highlight'
-  var init = function () {
-    if (_isInit === true) {
-      return;
-    }
-    _isInit = true;
-    moment.lang(i18n.lng());
-    _mode = 'timeSelection';
-    _callbacks = {};
-    _initTimeFrame();
-  };
-  var _initHtml = function () {
-    $(CONTAINER).html('<div id="timeframe" style="margin-left: ' + MARGIN.left +
-        'px; margin-right: ' + MARGIN.right + 'px;"><div id="upperLayout"></div>' +
-        '<div id="datesContainer"><div id="dates"></div></div>' +
-        '<div id="scalesContainer" class="btn-toolbar">' +
-        '<div id="scales" class="btn-group btn-group-xs">' +
-        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
-        'data-timeScale="day" data-i18n="timeframe.labels.day"></a>' +
-        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
-        'data-timeScale="week" data-i18n="timeframe.labels.week"></a>' +
-        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
-        'data-timeScale="month" data-i18n="timeframe.labels.month"></a>' +
-        '<a href="javascript:void(0)" class="btn btn-default timeScale selected"' +
-        'data-timeScale="year" data-i18n="timeframe.labels.year"></a>' +
-        '</div>' +
-        '<div class="btn-group btn-group-xs">' +
-        '<a href="javascript:void(0)" id="custom" class="btn btn-default timeScale"' +
-        'data-timeScale="custom" data-i18n="timeframe.labels.custom"></a>' +
-        '</div>' +
-        '</div>' +
-        '</div>');
-    $('#custom').popover({
-      html: true,
-      placement: 'top',
-      container: 'body',
-      content: function () {
-        return $('<form class="form-horizontal">' +
-            '<div class="form-group">' +
-            '  <label for="fromPicker">' + i18n.t('timeframe.labels.fromTime') + '</label>' +
-            '  <div class="input-group date picker" id="fromPicker">' +
-            '    <input type="text" class="form-control"/> ' +
-            '    <span id="fromButton" class="input-group-addon">' +
-            '      <span class="fa fa-calendar"></span>' +
-            '    </span>' +
-            '  </div>' +
-            '</div>' +
-            '<div class="form-group">' +
-            '  <label for="fromPicker">' + i18n.t('timeframe.labels.toTime') + '</label>' +
-            '  <div class="input-group date picker" id="toPicker">' +
-            '    <input type="text" class="form-control"/> ' +
-            '    <span id="toButton" class="input-group-addon">' +
-            '      <span class="fa fa-calendar"></span>' +
-            '    </span>' +
-            '  </div>' +
-            '</div>' +
-            '<button type="button" id="cancel" ' +
-            'class="btn btn-default col-md-4"  style="float: none">' +
-                i18n.t('common.actions.cancel') + '</button>' +
-
-            '<button type="button" id="ok" class="btn btn-default col-md-7 col-md-offset-1"' +
-            ' style="float: none">' +
-                i18n.t('timeframe.actions.go') + '</button>' +
-            '</form>').html();
-      }
-    });
-    $('#custom').on('hidden.bs.popover', function () {
-      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
-    });
-    $('#custom').on('shown.bs.popover', function () {
-      var fromDate = moment.unix(_from),
-          toDate = moment.unix(_to);
-      $(document.body).off('click', '#ok');
-      $(document.body).on('click', '#ok', function () {
-        fromDate = moment(fromDate);
-        toDate = moment(toDate);
-        if (fromDate.isValid() && toDate.isValid() && fromDate.unix() <= toDate.unix()) {
-          $('#custom').popover('toggle');
-          _scale = 'custom';
-          setTimeBounds(fromDate, toDate);
-          _updateDateScale();
-        }
-      });
-      $(document.body).off('click', '#cancel');
-      $(document.body).on('click', '#cancel', function () {
-        $('#custom').popover('toggle');
-      });
-      $(document.body).off('click', '#fromButton');
-      $(document.body).on('click', '#fromButton', function () {
-        fromDate = moment();
-        $('#fromButton').trigger('click');
-      });
-
-      $(document.body).off('click', '#fromPicker input');
-      $(document.body).on('click', '#fromPicker input', function () {
-        fromDate = moment();
-        $('#fromButton').trigger('click');
-      });
-      $(document.body).off('click', '#toButton');
-      $(document.body).on('click', '#toButton', function () {
-        toDate = moment();
-        $('#toButton').trigger('click');
-      });
-
-      $(document.body).off('click', '#toPicker');
-      $(document.body).on('click', '#toPicker input', function () {
-        toDate = moment();
-        $('#toButton').trigger('click');
-      });
-      $('#fromPicker').datetimepicker({
-        direction: 'auto',
-        language: i18n.lng()
-      });
-      $('#fromPicker').on('dp.change', function (e) {
-        fromDate = e.date;
-      });
-      $('#toPicker').datetimepicker({
-        direction: 'auto',
-        language: i18n.lng()
-      });
-      $('#toPicker').on('dp.change', function (e) {
-        toDate = e.date;
-      });
-      $('#fromPicker').data('DateTimePicker').setDate(fromDate);
-      $('#toPicker').data('DateTimePicker').setDate(toDate);
-    });
-  };
-  var _updateDateScale = function () {
-    var containerWidth = $(CONTAINER).width();
-    var $dates = $('#dates');
-    var $datesMargin, $datesWidth;
-    moment.lang(i18n.lng());
-    if (_scale === 'custom') {
-      $('.timeScale').removeClass('selected');
-      $('#custom').addClass('selected');
-      $datesWidth = DATE_SIZE[_scale].selected;
-      $datesMargin = ((containerWidth - MARGIN.left - MARGIN.right) - $datesWidth) / 2;
-      $dates.empty();
-      $dates.css({
-        'width': $datesWidth + 'px',
-        'margin-left': $datesMargin + 'px'
-      });
-      $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
-          'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + ' - ' +
-          moment.unix(_to).format(DATE_FORMAT[_scale].selected) + '</li>');
-      $('.timeItem.selected').click(_openHighlight);
-      if (_mode === 'highlight') {
-        _mode = 'timeline';
-        _openHighlight();
-      }
-      return;
-    }
-
-    var nbrToDisplay = Math.floor((containerWidth - MARGIN.left - MARGIN.right -
-        DATE_SIZE[_scale].selected) / (DATE_SIZE[_scale].others * 2));
-
-    $datesWidth = (nbrToDisplay * 4 * DATE_SIZE[_scale].others) + DATE_SIZE[_scale].selected;
-    // use margin to center dates
-    $datesMargin = -($datesWidth - (containerWidth - MARGIN.left - MARGIN.right)) / 2;
-    $dates.empty();
-    for (var i = 0; i < nbrToDisplay * 2; i++) {
-      $dates.prepend('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
-          moment.unix(_from).subtract(_scale, i + 1).format(DATE_FORMAT[_scale].others) + '</li>');
-    }
-    $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
-        'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + '</li>');
-    for (var j = 0; j < nbrToDisplay * 2; j++) {
-      $dates.append('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
-          moment.unix(_from).add(_scale, j + 1).format(DATE_FORMAT[_scale].others) + '</li>');
-    }
-    $dates.css({
-      'width': $datesWidth + 'px',
-      'margin-left': $datesMargin + 'px'
-    });
-    $('.timeItem').off();
-    $('.timeItem.selected').click(_openHighlight);
-    $('.timeItem').click(_changeTime);
-    if (_mode === 'highlight') {
-      _mode = 'timeline';
-      _openHighlight();
-    }
-  };
-
-  var _changeTime = function () {
-    var clickedIndex = $(this).index();
-    var totalIndex = $('.timeItem').length;
-    var centerIndex = (totalIndex - 1) / 2;
-    var diff = centerIndex - clickedIndex;
-    if (diff === 0) {
-      return;
-    }
-    if (_mode === 'highlight') {
-      return;
-    }
-    var c = centerIndex + 1;
-    $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from)
-            .format(DATE_FORMAT[_scale].others))
-        .css('width', DATE_SIZE[_scale].others).removeClass('selected');
-    var $dates = $('#dates');
-    if (diff > 0) {
-      // add before and remove last
-      c = clickedIndex + 1;
-      $('.timeItem:nth-child(' + c + ')')
-          .html(moment.unix(_from).subtract(_scale, diff).format(DATE_FORMAT[_scale].selected))
-          .css('width', DATE_SIZE[_scale].selected).addClass('selected');
-      var d = diff + 1;
-      $('.timeItem:gt(-' + d + ')').remove();
-      for (var i = 0; i < diff; i++) {
-        $('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
-          moment.unix(_from).subtract(_scale, totalIndex - centerIndex + i)
-          .format(DATE_FORMAT[_scale].others) + '</li>').hide().prependTo('#dates').animate({
-            width: 'toggle'
-          });
-      }
-      setTimeBounds(moment.unix(_from)
-          .subtract(_scale, diff).startOf(_scale),
-          moment.unix(_to).subtract(_scale, diff).endOf(_scale));
-    } else {
-      // remove before and add last
-
-      c = clickedIndex + 1;
-      $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from).add(_scale, -diff)
-              .format(DATE_FORMAT[_scale].selected))
-          .css('width', DATE_SIZE[_scale].selected).addClass('selected');
-
-
-
-      $('.timeItem:lt(' + -diff + ')').animate({
-        width: 'toggle'
-      }, {
-        complete: function () {
-          $(this).remove();
-        }
-      });
-
-      for (var j = 0; j < -diff; j++) {
-        $dates.append('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
-            moment.unix(_from).add(_scale, totalIndex - centerIndex + j)
-            .format(DATE_FORMAT[_scale].others) + '</li>');
-      }
-      setTimeBounds(moment.unix(_from).add(_scale, -diff)
-          .startOf(_scale), moment.unix(_to).add(_scale, -diff).endOf(_scale));
-    }
-    $('.timeItem').off();
-    $('.timeItem.selected').click(_openHighlight);
-    $('.timeItem').click(_changeTime);
-  };
-  var _changeScale = function () {
-    var scale = $(this).attr('data-timeScale');
-    if (scale === _scale || scale === 'custom') {
-      return;
-    }
-    $('.timeScale').removeClass('selected');
-    $(this).addClass('selected');
-    if (scale === 'day') {
-      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
-          moment().unix() <= moment.unix(_to).unix())) {
-        setTimeBounds(moment().startOf('day'), moment().endOf('day'));
-      } else {
-        setTimeBounds(moment.unix(_from).startOf('day'), moment.unix(_from).endOf('day'));
-      }
-      _scale = 'day';
-    } else if (scale === 'week') {
-      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
-          moment().unix() <= moment.unix(_to).unix())) {
-        setTimeBounds(moment().startOf('week'), moment().endOf('week'));
-      } else {
-        setTimeBounds(moment.unix(_from).startOf('week'), moment.unix(_from).endOf('week'));
-      }
-      _scale = 'week';
-    } else if (scale === 'month') {
-      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
-          moment().unix() <= moment.unix(_to).unix())) {
-        setTimeBounds(moment().startOf('month'), moment().endOf('month'));
-      } else {
-        setTimeBounds(moment.unix(_from).startOf('month'), moment.unix(_from).endOf('month'));
-      }
-      _scale = 'month';
-    } else if (scale === 'year') {
-      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
-          moment().unix() <= moment.unix(_to).unix())) {
-        setTimeBounds(moment().startOf('year'), moment().endOf('year'));
-      } else {
-        setTimeBounds(moment.unix(_from).startOf('year'), moment.unix(_from).endOf('year'));
-      }
-      _scale = 'year';
-    }
-    _updateDateScale();
-  };
-  // set time frame to current month and highlight to now
-  var _initTimeFrame = function () {
-    _scale = 'year';
-    setTimeBounds(moment().startOf('year'),
-        moment().endOf('year'));
-
-    _initHtml();
-    _updateDateScale();
-    $('.timeScale').click(_changeScale);
-    $(window).resize(_.debounce(_updateDateScale, 500));
-
-  };
-
-  var marginOffset;
-  var widthOffset;
-  var _openHighlight = function () {
-    if (_mode === 'highlight') {
-      return;
-    }
-    _mode = 'highlight';
-    var html = $('<div class="highlight popover bottom"><div class="arrow"></div>' +
-        '<div class="content"></div><span class="fa fa-times"></span></div>');
-    $('.timeItem.selected').append(html.fadeIn());
-    $('.highlight').width(HIGHLIGHT_SIZE);
-    $('.highlight .fa-times').off().click(_closeHighlight);
-    $('#dates').css('overflow', 'visible');
-    var containerWidth = $('#timeframe').width();
-    var width = containerWidth - HIGHLIGHT_MARGIN.left - HIGHLIGHT_MARGIN.right;
-    marginOffset = (width - DATE_SIZE[_scale].selected) / 2;
-    widthOffset = width - DATE_SIZE[_scale].selected;
-    $('.timeScale').fadeOut();
-    $('.timeItem.selected').animate({
-      width: width
-    });
-    $('#dates').animate({
-      'margin-left': '-=' + marginOffset + 'px',
-      'width': '+=' + widthOffset + 'px'
-    });
-
-    //init position of highlighter
-    var left = 100 * (_highlight - _from) / (_to - _from);
-    $('.highlight').css('left', left + '%');
-    $('.highlight .content').text(moment.unix(_highlight).format('lll'));
-    //init drag
-    $('.highlight').draggable({containment: 'parent', axis: 'x', drag: _onHighlightDrag});
-  };
-  var _onHighlightDrag = function (e, object) {
-    var left = object.position.left;
-    var width = $('.timeItem.selected').width();
-    var newHighlight = _from + ((left / width) * (_to - _from));
-    setHighlight(moment.unix(newHighlight));
-    $('.highlight .content').text(moment.unix(newHighlight).format('lll'));
-  };
-  var _closeHighlight = function (e) {
-    if (_mode !== 'highlight') {
-      return;
-    }
-    e.stopPropagation();
-    _mode = 'timeline';
-    $('.highlight').fadeOut(function () {
-      $(this).remove();
-    });
-    $('.timeScale').fadeIn();
-    $('.timeItem.selected').animate({
-      width: DATE_SIZE[_scale].selected
-    });
-    $('#dates').animate({
-      'margin-left': '+=' + marginOffset + 'px',
-      'width': '-=' + widthOffset + 'px'
-    });
-  };
-  var _updateHighlight = function () {
-    var now = moment().unix();
-    var highlight;
-    if (now >= _from && now <= _to) {
-      highlight = moment();
-    } else if (now <= _from) {
-      highlight = moment.unix(_from);
-    } else if (now >= _to) {
-      highlight = moment.unix(_to);
-    }
-    setHighlight(highlight);
-  };
-  var setHighlight = function (time) {
-    init();
-    if (moment(time).isValid()) {
-      _highlight = moment(time).unix();
-      trigger('highlightChanged', _highlight);
-    } else {
-      console.warn('setHighlight(): invalid argument', time);
-    }
-  };
-  var setTimeBounds = function (from, to) {
-    init();
-    if (moment(from).isValid() && moment(to).isValid() && moment(from).unix() < moment(to).unix()) {
-      _from = moment(from).unix();
-      _to = moment(to).unix();
-      trigger('timeBoundsChanged', _from, _to);
-      _updateHighlight();
-    } else {
-      console.warn('setTimeBounds(): invalid argument', from, to);
-    }
-  };
-  var getTimeBounds = function () {
-    return {
-      from: _from,
-      to: _to
-    };
-  };
-  var on = function (event, callback) {
-    init();
-    if (event && typeof (event) === 'string' && callback && typeof (callback) === 'function') {
-      if (!_callbacks[event]) {
-        _callbacks[event] = [];
-      }
-      _callbacks[event].push(callback);
-    }
-  };
-  var off = function (event, callback) {
-    init();
-    if (!event || typeof (event) !== 'string') {
-      _callbacks = {};
-    } else {
-      if (callback && typeof (callback) === 'function' && _callbacks[event]) {
-        for (var i = 0; i < _callbacks[event].length; ++i) {
-          if (_callbacks[event][i] === callback) {
-            _callbacks[event][i] = null;
-          }
-        }
-      } else if (!callback && _callbacks[event]) {
-        _callbacks[event] = [];
-      }
-    }
-  };
-  var trigger = function () {
-    init();
-    var event = arguments[0];
-    var args = _.toArray(arguments).slice(1);
-    if (_callbacks[event]) {
-      _callbacks[event].forEach(function (cb) {
-        if (cb && typeof (cb) === 'function') {
-          cb.apply(null, args);
-        }
-      });
-    }
-  };
-
-
-  var oPublic = {
-    init: init,
-    setTimeBounds: setTimeBounds,
-    getTimeBounds: getTimeBounds,
-    setHighlight: setHighlight,
-    on: on,
-    off: off,
-    trigger: trigger
-  };
-  return oPublic;
-})();
-
-})()
-},{"underscore":9}],22:[function(require,module,exports){
+},{"./Messages":8,"pryv":10,"underscore":9}],22:[function(require,module,exports){
 
 /* Definition of a virtual node attached to a stream as its child
  *  stream: <streamId>, // the node where it's attached to
@@ -4915,7 +4400,522 @@ try {
 }
 
 })()
-},{"../model/Messages":8,"../view/connect-apps/Controller.js":30,"../view/create/Controller.js":26,"../view/events-views/detailed/Controller.js":25,"../view/events-views/draganddrop/Controller.js":31,"../view/onboarding/View.js":32,"../view/settings/Controller.js":29,"../view/sharings/Controller.js":24,"../view/sharings/create/Controller.js":28,"../view/subscribe/Controller.js":27,"./RootNode.js":23,"./VirtualNode.js":33,"pryv":10,"underscore":9}],8:[function(require,module,exports){
+},{"../model/Messages":8,"../view/connect-apps/Controller.js":30,"../view/create/Controller.js":24,"../view/events-views/detailed/Controller.js":25,"../view/events-views/draganddrop/Controller.js":32,"../view/onboarding/View.js":33,"../view/settings/Controller.js":29,"../view/sharings/Controller.js":26,"../view/sharings/create/Controller.js":27,"../view/subscribe/Controller.js":28,"./RootNode.js":23,"./VirtualNode.js":31,"pryv":10,"underscore":9}],7:[function(require,module,exports){
+(function(){/* global $, document, i18n, window, moment */
+var _ = require('underscore');
+module.exports = (function () {
+  var CONTAINER = '#timeframeContainer';
+  var MARGIN = {
+    left: 0,
+    right: 0
+  };
+  var HIGHLIGHT_MARGIN = {
+    left: 90,
+    right: 90
+  };
+  var HIGHLIGHT_SIZE = 180;
+  var DATE_FORMAT = {
+    'day': {
+      'selected': 'D.M.YYYY',
+      'others': 'D'
+    },
+    'month': {
+      'selected': 'MMM YYYY',
+      'others': 'MMM'
+    },
+    'week': {
+      'selected': 'D.M.YYYY',
+      'others': 'D.M'
+    },
+    'year': {
+      'selected': 'YYYY',
+      'others': 'YYYY'
+    },
+    'custom': {
+      'selected': 'D.M.YYYY LT'
+    },
+    'all': {
+      'selected': 'D.M.YYYY LT'
+    }
+  };
+  var DATE_SIZE = {
+    'day': {
+      'selected': 140,
+      'others': 70
+    },
+    'month': {
+      'selected': 140,
+      'others': 90
+    },
+    'week': {
+      'selected': 150,
+      'others': 90
+    },
+    'year': {
+      'selected': 100,
+      'others': 90
+    },
+    'custom': {
+      'selected': 500
+    }
+  };
+  var _isInit = false;
+  var _callbacks;
+  var _from;
+  var _to;
+  var _scale;
+  var _highlight;
+  var _mode; // 'timeSelection' || 'highlight'
+  var init = function () {
+    if (_isInit === true) {
+      return;
+    }
+    _isInit = true;
+    moment.lang(i18n.lng());
+    _mode = 'timeSelection';
+    _callbacks = {};
+    _initTimeFrame();
+  };
+  var _initHtml = function () {
+    $(CONTAINER).html('<div id="timeframe" style="margin-left: ' + MARGIN.left +
+        'px; margin-right: ' + MARGIN.right + 'px;"><div id="upperLayout"></div>' +
+        '<div id="datesContainer"><div id="dates"></div></div>' +
+        '<div id="scalesContainer" class="btn-toolbar">' +
+        '<div id="scales" class="btn-group btn-group-xs">' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        'data-timeScale="day" data-i18n="timeframe.labels.day"></a>' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        'data-timeScale="week" data-i18n="timeframe.labels.week"></a>' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        'data-timeScale="month" data-i18n="timeframe.labels.month"></a>' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale selected"' +
+        'data-timeScale="year" data-i18n="timeframe.labels.year"></a>' +
+        '</div>' +
+        '<div class="btn-group btn-group-xs">' +
+        '<a href="javascript:void(0)" id="custom" class="btn btn-default timeScale"' +
+        'data-timeScale="custom" data-i18n="timeframe.labels.custom"></a>' +
+        '</div>' +
+        '</div>' +
+        '</div>');
+    $('#custom').popover({
+      html: true,
+      placement: 'top',
+      container: 'body',
+      content: function () {
+        return $('<form class="form-horizontal">' +
+            '<div class="form-group">' +
+            '  <label for="fromPicker">' + i18n.t('timeframe.labels.fromTime') + '</label>' +
+            '  <div class="input-group date picker" id="fromPicker">' +
+            '    <input type="text" class="form-control"/> ' +
+            '    <span id="fromButton" class="input-group-addon">' +
+            '      <span class="fa fa-calendar"></span>' +
+            '    </span>' +
+            '  </div>' +
+            '</div>' +
+            '<div class="form-group">' +
+            '  <label for="fromPicker">' + i18n.t('timeframe.labels.toTime') + '</label>' +
+            '  <div class="input-group date picker" id="toPicker">' +
+            '    <input type="text" class="form-control"/> ' +
+            '    <span id="toButton" class="input-group-addon">' +
+            '      <span class="fa fa-calendar"></span>' +
+            '    </span>' +
+            '  </div>' +
+            '</div>' +
+            '<button type="button" id="cancel" ' +
+            'class="btn btn-default col-md-4"  style="float: none">' +
+                i18n.t('common.actions.cancel') + '</button>' +
+
+            '<button type="button" id="ok" class="btn btn-default col-md-7 col-md-offset-1"' +
+            ' style="float: none">' +
+                i18n.t('timeframe.actions.go') + '</button>' +
+            '</form>').html();
+      }
+    });
+    $('#custom').on('hidden.bs.popover', function () {
+      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
+    });
+    $('#custom').on('shown.bs.popover', function () {
+      var fromDate = moment.unix(_from),
+          toDate = moment.unix(_to);
+      $(document.body).off('click', '#ok');
+      $(document.body).on('click', '#ok', function () {
+        fromDate = moment(fromDate);
+        toDate = moment(toDate);
+        if (fromDate.isValid() && toDate.isValid() && fromDate.unix() <= toDate.unix()) {
+          $('#custom').popover('toggle');
+          _scale = 'custom';
+          setTimeBounds(fromDate, toDate);
+          _updateDateScale();
+        }
+      });
+      $(document.body).off('click', '#cancel');
+      $(document.body).on('click', '#cancel', function () {
+        $('#custom').popover('toggle');
+      });
+      $(document.body).off('click', '#fromButton');
+      $(document.body).on('click', '#fromButton', function () {
+        fromDate = moment();
+        $('#fromButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#fromPicker input');
+      $(document.body).on('click', '#fromPicker input', function () {
+        fromDate = moment();
+        $('#fromButton').trigger('click');
+      });
+      $(document.body).off('click', '#toButton');
+      $(document.body).on('click', '#toButton', function () {
+        toDate = moment();
+        $('#toButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#toPicker');
+      $(document.body).on('click', '#toPicker input', function () {
+        toDate = moment();
+        $('#toButton').trigger('click');
+      });
+      $('#fromPicker').datetimepicker({
+        direction: 'auto',
+        language: i18n.lng()
+      });
+      $('#fromPicker').on('dp.change', function (e) {
+        fromDate = e.date;
+      });
+      $('#toPicker').datetimepicker({
+        direction: 'auto',
+        language: i18n.lng()
+      });
+      $('#toPicker').on('dp.change', function (e) {
+        toDate = e.date;
+      });
+      $('#fromPicker').data('DateTimePicker').setDate(fromDate);
+      $('#toPicker').data('DateTimePicker').setDate(toDate);
+    });
+  };
+  var _updateDateScale = function () {
+    var containerWidth = $(CONTAINER).width();
+    var $dates = $('#dates');
+    var $datesMargin, $datesWidth;
+    moment.lang(i18n.lng());
+    if (_scale === 'custom') {
+      $('.timeScale').removeClass('selected');
+      $('#custom').addClass('selected');
+      $datesWidth = DATE_SIZE[_scale].selected;
+      $datesMargin = ((containerWidth - MARGIN.left - MARGIN.right) - $datesWidth) / 2;
+      $dates.empty();
+      $dates.css({
+        'width': $datesWidth + 'px',
+        'margin-left': $datesMargin + 'px'
+      });
+      $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
+          'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + ' - ' +
+          moment.unix(_to).format(DATE_FORMAT[_scale].selected) + '</li>');
+      $('.timeItem.selected').click(_openHighlight);
+      if (_mode === 'highlight') {
+        _mode = 'timeline';
+        _openHighlight();
+      }
+      return;
+    }
+
+    var nbrToDisplay = Math.floor((containerWidth - MARGIN.left - MARGIN.right -
+        DATE_SIZE[_scale].selected) / (DATE_SIZE[_scale].others * 2));
+
+    $datesWidth = (nbrToDisplay * 4 * DATE_SIZE[_scale].others) + DATE_SIZE[_scale].selected;
+    // use margin to center dates
+    $datesMargin = -($datesWidth - (containerWidth - MARGIN.left - MARGIN.right)) / 2;
+    $dates.empty();
+    for (var i = 0; i < nbrToDisplay * 2; i++) {
+      $dates.prepend('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+          moment.unix(_from).subtract(_scale, i + 1).format(DATE_FORMAT[_scale].others) + '</li>');
+    }
+    $dates.append('<li class="timeItem selected" style="width: ' + DATE_SIZE[_scale].selected +
+        'px;">' + moment.unix(_from).format(DATE_FORMAT[_scale].selected) + '</li>');
+    for (var j = 0; j < nbrToDisplay * 2; j++) {
+      $dates.append('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+          moment.unix(_from).add(_scale, j + 1).format(DATE_FORMAT[_scale].others) + '</li>');
+    }
+    $dates.css({
+      'width': $datesWidth + 'px',
+      'margin-left': $datesMargin + 'px'
+    });
+    $('.timeItem').off();
+    $('.timeItem.selected').click(_openHighlight);
+    $('.timeItem').click(_changeTime);
+    if (_mode === 'highlight') {
+      _mode = 'timeline';
+      _openHighlight();
+    }
+  };
+
+  var _changeTime = function () {
+    var clickedIndex = $(this).index();
+    var totalIndex = $('.timeItem').length;
+    var centerIndex = (totalIndex - 1) / 2;
+    var diff = centerIndex - clickedIndex;
+    if (diff === 0) {
+      return;
+    }
+    if (_mode === 'highlight') {
+      return;
+    }
+    var c = centerIndex + 1;
+    $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from)
+            .format(DATE_FORMAT[_scale].others))
+        .css('width', DATE_SIZE[_scale].others).removeClass('selected');
+    var $dates = $('#dates');
+    if (diff > 0) {
+      // add before and remove last
+      c = clickedIndex + 1;
+      $('.timeItem:nth-child(' + c + ')')
+          .html(moment.unix(_from).subtract(_scale, diff).format(DATE_FORMAT[_scale].selected))
+          .css('width', DATE_SIZE[_scale].selected).addClass('selected');
+      var d = diff + 1;
+      $('.timeItem:gt(-' + d + ')').remove();
+      for (var i = 0; i < diff; i++) {
+        $('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+          moment.unix(_from).subtract(_scale, totalIndex - centerIndex + i)
+          .format(DATE_FORMAT[_scale].others) + '</li>').hide().prependTo('#dates').animate({
+            width: 'toggle'
+          });
+      }
+      setTimeBounds(moment.unix(_from)
+          .subtract(_scale, diff).startOf(_scale),
+          moment.unix(_to).subtract(_scale, diff).endOf(_scale));
+    } else {
+      // remove before and add last
+
+      c = clickedIndex + 1;
+      $('.timeItem:nth-child(' + c + ')').html(moment.unix(_from).add(_scale, -diff)
+              .format(DATE_FORMAT[_scale].selected))
+          .css('width', DATE_SIZE[_scale].selected).addClass('selected');
+
+
+
+      $('.timeItem:lt(' + -diff + ')').animate({
+        width: 'toggle'
+      }, {
+        complete: function () {
+          $(this).remove();
+        }
+      });
+
+      for (var j = 0; j < -diff; j++) {
+        $dates.append('<li class="timeItem" style="width: ' + DATE_SIZE[_scale].others + 'px;">' +
+            moment.unix(_from).add(_scale, totalIndex - centerIndex + j)
+            .format(DATE_FORMAT[_scale].others) + '</li>');
+      }
+      setTimeBounds(moment.unix(_from).add(_scale, -diff)
+          .startOf(_scale), moment.unix(_to).add(_scale, -diff).endOf(_scale));
+    }
+    $('.timeItem').off();
+    $('.timeItem.selected').click(_openHighlight);
+    $('.timeItem').click(_changeTime);
+  };
+  var _changeScale = function () {
+    var scale = $(this).attr('data-timeScale');
+    if (scale === _scale || scale === 'custom') {
+      return;
+    }
+    $('.timeScale').removeClass('selected');
+    $(this).addClass('selected');
+    if (scale === 'day') {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('day'), moment().endOf('day'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('day'), moment.unix(_from).endOf('day'));
+      }
+      _scale = 'day';
+    } else if (scale === 'week') {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('week'), moment().endOf('week'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('week'), moment.unix(_from).endOf('week'));
+      }
+      _scale = 'week';
+    } else if (scale === 'month') {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('month'), moment().endOf('month'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('month'), moment.unix(_from).endOf('month'));
+      }
+      _scale = 'month';
+    } else if (scale === 'year') {
+      if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
+          moment().unix() <= moment.unix(_to).unix())) {
+        setTimeBounds(moment().startOf('year'), moment().endOf('year'));
+      } else {
+        setTimeBounds(moment.unix(_from).startOf('year'), moment.unix(_from).endOf('year'));
+      }
+      _scale = 'year';
+    }
+    _updateDateScale();
+  };
+  // set time frame to current month and highlight to now
+  var _initTimeFrame = function () {
+    _scale = 'year';
+    setTimeBounds(moment().startOf('year'),
+        moment().endOf('year'));
+
+    _initHtml();
+    _updateDateScale();
+    $('.timeScale').click(_changeScale);
+    $(window).resize(_.debounce(_updateDateScale, 500));
+
+  };
+
+  var marginOffset;
+  var widthOffset;
+  var _openHighlight = function () {
+    if (_mode === 'highlight') {
+      return;
+    }
+    _mode = 'highlight';
+    var html = $('<div class="highlight popover bottom"><div class="arrow"></div>' +
+        '<div class="content"></div><span class="fa fa-times"></span></div>');
+    $('.timeItem.selected').append(html.fadeIn());
+    $('.highlight').width(HIGHLIGHT_SIZE);
+    $('.highlight .fa-times').off().click(_closeHighlight);
+    $('#dates').css('overflow', 'visible');
+    var containerWidth = $('#timeframe').width();
+    var width = containerWidth - HIGHLIGHT_MARGIN.left - HIGHLIGHT_MARGIN.right;
+    marginOffset = (width - DATE_SIZE[_scale].selected) / 2;
+    widthOffset = width - DATE_SIZE[_scale].selected;
+    $('.timeScale').fadeOut();
+    $('.timeItem.selected').animate({
+      width: width
+    });
+    $('#dates').animate({
+      'margin-left': '-=' + marginOffset + 'px',
+      'width': '+=' + widthOffset + 'px'
+    });
+
+    //init position of highlighter
+    var left = 100 * (_highlight - _from) / (_to - _from);
+    $('.highlight').css('left', left + '%');
+    $('.highlight .content').text(moment.unix(_highlight).format('lll'));
+    //init drag
+    $('.highlight').draggable({containment: 'parent', axis: 'x', drag: _onHighlightDrag});
+  };
+  var _onHighlightDrag = function (e, object) {
+    var left = object.position.left;
+    var width = $('.timeItem.selected').width();
+    var newHighlight = _from + ((left / width) * (_to - _from));
+    setHighlight(moment.unix(newHighlight));
+    $('.highlight .content').text(moment.unix(newHighlight).format('lll'));
+  };
+  var _closeHighlight = function (e) {
+    if (_mode !== 'highlight') {
+      return;
+    }
+    e.stopPropagation();
+    _mode = 'timeline';
+    $('.highlight').fadeOut(function () {
+      $(this).remove();
+    });
+    $('.timeScale').fadeIn();
+    $('.timeItem.selected').animate({
+      width: DATE_SIZE[_scale].selected
+    });
+    $('#dates').animate({
+      'margin-left': '+=' + marginOffset + 'px',
+      'width': '-=' + widthOffset + 'px'
+    });
+  };
+  var _updateHighlight = function () {
+    var now = moment().unix();
+    var highlight;
+    if (now >= _from && now <= _to) {
+      highlight = moment();
+    } else if (now <= _from) {
+      highlight = moment.unix(_from);
+    } else if (now >= _to) {
+      highlight = moment.unix(_to);
+    }
+    setHighlight(highlight);
+  };
+  var setHighlight = function (time) {
+    init();
+    if (moment(time).isValid()) {
+      _highlight = moment(time).unix();
+      trigger('highlightChanged', _highlight);
+    } else {
+      console.warn('setHighlight(): invalid argument', time);
+    }
+  };
+  var setTimeBounds = function (from, to) {
+    init();
+    if (moment(from).isValid() && moment(to).isValid() && moment(from).unix() < moment(to).unix()) {
+      _from = moment(from).unix();
+      _to = moment(to).unix();
+      trigger('timeBoundsChanged', _from, _to);
+      _updateHighlight();
+    } else {
+      console.warn('setTimeBounds(): invalid argument', from, to);
+    }
+  };
+  var getTimeBounds = function () {
+    return {
+      from: _from,
+      to: _to
+    };
+  };
+  var on = function (event, callback) {
+    init();
+    if (event && typeof (event) === 'string' && callback && typeof (callback) === 'function') {
+      if (!_callbacks[event]) {
+        _callbacks[event] = [];
+      }
+      _callbacks[event].push(callback);
+    }
+  };
+  var off = function (event, callback) {
+    init();
+    if (!event || typeof (event) !== 'string') {
+      _callbacks = {};
+    } else {
+      if (callback && typeof (callback) === 'function' && _callbacks[event]) {
+        for (var i = 0; i < _callbacks[event].length; ++i) {
+          if (_callbacks[event][i] === callback) {
+            _callbacks[event][i] = null;
+          }
+        }
+      } else if (!callback && _callbacks[event]) {
+        _callbacks[event] = [];
+      }
+    }
+  };
+  var trigger = function () {
+    init();
+    var event = arguments[0];
+    var args = _.toArray(arguments).slice(1);
+    if (_callbacks[event]) {
+      _callbacks[event].forEach(function (cb) {
+        if (cb && typeof (cb) === 'function') {
+          cb.apply(null, args);
+        }
+      });
+    }
+  };
+
+
+  var oPublic = {
+    init: init,
+    setTimeBounds: setTimeBounds,
+    getTimeBounds: getTimeBounds,
+    setHighlight: setHighlight,
+    on: on,
+    off: off,
+    trigger: trigger
+  };
+  return oPublic;
+})();
+
+})()
+},{"underscore":9}],8:[function(require,module,exports){
 
 var Messages = module.exports = { };
 
@@ -4950,13 +4950,7 @@ Messages.MonitorsHandler = {
     FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };
-},{"pryv":10}],14:[function(require,module,exports){
-var utility = require('../utility/utility.js');
-
-module.exports =  utility.isBrowser() ?
-    require('./Auth-browser.js') : require('./Auth-node.js');
-
-},{"../utility/utility.js":21,"./Auth-browser.js":34,"./Auth-node.js":35}],18:[function(require,module,exports){
+},{"pryv":10}],18:[function(require,module,exports){
 
 var utility = require('./utility/utility');
 var eventTypes = module.exports = { };
@@ -5059,7 +5053,13 @@ eventTypes.extras = function (eventType) {
  * @param {Object} result - jSonEncoded result
  */
 
-},{"./utility/utility":21}],13:[function(require,module,exports){
+},{"./utility/utility":19}],16:[function(require,module,exports){
+var utility = require('../utility/utility.js');
+
+module.exports =  utility.isBrowser() ?
+    require('./Auth-browser.js') : require('./Auth-node.js');
+
+},{"../utility/utility.js":19,"./Auth-browser.js":35,"./Auth-node.js":34}],12:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -6724,18 +6724,6 @@ var isConnectionsNumberChange = function (MainModel) {
 
 })()
 },{"./Actions.js":37,"./FilterByStream.js":36,"backbone.marionette":11,"underscore":9}],38:[function(require,module,exports){
-exports.Errors = {
-  API_UNREACHEABLE : 'API_UNREACHEABLE',
-  INVALID_RESULT_CODE : 'INVALID_RESULT_CODE'
-};
-
-exports.Api = {
-  Headers : {
-    ServerTime : 'server-time',
-    ApiVersion : 'api-version'
-  }
-};
-},{}],39:[function(require,module,exports){
 var apiPathPrivateProfile = '/profile/private';
 var apiPathPublicProfile = '/profile/app';
 
@@ -6885,6 +6873,18 @@ Profile.prototype._set = function (path, keyValuePairs, callback) {
 };
 
 module.exports = Profile;
+},{}],39:[function(require,module,exports){
+exports.Errors = {
+  API_UNREACHEABLE : 'API_UNREACHEABLE',
+  INVALID_RESULT_CODE : 'INVALID_RESULT_CODE'
+};
+
+exports.Api = {
+  Headers : {
+    ServerTime : 'server-time',
+    ApiVersion : 'api-version'
+  }
+};
 },{}],40:[function(require,module,exports){
 var apiPathAccount = '/account';
 
@@ -6911,10 +6911,20 @@ Account.prototype.getInfo = function (callback) {
 };
 
 module.exports = Account;
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 
 module.exports = {};
 },{}],41:[function(require,module,exports){
+/**
+ * Common regexps
+ * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
+ */
+module.exports = {
+  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
+  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
+};
+
+},{}],42:[function(require,module,exports){
 (function(){/* global document */
 
 var urls = module.exports = {};
@@ -7059,17 +7069,7 @@ URLInfo.prototype.parseSharingTokens = function () {
 };
 
 })()
-},{"url":42}],43:[function(require,module,exports){
-/**
- * Common regexps
- * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
- */
-module.exports = {
-  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
-  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
-};
-
-},{}],23:[function(require,module,exports){
+},{"url":43}],23:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
@@ -7167,7 +7167,7 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":44,"./TreeNode":45,"underscore":9}],33:[function(require,module,exports){
+},{"./ConnectionNode":44,"./TreeNode":45,"underscore":9}],31:[function(require,module,exports){
 var Pryv = require('pryv');
 var _ = require('underscore');
 
@@ -7750,7 +7750,7 @@ exports.format = function(f) {
   return str;
 };
 
-},{"events":47}],42:[function(require,module,exports){
+},{"events":47}],43:[function(require,module,exports){
 var punycode = { encode : function (s) { return s } };
 
 exports.parse = urlParse;
@@ -8608,344 +8608,7 @@ EventEmitter.listenerCount = function(emitter, type) {
 };
 
 })(require("__browserify_process"))
-},{"__browserify_process":49}],17:[function(require,module,exports){
-var _ = require('underscore'),
-    SignalEmitter = require('./utility/SignalEmitter.js');
-
-/**
- * TODO Filter is badly missing a correct documentation
- * @constructor
- */
-var Filter = module.exports = function Filter(settings) {
-  SignalEmitter.extend(this, Messages, 'Filter');
-
-  this._settings = _.extend({
-    //TODO: set default values
-    streams: null, //ids
-    tags: null,
-    fromTime: null,  // serverTime
-    toTime: null,  // serverTime
-    limit: null,
-    skip: null,
-    types: null,
-    modifiedSince: null,
-    state: null
-  }, settings);
-};
-
-var Messages = Filter.Messages = {
-  /**
-   * generic change event called on any change
-   * content: {filter, signal, content}
-   **/
-  ON_CHANGE : 'changed',
-  /**
-   * called on streams changes
-   * content: streams
-   */
-  STREAMS_CHANGE : 'streamsChanged',
-
-  /*
-   * called on date changes
-   * content: streams
-   */
-  DATE_CHANGE : 'timeFrameChanged'
-};
-
-// TODO
-// redundant with get
-function _normalizeTimeFrameST(filterData) {
-  var result = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
-  if (filterData.fromTime || filterData.fromTime === 0) {
-    result[0] = filterData.fromTime;
-  }
-  if (filterData.toTime || filterData.toTime === 0) {
-    result[1] = filterData.toTime;
-  }
-  return result;
-}
-
-
-
-/**
- * TODO write doc
- * TODO complete with tags and state and modified and..
- * check if this event is in this filter
- */
-Filter.prototype.matchEvent = function (event) {
-  if (event.time > this.toTimeSTNormalized) { return 0; }
-  if (event.time < this.fromTimeSTNormalized) { return 0; }
-
-
-  if (this._settings.streams && this._settings.streams.indexOf(event.streamId) < 0) {
-    var found = false;
-    event.stream.ancestors.forEach(function (ancestor) {
-      if (this._settings.streams.indexOf(ancestor.id) >= 0) {
-        found = true;
-      }
-    }.bind(this));
-    if (!found) {
-      return 0;
-    }
-  }
-
-
-
-  // TODO complete test
-  return 1;
-};
-
-/**
- * Compare this filter with data form anothe filter
- * @param {Object} filterDataTest data got with filter.getData
- * @returns keymap \{ timeFrame : -1, 0 , 1 \}
- * (1 = more than test, -1 = less data than test, 0 == no changes)
- */
-Filter.prototype.compareToFilterData = function (filterDataTest) {
-  var result = { timeFrame : 0, streams : 0 };
-
-
-  // timeFrame
-  var myTimeFrameST = [this.fromTimeSTNormalized, this.toTimeSTNormalized];
-  var testTimeFrameST = _normalizeTimeFrameST(filterDataTest);
-  console.log(myTimeFrameST);
-  console.log(testTimeFrameST);
-
-  if (myTimeFrameST[0] < testTimeFrameST[0]) {
-    result.timeFrame = 1;
-  } else if (myTimeFrameST[0] > testTimeFrameST[0]) {
-    result.timeFrame = -1;
-  }
-  if (result.timeFrame <= 0) {
-    if (myTimeFrameST[1] > testTimeFrameST[1]) {
-      result.timeFrame = 1;
-    } else  if (myTimeFrameST[1] < testTimeFrameST[1]) {
-      result.timeFrame = -1;
-    }
-  }
-
-  // streams
-  //TODO look if this processing can be optimized
-
-  var nullStream = 0;
-  if (! this._settings.streams) {
-    if (filterDataTest.streams) {
-      result.streams = 1;
-    }
-    nullStream = 1;
-  }
-  if (! filterDataTest.streams) {
-    if (this._settings.streams) {
-      result.streams = -1;
-    }
-    nullStream = 1;
-  }
-
-  if (! nullStream) {
-    var notinTest = _.difference(this._settings.streams, filterDataTest.streams);
-    if (notinTest.length > 0) {
-      result.streams = 1;
-    } else {
-      var notinLocal = _.difference(filterDataTest.streams, this._settings.streams);
-      if (notinLocal.length > 0) {
-        result.streams = -1;
-      }
-    }
-  }
-
-  return result;
-};
-
-/**
- * Create a clone of this filter and changes some properties
- * @param properties
- * @returns pryv.Filter
- */
-Filter.prototype.cloneWithDelta = function (properties) {
-  var newProps = _.clone(this._settings);
-  _.extend(newProps, properties);
-  return new Filter(newProps);
-};
-
-/**
- *
- * @param ignoreNulls (optional) boolean
- * @param withDelta (optional) apply this differences on the data
- * @returns {*}
- */
-Filter.prototype.getData = function (ignoreNulls, withDelta) {
-  ignoreNulls = ignoreNulls || false;
-  var result = _.clone(this._settings);
-  if (withDelta)  {
-    _.extend(result, withDelta);
-  }
-  _.each(_.keys(result), function (key) {
-    if (result[key] === null) { delete result[key]; }
-  });
-  return result;
-};
-
-/**
- * @private
- */
-Filter.prototype._fireFilterChange = function (signal, content, batch) {
-  // generic
-  this._fireEvent(Messages.ON_CHANGE, {filter: this, signal: signal, content: content}, batch);
-  // specific
-  this._fireEvent(signal, content, batch);
-};
-
-/**
- * TODO review documentation and add example
- * Change several values of the filter in batch.. this wil group all events behind a batch id
- * @param keyValueMap {Object}
- * @param batch {SignalEmitter~Batch}
- */
-Filter.prototype.set = function (keyValueMap, batch) {
-  batch = this.startBatch('set', batch);
-
-  _.each(keyValueMap, function (value, key) {
-    this._setValue(key, value, batch);
-  }.bind(this));
-
-  batch.done();
-};
-
-/**
- * Internal that take in charge of changing values
- * @param keyValueMap
- * @param batch
- * @private
- */
-Filter.prototype._setValue = function (key, newValue, batch) {
-  var waitForMe = batch ? batch.waitForMeToFinish() : null;
-
-  if (key === 'limit') {
-    this._settings.limit = newValue;
-
-    // TODO handle changes
-    return;
-  }
-
-
-  if (key === 'timeFrameST') {
-    if (! _.isArray(newValue) || newValue.length !== 2) {
-      throw new Error('Filter.timeFrameST is an Array of two timestamps [fromTime, toTime]');
-    }
-    if (this._settings.fromTime !== newValue[0] || this._settings.toTime !== newValue[1]) {
-      this._settings.fromTime = newValue[0];
-      this._settings.toTime = newValue[1];
-      this._fireFilterChange(Messages.DATE_CHANGE, this.timeFrameST, batch);
-    }
-    if (waitForMe) { waitForMe.done(); }
-    return;
-  }
-
-  if (key === 'streamsIds') {
-
-    if (newValue === null || typeof newValue === 'undefined') {
-      if (this._settings.streams === null) {
-
-        return;
-      }
-    } else if (! _.isArray(newValue)) {
-      newValue = [newValue];
-    }
-
-    // TODO check that this stream is valid
-    this._settings.streams = newValue;
-    this._fireFilterChange(Messages.STREAMS_CHANGE, this.streams, batch);
-    if (waitForMe) { waitForMe.done(); }
-    return;
-  }
-
-  if (waitForMe) { waitForMe.done(); }
-  throw new Error('Filter has no property : ' + key);
-};
-
-/**
- * get toTime, return Number.POSITIVE_INFINITY if null
- */
-Object.defineProperty(Filter.prototype, 'toTimeSTNormalized', {
-  get: function () {
-    if (this._settings.toTime || this._settings.toTime === 0) {
-      return this._settings.toTime;
-    }
-    return Number.POSITIVE_INFINITY;
-  }
-});
-
-/**
- * get fromTime, return Number.POSITIVE_INFINITY if null
- */
-Object.defineProperty(Filter.prototype, 'fromTimeSTNormalized', {
-  get: function () {
-    if (this._settings.fromTime || this._settings.fromTime === 0) {
-      return this._settings.fromTime;
-    }
-    return Number.NEGATIVE_INFINITY;
-  }
-});
-
-
-
-/**
- * timeFrameChange ..  [fromTime, toTime]
- * setting them to "null" => ALL
- */
-Object.defineProperty(Filter.prototype, 'timeFrameST', {
-  get: function () {
-    return [this._settings.toTime, this._settings.fromTime];
-  },
-  set: function (newValue) {
-    this._setValue('timeFrameST', newValue);
-    return this.timeFrameST;
-  }
-});
-
-
-/**
- * StreamIds ..
- * setting them to "null" => ALL and to "[]" => NONE
- */
-Object.defineProperty(Filter.prototype, 'streamsIds', {
-  get: function () {
-    return this._settings.streams;
-  },
-  set: function (newValue) {
-    this._setValue('streamsIds', newValue);
-    return this._settings.streams;
-  }
-});
-
-
-/**
- * return true if context (stream is on a single stream)
- * This is usefull to check when creating and event in a context.
- * This way, no need to ask the user for a stream specification.
- * TODO determine if this should stay in the lib.. or handle by apps
- */
-Filter.prototype.focusedOnSingleStream = function () {
-  if (_.isArray(this._settings.streams) && this._settings.streams.length === 1) {
-    return this._settings.streams[0];
-  }
-  return null;
-};
-
-/**
- * An pryv Filter or an object corresponding at what we can get with Filter.getData().
- * @typedef {(Filter|Object)} FilterLike
- * @property {String[]} [streams]
- * @property {String[]} [tags]
- * @property {number} [fromTime] -- serverTime
- * @property {number} [toTime] -- serverTime
- * @property {number} [modifiedSince] -- serverTime
- * @property {number} [limit] -- response to 'n' events
- * @property {number} [skip] -- skip the first 'n' events of he response
- */
-
-
-},{"./utility/SignalEmitter.js":50,"underscore":51}],15:[function(require,module,exports){
+},{"__browserify_process":49}],14:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('./utility/utility.js'),
     ConnectionEvents = require('./connection/ConnectionEvents.js'),
@@ -9322,223 +8985,344 @@ function getHostname(connection) {
       connection.username + '.' + connection.settings.domain : connection.settings.domain;
 }
 
-},{"./Datastore.js":57,"./connection/ConnectionAccesses.js":56,"./connection/ConnectionAccount.js":40,"./connection/ConnectionBookmarks.js":53,"./connection/ConnectionConstants.js":38,"./connection/ConnectionEvents.js":52,"./connection/ConnectionMonitors.js":54,"./connection/ConnectionProfile.js":39,"./connection/ConnectionStreams.js":55,"./utility/utility.js":21,"underscore":51}],16:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var RW_PROPERTIES =
-  ['streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
-    'clientData', 'state', 'modified', 'trashed'];
-
-
+},{"./Datastore.js":55,"./connection/ConnectionAccesses.js":51,"./connection/ConnectionAccount.js":40,"./connection/ConnectionBookmarks.js":52,"./connection/ConnectionConstants.js":39,"./connection/ConnectionEvents.js":50,"./connection/ConnectionMonitors.js":54,"./connection/ConnectionProfile.js":38,"./connection/ConnectionStreams.js":53,"./utility/utility.js":19,"underscore":56}],15:[function(require,module,exports){
+var _ = require('underscore'),
+    SignalEmitter = require('./utility/SignalEmitter.js');
 
 /**
- *
- * @type {Function}
+ * TODO Filter is badly missing a correct documentation
  * @constructor
  */
-var Event = module.exports = function Event(connection, data) {
-  if (! connection) {
-    throw new Error('Cannot create connection less events');
+var Filter = module.exports = function Filter(settings) {
+  SignalEmitter.extend(this, Messages, 'Filter');
+
+  this._settings = _.extend({
+    //TODO: set default values
+    streams: null, //ids
+    tags: null,
+    fromTime: null,  // serverTime
+    toTime: null,  // serverTime
+    limit: null,
+    skip: null,
+    types: null,
+    modifiedSince: null,
+    state: null
+  }, settings);
+};
+
+var Messages = Filter.Messages = {
+  /**
+   * generic change event called on any change
+   * content: {filter, signal, content}
+   **/
+  ON_CHANGE : 'changed',
+  /**
+   * called on streams changes
+   * content: streams
+   */
+  STREAMS_CHANGE : 'streamsChanged',
+
+  /*
+   * called on date changes
+   * content: streams
+   */
+  DATE_CHANGE : 'timeFrameChanged'
+};
+
+// TODO
+// redundant with get
+function _normalizeTimeFrameST(filterData) {
+  var result = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+  if (filterData.fromTime || filterData.fromTime === 0) {
+    result[0] = filterData.fromTime;
   }
-  this.connection = connection;
-  this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
-  _.extend(this, data);
+  if (filterData.toTime || filterData.toTime === 0) {
+    result[1] = filterData.toTime;
+  }
+  return result;
+}
+
+
+
+/**
+ * TODO write doc
+ * TODO complete with tags and state and modified and..
+ * check if this event is in this filter
+ */
+Filter.prototype.matchEvent = function (event) {
+  if (event.time > this.toTimeSTNormalized) { return 0; }
+  if (event.time < this.fromTimeSTNormalized) { return 0; }
+
+
+  if (this._settings.streams && this._settings.streams.indexOf(event.streamId) < 0) {
+    var found = false;
+    event.stream.ancestors.forEach(function (ancestor) {
+      if (this._settings.streams.indexOf(ancestor.id) >= 0) {
+        found = true;
+      }
+    }.bind(this));
+    if (!found) {
+      return 0;
+    }
+  }
+
+
+
+  // TODO complete test
+  return 1;
 };
 
 /**
- * get Json object ready to be posted on the API
+ * Compare this filter with data form anothe filter
+ * @param {Object} filterDataTest data got with filter.getData
+ * @returns keymap \{ timeFrame : -1, 0 , 1 \}
+ * (1 = more than test, -1 = less data than test, 0 == no changes)
  */
-Event.prototype.getData = function () {
-  var data = {};
-  _.each(RW_PROPERTIES, function (key) { // only set non null values
-    if (_.has(this, key)) { data[key] = this[key]; }
+Filter.prototype.compareToFilterData = function (filterDataTest) {
+  var result = { timeFrame : 0, streams : 0 };
+
+
+  // timeFrame
+  var myTimeFrameST = [this.fromTimeSTNormalized, this.toTimeSTNormalized];
+  var testTimeFrameST = _normalizeTimeFrameST(filterDataTest);
+  console.log(myTimeFrameST);
+  console.log(testTimeFrameST);
+
+  if (myTimeFrameST[0] < testTimeFrameST[0]) {
+    result.timeFrame = 1;
+  } else if (myTimeFrameST[0] > testTimeFrameST[0]) {
+    result.timeFrame = -1;
+  }
+  if (result.timeFrame <= 0) {
+    if (myTimeFrameST[1] > testTimeFrameST[1]) {
+      result.timeFrame = 1;
+    } else  if (myTimeFrameST[1] < testTimeFrameST[1]) {
+      result.timeFrame = -1;
+    }
+  }
+
+  // streams
+  //TODO look if this processing can be optimized
+
+  var nullStream = 0;
+  if (! this._settings.streams) {
+    if (filterDataTest.streams) {
+      result.streams = 1;
+    }
+    nullStream = 1;
+  }
+  if (! filterDataTest.streams) {
+    if (this._settings.streams) {
+      result.streams = -1;
+    }
+    nullStream = 1;
+  }
+
+  if (! nullStream) {
+    var notinTest = _.difference(this._settings.streams, filterDataTest.streams);
+    if (notinTest.length > 0) {
+      result.streams = 1;
+    } else {
+      var notinLocal = _.difference(filterDataTest.streams, this._settings.streams);
+      if (notinLocal.length > 0) {
+        result.streams = -1;
+      }
+    }
+  }
+
+  return result;
+};
+
+/**
+ * Create a clone of this filter and changes some properties
+ * @param properties
+ * @returns pryv.Filter
+ */
+Filter.prototype.cloneWithDelta = function (properties) {
+  var newProps = _.clone(this._settings);
+  _.extend(newProps, properties);
+  return new Filter(newProps);
+};
+
+/**
+ *
+ * @param ignoreNulls (optional) boolean
+ * @param withDelta (optional) apply this differences on the data
+ * @returns {*}
+ */
+Filter.prototype.getData = function (ignoreNulls, withDelta) {
+  ignoreNulls = ignoreNulls || false;
+  var result = _.clone(this._settings);
+  if (withDelta)  {
+    _.extend(result, withDelta);
+  }
+  _.each(_.keys(result), function (key) {
+    if (result[key] === null) { delete result[key]; }
+  });
+  return result;
+};
+
+/**
+ * @private
+ */
+Filter.prototype._fireFilterChange = function (signal, content, batch) {
+  // generic
+  this._fireEvent(Messages.ON_CHANGE, {filter: this, signal: signal, content: content}, batch);
+  // specific
+  this._fireEvent(signal, content, batch);
+};
+
+/**
+ * TODO review documentation and add example
+ * Change several values of the filter in batch.. this wil group all events behind a batch id
+ * @param keyValueMap {Object}
+ * @param batch {SignalEmitter~Batch}
+ */
+Filter.prototype.set = function (keyValueMap, batch) {
+  batch = this.startBatch('set', batch);
+
+  _.each(keyValueMap, function (value, key) {
+    this._setValue(key, value, batch);
   }.bind(this));
-  return data;
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.update = function (callback) {
-  this.connection.events.update(this, callback);
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.addAttachment = function (file, callback) {
-  this.connection.events.addAttachment(this.id, file, callback);
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.removeAttachment = function (fileName, callback) {
-  this.connection.events.removeAttachment(this.id, fileName, callback);
-};
-/**
- * TODO create an attachment Class that contains such logic
- * @param {attachment} attachment
- */
-Event.prototype.attachmentUrl = function (attachment) {
-  var url =  this.connection.settings.ssl ? 'https://' : 'http://';
-  url += this.connection.username + '.' + this.connection.settings.domain + '/events/' +
-    this.id + '/' + attachment.id + '?readToken=' + attachment.readToken;
-  return url;
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.trash = function (callback) {
-  this.connection.events.trash(this, callback);
-};
-/**
- * TODO document and rename to getPicturePreviewUrl
- * @param width
- * @param height
- * @returns {string}
- */
-Event.prototype.getPicturePreview = function (width, height) {
-  width = width ? '&w=' + width : '';
-  height = height ? '&h=' + height : '';
-  var url = this.connection.settings.ssl ? 'https://' : 'http://';
-  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
-    this.id + '?auth=' + this.connection.auth + width + height;
-  return url;
+
+  batch.done();
 };
 
 /**
- * TODO document
+ * Internal that take in charge of changing values
+ * @param keyValueMap
+ * @param batch
+ * @private
  */
-Object.defineProperty(Event.prototype, 'timeLT', {
+Filter.prototype._setValue = function (key, newValue, batch) {
+  var waitForMe = batch ? batch.waitForMeToFinish() : null;
+
+  if (key === 'limit') {
+    this._settings.limit = newValue;
+
+    // TODO handle changes
+    return;
+  }
+
+
+  if (key === 'timeFrameST') {
+    if (! _.isArray(newValue) || newValue.length !== 2) {
+      throw new Error('Filter.timeFrameST is an Array of two timestamps [fromTime, toTime]');
+    }
+    if (this._settings.fromTime !== newValue[0] || this._settings.toTime !== newValue[1]) {
+      this._settings.fromTime = newValue[0];
+      this._settings.toTime = newValue[1];
+      this._fireFilterChange(Messages.DATE_CHANGE, this.timeFrameST, batch);
+    }
+    if (waitForMe) { waitForMe.done(); }
+    return;
+  }
+
+  if (key === 'streamsIds') {
+
+    if (newValue === null || typeof newValue === 'undefined') {
+      if (this._settings.streams === null) {
+
+        return;
+      }
+    } else if (! _.isArray(newValue)) {
+      newValue = [newValue];
+    }
+
+    // TODO check that this stream is valid
+    this._settings.streams = newValue;
+    this._fireFilterChange(Messages.STREAMS_CHANGE, this.streams, batch);
+    if (waitForMe) { waitForMe.done(); }
+    return;
+  }
+
+  if (waitForMe) { waitForMe.done(); }
+  throw new Error('Filter has no property : ' + key);
+};
+
+/**
+ * get toTime, return Number.POSITIVE_INFINITY if null
+ */
+Object.defineProperty(Filter.prototype, 'toTimeSTNormalized', {
   get: function () {
-    return this.connection.getLocalTime(this.time);
+    if (this._settings.toTime || this._settings.toTime === 0) {
+      return this._settings.toTime;
+    }
+    return Number.POSITIVE_INFINITY;
+  }
+});
+
+/**
+ * get fromTime, return Number.POSITIVE_INFINITY if null
+ */
+Object.defineProperty(Filter.prototype, 'fromTimeSTNormalized', {
+  get: function () {
+    if (this._settings.fromTime || this._settings.fromTime === 0) {
+      return this._settings.fromTime;
+    }
+    return Number.NEGATIVE_INFINITY;
+  }
+});
+
+
+
+/**
+ * timeFrameChange ..  [fromTime, toTime]
+ * setting them to "null" => ALL
+ */
+Object.defineProperty(Filter.prototype, 'timeFrameST', {
+  get: function () {
+    return [this._settings.toTime, this._settings.fromTime];
   },
   set: function (newValue) {
-    this.time = this.connection.getServerTime(newValue);
+    this._setValue('timeFrameST', newValue);
+    return this.timeFrameST;
   }
 });
 
 
-
 /**
- * TODO document
+ * StreamIds ..
+ * setting them to "null" => ALL and to "[]" => NONE
  */
-Object.defineProperty(Event.prototype, 'stream', {
+Object.defineProperty(Filter.prototype, 'streamsIds', {
   get: function () {
-    if (! this.connection.datastore) {
-      throw new Error('call connection.fetchStructure before to get automatic stream mapping.' +
-        ' Or use StreamId');
-    }
-    return this.connection.datastore.getStreamById(this.streamId);
+    return this._settings.streams;
   },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
-
-/**
- * TODO document
- */
-Object.defineProperty(Event.prototype, 'url', {
-  get: function () {
-    var url = this.connection.settings.ssl ? 'https://' : 'http://';
-    url += this.connection.username + '.' + this.connection.settings.domain + '/events/' + this.id;
-    return url;
-  },
-  set: function () { throw new Error('Event.url property is read only'); }
+  set: function (newValue) {
+    this._setValue('streamsIds', newValue);
+    return this._settings.streams;
+  }
 });
 
 
 /**
- * An newly created Event (no id, not synched with API)
- * or an object with sufficient properties to be considered as an Event.
- * @typedef {(Event|Object)} NewEventLike
- * @property {String} streamId
- * @property {String} type
- * @property {number} [time]
+ * return true if context (stream is on a single stream)
+ * This is usefull to check when creating and event in a context.
+ * This way, no need to ask the user for a stream specification.
+ * TODO determine if this should stay in the lib.. or handle by apps
  */
-
-},{"underscore":51}],19:[function(require,module,exports){
-
-var _ = require('underscore');
-
-/**
- * TODO write documentation  with use cases.. !!
- * @type {Function}
- */
-var Stream = module.exports = function Stream(connection, data) {
-  this.connection = connection;
-
-  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
-  /** those are only used when no datastore **/
-  this._parent = null;
-  this.parentId = null;
-  this._children = [];
-  _.extend(this, data);
+Filter.prototype.focusedOnSingleStream = function () {
+  if (_.isArray(this._settings.streams) && this._settings.streams.length === 1) {
+    return this._settings.streams[0];
+  }
+  return null;
 };
 
 /**
- * Set or erase clientData properties
- * @example // set x=25 and delete y
- * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValueMap
- * @param {Connection~requestCallback} callback
+ * An pryv Filter or an object corresponding at what we can get with Filter.getData().
+ * @typedef {(Filter|Object)} FilterLike
+ * @property {String[]} [streams]
+ * @property {String[]} [tags]
+ * @property {number} [fromTime] -- serverTime
+ * @property {number} [toTime] -- serverTime
+ * @property {number} [modifiedSince] -- serverTime
+ * @property {number} [limit] -- response to 'n' events
+ * @property {number} [skip] -- skip the first 'n' events of he response
  */
-Stream.prototype.setClientData = function (keyValueMap, callback) {
-  return this.connection.streams.setClientData(this, keyValueMap, callback);
-};
-
-Object.defineProperty(Stream.prototype, 'parent', {
-  get: function () {
-
-    if (! this.parentId) { return null; }
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._parent;
-    }
-
-    return this.connection.datastore.getStreamById(this.parentId);
-  },
-  set: function () { throw new Error('Stream.parent property is read only'); }
-});
-
-/**
- * TODO write documentation
- */
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    if (! this.connection.datastore) { // we use this._parent and this._children
-      return this._children;
-    }
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      var child = this.connection.datastore.getStreamById(childrenId);
-      children.push(child);
-    }.bind(this));
-    return children;
-  },
-  set: function () { throw new Error('Stream.children property is read only'); }
-});
-
-// TODO write test
-Object.defineProperty(Stream.prototype, 'ancestors', {
-  get: function () {
-    if (! this.parentId || this.parent === null) { return []; }
-    var result = this.parent.ancestors;
-    result.push(this.parent);
-    return result;
-  },
-  set: function () { throw new Error('Stream.ancestors property is read only'); }
-});
 
 
-
-
-
-
-
-},{"underscore":51}],20:[function(require,module,exports){
+},{"./utility/SignalEmitter.js":57,"underscore":56}],20:[function(require,module,exports){
 var _ = require('underscore'),
   SignalEmitter = require('./utility/SignalEmitter.js'),
   Filter = require('./Filter.js');
@@ -9860,7 +9644,285 @@ module.exports = Monitor;
 
 
 
-},{"./Filter.js":17,"./utility/SignalEmitter.js":50,"underscore":51}],24:[function(require,module,exports){
+},{"./Filter.js":15,"./utility/SignalEmitter.js":57,"underscore":56}],21:[function(require,module,exports){
+
+var _ = require('underscore');
+
+var RW_PROPERTIES =
+  ['streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
+    'clientData', 'state', 'modified', 'trashed'];
+
+
+
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function Event(connection, data) {
+  if (! connection) {
+    throw new Error('Cannot create connection less events');
+  }
+  this.connection = connection;
+  this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
+  _.extend(this, data);
+};
+
+/**
+ * get Json object ready to be posted on the API
+ */
+Event.prototype.getData = function () {
+  var data = {};
+  _.each(RW_PROPERTIES, function (key) { // only set non null values
+    if (_.has(this, key)) { data[key] = this[key]; }
+  }.bind(this));
+  return data;
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.update = function (callback) {
+  this.connection.events.update(this, callback);
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.addAttachment = function (file, callback) {
+  this.connection.events.addAttachment(this.id, file, callback);
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.removeAttachment = function (fileName, callback) {
+  this.connection.events.removeAttachment(this.id, fileName, callback);
+};
+/**
+ * TODO create an attachment Class that contains such logic
+ * @param {attachment} attachment
+ */
+Event.prototype.attachmentUrl = function (attachment) {
+  var url =  this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + '/events/' +
+    this.id + '/' + attachment.id + '?readToken=' + attachment.readToken;
+  return url;
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.trash = function (callback) {
+  this.connection.events.trash(this, callback);
+};
+/**
+ * TODO document and rename to getPicturePreviewUrl
+ * @param width
+ * @param height
+ * @returns {string}
+ */
+Event.prototype.getPicturePreview = function (width, height) {
+  width = width ? '&w=' + width : '';
+  height = height ? '&h=' + height : '';
+  var url = this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
+    this.id + '?auth=' + this.connection.auth + width + height;
+  return url;
+};
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'timeLT', {
+  get: function () {
+    return this.connection.getLocalTime(this.time);
+  },
+  set: function (newValue) {
+    this.time = this.connection.getServerTime(newValue);
+  }
+});
+
+
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    if (! this.connection.datastore) {
+      throw new Error('call connection.fetchStructure before to get automatic stream mapping.' +
+        ' Or use StreamId');
+    }
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'url', {
+  get: function () {
+    var url = this.connection.settings.ssl ? 'https://' : 'http://';
+    url += this.connection.username + '.' + this.connection.settings.domain + '/events/' + this.id;
+    return url;
+  },
+  set: function () { throw new Error('Event.url property is read only'); }
+});
+
+
+/**
+ * An newly created Event (no id, not synched with API)
+ * or an object with sufficient properties to be considered as an Event.
+ * @typedef {(Event|Object)} NewEventLike
+ * @property {String} streamId
+ * @property {String} type
+ * @property {number} [time]
+ */
+
+},{"underscore":56}],17:[function(require,module,exports){
+
+var _ = require('underscore');
+
+/**
+ * TODO write documentation  with use cases.. !!
+ * @type {Function}
+ */
+var Stream = module.exports = function Stream(connection, data) {
+  this.connection = connection;
+
+  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this.parentId = null;
+  this._children = [];
+  _.extend(this, data);
+};
+
+/**
+ * Set or erase clientData properties
+ * @example // set x=25 and delete y
+ * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValueMap
+ * @param {Connection~requestCallback} callback
+ */
+Stream.prototype.setClientData = function (keyValueMap, callback) {
+  return this.connection.streams.setClientData(this, keyValueMap, callback);
+};
+
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (! this.parentId) { return null; }
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
+  },
+  set: function () { throw new Error('Stream.parent property is read only'); }
+});
+
+/**
+ * TODO write documentation
+ */
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    if (! this.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      var child = this.connection.datastore.getStreamById(childrenId);
+      children.push(child);
+    }.bind(this));
+    return children;
+  },
+  set: function () { throw new Error('Stream.children property is read only'); }
+});
+
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    if (! this.parentId || this.parent === null) { return []; }
+    var result = this.parent.ancestors;
+    result.push(this.parent);
+    return result;
+  },
+  set: function () { throw new Error('Stream.ancestors property is read only'); }
+});
+
+
+
+
+
+
+
+},{"underscore":56}],24:[function(require,module,exports){
+(function(){/* global $ */
+var _ = require('underscore'),
+  View = require('./View.js'),
+  Model = require('./EventModel.js'),
+  _ = require('underscore');
+
+var Controller = module.exports = function ($modal, connection, focusedStream, target) {
+  this.connection = connection;
+  this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
+  this.$modal = $modal;
+  this.target = target;
+  this.container = '.modal-content';
+  this.view = null;
+  this.newEvent = null;
+};
+_.extend(Controller.prototype, {
+  show: function () {
+    this.newEvent = new Model({event: this._defaultEvent()});
+    this.$modal.modal({currentTarget: this.target});
+    $(this.container).empty().hide();
+    setTimeout(function () {
+      $(this.container).fadeIn();
+    }.bind(this), 500);
+    $(this.container).append('<div class="modal-header">  ' +
+      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
+      '&times;</button> ' +
+      '<h4 class="modal-title" id="myModalLabel" ' +
+      'data-i18n="events.common.labels.addEventTitle"></h4>' +
+      '<div class="modal-close"></div> ' +
+      '</div>' +
+      '<div id="modal-content"></div>');
+    this.view = new View({model: this.newEvent});
+    this.view.connection = this.connection;
+    this.view.focusedStream = this.focusedStream;
+    this.view.render();
+    this.view.on('close', this.close.bind(this));
+    $('body').i18n();
+  },
+  close: function () {
+    this.newEvent = null;
+    if (this.view) {
+      this.view.close();
+      this.view = null;
+      $(this.container).empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
+    }
+
+  },
+  _defaultEvent: function () {
+    var result = {};
+    result.time = new Date().getTime() / 1000;
+    result.tags = [];
+    result.content = null;
+    result.desctiption = '';
+    return result;
+  }
+});
+
+})()
+},{"./EventModel.js":58,"./View.js":59,"underscore":9}],26:[function(require,module,exports){
 (function(){/* global $, window, i18n */
 var _ = require('underscore'),
   SharingCollection = require('./SharingCollection.js'),
@@ -10036,69 +10098,7 @@ _.extend(Controller.prototype, {
 });
 
 })()
-},{"./BookmarkCollection.js":61,"./BookmarkListView.js":63,"./BookmarkModel.js":62,"./SharingCollection.js":60,"./SharingListView.js":58,"./SharingModel.js":59,"pryv":10,"underscore":9}],26:[function(require,module,exports){
-(function(){/* global $ */
-var _ = require('underscore'),
-  View = require('./View.js'),
-  Model = require('./EventModel.js'),
-  _ = require('underscore');
-
-var Controller = module.exports = function ($modal, connection, focusedStream, target) {
-  this.connection = connection;
-  this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
-  this.$modal = $modal;
-  this.target = target;
-  this.container = '.modal-content';
-  this.view = null;
-  this.newEvent = null;
-};
-_.extend(Controller.prototype, {
-  show: function () {
-    this.newEvent = new Model({event: this._defaultEvent()});
-    this.$modal.modal({currentTarget: this.target});
-    $(this.container).empty().hide();
-    setTimeout(function () {
-      $(this.container).fadeIn();
-    }.bind(this), 500);
-    $(this.container).append('<div class="modal-header">  ' +
-      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">' +
-      '&times;</button> ' +
-      '<h4 class="modal-title" id="myModalLabel" ' +
-      'data-i18n="events.common.labels.addEventTitle"></h4>' +
-      '<div class="modal-close"></div> ' +
-      '</div>' +
-      '<div id="modal-content"></div>');
-    this.view = new View({model: this.newEvent});
-    this.view.connection = this.connection;
-    this.view.focusedStream = this.focusedStream;
-    this.view.render();
-    this.view.on('close', this.close.bind(this));
-    $('body').i18n();
-  },
-  close: function () {
-    this.newEvent = null;
-    if (this.view) {
-      this.view.close();
-      this.view = null;
-      $(this.container).empty();
-      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
-      $('.modal-backdrop').remove();
-      this.$modal.trigger('hidden.bs.modal');
-    }
-
-  },
-  _defaultEvent: function () {
-    var result = {};
-    result.time = new Date().getTime() / 1000;
-    result.tags = [];
-    result.content = null;
-    result.desctiption = '';
-    return result;
-  }
-});
-
-})()
-},{"./EventModel.js":65,"./View.js":64,"underscore":9}],27:[function(require,module,exports){
+},{"./BookmarkCollection.js":63,"./BookmarkListView.js":65,"./BookmarkModel.js":64,"./SharingCollection.js":61,"./SharingListView.js":62,"./SharingModel.js":60,"pryv":10,"underscore":9}],28:[function(require,module,exports){
 (function(){/* global $, window, i18n */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
@@ -10186,7 +10186,57 @@ _.extend(Controller.prototype, {
   }
 });
 })()
-},{"./Collection.js":66,"./ListView.js":68,"./Model.js":67,"underscore":9}],29:[function(require,module,exports){
+},{"./Collection.js":66,"./ListView.js":68,"./Model.js":67,"underscore":9}],30:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+    AppListView = require('./AppListView.js'),
+    _ = require('underscore');
+
+var Layout = Marionette.Layout.extend({
+  template: '#apps-modal-template',
+
+  regions: {
+    otherApps: '#settings-other-apps'
+  },
+  initialize: function () {
+    this.$el =  $('.modal-content');
+  }
+});
+var Controller = module.exports  = function ($modal, connection, target) {
+  this.connection = connection;
+  this.$modal = $modal;
+  this.target = target;
+  this.view  = null;
+  this.appList = null;
+
+
+};
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
+    this.view = new Layout();
+    this.view.on('close', this.close.bind(this));
+    this.appList = new AppListView({connection: this.connection});
+    this.view.render();
+    this.view.otherApps.show(this.appList);
+  },
+  close: function () {
+    if (this.view) {
+      this.view = null;
+      $('.modal-content').empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
+      this.appList.reset();
+    }
+  }
+});
+
+})()
+},{"./AppListView.js":69,"backbone.marionette":11,"underscore":9}],29:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   NavView = require('./NavView.js'),
@@ -10274,7 +10324,7 @@ _.extend(Controller.prototype, {
 });
 
 })()
-},{"./AppListView.js":71,"./ManageAppsView.js":69,"./NavView.js":70,"./PasswordView.js":72,"backbone.marionette":11,"underscore":9}],32:[function(require,module,exports){
+},{"./AppListView.js":73,"./ManageAppsView.js":71,"./NavView.js":70,"./PasswordView.js":72,"backbone.marionette":11,"underscore":9}],33:[function(require,module,exports){
 (function(){/* global $ */
 var  Marionette = require('backbone.marionette');
 /* TODO This a the view for each node, with dynamic animation
@@ -10306,57 +10356,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":11}],30:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-    AppListView = require('./AppListView.js'),
-    _ = require('underscore');
-
-var Layout = Marionette.Layout.extend({
-  template: '#apps-modal-template',
-
-  regions: {
-    otherApps: '#settings-other-apps'
-  },
-  initialize: function () {
-    this.$el =  $('.modal-content');
-  }
-});
-var Controller = module.exports  = function ($modal, connection, target) {
-  this.connection = connection;
-  this.$modal = $modal;
-  this.target = target;
-  this.view  = null;
-  this.appList = null;
-
-
-};
-_.extend(Controller.prototype, {
-  show: function () {
-    this.$modal.modal({currentTarget: this.target});
-    setTimeout(function () {
-      $('.modal-content').fadeIn();
-    }.bind(this), 500);
-    this.view = new Layout();
-    this.view.on('close', this.close.bind(this));
-    this.appList = new AppListView({connection: this.connection});
-    this.view.render();
-    this.view.otherApps.show(this.appList);
-  },
-  close: function () {
-    if (this.view) {
-      this.view = null;
-      $('.modal-content').empty();
-      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
-      $('.modal-backdrop').remove();
-      this.$modal.trigger('hidden.bs.modal');
-      this.appList.reset();
-    }
-  }
-});
-
-})()
-},{"./AppListView.js":73,"backbone.marionette":11,"underscore":9}],74:[function(require,module,exports){
+},{"backbone.marionette":11}],74:[function(require,module,exports){
 (function(){/* global document, navigator */
 
 /**
@@ -10491,260 +10491,7 @@ utility.domReady = require('./domReady');
 utility.request = require('./request-browser');
 
 })()
-},{"./docCookies":75,"./domReady":76,"./request-browser":77}],36:[function(require,module,exports){
-(function(){/*global $ */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore'),
-  UNIQUE_ID = 0;
-
-module.exports = Marionette.ItemView.extend({
-  template: '#filter-by-stream-template',
-  templateHelpers: function () {
-    return {
-      getStream: function () {
-        return this._getStream();
-      }.bind(this)
-    };
-  },
-  ui: {
-    label: 'label',
-    checkbox: 'input[type=checkbox]',
-    applyBtn: '#filter-by-stream-apply'
-  },
-  shushListenerOnce: false, //used to note trigger the render when we click on a checkbox
-  initialize: function (options) {
-    this.MainModel  = options.MainModel;
-    var initListener = setInterval(function () {
-      if (this.MainModel.activeFilter) {
-        clearInterval(initListener);
-        this.MainModel.activeFilter.addEventListener('filteredStreamsChange', function () {
-          if (!this.shushListenerOnce) {
-            this.render();
-          } else {
-            this.shushListenerOnce = false;
-          }
-        }.bind(this));
-        this.MainModel.activeFilter.addEventListener('streamEnterScope', function () {
-          if (!this.shushListenerOnce) {
-            this.render();
-          } else {
-            this.shushListenerOnce = false;
-          }
-        }.bind(this));
-      }
-    }.bind(this), 100);
-  },
-  onRender: function () {
-    if (!this.MainModel.activeFilter) {
-      return;
-    }
-    var self = this;
-    self.ui.applyBtn.prop('disabled', true);
-    self.ui.applyBtn.click(this._applyFilter.bind(this));
-    this.ui.label.click(function (e) {
-      e.stopPropagation();
-      var input = $($(e.currentTarget).parent()).find('input');
-      var checked = input.prop('checked');
-      input.prop({
-        indeterminate: false,
-        checked: !checked
-      });
-      input.trigger('change');
-      this.shushListenerOnce = true;
-      this._applyFilter();
-    }.bind(this));
-    this.ui.checkbox.click(function (e) {
-      e.stopPropagation();
-    });
-    this.ui.checkbox.change(function (e, options) {
-      var checked = $(e.currentTarget).prop('checked'),
-        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
-      self.ui.applyBtn.prop('disabled', false);
-      container.find('input[type="checkbox"]').prop({
-        indeterminate: false,
-        checked: checked
-      });
-      if (!options || !options.noIndeterminate) {
-        self._isChildrenCheck(container.parent().parent());
-      }
-    });
-    this.bindUIElements();
-    this.onFocusStreamChanged();
-    setTimeout(function () {$('body').i18n(); }, 100);
-  },
-  onFocusStreamChanged: function () {
-    var focusedStreams = this.MainModel.activeFilter.getStreams();
-    var focusedStreamsIds = [];
-    try {
-      this.ui.checkbox.prop({
-        indeterminate: false,
-        checked: false
-      });
-    } catch (e) {
-      return false;
-    }
-
-    _.each(focusedStreams, function (stream) {
-      focusedStreamsIds.push(stream.connection.serialId + '/' + stream.id);
-    });
-    var $parent, c, s;
-    _.each(this.ui.checkbox, function (checkbox) {
-      checkbox = $(checkbox);
-      $parent = $(checkbox.parent().parent());
-      if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
-        c = this.MainModel.connections.get($parent.attr('data-connection'));
-        if (c) {
-          s = c.datastore.getStreamById($parent.attr('data-stream'));
-          if (s) {
-            if (focusedStreamsIds.indexOf(c.serialId + '/' + s.id) !== -1 ||
-              focusedStreamsIds.length === 0) {
-              checkbox.prop({
-                indeterminate: false,
-                checked: true
-              });
-              checkbox.trigger('change', {noIndeterminate: true});
-            }
-          }
-        }
-      }
-    }.bind(this));
-    return true;
-  },
-  _isChildrenCheck: function ($el) {
-    if ($el.attr('id') === 'collapseFilterByStream') {
-      return;
-    }
-    var allChecked = true;
-    var allUncheck = true;
-    var children  = $($el).find('input[type="checkbox"]');
-    for (var i = 0; i < children.length; i++) {
-      allChecked = allChecked && $(children[i]).prop('checked');
-      allUncheck = allUncheck && !$(children[i]).prop('checked');
-    }
-    if (allUncheck) {
-      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
-        indeterminate: false,
-        checked: false
-      });
-    } else if (!allChecked && !allUncheck) {
-      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
-        indeterminate: true,
-        checked: false
-      });
-    }
-    this._isChildrenCheck($($($el).parent().parent()));
-  },
-  _applyFilter: function () {
-    var streams = [], $parent, connection, stream;
-    this.ui.applyBtn.prop('disabled', true);
-    _.each(this.ui.checkbox, function (checkbox) {
-      checkbox = $(checkbox);
-      if (checkbox.prop('checked')) {
-        $parent = $(checkbox.parent().parent());
-        if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
-          connection = this.MainModel.connections.get($parent.attr('data-connection'));
-          if (connection) {
-            stream = connection.datastore.getStreamById($parent.attr('data-stream'));
-            if (stream) {
-              streams.push(stream);
-            }
-          }
-        }
-      }
-    }.bind(this));
-    this.MainModel.activeFilter.focusOnStreams(streams);
-  },
-  _getStream: function () {
-    var connections = [],
-      result = '';
-    if (!this.MainModel.loggedConnection) {
-      return result;
-    }
-    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
-      connections.push(this.MainModel.loggedConnection);
-    }
-    _.each(this.MainModel.sharingsConnections, function (c) {
-      if (c._accessInfo) {
-        connections.push(c);
-      }
-    });
-    _.each(this.MainModel.bookmakrsConnections, function (c) {
-      if (c._accessInfo) {
-        connections.push(c);
-      }
-    });
-    _.each(connections, function (c) {
-      result += '<li class="stream-tree-summary connection disclosure"' +
-        ' data-toggle="collapse" ' +
-        'data-target="#collapse' + UNIQUE_ID + '">' +
-        '<div class="pryv-checkbox">' +
-        '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
-        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
-      if (c._accessInfo.name !== 'pryv-browser') {
-        result += ' / ' + c._accessInfo.name;
-      }
-      result += '</label></div></li>';
-      result += '<ul id="collapse' + UNIQUE_ID +
-        '" class="panel-collapse  collapse in stream-tree-children">' +
-        '<div class="panel-body">';
-      UNIQUE_ID++;
-      result += this._getStreamStructure(c);
-      result += '</div></ul>';
-    }.bind(this));
-
-    return result;
-  },
-  _getStreamStructure: function (connection) {
-    var rootStreams = connection.datastore.getStreams(),
-      result = '';
-    for (var i = 0; i < rootStreams.length; i++) {
-      if (!rootStreams[i].virtual) {
-        result += this._walkStreamStructure(rootStreams[i]);
-      }
-    }
-    return result;
-  },
-  _walkStreamStructure: function (stream) {
-    var disclosure = '';
-    if (stream.children.length > 0) {
-      disclosure = 'disclosure';
-    }
-    var result = '<li data-connection="' +
-      stream.connection.serialId + '" data-stream="' +
-      stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
-      '" data-toggle="collapse" ' +
-      'data-target="#collapse' + UNIQUE_ID + '">' +
-      '<div class="pryv-checkbox">' +
-      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
-      '"><label for="afilterStream' + UNIQUE_ID + '">' +
-      stream.name + '</label></div></li>';
-    result += '<ul id="collapse' + UNIQUE_ID +
-      '" class="panel-collapse  collapse stream-tree-children">' +
-      '<div class="panel-body">';
-    UNIQUE_ID++;
-    for (var j = 0; j < stream.children.length; j++) {
-      if (!stream.children[j].virtual) {
-        result += this._walkStreamStructure(stream.children[j]);
-      }
-
-    }
-    result += '</div></ul>';
-    return result;
-  }
-
-});
-
-
-
-})()
-},{"backbone.marionette":11,"underscore":9}],37:[function(require,module,exports){
-
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#actions-template'
-});
-},{"backbone.marionette":11}],48:[function(require,module,exports){
+},{"./docCookies":75,"./domReady":77,"./request-browser":76}],48:[function(require,module,exports){
 
 /**
  * Object#toString() ref for stringify().
@@ -11063,7 +10810,260 @@ function decode(str) {
   }
 }
 
-},{}],51:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
+
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#actions-template'
+});
+},{"backbone.marionette":11}],36:[function(require,module,exports){
+(function(){/*global $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  UNIQUE_ID = 0;
+
+module.exports = Marionette.ItemView.extend({
+  template: '#filter-by-stream-template',
+  templateHelpers: function () {
+    return {
+      getStream: function () {
+        return this._getStream();
+      }.bind(this)
+    };
+  },
+  ui: {
+    label: 'label',
+    checkbox: 'input[type=checkbox]',
+    applyBtn: '#filter-by-stream-apply'
+  },
+  shushListenerOnce: false, //used to note trigger the render when we click on a checkbox
+  initialize: function (options) {
+    this.MainModel  = options.MainModel;
+    var initListener = setInterval(function () {
+      if (this.MainModel.activeFilter) {
+        clearInterval(initListener);
+        this.MainModel.activeFilter.addEventListener('filteredStreamsChange', function () {
+          if (!this.shushListenerOnce) {
+            this.render();
+          } else {
+            this.shushListenerOnce = false;
+          }
+        }.bind(this));
+        this.MainModel.activeFilter.addEventListener('streamEnterScope', function () {
+          if (!this.shushListenerOnce) {
+            this.render();
+          } else {
+            this.shushListenerOnce = false;
+          }
+        }.bind(this));
+      }
+    }.bind(this), 100);
+  },
+  onRender: function () {
+    if (!this.MainModel.activeFilter) {
+      return;
+    }
+    var self = this;
+    self.ui.applyBtn.prop('disabled', true);
+    self.ui.applyBtn.click(this._applyFilter.bind(this));
+    this.ui.label.click(function (e) {
+      e.stopPropagation();
+      var input = $($(e.currentTarget).parent()).find('input');
+      var checked = input.prop('checked');
+      input.prop({
+        indeterminate: false,
+        checked: !checked
+      });
+      input.trigger('change');
+      this.shushListenerOnce = true;
+      this._applyFilter();
+    }.bind(this));
+    this.ui.checkbox.click(function (e) {
+      e.stopPropagation();
+    });
+    this.ui.checkbox.change(function (e, options) {
+      var checked = $(e.currentTarget).prop('checked'),
+        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
+      self.ui.applyBtn.prop('disabled', false);
+      container.find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: checked
+      });
+      if (!options || !options.noIndeterminate) {
+        self._isChildrenCheck(container.parent().parent());
+      }
+    });
+    this.bindUIElements();
+    this.onFocusStreamChanged();
+    setTimeout(function () {$('body').i18n(); }, 100);
+  },
+  onFocusStreamChanged: function () {
+    var focusedStreams = this.MainModel.activeFilter.getStreams();
+    var focusedStreamsIds = [];
+    try {
+      this.ui.checkbox.prop({
+        indeterminate: false,
+        checked: false
+      });
+    } catch (e) {
+      return false;
+    }
+
+    _.each(focusedStreams, function (stream) {
+      focusedStreamsIds.push(stream.connection.serialId + '/' + stream.id);
+    });
+    var $parent, c, s;
+    _.each(this.ui.checkbox, function (checkbox) {
+      checkbox = $(checkbox);
+      $parent = $(checkbox.parent().parent());
+      if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
+        c = this.MainModel.connections.get($parent.attr('data-connection'));
+        if (c) {
+          s = c.datastore.getStreamById($parent.attr('data-stream'));
+          if (s) {
+            if (focusedStreamsIds.indexOf(c.serialId + '/' + s.id) !== -1 ||
+              focusedStreamsIds.length === 0) {
+              checkbox.prop({
+                indeterminate: false,
+                checked: true
+              });
+              checkbox.trigger('change', {noIndeterminate: true});
+            }
+          }
+        }
+      }
+    }.bind(this));
+    return true;
+  },
+  _isChildrenCheck: function ($el) {
+    if ($el.attr('id') === 'collapseFilterByStream') {
+      return;
+    }
+    var allChecked = true;
+    var allUncheck = true;
+    var children  = $($el).find('input[type="checkbox"]');
+    for (var i = 0; i < children.length; i++) {
+      allChecked = allChecked && $(children[i]).prop('checked');
+      allUncheck = allUncheck && !$(children[i]).prop('checked');
+    }
+    if (allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: false
+      });
+    } else if (!allChecked && !allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+        indeterminate: true,
+        checked: false
+      });
+    }
+    this._isChildrenCheck($($($el).parent().parent()));
+  },
+  _applyFilter: function () {
+    var streams = [], $parent, connection, stream;
+    this.ui.applyBtn.prop('disabled', true);
+    _.each(this.ui.checkbox, function (checkbox) {
+      checkbox = $(checkbox);
+      if (checkbox.prop('checked')) {
+        $parent = $(checkbox.parent().parent());
+        if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
+          connection = this.MainModel.connections.get($parent.attr('data-connection'));
+          if (connection) {
+            stream = connection.datastore.getStreamById($parent.attr('data-stream'));
+            if (stream) {
+              streams.push(stream);
+            }
+          }
+        }
+      }
+    }.bind(this));
+    this.MainModel.activeFilter.focusOnStreams(streams);
+  },
+  _getStream: function () {
+    var connections = [],
+      result = '';
+    if (!this.MainModel.loggedConnection) {
+      return result;
+    }
+    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
+      connections.push(this.MainModel.loggedConnection);
+    }
+    _.each(this.MainModel.sharingsConnections, function (c) {
+      if (c._accessInfo) {
+        connections.push(c);
+      }
+    });
+    _.each(this.MainModel.bookmakrsConnections, function (c) {
+      if (c._accessInfo) {
+        connections.push(c);
+      }
+    });
+    _.each(connections, function (c) {
+      result += '<li class="stream-tree-summary connection disclosure"' +
+        ' data-toggle="collapse" ' +
+        'data-target="#collapse' + UNIQUE_ID + '">' +
+        '<div class="pryv-checkbox">' +
+        '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
+      if (c._accessInfo.name !== 'pryv-browser') {
+        result += ' / ' + c._accessInfo.name;
+      }
+      result += '</label></div></li>';
+      result += '<ul id="collapse' + UNIQUE_ID +
+        '" class="panel-collapse  collapse in stream-tree-children">' +
+        '<div class="panel-body">';
+      UNIQUE_ID++;
+      result += this._getStreamStructure(c);
+      result += '</div></ul>';
+    }.bind(this));
+
+    return result;
+  },
+  _getStreamStructure: function (connection) {
+    var rootStreams = connection.datastore.getStreams(),
+      result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (!rootStreams[i].virtual) {
+        result += this._walkStreamStructure(rootStreams[i]);
+      }
+    }
+    return result;
+  },
+  _walkStreamStructure: function (stream) {
+    var disclosure = '';
+    if (stream.children.length > 0) {
+      disclosure = 'disclosure';
+    }
+    var result = '<li data-connection="' +
+      stream.connection.serialId + '" data-stream="' +
+      stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
+      '" data-toggle="collapse" ' +
+      'data-target="#collapse' + UNIQUE_ID + '">' +
+      '<div class="pryv-checkbox">' +
+      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+      '"><label for="afilterStream' + UNIQUE_ID + '">' +
+      stream.name + '</label></div></li>';
+    result += '<ul id="collapse' + UNIQUE_ID +
+      '" class="panel-collapse  collapse stream-tree-children">' +
+      '<div class="panel-body">';
+    UNIQUE_ID++;
+    for (var j = 0; j < stream.children.length; j++) {
+      if (!stream.children[j].virtual) {
+        result += this._walkStreamStructure(stream.children[j]);
+      }
+
+    }
+    result += '</div></ul>';
+    return result;
+  }
+
+});
+
+
+
+})()
+},{"backbone.marionette":11,"underscore":9}],56:[function(require,module,exports){
 (function(){//     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -12402,64 +12402,6 @@ module.exports = {
 };
 
 },{}],76:[function(require,module,exports){
-/* jshint ignore:start */
-
-/*!
- * domready (c) Dustin Diaz 2012 - License MIT
- */
-module.exports = function (ready) {
-
-
-  var fns = [], fn, f = false,
-      doc = document,
-      testEl = doc.documentElement,
-      hack = testEl.doScroll,
-      domContentLoaded = 'DOMContentLoaded',
-      addEventListener = 'addEventListener',
-      onreadystatechange = 'onreadystatechange',
-      readyState = 'readyState',
-      loaded = /^loade|c/.test(doc[readyState]);
-
-  function flush(f) {
-    loaded = 1;
-    while (f = fns.shift()) {
-      f()
-    }
-  }
-
-  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
-    doc.removeEventListener(domContentLoaded, fn, f);
-    flush();
-  }, f);
-
-
-  hack && doc.attachEvent(onreadystatechange, fn = function () {
-    if (/^c/.test(doc[readyState])) {
-      doc.detachEvent(onreadystatechange, fn);
-      flush();
-    }
-  });
-
-  return (ready = hack ?
-      function (fn) {
-        self != top ?
-            loaded ? fn() : fns.push(fn) :
-            function () {
-              console.log("on dom ready 2");
-              try {
-                testEl.doScroll('left')
-              } catch (e) {
-                return setTimeout(function() { ready(fn) }, 50)
-              }
-              fn()
-            }()
-      } :
-      function (fn) {
-        loaded ? fn() : fns.push(fn)
-      })
-}();
-
-},{}],77:[function(require,module,exports){
 /**
  *
  * @param {Object} pack json with
@@ -12649,7 +12591,65 @@ function parseResponseHeaders(headerStr) {
   return headers;
 }
 
-},{}],21:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
+/* jshint ignore:start */
+
+/*!
+ * domready (c) Dustin Diaz 2012 - License MIT
+ */
+module.exports = function (ready) {
+
+
+  var fns = [], fn, f = false,
+      doc = document,
+      testEl = doc.documentElement,
+      hack = testEl.doScroll,
+      domContentLoaded = 'DOMContentLoaded',
+      addEventListener = 'addEventListener',
+      onreadystatechange = 'onreadystatechange',
+      readyState = 'readyState',
+      loaded = /^loade|c/.test(doc[readyState]);
+
+  function flush(f) {
+    loaded = 1;
+    while (f = fns.shift()) {
+      f()
+    }
+  }
+
+  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
+    doc.removeEventListener(domContentLoaded, fn, f);
+    flush();
+  }, f);
+
+
+  hack && doc.attachEvent(onreadystatechange, fn = function () {
+    if (/^c/.test(doc[readyState])) {
+      doc.detachEvent(onreadystatechange, fn);
+      flush();
+    }
+  });
+
+  return (ready = hack ?
+      function (fn) {
+        self != top ?
+            loaded ? fn() : fns.push(fn) :
+            function () {
+              console.log("on dom ready 2");
+              try {
+                testEl.doScroll('left')
+              } catch (e) {
+                return setTimeout(function() { ready(fn) }, 50)
+              }
+              fn()
+            }()
+      } :
+      function (fn) {
+        loaded ? fn() : fns.push(fn)
+      })
+}();
+
+},{}],19:[function(require,module,exports){
 var socketIO = require('socket.io-client'),
     _ = require('underscore');
 
@@ -12732,7 +12732,7 @@ utility.urls = require('./urls');
 _.extend(utility, utility.isBrowser() ?
     require('./utility-browser.js') : require('./utility-node.js'));
 
-},{"./SignalEmitter.js":50,"./regex":43,"./urls":41,"./utility-browser.js":74,"./utility-node.js":78,"socket.io-client":79,"underscore":51}],45:[function(require,module,exports){
+},{"./SignalEmitter.js":57,"./regex":41,"./urls":42,"./utility-browser.js":74,"./utility-node.js":78,"socket.io-client":79,"underscore":56}],45:[function(require,module,exports){
 (function(){/* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -13124,7 +13124,7 @@ try {
 }
 
 })()
-},{"../utility/treemap.js":81,"../view/NodeView.js":80,"backbone":13,"underscore":9}],44:[function(require,module,exports){
+},{"../utility/treemap.js":80,"../view/NodeView.js":81,"backbone":12,"underscore":9}],44:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreeNode = require('./TreeNode');
@@ -13433,7 +13433,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   get: function () { return this.connection.id; },
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
-},{"./StreamNode":82,"./TreeNode":45,"./VirtualNode.js":33,"pryv":10,"underscore":9}],25:[function(require,module,exports){
+},{"./StreamNode":82,"./TreeNode":45,"./VirtualNode.js":31,"pryv":10,"underscore":9}],25:[function(require,module,exports){
 (function(){/* global $, i18n, window */
 var _ = require('underscore'),
     Collection = require('./EventCollection.js'),
@@ -13765,7 +13765,7 @@ _.extend(Controller.prototype, {
 });
 
 })()
-},{"./BatchActionView.js":88,"./CommonView.js":86,"./EventCollection.js":83,"./EventModel.js":84,"./ListView.js":85,"./contentView/Creation.js":94,"./contentView/Generic.js":87,"./contentView/Note.js":91,"./contentView/Picture.js":92,"./contentView/Position.js":93,"./contentView/Tweet.js":89,"./contentView/numercial/Controller.js":90,"underscore":9}],28:[function(require,module,exports){
+},{"./BatchActionView.js":86,"./CommonView.js":88,"./EventCollection.js":83,"./EventModel.js":84,"./ListView.js":85,"./contentView/Creation.js":94,"./contentView/Generic.js":87,"./contentView/Note.js":89,"./contentView/Picture.js":93,"./contentView/Position.js":92,"./contentView/Tweet.js":90,"./contentView/numercial/Controller.js":91,"underscore":9}],27:[function(require,module,exports){
 (function(){/* global $, i18n, window */
 var Marionette = require('backbone.marionette'),
   CreateFormView = require('./CreateFormView.js'),
@@ -13893,7 +13893,7 @@ _.extend(Controller.prototype, {
   }
 });
 })()
-},{"./CreateFormView.js":96,"./SuccessView.js":95,"backbone.marionette":11,"underscore":9}],31:[function(require,module,exports){
+},{"./CreateFormView.js":96,"./SuccessView.js":95,"backbone.marionette":11,"underscore":9}],32:[function(require,module,exports){
 (function(){/* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
@@ -14345,7 +14345,7 @@ _.extend(Controller.prototype, {
 });
 
 })()
-},{"./../numericals/ChartModel.js":101,"./../numericals/ChartView.js":98,"./../numericals/TimeSeriesCollection.js":99,"./../numericals/TimeSeriesModel.js":100,"./../numericals/utils/ChartSettings.js":22,"./ListView.js":97,"underscore":9}],11:[function(require,module,exports){
+},{"./../numericals/ChartModel.js":99,"./../numericals/ChartView.js":98,"./../numericals/TimeSeriesCollection.js":100,"./../numericals/TimeSeriesModel.js":101,"./../numericals/utils/ChartSettings.js":22,"./ListView.js":97,"underscore":9}],11:[function(require,module,exports){
 (function(){// MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.1.0
@@ -16307,7 +16307,7 @@ _.extend(Marionette.Module, {
 }));
 
 })()
-},{"backbone":103,"backbone.babysitter":104,"backbone.wreqr":102,"underscore":9}],57:[function(require,module,exports){
+},{"backbone":102,"backbone.babysitter":104,"backbone.wreqr":103,"underscore":9}],55:[function(require,module,exports){
 /**
  * DataStore handles in memory caching of objects.
  * @private
@@ -16461,7 +16461,7 @@ Datastore.prototype.createOrReuseEvent = function (data) {
 
 
 
-},{"./Event":16,"underscore":51,"util":46}],79:[function(require,module,exports){
+},{"./Event":21,"underscore":56,"util":46}],79:[function(require,module,exports){
 (function(){/*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -20337,214 +20337,46 @@ if (typeof define === "function" && define.amd) {
 })();
 })()
 },{}],58:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./SharingItemView.js'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-sharingListCompositeView',
-  container: '.sharings',
-  itemView: ItemView,
-  itemViewContainer: '#sharing-list',
-
-  initialize: function () {
-    this.listenTo(this.collection, 'add remove', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h5 data-i18n="slices.labels.sharedSlices"></h5>' +
-    '<table class="table" >' +
-      '<thead><tr><th data-i18n="slices.labels.name">Name</th>' +
-      '<th data-i18n="slices.labels.link">Link</th>' +
-      '<th data-i18n="slices.labels.share">Share</th><th></th></tr></thead>' +
-      '<tbody id="sharing-list"></tbody>' +
-    '</table>');
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
-  onRender: function () {
-    $('body').i18n();
-  },
-  onBeforeClose: function () {
-    $(this.container).empty();
-    return true;
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-})()
-},{"./SharingItemView.js":105,"backbone.marionette":11,"underscore":9}],60:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./SharingModel.js');
-
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model
-});
-},{"./SharingModel.js":59,"backbone":13}],59:[function(require,module,exports){
+(function(){/* global FormData */
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
   defaults: {
-    sharing: null,
-    collection: null
-  }
-});
-},{"backbone":13}],62:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    bookmark: null,
-    collection: null
-  }
-});
-},{"backbone":13}],61:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./BookmarkModel.js');
-
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model
-});
-},{"./BookmarkModel.js":62,"backbone":13}],63:[function(require,module,exports){
-(function(){/* global $, window, i18n */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./BookmarkItemView.js'),
-  Pryv = require('pryv'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-bookmarkListCompositeView',
-  container: '.sharings',
-  itemView: ItemView,
-  itemViewContainer: '#bookmark-list',
-  $url: null,
-  $auth: null,
-  $name: null,
-  $tick: null,
-  $form: null,
-  _findAuthFromUrl: function () {
-
-    var url = this.$url.val(),
-        urlInfo = Pryv.utility.urls.parseClientURL(url),
-        params = urlInfo.parseQuery(),
-        sharingTokens = urlInfo.parseSharingTokens();
-    if (params && params.auth) {
-      this.$auth.val(params.auth);
-    } else if (sharingTokens && sharingTokens.length > 0) {
-      this.$auth.val(sharingTokens.join(','));
+    event: null
+  },
+  save: function () {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      this.get('event').addAttachment(file, function () {
+        //  console.log('trash event callback', arguments);
+      });
     }
-
+    event.update(function () {
+      //  console.log('update event callback', arguments);
+    });
   },
-  initialize: function () {
-    this.listenTo(this.collection, 'change', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<h5 data-i18n="slices.labels.followedSlices"></h5>' +
-
-      '<table class="table" >' +
-      '<thead><tr><th data-i18n="slices.labels.name"></th>' +
-      '<th data-i18n="slices.labels.link"></th><th></th></tr></thead>' +
-      '<tbody id="bookmark-list"></tbody>' +
-      '</table>' +
-      '<button class="btn btn-default btn-sm" id="add-slice">' +
-      ' <i class="fa fa-plus"></i> ' +
-      '<span data-i18n="slices.actions.addNewFollowedSlice"></span></button>' +
-      '<form class="form-inline" id="add-bookmark" role="form">' +
-      '<div class="form-group">' +
-      ' <label class="sr-only" for="add-bookmark-url">url</label>' +
-      ' <input type="url" class="form-control" id="add-bookmark-url" ' +
-      'data-i18n="[placeholder]slices.labels.linkPlaceholder" required>' +
-      '</div> ' +
-      '<div class="form-group">' +
-        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
-        '<input type="text" class="form-control" id="add-bookmark-name" ' +
-      'data-i18n="[placeholder]slices.labels.namePlaceholder" required>' +
-      '</div>' +
-      '<div class="form-group">' +
-        ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
-        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
-      '</div> ' +
-      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">' +
-      '<span data-i18n="common.actions.add"></span> ' +
-      '<i class="fa fa-spinner fa-spin"></i></button>  ' +
-      '' +
-      ' </form>');
-    this.$url = $('#add-bookmark-url');
-    this.$auth = $('#add-bookmark-auth');
-    this.$name = $('#add-bookmark-name');
-    this.$btn = $('#add-bookmark-btn');
-    this.$form = $('#add-bookmark');
-    this.$spin = $('#add-bookmark-btn .fa-spin');
-    this.$spin.hide();
-    this.$form.toggle();
-    this.$addSlice = $('#add-slice');
-    this.$addSlice.click(function () {
-      this.$form.toggle();
-      this.$addSlice.toggle();
-    }.bind(this));
-    this.$form.bind('change paste keyup', function () {
-      this.$btn.removeClass('btn-danger btn-success').addClass('btn-default');
-    }.bind(this));
-    this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
-    this.$form.submit(function (e) {
-      e.preventDefault();
-      var auths = this.$auth.val().split(','),
-        url = this.$url.val(),
-        name = this.$name.val(),
-        sameNameExtension = '',
-        i = 0;
-      this.$spin.show();
-      this.$btn.removeClass('btn-pryv-alizarin');
-      auths.forEach(function (auth) {
-        this.trigger('bookmark:add', url, auth, name + sameNameExtension);
-        i += 1;
-        sameNameExtension = '-' + i;
-      }.bind(this));
-    }.bind(this));
-  },
-  endAddBookmark: function (error) {
-    this.$spin.hide();
-    if (error) {
-      var errorId;
-      console.log(error.id);
-      switch (error.id) {
-        case 'slice-unknown':
-        case 'API_UNREACHEABLE':
-          errorId = 'slice-unknown';
-          break;
-        case 'item-already-exists':
-          errorId = 'slice-already-exists';
-          break;
-        default:
-          errorId = 'slice-unknown';
-          break;
-      }
-      window.PryvBrowser.showAlert(this.container, i18n.t('error.followedSlice.add.' + errorId));
-      this.$btn.removeClass('btn-success').addClass('btn-pryv-alizarin');
-    } else {
-      this.$btn.removeClass('btn-pryv-alizarin').addClass('btn-success');
+  create: function (callback, progressCallback) {
+    var event = this.get('event'),
+      file = event.file;
+    if (file) {
+      event.connection.events.createWithAttachment(event, file, callback, progressCallback);
+    }  else {
+      event.connection.events.create(event, callback);
     }
   },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
+  addAttachment: function (file) {
+    var data = new FormData();
+    data.append(file.name.split('.')[0], file);
+    this.get('event').file = data;
+    this.get('event').previewFile = file;
   },
-  onRender: function () {
-    $('body').i18n();
-  },
-  onBeforeClose: function () {
-    $(this.container).empty();
-    return true;
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
+  removeAttachment: function (fileName, callback) {
+    this.get('event').removeAttachment(fileName, callback);
+  }
 });
-
 })()
-},{"./BookmarkItemView.js":106,"backbone.marionette":11,"pryv":10,"underscore":9}],64:[function(require,module,exports){
+},{"backbone":12}],59:[function(require,module,exports){
 (function(){/* global $, FileReader, document, window, i18n, navigator*/
 var Marionette = require('backbone.marionette'),
     _ = require('underscore'),
@@ -21312,47 +21144,223 @@ module.exports = Marionette.ItemView.extend({
 });
 
 })()
-},{"./EventModel.js":65,"backbone.marionette":11,"google-maps":107,"underscore":9}],65:[function(require,module,exports){
-(function(){/* global FormData */
+},{"./EventModel.js":58,"backbone.marionette":11,"google-maps":105,"underscore":9}],60:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
   defaults: {
-    event: null
-  },
-  save: function () {
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      this.get('event').addAttachment(file, function () {
-        //  console.log('trash event callback', arguments);
-      });
-    }
-    event.update(function () {
-      //  console.log('update event callback', arguments);
-    });
-  },
-  create: function (callback, progressCallback) {
-    var event = this.get('event'),
-      file = event.file;
-    if (file) {
-      event.connection.events.createWithAttachment(event, file, callback, progressCallback);
-    }  else {
-      event.connection.events.create(event, callback);
-    }
-  },
-  addAttachment: function (file) {
-    var data = new FormData();
-    data.append(file.name.split('.')[0], file);
-    this.get('event').file = data;
-    this.get('event').previewFile = file;
-  },
-  removeAttachment: function (fileName, callback) {
-    this.get('event').removeAttachment(fileName, callback);
+    sharing: null,
+    collection: null
   }
 });
+},{"backbone":12}],62:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./SharingItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-sharingListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#sharing-list',
+
+  initialize: function () {
+    this.listenTo(this.collection, 'add remove', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h5 data-i18n="slices.labels.sharedSlices"></h5>' +
+    '<table class="table" >' +
+      '<thead><tr><th data-i18n="slices.labels.name">Name</th>' +
+      '<th data-i18n="slices.labels.link">Link</th>' +
+      '<th data-i18n="slices.labels.share">Share</th><th></th></tr></thead>' +
+      '<tbody id="sharing-list"></tbody>' +
+    '</table>');
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
 })()
-},{"backbone":13}],67:[function(require,module,exports){
+},{"./SharingItemView.js":106,"backbone.marionette":11,"underscore":9}],61:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./SharingModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./SharingModel.js":60,"backbone":12}],63:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./BookmarkModel.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./BookmarkModel.js":64,"backbone":12}],64:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    bookmark: null,
+    collection: null
+  }
+});
+},{"backbone":12}],66:[function(require,module,exports){
+var Backbone = require('backbone'),
+  Model = require('./Model.js');
+
+module.exports = Backbone.Collection.extend({
+  url: '#',
+  model: Model
+});
+},{"./Model.js":67,"backbone":12}],65:[function(require,module,exports){
+(function(){/* global $, window, i18n */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./BookmarkItemView.js'),
+  Pryv = require('pryv'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-bookmarkListCompositeView',
+  container: '.sharings',
+  itemView: ItemView,
+  itemViewContainer: '#bookmark-list',
+  $url: null,
+  $auth: null,
+  $name: null,
+  $tick: null,
+  $form: null,
+  _findAuthFromUrl: function () {
+
+    var url = this.$url.val(),
+        urlInfo = Pryv.utility.urls.parseClientURL(url),
+        params = urlInfo.parseQuery(),
+        sharingTokens = urlInfo.parseSharingTokens();
+    if (params && params.auth) {
+      this.$auth.val(params.auth);
+    } else if (sharingTokens && sharingTokens.length > 0) {
+      this.$auth.val(sharingTokens.join(','));
+    }
+
+  },
+  initialize: function () {
+    this.listenTo(this.collection, 'change', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<h5 data-i18n="slices.labels.followedSlices"></h5>' +
+
+      '<table class="table" >' +
+      '<thead><tr><th data-i18n="slices.labels.name"></th>' +
+      '<th data-i18n="slices.labels.link"></th><th></th></tr></thead>' +
+      '<tbody id="bookmark-list"></tbody>' +
+      '</table>' +
+      '<button class="btn btn-default btn-sm" id="add-slice">' +
+      ' <i class="fa fa-plus"></i> ' +
+      '<span data-i18n="slices.actions.addNewFollowedSlice"></span></button>' +
+      '<form class="form-inline" id="add-bookmark" role="form">' +
+      '<div class="form-group">' +
+      ' <label class="sr-only" for="add-bookmark-url">url</label>' +
+      ' <input type="url" class="form-control" id="add-bookmark-url" ' +
+      'data-i18n="[placeholder]slices.labels.linkPlaceholder" required>' +
+      '</div> ' +
+      '<div class="form-group">' +
+        '<label class="sr-only" for="add-bookmark-name">Name</label>' +
+        '<input type="text" class="form-control" id="add-bookmark-name" ' +
+      'data-i18n="[placeholder]slices.labels.namePlaceholder" required>' +
+      '</div>' +
+      '<div class="form-group">' +
+        ' <label class="sr-only" for="add-bookmark-auth">token</label>' +
+        ' <input type="text" class="form-control" id="add-bookmark-auth" placeholder="Token(s)">' +
+      '</div> ' +
+      ' <button type="submit" id ="add-bookmark-btn" class="btn btn-default">' +
+      '<span data-i18n="common.actions.add"></span> ' +
+      '<i class="fa fa-spinner fa-spin"></i></button>  ' +
+      '' +
+      ' </form>');
+    this.$url = $('#add-bookmark-url');
+    this.$auth = $('#add-bookmark-auth');
+    this.$name = $('#add-bookmark-name');
+    this.$btn = $('#add-bookmark-btn');
+    this.$form = $('#add-bookmark');
+    this.$spin = $('#add-bookmark-btn .fa-spin');
+    this.$spin.hide();
+    this.$form.toggle();
+    this.$addSlice = $('#add-slice');
+    this.$addSlice.click(function () {
+      this.$form.toggle();
+      this.$addSlice.toggle();
+    }.bind(this));
+    this.$form.bind('change paste keyup', function () {
+      this.$btn.removeClass('btn-danger btn-success').addClass('btn-default');
+    }.bind(this));
+    this.$url.bind('change paste keyup', this._findAuthFromUrl.bind(this));
+    this.$form.submit(function (e) {
+      e.preventDefault();
+      var auths = this.$auth.val().split(','),
+        url = this.$url.val(),
+        name = this.$name.val(),
+        sameNameExtension = '',
+        i = 0;
+      this.$spin.show();
+      this.$btn.removeClass('btn-pryv-alizarin');
+      auths.forEach(function (auth) {
+        this.trigger('bookmark:add', url, auth, name + sameNameExtension);
+        i += 1;
+        sameNameExtension = '-' + i;
+      }.bind(this));
+    }.bind(this));
+  },
+  endAddBookmark: function (error) {
+    this.$spin.hide();
+    if (error) {
+      var errorId;
+      console.log(error.id);
+      switch (error.id) {
+        case 'slice-unknown':
+        case 'API_UNREACHEABLE':
+          errorId = 'slice-unknown';
+          break;
+        case 'item-already-exists':
+          errorId = 'slice-already-exists';
+          break;
+        default:
+          errorId = 'slice-unknown';
+          break;
+      }
+      window.PryvBrowser.showAlert(this.container, i18n.t('error.followedSlice.add.' + errorId));
+      this.$btn.removeClass('btn-success').addClass('btn-pryv-alizarin');
+    } else {
+      this.$btn.removeClass('btn-pryv-alizarin').addClass('btn-success');
+    }
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./BookmarkItemView.js":107,"backbone.marionette":11,"pryv":10,"underscore":9}],67:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -21364,15 +21372,183 @@ module.exports = Backbone.Model.extend({
     created: false
   }
 });
-},{"backbone":13}],66:[function(require,module,exports){
-var Backbone = require('backbone'),
-  Model = require('./Model.js');
+},{"backbone":12}],69:[function(require,module,exports){
+(function(){/* global window, i18n, $*/
+var Marionette = require('backbone.marionette');
+var Backbone = require('backbone');
+var _ = require('underscore');
 
-module.exports = Backbone.Collection.extend({
-  url: '#',
-  model: Model
+var GridRow = Marionette.ItemView.extend({
+  template: '#other-apps-item-settings-template',
+  tagName: 'div',
+  className: 'col-sm-6 col-md-4'
 });
-},{"./Model.js":67,"backbone":13}],71:[function(require,module,exports){
+
+
+
+var App = Backbone.Model.extend({});
+
+var AppList = Backbone.Collection.extend({
+  model: App
+});
+
+var allList = new AppList([]);
+
+
+// The grid view
+module.exports = Marionette.CompositeView.extend({
+  tagName: 'div',
+  template: '#other-apps-list-template',
+  itemView: GridRow,
+  connection: null,
+  myAppsId: null,
+  apps: null,
+  initialize: function () {
+    this.myAppsId = [];
+    this.apps = [];
+    var sync = false;
+    this.collection =  this.options.collection || allList;
+    this.listenTo(allList, 'change', this.debounceRender);
+    this.connection = this.options.connection;
+    if (this.connection) {
+      this.connection.accesses.get(function (error, result) {
+        if (error) {
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.manageApps.' + error.id));
+        } else {
+          result.forEach(function (access) {
+            if (access.type === 'app') {
+              this.myAppsId.push(access.name);
+            }
+          }.bind(this));
+          if (sync) {
+            this.showAppList();
+          } else {
+            sync = true;
+          }
+        }
+      }.bind(this));
+      var baseHref = $('base').attr('href');
+      var url = baseHref + 'locales/appList.json';
+      $.get(url)
+        .done(function (result) {
+          result = result.apps || [];
+          result.forEach(function (app) {
+            this.apps.push(app);
+          }.bind(this));
+          if (sync) {
+            this.showAppList();
+          } else {
+            sync = true;
+          }
+        }.bind(this))
+        .fail(function () {
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('error.manageApps.cannot-load-app-list'));
+        });
+
+    }
+  },
+  showAppList: function () {
+    this.apps.forEach(function (app) {
+      if (this.myAppsId.indexOf(app.id) === -1) {
+        var m = new App({
+          app: app
+        });
+        allList.add(m);
+      }
+    }.bind(this));
+    this.debounceRender();
+  },
+  appendHtml: function (collectionView, itemView) {
+    collectionView.$('#appList .panel-body').append(itemView.el);
+  },
+  onRender: function () {
+    $('body').i18n();
+  },
+  reset: function () {
+    this.collection.reset();
+    allList.reset();
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+
+})()
+},{"backbone":12,"backbone.marionette":11,"underscore":9}],68:[function(require,module,exports){
+(function(){/* global $ */
+var Marionette = require('backbone.marionette'),
+  ItemView = require('./ItemView.js'),
+  _ = require('underscore');
+
+module.exports = Marionette.CompositeView.extend({
+  template: '#template-subscribeListCompositeView',
+  container: '.modal-content',
+  itemView: ItemView,
+  itemViewContainer: '#subscribe-list',
+  $addButton: null,
+  $forms: null,
+  initialize: function () {
+    this.listenTo(this.collection, 'change', this.debounceRender);
+    //this.listenTo(this.collection, 'change', this.bindClick);
+    $(this.container).append('<div class="modal-header">  ' +
+      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
+      ' <h4 class="modal-title" id="myModalLabel">Add to my Pryv</h4><div class="modal-close">' +
+      '</div></div>' +
+      '<div id="modal-content">' +
+      '<div id="creation-content"><ul id="subscribe-list"></ul></div>' +
+      '<div id="creation-footer" class="col-md-12">' +
+      '<button class="btn btn-primary" id="add-subscribe">Add ' +
+      '<i class="fa fa-spinner fa-spin"></i></button>' +
+      '<button id="cancel" class="btn btn-default" data-dismiss="modal">Cancel</button>' +
+      '</div></div>');
+    this.$addButton = $('#add-subscribe');
+    $('.fa-spin', this.$addButton).hide();
+    this.$addButton.bind('click', this._addSubscribe.bind(this));
+  },
+  _addSubscribe: function () {
+    var subscriptions = [];
+    $('.fa-spin', this.$addButton).show();
+    this.$addButton.attr('disabled', 'disabled');
+    this.collection.each(function (model) {
+      if (model.get('checked') && !model.get('created')) {
+        subscriptions.push(model);
+      }
+    }.bind(this));
+    this.trigger('subscription:add', subscriptions);
+  },
+  onCreateSubscriptionFinished: function (error) {
+    console.log('onCreateSubscriptionFinished');
+    $('.fa-spin', this.$addButton).hide();
+    this.$addButton.attr('disabled', false);
+    if (!error) {
+      this.trigger('close');
+    }
+  },
+  appendHtml: function (collectionView, itemView) {
+    $(this.itemViewContainer).append(itemView.el);
+  },
+  onRender: function () {
+    this.$forms = $('form.subscribe');
+    this.$forms.bind('submit',
+      function (e) {
+        e.preventDefault();
+        this._addSubscribe();
+      }.bind(this));
+  },
+  onBeforeClose: function () {
+    $(this.container).empty();
+    return true;
+  },
+  debounceRender: _.debounce(function () {
+    this.render();
+  }, 10)
+});
+
+})()
+},{"./ItemView.js":108,"backbone.marionette":11,"underscore":9}],73:[function(require,module,exports){
 (function(){/* global window, i18n, $*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -21477,45 +21653,7 @@ module.exports = Marionette.CompositeView.extend({
 
 
 })()
-},{"backbone":13,"backbone.marionette":11,"underscore":9}],70:[function(require,module,exports){
-(function(){/*global $ */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#nav-settings-modal-template',
-  ui: {
-    a: 'a'
-  },
-  onRender: function () {
-    this.ui.a.click(function (e) {
-      this._removeActive();
-      e.currentTarget.classList.add('active');
-      this.trigger('showRegion', e.currentTarget.getAttribute('data-name'));
-    }.bind(this));
-    setTimeout(function () {$('body').i18n(); }, 100);
-  },
-  _removeActive: function () {
-    _.each(this.ui.a, function (a) {
-      a.classList.remove('active');
-    });
-  },
-  activeRegion: function (regionName) {
-    for (var i = 0 ; i < this.ui.a.length; i++) {
-      if (this.ui.a[i].getAttribute('data-name') === regionName) {
-        this._removeActive();
-        this.ui.a[i].classList.add('active');
-        break;
-      }
-    }
-  }
-
-});
-
-
-
-})()
-},{"backbone.marionette":11,"underscore":9}],72:[function(require,module,exports){
+},{"backbone":12,"backbone.marionette":11,"underscore":9}],72:[function(require,module,exports){
 (function(){/* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -21593,78 +21731,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 })()
-},{"backbone.marionette":11}],68:[function(require,module,exports){
-(function(){/* global $ */
-var Marionette = require('backbone.marionette'),
-  ItemView = require('./ItemView.js'),
-  _ = require('underscore');
-
-module.exports = Marionette.CompositeView.extend({
-  template: '#template-subscribeListCompositeView',
-  container: '.modal-content',
-  itemView: ItemView,
-  itemViewContainer: '#subscribe-list',
-  $addButton: null,
-  $forms: null,
-  initialize: function () {
-    this.listenTo(this.collection, 'change', this.debounceRender);
-    //this.listenTo(this.collection, 'change', this.bindClick);
-    $(this.container).append('<div class="modal-header">  ' +
-      '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
-      ' <h4 class="modal-title" id="myModalLabel">Add to my Pryv</h4><div class="modal-close">' +
-      '</div></div>' +
-      '<div id="modal-content">' +
-      '<div id="creation-content"><ul id="subscribe-list"></ul></div>' +
-      '<div id="creation-footer" class="col-md-12">' +
-      '<button class="btn btn-primary" id="add-subscribe">Add ' +
-      '<i class="fa fa-spinner fa-spin"></i></button>' +
-      '<button id="cancel" class="btn btn-default" data-dismiss="modal">Cancel</button>' +
-      '</div></div>');
-    this.$addButton = $('#add-subscribe');
-    $('.fa-spin', this.$addButton).hide();
-    this.$addButton.bind('click', this._addSubscribe.bind(this));
-  },
-  _addSubscribe: function () {
-    var subscriptions = [];
-    $('.fa-spin', this.$addButton).show();
-    this.$addButton.attr('disabled', 'disabled');
-    this.collection.each(function (model) {
-      if (model.get('checked') && !model.get('created')) {
-        subscriptions.push(model);
-      }
-    }.bind(this));
-    this.trigger('subscription:add', subscriptions);
-  },
-  onCreateSubscriptionFinished: function (error) {
-    console.log('onCreateSubscriptionFinished');
-    $('.fa-spin', this.$addButton).hide();
-    this.$addButton.attr('disabled', false);
-    if (!error) {
-      this.trigger('close');
-    }
-  },
-  appendHtml: function (collectionView, itemView) {
-    $(this.itemViewContainer).append(itemView.el);
-  },
-  onRender: function () {
-    this.$forms = $('form.subscribe');
-    this.$forms.bind('submit',
-      function (e) {
-        e.preventDefault();
-        this._addSubscribe();
-      }.bind(this));
-  },
-  onBeforeClose: function () {
-    $(this.container).empty();
-    return true;
-  },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
-});
-
-})()
-},{"./ItemView.js":108,"backbone.marionette":11,"underscore":9}],69:[function(require,module,exports){
+},{"backbone.marionette":11}],71:[function(require,module,exports){
 (function(){/* global window, i18n, $*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -21784,190 +21851,45 @@ module.exports = Marionette.CompositeView.extend({
 
 
 })()
-},{"backbone":13,"backbone.marionette":11,"underscore":9}],73:[function(require,module,exports){
-(function(){/* global window, i18n, $*/
-var Marionette = require('backbone.marionette');
-var Backbone = require('backbone');
-var _ = require('underscore');
+},{"backbone":12,"backbone.marionette":11,"underscore":9}],70:[function(require,module,exports){
+(function(){/*global $ */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore');
 
-var GridRow = Marionette.ItemView.extend({
-  template: '#other-apps-item-settings-template',
-  tagName: 'div',
-  className: 'col-sm-6 col-md-4'
-});
-
-
-
-var App = Backbone.Model.extend({});
-
-var AppList = Backbone.Collection.extend({
-  model: App
-});
-
-var allList = new AppList([]);
-
-
-// The grid view
-module.exports = Marionette.CompositeView.extend({
-  tagName: 'div',
-  template: '#other-apps-list-template',
-  itemView: GridRow,
-  connection: null,
-  myAppsId: null,
-  apps: null,
-  initialize: function () {
-    this.myAppsId = [];
-    this.apps = [];
-    var sync = false;
-    this.collection =  this.options.collection || allList;
-    this.listenTo(allList, 'change', this.debounceRender);
-    this.connection = this.options.connection;
-    if (this.connection) {
-      this.connection.accesses.get(function (error, result) {
-        if (error) {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.manageApps.' + error.id));
-        } else {
-          result.forEach(function (access) {
-            if (access.type === 'app') {
-              this.myAppsId.push(access.name);
-            }
-          }.bind(this));
-          if (sync) {
-            this.showAppList();
-          } else {
-            sync = true;
-          }
-        }
-      }.bind(this));
-      var baseHref = $('base').attr('href');
-      var url = baseHref + 'locales/appList.json';
-      $.get(url)
-        .done(function (result) {
-          result = result.apps || [];
-          result.forEach(function (app) {
-            this.apps.push(app);
-          }.bind(this));
-          if (sync) {
-            this.showAppList();
-          } else {
-            sync = true;
-          }
-        }.bind(this))
-        .fail(function () {
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('error.manageApps.cannot-load-app-list'));
-        });
-
-    }
-  },
-  showAppList: function () {
-    this.apps.forEach(function (app) {
-      if (this.myAppsId.indexOf(app.id) === -1) {
-        var m = new App({
-          app: app
-        });
-        allList.add(m);
-      }
-    }.bind(this));
-    this.debounceRender();
-  },
-  appendHtml: function (collectionView, itemView) {
-    collectionView.$('#appList .panel-body').append(itemView.el);
+module.exports = Marionette.ItemView.extend({
+  template: '#nav-settings-modal-template',
+  ui: {
+    a: 'a'
   },
   onRender: function () {
-    $('body').i18n();
+    this.ui.a.click(function (e) {
+      this._removeActive();
+      e.currentTarget.classList.add('active');
+      this.trigger('showRegion', e.currentTarget.getAttribute('data-name'));
+    }.bind(this));
+    setTimeout(function () {$('body').i18n(); }, 100);
   },
-  reset: function () {
-    this.collection.reset();
-    allList.reset();
+  _removeActive: function () {
+    _.each(this.ui.a, function (a) {
+      a.classList.remove('active');
+    });
   },
-  debounceRender: _.debounce(function () {
-    this.render();
-  }, 10)
+  activeRegion: function (regionName) {
+    for (var i = 0 ; i < this.ui.a.length; i++) {
+      if (this.ui.a[i].getAttribute('data-name') === regionName) {
+        this._removeActive();
+        this.ui.a[i].classList.add('active');
+        break;
+      }
+    }
+  }
+
 });
+
 
 
 })()
-},{"backbone":13,"backbone.marionette":11,"underscore":9}],53:[function(require,module,exports){
-var apiPathBookmarks = '/followed-slices',
-  Connection = require('../Connection.js'),
-  _ = require('underscore');
-
-/**
- * @class Bookmarks
- * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
- * @param {Connection} connection
- * @constructor
- */
-function Bookmarks(connection, Conn) {
-  this.connection = connection;
-  Connection = Conn;
-}
-/**
- * @param {Connection~requestCallback} callback
- */
-Bookmarks.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathBookmarks, function (error, res) {
-    var result = [],
-      bookmarks = res.followedSlices || res.followedSlice;
-    _.each(bookmarks, function (bookmark) {
-      bookmark.url = bookmark.url.replace(/\.li/, '.in');
-      bookmark.url = bookmark.url.replace(/\.me/, '.io');
-      var conn =  new Connection({
-        auth: bookmark.accessToken,
-        url: bookmark.url,
-        name: bookmark.name,
-        bookmarkId: bookmark.id
-      });
-      result.push(conn);
-    });
-    callback(error, result);
-  });
-};
-
-/**
- * TODO complete documentation
- * @param bookmark
- * @param callback
- * @returns {*}
- */
-Bookmarks.prototype.create = function (bookmark, callback) {
-  if (bookmark.name && bookmark.url && bookmark.accessToken) {
-    this.connection.request('POST', apiPathBookmarks, function (err, result) {
-      var error = err;
-      if (!error) {
-        var conn =  new Connection({
-          auth: bookmark.accessToken,
-          url: bookmark.url,
-          name: bookmark.name,
-          bookmarkId: result.followedSlice.id
-        });
-        bookmark = conn;
-      }
-      callback(error, bookmark);
-    }, bookmark);
-    return bookmark;
-  }
-};
-
-/**
- * TODO complete documentation
- * @param bookmarkId
- * @param callback
- */
-Bookmarks.prototype.delete = function (bookmarkId, callback) {
-  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
-    var error = err;
-    if (result && result.message) {
-      error = result;
-    }
-    callback(error, result);
-  });
-};
-
-module.exports = Bookmarks;
-},{"../Connection.js":15,"underscore":51}],52:[function(require,module,exports){
+},{"backbone.marionette":11,"underscore":9}],50:[function(require,module,exports){
 var utility = require('../utility/utility.js'),
   _ = require('underscore'),
   Filter = require('../Filter'),
@@ -22420,7 +22342,79 @@ module.exports = ConnectionEvents;
  * @param {Event[]} events
  */
 
-},{"../Event":16,"../Filter":17,"../utility/utility.js":21,"./ConnectionConstants.js":38,"underscore":51}],54:[function(require,module,exports){
+},{"../Event":21,"../Filter":15,"../utility/utility.js":19,"./ConnectionConstants.js":39,"underscore":56}],51:[function(require,module,exports){
+var apiPathAccesses = '/accesses';
+var _ = require('underscore');
+
+/**
+ * @class Accesses
+ * @link http://api.pryv.com/reference.html#methods-accesses
+ * @link http://api.pryv.com/reference.html#data-structure-access
+ * @param {Connection} connection
+ * @constructor
+ */
+function Accesses(connection) {
+  this.connection = connection;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Accesses.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathAccesses, function (err, res) {
+    var accesses = res.accesses || res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, accesses);
+    }
+  });
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.create = function (access, callback) {
+  this.connection.request('POST', apiPathAccesses, function (err, res) {
+    var access = res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, access);
+    }
+  }, access);
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.update = function (access, callback) {
+  if (access.id) {
+    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
+      _.pick(access, 'name', 'deviceName', 'permissions'));
+  } else {
+    if (callback && _.isFunction(callback)) {
+      return callback('No access id found');
+    }
+
+  }
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.delete = function (sharingId, callback) {
+  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+module.exports = Accesses;
+},{"underscore":56}],54:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('../utility/utility'),
     Monitor = require('../Monitor');
@@ -22507,70 +22501,75 @@ module.exports = ConnectionMonitors;
 
 
 
-},{"../Monitor":20,"../utility/utility":21,"underscore":51}],56:[function(require,module,exports){
-var apiPathAccesses = '/accesses';
-var _ = require('underscore');
+},{"../Monitor":20,"../utility/utility":19,"underscore":56}],52:[function(require,module,exports){
+var apiPathBookmarks = '/followed-slices',
+  Connection = require('../Connection.js'),
+  _ = require('underscore');
 
 /**
- * @class Accesses
- * @link http://api.pryv.com/reference.html#methods-accesses
- * @link http://api.pryv.com/reference.html#data-structure-access
+ * @class Bookmarks
+ * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
  * @param {Connection} connection
  * @constructor
  */
-function Accesses(connection) {
+function Bookmarks(connection, Conn) {
   this.connection = connection;
+  Connection = Conn;
 }
 /**
  * @param {Connection~requestCallback} callback
  */
-Accesses.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathAccesses, function (err, res) {
-    var accesses = res.accesses || res.access;
-    if (typeof(callback) === 'function') {
-      callback(err, accesses);
-    }
+Bookmarks.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathBookmarks, function (error, res) {
+    var result = [],
+      bookmarks = res.followedSlices || res.followedSlice;
+    _.each(bookmarks, function (bookmark) {
+      bookmark.url = bookmark.url.replace(/\.li/, '.in');
+      bookmark.url = bookmark.url.replace(/\.me/, '.io');
+      var conn =  new Connection({
+        auth: bookmark.accessToken,
+        url: bookmark.url,
+        name: bookmark.name,
+        bookmarkId: bookmark.id
+      });
+      result.push(conn);
+    });
+    callback(error, result);
   });
 };
 
 /**
  * TODO complete documentation
- * @param access
+ * @param bookmark
  * @param callback
+ * @returns {*}
  */
-Accesses.prototype.create = function (access, callback) {
-  this.connection.request('POST', apiPathAccesses, function (err, res) {
-    var access = res.access;
-    if (typeof(callback) === 'function') {
-      callback(err, access);
-    }
-  }, access);
-};
-
-/**
- * TODO complete documentation
- * @param access
- * @param callback
- */
-Accesses.prototype.update = function (access, callback) {
-  if (access.id) {
-    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
-      _.pick(access, 'name', 'deviceName', 'permissions'));
-  } else {
-    if (callback && _.isFunction(callback)) {
-      return callback('No access id found');
-    }
-
+Bookmarks.prototype.create = function (bookmark, callback) {
+  if (bookmark.name && bookmark.url && bookmark.accessToken) {
+    this.connection.request('POST', apiPathBookmarks, function (err, result) {
+      var error = err;
+      if (!error) {
+        var conn =  new Connection({
+          auth: bookmark.accessToken,
+          url: bookmark.url,
+          name: bookmark.name,
+          bookmarkId: result.followedSlice.id
+        });
+        bookmark = conn;
+      }
+      callback(error, bookmark);
+    }, bookmark);
+    return bookmark;
   }
 };
 
 /**
  * TODO complete documentation
- * @param access
+ * @param bookmarkId
  * @param callback
  */
-Accesses.prototype.delete = function (sharingId, callback) {
-  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+Bookmarks.prototype.delete = function (bookmarkId, callback) {
+  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
     var error = err;
     if (result && result.message) {
       error = result;
@@ -22578,8 +22577,9 @@ Accesses.prototype.delete = function (sharingId, callback) {
     callback(error, result);
   });
 };
-module.exports = Accesses;
-},{"underscore":51}],55:[function(require,module,exports){
+
+module.exports = Bookmarks;
+},{"../Connection.js":14,"underscore":56}],53:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('../utility/utility.js'),
     Stream = require('../Stream.js');
@@ -22935,7 +22935,7 @@ module.exports = ConnectionStreams;
  */
 
 
-},{"../Stream.js":19,"../utility/utility.js":21,"underscore":51}],50:[function(require,module,exports){
+},{"../Stream.js":17,"../utility/utility.js":19,"underscore":56}],57:[function(require,module,exports){
 (function(){/**
  * (event)Emitter renamed to avoid confusion with prvy's events
  */
@@ -23069,7 +23069,7 @@ SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
 };
 
 })()
-},{"underscore":51}],34:[function(require,module,exports){
+},{"underscore":56}],35:[function(require,module,exports){
 (function(){/* global confirm, document, navigator, location, window */
 
 var utility = require('../utility/utility.js');
@@ -23775,7 +23775,83 @@ Auth.prototype._cleanStatusFromURL = function () {
 module.exports = new Auth();
 
 })()
-},{"../Connection.js":15,"../utility/utility.js":21,"underscore":51}],81:[function(require,module,exports){
+},{"../Connection.js":14,"../utility/utility.js":19,"underscore":56}],81:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+ /* TODO This a the view for each node, with dynamic animation
+ we can't re-render on change because animation would no be done
+ If the model is a event Node we must include a new typed view
+ */
+module.exports = Marionette.ItemView.extend({
+  template: '#nodeView',
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+
+    this.$el.attr('id', this.model.get('id'));
+    this.$el.attr('data-streamId', this.model.get('streamId'));
+    this.$el.attr('data-streamName', this.model.get('streamName'));
+    this.$el.attr('data-connectionId', this.model.get('connectionId'));
+    this.$el.addClass('node animated  fadeIn');
+    this.$el.addClass(this.model.get('className'));
+
+  },
+  triggers: {
+    'click .nodeHeader': 'headerClicked'
+  },
+  change: function () {
+
+    this._refreshStyle();
+  },
+
+  renderView: function () {
+
+    this.render();
+  },
+  render: function () {
+    if (this.beforeRender) { this.beforeRender(); }
+    this.trigger('before:render', this);
+    this.trigger('item:before:render', this);
+    this._refreshStyle();
+    var data = this.serializeData();
+    var template = this.getTemplate();
+    var html = Marionette.Renderer.render(template, data);
+    this.$el.html(html);
+
+    $('#' + this.model.get('containerId')).prepend(this.$el);
+    if (this.model.get('eventView')) {
+      this.model.get('eventView').render(this.model.get('id'));
+    }
+    this.bindUIElements();
+
+    if (this.onRender) { this.onRender(); }
+    this.trigger('render', this);
+    this.trigger('item:rendered', this);
+    return this;
+
+  },
+  _refreshStyle: function () {
+    if (this.model.get('weight') === 0) {
+      this.close();
+      return;
+    }
+    this.$el.attr('weight', this.model.get('weight'));
+    this.$el.attr('className', this.model.get('className'));
+    this.$el.css('width', this.model.get('width'));
+    this.$el.css('height', this.model.get('height'));
+    this.$el.css('left', this.model.get('x'));
+    this.$el.css('top', this.model.get('y'));
+
+
+  },
+  close: function () {
+
+    this.$el.removeClass('animated  fadeIn');
+    this.$el.addClass('animated  fadeOut');
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":11}],80:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -23967,83 +24043,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":9}],80:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
- /* TODO This a the view for each node, with dynamic animation
- we can't re-render on change because animation would no be done
- If the model is a event Node we must include a new typed view
- */
-module.exports = Marionette.ItemView.extend({
-  template: '#nodeView',
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-
-    this.$el.attr('id', this.model.get('id'));
-    this.$el.attr('data-streamId', this.model.get('streamId'));
-    this.$el.attr('data-streamName', this.model.get('streamName'));
-    this.$el.attr('data-connectionId', this.model.get('connectionId'));
-    this.$el.addClass('node animated  fadeIn');
-    this.$el.addClass(this.model.get('className'));
-
-  },
-  triggers: {
-    'click .nodeHeader': 'headerClicked'
-  },
-  change: function () {
-
-    this._refreshStyle();
-  },
-
-  renderView: function () {
-
-    this.render();
-  },
-  render: function () {
-    if (this.beforeRender) { this.beforeRender(); }
-    this.trigger('before:render', this);
-    this.trigger('item:before:render', this);
-    this._refreshStyle();
-    var data = this.serializeData();
-    var template = this.getTemplate();
-    var html = Marionette.Renderer.render(template, data);
-    this.$el.html(html);
-
-    $('#' + this.model.get('containerId')).prepend(this.$el);
-    if (this.model.get('eventView')) {
-      this.model.get('eventView').render(this.model.get('id'));
-    }
-    this.bindUIElements();
-
-    if (this.onRender) { this.onRender(); }
-    this.trigger('render', this);
-    this.trigger('item:rendered', this);
-    return this;
-
-  },
-  _refreshStyle: function () {
-    if (this.model.get('weight') === 0) {
-      this.close();
-      return;
-    }
-    this.$el.attr('weight', this.model.get('weight'));
-    this.$el.attr('className', this.model.get('className'));
-    this.$el.css('width', this.model.get('width'));
-    this.$el.css('height', this.model.get('height'));
-    this.$el.css('left', this.model.get('x'));
-    this.$el.css('top', this.model.get('y'));
-
-
-  },
-  close: function () {
-
-    this.$el.removeClass('animated  fadeIn');
-    this.$el.addClass('animated  fadeOut');
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":11}],78:[function(require,module,exports){
+},{"underscore":9}],78:[function(require,module,exports){
 /**
  * Node-only utils
  */
@@ -24377,7 +24377,7 @@ StreamNode.registeredEventNodeTypes = {
   'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":45,"./eventsNode/ActivitiesEventsNode.js":112,"./eventsNode/GenericEventsNode.js":115,"./eventsNode/NotesEventsNode.js":111,"./eventsNode/NumericalsEventsNode.js":114,"./eventsNode/PicturesEventsNode.js":117,"./eventsNode/PositionsEventsNode.js":113,"./eventsNode/TweetsEventsNode.js":116,"underscore":9}],84:[function(require,module,exports){
+},{"./TreeNode":45,"./eventsNode/ActivitiesEventsNode.js":112,"./eventsNode/GenericEventsNode.js":117,"./eventsNode/NotesEventsNode.js":111,"./eventsNode/NumericalsEventsNode.js":115,"./eventsNode/PicturesEventsNode.js":114,"./eventsNode/PositionsEventsNode.js":113,"./eventsNode/TweetsEventsNode.js":116,"underscore":9}],84:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -24386,6 +24386,11 @@ module.exports = Backbone.Model.extend({
     collection: null,
     highlighted: false,
     checked: false
+  },
+  check: function (state) {
+    if (this.isEditPermission) {
+      this.set('checked', state);
+    }
   },
   isEditPermission: function () {
     var event = this.get('event');
@@ -24442,99 +24447,7 @@ module.exports = Backbone.Model.extend({
     this.get('event').trash(callback);
   }
 });
-},{"backbone":13}],88:[function(require,module,exports){
-(function(){/* global $, i18n */
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#template-detail-batch-action-view',
-  itemViewContainer: '.modal-panel-left',
-  id: 'batch-action-view',
-  ui: {
-    itemsSelectedLabel: '#batch-action-items-selected',
-    selectAll: '#select-all',
-    unselectAll: '#unselect-all',
-    trash: '#trash',
-    cancel: '#cancel',
-    spinner: '#trash fa-spinner'
-  },
-
-  initialize: function () {
-  },
-
-  onRender: function () {
-    $(this.itemViewContainer).append(this.el);
-    this.ui.cancel.bind('click', function () {
-      this.trigger('close');
-    }.bind(this));
-    this.ui.selectAll.bind('click', this.selectAll.bind(this));
-    this.ui.unselectAll.bind('click', this.unselectAll.bind(this));
-    this.ui.trash.bind('click', this.trash.bind(this));
-    $('body').i18n();
-    this.updateItemsSelectedLabel();
-  },
-
-  updateItemsSelectedLabel: function () {
-    this.ui.itemsSelectedLabel.html(i18n.t('events.common.labels.batchActionItemsSelected', {
-      count: countChecked(this.collection)
-    }));
-  },
-
-  trash: function () {
-    var i = 0;
-    this.ui.spinner.show();
-    this.ui.trash.prop('disabled', true);
-    this.collection.each(function (model) {
-      if (model.get('checked')) {
-        i++;
-        model.trash(function () {
-          i--;
-          if (i === 0) {
-            this.ui.spinner.hide();
-            this.ui.trash.prop('disabled', false);
-          }
-        }.bind(this));
-      }
-    }.bind(this));
-    if (i === 0) {
-      this.ui.spinner.hide();
-      this.ui.trash.prop('disabled', false);
-    }
-  },
-
-  selectAll: function () {
-    this.collection.each(function (model) {
-      model.set('checked', true);
-      model.trigger('change:checked');
-    }.bind(this));
-    this.updateItemsSelectedLabel();
-  },
-
-  unselectAll: function () {
-    this.collection.each(function (model) {
-      model.set('checked', false);
-      model.trigger('change:checked');
-    }.bind(this));
-    this.updateItemsSelectedLabel();
-  },
-
-  onClose: function () {
-    $('#' + this.id).remove();
-  }
-});
-
-function countChecked(collection) {
-  var count = 0;
-  collection.each(function (model) {
-    if (model.get('checked')) {
-      count++;
-    }
-  });
-  return count;
-}
-
-})()
-},{"backbone.marionette":11}],85:[function(require,module,exports){
+},{"backbone":12}],85:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
     ItemView = require('./ItemView.js'),
@@ -24680,7 +24593,99 @@ module.exports = Backbone.Collection.extend({
     return this;
   }
 });
-},{"./EventModel.js":84,"backbone":13}],86:[function(require,module,exports){
+},{"./EventModel.js":84,"backbone":12}],86:[function(require,module,exports){
+(function(){/* global $, i18n */
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#template-detail-batch-action-view',
+  itemViewContainer: '.modal-panel-left',
+  id: 'batch-action-view',
+  ui: {
+    itemsSelectedLabel: '#batch-action-items-selected',
+    selectAll: '#select-all',
+    unselectAll: '#unselect-all',
+    trash: '#trash',
+    cancel: '#cancel',
+    spinner: '#trash fa-spinner'
+  },
+
+  initialize: function () {
+  },
+
+  onRender: function () {
+    $(this.itemViewContainer).append(this.el);
+    this.ui.cancel.bind('click', function () {
+      this.trigger('close');
+    }.bind(this));
+    this.ui.selectAll.bind('click', this.selectAll.bind(this));
+    this.ui.unselectAll.bind('click', this.unselectAll.bind(this));
+    this.ui.trash.bind('click', this.trash.bind(this));
+    $('body').i18n();
+    this.updateItemsSelectedLabel();
+  },
+
+  updateItemsSelectedLabel: function () {
+    this.ui.itemsSelectedLabel.html(i18n.t('events.common.labels.batchActionItemsSelected', {
+      count: countChecked(this.collection)
+    }));
+  },
+
+  trash: function () {
+    var i = 0;
+    this.ui.spinner.show();
+    this.ui.trash.prop('disabled', true);
+    this.collection.each(function (model) {
+      if (model.get('checked')) {
+        i++;
+        model.trash(function () {
+          i--;
+          if (i === 0) {
+            this.ui.spinner.hide();
+            this.ui.trash.prop('disabled', false);
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+    if (i === 0) {
+      this.ui.spinner.hide();
+      this.ui.trash.prop('disabled', false);
+    }
+  },
+
+  selectAll: function () {
+    this.collection.each(function (model) {
+      model.check(true);
+      model.trigger('change:checked');
+    }.bind(this));
+    this.updateItemsSelectedLabel();
+  },
+
+  unselectAll: function () {
+    this.collection.each(function (model) {
+      model.check(false);
+      model.trigger('change:checked');
+    }.bind(this));
+    this.updateItemsSelectedLabel();
+  },
+
+  onClose: function () {
+    $('#' + this.id).remove();
+  }
+});
+
+function countChecked(collection) {
+  var count = 0;
+  collection.each(function (model) {
+    if (model.get('checked')) {
+      count++;
+    }
+  });
+  return count;
+}
+
+})()
+},{"backbone.marionette":11}],88:[function(require,module,exports){
 (function(){/* global $, moment, window, i18n */
 var Marionette = require('backbone.marionette');
 module.exports = Marionette.ItemView.extend({
@@ -24805,6 +24810,34 @@ module.exports = Marionette.ItemView.extend({
 });
 
 })()
+},{"backbone.marionette":11}],95:[function(require,module,exports){
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#success-sharings-template',
+  className: 'create-sharing full-height',
+  templateHelpers: function () {
+    return {
+      getUrl: function () {
+        var url = this.connection.id.replace(/\?auth.*$/, '');
+        url = url.replace(/\.in/, '.li');
+        url = url.replace(/\.io/, '.me');
+        url = url.replace(/:443/, '');
+        url += '#/sharings/' + this.token;
+        return url;
+      }.bind(this)
+    };
+  },
+  ui: {
+    label: 'label',
+    checkbox: 'input[type=checkbox]'
+  },
+  initialize: function () {
+    this.connection = this.options.connection;
+    this.name = this.options.name;
+    this.token = this.options.token;
+  }
+});
 },{"backbone.marionette":11}],96:[function(require,module,exports){
 (function(){/* global $ */
 
@@ -24959,35 +24992,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 })()
-},{"backbone.marionette":11,"underscore":9}],95:[function(require,module,exports){
-var Marionette = require('backbone.marionette');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#success-sharings-template',
-  className: 'create-sharing full-height',
-  templateHelpers: function () {
-    return {
-      getUrl: function () {
-        var url = this.connection.id.replace(/\?auth.*$/, '');
-        url = url.replace(/\.in/, '.li');
-        url = url.replace(/\.io/, '.me');
-        url = url.replace(/:443/, '');
-        url += '#/sharings/' + this.token;
-        return url;
-      }.bind(this)
-    };
-  },
-  ui: {
-    label: 'label',
-    checkbox: 'input[type=checkbox]'
-  },
-  initialize: function () {
-    this.connection = this.options.connection;
-    this.name = this.options.name;
-    this.token = this.options.token;
-  }
-});
-},{"backbone.marionette":11}],97:[function(require,module,exports){
+},{"backbone.marionette":11,"underscore":9}],97:[function(require,module,exports){
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js');
 
@@ -25002,7 +25007,96 @@ module.exports = Marionette.CollectionView.extend({
   }
 });
 
-},{"./ItemView.js":119,"backbone.marionette":11}],98:[function(require,module,exports){
+},{"./ItemView.js":119,"backbone.marionette":11}],99:[function(require,module,exports){
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    container: null,
+    view: null,
+
+    requiresDim: false,
+
+    collection: null,
+
+    highlighted: false,
+    highlightedTime: null,
+
+    allowPieChart: false,
+
+    singleNumberAsText: true,
+
+    // Chart dimensions
+    dimensions: null,
+
+    // Legend style
+    legendStyle: 'table', // Legend style: 'list', 'table'
+    legendButton: false,  // A button in the legend
+    legendButtonCount: ['edit', 'duplicate', 'remove'],
+    legendShow: true,     // Show legend on size/true/false
+    legendExtras: true,   // use extras in the legend
+
+    /* Events control */
+    onClick: null,
+    onHover: null,
+    onDnD: null,
+
+    // Panning and Zooming
+    allowPan: false,      // Allows navigation through the chart
+    allowZoom: false,     // Allows zooming on the chart
+    panZoomButton: false,
+
+    // Display X-axis
+    xaxis: null,
+
+    // Editable point mode
+    editPoint: false,
+
+    // Show node count
+    showNodeCount: true
+  },
+
+  initialize: function () {
+    this.on('remove', function () {
+      console.log('model: remove received');
+    });
+  },
+
+  setHighlighted: function (highlight) {
+    this.set('highlighted', highlight);
+  }
+});
+},{"backbone":12}],101:[function(require,module,exports){
+
+var Backbone = require('backbone');
+
+module.exports = Backbone.Model.extend({
+  defaults: {
+    events: [],
+    connectionId: null,
+    streamId: null,
+    streamName: null,
+    type: null,
+    category: null,
+
+    color: null,
+    style: null,
+    transform: null,
+    interval: null,
+    fitting: null,
+
+    virtual: null
+  },
+  sortData: function () {
+    this.get('events').sort(function (a, b) {
+      if (a.time < b.time) { return -1; }
+      if (b.time < a.time) { return 1; }
+      return 0;
+    });
+  }
+
+});
+},{"backbone":12}],98:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   Pryv = require('pryv'),
@@ -25856,7 +25950,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 })()
-},{"./utils/ChartTransform.js":120,"backbone.marionette":11,"pryv":10,"underscore":9}],99:[function(require,module,exports){
+},{"./utils/ChartTransform.js":120,"backbone.marionette":11,"pryv":10,"underscore":9}],100:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./TimeSeriesModel.js');
 
@@ -25871,96 +25965,7 @@ module.exports = Backbone.Collection.extend({
 
   }
 });
-},{"./TimeSeriesModel.js":100,"backbone":13}],101:[function(require,module,exports){
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    container: null,
-    view: null,
-
-    requiresDim: false,
-
-    collection: null,
-
-    highlighted: false,
-    highlightedTime: null,
-
-    allowPieChart: false,
-
-    singleNumberAsText: true,
-
-    // Chart dimensions
-    dimensions: null,
-
-    // Legend style
-    legendStyle: 'table', // Legend style: 'list', 'table'
-    legendButton: false,  // A button in the legend
-    legendButtonCount: ['edit', 'duplicate', 'remove'],
-    legendShow: true,     // Show legend on size/true/false
-    legendExtras: true,   // use extras in the legend
-
-    /* Events control */
-    onClick: null,
-    onHover: null,
-    onDnD: null,
-
-    // Panning and Zooming
-    allowPan: false,      // Allows navigation through the chart
-    allowZoom: false,     // Allows zooming on the chart
-    panZoomButton: false,
-
-    // Display X-axis
-    xaxis: null,
-
-    // Editable point mode
-    editPoint: false,
-
-    // Show node count
-    showNodeCount: true
-  },
-
-  initialize: function () {
-    this.on('remove', function () {
-      console.log('model: remove received');
-    });
-  },
-
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
-  }
-});
-},{"backbone":13}],100:[function(require,module,exports){
-
-var Backbone = require('backbone');
-
-module.exports = Backbone.Model.extend({
-  defaults: {
-    events: [],
-    connectionId: null,
-    streamId: null,
-    streamName: null,
-    type: null,
-    category: null,
-
-    color: null,
-    style: null,
-    transform: null,
-    interval: null,
-    fitting: null,
-
-    virtual: null
-  },
-  sortData: function () {
-    this.get('events').sort(function (a, b) {
-      if (a.time < b.time) { return -1; }
-      if (b.time < a.time) { return 1; }
-      return 0;
-    });
-  }
-
-});
-},{"backbone":13}],105:[function(require,module,exports){
+},{"./TimeSeriesModel.js":101,"backbone":12}],106:[function(require,module,exports){
 (function(){/* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -26028,7 +26033,7 @@ module.exports = Marionette.ItemView.extend({
 });
 
 })()
-},{"backbone.marionette":11}],106:[function(require,module,exports){
+},{"backbone.marionette":11}],107:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -26235,6 +26240,37 @@ module.exports = Marionette.ItemView.extend({
 
 })()
 },{"backbone.marionette":11,"underscore":9}],89:[function(require,module,exports){
+(function(){/* global $, window */
+var Marionette = require('backbone.marionette');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Note',
+  template: '#template-detail-content-note',
+  itemViewContainer: '#detail-content',
+  className: 'note-content',
+  ui: {
+    content: '#edit-content'
+  },
+  templateHelpers: function () {
+    return {
+      getContent: function () {
+        return window.PryvBrowser.renderNote(this.model.get('event').content);
+      }.bind(this)
+    };
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+    this.ui.content.bind('keyup input paste', function () {
+      this.model.get('event').content = this.ui.content.val();
+    }.bind(this));
+    $('body').i18n();
+  },
+});
+})()
+},{"backbone.marionette":11}],90:[function(require,module,exports){
 (function(){/* global $, FormData, PryvBrowser */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -26289,22 +26325,31 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":11,"underscore":9}],91:[function(require,module,exports){
-(function(){/* global $, window */
-var Marionette = require('backbone.marionette');
+},{"backbone.marionette":11,"underscore":9}],93:[function(require,module,exports){
+(function(){/* global $, FormData */
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
-  type: 'Note',
-  template: '#template-detail-content-note',
+  type: 'Picture',
+  tagName: 'div',
+  className: 'full-height full-width',
+  template: '#template-detail-content-picture',
   itemViewContainer: '#detail-content',
-  className: 'note-content',
+  addAttachmentContainer: '#add-attachment',
+  addAttachmentId: 0,
+  attachmentId: {},
   ui: {
-    content: '#edit-content'
+    li: 'li.editable',
+    edit: '.edit'
   },
   templateHelpers: function () {
     return {
-      getContent: function () {
-        return window.PryvBrowser.renderNote(this.model.get('event').content);
+      getSrc: function () {
+        return this.getSrc();
+      }.bind(this),
+      getAlt: function () {
+        return this.getAlt();
       }.bind(this)
     };
   },
@@ -26313,14 +26358,66 @@ module.exports = Marionette.ItemView.extend({
   },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    this.ui.content.bind('keyup input paste', function () {
-      this.model.get('event').content = this.ui.content.val();
+    $('#current-picture .fa-angle-left').click(function () {
+      this.trigger('previous');
     }.bind(this));
-    $('body').i18n();
+    $('#current-picture .fa-angle-right').click(function () {
+      this.trigger('next');
+    }.bind(this));
+    this.addAttachment();
   },
+  addAttachment: function () {
+    var id = 'attachment-' + this.addAttachmentId;
+    var html = '<li><input type="file" id="' + id + '"></li>';
+    this.addAttachmentId++;
+    $(this.addAttachmentContainer).append(html);
+    $('#' + id).bind('change', this._onFileAttach.bind(this));
+  },
+  _onFileAttach : function (e)	{
+    var file = new FormData(),
+      keys = this.model.get('event').attachments ? _.keys(this.model.get('event').attachments) :
+        [e.target.files[0].name];
+    e.target.disabled = true;
+    file.append(keys[0].split('.')[0], e.target.files[0]);
+    this.model.addAttachment(file);
+  },
+  getSrc: function () {
+    var event = this.model.get('event'),
+      attachments = event.attachments;
+    if (attachments) {
+      var keys = _.keys(attachments);
+      return event.url + '/' + attachments[keys[0]].id + '?readToken=' +
+        attachments[keys[0]].readToken;
+    } else {
+      return '';
+    }
+  },
+  getAlt: function () {
+    var event = this.model.get('event'),
+      attachments = event.attachments;
+    if (attachments) {
+      var keys = _.keys(attachments);
+      return keys[0];
+    } else {
+      return '';
+    }
+  },
+  /* jshint -W098, -W061 */
+  updateEvent: function ($elem) {
+    var event = this.model.get('event'),
+      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
+      value = $($elem).val().trim();
+    eval('event.' + key + ' = value');
+    this.completeEdit($($elem).parent());
+    this.render();
+
+  },
+  completeEdit: function ($elem) {
+    $($elem).removeClass('editing');
+  }
 });
 })()
-},{"backbone.marionette":11}],93:[function(require,module,exports){
+},{"backbone.marionette":11,"underscore":9}],92:[function(require,module,exports){
 (function(){/* global $, document*/
 var Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps');
@@ -26427,99 +26524,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":11,"google-maps":107}],92:[function(require,module,exports){
-(function(){/* global $, FormData */
-var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  type: 'Picture',
-  tagName: 'div',
-  className: 'full-height full-width',
-  template: '#template-detail-content-picture',
-  itemViewContainer: '#detail-content',
-  addAttachmentContainer: '#add-attachment',
-  addAttachmentId: 0,
-  attachmentId: {},
-  ui: {
-    li: 'li.editable',
-    edit: '.edit'
-  },
-  templateHelpers: function () {
-    return {
-      getSrc: function () {
-        return this.getSrc();
-      }.bind(this),
-      getAlt: function () {
-        return this.getAlt();
-      }.bind(this)
-    };
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
-  },
-  onRender: function () {
-    $(this.itemViewContainer).html(this.el);
-    $('#current-picture .fa-angle-left').click(function () {
-      this.trigger('previous');
-    }.bind(this));
-    $('#current-picture .fa-angle-right').click(function () {
-      this.trigger('next');
-    }.bind(this));
-    this.addAttachment();
-  },
-  addAttachment: function () {
-    var id = 'attachment-' + this.addAttachmentId;
-    var html = '<li><input type="file" id="' + id + '"></li>';
-    this.addAttachmentId++;
-    $(this.addAttachmentContainer).append(html);
-    $('#' + id).bind('change', this._onFileAttach.bind(this));
-  },
-  _onFileAttach : function (e)	{
-    var file = new FormData(),
-      keys = this.model.get('event').attachments ? _.keys(this.model.get('event').attachments) :
-        [e.target.files[0].name];
-    e.target.disabled = true;
-    file.append(keys[0].split('.')[0], e.target.files[0]);
-    this.model.addAttachment(file);
-  },
-  getSrc: function () {
-    var event = this.model.get('event'),
-      attachments = event.attachments;
-    if (attachments) {
-      var keys = _.keys(attachments);
-      return event.url + '/' + attachments[keys[0]].id + '?readToken=' +
-        attachments[keys[0]].readToken;
-    } else {
-      return '';
-    }
-  },
-  getAlt: function () {
-    var event = this.model.get('event'),
-      attachments = event.attachments;
-    if (attachments) {
-      var keys = _.keys(attachments);
-      return keys[0];
-    } else {
-      return '';
-    }
-  },
-  /* jshint -W098, -W061 */
-  updateEvent: function ($elem) {
-    var event = this.model.get('event'),
-      key = ($($elem).attr('id')).replace('edit-', '').replace('-', '.'),
-      value = $($elem).val().trim();
-    eval('event.' + key + ' = value');
-    this.completeEdit($($elem).parent());
-    this.render();
-
-  },
-  completeEdit: function ($elem) {
-    $($elem).removeClass('editing');
-  }
-});
-})()
-},{"backbone.marionette":11,"underscore":9}],94:[function(require,module,exports){
+},{"backbone.marionette":11,"google-maps":105}],94:[function(require,module,exports){
 (function(){/* global $*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -26840,7 +26845,7 @@ https.request = function (params, cb) {
 },{"http":123}],124:[function(require,module,exports){
 // nothing to see here... no file methods for the browser
 
-},{}],103:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 (function(){//     Backbone.js 1.0.0
 
 //     (c) 2010-2013 Jeremy Ashkenas, DocumentCloud Inc.
@@ -32392,7 +32397,7 @@ module.exports = function (pack)  {
 };
 
 })(require("__browserify_buffer").Buffer)
-},{"__browserify_buffer":125,"form-data":110,"underscore":51}],90:[function(require,module,exports){
+},{"__browserify_buffer":125,"form-data":110,"underscore":56}],91:[function(require,module,exports){
 (function(){/* global window, $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -32619,7 +32624,7 @@ module.exports = Marionette.ItemView.extend({
   }, 1000)
 });
 })()
-},{"../../../numericals/TimeSeriesCollection.js":99,"../../../numericals/TimeSeriesModel.js":100,"../../../numericals/utils/ChartSettings.js":22,"./GeneralConfigView.js":127,"./SingleEditView.js":126,"backbone.marionette":11,"underscore":9}],123:[function(require,module,exports){
+},{"../../../numericals/TimeSeriesCollection.js":100,"../../../numericals/TimeSeriesModel.js":101,"../../../numericals/utils/ChartSettings.js":22,"./GeneralConfigView.js":127,"./SingleEditView.js":126,"backbone.marionette":11,"underscore":9}],123:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -32787,6 +32792,19 @@ module.exports = Marionette.ItemView.extend({
   onRender: function () {
     this.check();
     this.highlight();
+    if (this.model.isEditPermission()) {
+      this.$('input').bind('click', function (e) {
+        e.stopPropagation();
+        this.model.check(!this.model.get('checked'));
+        this.check();
+        this.trigger('item:checked');
+      }.bind(this));
+      this.$('label').bind('click', function (e) {
+        e.stopPropagation();
+      });
+    } else {
+      this.$('.pryv-checkbox').hide();
+    }
     if (this.model.get('event').type.indexOf('picture') === 0) {
       this.$el.css(
           {'background': 'url(' + this.model.get('event').getPicturePreview() +
@@ -32801,15 +32819,7 @@ module.exports = Marionette.ItemView.extend({
       this.trigger('date:clicked', this.model);
     }.bind(this));
 
-    this.$('input').bind('click', function (e) {
-      e.stopPropagation();
-      this.model.set('checked', !this.model.get('checked'));
-      this.check();
-      this.trigger('item:checked');
-    }.bind(this));
-    this.$('label').bind('click', function (e) {
-      e.stopPropagation();
-    });
+
     $(this.$el).find('.Center-Container').dotdotdot({watch: true, wrap: 'letter'});
   }
 });
@@ -32838,7 +32848,7 @@ module.exports = Marionette.CompositeView.extend({
   }
 });
 
-},{"backbone.marionette":11}],107:[function(require,module,exports){
+},{"backbone.marionette":11}],105:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var Google, Q;
@@ -33014,24 +33024,25 @@ try {
 
 
 })()
-},{"../../view/events-views/activities/Model.js":132,"../EventsNode":131,"underscore":9}],116:[function(require,module,exports){
-(function(){/* global window */
+},{"../../view/events-views/activities/Model.js":132,"../EventsNode":131,"underscore":9}],114:[function(require,module,exports){
+(function(){/*global window */
 var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/tweet/Model.js'),
+  EventsView = require('../../view/events-views/pictures/Model.js'),
   _ = require('underscore'),
   DEFAULT_WEIGHT = 1;
 
 /**
- * Holder for TweetsNode
+ * Holder for EventsNode
  * @type {*}
  */
-var TweetsEventsNode = module.exports = EventsNode.implement(
+var PicturesEventsNode = module.exports = EventsNode.implement(
   function (parentStreamNode) {
     EventsNode.call(this, parentStreamNode);
   },
   {
-    className: 'TweetsEventsNode EventsNode',
+    className: 'PicturesEventsNode EventsNode',
     pluginView: EventsView,
+
     getWeight: function () {
       return DEFAULT_WEIGHT;
     }
@@ -33039,11 +33050,11 @@ var TweetsEventsNode = module.exports = EventsNode.implement(
   });
 
 // we accept all kind of events
-TweetsEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'message/twitter');
+PicturesEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'picture/attached');
 };
 try {
-  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
+  Object.defineProperty(window.PryvBrowser, 'pictureWeight', {
     set: function (value) {
       value = +value;
       if (_.isFinite(value)) {
@@ -33064,7 +33075,7 @@ try {
 
 
 })()
-},{"../../view/events-views/tweet/Model.js":133,"../EventsNode":131,"underscore":9}],113:[function(require,module,exports){
+},{"../../view/events-views/pictures/Model.js":133,"../EventsNode":131,"underscore":9}],113:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/positions/Model.js'),
@@ -33114,7 +33125,7 @@ try {
 
 
 })()
-},{"../../view/events-views/positions/Model.js":134,"../EventsNode":131,"underscore":9}],114:[function(require,module,exports){
+},{"../../view/events-views/positions/Model.js":134,"../EventsNode":131,"underscore":9}],115:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/numericals/Model.js'),
@@ -33196,57 +33207,6 @@ try {
 
 })()
 },{"../../view/events-views/numericals/Model.js":135,"../EventsNode":131,"underscore":9}],117:[function(require,module,exports){
-(function(){/*global window */
-var EventsNode = require('../EventsNode'),
-  EventsView = require('../../view/events-views/pictures/Model.js'),
-  _ = require('underscore'),
-  DEFAULT_WEIGHT = 1;
-
-/**
- * Holder for EventsNode
- * @type {*}
- */
-var PicturesEventsNode = module.exports = EventsNode.implement(
-  function (parentStreamNode) {
-    EventsNode.call(this, parentStreamNode);
-  },
-  {
-    className: 'PicturesEventsNode EventsNode',
-    pluginView: EventsView,
-
-    getWeight: function () {
-      return DEFAULT_WEIGHT;
-    }
-
-  });
-
-// we accept all kind of events
-PicturesEventsNode.acceptThisEventType = function (eventType) {
-  return (eventType === 'picture/attached');
-};
-try {
-  Object.defineProperty(window.PryvBrowser, 'pictureWeight', {
-    set: function (value) {
-      value = +value;
-      if (_.isFinite(value)) {
-        this.customConfig = true;
-        DEFAULT_WEIGHT = value;
-        if (_.isFunction(this.refresh)) {
-          this.refresh();
-        }
-      }
-    },
-    get: function () {
-      return DEFAULT_WEIGHT;
-    }
-  });
-} catch (err) {
-  console.warn('cannot define window.PryvBrowser');
-}
-
-
-})()
-},{"../../view/events-views/pictures/Model.js":136,"../EventsNode":131,"underscore":9}],115:[function(require,module,exports){
 (function(){/* global window */
 var EventsNode = require('../EventsNode'),
   _ = require('underscore'),
@@ -33296,232 +33256,57 @@ try {
 }
 
 })()
-},{"../../view/events-views/generics/Model.js":137,"../EventsNode":131,"underscore":9}],120:[function(require,module,exports){
-var _ = require('underscore');
-
-var ChartTransform = module.exports = {};
+},{"../../view/events-views/generics/Model.js":136,"../EventsNode":131,"underscore":9}],116:[function(require,module,exports){
+(function(){/* global window */
+var EventsNode = require('../EventsNode'),
+  EventsView = require('../../view/events-views/tweet/Model.js'),
+  _ = require('underscore'),
+  DEFAULT_WEIGHT = 1;
 
 /**
- * ISO ISO8601 week numbers
- * @returns {number} the week number of this date.
+ * Holder for TweetsNode
+ * @type {*}
  */
-Date.prototype.getISO8601Week = function () {
-  var target = new Date(this.valueOf());
-  var dayNr = (this.getDay() + 6) % 7;
-  target.setDate(target.getDate() - dayNr + 3);
-  var jan4 = new Date(target.getFullYear(), 0, 4);
-  var dayDiff = (target - jan4) / 86400000;
-  var weekNr = 1 + Math.ceil(dayDiff / 7);
-  return weekNr;
-};
-
-ChartTransform.transform = function (model) {
-  if (!model.get('transform')) {
-    return this.default(model.get('events'));
-  }
-
-  var mapper = this.getMapFunction(model.get('interval'));
-  var dater = this.getDateFunction(model.get('interval'));
-
-  var cut = this.map(model.get('events'), mapper, dater);
-
-  var r = null;
-  switch (model.get('transform')) {
-  case 'sum':
-    r = (!model.get('interval')) ? this.stackedSum(cut) : this.sum(cut);
-    break;
-  case 'average':
-    r = this.avg(cut);
-    break;
-  default:
-    r = this.default(model.get('events'));
-    break;
-  }
-  return r;
-};
-
-ChartTransform.default = function (data) {
-  return _.map(data, function (e) {
-    return [e.time * 1000, +e.content];
-  });
-};
-
-ChartTransform.map = function (data, mapper, dater) {
-  var m = _.map(data, function (e) {
-    var d = new Date(e.time * 1000);
-    return [mapper(d), +dater(d), +e.content];
-  });
-  return _.groupBy(m, function (e) {
-    return e[0];
-  });
-};
-
-
-ChartTransform.getDurationFunction = function (interval) {
-  switch (interval) {
-  case 'hourly' :
-    return function () { return 3600 * 1000; };
-  case 'daily' :
-    return function () { return 24 * 3600 * 1000; };
-  case 'weekly' :
-    return function () { return 7 * 24 * 3600 * 1000; };
-  case 'monthly' :
-    return function (d) { return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() *
-      24 * 3600 * 1000; };
-  case 'yearly' :
-    return function (d) {
-      return (d.getFullYear() % 4 === 0 &&
-        (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
-    };
-  default :
-    return function () {
-      return 0;
-    };
-  }
-};
-
-ChartTransform.getMapFunction = function (interval) {
-  switch (interval) {
-  case 'hourly' :
-    return function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
-        d.getDate().toString() +  '-' + d.getHours().toString();
-    };
-  case 'daily' :
-    return function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
-        d.getDate().toString();
-    };
-  case 'weekly' :
-    return function (d) {
-      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
-      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
-      return asWeek.getFullYear().toString() +  '-' + asWeek.getISO8601Week().toString();
-    };
-  case 'monthly' :
-    return function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
-    };
-  case 'yearly' :
-    return function (d) {
-      return d.getFullYear().toString();
-    };
-  default :
-    return function (d) {
-      return d.getDate().toString();
-    };
-  }
-};
-
-ChartTransform.getDateFunction = function (interval) {
-  switch (interval) {
-  case 'hourly' :
-    return function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(),
-        d.getHours(), 0, 0, 0)).getTime();
-    };
-  case 'daily' :
-    return function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).getTime();
-    };
-  case 'weekly' :
-    return function (d) {
-      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
-      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
-      return (new Date(asWeek.getFullYear(), asWeek.getMonth(),
-        asWeek.getDate(), 0, 0, 0, 0)).getTime();
-    };
-  case 'monthly' :
-    return function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), 0, 0, 0, 0, 0)).getTime();
-    };
-  case 'yearly' :
-    return function (d) {
-      return (new Date(d.getFullYear(), 0, 0, 0, 0, 0, 0)).getTime();
-    };
-  default :
-    return function (d) {
-      return d.getTime();
-    };
-  }
-};
-
-
-/*
- in -> {1234: [123, 1234, 345], 145: [1234] ,...}
- out -> [[1234, sum], [145, sum]]
- */
-ChartTransform.sum = function (data) {
-  var r = [];
-  var summer = function (a) {
-    return _.reduce(a, function (c, e) {
-      return c + e[2];
-    }, 0);
-  };
-  for (var a in data) {
-    if (data.hasOwnProperty(a)) {
-      r.push([+data[a][0][1], summer(data[a])]);
+var TweetsEventsNode = module.exports = EventsNode.implement(
+  function (parentStreamNode) {
+    EventsNode.call(this, parentStreamNode);
+  },
+  {
+    className: 'TweetsEventsNode EventsNode',
+    pluginView: EventsView,
+    getWeight: function () {
+      return DEFAULT_WEIGHT;
     }
-  }
-  return r;
+
+  });
+
+// we accept all kind of events
+TweetsEventsNode.acceptThisEventType = function (eventType) {
+  return (eventType === 'message/twitter');
 };
-
-
-/*
- in -> {1234: [123, 1234, 345], 145: [1234] ,...}
- out -> [[1234, sum], [145, sum]]
- */
-ChartTransform.stackedSum = function (data) {
-  var r = [];
-  var previous = 0;
-
-  var summer = function (a) {
-    return _.reduce(a, function (c, e) {
-      var s = c + e[2] + previous;
-      previous = s;
-      return s;
-    }, 0);
-  };
-
-  var keys = [];
-
-  for (var key in data) {
-    if (data.hasOwnProperty(key)) {
-      keys.push(key);
+try {
+  Object.defineProperty(window.PryvBrowser, 'tweetWeight', {
+    set: function (value) {
+      value = +value;
+      if (_.isFinite(value)) {
+        this.customConfig = true;
+        DEFAULT_WEIGHT = value;
+        if (_.isFunction(this.refresh)) {
+          this.refresh();
+        }
+      }
+    },
+    get: function () {
+      return DEFAULT_WEIGHT;
     }
-  }
-  keys.sort();
-
-  for (var i = 0; i < keys.length; ++i) {
-    r.push([+data[keys[i]][0][1], summer(data[keys[i]])]);
-  }
-  return r;
-};
+  });
+} catch (err) {
+  console.warn('cannot define window.PryvBrowser');
+}
 
 
-/*
- in -> {1234: [123, 1234, 345], 145: [1234] ,...}
- out -> [[1234, avg], [145, avg]]
- */
-ChartTransform.avg = function (data) {
-  var r = [];
-  var averager = function (a) {
-    var s = _.reduce(a, function (c, e) {
-      return c + e[2];
-    }, 0);
-    return s / a.length;
-  };
-  for (var a in data) {
-    if (data.hasOwnProperty(a)) {
-      r.push([+data[a][0][1], averager(data[a])]);
-    }
-  }
-  return r;
-};
-
-
-
-},{"underscore":9}],129:[function(require,module,exports){
+})()
+},{"../../view/events-views/tweet/Model.js":137,"../EventsNode":131,"underscore":9}],129:[function(require,module,exports){
 (function(process){// vim:ts=4:sts=4:sw=4:
 /*!
  *
@@ -35275,7 +35060,533 @@ return Q;
 });
 
 })(require("__browserify_process"))
-},{"__browserify_process":49}],102:[function(require,module,exports){
+},{"__browserify_process":49}],120:[function(require,module,exports){
+var _ = require('underscore');
+
+var ChartTransform = module.exports = {};
+
+/**
+ * ISO ISO8601 week numbers
+ * @returns {number} the week number of this date.
+ */
+Date.prototype.getISO8601Week = function () {
+  var target = new Date(this.valueOf());
+  var dayNr = (this.getDay() + 6) % 7;
+  target.setDate(target.getDate() - dayNr + 3);
+  var jan4 = new Date(target.getFullYear(), 0, 4);
+  var dayDiff = (target - jan4) / 86400000;
+  var weekNr = 1 + Math.ceil(dayDiff / 7);
+  return weekNr;
+};
+
+ChartTransform.transform = function (model) {
+  if (!model.get('transform')) {
+    return this.default(model.get('events'));
+  }
+
+  var mapper = this.getMapFunction(model.get('interval'));
+  var dater = this.getDateFunction(model.get('interval'));
+
+  var cut = this.map(model.get('events'), mapper, dater);
+
+  var r = null;
+  switch (model.get('transform')) {
+  case 'sum':
+    r = (!model.get('interval')) ? this.stackedSum(cut) : this.sum(cut);
+    break;
+  case 'average':
+    r = this.avg(cut);
+    break;
+  default:
+    r = this.default(model.get('events'));
+    break;
+  }
+  return r;
+};
+
+ChartTransform.default = function (data) {
+  return _.map(data, function (e) {
+    return [e.time * 1000, +e.content];
+  });
+};
+
+ChartTransform.map = function (data, mapper, dater) {
+  var m = _.map(data, function (e) {
+    var d = new Date(e.time * 1000);
+    return [mapper(d), +dater(d), +e.content];
+  });
+  return _.groupBy(m, function (e) {
+    return e[0];
+  });
+};
+
+
+ChartTransform.getDurationFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function () { return 3600 * 1000; };
+  case 'daily' :
+    return function () { return 24 * 3600 * 1000; };
+  case 'weekly' :
+    return function () { return 7 * 24 * 3600 * 1000; };
+  case 'monthly' :
+    return function (d) { return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() *
+      24 * 3600 * 1000; };
+  case 'yearly' :
+    return function (d) {
+      return (d.getFullYear() % 4 === 0 &&
+        (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
+    };
+  default :
+    return function () {
+      return 0;
+    };
+  }
+};
+
+ChartTransform.getMapFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+        d.getDate().toString() +  '-' + d.getHours().toString();
+    };
+  case 'daily' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+        d.getDate().toString();
+    };
+  case 'weekly' :
+    return function (d) {
+      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
+      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
+      return asWeek.getFullYear().toString() +  '-' + asWeek.getISO8601Week().toString();
+    };
+  case 'monthly' :
+    return function (d) {
+      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
+    };
+  case 'yearly' :
+    return function (d) {
+      return d.getFullYear().toString();
+    };
+  default :
+    return function (d) {
+      return d.getDate().toString();
+    };
+  }
+};
+
+ChartTransform.getDateFunction = function (interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(),
+        d.getHours(), 0, 0, 0)).getTime();
+    };
+  case 'daily' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)).getTime();
+    };
+  case 'weekly' :
+    return function (d) {
+      var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
+      var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
+      return (new Date(asWeek.getFullYear(), asWeek.getMonth(),
+        asWeek.getDate(), 0, 0, 0, 0)).getTime();
+    };
+  case 'monthly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), 0, 0, 0, 0, 0)).getTime();
+    };
+  case 'yearly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), 0, 0, 0, 0, 0, 0)).getTime();
+    };
+  default :
+    return function (d) {
+      return d.getTime();
+    };
+  }
+};
+
+
+/*
+ in -> {1234: [123, 1234, 345], 145: [1234] ,...}
+ out -> [[1234, sum], [145, sum]]
+ */
+ChartTransform.sum = function (data) {
+  var r = [];
+  var summer = function (a) {
+    return _.reduce(a, function (c, e) {
+      return c + e[2];
+    }, 0);
+  };
+  for (var a in data) {
+    if (data.hasOwnProperty(a)) {
+      r.push([+data[a][0][1], summer(data[a])]);
+    }
+  }
+  return r;
+};
+
+
+/*
+ in -> {1234: [123, 1234, 345], 145: [1234] ,...}
+ out -> [[1234, sum], [145, sum]]
+ */
+ChartTransform.stackedSum = function (data) {
+  var r = [];
+  var previous = 0;
+
+  var summer = function (a) {
+    return _.reduce(a, function (c, e) {
+      var s = c + e[2] + previous;
+      previous = s;
+      return s;
+    }, 0);
+  };
+
+  var keys = [];
+
+  for (var key in data) {
+    if (data.hasOwnProperty(key)) {
+      keys.push(key);
+    }
+  }
+  keys.sort();
+
+  for (var i = 0; i < keys.length; ++i) {
+    r.push([+data[keys[i]][0][1], summer(data[keys[i]])]);
+  }
+  return r;
+};
+
+
+/*
+ in -> {1234: [123, 1234, 345], 145: [1234] ,...}
+ out -> [[1234, avg], [145, avg]]
+ */
+ChartTransform.avg = function (data) {
+  var r = [];
+  var averager = function (a) {
+    var s = _.reduce(a, function (c, e) {
+      return c + e[2];
+    }, 0);
+    return s / a.length;
+  };
+  for (var a in data) {
+    if (data.hasOwnProperty(a)) {
+      r.push([+data[a][0][1], averager(data[a])]);
+    }
+  }
+  return r;
+};
+
+
+
+},{"underscore":9}],138:[function(require,module,exports){
+var events = require('events');
+var util = require('util');
+
+function Stream() {
+  events.EventEmitter.call(this);
+}
+util.inherits(Stream, events.EventEmitter);
+module.exports = Stream;
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream;
+
+Stream.prototype.pipe = function(dest, options) {
+  var source = this;
+
+  function ondata(chunk) {
+    if (dest.writable) {
+      if (false === dest.write(chunk) && source.pause) {
+        source.pause();
+      }
+    }
+  }
+
+  source.on('data', ondata);
+
+  function ondrain() {
+    if (source.readable && source.resume) {
+      source.resume();
+    }
+  }
+
+  dest.on('drain', ondrain);
+
+  // If the 'end' option is not supplied, dest.end() will be called when
+  // source gets the 'end' or 'close' events.  Only dest.end() once, and
+  // only when all sources have ended.
+  if (!dest._isStdio && (!options || options.end !== false)) {
+    dest._pipeCount = dest._pipeCount || 0;
+    dest._pipeCount++;
+
+    source.on('end', onend);
+    source.on('close', onclose);
+  }
+
+  var didOnEnd = false;
+  function onend() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    dest._pipeCount--;
+
+    // remove the listeners
+    cleanup();
+
+    if (dest._pipeCount > 0) {
+      // waiting for other incoming streams to end.
+      return;
+    }
+
+    dest.end();
+  }
+
+
+  function onclose() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    dest._pipeCount--;
+
+    // remove the listeners
+    cleanup();
+
+    if (dest._pipeCount > 0) {
+      // waiting for other incoming streams to end.
+      return;
+    }
+
+    dest.destroy();
+  }
+
+  // don't leave dangling pipes when there are errors.
+  function onerror(er) {
+    cleanup();
+    if (this.listeners('error').length === 0) {
+      throw er; // Unhandled stream error in pipe.
+    }
+  }
+
+  source.on('error', onerror);
+  dest.on('error', onerror);
+
+  // remove all the event listeners that were added.
+  function cleanup() {
+    source.removeListener('data', ondata);
+    dest.removeListener('drain', ondrain);
+
+    source.removeListener('end', onend);
+    source.removeListener('close', onclose);
+
+    source.removeListener('error', onerror);
+    dest.removeListener('error', onerror);
+
+    source.removeListener('end', cleanup);
+    source.removeListener('close', cleanup);
+
+    dest.removeListener('end', cleanup);
+    dest.removeListener('close', cleanup);
+  }
+
+  source.on('end', cleanup);
+  source.on('close', cleanup);
+
+  dest.on('end', cleanup);
+  dest.on('close', cleanup);
+
+  dest.emit('pipe', source);
+
+  // Allow for unix-like usage: A.pipe(B).pipe(C)
+  return dest;
+};
+
+},{"events":47,"util":46}],104:[function(require,module,exports){
+// Backbone.BabySitter
+// -------------------
+// v0.0.6
+//
+// Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.
+// Distributed under MIT license
+//
+// http://github.com/babysitterjs/backbone.babysitter
+
+(function (root, factory) {
+  if (typeof exports === 'object') {
+
+    var underscore = require('underscore');
+    var backbone = require('backbone');
+
+    module.exports = factory(underscore, backbone);
+
+  } else if (typeof define === 'function' && define.amd) {
+
+    define(['underscore', 'backbone'], factory);
+
+  } 
+}(this, function (_, Backbone) {
+  "option strict";
+
+  // Backbone.ChildViewContainer
+// ---------------------------
+//
+// Provide a container to store, retrieve and
+// shut down child views.
+
+Backbone.ChildViewContainer = (function(Backbone, _){
+  
+  // Container Constructor
+  // ---------------------
+
+  var Container = function(views){
+    this._views = {};
+    this._indexByModel = {};
+    this._indexByCustom = {};
+    this._updateLength();
+
+    _.each(views, this.add, this);
+  };
+
+  // Container Methods
+  // -----------------
+
+  _.extend(Container.prototype, {
+
+    // Add a view to this container. Stores the view
+    // by `cid` and makes it searchable by the model
+    // cid (and model itself). Optionally specify
+    // a custom key to store an retrieve the view.
+    add: function(view, customIndex){
+      var viewCid = view.cid;
+
+      // store the view
+      this._views[viewCid] = view;
+
+      // index it by model
+      if (view.model){
+        this._indexByModel[view.model.cid] = viewCid;
+      }
+
+      // index by custom
+      if (customIndex){
+        this._indexByCustom[customIndex] = viewCid;
+      }
+
+      this._updateLength();
+    },
+
+    // Find a view by the model that was attached to
+    // it. Uses the model's `cid` to find it.
+    findByModel: function(model){
+      return this.findByModelCid(model.cid);
+    },
+
+    // Find a view by the `cid` of the model that was attached to
+    // it. Uses the model's `cid` to find the view `cid` and
+    // retrieve the view using it.
+    findByModelCid: function(modelCid){
+      var viewCid = this._indexByModel[modelCid];
+      return this.findByCid(viewCid);
+    },
+
+    // Find a view by a custom indexer.
+    findByCustom: function(index){
+      var viewCid = this._indexByCustom[index];
+      return this.findByCid(viewCid);
+    },
+
+    // Find by index. This is not guaranteed to be a
+    // stable index.
+    findByIndex: function(index){
+      return _.values(this._views)[index];
+    },
+
+    // retrieve a view by it's `cid` directly
+    findByCid: function(cid){
+      return this._views[cid];
+    },
+
+    // Remove a view
+    remove: function(view){
+      var viewCid = view.cid;
+
+      // delete model index
+      if (view.model){
+        delete this._indexByModel[view.model.cid];
+      }
+
+      // delete custom index
+      _.any(this._indexByCustom, function(cid, key) {
+        if (cid === viewCid) {
+          delete this._indexByCustom[key];
+          return true;
+        }
+      }, this);
+
+      // remove the view from the container
+      delete this._views[viewCid];
+
+      // update the length
+      this._updateLength();
+    },
+
+    // Call a method on every view in the container,
+    // passing parameters to the call method one at a
+    // time, like `function.call`.
+    call: function(method){
+      this.apply(method, _.tail(arguments));
+    },
+
+    // Apply a method on every view in the container,
+    // passing parameters to the call method one at a
+    // time, like `function.apply`.
+    apply: function(method, args){
+      _.each(this._views, function(view){
+        if (_.isFunction(view[method])){
+          view[method].apply(view, args || []);
+        }
+      });
+    },
+
+    // Update the `.length` attribute on this container
+    _updateLength: function(){
+      this.length = _.size(this._views);
+    }
+  });
+
+  // Borrowing this code from Backbone.Collection:
+  // http://backbonejs.org/docs/backbone.html#section-106
+  //
+  // Mix in methods from Underscore, for iteration, and other
+  // collection related features.
+  var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter', 
+    'select', 'reject', 'every', 'all', 'some', 'any', 'include', 
+    'contains', 'invoke', 'toArray', 'first', 'initial', 'rest', 
+    'last', 'without', 'isEmpty', 'pluck'];
+
+  _.each(methods, function(method) {
+    Container.prototype[method] = function() {
+      var views = _.values(this._views);
+      var args = [views].concat(_.toArray(arguments));
+      return _[method].apply(_, args);
+    };
+  });
+
+  // return the public API
+  return Container;
+})(Backbone, _);
+
+  return Backbone.ChildViewContainer; 
+
+}));
+
+
+},{"backbone":102,"underscore":9}],103:[function(require,module,exports){
 (function(){(function (root, factory) {
   if (typeof exports === 'object') {
 
@@ -35555,308 +35866,7 @@ Wreqr.EventAggregator = (function(Backbone, _){
 
 
 })()
-},{"backbone":103,"underscore":9}],104:[function(require,module,exports){
-// Backbone.BabySitter
-// -------------------
-// v0.0.6
-//
-// Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.
-// Distributed under MIT license
-//
-// http://github.com/babysitterjs/backbone.babysitter
-
-(function (root, factory) {
-  if (typeof exports === 'object') {
-
-    var underscore = require('underscore');
-    var backbone = require('backbone');
-
-    module.exports = factory(underscore, backbone);
-
-  } else if (typeof define === 'function' && define.amd) {
-
-    define(['underscore', 'backbone'], factory);
-
-  } 
-}(this, function (_, Backbone) {
-  "option strict";
-
-  // Backbone.ChildViewContainer
-// ---------------------------
-//
-// Provide a container to store, retrieve and
-// shut down child views.
-
-Backbone.ChildViewContainer = (function(Backbone, _){
-  
-  // Container Constructor
-  // ---------------------
-
-  var Container = function(views){
-    this._views = {};
-    this._indexByModel = {};
-    this._indexByCustom = {};
-    this._updateLength();
-
-    _.each(views, this.add, this);
-  };
-
-  // Container Methods
-  // -----------------
-
-  _.extend(Container.prototype, {
-
-    // Add a view to this container. Stores the view
-    // by `cid` and makes it searchable by the model
-    // cid (and model itself). Optionally specify
-    // a custom key to store an retrieve the view.
-    add: function(view, customIndex){
-      var viewCid = view.cid;
-
-      // store the view
-      this._views[viewCid] = view;
-
-      // index it by model
-      if (view.model){
-        this._indexByModel[view.model.cid] = viewCid;
-      }
-
-      // index by custom
-      if (customIndex){
-        this._indexByCustom[customIndex] = viewCid;
-      }
-
-      this._updateLength();
-    },
-
-    // Find a view by the model that was attached to
-    // it. Uses the model's `cid` to find it.
-    findByModel: function(model){
-      return this.findByModelCid(model.cid);
-    },
-
-    // Find a view by the `cid` of the model that was attached to
-    // it. Uses the model's `cid` to find the view `cid` and
-    // retrieve the view using it.
-    findByModelCid: function(modelCid){
-      var viewCid = this._indexByModel[modelCid];
-      return this.findByCid(viewCid);
-    },
-
-    // Find a view by a custom indexer.
-    findByCustom: function(index){
-      var viewCid = this._indexByCustom[index];
-      return this.findByCid(viewCid);
-    },
-
-    // Find by index. This is not guaranteed to be a
-    // stable index.
-    findByIndex: function(index){
-      return _.values(this._views)[index];
-    },
-
-    // retrieve a view by it's `cid` directly
-    findByCid: function(cid){
-      return this._views[cid];
-    },
-
-    // Remove a view
-    remove: function(view){
-      var viewCid = view.cid;
-
-      // delete model index
-      if (view.model){
-        delete this._indexByModel[view.model.cid];
-      }
-
-      // delete custom index
-      _.any(this._indexByCustom, function(cid, key) {
-        if (cid === viewCid) {
-          delete this._indexByCustom[key];
-          return true;
-        }
-      }, this);
-
-      // remove the view from the container
-      delete this._views[viewCid];
-
-      // update the length
-      this._updateLength();
-    },
-
-    // Call a method on every view in the container,
-    // passing parameters to the call method one at a
-    // time, like `function.call`.
-    call: function(method){
-      this.apply(method, _.tail(arguments));
-    },
-
-    // Apply a method on every view in the container,
-    // passing parameters to the call method one at a
-    // time, like `function.apply`.
-    apply: function(method, args){
-      _.each(this._views, function(view){
-        if (_.isFunction(view[method])){
-          view[method].apply(view, args || []);
-        }
-      });
-    },
-
-    // Update the `.length` attribute on this container
-    _updateLength: function(){
-      this.length = _.size(this._views);
-    }
-  });
-
-  // Borrowing this code from Backbone.Collection:
-  // http://backbonejs.org/docs/backbone.html#section-106
-  //
-  // Mix in methods from Underscore, for iteration, and other
-  // collection related features.
-  var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter', 
-    'select', 'reject', 'every', 'all', 'some', 'any', 'include', 
-    'contains', 'invoke', 'toArray', 'first', 'initial', 'rest', 
-    'last', 'without', 'isEmpty', 'pluck'];
-
-  _.each(methods, function(method) {
-    Container.prototype[method] = function() {
-      var views = _.values(this._views);
-      var args = [views].concat(_.toArray(arguments));
-      return _[method].apply(_, args);
-    };
-  });
-
-  // return the public API
-  return Container;
-})(Backbone, _);
-
-  return Backbone.ChildViewContainer; 
-
-}));
-
-
-},{"backbone":103,"underscore":9}],138:[function(require,module,exports){
-var events = require('events');
-var util = require('util');
-
-function Stream() {
-  events.EventEmitter.call(this);
-}
-util.inherits(Stream, events.EventEmitter);
-module.exports = Stream;
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream;
-
-Stream.prototype.pipe = function(dest, options) {
-  var source = this;
-
-  function ondata(chunk) {
-    if (dest.writable) {
-      if (false === dest.write(chunk) && source.pause) {
-        source.pause();
-      }
-    }
-  }
-
-  source.on('data', ondata);
-
-  function ondrain() {
-    if (source.readable && source.resume) {
-      source.resume();
-    }
-  }
-
-  dest.on('drain', ondrain);
-
-  // If the 'end' option is not supplied, dest.end() will be called when
-  // source gets the 'end' or 'close' events.  Only dest.end() once, and
-  // only when all sources have ended.
-  if (!dest._isStdio && (!options || options.end !== false)) {
-    dest._pipeCount = dest._pipeCount || 0;
-    dest._pipeCount++;
-
-    source.on('end', onend);
-    source.on('close', onclose);
-  }
-
-  var didOnEnd = false;
-  function onend() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    dest._pipeCount--;
-
-    // remove the listeners
-    cleanup();
-
-    if (dest._pipeCount > 0) {
-      // waiting for other incoming streams to end.
-      return;
-    }
-
-    dest.end();
-  }
-
-
-  function onclose() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    dest._pipeCount--;
-
-    // remove the listeners
-    cleanup();
-
-    if (dest._pipeCount > 0) {
-      // waiting for other incoming streams to end.
-      return;
-    }
-
-    dest.destroy();
-  }
-
-  // don't leave dangling pipes when there are errors.
-  function onerror(er) {
-    cleanup();
-    if (this.listeners('error').length === 0) {
-      throw er; // Unhandled stream error in pipe.
-    }
-  }
-
-  source.on('error', onerror);
-  dest.on('error', onerror);
-
-  // remove all the event listeners that were added.
-  function cleanup() {
-    source.removeListener('data', ondata);
-    dest.removeListener('drain', ondrain);
-
-    source.removeListener('end', onend);
-    source.removeListener('close', onclose);
-
-    source.removeListener('error', onerror);
-    dest.removeListener('error', onerror);
-
-    source.removeListener('end', cleanup);
-    source.removeListener('close', cleanup);
-
-    dest.removeListener('end', cleanup);
-    dest.removeListener('close', cleanup);
-  }
-
-  source.on('end', cleanup);
-  source.on('close', cleanup);
-
-  dest.on('end', cleanup);
-  dest.on('close', cleanup);
-
-  dest.emit('pipe', source);
-
-  // Allow for unix-like usage: A.pipe(B).pipe(C)
-  return dest;
-};
-
-},{"events":47,"util":46}],110:[function(require,module,exports){
+},{"backbone":102,"underscore":9}],110:[function(require,module,exports){
 (function(process,Buffer){var CombinedStream = require('combined-stream');
 var util = require('util');
 var path = require('path');
@@ -36184,7 +36194,7 @@ function populate(dst, src) {
 }
 
 })(require("__browserify_process"),require("__browserify_buffer").Buffer)
-},{"__browserify_buffer":125,"__browserify_process":49,"async":140,"combined-stream":141,"fs":124,"http":123,"https":122,"mime":139,"path":121,"url":42,"util":46}],131:[function(require,module,exports){
+},{"__browserify_buffer":125,"__browserify_process":49,"async":141,"combined-stream":140,"fs":124,"http":123,"https":122,"mime":139,"path":121,"url":43,"util":46}],131:[function(require,module,exports){
 (function(){var TreeNode = require('./TreeNode'),
   RootNode = require('./RootNode'),
   Backbone = require('backbone'),
@@ -36374,7 +36384,7 @@ EventsNode.acceptThisEventType = function () {
 
 
 })()
-},{"../view/NodeView.js":80,"./RootNode":23,"./TreeNode":45,"backbone":13,"underscore":9}],142:[function(require,module,exports){
+},{"../view/NodeView.js":81,"./RootNode":23,"./TreeNode":45,"backbone":12,"underscore":9}],142:[function(require,module,exports){
 (function(){/* global window, google, document */
 /*jshint -W084 */
 /*jshint -W089 */
@@ -37805,7 +37815,7 @@ mime.charsets = {
 module.exports = mime;
 
 })(require("__browserify_process"),"/..\\node_modules\\pryv\\node_modules\\form-data\\node_modules\\mime")
-},{"__browserify_process":49,"fs":124,"path":121}],140:[function(require,module,exports){
+},{"__browserify_process":49,"fs":124,"path":121}],141:[function(require,module,exports){
 (function(process){/*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
@@ -38766,7 +38776,129 @@ module.exports = mime;
 }());
 
 })(require("__browserify_process"))
-},{"__browserify_process":49}],127:[function(require,module,exports){
+},{"__browserify_process":49}],143:[function(require,module,exports){
+var Stream = require('stream');
+var util = require('util');
+
+var Response = module.exports = function (res) {
+    this.offset = 0;
+    this.readable = true;
+};
+
+util.inherits(Response, Stream);
+
+var capable = {
+    streaming : true,
+    status2 : true
+};
+
+function parseHeaders (res) {
+    var lines = res.getAllResponseHeaders().split(/\r?\n/);
+    var headers = {};
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line === '') continue;
+        
+        var m = line.match(/^([^:]+):\s*(.*)/);
+        if (m) {
+            var key = m[1].toLowerCase(), value = m[2];
+            
+            if (headers[key] !== undefined) {
+            
+                if (isArray(headers[key])) {
+                    headers[key].push(value);
+                }
+                else {
+                    headers[key] = [ headers[key], value ];
+                }
+            }
+            else {
+                headers[key] = value;
+            }
+        }
+        else {
+            headers[line] = true;
+        }
+    }
+    return headers;
+}
+
+Response.prototype.getResponse = function (xhr) {
+    var respType = String(xhr.responseType).toLowerCase();
+    if (respType === 'blob') return xhr.responseBlob || xhr.response;
+    if (respType === 'arraybuffer') return xhr.response;
+    return xhr.responseText;
+}
+
+Response.prototype.getHeader = function (key) {
+    return this.headers[key.toLowerCase()];
+};
+
+Response.prototype.handle = function (res) {
+    if (res.readyState === 2 && capable.status2) {
+        try {
+            this.statusCode = res.status;
+            this.headers = parseHeaders(res);
+        }
+        catch (err) {
+            capable.status2 = false;
+        }
+        
+        if (capable.status2) {
+            this.emit('ready');
+        }
+    }
+    else if (capable.streaming && res.readyState === 3) {
+        try {
+            if (!this.statusCode) {
+                this.statusCode = res.status;
+                this.headers = parseHeaders(res);
+                this.emit('ready');
+            }
+        }
+        catch (err) {}
+        
+        try {
+            this._emitData(res);
+        }
+        catch (err) {
+            capable.streaming = false;
+        }
+    }
+    else if (res.readyState === 4) {
+        if (!this.statusCode) {
+            this.statusCode = res.status;
+            this.emit('ready');
+        }
+        this._emitData(res);
+        
+        if (res.error) {
+            this.emit('error', this.getResponse(res));
+        }
+        else this.emit('end');
+        
+        this.emit('close');
+    }
+};
+
+Response.prototype._emitData = function (res) {
+    var respBody = this.getResponse(res);
+    if (respBody.toString().match(/ArrayBuffer/)) {
+        this.emit('data', new Uint8Array(respBody, this.offset));
+        this.offset = respBody.byteLength;
+        return;
+    }
+    if (respBody.length > this.offset) {
+        this.emit('data', respBody.slice(this.offset));
+        this.offset = respBody.length;
+    }
+};
+
+var isArray = Array.isArray || function (xs) {
+    return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+},{"stream":138,"util":46}],127:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -38860,7 +38992,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"../../../numericals/ChartModel.js":101,"../../../numericals/ChartView.js":98,"backbone.marionette":11,"underscore":9}],126:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":99,"../../../numericals/ChartView.js":98,"backbone.marionette":11,"underscore":9}],126:[function(require,module,exports){
 (function(){/* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -39085,129 +39217,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"../../../numericals/ChartModel.js":101,"../../../numericals/ChartView.js":98,"backbone.marionette":11,"underscore":9}],143:[function(require,module,exports){
-var Stream = require('stream');
-var util = require('util');
-
-var Response = module.exports = function (res) {
-    this.offset = 0;
-    this.readable = true;
-};
-
-util.inherits(Response, Stream);
-
-var capable = {
-    streaming : true,
-    status2 : true
-};
-
-function parseHeaders (res) {
-    var lines = res.getAllResponseHeaders().split(/\r?\n/);
-    var headers = {};
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (line === '') continue;
-        
-        var m = line.match(/^([^:]+):\s*(.*)/);
-        if (m) {
-            var key = m[1].toLowerCase(), value = m[2];
-            
-            if (headers[key] !== undefined) {
-            
-                if (isArray(headers[key])) {
-                    headers[key].push(value);
-                }
-                else {
-                    headers[key] = [ headers[key], value ];
-                }
-            }
-            else {
-                headers[key] = value;
-            }
-        }
-        else {
-            headers[line] = true;
-        }
-    }
-    return headers;
-}
-
-Response.prototype.getResponse = function (xhr) {
-    var respType = String(xhr.responseType).toLowerCase();
-    if (respType === 'blob') return xhr.responseBlob || xhr.response;
-    if (respType === 'arraybuffer') return xhr.response;
-    return xhr.responseText;
-}
-
-Response.prototype.getHeader = function (key) {
-    return this.headers[key.toLowerCase()];
-};
-
-Response.prototype.handle = function (res) {
-    if (res.readyState === 2 && capable.status2) {
-        try {
-            this.statusCode = res.status;
-            this.headers = parseHeaders(res);
-        }
-        catch (err) {
-            capable.status2 = false;
-        }
-        
-        if (capable.status2) {
-            this.emit('ready');
-        }
-    }
-    else if (capable.streaming && res.readyState === 3) {
-        try {
-            if (!this.statusCode) {
-                this.statusCode = res.status;
-                this.headers = parseHeaders(res);
-                this.emit('ready');
-            }
-        }
-        catch (err) {}
-        
-        try {
-            this._emitData(res);
-        }
-        catch (err) {
-            capable.streaming = false;
-        }
-    }
-    else if (res.readyState === 4) {
-        if (!this.statusCode) {
-            this.statusCode = res.status;
-            this.emit('ready');
-        }
-        this._emitData(res);
-        
-        if (res.error) {
-            this.emit('error', this.getResponse(res));
-        }
-        else this.emit('end');
-        
-        this.emit('close');
-    }
-};
-
-Response.prototype._emitData = function (res) {
-    var respBody = this.getResponse(res);
-    if (respBody.toString().match(/ArrayBuffer/)) {
-        this.emit('data', new Uint8Array(respBody, this.offset));
-        this.offset = respBody.byteLength;
-        return;
-    }
-    if (respBody.length > this.offset) {
-        this.emit('data', respBody.slice(this.offset));
-        this.offset = respBody.length;
-    }
-};
-
-var isArray = Array.isArray || function (xs) {
-    return Object.prototype.toString.call(xs) === '[object Array]';
-};
-
-},{"stream":138,"util":46}],130:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":99,"../../../numericals/ChartView.js":98,"backbone.marionette":11,"underscore":9}],130:[function(require,module,exports){
 var _ = require('underscore'),
   NotesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -39316,193 +39326,9 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":145,"./View.js":144,"underscore":9}],132:[function(require,module,exports){
-(function(){/* global $*/
+},{"../common/Model.js":145,"./View.js":144,"underscore":9}],133:[function(require,module,exports){
 var _ = require('underscore'),
-  ActivityView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = ActivityView;
-    this.eventDisplayed = null;
-    this.modelContent = {};
-    this.data = [];
-    this.options = {};
-    this.totalTime = 0;
-    this.updateEachSecond = false;
-    this.updateTime = _.debounce(this.updateEachSecondTime.bind(this), 2000);
-    this.updateFull = _.debounce(this.fullRefresh.bind(this), 30000);
-  },
-  {
-    beforeRefreshModelView: function () {
-      this.sumTime();
-
-      this.options = {
-        series: {
-          pie: {
-            show: true,
-            innerRadius: 0.5,
-            label: {
-              show: false,
-              radius: 3 / 4,
-              formatter: function (label) { return label; },
-              background: {
-                opacity: 0
-              }
-            }
-          }
-        }
-      };
-      this.modelContent = {
-        options: this.options,
-        data: this.data,
-        content: this.eventDisplayed.content,
-        description: this.eventDisplayed.description,
-        id: this.eventDisplayed.id,
-        modified: this.eventDisplayed.modified,
-        streamId: this.eventDisplayed.streamId,
-        tags: this.eventDisplayed.tags,
-        time: this.eventDisplayed.time,
-        type: this.eventDisplayed.type,
-        eventsNbr: _.size(this.events),
-        dimensions: this.computeDimension(),
-        totalTime: this.totalTime
-      };
-
-      if (this.updateEachSecond) {
-        this.updateTime();
-        this.updateFull();
-      }
-    },
-    computeDimension: function () {
-      var chartSizeWidth = null;
-      var chartSizeHeight = null;
-
-      if (this.width !== null) {
-        chartSizeWidth = this.width;
-      } else if ($('#' + this.container).length)  {
-        chartSizeWidth = $('#' + this.container).width();
-      } else if ($('#' + this.container).length)  {
-        chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
-      }
-
-      if (this.height !== null) {
-        chartSizeHeight = this.height;
-      } else if ($('#' + this.container).length)  {
-        chartSizeHeight = $('#' + this.container).height();
-      } else if ($('#' + this.container).length)  {
-        chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
-      }
-      return {width: chartSizeWidth, height: chartSizeHeight};
-    },
-    sumTime : function () {
-      this.updateEachSecond = false;
-      var timeSumByStream = {};
-
-      // group by stream
-      _.each(this.events, function (e) {
-        if (!timeSumByStream[e.streamId]) {
-          timeSumByStream[e.streamId] = {
-            stream: e.stream,
-            time: 0
-          };
-        }
-        var toAdd = 0;
-
-        if (e.hasOwnProperty('duration') && !isNaN(e.duration)) {
-          toAdd = e.duration;
-        } else {
-          this.updateEachSecond = true;
-          toAdd = (((new Date()).getTime() / 1000) - e.created);
-        }
-        timeSumByStream[e.streamId].time += toAdd;
-      }.bind(this));
-
-
-      // Merge childs into parent, such that all are a the same level
-
-      this.data = [];
-      for (var s in timeSumByStream) {
-        if (timeSumByStream.hasOwnProperty(s)) {
-          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
-        }
-      }
-
-      this.totalTime = 0;
-      _.each(this.data, function (e) {
-        this.totalTime += e.data;
-      }.bind(this));
-    },
-    updateEachSecondTime: function () {
-      if (this.container && $('#' + this.container).length !== 0  && this.updateEachSecond) {
-        this.sumTime();
-        if (this.modelView) {
-          this.modelView.set('totalTime', this.totalTime);
-        }
-        this.updateTime();
-      }
-    },
-    fullRefresh: function () {
-      if (this.container && $('#' + this.container).length !== 0 && this.updateEachSecond) {
-        this.refresh();
-        this.updateFull();
-      }
-    }
-
-  }
-);
-})()
-},{"../common/Model.js":145,"./View.js":146,"underscore":9}],134:[function(require,module,exports){
-var _ = require('underscore'),
-  PositionsView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
-
-module.exports = CommonModel.implement(
-  function (events, params) {
-    CommonModel.call(this, events, params);
-    this.typeView = PositionsView;
-    this.modelContent = {};
-    this.positions = [];
-  },
-
-  {
-    OnDateHighlightedChange: function (time) {
-      this.highlightedTime = time;
-      if (this.view) {
-        this.view.onDateHighLighted(time);
-      }
-      if (this.detailedView) {
-        this.detailedView.highlightDate(this.highlightedTime);
-      }
-    },
-
-    _findEventToDisplay: function () {},
-
-    beforeRefreshModelView: function () {
-      // if (this.positions.length !== _.size(this.events)) {
-      this.positions = [];
-      _.each(this.events, function (event) {
-        this.positions.push(event);
-      }, this);
-      this.positions = this.positions.sort(function (a, b) {
-        return a.time <= b.time ? -1 : 1;
-      });
-      //  }
-      this.modelContent = {
-        positions: this.positions,
-        posWidth: this.width,
-        posHeight: this.height,
-        id: this.id,
-        eventsNbr: this.positions.length
-      };
-    }
-  }
-);
-},{"../common/Model.js":145,"./View.js":147,"underscore":9}],133:[function(require,module,exports){
-var _ = require('underscore'),
-  TweetsView = require('./View.js'),
+  PicturesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
 var minWidth = 300;
 var minHeight = 200;
@@ -39511,7 +39337,7 @@ var maxHeight = 200;
 module.exports = CommonModel.implement(
   function (events, params) {
     CommonModel.call(this, events, params);
-    this.typeView = TweetsView;
+    this.typeView = PicturesView;
     this.eventDisplayed = null;
     this.modelContent = {};
     this.nbrDisplayW = -1;
@@ -39581,6 +39407,23 @@ module.exports = CommonModel.implement(
         }
 
       }
+      /* DEBUG
+      var times = [];
+      var diff = [];
+      var error = false;
+      for (var k = 0; k < this.eventsToDisplay.length; k++) {
+        times[k] = this.eventsToDisplay[k].time;
+        if (times[k - 1] && times[k - 1] > times[k]) {
+          error = true;
+        }
+        diff[k] = Math.abs(this.highlightedTime - this.eventsToDisplay[k].time);
+      }
+      if (error) {
+        console.error('highlight', this.highlightedTime, 'times', times, 'diff', diff);
+      } else {
+        console.log('highlight', this.highlightedTime, 'times', times, 'diff', diff);
+      }
+      */
     },
     beforeRefreshModelView: function () {
       for (var i = 0; i < this.eventsToDisplay.length; ++i) {
@@ -39598,6 +39441,8 @@ module.exports = CommonModel.implement(
         this.eventsToDisplay[i].height = height * this.height / 100.0;
         this.eventsToDisplay[i].top = top * this.height / 100.0;
         this.eventsToDisplay[i].left = left * this.width / 100.0;
+        this.eventsToDisplay[i].picUrl = this.eventsToDisplay[i]
+            .getPicturePreview(width * this.width / 100.0, height * this.height / 100.0);
       }
 
       this.modelContent = {
@@ -39609,7 +39454,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":145,"./View.js":148,"underscore":9}],135:[function(require,module,exports){
+},{"../common/Model.js":145,"./View.js":146,"underscore":9}],135:[function(require,module,exports){
 (function(){/* global window, $ */
 
 var _ = require('underscore'),
@@ -39964,9 +39809,176 @@ NumericalsPlugin.prototype.resize = function () {
 };
 
 })()
-},{"../detailed/Controller.js":25,"./ChartModel.js":101,"./ChartView.js":98,"./TimeSeriesCollection.js":99,"./TimeSeriesModel.js":100,"./utils/ChartSettings.js":22,"underscore":9}],136:[function(require,module,exports){
+},{"../detailed/Controller.js":25,"./ChartModel.js":99,"./ChartView.js":98,"./TimeSeriesCollection.js":100,"./TimeSeriesModel.js":101,"./utils/ChartSettings.js":22,"underscore":9}],132:[function(require,module,exports){
+(function(){/* global $*/
 var _ = require('underscore'),
-  PicturesView = require('./View.js'),
+  ActivityView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = ActivityView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+    this.data = [];
+    this.options = {};
+    this.totalTime = 0;
+    this.updateEachSecond = false;
+    this.updateTime = _.debounce(this.updateEachSecondTime.bind(this), 2000);
+    this.updateFull = _.debounce(this.fullRefresh.bind(this), 30000);
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.sumTime();
+
+      this.options = {
+        series: {
+          pie: {
+            show: true,
+            innerRadius: 0.5,
+            label: {
+              show: false,
+              radius: 3 / 4,
+              formatter: function (label) { return label; },
+              background: {
+                opacity: 0
+              }
+            }
+          }
+        }
+      };
+      this.modelContent = {
+        options: this.options,
+        data: this.data,
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        eventsNbr: _.size(this.events),
+        dimensions: this.computeDimension(),
+        totalTime: this.totalTime
+      };
+
+      if (this.updateEachSecond) {
+        this.updateTime();
+        this.updateFull();
+      }
+    },
+    computeDimension: function () {
+      var chartSizeWidth = null;
+      var chartSizeHeight = null;
+
+      if (this.width !== null) {
+        chartSizeWidth = this.width;
+      } else if ($('#' + this.container).length)  {
+        chartSizeWidth = $('#' + this.container).width();
+      } else if ($('#' + this.container).length)  {
+        chartSizeWidth = parseInt($('#' + this.container).prop('style').width.split('px')[0], 0);
+      }
+
+      if (this.height !== null) {
+        chartSizeHeight = this.height;
+      } else if ($('#' + this.container).length)  {
+        chartSizeHeight = $('#' + this.container).height();
+      } else if ($('#' + this.container).length)  {
+        chartSizeHeight = parseInt($('#' + this.container).prop('style').height.split('px')[0], 0);
+      }
+      return {width: chartSizeWidth, height: chartSizeHeight};
+    },
+    sumTime : function () {
+      this.updateEachSecond = false;
+      var timeSumByStream = {};
+
+      // group by stream
+      _.each(this.events, function (e) {
+        if (!timeSumByStream[e.streamId]) {
+          timeSumByStream[e.streamId] = {
+            stream: e.stream,
+            time: 0
+          };
+        }
+        var toAdd = 0;
+
+        if (e.hasOwnProperty('duration') && !isNaN(e.duration)) {
+          toAdd = e.duration;
+        } else {
+          this.updateEachSecond = true;
+          toAdd = (((new Date()).getTime() / 1000) - e.created);
+        }
+        timeSumByStream[e.streamId].time += toAdd;
+      }.bind(this));
+
+
+      // Merge childs into parent, such that all are a the same level
+
+      this.data = [];
+      for (var s in timeSumByStream) {
+        if (timeSumByStream.hasOwnProperty(s)) {
+          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
+        }
+      }
+
+      this.totalTime = 0;
+      _.each(this.data, function (e) {
+        this.totalTime += e.data;
+      }.bind(this));
+    },
+    updateEachSecondTime: function () {
+      if (this.container && $('#' + this.container).length !== 0  && this.updateEachSecond) {
+        this.sumTime();
+        if (this.modelView) {
+          this.modelView.set('totalTime', this.totalTime);
+        }
+        this.updateTime();
+      }
+    },
+    fullRefresh: function () {
+      if (this.container && $('#' + this.container).length !== 0 && this.updateEachSecond) {
+        this.refresh();
+        this.updateFull();
+      }
+    }
+
+  }
+);
+})()
+},{"../common/Model.js":145,"./View.js":147,"underscore":9}],136:[function(require,module,exports){
+var _ = require('underscore'),
+  GenericsView = require('./View.js'),
+  CommonModel = require('../common/Model.js');
+
+module.exports = CommonModel.implement(
+  function (events, params) {
+    CommonModel.call(this, events, params);
+    this.typeView = GenericsView;
+    this.eventDisplayed = null;
+    this.modelContent = {};
+  },
+  {
+    beforeRefreshModelView: function () {
+      this.modelContent = {
+        content: this.eventDisplayed.content,
+        description: this.eventDisplayed.description,
+        id: this.eventDisplayed.id,
+        modified: this.eventDisplayed.modified,
+        streamId: this.eventDisplayed.streamId,
+        tags: this.eventDisplayed.tags,
+        time: this.eventDisplayed.time,
+        type: this.eventDisplayed.type,
+        event: this.eventDisplayed,
+        eventsNbr: _.size(this.events)
+      };
+    }
+  }
+);
+},{"../common/Model.js":145,"./View.js":148,"underscore":9}],137:[function(require,module,exports){
+var _ = require('underscore'),
+  TweetsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
 var minWidth = 300;
 var minHeight = 200;
@@ -39975,7 +39987,7 @@ var maxHeight = 200;
 module.exports = CommonModel.implement(
   function (events, params) {
     CommonModel.call(this, events, params);
-    this.typeView = PicturesView;
+    this.typeView = TweetsView;
     this.eventDisplayed = null;
     this.modelContent = {};
     this.nbrDisplayW = -1;
@@ -40045,23 +40057,6 @@ module.exports = CommonModel.implement(
         }
 
       }
-      /* DEBUG
-      var times = [];
-      var diff = [];
-      var error = false;
-      for (var k = 0; k < this.eventsToDisplay.length; k++) {
-        times[k] = this.eventsToDisplay[k].time;
-        if (times[k - 1] && times[k - 1] > times[k]) {
-          error = true;
-        }
-        diff[k] = Math.abs(this.highlightedTime - this.eventsToDisplay[k].time);
-      }
-      if (error) {
-        console.error('highlight', this.highlightedTime, 'times', times, 'diff', diff);
-      } else {
-        console.log('highlight', this.highlightedTime, 'times', times, 'diff', diff);
-      }
-      */
     },
     beforeRefreshModelView: function () {
       for (var i = 0; i < this.eventsToDisplay.length; ++i) {
@@ -40079,8 +40074,6 @@ module.exports = CommonModel.implement(
         this.eventsToDisplay[i].height = height * this.height / 100.0;
         this.eventsToDisplay[i].top = top * this.height / 100.0;
         this.eventsToDisplay[i].left = left * this.width / 100.0;
-        this.eventsToDisplay[i].picUrl = this.eventsToDisplay[i]
-            .getPicturePreview(width * this.width / 100.0, height * this.height / 100.0);
       }
 
       this.modelContent = {
@@ -40092,31 +40085,48 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":145,"./View.js":149,"underscore":9}],137:[function(require,module,exports){
+},{"../common/Model.js":145,"./View.js":149,"underscore":9}],134:[function(require,module,exports){
 var _ = require('underscore'),
-  GenericsView = require('./View.js'),
+  PositionsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
 
 module.exports = CommonModel.implement(
   function (events, params) {
     CommonModel.call(this, events, params);
-    this.typeView = GenericsView;
-    this.eventDisplayed = null;
+    this.typeView = PositionsView;
     this.modelContent = {};
+    this.positions = [];
   },
+
   {
+    OnDateHighlightedChange: function (time) {
+      this.highlightedTime = time;
+      if (this.view) {
+        this.view.onDateHighLighted(time);
+      }
+      if (this.detailedView) {
+        this.detailedView.highlightDate(this.highlightedTime);
+      }
+    },
+
+    _findEventToDisplay: function () {},
+
     beforeRefreshModelView: function () {
+      // if (this.positions.length !== _.size(this.events)) {
+      this.positions = [];
+      _.each(this.events, function (event) {
+        this.positions.push(event);
+      }, this);
+      this.positions = this.positions.sort(function (a, b) {
+        return a.time <= b.time ? -1 : 1;
+      });
+      //  }
       this.modelContent = {
-        content: this.eventDisplayed.content,
-        description: this.eventDisplayed.description,
-        id: this.eventDisplayed.id,
-        modified: this.eventDisplayed.modified,
-        streamId: this.eventDisplayed.streamId,
-        tags: this.eventDisplayed.tags,
-        time: this.eventDisplayed.time,
-        type: this.eventDisplayed.type,
-        event: this.eventDisplayed,
-        eventsNbr: _.size(this.events)
+        positions: this.positions,
+        posWidth: this.width,
+        posHeight: this.height,
+        id: this.id,
+        eventsNbr: this.positions.length
       };
     }
   }
@@ -40312,7 +40322,7 @@ var indexOf = function (xs, x) {
 
 }());
 
-},{}],141:[function(require,module,exports){
+},{}],140:[function(require,module,exports){
 (function(Buffer){var util = require('util');
 var Stream = require('stream').Stream;
 var DelayedStream = require('delayed-stream');
@@ -40611,6 +40621,111 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
+},{"backbone.marionette":11,"underscore":9}],146:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette'),
+  _ = require('underscore');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#picturesView',
+  container: null,
+  animation: null,
+  currentId: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+
+  },
+  change: function () {
+    if (!this.currentId || this.currentId !== this.model.get('id')) {
+      $('#' + this.container).removeClass('animated ' + this.animation);
+      this.animation = '';
+      this.$el.attr('id', this.model.get('id'));
+      this.currentId = this.model.get('id');
+    } else {
+      this.animation = null;
+    }
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.currentId = this.model.get('id');
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      var $mosaics = $('#' + this.container + ' .mosaic');
+      var events = this.model.get('events');
+      var displayedIds  = [];
+      _.each($mosaics, function (mosaic) {
+        displayedIds.push($(mosaic).attr('id'));
+      });
+      _.each(events, function (event) {
+        var index = displayedIds.indexOf(event.id);
+        if (index !== -1) {
+          $('#' + event.id).css({
+            width: event.width,
+            height: event.height,
+            top: event.top,
+            left: event.left
+          });
+          displayedIds[index] = null;
+        } else {
+          var toAdd = $('<div></div>').addClass('mosaic node').attr('id', event.id)
+            .css({
+              'background': 'url(' + event.picUrl + ') no-repeat center center',
+              '-webkit-background-size': 'cover',
+              '-moz-background-size': 'cover',
+              '-o-background-size': 'cover',
+              'background-size': 'cover',
+              'width': event.width,
+              'height': event.height,
+              'top': event.top,
+              'left': event.left,
+              'position': 'absolute'
+            });
+          $('#' + this.container).append(toAdd.fadeIn());
+        }
+      }.bind(this));
+      _.each(displayedIds, function (id) {
+        if (id) {
+          $('#' + id).remove();
+        }
+      });
+      var $eventsNbr = $('#' + this.container + ' .aggregated-nbr-events');
+      if ($eventsNbr.length === 0) {
+        if (this.model.get('eventsNbr') > 1) {
+          $('#' + this.container).append('<span class="aggregated-nbr-events">' +
+          this.model.get('eventsNbr') + '</span>');
+        }
+        $('#' + this.container).bind('click', function () {
+          this.trigger('nodeClicked');
+        }.bind(this));
+      } else {
+        $eventsNbr.html(this.model.get('eventsNbr'));
+      }
+
+
+
+
+      $('#' + this.container).removeClass('animated fadeIn');
+
+      if (this.animation) {
+        $('#' + this.container).addClass('animated ' + this.animation);
+        setTimeout(function () {
+          $('#' + this.container).removeClass('animated ' + this.animation);
+        }.bind(this), 1000);
+      }
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
 },{"backbone.marionette":11,"underscore":9}],145:[function(require,module,exports){
 (function(){/* global $*/
 var _ = require('underscore'),
@@ -40805,7 +40920,81 @@ _.extend(Model.prototype, {
 });
 
 })()
-},{"backbone":13,"underscore":9}],146:[function(require,module,exports){
+},{"backbone":12,"underscore":9}],148:[function(require,module,exports){
+(function(){/* global $ */
+var  Marionette = require('backbone.marionette');
+var _ = require('underscore');
+
+module.exports = Marionette.ItemView.extend({
+  template: '#genericsView',
+  container: null,
+  animation: null,
+  templateHelpers: function () {
+    return {
+      getContent: function () {
+        var event = this.model.get('event');
+        if (event.type.split('/')[0] === 'url') {
+          return  '<a href="' + event.content + '" target="_blank">' + event.content + '</a>';
+        }
+        if (_.isString(event.content)) {
+          return event.content;
+        }
+        if (_.isNumber(event.content)) {
+          return '<span class="value">' + event.content + '</span>';
+        }
+        if (_.isObject(event.content)) {
+          return JSON.stringify(event.content, null, 2);
+        }
+        if (event.attachments) {
+          var keys = _.keys(event.attachments);
+          var href = event.url + '/' + event.attachments[keys[0]].id + '/' +
+            event.attachments[keys[0]].fileName + '?readToken=' +
+            event.attachments[keys[0]].readToken;
+          return '<p><span class="fa fa-paperclip fa-2x"></span> </p>' +
+            '<p><a href="' + href + '" target="_blank">' +
+            event.attachments[keys[0]].fileName + '</a></p>';
+        }
+        return '<p><span class="fa fa-2x fa-question"></span></p>' +
+          '<p>' + event.type + '</p>';
+      }.bind(this)
+    };
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+  },
+  change: function () {
+    $('#' + this.container).removeClass('animated ' + this.animation);
+    this.animation = 'pulse';
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      $('#' + this.container).removeClass('animated fadeIn');
+      $('#' + this.container).html(this.el);
+      $('#' + this.container).bind('click', function () {
+        this.trigger('nodeClicked');
+      }.bind(this));
+      $('#' + this.container).addClass('animated ' + this.animation);
+      setTimeout(function () {
+        $('#' + this.container).removeClass('animated ' + this.animation);
+      }.bind(this), 1000);
+      $('#' + this.container).find('.content').dotdotdot();
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":11,"underscore":9}],147:[function(require,module,exports){
 (function(){/* global $, moment*/
 var  Marionette = require('backbone.marionette');
 var Moment = moment;
@@ -40933,7 +41122,135 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"backbone.marionette":11}],147:[function(require,module,exports){
+},{"backbone.marionette":11}],149:[function(require,module,exports){
+(function(){/* global $, window */
+var  Marionette = require('backbone.marionette'),
+    _ = require('underscore');
+
+var getUrl =  function (event) {
+  var id = event.content.id,
+      screenName = event.content['screen-name'],
+      date = new Date(event.time * 1000);
+  return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
+      'data-datetime="' + date.toISOString() + '">' +
+      window.PryvBrowser.getTimeString(event.time) + '</a>';
+};
+module.exports = Marionette.ItemView.extend({
+  template: '#picturesView',
+  container: null,
+  animation: null,
+  currentId: null,
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.change);
+    this.$el.css('height', '100%');
+    this.$el.css('width', '100%');
+    this.$el.addClass('animated node');
+
+  },
+  change: function () {
+    if (!this.currentId || this.currentId !== this.model.get('id')) {
+      $('#' + this.container).removeClass('animated ' + this.animation);
+      this.animation = '';
+      this.$el.attr('id', this.model.get('id'));
+      this.currentId = this.model.get('id');
+    } else {
+      this.animation = null;
+    }
+    this.render();
+  },
+  renderView: function (container) {
+    this.container = container;
+    this.animation = 'bounceIn';
+    this.currentId = this.model.get('id');
+    this.render();
+  },
+  onRender: function () {
+    if (this.container) {
+      var $mosaics = $('#' + this.container + ' .mosaic');
+      var events = this.model.get('events');
+      var displayedIds  = [];
+      _.each($mosaics, function (mosaic) {
+        displayedIds.push($(mosaic).attr('id'));
+      });
+      _.each(events, function (event) {
+        var index = displayedIds.indexOf(event.id);
+        if (index !== -1) {
+          $('#' + event.id).css({
+            width: event.width,
+            height: event.height,
+            top: event.top,
+            left: event.left
+          }).find('.Center-Block').html('<div class="tweet" >' +
+                  '<p>' + event.content.text + '</p><p>&mdash;' +
+                  '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
+                  '</p></div>');
+
+          displayedIds[index] = null;
+        } else {
+
+          var toAdd = $('<div></div>')
+            .addClass('mosaic node content Center-Container is-Table').attr('id', event.id)
+            .append(
+              '<div class="content Center-Container is-Table">' +
+              '<div class="Table-Cell">' +
+              '<div class="Center-Block">' +
+              '<div class="tweet" >' +
+              '<p>' + event.content.text + '</p><p>&mdash;' +
+              '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
+              '</p></div>' +
+              '</div>' +
+              '</div>' +
+              '</div>')
+            .css({
+              'width': event.width,
+              'height': event.height,
+              'top': event.top,
+              'left': event.left,
+              'position': 'absolute'
+            });
+          $('#' + this.container).append(toAdd.fadeIn());
+          setTimeout(function () {
+            $('#' + event.id).dotdotdot({watch: true});
+          }, 800);
+        }
+      }.bind(this));
+      _.each(displayedIds, function (id) {
+        if (id) {
+          $('#' + id).remove();
+        }
+      });
+      var $eventsNbr = $('#' + this.container + ' .aggregated-nbr-events');
+      if ($eventsNbr.length === 0) {
+        if (this.model.get('eventsNbr') > 1) {
+          $('#' + this.container).append('<span class="aggregated-nbr-events">' +
+              this.model.get('eventsNbr') + '</span>');
+        }
+        $('#' + this.container).bind('click', function () {
+          this.trigger('nodeClicked');
+        }.bind(this));
+      } else {
+        $eventsNbr.html(this.model.get('eventsNbr'));
+      }
+
+
+
+
+      $('#' + this.container).removeClass('animated fadeIn');
+
+      if (this.animation) {
+        $('#' + this.container).addClass('animated ' + this.animation);
+        setTimeout(function () {
+          $('#' + this.container).removeClass('animated ' + this.animation);
+        }.bind(this), 1000);
+      }
+    }
+  },
+  close: function () {
+    this.remove();
+  }
+});
+})()
+},{"backbone.marionette":11,"underscore":9}],150:[function(require,module,exports){
 (function(){/* global document, $ */
 var  Marionette = require('backbone.marionette'),
   MapLoader = require('google-maps'),
@@ -41129,314 +41446,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 })()
-},{"./utility/markerclusterer.js":142,"backbone.marionette":11,"google-maps":107,"underscore":9}],148:[function(require,module,exports){
-(function(){/* global $, window */
-var  Marionette = require('backbone.marionette'),
-    _ = require('underscore');
-
-var getUrl =  function (event) {
-  var id = event.content.id,
-      screenName = event.content['screen-name'],
-      date = new Date(event.time * 1000);
-  return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
-      'data-datetime="' + date.toISOString() + '">' +
-      window.PryvBrowser.getTimeString(event.time) + '</a>';
-};
-module.exports = Marionette.ItemView.extend({
-  template: '#picturesView',
-  container: null,
-  animation: null,
-  currentId: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-
-  },
-  change: function () {
-    if (!this.currentId || this.currentId !== this.model.get('id')) {
-      $('#' + this.container).removeClass('animated ' + this.animation);
-      this.animation = '';
-      this.$el.attr('id', this.model.get('id'));
-      this.currentId = this.model.get('id');
-    } else {
-      this.animation = null;
-    }
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.currentId = this.model.get('id');
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      var $mosaics = $('#' + this.container + ' .mosaic');
-      var events = this.model.get('events');
-      var displayedIds  = [];
-      _.each($mosaics, function (mosaic) {
-        displayedIds.push($(mosaic).attr('id'));
-      });
-      _.each(events, function (event) {
-        var index = displayedIds.indexOf(event.id);
-        if (index !== -1) {
-          $('#' + event.id).css({
-            width: event.width,
-            height: event.height,
-            top: event.top,
-            left: event.left
-          }).find('.Center-Block').html('<div class="tweet" >' +
-                  '<p>' + event.content.text + '</p><p>&mdash;' +
-                  '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
-                  '</p></div>');
-
-          displayedIds[index] = null;
-        } else {
-
-          var toAdd = $('<div></div>')
-            .addClass('mosaic node content Center-Container is-Table').attr('id', event.id)
-            .append(
-              '<div class="content Center-Container is-Table">' +
-              '<div class="Table-Cell">' +
-              '<div class="Center-Block">' +
-              '<div class="tweet" >' +
-              '<p>' + event.content.text + '</p><p>&mdash;' +
-              '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
-              '</p></div>' +
-              '</div>' +
-              '</div>' +
-              '</div>')
-            .css({
-              'width': event.width,
-              'height': event.height,
-              'top': event.top,
-              'left': event.left,
-              'position': 'absolute'
-            });
-          $('#' + this.container).append(toAdd.fadeIn());
-          setTimeout(function () {
-            $('#' + event.id).dotdotdot({watch: true});
-          }, 800);
-        }
-      }.bind(this));
-      _.each(displayedIds, function (id) {
-        if (id) {
-          $('#' + id).remove();
-        }
-      });
-      var $eventsNbr = $('#' + this.container + ' .aggregated-nbr-events');
-      if ($eventsNbr.length === 0) {
-        if (this.model.get('eventsNbr') > 1) {
-          $('#' + this.container).append('<span class="aggregated-nbr-events">' +
-              this.model.get('eventsNbr') + '</span>');
-        }
-        $('#' + this.container).bind('click', function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
-      } else {
-        $eventsNbr.html(this.model.get('eventsNbr'));
-      }
-
-
-
-
-      $('#' + this.container).removeClass('animated fadeIn');
-
-      if (this.animation) {
-        $('#' + this.container).addClass('animated ' + this.animation);
-        setTimeout(function () {
-          $('#' + this.container).removeClass('animated ' + this.animation);
-        }.bind(this), 1000);
-      }
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":11,"underscore":9}],149:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette'),
-  _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#picturesView',
-  container: null,
-  animation: null,
-  currentId: null,
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-
-  },
-  change: function () {
-    if (!this.currentId || this.currentId !== this.model.get('id')) {
-      $('#' + this.container).removeClass('animated ' + this.animation);
-      this.animation = '';
-      this.$el.attr('id', this.model.get('id'));
-      this.currentId = this.model.get('id');
-    } else {
-      this.animation = null;
-    }
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.currentId = this.model.get('id');
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      var $mosaics = $('#' + this.container + ' .mosaic');
-      var events = this.model.get('events');
-      var displayedIds  = [];
-      _.each($mosaics, function (mosaic) {
-        displayedIds.push($(mosaic).attr('id'));
-      });
-      _.each(events, function (event) {
-        var index = displayedIds.indexOf(event.id);
-        if (index !== -1) {
-          $('#' + event.id).css({
-            width: event.width,
-            height: event.height,
-            top: event.top,
-            left: event.left
-          });
-          displayedIds[index] = null;
-        } else {
-          var toAdd = $('<div></div>').addClass('mosaic node').attr('id', event.id)
-            .css({
-              'background': 'url(' + event.picUrl + ') no-repeat center center',
-              '-webkit-background-size': 'cover',
-              '-moz-background-size': 'cover',
-              '-o-background-size': 'cover',
-              'background-size': 'cover',
-              'width': event.width,
-              'height': event.height,
-              'top': event.top,
-              'left': event.left,
-              'position': 'absolute'
-            });
-          $('#' + this.container).append(toAdd.fadeIn());
-        }
-      }.bind(this));
-      _.each(displayedIds, function (id) {
-        if (id) {
-          $('#' + id).remove();
-        }
-      });
-      var $eventsNbr = $('#' + this.container + ' .aggregated-nbr-events');
-      if ($eventsNbr.length === 0) {
-        if (this.model.get('eventsNbr') > 1) {
-          $('#' + this.container).append('<span class="aggregated-nbr-events">' +
-          this.model.get('eventsNbr') + '</span>');
-        }
-        $('#' + this.container).bind('click', function () {
-          this.trigger('nodeClicked');
-        }.bind(this));
-      } else {
-        $eventsNbr.html(this.model.get('eventsNbr'));
-      }
-
-
-
-
-      $('#' + this.container).removeClass('animated fadeIn');
-
-      if (this.animation) {
-        $('#' + this.container).addClass('animated ' + this.animation);
-        setTimeout(function () {
-          $('#' + this.container).removeClass('animated ' + this.animation);
-        }.bind(this), 1000);
-      }
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":11,"underscore":9}],150:[function(require,module,exports){
-(function(){/* global $ */
-var  Marionette = require('backbone.marionette');
-var _ = require('underscore');
-
-module.exports = Marionette.ItemView.extend({
-  template: '#genericsView',
-  container: null,
-  animation: null,
-  templateHelpers: function () {
-    return {
-      getContent: function () {
-        var event = this.model.get('event');
-        if (event.type.split('/')[0] === 'url') {
-          return  '<a href="' + event.content + '" target="_blank">' + event.content + '</a>';
-        }
-        if (_.isString(event.content)) {
-          return event.content;
-        }
-        if (_.isNumber(event.content)) {
-          return '<span class="value">' + event.content + '</span>';
-        }
-        if (_.isObject(event.content)) {
-          return JSON.stringify(event.content, null, 2);
-        }
-        if (event.attachments) {
-          var keys = _.keys(event.attachments);
-          var href = event.url + '/' + event.attachments[keys[0]].id + '/' +
-            event.attachments[keys[0]].fileName + '?readToken=' +
-            event.attachments[keys[0]].readToken;
-          return '<p><span class="fa fa-paperclip fa-2x"></span> </p>' +
-            '<p><a href="' + href + '" target="_blank">' +
-            event.attachments[keys[0]].fileName + '</a></p>';
-        }
-        return '<p><span class="fa fa-2x fa-question"></span></p>' +
-          '<p>' + event.type + '</p>';
-      }.bind(this)
-    };
-  },
-  initialize: function () {
-    this.listenTo(this.model, 'change', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
-  },
-  change: function () {
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'pulse';
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
-      $('#' + this.container).bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-      $('#' + this.container).addClass('animated ' + this.animation);
-      setTimeout(function () {
-        $('#' + this.container).removeClass('animated ' + this.animation);
-      }.bind(this), 1000);
-      $('#' + this.container).find('.content').dotdotdot();
-    }
-  },
-  close: function () {
-    this.remove();
-  }
-});
-})()
-},{"backbone.marionette":11,"underscore":9}],153:[function(require,module,exports){
+},{"./utility/markerclusterer.js":142,"backbone.marionette":11,"google-maps":105,"underscore":9}],153:[function(require,module,exports){
 var Stream = require('stream').Stream;
 var util = require('util');
 
@@ -41609,20 +41619,18 @@ function mix(from, into) {
   }
 }
 
-},{"./copy.js":159,"./create.js":163,"./from.js":155,"./is.js":156,"./join.js":160,"./read.js":161,"./subarray.js":158,"./to.js":157,"./write.js":162}],156:[function(require,module,exports){
+},{"./copy.js":161,"./create.js":158,"./from.js":155,"./is.js":156,"./join.js":162,"./read.js":163,"./subarray.js":159,"./to.js":157,"./write.js":160}],156:[function(require,module,exports){
 
 module.exports = function(buffer) {
   return buffer instanceof Uint8Array;
 }
 
 },{}],158:[function(require,module,exports){
-module.exports = subarray
-
-function subarray(buf, from, to) {
-  return buf.subarray(from || 0, to || buf.length)
+module.exports = function(size) {
+  return new Uint8Array(size)
 }
 
-},{}],159:[function(require,module,exports){
+},{}],161:[function(require,module,exports){
 module.exports = copy
 
 var slice = [].slice
@@ -41676,7 +41684,14 @@ function slow_copy(from, to, j, i, jend) {
   }
 }
 
-},{}],160:[function(require,module,exports){
+},{}],159:[function(require,module,exports){
+module.exports = subarray
+
+function subarray(buf, from, to) {
+  return buf.subarray(from || 0, to || buf.length)
+}
+
+},{}],162:[function(require,module,exports){
 module.exports = join
 
 function join(targets, hint) {
@@ -41714,12 +41729,7 @@ function get_length(targets) {
   return size
 }
 
-},{}],163:[function(require,module,exports){
-module.exports = function(size) {
-  return new Uint8Array(size)
-}
-
-},{}],162:[function(require,module,exports){
+},{}],160:[function(require,module,exports){
 module.exports = {
     writeUInt8:      write_uint8
   , writeInt8:       write_int8
@@ -41807,7 +41817,7 @@ function write_double_be(target, value, at) {
   return dv.setFloat64(at + target.byteOffset, value, false)
 }
 
-},{"./mapped.js":164}],161:[function(require,module,exports){
+},{"./mapped.js":164}],163:[function(require,module,exports){
 module.exports = {
     readUInt8:      read_uint8
   , readInt8:       read_int8

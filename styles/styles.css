@@ -233,11 +233,10 @@ background-color: #00A8E2;
 .menu-footer {
   padding: 5px;
   text-align: center;
-  position: absolute;
-  bottom: 0;
+  position: relative;
   font-size: 11px;
-  width: 100%;
-  color: #7E7E7E;
+  color: #dfdfdf;
+  margin-top: 50px;
 }
 #main-container.slideRight {
   margin-left: 240px;
@@ -366,6 +365,8 @@ line-height: 27px;
   display: table;
   width: 100%;
   height: 100%;
+}
+.detail-item-content .Table-Cell {
   padding: 15px;
 }
 .is-Table .Center-Block {
@@ -1058,13 +1059,15 @@ li.generic-prop, li.generic-arr-item {
 }
 #modal-content {
   overflow: auto;
-  height: 100%;
-  padding-bottom: 60px;
+  width: 100%;
+  bottom: 0px;
+  position: absolute;
+  top: 50px;
 }
 
 #type-select {
   text-align: center;
-  margin: 70px auto;
+  margin: 70px auto 30px auto;
 }
 .type-select {
   display: inline-block;
@@ -1084,6 +1087,9 @@ li.generic-prop, li.generic-arr-item {
 }
 .type-select:hover {
   cursor: pointer;
+}
+#add-csv-importer {
+  text-align: center;
 }
 #select-picture-container {
   margin: 30px;

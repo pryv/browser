@@ -39,7 +39,8 @@
         "addNewStream": "Add new stream",
         "deleteSelected": "Delete selected",
         "selectAll": "All",
-        "selectNone": "None"
+        "selectNone": "None",
+        "importCSV": "Import from CSV"
       },
       "labels": {
         "addEventTitle": "Add content",

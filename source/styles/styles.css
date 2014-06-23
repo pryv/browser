@@ -233,11 +233,10 @@ background-color: #00A8E2;
 .menu-footer {
   padding: 5px;
   text-align: center;
-  position: absolute;
-  bottom: 0;
+  position: relative;
   font-size: 11px;
-  width: 100%;
-  color: #7E7E7E;
+  color: #dfdfdf;
+  margin-top: 50px;
 }
 #main-container.slideRight {
   margin-left: 240px;

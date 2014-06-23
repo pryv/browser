@@ -7,6 +7,24 @@ module.exports = Backbone.Model.extend({
     highlighted: false,
     checked: false
   },
+  isEditPermission: function () {
+    var event = this.get('event');
+    if (!event.connection._accessInfo) {
+      return false;
+    }
+
+    if (event.connection._accessInfo.type === 'personal') {
+      return true;
+    }
+    if (event.connection._accessInfo.permissions &&
+      event.connection._accessInfo.permissions[0].level !== 'read') {
+      return true;
+    } else {
+      return false;
+    }
+
+    return false;
+  },
   getTimeDifference: function (time) {
     return Math.abs(time - this.get('event').time);
   },

@@ -53,7 +53,11 @@ module.exports = Marionette.ItemView.extend({
     if (this.model.get('event')) {
       var evtDate = moment.unix(this.model.get('event').time);
       this.ui.editTimePicker.data('DateTimePicker').setDate(evtDate);
+      if (!this.model.isEditPermission()) {
+        this.ui.editBtn.hide();
+      }
     }
+
     $('body').i18n();
   },
   showEdit: function () {

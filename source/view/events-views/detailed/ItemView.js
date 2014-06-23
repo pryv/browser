@@ -100,6 +100,19 @@ module.exports = Marionette.ItemView.extend({
   onRender: function () {
     this.check();
     this.highlight();
+    if (this.model.isEditPermission()) {
+      this.$('input').bind('click', function (e) {
+        e.stopPropagation();
+        this.model.check(!this.model.get('checked'));
+        this.check();
+        this.trigger('item:checked');
+      }.bind(this));
+      this.$('label').bind('click', function (e) {
+        e.stopPropagation();
+      });
+    } else {
+      this.$('.pryv-checkbox').hide();
+    }
     if (this.model.get('event').type.indexOf('picture') === 0) {
       this.$el.css(
           {'background': 'url(' + this.model.get('event').getPicturePreview() +
@@ -114,15 +127,7 @@ module.exports = Marionette.ItemView.extend({
       this.trigger('date:clicked', this.model);
     }.bind(this));
 
-    this.$('input').bind('click', function (e) {
-      e.stopPropagation();
-      this.model.set('checked', !this.model.get('checked'));
-      this.check();
-      this.trigger('item:checked');
-    }.bind(this));
-    this.$('label').bind('click', function (e) {
-      e.stopPropagation();
-    });
+
     $(this.$el).find('.Center-Container').dotdotdot({watch: true, wrap: 'letter'});
   }
 });

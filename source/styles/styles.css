@@ -366,6 +366,8 @@ line-height: 27px;
   display: table;
   width: 100%;
   height: 100%;
+}
+.detail-item-content .Table-Cell {
   padding: 15px;
 }
 .is-Table .Center-Block {

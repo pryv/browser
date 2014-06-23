@@ -1058,13 +1058,15 @@ li.generic-prop, li.generic-arr-item {
 }
 #modal-content {
   overflow: auto;
-  height: 100%;
-  padding-bottom: 60px;
+  width: 100%;
+  bottom: 0px;
+  position: absolute;
+  top: 50px;
 }
 
 #type-select {
   text-align: center;
-  margin: 70px auto;
+  margin: 70px auto 30px auto;
 }
 .type-select {
   display: inline-block;
@@ -1084,6 +1086,9 @@ li.generic-prop, li.generic-arr-item {
 }
 .type-select:hover {
   cursor: pointer;
+}
+#add-csv-importer {
+  text-align: center;
 }
 #select-picture-container {
   margin: 30px;

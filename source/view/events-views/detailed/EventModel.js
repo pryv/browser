@@ -7,6 +7,11 @@ module.exports = Backbone.Model.extend({
     highlighted: false,
     checked: false
   },
+  check: function (state) {
+    if (this.isEditPermission) {
+      this.set('checked', state);
+    }
+  },
   isEditPermission: function () {
     var event = this.get('event');
     if (!event.connection._accessInfo) {

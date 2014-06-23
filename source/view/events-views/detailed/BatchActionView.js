@@ -59,7 +59,7 @@ module.exports = Marionette.ItemView.extend({
 
   selectAll: function () {
     this.collection.each(function (model) {
-      model.set('checked', true);
+      model.check(true);
       model.trigger('change:checked');
     }.bind(this));
     this.updateItemsSelectedLabel();
@@ -67,7 +67,7 @@ module.exports = Marionette.ItemView.extend({
 
   unselectAll: function () {
     this.collection.each(function (model) {
-      model.set('checked', false);
+      model.check(false);
       model.trigger('change:checked');
     }.bind(this));
     this.updateItemsSelectedLabel();

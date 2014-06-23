@@ -445,14 +445,6 @@ padding: 0px 15px;
 /*-----------------theme Connection*/
 .EventsNode{background-color: #ffffff;}
 
-.nodeHeader.color_0:hover,.nodeHeader.color_1:hover,.nodeHeader.color_2:hover,.nodeHeader.color_3:hover,.nodeHeader.color_4:hover,.nodeHeader.color_5:hover
-,.nodeHeader.color_6:hover,.nodeHeader.color_7:hover,.nodeHeader.color_8:hover,.nodeHeader.color_9:hover,.nodeHeader.color_10:hover,.nodeHeader.color_11:hover
-,.nodeHeader.color_12:hover,.nodeHeader.color_13:hover,.nodeHeader.color_14:hover
- {
-  cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.12);
-}
-
 /* For nested streamNode cannot do that
    wait for selector4
    http://stackoverflow.com/questions/1014861/is-there-a-css-parent-selector/1014958#1014958
@@ -460,13 +452,23 @@ padding: 0px 15px;
   background-color: white;
   outline: #fff solid 5px;
 } */
-.StreamNode:hover>.nodeHeader{
-  color:black;
-  background-color: white;
+.StreamNode > .nodeHeader {
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 2px;
+  position: relative; /* for applying z-index */
 }
-.StreamNode .nodeHeader {
-  font-size:12px;
-  /*text-align: center;*/
+.StreamNode > .nodeHeader:hover {
+  color: white;
+  background-color: #BD1727;
+  -webkit-box-shadow: 0 0 0 2px #BD1727;
+  box-shadow: 0 0 0 2px #BD1727;
+  z-index: 100;
+}
+.EventsNode:hover {
+  -webkit-box-shadow: 0 0 0 2px #BD1727;
+  box-shadow: 0 0 0 2px #BD1727;
+  z-index: 100;
 }
 .ConnectionNode, .StreamNode, .EventsNode{
   /* border-right: 2px solid white;      */

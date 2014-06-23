@@ -1683,15 +1683,19 @@ color: #FFF;
 
 /* Zendesk tab */
 #zenbox_tab {
-  right: -10px;
+  top: inherit !important;
+  bottom: 80px; /* i.e. align with treemap bottom */
+  right: -11px;
   border: none !important;
   border-radius: 3px;
   overflow: hidden;
+  opacity: 0.25;
 }
 #zenbox_tab:hover, #zenbox_tab:focus {
   -webkit-box-shadow: 0 0 0 1px #FFF;
   box-shadow: 0 0 0 1px #FFF;
+  opacity: 1;
 }
 #zenbox_tab img {
-  margin: -2px;
+  margin: -4px;
 }

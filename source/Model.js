@@ -123,12 +123,12 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       error: function (data) {
         if (data.error && data.error.message && data.error.message !== 'Not signed-on') {
           $('#login form button[type=submit]').prop('disabled', false)
-            .addClass('btn-pryv-alizarin');
+            /*.addClass('btn-pryv-alizarin')*/;
           $('#login form button[type=submit] .fa-spinner').hide();
           window.PryvBrowser.showAlert('#login', i18n.t('error.login.' + data.error.id));
         } else if (!data.error) {
           $('#login form button[type=submit]').prop('disabled', false)
-            .addClass('btn-pryv-alizarin');
+            /*.addClass('btn-pryv-alizarin')*/;
           $('#login form button[type=submit] .fa-spinner').hide();
           window.PryvBrowser.showAlert('#login', i18n.t('error.login.unknown-username'));
 

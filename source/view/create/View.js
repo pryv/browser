@@ -93,7 +93,8 @@ module.exports = Marionette.ItemView.extend({
           conn.accesses.get(function (error, result) {
             if (!error) {
               result.forEach(function (access) {
-                if (access.type === 'app' && access.name === 'pryv-csv-importer') {
+                if (access.type === 'app' && access.name === 'pryv-csv-importer' &&
+                  this.step === creationStep.typeSelect) {
                   this.$el.append('<div id="add-csv-importer">' +
                     '<a class="btn btn-default" target="_blank" ' +
                     'href="http://pryv.github.io/dev-tools/csv-importer">' +

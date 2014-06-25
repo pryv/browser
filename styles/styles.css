@@ -233,11 +233,10 @@ background-color: #00A8E2;
 .menu-footer {
   padding: 5px;
   text-align: center;
-  position: absolute;
-  bottom: 0;
+  position: relative;
   font-size: 11px;
-  width: 100%;
-  color: #7E7E7E;
+  color: #dfdfdf;
+  margin-top: 50px;
 }
 #main-container.slideRight {
   margin-left: 240px;
@@ -366,6 +365,8 @@ line-height: 27px;
   display: table;
   width: 100%;
   height: 100%;
+}
+.detail-item-content .Table-Cell {
   padding: 15px;
 }
 .is-Table .Center-Block {
@@ -455,7 +456,7 @@ padding: 0px 15px;
 .StreamNode > .nodeHeader {
   font-size: 12px;
   cursor: pointer;
-  border-radius: 2px;
+  border-radius: 1px;
   position: relative; /* for applying z-index */
 }
 .StreamNode > .nodeHeader:hover {
@@ -496,15 +497,13 @@ padding: 0px 15px;
   /*background-color: #40E0D0;*/
   pointer-events: all;
 }
-.TweetsEventsNode .content {
-  overflow: hidden;
-  word-break: break-word;
-}
 .tweet {
   border-left: 5px solid #eee;
-  margin: 0 10px 0 5px;
+  padding-left: 5px;
+  margin-left: -5px;
+  text-align: left;
 }
-.NotesEventsNode .content, .GenericEventsNode .content {
+.NotesEventsNode .content, .TweetsEventsNode .content, .GenericEventsNode .content {
   padding: 15px;
   text-align: center;
   overflow: hidden;
@@ -1058,13 +1057,15 @@ li.generic-prop, li.generic-arr-item {
 }
 #modal-content {
   overflow: auto;
-  height: 100%;
-  padding-bottom: 60px;
+  width: 100%;
+  bottom: 0px;
+  position: absolute;
+  top: 50px;
 }
 
 #type-select {
   text-align: center;
-  margin: 70px auto;
+  margin: 70px auto 30px auto;
 }
 .type-select {
   display: inline-block;
@@ -1084,6 +1085,9 @@ li.generic-prop, li.generic-arr-item {
 }
 .type-select:hover {
   cursor: pointer;
+}
+#add-csv-importer {
+  text-align: center;
 }
 #select-picture-container {
   margin: 30px;
@@ -1624,7 +1628,7 @@ span.value {
   top: 0;
   left: 0;
   right: 0;
-  margin: 50px;
+  /*margin: 50px;*/
   z-index: 9999;
 }
 

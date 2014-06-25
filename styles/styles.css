@@ -1339,9 +1339,6 @@ color: #BD1727;
   /*font-size: 40px;
   cursor: pointer;*/
 }
-#login hr{
-  border-top: 1px solid #D1D1D1;
-}
 #login-form form {
   text-align: initial;
 }

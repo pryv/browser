@@ -44,7 +44,7 @@ var TreeMap = module.exports = function (model) {
   $('#back-tree').hide();
   $('#back-tree').click(function (e) {
     e.preventDefault();
-    if (this.model.sharingsConnections &&
+    if (this.model.sharingsConnections && this.model.loggedConnection &&
       this.model.urlUsername === this.model.loggedConnection.username) {
       this.model.removeConnections(this.model.sharingsConnections);
       this.model.sharingsConnections = null;

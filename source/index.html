@@ -962,8 +962,8 @@
   <div class="menu-panel"></div>
 <span id="pryvButton"></span>
 <div id="login">
-  <div id="login-caret" class="centered"><span class="ss-navigateleft"></span>
-  </div>
+  <!--<div id="login-caret" class="centered"><span class="ss-navigateleft"></span>
+  </div>-->
   <div id="login-form" class="centered">
     <form role="form">
       <div class="icon ss-user" style="text-align: center;"></div>
@@ -977,13 +977,20 @@
         <label class="sr-only" for="login-password">Password</label>
         <input type="password" class="form-control" id="login-password" data-i18n="[placeholder]login.labels.password">
       </div>
-      <!-- @if NODE_ENV == 'PRODUCTION' -->
-      <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
-      <!-- @endif -->
-      <!-- @if NODE_ENV != 'PRODUCTION' -->
-      <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
-      <!-- @endif -->
-      <button type="submit" class="btn btn-primary"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
+
+      <div class="form-group" style="overflow:hidden;">
+        <button type="submit" class="btn btn-primary pull-right"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
+        <button id="login-caret" class="btn btn-default pull-right"><span data-i18n="common.actions.cancel"></span></button>
+      </div>
+      <hr/>
+      <div class="form-group">
+        <!-- @if NODE_ENV == 'PRODUCTION' -->
+        <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
+        <!-- @endif -->
+        <!-- @if NODE_ENV != 'PRODUCTION' -->
+        <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
+        <!-- @endif -->
+      </div>
 
     </form>
   </div>

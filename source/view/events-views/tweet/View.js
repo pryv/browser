@@ -66,14 +66,12 @@ module.exports = Marionette.ItemView.extend({
           var toAdd = $('<div></div>')
             .addClass('mosaic node content Center-Container is-Table').attr('id', event.id)
             .append(
-              '<div class="content Center-Container is-Table">' +
               '<div class="Table-Cell">' +
               '<div class="Center-Block">' +
               '<div class="tweet" >' +
               '<p>' + event.content.text + '</p><p>&mdash;' +
               '@' + event.content['screen-name'] + '</p><p>' + getUrl(event) +
               '</p></div>' +
-              '</div>' +
               '</div>' +
               '</div>')
             .css({

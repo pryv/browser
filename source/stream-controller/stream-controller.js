@@ -25,7 +25,6 @@
 
   var createStreamController = function ($el, options) {
     var streamCtrl, el, existingStreamCtrl;
-    console.log('DEBUG', 'createStreamController', $el, options, $el.length);
     for (var i = 0; i < $el.length; i++) {
       el = $el[i];
       existingStreamCtrl = getStreamControllerData(el);
@@ -88,7 +87,6 @@
     }
   };
   var StreamController = function ($el, options) {
-    console.log('DEBUG', 'new', $el, options);
     var defaults = {
       streams: [],
       connections: [],
@@ -150,13 +148,11 @@
     }
   };
   StreamController.prototype.addConnections = function (connections) {
-    console.log('DEBUG', 'addConnections', connections);
     if (!connections) {
       return;
     }
     connections = $.isArray(connections) ? connections : [connections];
     $.each(connections, function (i, conn) {
-      console.log('DEBUG', 'each', conn);
       this.addConnection(conn);
     }.bind(this));
   };
@@ -172,8 +168,6 @@
       connection._childNode = $html.find('ul .panel-body');
       $html.appendTo(this.$el);
       this.connectionNodes[connId] = connection;
-      console.log('DEBUG', 'addConnections', $html, this.$el);
-
     }
   };
   StreamController.prototype.getSelectedConnections = function () {
@@ -277,25 +271,58 @@
       this.connectionNodes[getConnectionId(object)];
 
     if (this.options.multiple) {
-      object._childNode.find('input').prop('checked', $input.checked);
+      object._childNode.find('input').prop('checked', $input.checked).prop('indeterminate', false);
       if (type === 'stream') {
         var $parent = this.findParentNode(object);
         this.updateInputState($parent);
       }
     } else {
-      this.$el.find('input').prop('checked', false);
+      this.unselectAll();
       $input.checked = true;
     }
     this.$el.trigger('inputChanged');
   };
+  StreamController.prototype.unselectAll = function ()  {
+    this.$el.find('input').prop('checked', false);
+  };
   StreamController.prototype.updateInputState = function (object) {
     if (object) {
+      if (object._node.find('.stream-controller-connection').length === 1 &&
+        object._childNode.find('input:checked').length === object._childNode.find('input').length) {
+        object._node.find('input:first').prop('checked', true).prop('indeterminate', false);
+      } else
       if (object._childNode.find('input:checked').length === 0) {
         object._node.find('input:first').prop('checked', false).prop('indeterminate', false);
       } else {
         object._node.find('input:first').prop('checked', false).prop('indeterminate', true);
       }
+
       this.updateInputState(this.findParentNode(object));
+    }
+  };
+  StreamController.prototype.setSelectedConnections = function (connections) {
+    if (connections) {
+      connections = $.isArray(connections) ? connections : [connections];
+      this.unselectAll();
+      $.each(connections, function (i, conn) {
+        var node = this.connectionNodes[getConnectionId(conn)];
+        if (node) {
+          node._node.find('input').prop('checked', true).prop('indeterminate', false);
+        }
+      }.bind(this));
+    }
+  };
+  StreamController.prototype.setSelectedStreams = function (streams) {
+    if (streams) {
+      streams = $.isArray(streams) ? streams : [streams];
+      this.unselectAll();
+      $.each(streams, function (i, stream) {
+        var node = this.streamNodes[getStreamId(stream)];
+        if (node) {
+          node._node.find('input').prop('checked', true).prop('indeterminate', false);
+          this.updateInputState(this.findParentNode(node));
+        }
+      }.bind(this));
     }
   };
 })(jQuery);

@@ -67,11 +67,7 @@ module.exports = Marionette.ItemView.extend({
         streams: this.streams,
         connections: this.connection
       });
-      $('#sharing-stream-list').on('inputChanged', function () {
-        console.log('DEBUG', 'inputchanged');
-        console.log('DEBUG', $(this).streamController('getSelectedConnections'));
-        console.log('DEBUG', $(this).streamController('getSelectedStreams'));
-      });
+      $('#sharing-stream-list').streamController('setSelectedStreams', this.streams);
     }.bind(this), 200);
   },
   _isChildrenCheck: function ($el) {

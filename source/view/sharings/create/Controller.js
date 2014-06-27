@@ -46,34 +46,33 @@ var Layout = Marionette.Layout.extend({
     access.name = name;
    // access.token = token;
     access.permissions = [];
-    if ($spin) {
-      $spin.show();
-    }
 
-    _.each($('#sharing-stream-list input[type=checkbox]'), function (checkbox) {
-      var streamId = $($(checkbox).parent().parent()).attr('data-stream');
-      if ($(checkbox).prop('checked') && streamId) {
-        access.permissions.push({streamId : streamId, level: permission});
-      }
+
+    _.each($('#sharing-stream-list').streamController('getSelectedStreams'), function (stream) {
+      access.permissions.push({streamId : stream.id, level: permission});
     }.bind(this));
 
+    if (access.permissions.length > 0) {
 
-
-    this.connection.accesses.create(access, function (error, result) {
       if ($spin) {
-        $spin.hide();
+        $spin.show();
       }
+      this.connection.accesses.create(access, function (error, result) {
+        if ($spin) {
+          $spin.hide();
+        }
 
-      if (error || result.message) {
-        $btn.addClass('btn-pryv-alizarin');
-        window.PryvBrowser.showAlert('.modal-content',
-          i18n.t('slices.messages.errInvalidSharingToken'));
-        return;
-      }
+        if (error || result.message) {
+          $btn.addClass('btn-pryv-alizarin');
+          window.PryvBrowser.showAlert('.modal-content',
+            i18n.t('slices.messages.errInvalidSharingToken'));
+          return;
+        }
 
-      $btn.removeClass('btn-pryv-alizarin');
-      this.trigger('sharing:createSuccess', { name: name, token: result.token });
-    }.bind(this));
+        $btn.removeClass('btn-pryv-alizarin');
+        this.trigger('sharing:createSuccess', { name: name, token: result.token });
+      }.bind(this));
+    }
   }
 });
 var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {

@@ -10,7 +10,7 @@ module.exports = Marionette.ItemView.extend({
   templateHelpers: function () {
     return {
       getStream: function () {
-        return this._getStream();
+        return '';
       }.bind(this)
     };
   },
@@ -23,8 +23,10 @@ module.exports = Marionette.ItemView.extend({
     this.streams = this.options.streams;
   },
   onRender: function () {
-    var self = this;
     this.bindUIElements();
+
+    /*var self = this;
+
     _.each(this.$el.find('input[type=checkbox]'), function (checkbox) {
       $(checkbox).prop({
         indeterminate: false,
@@ -54,9 +56,23 @@ module.exports = Marionette.ItemView.extend({
       if (!options || !options.noIndeterminate) {
         self._isChildrenCheck(container.parent().parent());
       }
-    });
+    });  */
 
-    setTimeout(function () {$('body').i18n(); }, 100);
+    setTimeout(function () {
+      $('body').i18n();
+      $('#sharing-stream-list').streamController(
+        {
+        autoOpen: 1,
+        multiple: true,
+        streams: this.streams,
+        connections: this.connection
+      });
+      $('#sharing-stream-list').on('inputChanged', function () {
+        console.log('DEBUG', 'inputchanged');
+        console.log('DEBUG', $(this).streamController('getSelectedConnections'));
+        console.log('DEBUG', $(this).streamController('getSelectedStreams'));
+      });
+    }.bind(this), 200);
   },
   _isChildrenCheck: function ($el) {
     if (!$el.hasClass('stream-tree-children')) {

@@ -59,7 +59,8 @@ module.exports = function (grunt) {
           'source/vendor/jquery.dotdotdot.min.js',
           'source/vendor/jquery.scrollto.min.js',
           'source/vendor/md5.js',
-          'source/vendor/bootstrap-datetimepicker.js'
+          'source/vendor/bootstrap-datetimepicker.js',
+          'source/stream-controller/stream-controller.js'
         ],
         dest: 'dist/script/vendor.js'
       }

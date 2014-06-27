@@ -187,11 +187,11 @@ background-color: #00A8E2;
   background-color: #00a8e2;
   content: " ";
 }
-.stream-tree-children {
+.stream-tree-children, .stream-controller-child {
   padding: 0;
   padding-left: 20px;
 }
-.stream-tree-summary {
+.stream-tree-summary, .stream-controller-node {
   list-style: none;
   line-height: 3;
   cursor: pointer;

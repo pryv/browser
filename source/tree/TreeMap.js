@@ -112,7 +112,7 @@ var TreeMap = module.exports = function (model) {
     this.model.activeFilter.getStreams().forEach(function (stream) {
       if (stream.connection.username === loggedUsername) {
         if (streamsId.indexOf((stream.parentId)) === -1) {
-          streams.push({id: stream.id, name: stream.name, children: stream.children});
+          streams.push(stream);
         }
         streamsId.push(stream.id);
       }
@@ -120,7 +120,7 @@ var TreeMap = module.exports = function (model) {
     if (streams.length === 0) {
       this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
         if (streamsId.indexOf((stream.parentId)) === -1) {
-          streams.push({id: stream.id, name: stream.name, children: stream.children});
+          streams.push(stream);
         }
         streamsId.push(stream.id);
       });

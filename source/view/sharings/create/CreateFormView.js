@@ -61,13 +61,14 @@ module.exports = Marionette.ItemView.extend({
     setTimeout(function () {
       $('body').i18n();
       $('#sharing-stream-list').streamController(
-        {
+      {
         autoOpen: 1,
-        multiple: true,
+        multiple: false,
         streams: this.streams,
-        connections: this.connection
+        connections: this.connection,
+        editMode: 'toggle'
       });
-      $('#sharing-stream-list').streamController('setSelectedStreams', this.streams);
+      //$('#sharing-stream-list').streamController('setSelectedStreams', this.streams);
     }.bind(this), 200);
   },
   _isChildrenCheck: function ($el) {

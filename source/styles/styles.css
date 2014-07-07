@@ -1708,3 +1708,16 @@ color: #FFF;
 #zenbox_tab img {
   margin: -4px;
 }
+
+/* Logo "beta" mention */
+
+#logo-beta-mention {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  margin-left: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #999;
+}

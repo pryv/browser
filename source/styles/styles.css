@@ -1784,3 +1784,10 @@ color: #FFF;
   text-transform: uppercase;
   color: #999;
 }
+#logo-beta-mention a {
+  color: inherit;
+}
+#logo-beta-mention a:hover, #logo-beta-mention a:focus  {
+  color: #BD1727;
+  text-decoration: none;
+}

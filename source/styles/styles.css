@@ -1771,3 +1771,23 @@ color: #FFF;
   margin-left: -15px;
   margin-right: -15px;
 }
+
+/* Logo "beta" mention */
+
+#logo-beta-mention {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  margin-left: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #999;
+}
+#logo-beta-mention a {
+  color: inherit;
+}
+#logo-beta-mention a:hover, #logo-beta-mention a:focus  {
+  color: #BD1727;
+  text-decoration: none;
+}

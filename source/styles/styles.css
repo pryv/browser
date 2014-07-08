@@ -195,10 +195,16 @@ background-color: #00A8E2;
   list-style: none;
   line-height: 3;
   cursor: pointer;
+  position: relative;
 }
-.stream-tree-summary:hover {
+.stream-tree-summary:hover,.stream-controller-node:hover{
   background-color: #BD1727;
   color: #FFF;
+}
+.stream-controller-select .disclosure {
+  position: absolute;
+  right: 10px;
+  top: 10px;
 }
 .stream-tree-summary.disclosure::before {
   position: absolute;
@@ -1714,18 +1720,23 @@ color: #FFF;
 .stream-controller-select, .stream-controller-manage {
   float: left;
   border: 1px solid #e6e6e6;
+  min-width: 240px;
 }
 .stream-controller-manage,
 .stream-controller-header,
 .stream-controller-stream-list,
 .stream-controller-footer {
-  padding: 15px;
+  padding: 10px;
+}
+.stream-controller-stream-list{
+  padding-right: 0px;
 }
 .stream-controller-manage {
   background-color: #f2f4f3;
 }
 .stream-controller-header {
   border-bottom: 1px solid #e6e6e6;
+  overflow: hidden;
 }
 .stream-controller-footer {
   border-top: 1px solid #e6e6e6;
@@ -1739,6 +1750,13 @@ color: #FFF;
 .add-new-stream:focus, .add-new-stream:hover {
   color: white;
   text-decoration: none;
+}
+.rotate{
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(180deg);
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+  background-color: #F00;
+  
 }
 .manage-stream-color input[type="radio"] {
   display: none;

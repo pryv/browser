@@ -148,11 +148,11 @@
   };
   StreamController.prototype._initHeader = function () {
     if (this.options.headerText && typeof this.options.headerText === 'string') {
-      this.$header.append('<div class="header-title">' + this.options.headerText + '</div>');
+      this.$header.append('<div class="header-title pull-left">' + this.options.headerText + '</div>');
     }
     if (this.options.editMode === 'toggle') {
       this.isManageOpened = false;
-      var $manageToggle = $('<div class="manage-toggle btn btn-default">Manage</div>');
+      var $manageToggle = $('<div class="manage-toggle btn btn-default btn-xs pull-right">Manage</div>');
       $manageToggle.appendTo(this.$header);
       $manageToggle.click(function () {
         if (!this.isManageOpened) {
@@ -176,7 +176,7 @@
   StreamController.prototype._initFooter = function () {
     if (this.options.editMode === true || this.options.editMode === 'toggle') {
       this.isNewStreamOpened = false;
-      var $newStream = $('<a href="#" class="add-new-stream">+</a>');
+      var $newStream = $('<a href="#" class="add-new-stream"><span class="rotate">+</span></a>');
       $newStream.click(function (e) {
         e.preventDefault();
         if (this.isNewStreamOpened) {

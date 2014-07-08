@@ -176,7 +176,7 @@
   StreamController.prototype._initFooter = function () {
     if (this.options.editMode === true || this.options.editMode === 'toggle') {
       this.isNewStreamOpened = false;
-      var $newStream = $('<a href="#" class="add-new-stream"><span class="rotate">+</span></a>');
+      var $newStream = $('<a href="#" class="add-new-stream "><div>+</div></a>');
       $newStream.click(function (e) {
         e.preventDefault();
         if (this.isNewStreamOpened) {

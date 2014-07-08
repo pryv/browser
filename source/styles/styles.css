@@ -147,7 +147,7 @@ body{
 .pryv-radio label {
   padding-left: 0;
 }
-.pryv-radio label:before {
+/*.pryv-radio label:before {
   content: "\f10c";
   font-family: FontAwesome;
   color: #00a8e2;
@@ -159,7 +159,7 @@ body{
 
 .pryv-radio input[type=radio]:checked + label:before {
   content: "\f192";
-}
+}*/
 .pryv-checkbox label:hover:before {
 background-color: #00A8E2;
 }
@@ -198,7 +198,11 @@ background-color: #00A8E2;
   position: relative;
 }
 .stream-tree-summary:hover,.stream-controller-node:hover{
-  background-color: #BD1727;
+  background-color: #EBEBEB;
+  /*color: #FFF;*/
+}
+.stream-controller-node.checked{
+  background-color: #3E9EDF;
   color: #FFF;
 }
 .stream-controller-select .disclosure {
@@ -1740,23 +1744,39 @@ color: #FFF;
 }
 .stream-controller-footer {
   border-top: 1px solid #e6e6e6;
+  overflow: hidden;
 }
 .add-new-stream {
-  padding: 0px 8px;
+  padding: 0px 7px;
   background-color: #9d9d9d;
   color: white;
-  font-size: 2em;
+  font-size: 20px;
+  display: block;
+  width: 24px;
+  height: 24px;
+  position: relative;
+  float:right;
+}
+.add-new-stream div {
+  display: block;
+  position: absolute;
+  line-height: 24px;
+  -webkit-transition-duration: 0.4s;
+  -moz-transition-duration: 0.4s;
+  -o-transition-duration: 0.4s;
+}
+.add-new-stream.opened  div{
+  -webkit-transition-duration: 0.4s;
+  -moz-transition-duration: 0.4s;
+  -o-transition-duration: 0.4s;
+  transition-duration: 0.4s;
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(180deg);
+  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
 }
 .add-new-stream:focus, .add-new-stream:hover {
   color: white;
   text-decoration: none;
-}
-.rotate{
-  -webkit-transform: rotate(45deg);
-  -moz-transform: rotate(180deg);
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
-  background-color: #F00;
-  
 }
 .manage-stream-color input[type="radio"] {
   display: none;

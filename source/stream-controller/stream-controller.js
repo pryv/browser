@@ -1,7 +1,11 @@
-/* global jQuery */
-(function ($) {
+/* global jQuery, _ */
+(function ($, _) {
   if (!$) {
     console.warn('Stream controller: cannot find jquery');
+    return;
+  }
+  if (!_) {
+    console.warn('Stream controller: cannot find underscore');
     return;
   }
   $.fn.streamController = function () {
@@ -508,6 +512,7 @@
     if (!stream) {
       return;
     }
+    stream = _.clone(stream);
     var streamId = getStreamId(stream);
     if (streamId && !this.streamNodes[streamId]) {
       stream._streamId = streamId;
@@ -538,9 +543,9 @@
     }
     var streamId = getStreamId(stream);
     if (streamId && this.streamNodes[streamId]) {
-      stream._node.find('input').off();
-      stream._node.off();
-      stream._node.remove();
+      this.streamNodes[streamId]._node.find('input').off();
+      this.streamNodes[streamId]._node.off();
+      this.streamNodes[streamId]._node.remove();
       delete this.streamNodes[streamId];
     }
   };
@@ -568,6 +573,7 @@
     if (!connection) {
       return;
     }
+    connection = _.clone(connection);
     var connId = getConnectionId(connection);
     if (connId && !this.connectionNodes[connId]) {
       connection._connId = connId;
@@ -744,4 +750,4 @@
       }.bind(this));
     }
   };
-})(jQuery);
+})(jQuery, _);

@@ -226,19 +226,17 @@
             '</button>' +
           '</div>' +
           '</div>' +
-          '<div class="manage-stream-delete hide-by-overlay">' +
-            '<button class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
-          '</div>' +
           '<div class="manage-stream-save hide-by-overlay">' +
             '<button type="submit" class="btn btn-primary">' +
               '<i class="fa fa-spin fa-spinner"></i> Save' +
             '</button>' +
           '</div>' +
+          '<div class="manage-stream-delete hide-by-overlay">' +
+            '<button class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
+          '</div>' +
         '</form>' +
         '<div class="manage-empty"><h5>Select a stream</h5></div>');
       this.uiManage = {};
-      this.uiManage.form = $('form', html);
-      this.uiManage.empty = $('.manage-empty', html);
       this.uiManage.streamName = html.find('.manage-stream-name input');
       this.uiManage.streamColor = html.find('.manage-stream-color');
       this.uiManage.streamParentName = html.find('.manage-stream-parent .parent-name');
@@ -252,6 +250,7 @@
       this.uiManage.form = this.$manage.find('form');
       this.uiManage.empty = this.$manage.find('.manage-empty');
       this.uiManage.streamDeleteBtn.click(this._deleteClicked.bind(this));
+      this.uiManage.form.submit(this._submitClicked.bind(this));
       this.uiManage.streamParentSelect.click(this._startParentSelection.bind(this));
       if (this.options.editMode === 'toggle') {
         this.$manage.hide();
@@ -263,6 +262,58 @@
     } else {
       this.$manage.hide();
     }
+  };
+  StreamController.prototype._submitClicked = function (e) {
+    e.preventDefault();
+    if (this.editingStream) {
+      var updatedStream = this.editingStream, newName, newColor, newParentId;
+      if (updatedStream.id) {
+        newName = this.uiManage.streamName.val();
+        if (newName && typeof newName === 'string' && newName !== '') {
+          updatedStream._oldName = updatedStream.name;
+          updatedStream.name = newName;
+        }
+        newColor = this.uiManage.streamColor.find('input:checked').val();
+        if (newColor && typeof newColor === 'string' && newColor !== '') {
+          if (!updatedStream.clientData) {
+            updatedStream.clientData = {};
+          }
+          updatedStream._oldColor = updatedStream.color;
+          updatedStream.color = newColor;
+          updatedStream.clientData['pryv-browser:bgColor'] = newColor;
+        }
+        newParentId = this.uiManage.streamParentName.data('parentId');
+        updatedStream._oldParentId = updatedStream.parentId;
+        updatedStream.parentId = newParentId;
+        console.log('DEBUG', newName, newColor, newParentId, updatedStream);
+        this.updateStreams([updatedStream]);
+      }  else {
+        newName = this.uiManage.streamName.val();
+        if (newName && typeof newName === 'string' && newName !== '') {
+          updatedStream.name = newName;
+        }
+        newColor = this.uiManage.streamColor.find('input:checked').val();
+        if (newColor && typeof newColor === 'string' && newColor !== '') {
+          if (!updatedStream.clientData) {
+            updatedStream.clientData = {};
+          }
+          updatedStream.color = newColor;
+          updatedStream.clientData['pryv-browser:bgColor'] = newColor;
+        }
+        newParentId = this.uiManage.streamParentName.data('parentId');
+        updatedStream.parentId = newParentId;
+
+        /* temp before link with js lib */
+        updatedStream.connection = this.uiManage.streamParentName.data('connection');
+        updatedStream.parent = this.streamNodes[getStreamId({
+          id: newParentId,
+          connection: updatedStream.connection
+        })];
+        updatedStream.id = getUniqueId();
+        this.addStreams([updatedStream]);
+      }
+    }
+
   };
   StreamController.prototype._deleteClicked = function (e) {
     e.preventDefault();
@@ -306,6 +357,7 @@
   };
   StreamController.prototype._refreshManageView = function (reason) {
     var stream, parent, parentName, parentConn;
+    console.log('DEBUG', '_refreshView', reason, this.getSelectedStreams());
     if (!this.isManageOpened) {
       this.editingStream = null;
     } else {
@@ -395,12 +447,49 @@
 
       }
     }
-    if (this.editingStream === null) {
-      this.uiManage.empty.show();
-      this.uiManage.form.hide();
-    } else {
-      this.uiManage.empty.hide();
-      this.uiManage.form.show();
+    if (this.isManageOpened) {
+      if (this.editingStream === null) {
+        this.uiManage.empty.show();
+        this.uiManage.form.hide();
+      } else {
+        this.uiManage.empty.hide();
+        this.uiManage.form.show();
+      }
+    }
+  };
+  StreamController.prototype.updateStreams = function (streams) {
+    if (!streams) {
+      return;
+    }
+    streams = $.isArray(streams) ? streams : [streams];
+    $.each(streams, function (i, stream) {
+      this.updateStream(stream);
+    }.bind(this));
+  };
+  StreamController.prototype.updateStream = function (stream) {
+    if (!stream) {
+      return;
+    }
+    var streamId = getStreamId(stream);
+    var oldStream = this.streamNodes[streamId];
+    if (streamId && oldStream) {
+      if (stream.name !== oldStream.name || stream.color !== oldStream.color ||
+        stream.name !== oldStream._oldName || stream.color !== oldStream._oldColor) {
+        var label = '<span class="pins-color" style="background-color: ' +
+          stream.color + '"></span>' + stream.name;
+        oldStream._node.find('label:first').html(label);
+        oldStream.name = stream.name;
+        oldStream.color = stream.color;
+      }
+
+      if (stream.parentId !== oldStream.parentId || stream.parentId !== oldStream._oldParentId) {
+        var $parent = this.findParentNode(stream);
+        console.log('DEBUG', $parent, this.findParentNode(oldStream));
+        $parent._node.find('.disclosure:first').removeClass('hidden');
+        oldStream._node.detach().appendTo($parent._childNode);
+        oldStream.parentId = stream.parentId;
+      }
+      this.streamNodes[streamId] = oldStream;
     }
   };
   StreamController.prototype.addStreams = function (streams) {
@@ -439,7 +528,7 @@
     $.each(streams, function (i, stream) {
       this.removeStream(stream);
       if (stream && stream.children && stream.children.length > 0) {
-        this.addStreams(stream.children);
+        this.removeStreams(stream.children);
       }
     }.bind(this));
   };
@@ -589,9 +678,11 @@
     var $input = $(e.target)[0];
     object = type === 'stream' ? this.streamNodes[getStreamId(object)] :
       this.connectionNodes[getConnectionId(object)];
-
+    console.log('DEBUG', 'inputChanged', type, object);
     if (this.options.multiple) {
+      var checkedClass = $input.checked ? 'checked' : '';
       object._childNode.find('input').prop('checked', $input.checked).prop('indeterminate', false);
+      object._node.find('li').removeClass('indeterminate').addClass(checkedClass);
       if (type === 'stream') {
         var $parent = this.findParentNode(object);
         this.updateInputState($parent);
@@ -599,23 +690,28 @@
     } else {
       this.unselectAll();
       $input.checked = true;
+      object._node.find('li:first').addClass('checked').removeClass('indeterminate');
     }
     this.$el.trigger('inputChanged');
     this._refreshManageView('itemClicked');
   };
   StreamController.prototype.unselectAll = function ()  {
     this.$streamList.find('input').prop('checked', false);
+    this.$streamList.find('li').removeClass('checked indeterminate');
   };
   StreamController.prototype.updateInputState = function (object) {
     if (object) {
       if (object._node.find('.stream-controller-connection').length === 1 &&
         object._childNode.find('input:checked').length === object._childNode.find('input').length) {
         object._node.find('input:first').prop('checked', true).prop('indeterminate', false);
+        object._node.find('li:first').addClass('checked').removeClass('indeterminate');
       } else
       if (object._childNode.find('input:checked').length === 0) {
         object._node.find('input:first').prop('checked', false).prop('indeterminate', false);
+        object._node.find('li:first').removeClass('checked indeterminate');
       } else {
         object._node.find('input:first').prop('checked', false).prop('indeterminate', true);
+        object._node.find('li:first').removeClass('checked').addClass('indeterminate');
       }
 
       this.updateInputState(this.findParentNode(object));
@@ -641,6 +737,7 @@
         var node = this.streamNodes[getStreamId(stream)];
         if (node) {
           node._node.find('input').prop('checked', true).prop('indeterminate', false);
+          node._node.find('li').addClass('checked').removeClass('indeterminate');
           this.updateInputState(this.findParentNode(node));
         }
       }.bind(this));

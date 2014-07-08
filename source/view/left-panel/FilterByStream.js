@@ -8,7 +8,7 @@ module.exports = Marionette.ItemView.extend({
   templateHelpers: function () {
     return {
       getStream: function () {
-        return this._getStream();
+        return '';
       }.bind(this)
     };
   },
@@ -25,7 +25,8 @@ module.exports = Marionette.ItemView.extend({
         clearInterval(initListener);
         this.MainModel.activeFilter.addEventListener('filteredStreamsChange', function () {
           if (!this.shushListenerOnce) {
-            this.render();
+            $('#collapseFilterByStream .panel-body:first')
+              .streamController('setSelectedStreams', this.MainModel.activeFilter.getStreams());
           } else {
             this.shushListenerOnce = false;
           }
@@ -44,7 +45,46 @@ module.exports = Marionette.ItemView.extend({
     if (!this.MainModel.activeFilter) {
       return;
     }
-    var self = this;
+    var focusedStreams = this.MainModel.activeFilter.getStreams();
+    var connections = [], streams = [];
+    if (!this.MainModel.loggedConnection) {
+      return;
+    }
+    if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
+      connections.push(this.MainModel.loggedConnection);
+      streams = streams.concat(this.MainModel.loggedConnection.datastore.getStreams());
+    }
+    _.each(this.MainModel.sharingsConnections, function (c) {
+      if (c._accessInfo && c.datastore) {
+        connections.push(c);
+        streams = streams.concat(c.datastore.getStreams());
+      }
+    });
+    _.each(this.MainModel.bookmakrsConnections, function (c) {
+      if (c._accessInfo && c.datastore) {
+        connections.push(c);
+        streams = streams.concat(c.datastore.getStreams());
+      }
+    });
+    console.log('DEBUG', focusedStreams);
+    $('#collapseFilterByStream .panel-body:first').off();
+    $('#collapseFilterByStream .panel-body:first').streamController(
+      {
+        autoOpen: 1,
+        multiple: true,
+        streams: streams,
+        connections: connections,
+        editMode: false
+      }
+    );
+    $('#collapseFilterByStream .panel-body:first')
+      .streamController('setSelectedStreams', focusedStreams);
+    $('#collapseFilterByStream .panel-body:first').on('inputChanged', function () {
+      this.MainModel.treemap.focusOnStreams($('#collapseFilterByStream .panel-body:first')
+        .streamController('getSelectedStreams'));
+    }.bind(this));
+
+    /*var self = this;
     self.ui.applyBtn.prop('disabled', true);
     self.ui.applyBtn.click(this._applyFilter.bind(this));
     this.ui.label.click(function (e) {
@@ -74,8 +114,9 @@ module.exports = Marionette.ItemView.extend({
         self._isChildrenCheck(container.parent().parent());
       }
     });
+
+    this.onFocusStreamChanged(); */
     this.bindUIElements();
-    this.onFocusStreamChanged();
     setTimeout(function () {$('body').i18n(); }, 100);
   },
   onFocusStreamChanged: function () {

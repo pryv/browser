@@ -108,15 +108,18 @@ var TreeMap = module.exports = function (model) {
       this.closeCreateSharingView();
     }.bind(this));
     var streams = [], streamsId = [],
-      loggedUsername = this.model.loggedConnection.username;
-    this.model.activeFilter.getStreams().forEach(function (stream) {
-      if (stream.connection.username === loggedUsername) {
-        if (streamsId.indexOf((stream.parentId)) === -1) {
-          streams.push(stream);
+      loggedUsername = this.model.loggedConnection.username,
+      focusedStreams = this.model.activeFilter.getStreams();
+    if (focusedStreams) {
+      focusedStreams.forEach(function (stream) {
+        if (stream.connection.username === loggedUsername) {
+          if (streamsId.indexOf((stream.parentId)) === -1) {
+            streams.push(stream);
+          }
+          streamsId.push(stream.id);
         }
-        streamsId.push(stream.id);
-      }
-    });
+      });
+    }
     if (streams.length === 0) {
       this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
         if (streamsId.indexOf((stream.parentId)) === -1) {

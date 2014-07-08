@@ -46,6 +46,7 @@ module.exports = function (grunt) {
         src: [
           'source/vendor/require.js',
           'source/vendor/jquery-1.9.1.js',
+          'source/vendor/underscore.min.js',
           'source/vendor/jquery-ui-1.10.3.custom.min.js',
           'source/vendor/moment.min.js',
           'source/vendor/jquery.details.min.js',

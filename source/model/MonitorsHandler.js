@@ -238,8 +238,11 @@ MonitorsHandler.prototype._eachMonitor = function (callback) {
  * @returns {Array}
  */
 MonitorsHandler.prototype.getStreams = function () {
-  var result = [];
+  var result = null;
   this._eachMonitor(function (monitor) {
+    if (!result && monitor.filter.streamsIds) {
+      result = [];
+    }
     _.each(monitor.filter.streamsIds, function (streamId) {
       result.push(monitor.connection.datastore.getStreamById(streamId));
     });

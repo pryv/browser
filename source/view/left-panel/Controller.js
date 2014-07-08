@@ -42,10 +42,6 @@ Controller.render = function (MainModel) {
     /*view.render();
     view.actions.show(actionsView);*/
     view.filterByStream.show(filterByStreamView);
-  } else if (view && filterByStreamView) {
-    if (!filterByStreamView.onFocusStreamChanged()) {
-      view.filterByStream.show(filterByStreamView);
-    }
   }
 
 

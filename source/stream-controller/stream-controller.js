@@ -725,6 +725,7 @@
         var node = this.connectionNodes[getConnectionId(conn)];
         if (node) {
           node._node.find('input').prop('checked', true).prop('indeterminate', false);
+          node._node.find('li').addClass('checked').removeClass('indeterminate');
         }
       }.bind(this));
     }

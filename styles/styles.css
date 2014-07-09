@@ -136,10 +136,9 @@ body{
 .pryv-checkbox label, .pryv-radio label {
   margin: 0;
   font-weight: inherit;
-  margin-left: 6px;
-  padding: 0 0 0 25px;
+  margin-left: 5px;
+  padding: 0 25px;
   position: relative;
-  width: 100%;
  /* cursor: pointer; */
 }
 .connection > .pryv-checkbox > label {
@@ -148,7 +147,7 @@ body{
 .pryv-radio label {
   padding-left: 0;
 }
-/*.pryv-radio label:before {
+.pryv-radio label:before {
   content: "\f10c";
   font-family: FontAwesome;
   color: #00a8e2;
@@ -160,13 +159,13 @@ body{
 
 .pryv-radio input[type=radio]:checked + label:before {
   content: "\f192";
-}*/
+}
 .pryv-checkbox label:hover:before {
 background-color: #00A8E2;
 }
 .pryv-checkbox label:before {
   width: 20px;
-  margin-top: 6px;
+  margin-top: 10px;
   height: 20px;
   background-color: #fff;
   content: ' ';
@@ -188,29 +187,18 @@ background-color: #00A8E2;
   background-color: #00a8e2;
   content: " ";
 }
-.stream-tree-children, .stream-controller-child {
+.stream-tree-children {
   padding: 0;
-  padding-left: 10px;
+  padding-left: 20px;
 }
-.stream-tree-summary, .stream-controller-node {
+.stream-tree-summary {
   list-style: none;
-  line-height: 2.6;
+  line-height: 3;
   cursor: pointer;
-  position: relative;
-  margin: 1px 0;
 }
-.stream-tree-summary:hover,.stream-controller-node:hover{
-  background-color: #EBEBEB;
-  /*color: #FFF;*/
-}
-.stream-controller-node.checked{
-  background-color: #3E9EDF;
+.stream-tree-summary:hover {
+  background-color: #BD1727;
   color: #FFF;
-}
-.stream-controller-select .disclosure {
-  position: absolute;
-  right: 10px;
-  top: 10px;
 }
 .stream-tree-summary.disclosure::before {
   position: absolute;
@@ -1719,115 +1707,4 @@ color: #FFF;
 }
 #zenbox_tab img {
   margin: -4px;
-}
-
-/** Stream Controller **/
-
-.stream-controller-select, .stream-controller-manage {
-  float: left;
-  border: 1px solid #e6e6e6;
-  min-width: 240px;
-}
-.stream-controller-manage,
-.stream-controller-header,
-.stream-controller-stream-list,
-.stream-controller-footer {
-  padding: 10px;
-}
-.stream-controller-stream-list{
-  padding: 10px 0px;
-}
-.stream-controller-manage {
-  background-color: #f2f4f3;
-}
-.stream-controller-header {
-  border-bottom: 1px solid #e6e6e6;
-  overflow: hidden;
-}
-.stream-controller-footer {
-  border-top: 1px solid #e6e6e6;
-  overflow: hidden;
-}
-.add-new-stream {
-  padding: 0px 7px;
-  background-color: #9d9d9d;
-  color: white;
-  font-size: 20px;
-  display: block;
-  width: 24px;
-  height: 24px;
-  position: relative;
-  float:right;
-}
-.add-new-stream div {
-  display: block;
-  position: absolute;
-  line-height: 24px;
-  -webkit-transition-duration: 0.4s;
-  -moz-transition-duration: 0.4s;
-  -o-transition-duration: 0.4s;
-}
-.add-new-stream.opened  div{
-  -webkit-transition-duration: 0.4s;
-  -moz-transition-duration: 0.4s;
-  -o-transition-duration: 0.4s;
-  transition-duration: 0.4s;
-  -webkit-transform: rotate(45deg);
-  -moz-transform: rotate(180deg);
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
-}
-.add-new-stream:focus, .add-new-stream:hover {
-  color: white;
-  text-decoration: none;
-}
-.manage-stream-color input[type="radio"] {
-  display: none;
-}
-.stream-controller-container .pins-color {
-  margin-left: 0px;
-  width: 12px;
-  height: 12px;
-  border-radius: 10px;
-}
-.manage-stream-color input:checked + .pins-color {
-  box-shadow: 0 0 0 4px #3E9EDF;
-}
-.hide-by-overlay {
-  position: relative;
-}
-.overlay {
-  background-color: rgba(75, 80, 83, 0.93);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-.manage-stream-name .overlay {
-  margin-bottom: -15px;
-  margin-top: -15px;
-}
-.stream-controller-manage .overlay {
-  margin-left: -15px;
-  margin-right: -15px;
-}
-
-/* Logo "beta" mention */
-
-#logo-beta-mention {
-  position: absolute;
-  left: 50%;
-  top: 6px;
-  margin-left: 18px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #999;
-}
-#logo-beta-mention a {
-  color: inherit;
-}
-#logo-beta-mention a:hover, #logo-beta-mention a:focus  {
-  color: #BD1727;
-  text-decoration: none;
 }

@@ -136,9 +136,10 @@ body{
 .pryv-checkbox label, .pryv-radio label {
   margin: 0;
   font-weight: inherit;
-  margin-left: 5px;
-  padding: 0 25px;
+  margin-left: 6px;
+  padding: 0 0 0 25px;
   position: relative;
+  width: 100%;
  /* cursor: pointer; */
 }
 .connection > .pryv-checkbox > label {
@@ -165,7 +166,7 @@ background-color: #00A8E2;
 }
 .pryv-checkbox label:before {
   width: 20px;
-  margin-top: 10px;
+  margin-top: 6px;
   height: 20px;
   background-color: #fff;
   content: ' ';
@@ -189,13 +190,14 @@ background-color: #00A8E2;
 }
 .stream-tree-children, .stream-controller-child {
   padding: 0;
-  padding-left: 20px;
+  padding-left: 10px;
 }
 .stream-tree-summary, .stream-controller-node {
   list-style: none;
-  line-height: 3;
+  line-height: 2.6;
   cursor: pointer;
   position: relative;
+  margin: 1px 0;
 }
 .stream-tree-summary:hover,.stream-controller-node:hover{
   background-color: #EBEBEB;
@@ -1733,7 +1735,7 @@ color: #FFF;
   padding: 10px;
 }
 .stream-controller-stream-list{
-  padding-right: 0px;
+  padding: 10px 0px;
 }
 .stream-controller-manage {
   background-color: #f2f4f3;
@@ -1782,13 +1784,13 @@ color: #FFF;
   display: none;
 }
 .stream-controller-container .pins-color {
-  margin-left: 5px;
-  width: 15px;
-  height: 15px;
+  margin-left: 0px;
+  width: 12px;
+  height: 12px;
   border-radius: 10px;
 }
 .manage-stream-color input:checked + .pins-color {
-  box-shadow: 0 0 0 4px #e2e2e2;
+  box-shadow: 0 0 0 4px #3E9EDF;
 }
 .hide-by-overlay {
   position: relative;

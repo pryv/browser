@@ -133,10 +133,12 @@
     this._initHeader();
     this._initFooter();
     this._initManage();
-    this.streams = $.isArray(options.streams) ? options.streams : [options.streams];
-    this.connections = $.isArray(options.connections) ? options.connections : [options.connections];
-    this.addConnections(this.connections);
-    this.addStreams(this.streams);
+    this.streams = {};
+    this.connections = {};
+    options.streams = $.isArray(options.streams) ? options.streams : [options.streams];
+    options.connections = $.isArray(options.connections) ? options.connections : [options.connections];
+    this.addConnections(options.connections);
+    this.addStreams(options.streams);
     return this;
   };
   StreamController.prototype._initHtml = function () {
@@ -217,7 +219,7 @@
             '<label>Name</label><input type="text" class="form-control" required>' +
           '</div>' +
           '<div class="form-group manage-stream-color hide-by-overlay">' +
-            '<label>Color</label>' + colHtml +
+            '<label style="display: block;">Color</label>' + colHtml +
           '</div>' +
           '<div class="form-group manage-stream-parent">' +
             '<label>Parent</label>' +
@@ -270,8 +272,9 @@
   StreamController.prototype._submitClicked = function (e) {
     e.preventDefault();
     if (this.editingStream) {
-      var updatedStream = this.editingStream, newName, newColor, newParentId;
-      if (updatedStream.id) {
+      var updatedStream = this.streamNodes[getStreamId(this.editingStream)],
+        newName, newColor, newParentId;
+      if (updatedStream && updatedStream.id) {
         newName = this.uiManage.streamName.val();
         if (newName && typeof newName === 'string' && newName !== '') {
           updatedStream._oldName = updatedStream.name;
@@ -292,6 +295,7 @@
         console.log('DEBUG', newName, newColor, newParentId, updatedStream);
         this.updateStreams([updatedStream]);
       }  else {
+        updatedStream = this.editingStream;
         newName = this.uiManage.streamName.val();
         if (newName && typeof newName === 'string' && newName !== '') {
           updatedStream.name = newName;
@@ -314,6 +318,7 @@
           connection: updatedStream.connection
         })];
         updatedStream.id = getUniqueId();
+        this.editingStream = {};
         this.addStreams([updatedStream]);
       }
     }
@@ -487,8 +492,8 @@
       }
 
       if (stream.parentId !== oldStream.parentId || stream.parentId !== oldStream._oldParentId) {
-        var $parent = this.findParentNode(stream);
-        console.log('DEBUG', $parent, this.findParentNode(oldStream));
+        var $parent = this.findParentNode(oldStream);
+        console.log('DEBUG', 'move', $parent, stream, oldStream);
         $parent._node.find('.disclosure:first').removeClass('hidden');
         oldStream._node.detach().appendTo($parent._childNode);
         oldStream.parentId = stream.parentId;
@@ -512,17 +517,18 @@
     if (!stream) {
       return;
     }
-    stream = _.clone(stream);
+    var clonedStream = _.clone(stream);
     var streamId = getStreamId(stream);
     if (streamId && !this.streamNodes[streamId]) {
-      stream._streamId = streamId;
+      this.streams[streamId] = stream;
+      clonedStream._streamId = streamId;
       var $html = this.generateStreamHtml(stream);
-      stream._node = $html;
-      stream._childNode = $html.find('ul .panel-body');
+      clonedStream._node = $html;
+      clonedStream._childNode = $html.find('ul .panel-body');
       var $parent = this.findParentNode(stream);
       $parent._node.find('.disclosure:first').removeClass('hidden');
       $html.appendTo($parent._childNode);
-      this.streamNodes[streamId] = stream;
+      this.streamNodes[streamId] = clonedStream;
     }
   };
   StreamController.prototype.removeStreams = function (streams) {
@@ -547,11 +553,15 @@
       this.streamNodes[streamId]._node.off();
       this.streamNodes[streamId]._node.remove();
       delete this.streamNodes[streamId];
+      delete this.streams[streamId];
     }
   };
   StreamController.prototype.findParentNode = function (stream) {
-    var parentId = getStreamId(stream.parent);
-    if (stream && stream.parent && parentId && this.streamNodes[parentId]) {
+    if (!stream) {
+      return null;
+    }
+    var parentId = getConnectionId(stream.connection) + '-' + stream.parentId;
+    if (stream && parentId && this.streamNodes[parentId]) {
       return this.streamNodes[parentId];
     } else {
       var connId = getConnectionId(stream.connection);
@@ -573,15 +583,16 @@
     if (!connection) {
       return;
     }
-    connection = _.clone(connection);
+    var clonedConnection = _.clone(connection);
     var connId = getConnectionId(connection);
     if (connId && !this.connectionNodes[connId]) {
-      connection._connId = connId;
+      clonedConnection._connId = connId;
       var $html = this.generateConnectionHtml(connection);
-      connection._node = $html;
-      connection._childNode = $html.find('ul .panel-body');
+      clonedConnection._node = $html;
+      clonedConnection._childNode = $html.find('ul .panel-body');
       $html.appendTo(this.$streamList);
-      this.connectionNodes[connId] = connection;
+      this.connectionNodes[connId] = clonedConnection;
+      this.connections[connId] = connection;
     }
   };
   StreamController.prototype.getSelectedConnections = function () {
@@ -597,9 +608,10 @@
     var result = [];
     var parentId;
     var rootStreams = [];
+    var self = this;
     var walkStream = function (streams) {
       $.each(streams, function (i, stream) {
-        if (stream._node.find('input:first').prop('checked')) {
+        if (self.streamNodes[getStreamId(stream)]._node.find('input:first').prop('checked')) {
           result.push(stream);
         } else if (stream.children) {
           walkStream(stream.children);
@@ -607,7 +619,7 @@
       });
     };
 
-    $.each(this.streamNodes, function (i, stream) {
+    $.each(this.streams, function (i, stream) {
       parentId = getStreamId(stream.parent);
       if (!(stream.parent && parentId && this.streamNodes[parentId])) {
         rootStreams.push(stream);
@@ -619,7 +631,8 @@
   StreamController.prototype.generateStreamHtml = function (stream) {
     var label = '<span class="pins-color" style="background-color: ' +
       stream.color + '"></span>' + stream.name;
-    var level = getStreamLevel(stream);
+    console.log('DEBUG', 'level', stream, this.streams, this.streams[getStreamId(stream)] , getStreamLevel(this.streams[getStreamId(stream)]));
+    var level = getStreamLevel(this.streams[getStreamId(stream)]);
     var opened = this.options.autoOpen === true || this.options.autoOpen >= level;
     return this.generateNodeHtml('stream', stream, label, false, opened);
   };
@@ -690,7 +703,7 @@
       object._childNode.find('input').prop('checked', $input.checked).prop('indeterminate', false);
       object._node.find('li').removeClass('indeterminate').addClass(checkedClass);
       if (type === 'stream') {
-        var $parent = this.findParentNode(object);
+        var $parent = this.findParentNode(this.streams[getStreamId(object)]);
         this.updateInputState($parent);
       }
     } else {
@@ -720,7 +733,8 @@
         object._node.find('li:first').removeClass('checked').addClass('indeterminate');
       }
 
-      this.updateInputState(this.findParentNode(object));
+      this.updateInputState(this.findParentNode(this.streams[getStreamId(object)]));
+      this.updateInputState(this.findParentNode(this.connections[getConnectionId(object)]));
     }
   };
   StreamController.prototype.setSelectedConnections = function (connections) {
@@ -745,7 +759,7 @@
         if (node) {
           node._node.find('input').prop('checked', true).prop('indeterminate', false);
           node._node.find('li').addClass('checked').removeClass('indeterminate');
-          this.updateInputState(this.findParentNode(node));
+          this.updateInputState(this.findParentNode(this.streams[getStreamId(node)]));
         }
       }.bind(this));
     }

@@ -222,7 +222,7 @@
             '<label>Name</label><input type="text" class="form-control" required>' +
           '</div>' +
           '<div class="form-group manage-stream-color hide-by-overlay">' +
-            '<label>Color</label>' + colHtml +
+            '<label style="display: block;">Color</label>' + colHtml +
           '</div>' +
           '<div class="form-group manage-stream-parent">' +
             '<label>Parent</label>' +

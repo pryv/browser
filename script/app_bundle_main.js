@@ -21802,6 +21802,7 @@ function getHostname(connection) {
 
 var _ = require('underscore');
 var Event = require('./Event');
+var Stream = require('./Stream');
 
 function Datastore(connection) {
   this.connection = connection;
@@ -21943,12 +21944,34 @@ Datastore.prototype.createOrReuseEvent = function (data) {
   this.addEvent(result);
 
   return result;
+};
 
+
+/**
+ * @param {Object} data to map
+ * @return {Event} event
+ */
+Datastore.prototype.createOrReuseStream = function (data) {
+    if (! data.id) {
+        throw new Error('Datastore.createOrReuseStream cannot create stream with ' +
+            ' unkown id' + require('util').inspect(data));
+    }
+
+    var result = this.getStreamById(data.id);
+    if (result) {  // found event
+        _.extend(result, data);
+        return result;
+    }
+    // create an stream and register it
+    result = new Stream(this.connection, data);
+    this.addEvent(result);
+
+    return result;
 };
 
 
 
-},{"./Event":52,"underscore":49,"util":39}],52:[function(require,module,exports){
+},{"./Event":52,"./Stream":55,"underscore":49,"util":39}],52:[function(require,module,exports){
 
 var _ = require('underscore');
 
@@ -22830,7 +22853,6 @@ module.exports = Monitor;
 
 
 },{"./Filter.js":53,"./utility/SignalEmitter.js":69,"underscore":49}],55:[function(require,module,exports){
-
 var _ = require('underscore');
 
 /**
@@ -22863,14 +22885,27 @@ Stream.prototype.setClientData = function (keyValueMap, callback) {
 Object.defineProperty(Stream.prototype, 'parent', {
   get: function () {
 
-    if (! this.parentId) { return null; }
-    if (! this.connection.datastore) { // we use this._parent and this._children
+    if (!this.parentId) {
+      return null;
+    }
+    if (!this.connection.datastore) { // we use this._parent and this._children
       return this._parent;
     }
 
     return this.connection.datastore.getStreamById(this.parentId);
   },
-  set: function () { throw new Error('Stream.parent property is read only'); }
+  set: function (p) {
+    if (p instanceof Stream) {
+      p = p.id;
+    }
+
+    this.parentId = p;
+
+    if (!this.connection.datastore) { // we use this._parent and this._children
+      this._parent = p;
+    }
+    throw new Error('Stream.parent property is read only');
+  }
 });
 
 /**
@@ -22878,7 +22913,7 @@ Object.defineProperty(Stream.prototype, 'parent', {
  */
 Object.defineProperty(Stream.prototype, 'children', {
   get: function () {
-    if (! this.connection.datastore) { // we use this._parent and this._children
+    if (!this.connection.datastore) { // we use this._parent and this._children
       return this._children;
     }
     var children = [];
@@ -22888,18 +22923,24 @@ Object.defineProperty(Stream.prototype, 'children', {
     }.bind(this));
     return children;
   },
-  set: function () { throw new Error('Stream.children property is read only'); }
+  set: function () {
+    throw new Error('Stream.children property is read only');
+  }
 });
 
 // TODO write test
 Object.defineProperty(Stream.prototype, 'ancestors', {
   get: function () {
-    if (! this.parentId || this.parent === null) { return []; }
+    if (!this.parentId || this.parent === null) {
+      return [];
+    }
     var result = this.parent.ancestors;
     result.push(this.parent);
     return result;
   },
-  set: function () { throw new Error('Stream.ancestors property is read only'); }
+  set: function () {
+    throw new Error('Stream.ancestors property is read only');
+  }
 });
 
 
@@ -24502,8 +24543,8 @@ Profile.prototype._set = function (path, keyValuePairs, callback) {
 module.exports = Profile;
 },{}],66:[function(require,module,exports){
 var _ = require('underscore'),
-    utility = require('../utility/utility.js'),
-    Stream = require('../Stream.js');
+  utility = require('../utility/utility.js'),
+  Stream = require('../Stream.js');
 
 /**
  * @class ConnectionStreams
@@ -24524,7 +24565,6 @@ function ConnectionStreams(connection) {
   this.connection = connection;
   this._streamsIndex = {};
 }
-
 
 
 /**
@@ -24566,7 +24606,78 @@ ConnectionStreams.prototype.get = function (options, callback) {
 ConnectionStreams.prototype.create = function (streamData, callback) {
   streamData = _.pick(streamData, 'id', 'name', 'parentId', 'singleActivity',
     'clientData', 'trashed');
-  this._createWithData(streamData, callback);
+  return this._createWithData(streamData, callback);
+};
+
+
+ConnectionStreams.prototype.update = function (streamData, callback) {
+
+  if (typeof streamData === 'object') {
+    streamData = [ streamData ];
+  }
+
+  _.each(streamData, function (e) {
+    var s = _.pick(e, 'id', 'name', 'parentId', 'singleActivity',
+      'clientData', 'trashed');
+    var url = '/streams/' + s.id;
+    this.connection.request('PUT', url, function (error, result) {
+      if (!error && result && result.stream) {
+
+        this._getObjects(null, function (err, res) {
+          if (!err && res) {
+            if (!this.connection.datastore) {
+              result = new Stream(this.connection, result.stream);
+            } else {
+              result = this.connection.datastore.createOrReuseStream(result.stream);
+            }
+          } else {
+            result = null;
+          }
+
+          if (callback && typeof(callback) === 'function') {
+            callback(err, result);
+          }
+        }.bind(this));
+
+      } else {
+        result = null;
+      }
+      if (error && callback && typeof(callback) === 'function') {
+        callback(error, null);
+      }
+    }.bind(this), s);
+  }.bind(this));
+};
+
+
+/**
+ * @param streamData
+ * @param callback
+ * @param mergeEventsWithParent
+ */
+ConnectionStreams.prototype.delete = function (streamData, callback, mergeEventsWithParent) {
+  var id;
+  if (streamData && streamData.id) {
+    id = streamData.id;
+  } else {
+    id = streamData;
+  }
+
+  mergeEventsWithParent = mergeEventsWithParent ? true : false;
+  var url = '/streams/' + id + '?mergeEventsWithParent=' + mergeEventsWithParent;
+  this.connection.request('DELETE', url, function (error, resultData) {
+    var stream = null;
+    if (!error && resultData && resultData.stream) {
+      streamData.id = resultData.stream.id;
+      stream = new Stream(this.connection, resultData.stream);
+      if (this.connection.datastore) {
+        this.connection.datastore.indexStream(stream);
+      }
+    }
+    if (_.isFunction(callback)) {
+      return callback(error, error ? null : resultData.stream);
+    }
+  }.bind(this));
 };
 
 
@@ -24591,14 +24702,14 @@ ConnectionStreams.prototype.updateProperties = function (stream, properties, opt
 
 
 /**
- * TODO remove it's unused and could lead to miscumprhension
+ * TODO remove it's unused and could lead to miscomprehension
  * Get a Stream by it's Id.
  * Works only if fetchStructure has been done once.
  * @param {string} streamId
  * @throws {Error} Connection.fetchStructure must have been called before.
  */
 ConnectionStreams.prototype.getById = function (streamId) {
-  if (! this.connection.datastore) {
+  if (!this.connection.datastore) {
     throw new Error('Call connection.fetchStructure before, to get automatic stream mapping');
   }
   return this.connection.datastore.getStreamById(streamId);
@@ -24631,15 +24742,16 @@ ConnectionStreams.prototype._getData = function (opts, callback) {
 ConnectionStreams.prototype._createWithData = function (streamData, callback) {
   var url = '/streams';
   this.connection.request('POST', url, function (err, resultData) {
+    var stream = null;
     if (!err && resultData) {
       streamData.id = resultData.stream.id;
-      var stream = new Stream(this.connection, resultData.stream);
+      stream = new Stream(this.connection, resultData.stream);
       if (this.connection.datastore) {
         this.connection.datastore.indexStream(stream);
       }
     }
     if (_.isFunction(callback)) {
-      return callback(err, resultData.stream);
+      return callback(err, err ? null : stream);
     }
   }.bind(this), streamData);
 };
@@ -24668,7 +24780,9 @@ ConnectionStreams.prototype._getObjects = function (options, callback) {
   var streamsIndex = {};
   var resultTree = [];
   this._getData(options, function (error, result) {
-    if (error) { return callback('Stream.get failed: ' + JSON.stringify(error)); }
+    if (error) {
+      return callback('Stream.get failed: ' + JSON.stringify(error));
+    }
     var treeData = result.streams || result.stream;
     ConnectionStreams.Utils.walkDataTree(treeData, function (streamData) {
       var stream = new Stream(this.connection, streamData);
@@ -24679,7 +24793,7 @@ ConnectionStreams.prototype._getObjects = function (options, callback) {
         stream._children = [];
       } else {
         // localStorage will cleanup  parent / children link if needed
-        stream._parent =  streamsIndex[stream.parentId];
+        stream._parent = streamsIndex[stream.parentId];
         stream._parent._children.push(stream);
       }
     }.bind(this));
@@ -24707,12 +24821,15 @@ ConnectionStreams.prototype._getObjects = function (options, callback) {
  */
 ConnectionStreams.prototype.walkTree = function (options, eachStream, done) {
   this.get(options, function (error, result) {
-    if (error) { return done('Stream.walkTree failed: ' + error); }
+    if (error) {
+      return done('Stream.walkTree failed: ' + error);
+    }
     ConnectionStreams.Utils.walkObjectTree(result, eachStream);
-    if (done) { done(null); }
+    if (done) {
+      done(null);
+    }
   });
 };
-
 
 
 /**
@@ -24724,11 +24841,13 @@ ConnectionStreams.prototype.getFlatenedObjects = function (options, callback) {
   var result = [];
   this.walkTree(options,
     function (stream) { // each stream
-    result.push(stream);
-  }, function (error) {  // done
-    if (error) { return callback(error); }
-    callback(null, result);
-  }.bind(this));
+      result.push(stream);
+    }, function (error) {  // done
+      if (error) {
+        return callback(error);
+      }
+      callback(null, result);
+    }.bind(this));
 };
 
 
@@ -24758,29 +24877,29 @@ ConnectionStreams.Utils = {
    * @param streamArray
    * @param eachStream
    */
-  toJSON : function (arrayOfStreams) {
+  toJSON: function (arrayOfStreams) {
 
     var result = [];
-    if (! arrayOfStreams  || ! arrayOfStreams instanceof Array) {
+    if (!arrayOfStreams || !arrayOfStreams instanceof Array) {
       throw new Error('expected an array for argument :' + arrayOfStreams);
     }
 
     _.each(arrayOfStreams, function (stream) {
-      if (! stream || ! stream instanceof Stream) {
+      if (!stream || !stream instanceof Stream) {
         throw new Error('expected a Streams array ' + stream);
       }
       result.push({
-        name : stream.name,
-        id : stream.id,
-        parentId : stream.parentId,
-        singleActivity : stream.singleActivity,
-        clientData : stream.clientData,
-        trashed : stream.trashed,
-        created : stream.created,
-        createdBy : stream.createdBy,
-        modified : stream.modified,
-        modifiedBy : stream.modifiedBy,
-        children : ConnectionStreams.Utils.toJSON(stream.children)
+        name: stream.name,
+        id: stream.id,
+        parentId: stream.parentId,
+        singleActivity: stream.singleActivity,
+        clientData: stream.clientData,
+        trashed: stream.trashed,
+        created: stream.created,
+        createdBy: stream.createdBy,
+        modified: stream.modified,
+        modifiedBy: stream.modifiedBy,
+        children: ConnectionStreams.Utils.toJSON(stream.children)
       });
     });
     return result;
@@ -24791,7 +24910,7 @@ ConnectionStreams.Utils = {
    * @param streamTree
    * @param callback function(stream)
    */
-  walkObjectTree : function (streamArray, eachStream) {
+  walkObjectTree: function (streamArray, eachStream) {
     _.each(streamArray, function (stream) {
       eachStream(stream);
       ConnectionStreams.Utils.walkObjectTree(stream.children, eachStream);
@@ -24804,7 +24923,7 @@ ConnectionStreams.Utils = {
    * @param streamTree
    * @param callback function(streamData, subTree)  subTree is the descendance tree
    */
-  walkDataTree : function (streamTree, callback) {
+  walkDataTree: function (streamTree, callback) {
     _.each(streamTree, function (streamStruct) {
       var stream = _.omit(streamStruct, 'children');
       stream.childrenIds = [];
@@ -24825,20 +24944,20 @@ ConnectionStreams.Utils = {
   /**
    * ShowTree
    */
-  _debugTree : function (arrayOfStreams) {
+  _debugTree: function (arrayOfStreams) {
     var result = [];
-    if (! arrayOfStreams  || ! arrayOfStreams instanceof Array) {
+    if (!arrayOfStreams || !arrayOfStreams instanceof Array) {
       throw new Error('expected an array for argument :' + arrayOfStreams);
     }
     _.each(arrayOfStreams, function (stream) {
-      if (! stream || ! stream instanceof Stream) {
+      if (!stream || !stream instanceof Stream) {
         throw new Error('expected a Streams array ' + stream);
       }
       result.push({
-        name : stream.name,
-        id : stream.id,
-        parentId : stream.parentId,
-        children : ConnectionStreams.Utils._debugTree(stream.children)
+        name: stream.name,
+        id: stream.id,
+        parentId: stream.parentId,
+        children: ConnectionStreams.Utils._debugTree(stream.children)
       });
     });
     return result;
@@ -27305,7 +27424,6 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     };
 
     Pryv.eventTypes.loadExtras(function () {});
-    Pryv.eventTypes.loadFlat(function () {});
 
     // create the TreeMap
     this.controller = new Controller();
@@ -27672,7 +27790,36 @@ window.PryvBrowser.eventTypes = {
   },
 
   isNumerical: function (event) {
-    return Pryv.eventTypes.isNumerical(event);
+    if (! event || ! event.type) { return false; }
+    var typeClass = event.type.split('/')[0];
+    return typeClass === 'money' ||
+        typeClass === 'absorbed-dose' ||
+        typeClass === 'absorbed-dose-equivalent' ||
+        typeClass === 'absorbed-dose-rate' ||
+        typeClass === 'absorbed-dose-rate' ||
+        typeClass === 'area' ||
+        typeClass === 'capacitance' ||
+        typeClass === 'catalytic-activity' ||
+        typeClass === 'count' ||
+        typeClass === 'data-quantity' ||
+        typeClass === 'density' ||
+        typeClass === 'dynamic-viscosity' ||
+        typeClass === 'electric-charge' ||
+        typeClass === 'electric-charge-line-density' ||
+        typeClass === 'electric-current' ||
+        typeClass === 'electrical-conductivity' ||
+        typeClass === 'electromotive-force' ||
+        typeClass === 'energy' ||
+        typeClass === 'force' ||
+        typeClass === 'length' ||
+        typeClass === 'luminous-intensity' ||
+        typeClass === 'mass' ||
+        typeClass === 'mol' ||
+        typeClass === 'power' ||
+        typeClass === 'pressure' ||
+        typeClass === 'speed' ||
+        typeClass === 'temperature' ||
+        typeClass === 'volume';
   },
 
   isPicture: function (event) {
@@ -28026,11 +28173,8 @@ MonitorsHandler.prototype._eachMonitor = function (callback) {
  * @returns {Array}
  */
 MonitorsHandler.prototype.getStreams = function () {
-  var result = null;
+  var result = [];
   this._eachMonitor(function (monitor) {
-    if (!result && monitor.filter.streamsIds) {
-      result = [];
-    }
     _.each(monitor.filter.streamsIds, function (streamId) {
       result.push(monitor.connection.datastore.getStreamById(streamId));
     });
@@ -29723,22 +29867,19 @@ var TreeMap = module.exports = function (model) {
       this.closeCreateSharingView();
     }.bind(this));
     var streams = [], streamsId = [],
-      loggedUsername = this.model.loggedConnection.username,
-      focusedStreams = this.model.activeFilter.getStreams();
-    if (focusedStreams) {
-      focusedStreams.forEach(function (stream) {
-        if (stream.connection.username === loggedUsername) {
-          if (streamsId.indexOf((stream.parentId)) === -1) {
-            streams.push(stream);
-          }
-          streamsId.push(stream.id);
+      loggedUsername = this.model.loggedConnection.username;
+    this.model.activeFilter.getStreams().forEach(function (stream) {
+      if (stream.connection.username === loggedUsername) {
+        if (streamsId.indexOf((stream.parentId)) === -1) {
+          streams.push({id: stream.id, name: stream.name, children: stream.children});
         }
-      });
-    }
+        streamsId.push(stream.id);
+      }
+    });
     if (streams.length === 0) {
       this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
         if (streamsId.indexOf((stream.parentId)) === -1) {
-          streams.push(stream);
+          streams.push({id: stream.id, name: stream.name, children: stream.children});
         }
         streamsId.push(stream.id);
       });
@@ -31150,7 +31291,6 @@ try {
 },{"../../view/events-views/notes/Model.js":133,"../EventsNode":89,"underscore":79}],98:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
-  Pryv = require('pryv'),
   EventsView = require('../../view/events-views/numericals/Model.js'),
   _ = require('underscore'),
   DEFAULT_WEIGHT = 1;
@@ -31174,9 +31314,39 @@ var NumericalsEventsNode = module.exports = EventsNode.implement(
 
 // we accept all kind of events
 NumericalsEventsNode.acceptThisEventType = function (eventType) {
-  return Pryv.eventTypes.isNumerical(eventType);
+  var eventTypeClass = eventType.split('/')[0];
+  return (
+    eventTypeClass === 'money' ||
+      eventTypeClass === 'absorbed-dose' ||
+      eventTypeClass === 'absorbed-dose-equivalent' ||
+      eventTypeClass === 'absorbed-dose-rate' ||
+      eventTypeClass === 'absorbed-dose-rate' ||
+      eventTypeClass === 'area' ||
+      eventTypeClass === 'capacitance' ||
+      eventTypeClass === 'catalytic-activity' ||
+      eventTypeClass === 'count' ||
+      eventTypeClass === 'data-quantity' ||
+      eventTypeClass === 'density' ||
+      eventTypeClass === 'dynamic-viscosity' ||
+      eventTypeClass === 'electric-charge' ||
+      eventTypeClass === 'electric-charge-line-density' ||
+      eventTypeClass === 'electric-current' ||
+      eventTypeClass === 'electrical-conductivity' ||
+      eventTypeClass === 'electromotive-force' ||
+      eventTypeClass === 'energy' ||
+      eventTypeClass === 'force' ||
+      eventTypeClass === 'length' ||
+      eventTypeClass === 'luminous-intensity' ||
+      eventTypeClass === 'mass' ||
+      eventTypeClass === 'mol' ||
+      eventTypeClass === 'power' ||
+      eventTypeClass === 'pressure' ||
+      eventTypeClass === 'speed' ||
+      eventTypeClass === 'temperature' ||
+      eventTypeClass === 'time' ||
+      eventTypeClass === 'volume'
+    );
 };
-
 try {
   Object.defineProperty(window.PryvBrowser, 'numericalWeight', {
     set: function (value) {
@@ -31198,7 +31368,7 @@ try {
 }
 
 
-},{"../../view/events-views/numericals/Model.js":137,"../EventsNode":89,"pryv":68,"underscore":79}],99:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":137,"../EventsNode":89,"underscore":79}],99:[function(require,module,exports){
 /*global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/pictures/Model.js'),
@@ -39652,6 +39822,10 @@ Controller.render = function (MainModel) {
     /*view.render();
     view.actions.show(actionsView);*/
     view.filterByStream.show(filterByStreamView);
+  } else if (view && filterByStreamView) {
+    if (!filterByStreamView.onFocusStreamChanged()) {
+      view.filterByStream.show(filterByStreamView);
+    }
   }
 
 
@@ -39695,14 +39869,15 @@ var isConnectionsNumberChange = function (MainModel) {
 },{"./Actions.js":149,"./FilterByStream.js":151,"backbone.marionette":1,"underscore":79}],151:[function(require,module,exports){
 /*global $ */
 var Marionette = require('backbone.marionette'),
-  _ = require('underscore');
+  _ = require('underscore'),
+  UNIQUE_ID = 0;
 
 module.exports = Marionette.ItemView.extend({
   template: '#filter-by-stream-template',
   templateHelpers: function () {
     return {
       getStream: function () {
-        return '';
+        return this._getStream();
       }.bind(this)
     };
   },
@@ -39711,7 +39886,6 @@ module.exports = Marionette.ItemView.extend({
     checkbox: 'input[type=checkbox]',
     applyBtn: '#filter-by-stream-apply'
   },
-  connections: [],
   shushListenerOnce: false, //used to note trigger the render when we click on a checkbox
   initialize: function (options) {
     this.MainModel  = options.MainModel;
@@ -39720,13 +39894,7 @@ module.exports = Marionette.ItemView.extend({
         clearInterval(initListener);
         this.MainModel.activeFilter.addEventListener('filteredStreamsChange', function () {
           if (!this.shushListenerOnce) {
-            if (!this.MainModel.activeFilter.getStreams()) {
-              $('#collapseFilterByStream .panel-body:first')
-                .streamController('setSelectedConnections', this.connections);
-            } else {
-              $('#collapseFilterByStream .panel-body:first')
-                .streamController('setSelectedStreams', this.MainModel.activeFilter.getStreams());
-            }
+            this.render();
           } else {
             this.shushListenerOnce = false;
           }
@@ -39745,52 +39913,198 @@ module.exports = Marionette.ItemView.extend({
     if (!this.MainModel.activeFilter) {
       return;
     }
+    var self = this;
+    self.ui.applyBtn.prop('disabled', true);
+    self.ui.applyBtn.click(this._applyFilter.bind(this));
+    this.ui.label.click(function (e) {
+      e.stopPropagation();
+      var input = $($(e.currentTarget).parent()).find('input');
+      var checked = input.prop('checked');
+      input.prop({
+        indeterminate: false,
+        checked: !checked
+      });
+      input.trigger('change');
+      this.shushListenerOnce = true;
+      this._applyFilter();
+    }.bind(this));
+    this.ui.checkbox.click(function (e) {
+      e.stopPropagation();
+    });
+    this.ui.checkbox.change(function (e, options) {
+      var checked = $(e.currentTarget).prop('checked'),
+        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
+      self.ui.applyBtn.prop('disabled', false);
+      container.find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: checked
+      });
+      if (!options || !options.noIndeterminate) {
+        self._isChildrenCheck(container.parent().parent());
+      }
+    });
+    this.bindUIElements();
+    this.onFocusStreamChanged();
+    setTimeout(function () {$('body').i18n(); }, 100);
+  },
+  onFocusStreamChanged: function () {
     var focusedStreams = this.MainModel.activeFilter.getStreams();
-    this.connections = [];
-    var streams = [];
-    if (!this.MainModel.loggedConnection) {
+    var focusedStreamsIds = [];
+    try {
+      this.ui.checkbox.prop({
+        indeterminate: false,
+        checked: false
+      });
+    } catch (e) {
+      return false;
+    }
+
+    _.each(focusedStreams, function (stream) {
+      focusedStreamsIds.push(stream.connection.serialId + '/' + stream.id);
+    });
+    var $parent, c, s;
+    _.each(this.ui.checkbox, function (checkbox) {
+      checkbox = $(checkbox);
+      $parent = $(checkbox.parent().parent());
+      if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
+        c = this.MainModel.connections.get($parent.attr('data-connection'));
+        if (c) {
+          s = c.datastore.getStreamById($parent.attr('data-stream'));
+          if (s) {
+            if (focusedStreamsIds.indexOf(c.serialId + '/' + s.id) !== -1 ||
+              focusedStreamsIds.length === 0) {
+              checkbox.prop({
+                indeterminate: false,
+                checked: true
+              });
+              checkbox.trigger('change', {noIndeterminate: true});
+            }
+          }
+        }
+      }
+    }.bind(this));
+    return true;
+  },
+  _isChildrenCheck: function ($el) {
+    if ($el.attr('id') === 'collapseFilterByStream') {
       return;
     }
+    var allChecked = true;
+    var allUncheck = true;
+    var children  = $($el).find('input[type="checkbox"]');
+    for (var i = 0; i < children.length; i++) {
+      allChecked = allChecked && $(children[i]).prop('checked');
+      allUncheck = allUncheck && !$(children[i]).prop('checked');
+    }
+    if (allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: false
+      });
+    } else if (!allChecked && !allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']', this.$el).find('input[type="checkbox"]').prop({
+        indeterminate: true,
+        checked: false
+      });
+    }
+    this._isChildrenCheck($($($el).parent().parent()));
+  },
+  _applyFilter: function () {
+    var streams = [], $parent, connection, stream;
+    this.ui.applyBtn.prop('disabled', true);
+    _.each(this.ui.checkbox, function (checkbox) {
+      checkbox = $(checkbox);
+      if (checkbox.prop('checked')) {
+        $parent = $(checkbox.parent().parent());
+        if ($parent && $parent.attr('data-connection') && $parent.attr('data-stream')) {
+          connection = this.MainModel.connections.get($parent.attr('data-connection'));
+          if (connection) {
+            stream = connection.datastore.getStreamById($parent.attr('data-stream'));
+            if (stream) {
+              streams.push(stream);
+            }
+          }
+        }
+      }
+    }.bind(this));
+    this.MainModel.activeFilter.focusOnStreams(streams);
+  },
+  _getStream: function () {
+    var connections = [],
+      result = '';
+    if (!this.MainModel.loggedConnection) {
+      return result;
+    }
     if (this.MainModel.loggedConnection.datastore && this.MainModel.loggedConnection._accessInfo) {
-      this.connections.push(this.MainModel.loggedConnection);
-      streams = streams.concat(this.MainModel.loggedConnection.datastore.getStreams());
+      connections.push(this.MainModel.loggedConnection);
     }
     _.each(this.MainModel.sharingsConnections, function (c) {
-      if (c._accessInfo && c.datastore) {
-        this.connections.push(c);
-        streams = streams.concat(c.datastore.getStreams());
+      if (c._accessInfo) {
+        connections.push(c);
       }
-    }.bind(this));
+    });
     _.each(this.MainModel.bookmakrsConnections, function (c) {
-      if (c._accessInfo && c.datastore) {
-        this.connections.push(c);
-        streams = streams.concat(c.datastore.getStreams());
+      if (c._accessInfo) {
+        connections.push(c);
       }
-    }.bind(this));
-    $('#collapseFilterByStream .panel-body:first').off();
-    $('#collapseFilterByStream .panel-body:first').streamController(
-      {
-        autoOpen: 1,
-        multiple: true,
-        streams: streams,
-        connections: this.connections,
-        editMode: false
+    });
+    _.each(connections, function (c) {
+      result += '<li class="stream-tree-summary connection disclosure"' +
+        ' data-toggle="collapse" ' +
+        'data-target="#collapse' + UNIQUE_ID + '">' +
+        '<div class="pryv-checkbox">' +
+        '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
+      if (c._accessInfo.name !== 'pryv-browser') {
+        result += ' / ' + c._accessInfo.name;
       }
-    );
-    if (!focusedStreams) {
-      $('#collapseFilterByStream .panel-body:first')
-        .streamController('setSelectedConnections', this.connections);
-    } else {
-      $('#collapseFilterByStream .panel-body:first')
-        .streamController('setSelectedStreams', focusedStreams);
-    }
-    $('#collapseFilterByStream .panel-body:first').on('inputChanged', function () {
-      this.MainModel.treemap.focusOnStreams($('#collapseFilterByStream .panel-body:first')
-        .streamController('getSelectedStreams'));
+      result += '</label></div></li>';
+      result += '<ul id="collapse' + UNIQUE_ID +
+        '" class="panel-collapse  collapse in stream-tree-children">' +
+        '<div class="panel-body">';
+      UNIQUE_ID++;
+      result += this._getStreamStructure(c);
+      result += '</div></ul>';
     }.bind(this));
 
-    this.bindUIElements();
-    setTimeout(function () {$('body').i18n(); }, 100);
+    return result;
+  },
+  _getStreamStructure: function (connection) {
+    var rootStreams = connection.datastore.getStreams(),
+      result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (!rootStreams[i].virtual) {
+        result += this._walkStreamStructure(rootStreams[i]);
+      }
+    }
+    return result;
+  },
+  _walkStreamStructure: function (stream) {
+    var disclosure = '';
+    if (stream.children.length > 0) {
+      disclosure = 'disclosure';
+    }
+    var result = '<li data-connection="' +
+      stream.connection.serialId + '" data-stream="' +
+      stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
+      '" data-toggle="collapse" ' +
+      'data-target="#collapse' + UNIQUE_ID + '">' +
+      '<div class="pryv-checkbox">' +
+      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+      '"><label for="afilterStream' + UNIQUE_ID + '">' +
+      stream.name + '</label></div></li>';
+    result += '<ul id="collapse' + UNIQUE_ID +
+      '" class="panel-collapse  collapse stream-tree-children">' +
+      '<div class="panel-body">';
+    UNIQUE_ID++;
+    for (var j = 0; j < stream.children.length; j++) {
+      if (!stream.children[j].virtual) {
+        result += this._walkStreamStructure(stream.children[j]);
+      }
+
+    }
+    result += '</div></ul>';
+    return result;
   }
 
 });
@@ -40769,33 +41083,34 @@ var Layout = Marionette.Layout.extend({
     access.name = name;
    // access.token = token;
     access.permissions = [];
+    if ($spin) {
+      $spin.show();
+    }
 
-
-    _.each($('#sharing-stream-list').streamController('getSelectedStreams'), function (stream) {
-      access.permissions.push({streamId : stream.id, level: permission});
+    _.each($('#sharing-stream-list input[type=checkbox]'), function (checkbox) {
+      var streamId = $($(checkbox).parent().parent()).attr('data-stream');
+      if ($(checkbox).prop('checked') && streamId) {
+        access.permissions.push({streamId : streamId, level: permission});
+      }
     }.bind(this));
 
-    if (access.permissions.length > 0) {
 
+
+    this.connection.accesses.create(access, function (error, result) {
       if ($spin) {
-        $spin.show();
+        $spin.hide();
       }
-      this.connection.accesses.create(access, function (error, result) {
-        if ($spin) {
-          $spin.hide();
-        }
 
-        if (error || result.message) {
-          $btn.addClass('btn-pryv-alizarin');
-          window.PryvBrowser.showAlert('.modal-content',
-            i18n.t('slices.messages.errInvalidSharingToken'));
-          return;
-        }
+      if (error || result.message) {
+        $btn.addClass('btn-pryv-alizarin');
+        window.PryvBrowser.showAlert('.modal-content',
+          i18n.t('slices.messages.errInvalidSharingToken'));
+        return;
+      }
 
-        $btn.removeClass('btn-pryv-alizarin');
-        this.trigger('sharing:createSuccess', { name: name, token: result.token });
-      }.bind(this));
-    }
+      $btn.removeClass('btn-pryv-alizarin');
+      this.trigger('sharing:createSuccess', { name: name, token: result.token });
+    }.bind(this));
   }
 });
 var Controller = module.exports = function ($modal, connection, streams, timeFilter, target) {
@@ -40849,7 +41164,9 @@ _.extend(Controller.prototype, {
 },{"./CreateFormView.js":168,"./SuccessView.js":169,"backbone.marionette":1,"underscore":79}],168:[function(require,module,exports){
 /* global $ */
 
-var Marionette = require('backbone.marionette');
+var Marionette = require('backbone.marionette'),
+  _ = require('underscore'),
+  UNIQUE_ID = 0;
 
 module.exports = Marionette.ItemView.extend({
   template: '#create-sharings-form-template',
@@ -40857,7 +41174,7 @@ module.exports = Marionette.ItemView.extend({
   templateHelpers: function () {
     return {
       getStream: function () {
-        return '';
+        return this._getStream();
       }.bind(this)
     };
   },
@@ -40870,26 +41187,134 @@ module.exports = Marionette.ItemView.extend({
     this.streams = this.options.streams;
   },
   onRender: function () {
+    var self = this;
     this.bindUIElements();
-
-    setTimeout(function () {
-      $('body').i18n();
-      $('#sharing-stream-list').streamController(
-      {
-        autoOpen: 1,
-        multiple: false,
-        streams: this.streams,
-        connections: this.connection,
-        editMode: 'toggle'
+    _.each(this.$el.find('input[type=checkbox]'), function (checkbox) {
+      $(checkbox).prop({
+        indeterminate: false,
+        checked: true
       });
-      //$('#sharing-stream-list').streamController('setSelectedStreams', this.streams);
-    }.bind(this), 200);
+    });
+    this.ui.label.click(function (e) {
+      e.stopPropagation();
+      var input = $($(e.currentTarget).parent()).find('input');
+      var checked = input.prop('checked');
+      input.prop({
+        indeterminate: false,
+        checked: !checked
+      });
+      input.trigger('change');
+    }.bind(this));
+    this.ui.checkbox.click(function (e) {
+      e.stopPropagation();
+    });
+    this.ui.checkbox.change(function (e, options) {
+      var checked = $(e.currentTarget).prop('checked'),
+        container = $($(e.currentTarget).parent().parent().attr('data-target'), self.$el);
+      container.find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: checked
+      });
+      if (!options || !options.noIndeterminate) {
+        self._isChildrenCheck(container.parent().parent());
+      }
+    });
+
+    setTimeout(function () {$('body').i18n(); }, 100);
+  },
+  _isChildrenCheck: function ($el) {
+    if (!$el.hasClass('stream-tree-children')) {
+      return;
+    }
+    var allChecked = true;
+    var allUncheck = true;
+    var children  = $($el).find('input[type="checkbox"]');
+    for (var i = 0; i < children.length; i++) {
+      allChecked = allChecked && $(children[i]).prop('checked');
+      allUncheck = allUncheck && !$(children[i]).prop('checked');
+    }
+    if (allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']').find('input[type="checkbox"]').prop({
+        indeterminate: false,
+        checked: false
+      });
+    } else if (!allChecked && !allUncheck) {
+      $('li[data-target=#' + $el.attr('id') + ']').find('input[type="checkbox"]').prop({
+        indeterminate: true,
+        checked: false
+      });
+    }
+    this._isChildrenCheck($($($el).parent().parent()));
+  },
+  _getStream: function () {
+    var connections = [this.connection],
+      result = '';
+    _.each(connections, function (c) {
+      result += '<li class="stream-tree-summary connection disclosure"' +
+        ' data-toggle="collapse" ' +
+        'data-target="#collapse-sharing' + UNIQUE_ID + '">' +
+        '<div class="pryv-checkbox">' +
+        '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+        '"><label for="afilterStream' + UNIQUE_ID + '">' +   c.username;
+      if (c._accessInfo.name !== 'pryv-browser') {
+        result += ' / ' + c._accessInfo.name;
+      }
+      result += '</label></div></li>';
+      result += '<ul id="collapse-sharing' + UNIQUE_ID +
+        '" class="panel-collapse  collapse in stream-tree-children">' +
+        '<div class="panel-body">';
+      UNIQUE_ID++;
+      result += this._getStreamStructure();
+      result += '</div></ul>';
+    }.bind(this));
+
+    return result;
+  },
+  _getStreamStructure: function () {
+    var rootStreams = this.streams,
+      result = '';
+    for (var i = 0; i < rootStreams.length; i++) {
+      if (!rootStreams[i].virtual) {
+        result += this._walkStreamStructure(rootStreams[i]);
+      }
+    }
+    return result;
+  },
+  _walkStreamStructure: function (stream) {
+    var disclosure = '';
+    if (stream.children.length > 0) {
+      disclosure = 'disclosure';
+    }
+    if (stream.name.length === 0) {
+      stream.name = '&nbsp;&nbsp;';
+    }
+    var result = '<li data-stream="' +
+      stream.id + '" class="stream-tree-summary collapsed ' + disclosure +
+      '" data-toggle="collapse" ' +
+      'data-target="#collapse-sharing' + UNIQUE_ID + '">' +
+      '<div class="pryv-checkbox">' +
+      '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
+      '"><label for="afilterStream' + UNIQUE_ID + '">' +
+      stream.name + '</label></div></li>';
+    result += '<ul id="collapse-sharing' + UNIQUE_ID +
+      '" class="panel-collapse  collapse stream-tree-children">' +
+      '<div class="panel-body">';
+    UNIQUE_ID++;
+    for (var j = 0; j < stream.children.length; j++) {
+      if (!stream.children[j].virtual) {
+        result += this._walkStreamStructure(stream.children[j]);
+      }
+
+    }
+    result += '</div></ul>';
+    return result;
   }
+
 });
 
 
 
-},{"backbone.marionette":1}],169:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":79}],169:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({

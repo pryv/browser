@@ -88,6 +88,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     };
 
     Pryv.eventTypes.loadExtras(function () {});
+    Pryv.eventTypes.loadFlat(function () {});
 
     // create the TreeMap
     this.controller = new Controller();
@@ -454,36 +455,7 @@ window.PryvBrowser.eventTypes = {
   },
 
   isNumerical: function (event) {
-    if (! event || ! event.type) { return false; }
-    var typeClass = event.type.split('/')[0];
-    return typeClass === 'money' ||
-        typeClass === 'absorbed-dose' ||
-        typeClass === 'absorbed-dose-equivalent' ||
-        typeClass === 'absorbed-dose-rate' ||
-        typeClass === 'absorbed-dose-rate' ||
-        typeClass === 'area' ||
-        typeClass === 'capacitance' ||
-        typeClass === 'catalytic-activity' ||
-        typeClass === 'count' ||
-        typeClass === 'data-quantity' ||
-        typeClass === 'density' ||
-        typeClass === 'dynamic-viscosity' ||
-        typeClass === 'electric-charge' ||
-        typeClass === 'electric-charge-line-density' ||
-        typeClass === 'electric-current' ||
-        typeClass === 'electrical-conductivity' ||
-        typeClass === 'electromotive-force' ||
-        typeClass === 'energy' ||
-        typeClass === 'force' ||
-        typeClass === 'length' ||
-        typeClass === 'luminous-intensity' ||
-        typeClass === 'mass' ||
-        typeClass === 'mol' ||
-        typeClass === 'power' ||
-        typeClass === 'pressure' ||
-        typeClass === 'speed' ||
-        typeClass === 'temperature' ||
-        typeClass === 'volume';
+    return Pryv.eventTypes.isNumerical(event);
   },
 
   isPicture: function (event) {

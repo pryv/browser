@@ -136,7 +136,8 @@
     this.streams = {};
     this.connections = {};
     options.streams = $.isArray(options.streams) ? options.streams : [options.streams];
-    options.connections = $.isArray(options.connections) ? options.connections : [options.connections];
+    options.connections = $.isArray(options.connections) ?
+      options.connections : [options.connections];
     this.addConnections(options.connections);
     this.addStreams(options.streams);
     return this;
@@ -154,11 +155,13 @@
   };
   StreamController.prototype._initHeader = function () {
     if (this.options.headerText && typeof this.options.headerText === 'string') {
-      this.$header.append('<div class="header-title pull-left">' + this.options.headerText + '</div>');
+      this.$header.append('<div class="header-title pull-left">' +
+        this.options.headerText + '</div>');
     }
     if (this.options.editMode === 'toggle') {
       this.isManageOpened = false;
-      var $manageToggle = $('<div class="manage-toggle btn btn-default btn-xs pull-right">Manage</div>');
+      var $manageToggle = $('<div class="manage-toggle btn btn-default btn-xs pull-right">' +
+        'Manage</div>');
       $manageToggle.appendTo(this.$header);
       $manageToggle.click(function () {
         if (!this.isManageOpened) {

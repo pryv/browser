@@ -206,6 +206,7 @@ background-color: #00A8E2;
 .stream-controller-node.checked{
   background-color: #3E9EDF;
   color: #FFF;
+  min-height: 30px;
 }
 .stream-controller-select .disclosure {
   position: absolute;

@@ -937,8 +937,8 @@
   <div class="menu-panel"></div>
 <span id="pryvButton"></span>
 <div id="login">
-  <div id="login-caret" class="centered"><span class="ss-navigateleft"></span>
-  </div>
+  <!--<div id="login-caret" class="centered"><span class="ss-navigateleft"></span>
+  </div>-->
   <div id="login-form" class="centered">
     <form role="form">
       <div class="icon ss-user" style="text-align: center;"></div>
@@ -952,26 +952,33 @@
         <label class="sr-only" for="login-password">Password</label>
         <input type="password" class="form-control" id="login-password" data-i18n="[placeholder]login.labels.password">
       </div>
-      <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
-      <button type="submit" class="btn btn-primary"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
 
+      <div class="form-group" style="overflow:hidden;">
+        <button type="submit" class="btn btn-primary pull-right"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
+        <button id="login-caret" class="btn btn-default pull-right"><span data-i18n="common.actions.cancel"></span></button>
+      </div>
+      <hr/>
+      <div class="form-group">
+        <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
+      </div>
 
     </form>
   </div>
 </div>
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
-    <div href="#" id="logo-reload" class="logo">Pryv</div>
-      <ul class="nav navbar-nav navbar-left">
-        <li id="togglePanel">
-        <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
-        </li>
-        <li id="addEvent">
-          <a href="javascript:void(0)" ><span class="icon ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>
-        </li>
-        <li id="connectApps">
-          <a href="javascript:void(0)" ><span class="icon ss-piechart"></span> <span data-i18n="nav.actions.connectApps"></span></a>
-        </li>
-      </ul>
+    <div id="logo-reload" class="logo">Pryv</div>
+    <div id="logo-beta-mention"><a href="http://pryv.com/beta-roadmap/" target="_blank">Beta</a></div>
+    <ul class="nav navbar-nav navbar-left">
+      <li id="togglePanel">
+      <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
+      </li>
+      <li id="addEvent">
+        <a href="javascript:void(0)" ><span class="icon ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>
+      </li>
+      <li id="connectApps">
+        <a href="javascript:void(0)" ><span class="icon ss-piechart"></span> <span data-i18n="nav.actions.connectApps"></span></a>
+      </li>
+    </ul>
     <ul class="nav navbar-nav navbar-right">
         <li id="toMyPryv">
         <a href="javascript:void(0)"><span class="ss-user"></span>  <span data-i18n="nav.actions.goToMyPryv"></span></a>

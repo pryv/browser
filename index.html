@@ -4,12 +4,11 @@
 <head>
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
-  <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.11.7/">
+  <title>Pryv @ Glance || DEVMODE</title>
+  <base href="">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
-  <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
   <meta property="og:image" content="{browser-source}_v0.11.7/images/fb_share.jpg" />
   <meta property="og:image:secure_url" content="{browser-source}_v0.11.7/images/fb_share.jpg" />
@@ -20,7 +19,6 @@
   <link rel="stylesheet" href="fonts/ss-gizmo.css">
 
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
-  <script src="script/airbrake-shim.js" data-airbrake-project-id="95886" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="staging"></script>
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
     $(function () {
@@ -45,10 +43,7 @@
         $('#login-button').html(' ' + t('nav.actions.signIn'));
       });
       var sampleApp = require('SampleApp');
-      var wrapped = Airbrake.wrap(function() {
-        sampleApp.main(true);
-      });
-      wrapped();
+      sampleApp.main(true);
     });
   </script>
 <!-- ONBOARDING V2 -->
@@ -994,6 +989,7 @@
       <a id="back-tree" class="btn-back-tree ss-home" href="#" ></a>
   </nav>
 
+<!-- do not put anything between #logo-reload and #tree -->
 <div id="tree">
   <div id="empty-tree-notice" class="user-msg-box">
     <div class="icon ss-book"></div>

@@ -1,4 +1,4 @@
-/*! browser - v0.11.7 - 2014-07-09 *///Not using strict: uneven strict support in browsers, #392, and causes
+/*! browser - v0.11.7 - 2014-07-10 *///Not using strict: uneven strict support in browsers, #392, and causes
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
 /*jslint regexp: true, nomen: true, sloppy: true */
 /*global window, navigator, document, importScripts, setTimeout, opera */

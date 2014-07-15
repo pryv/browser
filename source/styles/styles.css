@@ -1764,6 +1764,8 @@ color: #FFF;
 }
 .stream-controller-manage {
   background-color: #E7ECF0;
+  padding: 20px;
+  min-width: 370px;
 }
 .stream-controller-header {
   border-bottom: 1px solid #C4CEE0;
@@ -1826,6 +1828,9 @@ color: #FFF;
 }
 .form-group.manage-stream-color .pins-color{
   opacity: 1;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
 }
 .manage-stream-color input:checked + .pins-color {
   box-shadow: 0 0 0 4px #3E9EDF;

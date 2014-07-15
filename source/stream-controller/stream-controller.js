@@ -58,9 +58,9 @@
     return null;
   };
   var getStreamId = function (stream) {
-    if (stream) {
+    if (stream && stream.id) {
       var id = getConnectionId(stream.connection);
-      if (id && stream.id) {
+      if (id) {
         id += '-' + stream.id;
         return id;
       }
@@ -129,7 +129,7 @@
     this.isManageOpened = false;
     this.isNewStreamOpened = false;
     this.isSelectingParent = false;
-    this.editingStream = {};
+    this.editingStream = null;
     this._initHeader();
     this._initFooter();
     this._initManage();
@@ -145,9 +145,9 @@
   StreamController.prototype._initHtml = function () {
     var $html = $('<div class="stream-controller-container">' +
       '<div class="stream-controller-select">' +
-      '<div class="stream-controller-header hide-by-overlay"></div>' +
+      '<div class="stream-controller-header"></div>' +
       '<div class="stream-controller-stream-list"></div>' +
-      '<div class="stream-controller-footer hide-by-overlay"></div>' +
+      '<div class="stream-controller-footer"></div>' +
       '</div>' +
       '<div class="stream-controller-manage"></div>' +
       '</div>');
@@ -157,26 +157,6 @@
     if (this.options.headerText && typeof this.options.headerText === 'string') {
       this.$header.append('<div class="header-title pull-left">' +
         this.options.headerText + '</div>');
-    }
-    if (this.options.editMode === 'toggle') {
-      this.isManageOpened = false;
-      var $manageToggle = $('<div class="manage-toggle btn btn-default btn-xs pull-right">' +
-        'Manage</div>');
-      $manageToggle.appendTo(this.$header);
-      $manageToggle.click(function () {
-        if (!this.isManageOpened) {
-          this.isManageOpened = true;
-          this.$manage.show();
-          this.$footer.show();
-          this._refreshManageView('toggleManageClicked');
-          $manageToggle.text('Close');
-        } else {
-          this.isManageOpened = false;
-          this.$manage.hide();
-          this.$footer.hide();
-          $manageToggle.text('Manage');
-        }
-      }.bind(this));
     }
     if (this.options.editMode === false && this.options.headerText === '') {
       this.$header.hide();
@@ -188,21 +168,39 @@
       var $newStream = $('<a href="#" class="add-new-stream "><div>+</div></a>');
       $newStream.click(function (e) {
         e.preventDefault();
-        if (this.isNewStreamOpened) {
-          this.isNewStreamOpened = false;
-          $newStream.removeClass('opened');
-        } else {
-          this.isNewStreamOpened = true;
-          $newStream.addClass('opened');
-        }
-        this._refreshManageView('addNewClicked');
+        this._addNewClicked($newStream);
       }.bind(this));
       $newStream.appendTo(this.$footer);
-      if (this.options.editMode === 'toggle') {
-        this.$footer.hide();
-      }
     } else {
       this.$footer.hide();
+    }
+  };
+  StreamController.prototype._addNewClicked = function ($btn) {
+    var selectedStream, selectedConn;
+    console.log('DEBUG', '_addNewClicked');
+    selectedStream = this.getSelectedStreams()[0];
+    selectedConn = this.getSelectedConnections()[0];
+    if (this.isNewStreamOpened) {
+      this.isNewStreamOpened = false;
+      $btn.removeClass('opened');
+      if (selectedStream && this.options.editMode === true &&
+        canCreateStream(selectedStream.connection)) {
+        this._showEdit(selectedStream);
+      } else {
+        this._hideEdit();
+      }
+    } else {
+      this.isNewStreamOpened = true;
+      $btn.addClass('opened');
+      var newStream = {};
+      if (selectedStream) {
+        newStream.parent = selectedStream;
+        newStream.parentId = selectedStream.id;
+        newStream.connection = selectedStream.connection;
+      } else if (selectedConn) {
+        newStream.connection = selectedConn;
+      }
+      this._showEdit(newStream);
     }
   };
   StreamController.prototype._initManage = function () {
@@ -217,34 +215,34 @@
           '"><span class="pins-color" style="background-color: ' + color + '"></span></label>';
       });
       var html = $(
-        '<form role="form">' +
-          '<div class="form-group manage-stream-name hide-by-overlay">' +
-            '<label>Name</label><input type="text" class="form-control" required>' +
+          '<form role="form">' +
+          '<div class="form-group manage-stream-name">' +
+          '<label>Name</label><input type="text" class="form-control" required>' +
           '</div>' +
-          '<div class="form-group manage-stream-color hide-by-overlay">' +
-            '<label style="display: block;">Color</label>' + colHtml +
+          '<div class="form-group manage-stream-color">' +
+          '<label style="display: block;">Color</label>' + colHtml +
           '</div>' +
           '<div class="form-group manage-stream-parent">' +
-            '<label>Parent</label>' +
-            '<div class="btn-group">' +
-               '<button type="button" class="btn btn-default parent-name" disabled>' +
-              'Select Parent' +
-            '</button>' +
-            '<button type="button" class="btn btn-default parent-select">' +
-              '<i class=" fa fa-list"></i>&nbsp;' +
-            '</button>' +
+          '<label>Parent</label>' +
+          '<div class="btn-group">' +
+          '<button type="button" class="btn btn-default parent-name" disabled>' +
+          'Select Parent' +
+          '</button>' +
+          '<button type="button" class="btn btn-default parent-select">' +
+          '<i class=" fa fa-list"></i>&nbsp;' +
+          '</button>' +
           '</div>' +
           '</div>' +
-          '<div class="manage-stream-save hide-by-overlay">' +
-            '<button type="submit" class="btn btn-primary">' +
-              '<i class="fa fa-spin fa-spinner"></i> Save' +
-            '</button>' +
+          '<div class="manage-stream-save">' +
+          '<button type="submit" class="btn btn-primary">' +
+          '<i class="fa fa-spin fa-spinner"></i> Save' +
+          '</button>' +
           '</div>' +
-          '<div class="manage-stream-delete hide-by-overlay">' +
-            '<button class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
+          '<div class="manage-stream-delete">' +
+          '<button class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
           '</div>' +
-        '</form>' +
-        '<div class="manage-empty"><h5>Select a stream</h5></div>');
+          '</form>' +
+          '<div class="manage-empty"><h5>Select a stream</h5></div>');
       this.uiManage = {};
       this.uiManage.streamName = html.find('.manage-stream-name input');
       this.uiManage.streamColor = html.find('.manage-stream-color');
@@ -266,7 +264,6 @@
       }
       if (this.options.editMode === true) {
         this.isManageOpened = true;
-        this._refreshManageView('toggleManageClicked');
       }
     } else {
       this.$manage.hide();
@@ -334,140 +331,71 @@
       this.unselectAll();
       this.removeStreams([this.editingStream]);
       this.uiManage.streamDeleteSpin.hide();
-      this._refreshManageView('itemClicked');
+      this._hideEdit();
     }
   };
   StreamController.prototype._startParentSelection = function () {
     if (this.isSelectingParent) {
       return;
     }
-    var overlay = $('<div class="overlay"></div>');
-    var $els = this.$el.find('.hide-by-overlay');
     this.isSelectingParent = true;
+    this.$manage.find('input').prop('disabled', true);
+    this.$manage.find('button').prop('disabled', true);
+    this.$el.addClass('selecting-parent');
     if (this.editingStream.connection) {
       $.each(this.connectionNodes, function (i, conn) {
-        if (conn._connId !== getConnectionId(this.editingStream.connection)) {
-          conn._node.append(overlay);
+        if (conn._connId === getConnectionId(this.editingStream.connection)) {
+          conn._node.addClass('can-select');
         }
       }.bind(this));
     } else {
       $.each(this.connectionNodes, function (i, conn) {
-        if (!canCreateStream(conn)) {
-          conn._node.append(overlay);
+        if (canCreateStream(conn)) {
+          conn._node.addClass('can-select');
         }
       }.bind(this));
     }
-
-    $els.append(overlay);
   };
   StreamController.prototype._stopParentSelection = function () {
     if (!this.isSelectingParent) {
       return;
     }
-    this.$el.find('.overlay').remove();
+    this.$el.removeClass('selecting-parent');
+    this.$el.find('.can-select').removeClass('can-select');
+    this.$manage.find('input').prop('disabled', false);
+    this.$manage.find('button').prop('disabled', false);
     this.isSelectingParent = false;
   };
-  StreamController.prototype._refreshManageView = function (reason) {
-    var stream, parent, parentName, parentConn;
-    console.log('DEBUG', '_refreshView', reason, this.getSelectedStreams());
-    if (!this.isManageOpened) {
-      this.editingStream = null;
+  StreamController.prototype._showEdit = function (stream) {
+    console.log('DEBUG', '_showEdit', stream);
+    if (!stream) {
+      return;
+    }
+    this.editingStream = stream;
+    if (stream.connection) {
+      var parentName = stream.parent ? stream.parent.name :
+        stream.connection.username + '/' + stream.connection._accessInfo.name;
+      this.uiManage.streamParentName.text(parentName);
+      this.uiManage.streamParentName.data('parentId', stream.parentId);
+      this.uiManage.streamParentName.data('connection', stream.connection);
+    }
+    this.uiManage.streamColor.find('input').prop('checked', false);
+    this.uiManage.streamColor.find('input[value="' + stream.color + '"]')
+      .prop('checked', true);
+    this.uiManage.streamName.val(stream.name);
+    if (stream.id) {
+      this.uiManage.streamDeleteBtn.show();
     } else {
-      if (reason === 'itemClicked') {
-        if (this.isSelectingParent) {
-          parent = this.getSelectedStreams()[0];
-          if (parent && getStreamId(parent) === getStreamId(this.editingStream)) {
-            // The parent stream cannot be itself
-            return;
-          }
-          if (!parent) {
-            parent = this.getSelectedConnections()[0];
-          }
-          if (!parent) {
-            return;
-          }
-          parentName = parent._accessInfo ? parent.username + '/' + parent._accessInfo.name : 
-            parent.name;
-          parentConn = parent.connection ? parent.connection : parent;
-          if ((!this.editingStream.id && canCreateStream(parentConn)) ||
-            getConnectionId(this.editingStream.connection) === getConnectionId(parentConn)) {
-            this.uiManage.streamParentName.text(parentName);
-            this.uiManage.streamParentName.data('parentId', parent.id);
-            this.uiManage.streamParentName.data('connection', parent.connection || parent);
-            this._stopParentSelection();
-          }
-
-        } else if (!this.isNewStreamOpened) {
-          stream = this.getSelectedStreams()[0];
-          if (stream && canCreateStream(stream.connection)) {
-            this.editingStream = stream;
-            parentName = stream.parent ? stream.parent.name :
-              stream.connection.username + '/' + stream.connection._accessInfo.name;
-            this.uiManage.streamColor.find('input').prop('checked', false);
-            this.uiManage.streamColor.find('input[value="' + stream.color + '"]')
-              .prop('checked', true);
-            this.uiManage.streamName.val(stream.name);
-            this.uiManage.streamParentName.text(parentName);
-            this.uiManage.streamParentName.data('parentId', stream.parentId);
-            this.uiManage.streamParentName.data('connection', stream.connection);
-            this.uiManage.streamDeleteBtn.show();
-          } else {
-            this.editingStream = null;
-          }
-        }
-
-      }
-      if (reason === 'toggleManageClicked' ||
-        (reason === 'addNewClicked' && !this.isNewStreamOpened)) {
-        stream = this.getSelectedStreams()[0];
-        if (stream && canCreateStream(stream.connection)) {
-          this.editingStream = stream;
-          parentName = stream.parent ? stream.parent.name :
-            stream.connection.username + '/' + stream.connection._accessInfo.name;
-          this.uiManage.streamColor.find('input').prop('checked', false);
-          this.uiManage.streamColor.find('input[value="' + stream.color + '"]')
-            .prop('checked', true);
-          this.uiManage.streamName.val(stream.name);
-          this.uiManage.streamParentName.text(parentName);
-          this.uiManage.streamParentName.data('parentId', stream.parentId);
-          this.uiManage.streamParentName.data('connection', stream.connection);
-          this.uiManage.streamDeleteBtn.show();
-        } else {
-          this.editingStream = null;
-        }
-      }
-      if (reason === 'addNewClicked' && this.isNewStreamOpened) {
-        this.uiManage.streamName.val('');
-        this.uiManage.streamColor.find('input').prop('checked', false);
-        this.uiManage.streamParentName.text('Select parent');
-        this.editingStream = {};
-        parent = this.getSelectedStreams()[0];
-        if (!parent) {
-          parent = this.getSelectedConnections()[0];
-        }
-        if (parent) {
-          parentName = parent._accessInfo ? parent.username + '/' + parent._accessInfo.name : 
-            parent.name;
-          parentConn = parent.connection ? parent.connection : parent;
-          if (canCreateStream(parentConn)) {
-            this.uiManage.streamParentName.text(parentName);
-            this.uiManage.streamParentName.data('parentId', parent.id);
-            this.uiManage.streamParentName.data('connection', parent.connection || parent);
-            this.uiManage.streamDeleteBtn.hide();
-          }
-        }
-
-      }
+      this.uiManage.streamDeleteBtn.hide();
     }
-    if (this.isManageOpened) {
-      if (this.editingStream === null) {
-        this.uiManage.empty.show();
-        this.uiManage.form.hide();
-      } else {
-        this.uiManage.empty.hide();
-        this.uiManage.form.show();
-      }
-    }
+    this.$manage.show();
+    this.uiManage.empty.hide();
+    this.uiManage.form.show();
+  };
+  StreamController.prototype._hideEdit = function () {
+    this.uiManage.empty.show();
+    this.uiManage.form.hide();
+    this.editingStream = null;
   };
   StreamController.prototype.updateStreams = function (streams) {
     if (!streams) {
@@ -634,7 +562,8 @@
   StreamController.prototype.generateStreamHtml = function (stream) {
     var label = '<span class="pins-color" style="background-color: ' +
       stream.color + '"></span>' + stream.name;
-    console.log('DEBUG', 'level', stream, this.streams, this.streams[getStreamId(stream)] , getStreamLevel(this.streams[getStreamId(stream)]));
+    console.log('DEBUG', 'level', stream, this.streams, this.streams[getStreamId(stream)],
+      getStreamLevel(this.streams[getStreamId(stream)]));
     var level = getStreamLevel(this.streams[getStreamId(stream)]);
     var opened = this.options.autoOpen === true || this.options.autoOpen >= level;
     return this.generateNodeHtml('stream', stream, label, false, opened);
@@ -676,6 +605,29 @@
         hidden + '">' + this.options.closedIcon + '</div>');
     }
     var self = this;
+    if (this.options.editMode === 'toggle' && type === 'stream' &&
+      canCreateStream(object.connection)) {
+      $html.find('li').append('<div class="manage-toggle btn btn-default btn-xs pull-right">' +
+        'Edit</div>');
+      $html.find('.manage-toggle:first').hide();
+      $html.find('li').hover(function () {
+        this.$streamList.find('.manage-toggle').hide();
+        this._showEditButton();
+        var editingId = getStreamId(this.editingStream);
+        var strId = getStreamId(object);
+        if (strId !== editingId) {
+          $html.find('.manage-toggle').show();
+        }
+      }.bind(this));
+      $html.find('.manage-toggle').click(function (e) {
+        e.preventDefault();
+        this.unselectAll();
+        $html.find('input').checked = true;
+        $html.find('li:first').addClass('checked').removeClass('indeterminate');
+        this._showEdit(object);
+        $html.find('.manage-toggle').hide();
+      }.bind(this));
+    }
     $html.find('.disclosure').click(function () {
       var $el = $(this);
       if ($el.hasClass('opened')) {
@@ -715,7 +667,67 @@
       object._node.find('li:first').addClass('checked').removeClass('indeterminate');
     }
     this.$el.trigger('inputChanged');
-    this._refreshManageView('itemClicked');
+    this._itemClicked();
+  };
+  StreamController.prototype._itemClicked = function () {
+    console.log('DEBUG', '_itemClicked');
+    var selectedStream = this.getSelectedStreams()[0];
+    if (this.isSelectingParent) {
+      this._validateParent();
+      return;
+    }
+    if (this.isNewStreamOpened) {
+      return;
+    }
+    if (this.options.editMode === true) {
+      if (selectedStream && canCreateStream(selectedStream.connection)) {
+        this._showEdit(selectedStream);
+      }
+      return;
+    }
+    if (this.options.editMode === 'toggle') {
+      if (this.editingStream && getStreamId(this.editingStream) !== getStreamId(selectedStream)) {
+        this._hideEdit();
+      }
+      this._showEditButton();
+    }
+  };
+  StreamController.prototype._showEditButton = function () {
+    console.log('DEBUG', '_showEditButton');
+    var selectedStream = this.getSelectedStreams()[0];
+    if (this.options.editMode === 'toggle') {
+      if (selectedStream && canCreateStream(selectedStream.connection)) {
+        if (this.editingStream && getStreamId(this.editingStream) !== getStreamId(selectedStream)) {
+          return;
+        }
+        this.streamNodes[getStreamId(selectedStream)]._node.find('.manage-toggle:first').show();
+      }
+    }
+  };
+  StreamController.prototype._validateParent = function () {
+    var parent = this.getSelectedStreams()[0];
+    if (parent && getStreamId(parent) === getStreamId(this.editingStream)) {
+      // The parent stream cannot be itself
+      return false;
+    }
+    if (!parent) {
+      parent = this.getSelectedConnections()[0];
+    }
+    if (!parent) {
+      return false;
+    }
+    var parentName = parent._accessInfo ? parent.username + '/' + parent._accessInfo.name :
+      parent.name;
+    var parentConn = parent.connection ? parent.connection : parent;
+    if ((!this.editingStream.id && canCreateStream(parentConn)) ||
+      getConnectionId(this.editingStream.connection) === getConnectionId(parentConn)) {
+      this.uiManage.streamParentName.text(parentName);
+      this.uiManage.streamParentName.data('parentId', parent.id);
+      this.uiManage.streamParentName.data('connection', parent.connection || parent);
+      this._stopParentSelection();
+      return true;
+    }
+    return false;
   };
   StreamController.prototype.unselectAll = function ()  {
     this.$streamList.find('input').prop('checked', false);

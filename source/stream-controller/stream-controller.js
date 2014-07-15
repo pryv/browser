@@ -293,7 +293,13 @@
         updatedStream._oldParentId = updatedStream.parentId;
         updatedStream.parentId = newParentId;
         console.log('DEBUG', newName, newColor, newParentId, updatedStream);
-        this.updateStreams([updatedStream]);
+        this.editingStream.connection.streams.update(updatedStream, function (err, result) {
+          console.log('DEBUG', 'end update', err, result);
+          if (!err) {
+            this.updateStreams([result]);
+          }
+        }.bind(this));
+
       }  else {
         updatedStream = this.editingStream;
         newName = this.uiManage.streamName.val();
@@ -313,13 +319,12 @@
 
         /* temp before link with js lib */
         updatedStream.connection = this.uiManage.streamParentName.data('connection');
-        updatedStream.parent = this.streamNodes[getStreamId({
-          id: newParentId,
-          connection: updatedStream.connection
-        })];
-        updatedStream.id = getUniqueId();
-        this.editingStream = {};
-        this.addStreams([updatedStream]);
+        updatedStream.connection.streams.create(updatedStream, function (err, result) {
+          console.log('DEBUG', 'create stream', err, result);
+          if (!err) {
+            this.addStreams([result]);
+          }
+        }.bind(this));
       }
     }
 
@@ -329,9 +334,14 @@
     if (this.editingStream && this.editingStream.id) {
       this.uiManage.streamDeleteSpin.show();
       this.unselectAll();
-      this.removeStreams([this.editingStream]);
-      this.uiManage.streamDeleteSpin.hide();
-      this._hideEdit();
+      this.editingStream.connection.streams.delete(this.editingStream, function (err) {
+        console.log('DEBUG', 'delete stream', err);
+        if (!err) {
+          this.removeStreams([this.editingStream]);
+          this.uiManage.streamDeleteSpin.hide();
+          this._hideEdit();
+        }
+      }.bind(this));
     }
   };
   StreamController.prototype._startParentSelection = function () {
@@ -560,6 +570,9 @@
     return result;
   };
   StreamController.prototype.generateStreamHtml = function (stream) {
+    if (stream.clientData && stream.clientData['pryv-browser:bgColor']) {
+      stream.color = stream.clientData['pryv-browser:bgColor'];
+    }
     var label = '<span class="pins-color" style="background-color: ' +
       stream.color + '"></span>' + stream.name;
     console.log('DEBUG', 'level', stream, this.streams, this.streams[getStreamId(stream)],

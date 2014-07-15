@@ -223,7 +223,7 @@
           '<label style="display: block;">Color</label>' + colHtml +
           '</div>' +
           '<div class="form-group manage-stream-parent">' +
-          '<label>Parent</label>' +
+          '<label style="display: block;">Parent</label>' +
           '<div class="btn-group">' +
           '<button type="button" class="btn btn-default parent-name" disabled>' +
           'Select Parent' +

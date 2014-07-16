@@ -1835,6 +1835,11 @@ color: #FFF;
 .manage-stream-color input:checked + .pins-color {
   box-shadow: 0 0 0 4px #3E9EDF;
 }
+.manage-toggle {
+  position: absolute;
+  right: 30px;
+  top: 6px;
+}
 
 /* Logo "beta" mention */
 

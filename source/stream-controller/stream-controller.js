@@ -177,7 +177,6 @@
   };
   StreamController.prototype._addNewClicked = function ($btn) {
     var selectedStream, selectedConn;
-    console.log('DEBUG', '_addNewClicked');
     selectedStream = this.getSelectedStreams()[0];
     selectedConn = this.getSelectedConnections()[0];
     if (this.isNewStreamOpened) {
@@ -292,10 +291,10 @@
         newParentId = this.uiManage.streamParentName.data('parentId');
         updatedStream._oldParentId = updatedStream.parentId;
         updatedStream.parentId = newParentId;
-        console.log('DEBUG', newName, newColor, newParentId, updatedStream);
         this.editingStream.connection.streams.update(updatedStream, function (err, result) {
           console.log('DEBUG', 'end update', err, result);
           if (!err) {
+            result.color = newColor;
             this.updateStreams([result]);
           }
         }.bind(this));
@@ -377,7 +376,6 @@
     this.isSelectingParent = false;
   };
   StreamController.prototype._showEdit = function (stream) {
-    console.log('DEBUG', '_showEdit', stream);
     if (!stream) {
       return;
     }
@@ -434,7 +432,6 @@
 
       if (stream.parentId !== oldStream.parentId || stream.parentId !== oldStream._oldParentId) {
         var $parent = this.findParentNode(oldStream);
-        console.log('DEBUG', 'move', $parent, stream, oldStream);
         $parent._node.find('.disclosure:first').removeClass('hidden');
         oldStream._node.detach().appendTo($parent._childNode);
         oldStream.parentId = stream.parentId;
@@ -552,7 +549,8 @@
     var self = this;
     var walkStream = function (streams) {
       $.each(streams, function (i, stream) {
-        if (self.streamNodes[getStreamId(stream)]._node.find('input:first').prop('checked')) {
+        if (self.streamNodes[getStreamId(stream)] &&
+          self.streamNodes[getStreamId(stream)]._node.find('input:first').prop('checked')) {
           result.push(stream);
         } else if (stream.children) {
           walkStream(stream.children);
@@ -575,8 +573,6 @@
     }
     var label = '<span class="pins-color" style="background-color: ' +
       stream.color + '"></span>' + stream.name;
-    console.log('DEBUG', 'level', stream, this.streams, this.streams[getStreamId(stream)],
-      getStreamLevel(this.streams[getStreamId(stream)]));
     var level = getStreamLevel(this.streams[getStreamId(stream)]);
     var opened = this.options.autoOpen === true || this.options.autoOpen >= level;
     return this.generateNodeHtml('stream', stream, label, false, opened);
@@ -629,7 +625,7 @@
         var editingId = getStreamId(this.editingStream);
         var strId = getStreamId(object);
         if (strId !== editingId) {
-          $html.find('.manage-toggle').show();
+          $html.find('.manage-toggle:first').show();
         }
       }.bind(this));
       $html.find('.manage-toggle').click(function (e) {
@@ -638,7 +634,7 @@
         $html.find('input').checked = true;
         $html.find('li:first').addClass('checked').removeClass('indeterminate');
         this._showEdit(object);
-        $html.find('.manage-toggle').hide();
+        $html.find('.manage-toggle:first').hide();
       }.bind(this));
     }
     $html.find('.disclosure').click(function () {
@@ -665,7 +661,6 @@
     var $input = $(e.target)[0];
     object = type === 'stream' ? this.streamNodes[getStreamId(object)] :
       this.connectionNodes[getConnectionId(object)];
-    console.log('DEBUG', 'inputChanged', type, object);
     if (this.options.multiple) {
       var checkedClass = $input.checked ? 'checked' : '';
       object._childNode.find('input').prop('checked', $input.checked).prop('indeterminate', false);
@@ -683,7 +678,6 @@
     this._itemClicked();
   };
   StreamController.prototype._itemClicked = function () {
-    console.log('DEBUG', '_itemClicked');
     var selectedStream = this.getSelectedStreams()[0];
     if (this.isSelectingParent) {
       this._validateParent();
@@ -706,7 +700,6 @@
     }
   };
   StreamController.prototype._showEditButton = function () {
-    console.log('DEBUG', '_showEditButton');
     var selectedStream = this.getSelectedStreams()[0];
     if (this.options.editMode === 'toggle') {
       if (selectedStream && canCreateStream(selectedStream.connection)) {

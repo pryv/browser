@@ -28,12 +28,12 @@ module.exports = Marionette.ItemView.extend({
       $('#sharing-stream-list').streamController(
       {
         autoOpen: 1,
-        multiple: false,
+        multiple: true,
         streams: this.streams,
         connections: this.connection,
-        editMode: 'toggle'
+        editMode: false
       });
-      //$('#sharing-stream-list').streamController('setSelectedStreams', this.streams);
+      $('#sharing-stream-list').streamController('setSelectedStreams', this.streams);
     }.bind(this), 200);
   }
 });

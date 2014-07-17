@@ -11,7 +11,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     PUBLIC_TOKEN = 'public',
     STAGING,
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
-      'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
+      'nav #togglePanel', 'nav #settings', 'nav #connectApps', 'nav #manageStream'],
     toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
 
 // temp fix for jQuery not being setup properly in Backbone/Marionette with Browserify

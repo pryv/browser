@@ -262,7 +262,9 @@
         this.$manage.hide();
       }
       if (this.options.editMode === true) {
-        this.isManageOpened = true;
+        this.$manage.show();
+        this.uiManage.empty.show();
+        this.uiManage.form.hide();
       }
     } else {
       this.$manage.hide();
@@ -662,9 +664,13 @@
     object = type === 'stream' ? this.streamNodes[getStreamId(object)] :
       this.connectionNodes[getConnectionId(object)];
     if (this.options.multiple) {
-      var checkedClass = $input.checked ? 'checked' : '';
-      object._childNode.find('input').prop('checked', $input.checked).prop('indeterminate', false);
-      object._node.find('li').removeClass('indeterminate').addClass(checkedClass);
+      if ($input.checked) {
+        object._childNode.find('input').prop('checked', true).prop('indeterminate', false);
+        object._node.find('li').removeClass('indeterminate').addClass('checked');
+      } else {
+        object._childNode.find('input').prop('checked', false).prop('indeterminate', false);
+        object._node.find('li').removeClass('indeterminate').removeClass('checked');
+      }
       if (type === 'stream') {
         var $parent = this.findParentNode(this.streams[getStreamId(object)]);
         this.updateInputState($parent);

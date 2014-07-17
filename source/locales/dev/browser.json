@@ -148,6 +148,7 @@
       "followSlice": "Follow this slice",
       "goToMyPryv": "Me",
       "manageSlices": "Manage slices",
+      "manageStreams": "Manage streams",
       "settings": "Settings",
       "shareSlice": "Share a slice of life",
       "signIn": "Sign in",
@@ -241,6 +242,11 @@
       "sharingSuccessful": "Your slice is ready. Share it via Facebook, Twitter, e-mail, or manually with this link: ",
       "errInvalidSharingToken": "The given sharing token cannot be used",
       "errSliceNameAlreadyExists": "A slice with the same name already exists"
+    }
+  },
+  "streams": {
+    "labels": {
+      "title": "Manage streams"
     }
   },
   "timeframe": {

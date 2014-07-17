@@ -9,6 +9,7 @@ var RootNode = require('./RootNode.js'),
   CreateSharingView = require('../view/sharings/create/Controller.js'),
   SubscribeView = require('../view/subscribe/Controller.js'),
   SettingsView = require('../view/settings/Controller.js'),
+  ManageStreamView = require('../view/stream/Controller.js'),
   ConnectAppsView = require('../view/connect-apps/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
   OnboardingView = require('../view/onboarding/View.js'),
@@ -75,6 +76,21 @@ var TreeMap = module.exports = function (model) {
       this.closeConnectAppsView();
     }.bind(this));
     this.showConnectAppsView($modal, this.model.loggedConnection, e.currentTarget);
+  }.bind(this));
+  $('nav #manageStream').click(function (e) {
+    e.preventDefault();
+    var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+      this.closeManageStreamView();
+    }.bind(this));
+    var streams = [];
+    var connections = [];
+    if (this.model.loggedConnection.datastore) {
+      connections.push(this.model.loggedConnection);
+      this.model.loggedConnection.datastore.getStreams().forEach(function (stream) {
+        streams.push(stream);
+      });
+    }
+    this.showManageStreamView($modal, connections, streams, e.currentTarget);
   }.bind(this));
 
   $('.logo-sharing').click(function (e) {
@@ -427,6 +443,7 @@ TreeMap.prototype.closeViews = function () {
   this.closeSubscribeView();
   this.closeConnectAppsView();
   this.closeOnboardingView();
+  this.closeManageStreamView();
 };
 
 //======== Detailed View ========\\
@@ -589,6 +606,29 @@ TreeMap.prototype.closeCreateSharingView = function () {
   if (this.hasCreateSharingView()) {
     this.createSharingView.close();
     this.createSharingView = null;
+  }
+};
+
+/*=================================*/
+//========== MANAGE STREAM VIEW =========\\
+
+TreeMap.prototype.hasManageStreamView = function () {
+  return typeof this.manageStreamView !== 'undefined' && this.manageStreamView !== null;
+};
+
+TreeMap.prototype.showManageStreamView = function ($modal, connection, streams,
+                                                    target) {
+  this.closeViews();
+  if ($modal && streams && connection) {
+    this.manageStreamView = new ManageStreamView($modal, connection, streams, target);
+    this.manageStreamView.show();
+  }
+};
+
+TreeMap.prototype.closeManageStreamView = function () {
+  if (this.hasManageStreamView()) {
+    this.manageStreamView.close();
+    this.manageStreamView = null;
   }
 };
 

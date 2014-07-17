@@ -293,8 +293,13 @@
         newParentId = this.uiManage.streamParentName.data('parentId');
         updatedStream._oldParentId = updatedStream.parentId;
         updatedStream.parentId = newParentId;
+
+        this.uiManage.streamSaveSpin.show();
+        this.uiManage.streamSaveBtn.prop('disabled', true);
         this.editingStream.connection.streams.update(updatedStream, function (err, result) {
           console.log('DEBUG', 'end update', err, result);
+          this.uiManage.streamSaveSpin.hide();
+          this.uiManage.streamSaveBtn.prop('disabled', false);
           if (!err) {
             result.color = newColor;
             this.updateStreams([result]);
@@ -320,8 +325,13 @@
 
         /* temp before link with js lib */
         updatedStream.connection = this.uiManage.streamParentName.data('connection');
+        this.uiManage.streamSaveSpin.show();
+        this.uiManage.streamSaveBtn.prop('disabled', true);
         updatedStream.connection.streams.create(updatedStream, function (err, result) {
           console.log('DEBUG', 'create stream', err, result);
+
+          this.uiManage.streamSaveSpin.hide();
+          this.uiManage.streamSaveBtn.prop('disabled', false);
           if (!err) {
             this.addStreams([result]);
           }
@@ -334,14 +344,16 @@
     e.preventDefault();
     if (this.editingStream && this.editingStream.id) {
       this.uiManage.streamDeleteSpin.show();
+      this.uiManage.streamDeleteBtn.prop('disabled', true);
       this.unselectAll();
       this.editingStream.connection.streams.delete(this.editingStream, function (err) {
         console.log('DEBUG', 'delete stream', err);
         if (!err) {
           this.removeStreams([this.editingStream]);
-          this.uiManage.streamDeleteSpin.hide();
           this._hideEdit();
         }
+        this.uiManage.streamDeleteBtn.prop('disabled', false);
+        this.uiManage.streamDeleteSpin.hide();
       }.bind(this));
     }
   };

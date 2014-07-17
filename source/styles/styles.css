@@ -150,7 +150,7 @@ body{
 /*.pryv-radio label {
   padding-left: 0;
 }*/
-/*.pryv-radio label:before {
+.pryv-radio label:before {
   content: "\f10c";
   font-family: FontAwesome;
   color: #00a8e2;
@@ -162,11 +162,11 @@ body{
 
 .pryv-radio input[type=radio]:checked + label:before {
   content: "\f192";
-}*/
+}
 .pryv-checkbox label:hover:before {
   border-color: #00A8E2;
 }
-/*.pryv-checkbox label:before {
+.pryv-checkbox label:before {
   width: 20px;
   margin-top: 6px;
   height: 20px;
@@ -185,7 +185,7 @@ body{
   text-align: center;
   line-height: 1.5;
   border: 1px solid #0E82DD;
-}*/
+}
 .pryv-checkbox input[type=checkbox]:indeterminate + label:before {
   background-color: #D0E2E9;
   content: " ";
@@ -1839,6 +1839,12 @@ color: #FFF;
   position: absolute;
   right: 30px;
   top: 6px;
+}
+.stream-controller-container .pryv-radio label:before {
+  display: none;
+}
+.stream-controller-container .pryv-checkbox label:before {
+  display: none;
 }
 
 /* Logo "beta" mention */

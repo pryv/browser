@@ -192,7 +192,8 @@ body{
   border-color: #00A8E2;
 }
 
-#collapseFilterByStream .panel-body, #stream-select .panel-body, #sharing-stream-list .panel-body{
+#collapseFilterByStream .panel-body, #stream-select .panel-body, #sharing-stream-list .panel-body,
+.stream-controller-stream-list .panel-body {
   padding: 0;
 }
 #sharing-stream-list {
@@ -1699,11 +1700,15 @@ color: #FFF;
 }
 .stream-tree-summary, .stream-controller-node {
   list-style: none;
-  line-height: 2.6;
   /*cursor: pointer;*/
   position: relative;
   margin: 0 0 1px 0;
 }
+.stream-tree-summary label, .stream-controller-node label {
+  line-height: 1.3em;
+  padding-top: 9px;
+  padding-bottom: 9px;
+ }
 .stream-tree-summary:hover,.stream-controller-node:hover{
   /*background-color: #F7F7F7;*/
   color: #000;
@@ -1717,18 +1722,21 @@ color: #FFF;
   min-height: 30px;
   border-right: 2px solid #2583E9;
 }
+.stream-controller-select .pryv-checkbox, .stream-controller-select .pryv-radio {
+  padding-right: 28px; /* = .disclosure width, see below */
+}
 .stream-controller-select .disclosure {
   position: absolute;
-  right: 7px;
-  top: 7px;
-  width: 20px;
-  height: 20px;
+  top: 0;
+  right: 0;
+  width: 28px;
+  height: 100%;
+  padding: 11px 0px;
+  text-align: center;
+  cursor: pointer;
 }
 .stream-controller-select .disclosure:hover {
   background-color: #D3DDE5;
-}
-.stream-controller-select .disclosure i {
-  margin: 4px 0 0 5px;
 }
 .stream-tree-summary.disclosure::before {
   position: absolute;

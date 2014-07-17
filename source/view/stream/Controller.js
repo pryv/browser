@@ -35,6 +35,7 @@ _.extend(Controller.prototype, {
       editMode: true,
       autoOpen: 1
     });
+    $('body').i18n();
   },
   close: function () {
     if (this.view) {

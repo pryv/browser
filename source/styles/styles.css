@@ -1840,6 +1840,9 @@ color: #FFF;
   right: 30px;
   top: 6px;
 }
+.stream-controller-container .can-select {
+  border: #00A8E2 solid 5px;
+}
 .stream-controller-container .pryv-radio label:before {
   display: none;
 }

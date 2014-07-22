@@ -1688,6 +1688,10 @@ color: #FFF;
 }
 
 /** Stream Controller **/
+.stream-box-full-height{
+  height: 100%;
+  position: relative;
+}
 .stream-tree-children, .stream-controller-child {
   padding: 0;
   padding-left: 15px;
@@ -1702,7 +1706,8 @@ color: #FFF;
   list-style: none;
   /*cursor: pointer;*/
   position: relative;
-  margin: 0 0 1px 0;
+  margin: 0 0 0 0;
+  border-bottom: 1px solid #EBEEF1;
 }
 .stream-tree-summary label, .stream-controller-node label {
   line-height: 1.3em;
@@ -1756,9 +1761,9 @@ color: #FFF;
 
 .stream-controller-select, .stream-controller-manage {
   float: left;
-  border: 1px solid #C4CEE0;
+  border: 1px solid #E5E9EE;
   min-width: 240px;
-  background-color: #E7ECF0;
+  background-color: #F3F5F6;
 }
 .stream-controller-manage,
 .stream-controller-header,
@@ -1768,23 +1773,38 @@ color: #FFF;
 }
 .stream-controller-stream-list{
   padding: 10px 0px;
-  color: #6C8AA0;
+  color: #6B8599;
+  overflow: auto;
+  position: relative;
+  height: 100%;
 }
 .stream-controller-manage {
-  background-color: #E7ECF0;
-  padding: 20px;
+  background-color: #fdfdfd;
+  padding: 0px;
   min-width: 370px;
+  border-left: 0;
+
+}
+.stream-controller-manage .form-group {
+  margin: 20px;
+  border-bottom: 1px solid #F0F0F0;
+  padding-bottom: 20px;
 }
 .stream-controller-header {
-  border-bottom: 1px solid #C4CEE0;
+  border-bottom: 1px solid #EBEEF1;
   overflow: hidden;
 }
-.stream-controller-footer {
-  border-top: 1px solid #e6e6e6;
+.manage-stream-footer {
+  border-top: 1px solid #DDE2E6;
   overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  background-color: #E7EDF0;
+  width: 100%;
+  padding: 10px;
 }
 .add-new-stream {
-  padding: 0px 7px;
+  /*padding: 0px 7px;
   background-color: #9d9d9d;
   color: white;
   font-size: 20px;
@@ -1792,15 +1812,16 @@ color: #FFF;
   width: 24px;
   height: 24px;
   position: relative;
-  float:right;
+  float:right;*/
+
 }
 .add-new-stream div {
-  display: block;
+  /*display: block;
   position: absolute;
   line-height: 24px;
   -webkit-transition-duration: 0.4s;
   -moz-transition-duration: 0.4s;
-  -o-transition-duration: 0.4s;
+  -o-transition-duration: 0.4s;*/
 }
 .add-new-stream.opened  div{
   -webkit-transition-duration: 0.4s;
@@ -1840,6 +1861,9 @@ color: #FFF;
   height: 20px;
   margin-right: 10px;
 }
+.form-group.manage-stream-color .pins-color:hover {
+  box-shadow: 0 0 0 4px #B9DAF0;
+}
 .manage-stream-color input:checked + .pins-color {
   box-shadow: 0 0 0 4px #3E9EDF;
 }
@@ -1856,6 +1880,12 @@ color: #FFF;
 }
 .stream-controller-container .pryv-checkbox label:before {
   display: none;
+}
+.manage-empty {
+  text-align: center;
+  position: relative;
+  top: 50%;
+  margin-top: -40px;
 }
 
 /* Logo "beta" mention */

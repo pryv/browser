@@ -212,6 +212,18 @@ var ConnectionNode = module.exports = TreeNode.implement(
       }
     },
 
+    streamLeaveScope: function (stream, reason, callback) {
+      var node = this.streamNodes[stream.id];
+      if (node) {
+        node._closeView();
+        delete this.streamNodes[stream.id];
+      }
+
+      if (typeof(callback) === 'function') {
+        return callback();
+      }
+    },
+
     eventLeaveScope: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
       if (node === 'undefined') {

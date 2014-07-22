@@ -237,6 +237,13 @@ var TreeMap = module.exports = function (model) {
     refreshTree();
   }.bind(this);
 
+  this.streamLeaveScope = function (content) {
+    _.each(content.streams, function (stream) {
+      this.root.streamLeaveScope(stream);
+    }.bind(this));
+    refreshTree();
+  }.bind(this);
+
   this.eventLeaveScope = function (content) {
     console.log('eventLeave', content);
     var start = new Date().getTime();
@@ -306,6 +313,8 @@ var TreeMap = module.exports = function (model) {
     this.eventChange);
   this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_ENTER,
     this.streamEnterScope);
+  this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_LEAVE,
+    this.streamLeaveScope);
 };
 
 TreeMap.prototype.isOnboarding = function () {

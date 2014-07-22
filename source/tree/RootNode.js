@@ -53,6 +53,14 @@ module.exports = TreeNode.implement(
       this.connectionNodes[stream.connection.id] = connectionNode;
       connectionNode.streamEnterScope(stream, reason, callback);
     },
+    streamLeaveScope: function (stream, reason, callback) {
+      var connectionNode = this.connectionNodes[stream.connection.id];
+      if (connectionNode) {
+        return connectionNode.streamLeaveScope(stream, reason, callback);
+      } else if (typeof(callback) === 'function') {
+        return callback();
+      }
+    },
 
     eventLeaveScope: function (event, reason, callback) {
       var node = this.connectionNodes[event.connection.id];

@@ -744,6 +744,8 @@
     if ((!this.editingStream.id && canCreateStream(parentConn)) ||
       getConnectionId(this.editingStream.connection) === getConnectionId(parentConn)) {
       this.uiManage.streamParentName.text(parentName);
+      this.uiManage.streamParentName.removeData('parentId');
+      this.uiManage.streamParentName.removeData('connection');
       this.uiManage.streamParentName.data('parentId', parent.id);
       this.uiManage.streamParentName.data('connection', parent.connection || parent);
       this._stopParentSelection();

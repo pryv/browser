@@ -61,6 +61,20 @@ module.exports = TreeNode.implement(
         return callback();
       }
     },
+    streamMove: function (stream, oldParentId) {
+      console.log('DEBUG', 'streamMove', arguments);
+      var connectionNode = this.connectionNodes[stream.connection.id];
+      if (connectionNode) {
+        return connectionNode.streamMove(stream, oldParentId);
+      }
+    },
+    streamChange: function (stream) {
+      console.log('DEBUG', 'streamChange', arguments);
+      var connectionNode = this.connectionNodes[stream.connection.id];
+      if (connectionNode) {
+        return connectionNode.streamChange(stream);
+      }
+    },
 
     eventLeaveScope: function (event, reason, callback) {
       var node = this.connectionNodes[event.connection.id];

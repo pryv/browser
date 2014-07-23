@@ -37,6 +37,7 @@ var TreeMap = module.exports = function (model) {
   this.focusedStreams = null;
   this.trashedEvents = {};
   this.events = {};
+  this.streams = {};
   var $tree = $('#tree');
   this.root = new RootNode(this, $tree.width() - MARGIN_LEFT - MARGIN_RIGHT,
     $tree.height() - MARGIN_BOTTOM - MARGIN_TOP);
@@ -228,8 +229,10 @@ var TreeMap = module.exports = function (model) {
     var start = new Date().getTime();
     _.each(content.streams, function (stream) {
       this.root.streamEnterScope(stream, content.reason, function () {});
+      if (stream.connection && stream.connection.username) {
+        this.streams[stream.connection.username + '-' + stream.id] = _.extend({}, stream);
+      }
     }, this);
-    var focusedStream = this.getFocusedStreams();
     this.root._createView();
     var end = new Date().getTime();
     var time = end - start;
@@ -240,6 +243,26 @@ var TreeMap = module.exports = function (model) {
   this.streamLeaveScope = function (content) {
     _.each(content.streams, function (stream) {
       this.root.streamLeaveScope(stream);
+      if (stream.connection && stream.connection.username) {
+        delete this.streams[stream.connection.username + '-' + stream.id];
+      }
+    }.bind(this));
+    refreshTree();
+  }.bind(this);
+
+  this.streamChange = function (content) {
+    var oldStream;
+    _.each(content.streams, function (stream) {
+      if (stream.connection && stream.connection.username) {
+        oldStream = this.streams[stream.connection.username + '-' + stream.id];
+        console.log('DEBUG', 'treemap streamChange', stream, oldStream);
+        if (oldStream && oldStream.parentId !== stream.parentId) {
+          this.root.streamMove(stream, oldStream.parentId);
+        } else if (oldStream) {
+          this.root.streamChange(stream);
+        }
+        this.streams[stream.connection.username + '-' + stream.id] = _.extend({}, stream);
+      }
     }.bind(this));
     refreshTree();
   }.bind(this);
@@ -315,6 +338,8 @@ var TreeMap = module.exports = function (model) {
     this.streamEnterScope);
   this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_LEAVE,
     this.streamLeaveScope);
+  this.model.activeFilter.addEventListener(SIGNAL.STREAM_CHANGE,
+    this.streamChange);
 };
 
 TreeMap.prototype.isOnboarding = function () {

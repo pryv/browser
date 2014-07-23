@@ -96,6 +96,10 @@ var ConnectionNode = module.exports = TreeNode.implement(
           if (stream.parent) {   // if not parent, this connection node is the parent
             parentNode = this.streamNodes[stream.parent.id];
           }
+          if (this.treeMap) {
+            this.treeMap.streams[stream.connection.username + '-' + stream.id] =
+              _.extend({}, stream);
+          }
           stream.isVirtual = false;
           this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);
           if (VirtualNode.nodeHas(stream)) {
@@ -221,6 +225,26 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
       if (typeof(callback) === 'function') {
         return callback();
+      }
+    },
+    streamMove: function (stream, oldParentId) {
+      var node = this.streamNodes[stream.id];
+      var newParent;
+      if (node) {
+        if (stream.parent) {
+          newParent = this.streamNodes[stream.parent.id];
+        } else {
+          newParent = this;
+        }
+        node.parent = newParent;
+        this.streamNodes[stream.id] = node;
+        this.streamChange(stream);
+      }
+    },
+    streamChange: function (stream) {
+      var node = this.streamNodes[stream.id];
+      if (node) {
+        node.stream = stream;
       }
     },
 

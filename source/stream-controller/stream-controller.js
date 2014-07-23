@@ -124,7 +124,7 @@
     $html.appendTo(this.$el);
     this.$streamList = $html.find('.stream-controller-stream-list');
     this.$header = $html.find('.stream-controller-header');
-    this.$footer = $html.find('.stream-controller-footer');
+    this.$footer = $html.find('#stream-select-footer');
     this.$manage = $html.find('.stream-controller-manage');
     this.isManageOpened = false;
     this.isNewStreamOpened = false;
@@ -143,13 +143,13 @@
     return this;
   };
   StreamController.prototype._initHtml = function () {
-    var $html = $('<div class="stream-controller-container">' +
-      '<div class="stream-controller-select">' +
+    var $html = $('<div class="stream-controller-container stream-box-full-height">' +
+      '<div class="stream-controller-select stream-box-full-height">' +
       '<div class="stream-controller-header"></div>' +
       '<div class="stream-controller-stream-list"></div>' +
-      '<div class="stream-controller-footer"></div>' +
+      '<div id="stream-select-footer" class="manage-stream-footer"></div>' +
       '</div>' +
-      '<div class="stream-controller-manage"></div>' +
+      '<div class="stream-controller-manage stream-box-full-height"></div>' +
       '</div>');
     return $html;
   };
@@ -165,7 +165,7 @@
   StreamController.prototype._initFooter = function () {
     if (this.options.editMode === true || this.options.editMode === 'toggle') {
       this.isNewStreamOpened = false;
-      var $newStream = $('<a href="#" class="add-new-stream "><div>+</div></a>');
+      var $newStream = $('<a href="#" class="btn btn-default add-new-stream"><div>+</div></a>');
       $newStream.click(function (e) {
         e.preventDefault();
         this._addNewClicked($newStream);
@@ -232,25 +232,23 @@
           '</button>' +
           '</div>' +
           '</div>' +
-          '<div class="manage-stream-save">' +
-          '<button type="submit" class="btn btn-primary">' +
+          '<div class="manage-stream-action manage-stream-footer">' +
+          '<button id="manage_stream_button_save" type="submit" class="btn btn-primary pull-right">' +
           '<i class="fa fa-spin fa-spinner"></i> Save' +
           '</button>' +
-          '</div>' +
-          '<div class="manage-stream-delete">' +
-          '<button class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
+          '<button id="manage_stream_button_delete" class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
           '</div>' +
           '</form>' +
-          '<div class="manage-empty"><h5>Select a stream</h5></div>');
+          '<div class="manage-empty user-msg-box"><span class="icon ss-cursor"></span><p>Select a stream</p></div>');
       this.uiManage = {};
       this.uiManage.streamName = html.find('.manage-stream-name input');
       this.uiManage.streamColor = html.find('.manage-stream-color');
       this.uiManage.streamParentName = html.find('.manage-stream-parent .parent-name');
       this.uiManage.streamParentSelect = html.find('.manage-stream-parent .parent-select');
-      this.uiManage.streamDeleteBtn = html.find('.manage-stream-delete button');
-      this.uiManage.streamDeleteSpin = html.find('.manage-stream-delete .fa-spinner').hide();
-      this.uiManage.streamSaveBtn = html.find('.manage-stream-save button');
-      this.uiManage.streamSaveSpin = html.find('.manage-stream-save .fa-spinner').hide();
+      this.uiManage.streamDeleteBtn = html.find('#manage_stream_button_delete');
+      this.uiManage.streamDeleteSpin = html.find('#manage_stream_button_delete .fa-spinner').hide();
+      this.uiManage.streamSaveBtn = html.find('#manage_stream_button_save');
+      this.uiManage.streamSaveSpin = html.find('#manage_stream_button_save .fa-spinner').hide();
 
       html.appendTo(this.$manage);
       this.uiManage.form = this.$manage.find('form');

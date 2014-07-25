@@ -43,7 +43,7 @@ var EventsNode = module.exports = TreeNode.implement(
         this.eventView.eventEnter(event);
       }
 
-      if (callback) {
+      if (callback && typeof(callback) === 'function') {
         callback(null);
       }
     },

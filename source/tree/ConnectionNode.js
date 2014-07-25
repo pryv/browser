@@ -179,6 +179,7 @@ var ConnectionNode = module.exports = TreeNode.implement(
     },
     streamEnterScope: function (stream, reason, callback) {
       if (this.streamNodes[stream.id]) {
+        console.log('DEBUG', 'streamEnterScope', 'exists');
         if (typeof(callback) === 'function') {
           return callback();
         } else {
@@ -186,13 +187,18 @@ var ConnectionNode = module.exports = TreeNode.implement(
         }
       }
       if (!stream.parent) {
+        console.log('DEBUG', 'streamEnterScope', 'no parent');
         this.streamNodes[stream.id] = new StreamNode(this, this, stream);
       }
       if (stream.parent && this.streamNodes[stream.parent.id]) {
+
+        console.log('DEBUG', 'streamEnterScope', 'parent exists');
         this.streamNodes[stream.id] =
           new StreamNode(this, this.streamNodes[stream.parent.id], stream);
       }
       if (stream.parent && !this.streamNodes[stream.parent.id]) {
+
+        console.log('DEBUG', 'streamEnterScope', 'parent dont exists');
         if (!this.waitForParentStream[stream.parent.id]) {
           this.waitForParentStream[stream.parent.id] = [];
         }
@@ -218,7 +224,10 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
     streamLeaveScope: function (stream, reason, callback) {
       var node = this.streamNodes[stream.id];
+      var events;
       if (node) {
+        events = node.getAllEvents();
+        _.each(events, this.eventLeaveScope.bind(this));
         node._closeView();
         delete this.streamNodes[stream.id];
       }
@@ -227,18 +236,16 @@ var ConnectionNode = module.exports = TreeNode.implement(
         return callback();
       }
     },
-    streamMove: function (stream, oldParentId) {
+    streamMove: function (stream) {
       var node = this.streamNodes[stream.id];
-      var newParent;
+      var events;
       if (node) {
-        if (stream.parent) {
-          newParent = this.streamNodes[stream.parent.id];
-        } else {
-          newParent = this;
-        }
-        node.parent = newParent;
-        this.streamNodes[stream.id] = node;
-        this.streamChange(stream);
+        events = node.getAllEvents();
+        console.log('DEBUG', 'streamMove', node, events);
+        this.streamLeaveScope(stream);
+        this.streamEnterScope(stream);
+        _.each(stream.children, this.streamMove.bind(this));
+        _.each(events, this.eventEnterScope.bind(this));
       }
     },
     streamChange: function (stream) {

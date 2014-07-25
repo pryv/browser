@@ -8,8 +8,6 @@ module.exports = Marionette.ItemView.extend({
   template: '#nodeView',
   initialize: function () {
     this.listenTo(this.model, 'change', this.change);
-    this.listenTo(this.model, 'change:containerId', this.containerChanged);
-
     this.$el.attr('id', this.model.get('id'));
     this.$el.attr('data-streamId', this.model.get('streamId'));
     this.$el.attr('data-streamName', this.model.get('streamName'));
@@ -25,11 +23,6 @@ module.exports = Marionette.ItemView.extend({
     this._refreshStyle();
   },
 
-  containerChanged: function () {
-    console.log('DEBUG', 'container changed', this.model);
-    $('#' + this.model.get('id')).remove();
-    this.render();
-  },
 
   renderView: function () {
 

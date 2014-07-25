@@ -174,6 +174,8 @@ var TreeMap = module.exports = function (model) {
     if (IGNORE_PARAM_CHANGED) {
       this._onIgnoreParamChanged();
     }
+
+    this.root._createView();
     this.root._generateChildrenTreemap(0,
       0,
       this.root.width,

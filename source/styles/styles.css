@@ -1772,7 +1772,7 @@ color: #FFF;
   padding: 10px;
 }
 .stream-controller-stream-list{
-  padding: 10px 0px;
+  padding: 20px 0 60px 0px;
   color: #6B8599;
   overflow: auto;
   position: relative;
@@ -1793,6 +1793,12 @@ color: #FFF;
 .stream-controller-header {
   border-bottom: 1px solid #EBEEF1;
   overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #F3F5F6;
+  z-index: 999;
 }
 .manage-stream-footer {
   border-top: 1px solid #DDE2E6;

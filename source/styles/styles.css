@@ -1772,7 +1772,7 @@ color: #FFF;
   padding: 10px;
 }
 .stream-controller-stream-list{
-  padding: 20px 0 60px 0px;
+  padding: 40px 0 60px 0px;
   color: #6B8599;
   overflow: auto;
   position: relative;
@@ -1878,8 +1878,12 @@ color: #FFF;
   right: 30px;
   top: 6px;
 }
-.stream-controller-container .can-select {
-  border: #00A8E2 solid 5px;
+
+.selecting-parent .stream-controller-stream-list > div.can-select{
+  opacity: 1;
+}
+.selecting-parent .manage-stream-name, .selecting-parent .manage-stream-color ,.selecting-parent .stream-controller-stream-list > div {
+  opacity: .2;
 }
 .stream-controller-container .pryv-radio label:before {
   display: none;
@@ -1887,12 +1891,14 @@ color: #FFF;
 .stream-controller-container .pryv-checkbox label:before {
   display: none;
 }
+
 .manage-empty {
   text-align: center;
   position: relative;
   top: 50%;
   margin-top: -40px;
 }
+
 
 /* Logo "beta" mention */
 

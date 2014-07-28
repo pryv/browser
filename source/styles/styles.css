@@ -1048,18 +1048,25 @@ li.generic-prop, li.generic-arr-item {
 .type-select {
   display: inline-block;
   float: none;
+  background: #BD1727;
+  color: #FFF;
+  padding: 20px;
 }
+.type-select > div {
+  margin-top: -20px;
+}
+
 .type-select i {
-  width: 100%;
+  /*width: 100%;
   height: 100%;
   background-color: #bdc3c7;
-  text-align: center;
+  text-align: center;*/
   font-size: 5em;
-  padding: 20px;
-  color: #fff;
+  /*padding: 20px 40px;
+  color: #fff;*/
 }
-.type-select:hover i {
-  background-color: #ecf0f1;
+.type-select:hover {
+  background-color: #D41F30;
 }
 .type-select:hover {
   cursor: pointer;

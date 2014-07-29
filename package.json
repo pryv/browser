@@ -30,6 +30,7 @@
     "grunt-contrib-jshint": "latest",
     "grunt-contrib-uglify": "latest",
     "grunt-contrib-watch": "latest",
+    "grunt-contrib-sass": "latest",
     "grunt-env": "latest",
     "grunt-git": "latest",
     "grunt-mocha-test": "latest",

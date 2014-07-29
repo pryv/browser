@@ -26,13 +26,21 @@ module.exports = function (grunt) {
       }
     },
     cssmin: {
-      combine: {
-        files: {
-          'dist/styles/vendor.min.css': ['source/styles/bootstrap.min.css',
-            'source/styles/bootstrap-responsive.min.css',
-            'source/styles/animate.css',
-            'source/styles/font-awesome.min.css',
-            'source/timeframe-selector/styles/main.css']
+      common: {
+        combine: {
+          files: {
+            'dist/styles/vendor.min.css': ['source/styles/animate.css',
+              'source/styles/font-awesome.min.css',
+              'source/timeframe-selector/styles/main.css']
+          }
+        }
+      },
+      css: {
+        combine: {
+          files: {
+            'dist/styles/vendor.min.css': ['source/styles/bootstrap.min.css',
+              'source/styles/bootstrap-responsive.min.css']
+          }
         }
       }
     },
@@ -67,7 +75,7 @@ module.exports = function (grunt) {
       }
     },
     copy: {
-      media : {
+      common : {
         files: [
           {
             expand: true,
@@ -88,13 +96,6 @@ module.exports = function (grunt) {
             cwd: 'source/locales/',
             src: '**',
             dest: 'dist/locales/'
-          },
-          {
-            expand: true,
-            flatten: true,
-            filter: 'isFile',
-            src: 'source/styles/styles.css',
-            dest: 'dist/styles/'
           },
           {
             expand: true,
@@ -132,6 +133,28 @@ module.exports = function (grunt) {
             dest: 'dist/images/'
           }
         ]
+      },
+      css: {
+        files: [
+          {
+            expand: true,
+            flatten: true,
+            filter: 'isFile',
+            src: 'source/styles/styles.css',
+            dest: 'dist/styles/'
+          }
+        ]
+      }
+    },
+    sass: {
+      dist: {
+        files: [{
+          expand: true,
+          cwd: 'style',
+          src: ['**/*.scss', '!**/{_}*.scss'],
+          dest: 'dist/styles',
+          ext: '.css'
+        }]
       }
     },
     mochaTest: {
@@ -211,6 +234,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-env');
   grunt.loadNpmTasks('grunt-preprocess');
+  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-git');
   grunt.registerTask('setup',
     ['gitclone:initrepo']);
@@ -222,6 +246,9 @@ module.exports = function (grunt) {
   grunt.registerTask('default',
     ['jshint', 'env:dev', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:dev']);
+  grunt.registerTask('styles',
+    ['jshint', 'env:dev', 'browserify',
+      'cssmin:common', 'concat', 'copy:common', 'sass', 'preprocess:dev']);
   grunt.registerTask('staging',
     ['jshint', 'env:staging', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:staging']);

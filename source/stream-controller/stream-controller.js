@@ -233,13 +233,16 @@
           '</div>' +
           '</div>' +
           '<div class="manage-stream-action manage-stream-footer">' +
-          '<button id="manage_stream_button_save" type="submit" class="btn btn-primary pull-right">' +
+          '<button id="manage_stream_button_save" type="submit" ' +
+            'class="btn btn-primary pull-right">' +
           '<i class="fa fa-spin fa-spinner"></i> Save' +
           '</button>' +
-          '<button id="manage_stream_button_delete" class="btn btn-danger"><i class="fa fa-spin fa-spinner"></i> Delete</button>' +
+          '<button id="manage_stream_button_delete" class="btn btn-danger">' +
+            '<i class="fa fa-spin fa-spinner"></i> Delete</button>' +
           '</div>' +
           '</form>' +
-          '<div class="manage-empty user-msg-box"><span class="icon ss-cursor"></span><p>Select a stream</p></div>');
+          '<div class="manage-empty user-msg-box">' +
+            '<span class="icon ss-cursor"></span><p>Select a stream</p></div>');
       this.uiManage = {};
       this.uiManage.streamName = html.find('.manage-stream-name input');
       this.uiManage.streamColor = html.find('.manage-stream-color');

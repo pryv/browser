@@ -26,23 +26,16 @@ module.exports = function (grunt) {
       }
     },
     cssmin: {
-      common: {
-        combine: {
-          files: {
-            'dist/styles/vendor.min.css': ['source/styles/animate.css',
+      combine: {
+        files: {
+          'dist/styles/vendor.min.css': ['source/styles/animate.css',
               'source/styles/font-awesome.min.css',
-              'source/timeframe-selector/styles/main.css']
-          }
-        }
-      },
-      css: {
-        combine: {
-          files: {
-            'dist/styles/vendor.min.css': ['source/styles/bootstrap.min.css',
+              'source/timeframe-selector/styles/main.css',
+              'source/styles/bootstrap.min.css',
               'source/styles/bootstrap-responsive.min.css']
-          }
         }
       }
+
     },
     concat: {
       options: {
@@ -248,7 +241,7 @@ module.exports = function (grunt) {
       'cssmin', 'concat', 'copy', 'preprocess:dev']);
   grunt.registerTask('styles',
     ['jshint', 'env:dev', 'browserify',
-      'cssmin:common', 'concat', 'copy:common', 'sass', 'preprocess:dev']);
+      'cssmin', 'concat', 'copy:common', 'sass', 'preprocess:dev']);
   grunt.registerTask('staging',
     ['jshint', 'env:staging', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:staging']);

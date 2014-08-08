@@ -98,7 +98,10 @@ var ConnectionNode = module.exports = TreeNode.implement(
           }
           if (this.treeMap) {
             this.treeMap.streams[stream.connection.username + '-' + stream.id] =
-              _.extend({}, stream);
+              _.clone(stream);
+          }
+          else {
+            console.error('DEBUG', 'no treemap');
           }
           stream.isVirtual = false;
           this.streamNodes[stream.id] = new StreamNode(this, parentNode, stream);

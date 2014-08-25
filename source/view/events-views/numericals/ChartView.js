@@ -259,7 +259,8 @@ module.exports = Marionette.CompositeView.extend({
     series.sortData();
     var data = this.transform(series);
     var label = series.get('streamName') + ' (' +
-        (this.useExtras ? Pryv.eventTypes.extras(series.get('type')).symbol : series.get('type')) +
+        (this.useExtras ? Pryv.eventTypes.extras(series.get('type')).symbol ||
+          Pryv.eventTypes.extras(series.get('type')).name.en || '' : series.get('type')) +
         ')';
 
     // Configures series
@@ -822,7 +823,8 @@ module.exports = Marionette.CompositeView.extend({
       m.get('events')[0].content + ' ' +
       '</span><span class="unity">' +
       (this.useExtras ?
-        Pryv.eventTypes.extras(m.get('events')[0].type).symbol : m.get('events')[0].type) +
+        Pryv.eventTypes.extras(m.get('events')[0].type).symbol ||
+        Pryv.eventTypes.extras(m.get('events')[0].type).name.en || '' : m.get('events')[0].type) +
       '</span></div></div></div>');
     }
 

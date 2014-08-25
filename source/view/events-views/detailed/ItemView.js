@@ -24,8 +24,10 @@ module.exports = Marionette.ItemView.extend({
         }
         result += text;
       } else if (Pryv.eventTypes.extras(type)) {
+        var unity =   Pryv.eventTypes.extras(type).symbol ||
+          Pryv.eventTypes.extras(type).name.en || '';
         result += '<span class="value">' + this.event.content + '</span>' +
-            '<span class="unity">' + Pryv.eventTypes.extras(type).symbol + '</span>';
+            '<span class="unity">' + unity + '</span>';
       } else  if (type === 'message/twitter') {
         result += this.event.content.text;
       } else if (type === 'position/wgs84') {

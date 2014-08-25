@@ -21441,6 +21441,7 @@ if (typeof define === "function" && define.amd) {
 },{}],49:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('./utility/utility.js'),
+    eventTypes = require('./eventTypes.js'),
     ConnectionEvents = require('./connection/ConnectionEvents.js'),
     ConnectionStreams = require('./connection/ConnectionStreams.js'),
     ConnectionProfile = require('./connection/ConnectionProfile.js'),
@@ -21569,6 +21570,7 @@ Connection._serialCounter = 0;
  * @returns {Connection} this
  */
 Connection.prototype.fetchStructure = function (callback /*, keepItUpToDate*/) {
+  eventTypes.loadFlat();
   if (this.datastore) { return this.datastore.init(callback); }
   this.datastore = new Datastore(this);
   this.accessInfo(function (error) {
@@ -21815,7 +21817,7 @@ function getHostname(connection) {
       connection.username + '.' + connection.settings.domain : connection.settings.domain;
 }
 
-},{"./Datastore.js":50,"./connection/ConnectionAccesses.js":58,"./connection/ConnectionAccount.js":59,"./connection/ConnectionBookmarks.js":60,"./connection/ConnectionConstants.js":61,"./connection/ConnectionEvents.js":62,"./connection/ConnectionMonitors.js":63,"./connection/ConnectionProfile.js":64,"./connection/ConnectionStreams.js":65,"./utility/utility.js":77,"underscore":48}],50:[function(require,module,exports){
+},{"./Datastore.js":50,"./connection/ConnectionAccesses.js":58,"./connection/ConnectionAccount.js":59,"./connection/ConnectionBookmarks.js":60,"./connection/ConnectionConstants.js":61,"./connection/ConnectionEvents.js":62,"./connection/ConnectionMonitors.js":63,"./connection/ConnectionProfile.js":64,"./connection/ConnectionStreams.js":65,"./eventTypes.js":66,"./utility/utility.js":77,"underscore":48}],50:[function(require,module,exports){
 /**
  * DataStore handles in memory caching of objects.
  * @private
@@ -25111,7 +25113,9 @@ eventTypes.hierarchical = function () {
 eventTypes.loadFlat = function (callback) {
   var myCallback = function (error, result) {
     this._flat = result;
-    callback(error, result);
+    if (callback && typeof(callback) === 'function') {
+      callback(error, result);
+    }
   };
   _getFile('flat.json', myCallback.bind(this));
 };
@@ -27871,36 +27875,7 @@ window.PryvBrowser.eventTypes = {
   },
 
   isNumerical: function (event) {
-    if (! event || ! event.type) { return false; }
-    var typeClass = event.type.split('/')[0];
-    return typeClass === 'money' ||
-        typeClass === 'absorbed-dose' ||
-        typeClass === 'absorbed-dose-equivalent' ||
-        typeClass === 'absorbed-dose-rate' ||
-        typeClass === 'absorbed-dose-rate' ||
-        typeClass === 'area' ||
-        typeClass === 'capacitance' ||
-        typeClass === 'catalytic-activity' ||
-        typeClass === 'count' ||
-        typeClass === 'data-quantity' ||
-        typeClass === 'density' ||
-        typeClass === 'dynamic-viscosity' ||
-        typeClass === 'electric-charge' ||
-        typeClass === 'electric-charge-line-density' ||
-        typeClass === 'electric-current' ||
-        typeClass === 'electrical-conductivity' ||
-        typeClass === 'electromotive-force' ||
-        typeClass === 'energy' ||
-        typeClass === 'force' ||
-        typeClass === 'length' ||
-        typeClass === 'luminous-intensity' ||
-        typeClass === 'mass' ||
-        typeClass === 'mol' ||
-        typeClass === 'power' ||
-        typeClass === 'pressure' ||
-        typeClass === 'speed' ||
-        typeClass === 'temperature' ||
-        typeClass === 'volume';
+    return Pryv.eventTypes.isNumerical(event);
   },
 
   isPicture: function (event) {
@@ -31395,38 +31370,7 @@ var NumericalsEventsNode = module.exports = EventsNode.implement(
 
 // we accept all kind of events
 NumericalsEventsNode.acceptThisEventType = function (eventType) {
-  var eventTypeClass = eventType.split('/')[0];
-  return (
-    eventTypeClass === 'money' ||
-      eventTypeClass === 'absorbed-dose' ||
-      eventTypeClass === 'absorbed-dose-equivalent' ||
-      eventTypeClass === 'absorbed-dose-rate' ||
-      eventTypeClass === 'absorbed-dose-rate' ||
-      eventTypeClass === 'area' ||
-      eventTypeClass === 'capacitance' ||
-      eventTypeClass === 'catalytic-activity' ||
-      eventTypeClass === 'count' ||
-      eventTypeClass === 'data-quantity' ||
-      eventTypeClass === 'density' ||
-      eventTypeClass === 'dynamic-viscosity' ||
-      eventTypeClass === 'electric-charge' ||
-      eventTypeClass === 'electric-charge-line-density' ||
-      eventTypeClass === 'electric-current' ||
-      eventTypeClass === 'electrical-conductivity' ||
-      eventTypeClass === 'electromotive-force' ||
-      eventTypeClass === 'energy' ||
-      eventTypeClass === 'force' ||
-      eventTypeClass === 'length' ||
-      eventTypeClass === 'luminous-intensity' ||
-      eventTypeClass === 'mass' ||
-      eventTypeClass === 'mol' ||
-      eventTypeClass === 'power' ||
-      eventTypeClass === 'pressure' ||
-      eventTypeClass === 'speed' ||
-      eventTypeClass === 'temperature' ||
-      eventTypeClass === 'time' ||
-      eventTypeClass === 'volume'
-    );
+  return window.PryvBrowser.eventTypes.isNumerical(eventType);
 };
 try {
   Object.defineProperty(window.PryvBrowser, 'numericalWeight', {

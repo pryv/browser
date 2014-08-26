@@ -21883,11 +21883,8 @@ Datastore.prototype.getStreams = function () {
  * @param test (do no throw error if Stream is not found
  * @returns Stream or null if not found
  */
-Datastore.prototype.getStreamById = function (streamId, test) {
+Datastore.prototype.getStreamById = function (streamId) {
   var result = this.streamsIndex[streamId];
-  if (! test && ! result) {
-    throw new Error('Datastore.getStreamById cannot find stream with id: ' + streamId);
-  }
   return result;
 };
 
@@ -22740,8 +22737,10 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
               this._events.active[event.id] = event;
             }
           } else {
-            result.created.push(event);
-            this._events.active[event.id] = event;
+            if(!event.trashed && event.stream && !event.stream.trashed) {
+              result.created.push(event);
+              this._events.active[event.id] = event;
+            }
           }
         }
       }.bind(this));
@@ -29120,19 +29119,17 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
     eventLeaveScope: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
+      if (node) {
+        node.eventLeaveScope(event, reason, callback);
       }
-      node.eventLeaveScope(event, reason, callback);
 
     },
 
     eventChange: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
+      if (node) {
+        node.eventChange(event, reason, callback);
       }
-      node.eventChange(event, reason, callback);
     },
 
 // ----------- connection attached virtual nodes ------------//
@@ -33093,7 +33090,7 @@ module.exports = Marionette.ItemView.extend({
         try {
           this.plot = $.plot(this.chartContainer, this.data, this.options);
         } catch (e) {
-          console.warn(e);
+          //console.warn(e);
         }
 
         setTimeout(this.updateTotalTime.bind(this), 200);
@@ -36284,7 +36281,7 @@ module.exports = Marionette.CompositeView.extend({
     try {
       this.plot = $.plot($(this.chartContainer), this.data, this.options);
     } catch (e) {
-      console.warn(e);
+      //console.warn(e);
     }
 
 

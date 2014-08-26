@@ -95,7 +95,7 @@ module.exports = Marionette.ItemView.extend({
         try {
           this.plot = $.plot(this.chartContainer, this.data, this.options);
         } catch (e) {
-          console.warn(e);
+          //console.warn(e);
         }
 
         setTimeout(this.updateTotalTime.bind(this), 200);

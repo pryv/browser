@@ -21441,7 +21441,6 @@ if (typeof define === "function" && define.amd) {
 },{}],49:[function(require,module,exports){
 var _ = require('underscore'),
     utility = require('./utility/utility.js'),
-    eventTypes = require('./eventTypes.js'),
     ConnectionEvents = require('./connection/ConnectionEvents.js'),
     ConnectionStreams = require('./connection/ConnectionStreams.js'),
     ConnectionProfile = require('./connection/ConnectionProfile.js'),
@@ -21570,7 +21569,6 @@ Connection._serialCounter = 0;
  * @returns {Connection} this
  */
 Connection.prototype.fetchStructure = function (callback /*, keepItUpToDate*/) {
-  eventTypes.loadFlat();
   if (this.datastore) { return this.datastore.init(callback); }
   this.datastore = new Datastore(this);
   this.accessInfo(function (error) {
@@ -21817,7 +21815,7 @@ function getHostname(connection) {
       connection.username + '.' + connection.settings.domain : connection.settings.domain;
 }
 
-},{"./Datastore.js":50,"./connection/ConnectionAccesses.js":58,"./connection/ConnectionAccount.js":59,"./connection/ConnectionBookmarks.js":60,"./connection/ConnectionConstants.js":61,"./connection/ConnectionEvents.js":62,"./connection/ConnectionMonitors.js":63,"./connection/ConnectionProfile.js":64,"./connection/ConnectionStreams.js":65,"./eventTypes.js":66,"./utility/utility.js":77,"underscore":48}],50:[function(require,module,exports){
+},{"./Datastore.js":50,"./connection/ConnectionAccesses.js":58,"./connection/ConnectionAccount.js":59,"./connection/ConnectionBookmarks.js":60,"./connection/ConnectionConstants.js":61,"./connection/ConnectionEvents.js":62,"./connection/ConnectionMonitors.js":63,"./connection/ConnectionProfile.js":64,"./connection/ConnectionStreams.js":65,"./utility/utility.js":77,"underscore":48}],50:[function(require,module,exports){
 /**
  * DataStore handles in memory caching of objects.
  * @private
@@ -22719,7 +22717,8 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
 
   var filterWith = this.filter.getData(true, options);
   if (this.ensureFullCache) { filterWith = REALLY_ALL_EVENTS; }
-
+  filterWith.modifiedSince = this.lastSynchedST;
+  filterWith.state = 'all';
   this.lastSynchedST = this.connection.getServerTime();
 
   var result = { created : [], trashed : [], modified: []};
@@ -22737,9 +22736,7 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
               result.trashed.push(event);
               delete this._events.active[event.id];
             } else {
-              if (event.modified !==  this._events.active[event.id].modified) { // else same }
-                result.modified.push(event);
-              }
+              result.modified.push(event);
               this._events.active[event.id] = event;
             }
           } else {
@@ -25119,7 +25116,7 @@ eventTypes.loadFlat = function (callback) {
   };
   _getFile('flat.json', myCallback.bind(this));
 };
-
+eventTypes.loadFlat();
 
 eventTypes.flat = function (eventType) {
   if (!this._flat) {
@@ -30055,6 +30052,15 @@ var TreeMap = module.exports = function (model) {
     };
     _.each(content.events, function (event) {
       var oldEvent = this.events[event.id];
+      if (!oldEvent) {
+        try {
+          this.root.eventEnterScope(event, content.reason, function () {
+          });
+        } catch (e) {
+          console.warn('EventLeave error:', e);
+        }
+        return;
+      }
       if (isTrashedChanged(oldEvent, event) && IGNORE_TRASHED_EVENT) {
         this.trashedEvents[event.id] = event;
       }

@@ -240,6 +240,15 @@ var TreeMap = module.exports = function (model) {
     };
     _.each(content.events, function (event) {
       var oldEvent = this.events[event.id];
+      if (!oldEvent) {
+        try {
+          this.root.eventEnterScope(event, content.reason, function () {
+          });
+        } catch (e) {
+          console.warn('EventLeave error:', e);
+        }
+        return;
+      }
       if (isTrashedChanged(oldEvent, event) && IGNORE_TRASHED_EVENT) {
         this.trashedEvents[event.id] = event;
       }

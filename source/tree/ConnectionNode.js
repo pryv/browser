@@ -214,19 +214,17 @@ var ConnectionNode = module.exports = TreeNode.implement(
 
     eventLeaveScope: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to remove event' + event.id);
+      if (node) {
+        node.eventLeaveScope(event, reason, callback);
       }
-      node.eventLeaveScope(event, reason, callback);
 
     },
 
     eventChange: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
-      if (node === 'undefined') {
-        throw new Error('ConnectionNode: can\'t find path to change event' + event.id);
+      if (node) {
+        node.eventChange(event, reason, callback);
       }
-      node.eventChange(event, reason, callback);
     },
 
 // ----------- connection attached virtual nodes ------------//

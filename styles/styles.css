@@ -1339,6 +1339,9 @@ color: #BD1727;
   /*font-size: 40px;
   cursor: pointer;*/
 }
+#login hr{
+  border-top: 1px solid #D1D1D1;
+}
 #login-form form {
   text-align: initial;
 }
@@ -1704,4 +1707,24 @@ color: #FFF;
 }
 #zenbox_tab img {
   margin: -4px;
+}
+
+/* Logo "beta" mention */
+
+#logo-beta-mention {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  margin-left: 18px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #999;
+}
+#logo-beta-mention a {
+  color: inherit;
+}
+#logo-beta-mention a:hover, #logo-beta-mention a:focus  {
+  color: #BD1727;
+  text-decoration: none;
 }

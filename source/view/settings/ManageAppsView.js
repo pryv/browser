@@ -39,8 +39,9 @@ module.exports = Marionette.CompositeView.extend({
     this.connection = this.options.connection;
     if (this.connection) {
 
-      var baseHref = $('base').attr('href');
-      var url = baseHref + 'locales/appList.json';
+      //var baseHref = $('base').attr('href');
+      var url = 'https://reg.pryv.io/apps';
+
       var apps = {};
       $.get(url)
         .done(function (result) {

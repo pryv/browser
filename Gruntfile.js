@@ -193,7 +193,7 @@ module.exports = function (grunt) {
       initrepo: {
         options: {
           repository: 'git@github.com:pryv/browser.git',
-          branch: 'dev',
+          branch: 'staging',
           directory: 'dist'
         }
       }

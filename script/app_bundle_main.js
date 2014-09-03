@@ -27415,7 +27415,7 @@ _.extend(utility, utility.isBrowser() ?
 }).call(this);
 
 },{}],79:[function(require,module,exports){
-/* global $, window, location, i18n, moment */
+/* global $, window, location, i18n, moment, localStorage */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
     _ = require('underscore'),
     ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -27533,6 +27533,14 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         }
         $('#login-button').html('<i class="ss-login"></i> ' + i18n.t('nav.actions.signIn'));
         this.loggedConnection = null;
+
+        if (localStorage) {
+          localStorage.removeItem('username');
+          localStorage.removeItem('auth');
+          localStorage.removeItem('domain');
+          localStorage.removeItem('returnUrl');
+          localStorage.removeItem('welcome');
+        }
       }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
@@ -27608,6 +27616,12 @@ Model.prototype.signedIn = function (connection) {
         '" />');
     }
   });
+  if (localStorage) {
+    localStorage.setItem('username', this.loggedConnection.username);
+    localStorage.setItem('auth', this.loggedConnection.auth);
+    localStorage.setItem('domain', this.loggedConnection.settings.domain);
+    localStorage.setItem('returnUrl', location.href);
+  }
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
     if (this.sharingsConnections && this.sharingsConnections.length === 1 &&
@@ -29807,7 +29821,7 @@ StreamNode.registeredEventNodeTypes = {
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
 },{"./TreeNode":92,"./eventsNode/ActivitiesEventsNode.js":94,"./eventsNode/GenericEventsNode.js":95,"./eventsNode/NotesEventsNode.js":96,"./eventsNode/NumericalsEventsNode.js":97,"./eventsNode/PicturesEventsNode.js":98,"./eventsNode/PositionsEventsNode.js":99,"./eventsNode/TweetsEventsNode.js":100,"underscore":78}],91:[function(require,module,exports){
-/* global $, window, location */
+/* global $, window, location, localStorage */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -29821,6 +29835,7 @@ var RootNode = require('./RootNode.js'),
   ConnectAppsView = require('../view/connect-apps/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
   OnboardingView = require('../view/onboarding/View.js'),
+  StreamView = require('../view/stream/View.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
 
@@ -30319,6 +30334,28 @@ TreeMap.prototype.closeCreateEventView = function () {
 };
 
 /*=================================*/
+//======= CONFIG STREAM VIEW ======\\
+
+TreeMap.prototype.hasStreamView = function () {
+  return typeof this.streamView !== 'undefined' && this.streamView !== null;
+};
+
+TreeMap.prototype.showStreamView = function ($modal, stream, target) {
+  this.closeViews();
+  if ($modal && stream && !this.hasStreamView()) {
+    this.streamView = new StreamView($modal, stream, target);
+    this.streamView.show();
+  }
+};
+
+TreeMap.prototype.closeStreamView = function () {
+  if (this.hasStreamView()) {
+    this.streamView.close();
+    this.streamView = null;
+  }
+};
+
+/*=================================*/
 //========== SHARING VIEW =========\\
 
 TreeMap.prototype.hasSharingView = function () {
@@ -30434,6 +30471,9 @@ TreeMap.prototype.closeSubscribeView = function () {
 //========== ONBOARDING VIEW =========\\
 
 TreeMap.prototype.showOnboarding = function () {
+  localStorage.setItem('welcome', true);
+  location.href = '/onboarding';
+ /*
   var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();
   $timeframeContainer.animate({'bottom': -$timeframeContainer.height() + 'px'});
@@ -30455,6 +30495,7 @@ TreeMap.prototype.showOnboarding = function () {
     this.model.showLoggedInElement();
     this.closeOnboardingView();
   }.bind(this));
+   */
 };
 TreeMap.prototype.closeOnboardingView = function () {
   if (this.onboardingView) {
@@ -30570,7 +30611,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../model/Messages":81,"../view/connect-apps/Controller.js":104,"../view/create/Controller.js":105,"../view/events-views/detailed/Controller.js":113,"../view/events-views/draganddrop/Controller.js":127,"../view/onboarding/View.js":151,"../view/settings/Controller.js":153,"../view/sharings/Controller.js":161,"../view/sharings/create/Controller.js":166,"../view/subscribe/Controller.js":170,"./RootNode.js":89,"./VirtualNode.js":93,"pryv":67,"underscore":78}],92:[function(require,module,exports){
+},{"../model/Messages":81,"../view/connect-apps/Controller.js":104,"../view/create/Controller.js":105,"../view/events-views/detailed/Controller.js":113,"../view/events-views/draganddrop/Controller.js":127,"../view/onboarding/View.js":151,"../view/settings/Controller.js":153,"../view/sharings/Controller.js":161,"../view/sharings/create/Controller.js":166,"../view/stream/View.js":169,"../view/subscribe/Controller.js":171,"./RootNode.js":89,"./VirtualNode.js":93,"pryv":67,"underscore":78}],92:[function(require,module,exports){
 /* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -30765,6 +30806,14 @@ _.extend(TreeNode.prototype, {
           else if (this.connection) {
             this.treeMap.focusOnConnections(this.connection);
           }
+        }, this);
+        this.view.on('streamConfigClicked', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+            this.treeMap.closeStreamView();
+          }.bind(this));
+          this.treeMap.showStreamView($modal, this.stream, this.view.$el);
         }, this);
       }
     }
@@ -31757,7 +31806,8 @@ module.exports = Marionette.ItemView.extend({
 
   },
   triggers: {
-    'click .nodeHeader': 'headerClicked'
+    'click .nodeHeader': 'headerClicked',
+    'click .streamConfig' : 'streamConfigClicked'
   },
   change: function () {
 
@@ -32965,7 +33015,18 @@ module.exports = CommonModel.implement(
       this.data = [];
       for (var s in timeSumByStream) {
         if (timeSumByStream.hasOwnProperty(s)) {
-          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
+          var series = {
+            label: timeSumByStream[s].stream.name,
+            data: timeSumByStream[s].time
+          };
+          var cd = timeSumByStream[s].stream.clientData;
+          if (cd && cd['pryv-browser:charts'] &&
+            cd['pryv-browser:charts']['activity/plain'] &&
+            cd['pryv-browser:charts']['activity/plain'].settings &&
+            cd['pryv-browser:charts']['activity/plain'].settings.color ) {
+            series.color = cd['pryv-browser:charts']['activity/plain'].settings.color;
+          }
+          this.data.push(series);
         }
       }
 
@@ -41372,6 +41433,8 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],169:[function(require,module,exports){
+module.exports = function ()  {};
+},{}],170:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./Model.js');
 
@@ -41379,7 +41442,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./Model.js":173,"backbone":4}],170:[function(require,module,exports){
+},{"./Model.js":174,"backbone":4}],171:[function(require,module,exports){
 /* global $, window, i18n */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
@@ -41466,7 +41529,7 @@ _.extend(Controller.prototype, {
     }.bind(this));
   }
 });
-},{"./Collection.js":169,"./ListView.js":172,"./Model.js":173,"underscore":78}],171:[function(require,module,exports){
+},{"./Collection.js":170,"./ListView.js":173,"./Model.js":174,"underscore":78}],172:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -41492,7 +41555,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":1}],172:[function(require,module,exports){
+},{"backbone.marionette":1}],173:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -41562,7 +41625,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./ItemView.js":171,"backbone.marionette":1,"underscore":78}],173:[function(require,module,exports){
+},{"./ItemView.js":172,"backbone.marionette":1,"underscore":78}],174:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({

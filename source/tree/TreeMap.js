@@ -12,6 +12,7 @@ var RootNode = require('./RootNode.js'),
   ConnectAppsView = require('../view/connect-apps/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
   OnboardingView = require('../view/onboarding/View.js'),
+  StreamView = require('../view/stream/View.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
 
@@ -506,6 +507,28 @@ TreeMap.prototype.closeCreateEventView = function () {
   if (this.hasCreateEventView()) {
     this.createEventView.close();
     this.createEventView = null;
+  }
+};
+
+/*=================================*/
+//======= CONFIG STREAM VIEW ======\\
+
+TreeMap.prototype.hasStreamView = function () {
+  return typeof this.streamView !== 'undefined' && this.streamView !== null;
+};
+
+TreeMap.prototype.showStreamView = function ($modal, stream, target) {
+  this.closeViews();
+  if ($modal && stream && !this.hasStreamView()) {
+    this.streamView = new StreamView($modal, stream, target);
+    this.streamView.show();
+  }
+};
+
+TreeMap.prototype.closeStreamView = function () {
+  if (this.hasStreamView()) {
+    this.streamView.close();
+    this.streamView = null;
   }
 };
 

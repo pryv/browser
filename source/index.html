@@ -243,9 +243,9 @@
     var bgColor = findColor(content);
 
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
-    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %></div>
+    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %><i class="streamConfig fa fa-cog fa-fw"></i></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
-    <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %></div>
+    <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %><i class="streamConfig fa fa-cog fa-fw"></i></div>
     <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
     <div class='nodeHeader'><span class="pins-color 3" style="background-color: <%= bgColor %>"></span><%= content.username %> / <%= content._accessInfo.name %></div>
     <% } else if (typeof(content.username) != "undefined") { %>

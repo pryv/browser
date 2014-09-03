@@ -18,7 +18,8 @@ module.exports = Marionette.ItemView.extend({
 
   },
   triggers: {
-    'click .nodeHeader': 'headerClicked'
+    'click .nodeHeader': 'headerClicked',
+    'click .streamConfig' : 'streamConfigClicked'
   },
   change: function () {
 

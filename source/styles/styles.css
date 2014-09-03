@@ -1728,3 +1728,11 @@ color: #FFF;
   color: #BD1727;
   text-decoration: none;
 }
+.streamConfig {
+  display: none;
+  float: right;       
+}
+
+.nodeHeader:hover .streamConfig {
+  /*display: block;  */
+}

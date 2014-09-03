@@ -193,6 +193,14 @@ _.extend(TreeNode.prototype, {
             this.treeMap.focusOnConnections(this.connection);
           }
         }, this);
+        this.view.on('streamConfigClicked', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+            this.treeMap.closeStreamView();
+          }.bind(this));
+          this.treeMap.showStreamView($modal, this.stream, this.view.$el);
+        }, this);
       }
     }
     if (recurcive) {

@@ -625,6 +625,8 @@ TreeMap.prototype.closeSubscribeView = function () {
 //========== ONBOARDING VIEW =========\\
 
 TreeMap.prototype.showOnboarding = function () {
+  location.href = '/onboarding';
+ /*
   var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();
   $timeframeContainer.animate({'bottom': -$timeframeContainer.height() + 'px'});
@@ -646,6 +648,7 @@ TreeMap.prototype.showOnboarding = function () {
     this.model.showLoggedInElement();
     this.closeOnboardingView();
   }.bind(this));
+   */
 };
 TreeMap.prototype.closeOnboardingView = function () {
   if (this.onboardingView) {

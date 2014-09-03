@@ -1,4 +1,4 @@
-/* global $, window, location, i18n, moment */
+/* global $, window, location, i18n, moment, localStorage */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
     _ = require('underscore'),
     ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -116,6 +116,13 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         }
         $('#login-button').html('<i class="ss-login"></i> ' + i18n.t('nav.actions.signIn'));
         this.loggedConnection = null;
+
+        if (localStorage) {
+          localStorage.removeItem('username');
+          localStorage.removeItem('auth');
+          localStorage.removeItem('domain');
+          localStorage.removeItem('returnUrl');
+        }
       }.bind(this),
       refused: function (reason) {
         console.log('** REFUSED! ' + reason);
@@ -191,6 +198,12 @@ Model.prototype.signedIn = function (connection) {
         '" />');
     }
   });
+  if (localStorage) {
+    localStorage.setItem('username', this.loggedConnection.username);
+    localStorage.setItem('auth', this.loggedConnection.auth);
+    localStorage.setItem('domain', this.loggedConnection.settings.domain);
+    localStorage.setItem('returnUrl', location.href);
+  }
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
     if (this.sharingsConnections && this.sharingsConnections.length === 1 &&

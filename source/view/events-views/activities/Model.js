@@ -107,7 +107,18 @@ module.exports = CommonModel.implement(
       this.data = [];
       for (var s in timeSumByStream) {
         if (timeSumByStream.hasOwnProperty(s)) {
-          this.data.push({label: timeSumByStream[s].stream.name, data: timeSumByStream[s].time});
+          var series = {
+            label: timeSumByStream[s].stream.name,
+            data: timeSumByStream[s].time
+          };
+          var cd = timeSumByStream[s].stream.clientData;
+          if (cd && cd['pryv-browser:charts'] &&
+            cd['pryv-browser:charts']['activity/plain'] &&
+            cd['pryv-browser:charts']['activity/plain'].settings &&
+            cd['pryv-browser:charts']['activity/plain'].settings.color ) {
+            series.color = cd['pryv-browser:charts']['activity/plain'].settings.color;
+          }
+          this.data.push(series);
         }
       }
 

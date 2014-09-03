@@ -122,6 +122,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
           localStorage.removeItem('auth');
           localStorage.removeItem('domain');
           localStorage.removeItem('returnUrl');
+          localStorage.removeItem('welcome');
         }
       }.bind(this),
       refused: function (reason) {

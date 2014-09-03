@@ -1,4 +1,4 @@
-/* global $, window, location */
+/* global $, window, location, localStorage */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -648,6 +648,7 @@ TreeMap.prototype.closeSubscribeView = function () {
 //========== ONBOARDING VIEW =========\\
 
 TreeMap.prototype.showOnboarding = function () {
+  localStorage.setItem('welcome', true);
   location.href = '/onboarding';
  /*
   var $timeframeContainer = $('#timeframeContainer');

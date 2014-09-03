@@ -400,7 +400,7 @@ line-height: 27px;
   cursor: pointer;
 }
 .EventsNode {
-  overflow: hidden;
+  /*overflow: hidden; */
   cursor: pointer;
 }
 .EventsNode:hover {

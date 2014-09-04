@@ -1,4 +1,4 @@
-/* global window, i18n, $*/
+/* global window, i18n, $, localStorage*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -54,7 +54,8 @@ module.exports = Marionette.CompositeView.extend({
         }
       }.bind(this));
       //var baseHref = $('base').attr('href');
-      var url = 'https://reg.pryv.io/apps';
+      var domain = localStorage.getItem('domain') || 'pryv.io';
+      var url = 'https://reg.' + domain + '/apps';
       $.get(url)
         .done(function (result) {
           result = result.apps || [];

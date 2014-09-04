@@ -5,14 +5,14 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.11.7-5/">
+  <base href="{browser-source}_v0.11.7-10/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.11.7-5/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.11.7-5/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.11.7-10/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.11.7-10/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -218,9 +218,9 @@
     var bgColor = findColor(content);
 
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
-    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %></div>
+    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %><i class="streamConfig fa fa-cog fa-fw"></i></div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
-    <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %></div>
+    <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %><i class="streamConfig fa fa-cog fa-fw"></i></div>
     <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
     <div class='nodeHeader'><span class="pins-color 3" style="background-color: <%= bgColor %>"></span><%= content.username %> / <%= content._accessInfo.name %></div>
     <% } else if (typeof(content.username) != "undefined") { %>
@@ -663,7 +663,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.11.7-5</span>
+    <span class="version">Browser v0.11.7-10</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -912,6 +912,21 @@
       <div class="panel-body">
       </div>
     </div>
+</script>
+  <script type="template" id="stream-config-modal-template">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      <h4 class="modal-title" id="myModalLabel" data-i18n="stream.common.labels.title"></h4>
+      <div class="modal-close"></div>
+    </div>
+    <div id="modal-content">
+      <div id="settings-content" class="col-md-12" >
+        <div id="stream-config"></div>
+      </div>
+    </div>
+  </script>
+<script type="template" id="stream-config-template">
+  <h3><%= stream.name %></h3>
 </script>
 </head>
 

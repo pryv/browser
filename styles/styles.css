@@ -400,7 +400,7 @@ line-height: 27px;
   cursor: pointer;
 }
 .EventsNode {
-  overflow: hidden;
+  /*overflow: hidden; */
   cursor: pointer;
 }
 .EventsNode:hover {
@@ -1727,4 +1727,12 @@ color: #FFF;
 #logo-beta-mention a:hover, #logo-beta-mention a:focus  {
   color: #BD1727;
   text-decoration: none;
+}
+.streamConfig {
+  display: none;
+  float: right;       
+}
+
+.nodeHeader:hover .streamConfig {
+  /*display: block; */
 }

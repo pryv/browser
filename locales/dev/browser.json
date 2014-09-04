@@ -243,6 +243,13 @@
       "errSliceNameAlreadyExists": "A slice with the same name already exists"
     }
   },
+  "stream": {
+    "common": {
+       "labels": {
+         "title": "Edit a stream"
+       }
+    }
+  },
   "timeframe": {
     "actions": {
       "go": "Go"

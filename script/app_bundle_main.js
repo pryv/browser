@@ -30475,7 +30475,7 @@ TreeMap.prototype.closeSubscribeView = function () {
 
 TreeMap.prototype.showOnboarding = function () {
   localStorage.setItem('welcome', true);
-  location.href += 'onboarding';
+  location.href = location.origin + '/onboarding';
  /*
   var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();

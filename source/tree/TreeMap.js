@@ -12,7 +12,7 @@ var RootNode = require('./RootNode.js'),
   ConnectAppsView = require('../view/connect-apps/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
   OnboardingView = require('../view/onboarding/View.js'),
-  StreamView = require('../view/stream/View.js'),
+  StreamView = require('../view/stream/Controller.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
 
@@ -649,7 +649,7 @@ TreeMap.prototype.closeSubscribeView = function () {
 
 TreeMap.prototype.showOnboarding = function () {
   localStorage.setItem('welcome', true);
-  location.href = '/onboarding';
+  location.href += 'onboarding';
  /*
   var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();

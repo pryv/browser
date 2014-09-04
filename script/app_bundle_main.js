@@ -29835,7 +29835,7 @@ var RootNode = require('./RootNode.js'),
   ConnectAppsView = require('../view/connect-apps/Controller.js'),
   FusionDialog = require('../view/events-views/draganddrop/Controller.js'),
   OnboardingView = require('../view/onboarding/View.js'),
-  StreamView = require('../view/stream/View.js'),
+  StreamView = require('../view/stream/Controller.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
 
@@ -30472,7 +30472,7 @@ TreeMap.prototype.closeSubscribeView = function () {
 
 TreeMap.prototype.showOnboarding = function () {
   localStorage.setItem('welcome', true);
-  location.href = '/onboarding';
+  location.href += 'onboarding';
  /*
   var $timeframeContainer = $('#timeframeContainer');
   this.model.hideLoggedInElement();
@@ -30611,7 +30611,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../model/Messages":81,"../view/connect-apps/Controller.js":104,"../view/create/Controller.js":105,"../view/events-views/detailed/Controller.js":113,"../view/events-views/draganddrop/Controller.js":127,"../view/onboarding/View.js":151,"../view/settings/Controller.js":153,"../view/sharings/Controller.js":161,"../view/sharings/create/Controller.js":166,"../view/stream/View.js":169,"../view/subscribe/Controller.js":171,"./RootNode.js":89,"./VirtualNode.js":93,"pryv":67,"underscore":78}],92:[function(require,module,exports){
+},{"../model/Messages":81,"../view/connect-apps/Controller.js":104,"../view/create/Controller.js":105,"../view/events-views/detailed/Controller.js":113,"../view/events-views/draganddrop/Controller.js":127,"../view/onboarding/View.js":151,"../view/settings/Controller.js":153,"../view/sharings/Controller.js":161,"../view/sharings/create/Controller.js":166,"../view/stream/Controller.js":169,"../view/subscribe/Controller.js":172,"./RootNode.js":89,"./VirtualNode.js":93,"pryv":67,"underscore":78}],92:[function(require,module,exports){
 /* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -30807,9 +30807,7 @@ _.extend(TreeNode.prototype, {
             this.treeMap.focusOnConnections(this.connection);
           }
         }, this);
-        this.view.on('streamConfigClicked', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
+        this.view.on('streamConfigClicked', function () {
           var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
             this.treeMap.closeStreamView();
           }.bind(this));
@@ -31862,7 +31860,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],103:[function(require,module,exports){
-/* global window, i18n, $*/
+/* global window, i18n, $, localStorage*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -31918,7 +31916,8 @@ module.exports = Marionette.CompositeView.extend({
         }
       }.bind(this));
       //var baseHref = $('base').attr('href');
-      var url = 'https://reg.pryv.io/apps';
+      var domain = localStorage.getItem('domain') || 'pryv.io';
+      var url = 'https://reg.' + domain + '/apps';
       $.get(url)
         .done(function (result) {
           result = result.apps || [];
@@ -40231,7 +40230,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],152:[function(require,module,exports){
-/* global window, i18n, $*/
+/* global window, i18n, $, localStorage*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -40287,7 +40286,8 @@ module.exports = Marionette.CompositeView.extend({
         }
       }.bind(this));
      // var baseHref = $('base').attr('href');
-      var url = 'https://reg.pryv.io/apps';
+      var domain = localStorage.getItem('domain') || 'pryv.io';
+      var url = 'https://reg.' + domain + '/apps';
 
       $.get(url)
         .done(function (result) {
@@ -40423,7 +40423,7 @@ _.extend(Controller.prototype, {
 });
 
 },{"./AppListView.js":152,"./ManageAppsView.js":154,"./NavView.js":155,"./PasswordView.js":156,"backbone.marionette":1,"underscore":78}],154:[function(require,module,exports){
-/* global window, i18n, $*/
+/* global window, i18n, $, localStorage*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -40465,7 +40465,8 @@ module.exports = Marionette.CompositeView.extend({
     if (this.connection) {
 
       //var baseHref = $('base').attr('href');
-      var url = 'https://reg.pryv.io/apps';
+      var domain = localStorage.getItem('domain') || 'pryv.io';
+      var url = 'https://reg.' + domain + '/apps';
 
       var apps = {};
       $.get(url)
@@ -41433,8 +41434,77 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],169:[function(require,module,exports){
-module.exports = function ()  {};
-},{}],170:[function(require,module,exports){
+/* global $ */
+var Marionette = require('backbone.marionette'),
+  Backbone = require('backbone'),
+  StreamView = require('./View.js'),
+  _ = require('underscore');
+
+var Model = Backbone.Model.extend({});
+
+var Layout = Marionette.Layout.extend({
+  template: '#stream-config-modal-template',
+
+  regions: {
+    streamConfig: '#stream-config'
+  },
+  initialize: function () {
+    this.$el =  $('.modal-content');
+  }
+});
+var Controller = module.exports  = function ($modal, stream, target) {
+  this.stream = stream;
+  this.$modal = $modal;
+  this.target = target;
+  this.view  = null;
+  this.streamConfig  = null;
+};
+
+
+_.extend(Controller.prototype, {
+  show: function () {
+    this.$modal.modal({currentTarget: this.target});
+    setTimeout(function () {
+      $('.modal-content').fadeIn();
+    }.bind(this), 500);
+    this.view = new Layout();
+    this.view.on('close', this.close.bind(this));
+    this.streamConfig = new StreamView({model: new Model({stream: this.stream})});
+    this.view.render();
+    this.view.streamConfig.show(this.streamConfig);
+  },
+  close: function () {
+    if (this.view) {
+      this.view = null;
+      $('.modal-content').empty();
+      $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
+      $('.modal-backdrop').remove();
+      this.$modal.trigger('hidden.bs.modal');
+      this.streamConfig.reset();
+    }
+  }
+});
+},{"./View.js":170,"backbone":4,"backbone.marionette":1,"underscore":78}],170:[function(require,module,exports){
+/* global $*/
+var Marionette = require('backbone.marionette');
+
+
+
+// The grid view
+module.exports = Marionette.ItemView.extend({
+  tagName: 'div',
+  template: '#stream-config-template',
+  connection: null,
+  streams: null,
+  initialize: function () {
+    this.stream = this.options.stream;
+  },
+  onRender: function () {
+    $('body').i18n();
+  }
+});
+
+},{"backbone.marionette":1}],171:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./Model.js');
 
@@ -41442,7 +41512,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./Model.js":174,"backbone":4}],171:[function(require,module,exports){
+},{"./Model.js":175,"backbone":4}],172:[function(require,module,exports){
 /* global $, window, i18n */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
@@ -41529,7 +41599,7 @@ _.extend(Controller.prototype, {
     }.bind(this));
   }
 });
-},{"./Collection.js":170,"./ListView.js":173,"./Model.js":174,"underscore":78}],172:[function(require,module,exports){
+},{"./Collection.js":171,"./ListView.js":174,"./Model.js":175,"underscore":78}],173:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -41555,7 +41625,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":1}],173:[function(require,module,exports){
+},{"backbone.marionette":1}],174:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -41625,7 +41695,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./ItemView.js":172,"backbone.marionette":1,"underscore":78}],174:[function(require,module,exports){
+},{"./ItemView.js":173,"backbone.marionette":1,"underscore":78}],175:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({

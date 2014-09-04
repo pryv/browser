@@ -30123,6 +30123,9 @@ var TreeMap = module.exports = function (model) {
 };
 
 TreeMap.prototype.isOnboarding = function () {
+  if (localStorage && localStorage.getItem('skipOnboarding')) {
+    return;
+  }
   this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
     if (!error && result.length === 0 &&
       this.model.urlUsername === this.model.loggedConnection.username) {

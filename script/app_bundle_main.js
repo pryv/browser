@@ -28470,11 +28470,11 @@ module.exports = (function () {
         '<div id="scales" class="btn-group btn-group-xs">' +
         '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
         'data-timeScale="day" data-i18n="timeframe.labels.day"></a>' +
-        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale selected"' +
         'data-timeScale="week" data-i18n="timeframe.labels.week"></a>' +
         '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
         'data-timeScale="month" data-i18n="timeframe.labels.month"></a>' +
-        '<a href="javascript:void(0)" class="btn btn-default timeScale selected"' +
+        '<a href="javascript:void(0)" class="btn btn-default timeScale"' +
         'data-timeScale="year" data-i18n="timeframe.labels.year"></a>' +
         '</div>' +
         '<div class="btn-group btn-group-xs">' +
@@ -28742,9 +28742,9 @@ module.exports = (function () {
   };
   // set time frame to current month and highlight to now
   var _initTimeFrame = function () {
-    _scale = 'year';
-    setTimeBounds(moment().startOf('year'),
-        moment().endOf('year'));
+    _scale = 'week';
+    setTimeBounds(moment().startOf('week'),
+        moment().endOf('week'));
 
     _initHtml();
     _updateDateScale();

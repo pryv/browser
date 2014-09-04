@@ -193,9 +193,7 @@ _.extend(TreeNode.prototype, {
             this.treeMap.focusOnConnections(this.connection);
           }
         }, this);
-        this.view.on('streamConfigClicked', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
+        this.view.on('streamConfigClicked', function () {
           var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
             this.treeMap.closeStreamView();
           }.bind(this));

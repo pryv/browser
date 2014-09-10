@@ -32,6 +32,7 @@ module.exports = function (grunt) {
             'source/styles/bootstrap-responsive.min.css',
             'source/styles/animate.css',
             'source/styles/font-awesome.min.css',
+            'source/styles/colpick.css',
             'source/timeframe-selector/styles/main.css']
         }
       }
@@ -58,6 +59,7 @@ module.exports = function (grunt) {
           'source/vendor/jquery.flot.pie.js',
           'source/vendor/jquery.dotdotdot.min.js',
           'source/vendor/jquery.scrollto.min.js',
+          'source/vendor/colpick.js',
           'source/vendor/md5.js',
           'source/vendor/bootstrap-datetimepicker.js'
         ],

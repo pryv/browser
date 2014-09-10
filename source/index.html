@@ -228,6 +228,26 @@
 
     <%
     if (typeof(content) != "undefined") {
+
+    var canManageStream = function (content) {
+    var conn = content.connection;
+    if (!conn) {
+    return false;
+    }
+    if (!conn._accessInfo) {
+    return false;
+    }
+
+    if (conn._accessInfo.type === 'personal') {
+    return true;
+    }
+    if (conn._accessInfo.permissions &&
+    conn._accessInfo.permissions[0].level === 'manage') {
+    return true;
+    }
+    return false;
+    };
+
     var findColor = function (c) {
     if (typeof(c) == "undefined" || !c) {
     return '';
@@ -241,11 +261,19 @@
     return '';
     }
     var bgColor = findColor(content);
-
+    var manageStream = canManageStream(content);
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
-    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %><i class="streamConfig fa fa-cog fa-fw"></i></div>
+    <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %>
+      <% if (manageStream)  { %>
+      <i class="streamConfig fa fa-cog fa-fw"></i>
+      <% } %>
+    </div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
-    <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %><i class="streamConfig fa fa-cog fa-fw"></i></div>
+    <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %>
+      <% if (manageStream)  { %>
+      <i class="streamConfig fa fa-cog fa-fw"></i>
+      <% } %>
+    </div>
     <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>
     <div class='nodeHeader'><span class="pins-color 3" style="background-color: <%= bgColor %>"></span><%= content.username %> / <%= content._accessInfo.name %></div>
     <% } else if (typeof(content.username) != "undefined") { %>
@@ -951,7 +979,30 @@
     </div>
   </script>
 <script type="template" id="stream-config-template">
-  <h3><%= stream.name %></h3>
+  <form id="stream-form" class="form-horizontal">
+    <div class="form-group">
+      <label for="streamName" class="col-sm-2 control-label">Name</label>
+      <div class="col-sm-4">
+        <input type="text" class="form-control" id="streamName" placeholder="Name" value="<%= stream.name %>">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="streamColor" class="col-sm-2 control-label">Color</label>
+      <div class="col-sm-2">
+         <div id="streamColor" style="background-color: <%= getColor() %>"></div>
+      </div>
+    </div>
+    <div class="col-sm-4 col-sm-offset-8">
+      <button id="delete" class="btn btn-danger" type="button">
+        <span data-i18n="common.actions.delete">Delete</span>
+        <i class="fa fa-spinner fa-spin" style="display: none;"></i>
+      </button>
+      <button id="publish" class="btn btn-primary" type="submit">
+        <span data-i18n="common.actions.save">Save</span>
+        <i class="fa fa-spinner fa-spin" style="display: none;"></i>
+      </button>
+    </div>
+  </form>
 </script>
 </head>
 

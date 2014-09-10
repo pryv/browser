@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, i18n */
 var Marionette = require('backbone.marionette'),
   Backbone = require('backbone'),
   StreamView = require('./View.js'),
@@ -36,6 +36,8 @@ _.extend(Controller.prototype, {
     this.streamConfig = new StreamView({model: new Model({stream: this.stream})});
     this.view.render();
     this.view.streamConfig.show(this.streamConfig);
+    this.streamConfig.afterRender();
+    this._getModalTitle();
   },
   close: function () {
     if (this.view) {
@@ -44,7 +46,11 @@ _.extend(Controller.prototype, {
       $('#pryv-modal').hide().removeClass('in').attr('aria-hidden', 'true');
       $('.modal-backdrop').remove();
       this.$modal.trigger('hidden.bs.modal');
-      this.streamConfig.reset();
     }
+  },
+  _getModalTitle: function () {
+    $('#myModalLabel').html(i18n.t('stream.common.labels.title', {
+      streamName: this.stream.name
+    }));
   }
 });

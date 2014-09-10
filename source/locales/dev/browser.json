@@ -246,8 +246,11 @@
   "stream": {
     "common": {
        "labels": {
-         "title": "Edit a stream"
+         "title": "Edit stream <strong>__streamName__</strong>"
        }
+    },
+    "messages": {
+      "confirmDelete": "Are you sure you want to delete this stream? All your data inside this stream will deleted as well"
     }
   },
   "timeframe": {

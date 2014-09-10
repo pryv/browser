@@ -272,6 +272,9 @@ var ConnectionNode = module.exports = TreeNode.implement(
      * @param name the virtual node's name
      */
     createVirtualStreamNode: function (parentNode, parent, id, name, vn) {
+
+      // Warning MANIPULATING childrensIds is WRONG!! and logic must be reviewd
+
       var connectionNode =  this;
       var virtualStream = new Pryv.Stream(this.connection, {_parent: parent,
         parentId: parent ? parent.id : null, childrenIds: [], id: id, name: name,

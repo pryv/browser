@@ -1,4 +1,4 @@
-/*! browser - v0.11.7-10 - 2014-09-04 *///Not using strict: uneven strict support in browsers, #392, and causes
+/*! browser - v0.11.7-11 - 2014-09-10 *///Not using strict: uneven strict support in browsers, #392, and causes
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
 /*jslint regexp: true, nomen: true, sloppy: true */
 /*global window, navigator, document, importScripts, setTimeout, opera */
@@ -16762,6 +16762,520 @@ if(!jQuery)throw new Error("Bootstrap requires jQuery");+function(a){"use strict
 
 !function(t,e){function n(t,e,n){var r=t.children(),o=!1;t.empty();for(var i=0,d=r.length;d>i;i++){var l=r.eq(i);if(t.append(l),n&&t.append(n),a(t,e)){l.remove(),o=!0;break}n&&n.detach()}return o}function r(e,n,i,d,l){var s=!1,c="table, thead, tbody, tfoot, tr, col, colgroup, object, embed, param, ol, ul, dl, blockquote, select, optgroup, option, textarea, script, style",u="script";return e.contents().detach().each(function(){var f=this,h=t(f);if("undefined"==typeof f||3==f.nodeType&&0==t.trim(f.data).length)return!0;if(h.is(u))e.append(h);else{if(s)return!0;e.append(h),l&&e[e.is(c)?"after":"append"](l),a(i,d)&&(s=3==f.nodeType?o(h,n,i,d,l):r(h,n,i,d,l),s||(h.detach(),s=!0)),s||l&&l.detach()}}),s}function o(e,n,r,o,d){var c=e[0];if(!c)return!1;var f=s(c),h=-1!==f.indexOf(" ")?" ":"ã€€",p="letter"==o.wrap?"":h,g=f.split(p),v=-1,w=-1,b=0,y=g.length-1;for(o.fallbackToLetter&&0==b&&0==y&&(p="",g=f.split(p),y=g.length-1);y>=b&&(0!=b||0!=y);){var m=Math.floor((b+y)/2);if(m==w)break;w=m,l(c,g.slice(0,w+1).join(p)+o.ellipsis),a(r,o)?(y=w,o.fallbackToLetter&&0==b&&0==y&&(p="",g=g[0].split(p),v=-1,w=-1,b=0,y=g.length-1)):(v=w,b=w)}if(-1==v||1==g.length&&0==g[0].length){var x=e.parent();e.detach();var T=d&&d.closest(x).length?d.length:0;x.contents().length>T?c=u(x.contents().eq(-1-T),n):(c=u(x,n,!0),T||x.detach()),c&&(f=i(s(c),o),l(c,f),T&&d&&t(c).parent().append(d))}else f=i(g.slice(0,v+1).join(p),o),l(c,f);return!0}function a(t,e){return t.innerHeight()>e.maxHeight}function i(e,n){for(;t.inArray(e.slice(-1),n.lastCharacter.remove)>-1;)e=e.slice(0,-1);return t.inArray(e.slice(-1),n.lastCharacter.noEllipsis)<0&&(e+=n.ellipsis),e}function d(t){return{width:t.innerWidth(),height:t.innerHeight()}}function l(t,e){t.innerText?t.innerText=e:t.nodeValue?t.nodeValue=e:t.textContent&&(t.textContent=e)}function s(t){return t.innerText?t.innerText:t.nodeValue?t.nodeValue:t.textContent?t.textContent:""}function c(t){do t=t.previousSibling;while(t&&1!==t.nodeType&&3!==t.nodeType);return t}function u(e,n,r){var o,a=e&&e[0];if(a){if(!r){if(3===a.nodeType)return a;if(t.trim(e.text()))return u(e.contents().last(),n)}for(o=c(a);!o;){if(e=e.parent(),e.is(n)||!e.length)return!1;o=c(e[0])}if(o)return u(t(o),n)}return!1}function f(e,n){return e?"string"==typeof e?(e=t(e,n),e.length?e:!1):e.jquery?e:!1:!1}function h(t){for(var e=t.innerHeight(),n=["paddingTop","paddingBottom"],r=0,o=n.length;o>r;r++){var a=parseInt(t.css(n[r]),10);isNaN(a)&&(a=0),e-=a}return e}if(!t.fn.dotdotdot){t.fn.dotdotdot=function(e){if(0==this.length)return t.fn.dotdotdot.debug('No element found for "'+this.selector+'".'),this;if(this.length>1)return this.each(function(){t(this).dotdotdot(e)});var o=this;o.data("dotdotdot")&&o.trigger("destroy.dot"),o.data("dotdotdot-style",o.attr("style")||""),o.css("word-wrap","break-word"),"nowrap"===o.css("white-space")&&o.css("white-space","normal"),o.bind_events=function(){return o.bind("update.dot",function(e,d){e.preventDefault(),e.stopPropagation(),l.maxHeight="number"==typeof l.height?l.height:h(o),l.maxHeight+=l.tolerance,"undefined"!=typeof d&&(("string"==typeof d||d instanceof HTMLElement)&&(d=t("<div />").append(d).contents()),d instanceof t&&(i=d)),g=o.wrapInner('<div class="dotdotdot" />').children(),g.contents().detach().end().append(i.clone(!0)).find("br").replaceWith("  <br />  ").end().css({height:"auto",width:"auto",border:"none",padding:0,margin:0});var c=!1,u=!1;return s.afterElement&&(c=s.afterElement.clone(!0),c.show(),s.afterElement.detach()),a(g,l)&&(u="children"==l.wrap?n(g,l,c):r(g,o,g,l,c)),g.replaceWith(g.contents()),g=null,t.isFunction(l.callback)&&l.callback.call(o[0],u,i),s.isTruncated=u,u}).bind("isTruncated.dot",function(t,e){return t.preventDefault(),t.stopPropagation(),"function"==typeof e&&e.call(o[0],s.isTruncated),s.isTruncated}).bind("originalContent.dot",function(t,e){return t.preventDefault(),t.stopPropagation(),"function"==typeof e&&e.call(o[0],i),i}).bind("destroy.dot",function(t){t.preventDefault(),t.stopPropagation(),o.unwatch().unbind_events().contents().detach().end().append(i).attr("style",o.data("dotdotdot-style")||"").data("dotdotdot",!1)}),o},o.unbind_events=function(){return o.unbind(".dot"),o},o.watch=function(){if(o.unwatch(),"window"==l.watch){var e=t(window),n=e.width(),r=e.height();e.bind("resize.dot"+s.dotId,function(){n==e.width()&&r==e.height()&&l.windowResizeFix||(n=e.width(),r=e.height(),u&&clearInterval(u),u=setTimeout(function(){o.trigger("update.dot")},100))})}else c=d(o),u=setInterval(function(){if(o.is(":visible")){var t=d(o);(c.width!=t.width||c.height!=t.height)&&(o.trigger("update.dot"),c=t)}},500);return o},o.unwatch=function(){return t(window).unbind("resize.dot"+s.dotId),u&&clearInterval(u),o};var i=o.contents(),l=t.extend(!0,{},t.fn.dotdotdot.defaults,e),s={},c={},u=null,g=null;return l.lastCharacter.remove instanceof Array||(l.lastCharacter.remove=t.fn.dotdotdot.defaultArrays.lastCharacter.remove),l.lastCharacter.noEllipsis instanceof Array||(l.lastCharacter.noEllipsis=t.fn.dotdotdot.defaultArrays.lastCharacter.noEllipsis),s.afterElement=f(l.after,o),s.isTruncated=!1,s.dotId=p++,o.data("dotdotdot",!0).bind_events().trigger("update.dot"),l.watch&&o.watch(),o},t.fn.dotdotdot.defaults={ellipsis:"... ",wrap:"word",fallbackToLetter:!0,lastCharacter:{},tolerance:0,callback:null,after:null,height:null,watch:!1,windowResizeFix:!0},t.fn.dotdotdot.defaultArrays={lastCharacter:{remove:[" ","ã€€",",",";",".","!","?"],noEllipsis:[]}},t.fn.dotdotdot.debug=function(){};var p=1,g=t.fn.html;t.fn.html=function(n){return n!=e&&!t.isFunction(n)&&this.data("dotdotdot")?this.trigger("update",[n]):g.apply(this,arguments)};var v=t.fn.text;t.fn.text=function(n){return n!=e&&!t.isFunction(n)&&this.data("dotdotdot")?(n=t("<div />").text(n).html(),this.trigger("update",[n])):v.apply(this,arguments)}}}(jQuery);
 ;(function(a){a(jQuery)}(function($){var j=$.scrollTo=function(a,b,c){return $(window).scrollTo(a,b,c)};j.defaults={axis:'xy',duration:parseFloat($.fn.jquery)>=1.3?0:1,limit:true};j.window=function(a){return $(window)._scrollable()};$.fn._scrollable=function(){return this.map(function(){var a=this,isWin=!a.nodeName||$.inArray(a.nodeName.toLowerCase(),['iframe','#document','html','body'])!=-1;if(!isWin)return a;var b=(a.contentWindow||a).document||a.ownerDocument||a;return/webkit/i.test(navigator.userAgent)||b.compatMode=='BackCompat'?b.body:b.documentElement})};$.fn.scrollTo=function(f,g,h){if(typeof g=='object'){h=g;g=0}if(typeof h=='function')h={onAfter:h};if(f=='max')f=9e9;h=$.extend({},j.defaults,h);g=g||h.duration;h.queue=h.queue&&h.axis.length>1;if(h.queue)g/=2;h.offset=both(h.offset);h.over=both(h.over);return this._scrollable().each(function(){if(f==null)return;var d=this,$elem=$(d),targ=f,toff,attr={},win=$elem.is('html,body');switch(typeof targ){case'number':case'string':if(/^([+-]=?)?\d+(\.\d+)?(px|%)?$/.test(targ)){targ=both(targ);break}targ=win?$(targ):$(targ,this);if(!targ.length)return;case'object':if(targ.is||targ.style)toff=(targ=$(targ)).offset()}var e=$.isFunction(h.offset)&&h.offset(d,targ)||h.offset;$.each(h.axis.split(''),function(i,a){var b=a=='x'?'Left':'Top',pos=b.toLowerCase(),key='scroll'+b,old=d[key],max=j.max(d,a);if(toff){attr[key]=toff[pos]+(win?0:old-$elem.offset()[pos]);if(h.margin){attr[key]-=parseInt(targ.css('margin'+b))||0;attr[key]-=parseInt(targ.css('border'+b+'Width'))||0}attr[key]+=e[pos]||0;if(h.over[pos])attr[key]+=targ[a=='x'?'width':'height']()*h.over[pos]}else{var c=targ[pos];attr[key]=c.slice&&c.slice(-1)=='%'?parseFloat(c)/100*max:c}if(h.limit&&/^\d+$/.test(attr[key]))attr[key]=attr[key]<=0?0:Math.min(attr[key],max);if(!i&&h.queue){if(old!=attr[key])animate(h.onAfterFirst);delete attr[key]}});animate(h.onAfter);function animate(a){$elem.animate(attr,g,h.easing,a&&function(){a.call(this,targ,h)})}}).end()};j.max=function(a,b){var c=b=='x'?'Width':'Height',scroll='scroll'+c;if(!$(a).is('html,body'))return a[scroll]-$(a)[c.toLowerCase()]();var d='client'+c,html=a.ownerDocument.documentElement,body=a.ownerDocument.body;return Math.max(html[scroll],body[scroll])-Math.min(html[d],body[d])};function both(a){return $.isFunction(a)||typeof a=='object'?a:{top:a,left:a}};return j}));
+
+(function ($) {
+	var colpick = function () {
+		var
+			tpl = '<div class="colpick"><div class="colpick_color"><div class="colpick_color_overlay1"><div class="colpick_color_overlay2"><div class="colpick_selector_outer"><div class="colpick_selector_inner"></div></div></div></div></div><div class="colpick_hue"><div class="colpick_hue_arrs"><div class="colpick_hue_larr"></div><div class="colpick_hue_rarr"></div></div></div><div class="colpick_new_color"></div><div class="colpick_current_color"></div><div class="colpick_hex_field"><div class="colpick_field_letter">#</div><input type="text" maxlength="6" size="6" /></div><div class="colpick_rgb_r colpick_field"><div class="colpick_field_letter">R</div><input type="text" maxlength="3" size="3" /><div class="colpick_field_arrs"><div class="colpick_field_uarr"></div><div class="colpick_field_darr"></div></div></div><div class="colpick_rgb_g colpick_field"><div class="colpick_field_letter">G</div><input type="text" maxlength="3" size="3" /><div class="colpick_field_arrs"><div class="colpick_field_uarr"></div><div class="colpick_field_darr"></div></div></div><div class="colpick_rgb_b colpick_field"><div class="colpick_field_letter">B</div><input type="text" maxlength="3" size="3" /><div class="colpick_field_arrs"><div class="colpick_field_uarr"></div><div class="colpick_field_darr"></div></div></div><div class="colpick_hsb_h colpick_field"><div class="colpick_field_letter">H</div><input type="text" maxlength="3" size="3" /><div class="colpick_field_arrs"><div class="colpick_field_uarr"></div><div class="colpick_field_darr"></div></div></div><div class="colpick_hsb_s colpick_field"><div class="colpick_field_letter">S</div><input type="text" maxlength="3" size="3" /><div class="colpick_field_arrs"><div class="colpick_field_uarr"></div><div class="colpick_field_darr"></div></div></div><div class="colpick_hsb_b colpick_field"><div class="colpick_field_letter">B</div><input type="text" maxlength="3" size="3" /><div class="colpick_field_arrs"><div class="colpick_field_uarr"></div><div class="colpick_field_darr"></div></div></div><div class="colpick_submit"></div></div>',
+			defaults = {
+				showEvent: 'click',
+				onShow: function () {},
+				onBeforeShow: function(){},
+				onHide: function () {},
+				onChange: function () {},
+				onSubmit: function () {},
+				colorScheme: 'light',
+				color: '3289c7',
+				livePreview: true,
+				flat: false,
+				layout: 'full',
+				submit: 1,
+				submitText: 'OK',
+				height: 156
+			},
+			//Fill the inputs of the plugin
+			fillRGBFields = function  (hsb, cal) {
+				var rgb = hsbToRgb(hsb);
+				$(cal).data('colpick').fields
+					.eq(1).val(rgb.r).end()
+					.eq(2).val(rgb.g).end()
+					.eq(3).val(rgb.b).end();
+			},
+			fillHSBFields = function  (hsb, cal) {
+				$(cal).data('colpick').fields
+					.eq(4).val(Math.round(hsb.h)).end()
+					.eq(5).val(Math.round(hsb.s)).end()
+					.eq(6).val(Math.round(hsb.b)).end();
+			},
+			fillHexFields = function (hsb, cal) {
+				$(cal).data('colpick').fields.eq(0).val(hsbToHex(hsb));
+			},
+			//Set the round selector position
+			setSelector = function (hsb, cal) {
+				$(cal).data('colpick').selector.css('backgroundColor', '#' + hsbToHex({h: hsb.h, s: 100, b: 100}));
+				$(cal).data('colpick').selectorIndic.css({
+					left: parseInt($(cal).data('colpick').height * hsb.s/100, 10),
+					top: parseInt($(cal).data('colpick').height * (100-hsb.b)/100, 10)
+				});
+			},
+			//Set the hue selector position
+			setHue = function (hsb, cal) {
+				$(cal).data('colpick').hue.css('top', parseInt($(cal).data('colpick').height - $(cal).data('colpick').height * hsb.h/360, 10));
+			},
+			//Set current and new colors
+			setCurrentColor = function (hsb, cal) {
+				$(cal).data('colpick').currentColor.css('backgroundColor', '#' + hsbToHex(hsb));
+			},
+			setNewColor = function (hsb, cal) {
+				$(cal).data('colpick').newColor.css('backgroundColor', '#' + hsbToHex(hsb));
+			},
+			//Called when the new color is changed
+			change = function (ev) {
+				var cal = $(this).parent().parent(), col;
+				if (this.parentNode.className.indexOf('_hex') > 0) {
+					cal.data('colpick').color = col = hexToHsb(fixHex(this.value));
+					fillRGBFields(col, cal.get(0));
+					fillHSBFields(col, cal.get(0));
+				} else if (this.parentNode.className.indexOf('_hsb') > 0) {
+					cal.data('colpick').color = col = fixHSB({
+						h: parseInt(cal.data('colpick').fields.eq(4).val(), 10),
+						s: parseInt(cal.data('colpick').fields.eq(5).val(), 10),
+						b: parseInt(cal.data('colpick').fields.eq(6).val(), 10)
+					});
+					fillRGBFields(col, cal.get(0));
+					fillHexFields(col, cal.get(0));
+				} else {
+					cal.data('colpick').color = col = rgbToHsb(fixRGB({
+						r: parseInt(cal.data('colpick').fields.eq(1).val(), 10),
+						g: parseInt(cal.data('colpick').fields.eq(2).val(), 10),
+						b: parseInt(cal.data('colpick').fields.eq(3).val(), 10)
+					}));
+					fillHexFields(col, cal.get(0));
+					fillHSBFields(col, cal.get(0));
+				}
+				setSelector(col, cal.get(0));
+				setHue(col, cal.get(0));
+				setNewColor(col, cal.get(0));
+				cal.data('colpick').onChange.apply(cal.parent(), [col, hsbToHex(col), hsbToRgb(col), cal.data('colpick').el, 0]);
+			},
+			//Change style on blur and on focus of inputs
+			blur = function (ev) {
+				$(this).parent().removeClass('colpick_focus');
+			},
+			focus = function () {
+				$(this).parent().parent().data('colpick').fields.parent().removeClass('colpick_focus');
+				$(this).parent().addClass('colpick_focus');
+			},
+			//Increment/decrement arrows functions
+			downIncrement = function (ev) {
+				ev.preventDefault ? ev.preventDefault() : ev.returnValue = false;
+				var field = $(this).parent().find('input').focus();
+				var current = {
+					el: $(this).parent().addClass('colpick_slider'),
+					max: this.parentNode.className.indexOf('_hsb_h') > 0 ? 360 : (this.parentNode.className.indexOf('_hsb') > 0 ? 100 : 255),
+					y: ev.pageY,
+					field: field,
+					val: parseInt(field.val(), 10),
+					preview: $(this).parent().parent().data('colpick').livePreview
+				};
+				$(document).mouseup(current, upIncrement);
+				$(document).mousemove(current, moveIncrement);
+			},
+			moveIncrement = function (ev) {
+				ev.data.field.val(Math.max(0, Math.min(ev.data.max, parseInt(ev.data.val - ev.pageY + ev.data.y, 10))));
+				if (ev.data.preview) {
+					change.apply(ev.data.field.get(0), [true]);
+				}
+				return false;
+			},
+			upIncrement = function (ev) {
+				change.apply(ev.data.field.get(0), [true]);
+				ev.data.el.removeClass('colpick_slider').find('input').focus();
+				$(document).off('mouseup', upIncrement);
+				$(document).off('mousemove', moveIncrement);
+				return false;
+			},
+			//Hue slider functions
+			downHue = function (ev) {
+				ev.preventDefault ? ev.preventDefault() : ev.returnValue = false;
+				var current = {
+					cal: $(this).parent(),
+					y: $(this).offset().top
+				};
+				$(document).on('mouseup touchend',current,upHue);
+				$(document).on('mousemove touchmove',current,moveHue);
+				
+				var pageY = ((ev.type == 'touchstart') ? ev.originalEvent.changedTouches[0].pageY : ev.pageY );
+				change.apply(
+					current.cal.data('colpick')
+					.fields.eq(4).val(parseInt(360*(current.cal.data('colpick').height - (pageY - current.y))/current.cal.data('colpick').height, 10))
+						.get(0),
+					[current.cal.data('colpick').livePreview]
+				);
+				return false;
+			},
+			moveHue = function (ev) {
+				var pageY = ((ev.type == 'touchmove') ? ev.originalEvent.changedTouches[0].pageY : ev.pageY );
+				change.apply(
+					ev.data.cal.data('colpick')
+					.fields.eq(4).val(parseInt(360*(ev.data.cal.data('colpick').height - Math.max(0,Math.min(ev.data.cal.data('colpick').height,(pageY - ev.data.y))))/ev.data.cal.data('colpick').height, 10))
+						.get(0),
+					[ev.data.preview]
+				);
+				return false;
+			},
+			upHue = function (ev) {
+				fillRGBFields(ev.data.cal.data('colpick').color, ev.data.cal.get(0));
+				fillHexFields(ev.data.cal.data('colpick').color, ev.data.cal.get(0));
+				$(document).off('mouseup touchend',upHue);
+				$(document).off('mousemove touchmove',moveHue);
+				return false;
+			},
+			//Color selector functions
+			downSelector = function (ev) {
+				ev.preventDefault ? ev.preventDefault() : ev.returnValue = false;
+				var current = {
+					cal: $(this).parent(),
+					pos: $(this).offset()
+				};
+				current.preview = current.cal.data('colpick').livePreview;
+				
+				$(document).on('mouseup touchend',current,upSelector);
+				$(document).on('mousemove touchmove',current,moveSelector);
+
+				var payeX,pageY;
+				if(ev.type == 'touchstart') {
+					pageX = ev.originalEvent.changedTouches[0].pageX,
+					pageY = ev.originalEvent.changedTouches[0].pageY;
+				} else {
+					pageX = ev.pageX;
+					pageY = ev.pageY;
+				}
+
+				change.apply(
+					current.cal.data('colpick').fields
+					.eq(6).val(parseInt(100*(current.cal.data('colpick').height - (pageY - current.pos.top))/current.cal.data('colpick').height, 10)).end()
+					.eq(5).val(parseInt(100*(pageX - current.pos.left)/current.cal.data('colpick').height, 10))
+					.get(0),
+					[current.preview]
+				);
+				return false;
+			},
+			moveSelector = function (ev) {
+				var payeX,pageY;
+				if(ev.type == 'touchmove') {
+					pageX = ev.originalEvent.changedTouches[0].pageX,
+					pageY = ev.originalEvent.changedTouches[0].pageY;
+				} else {
+					pageX = ev.pageX;
+					pageY = ev.pageY;
+				}
+
+				change.apply(
+					ev.data.cal.data('colpick').fields
+					.eq(6).val(parseInt(100*(ev.data.cal.data('colpick').height - Math.max(0,Math.min(ev.data.cal.data('colpick').height,(pageY - ev.data.pos.top))))/ev.data.cal.data('colpick').height, 10)).end()
+					.eq(5).val(parseInt(100*(Math.max(0,Math.min(ev.data.cal.data('colpick').height,(pageX - ev.data.pos.left))))/ev.data.cal.data('colpick').height, 10))
+					.get(0),
+					[ev.data.preview]
+				);
+				return false;
+			},
+			upSelector = function (ev) {
+				fillRGBFields(ev.data.cal.data('colpick').color, ev.data.cal.get(0));
+				fillHexFields(ev.data.cal.data('colpick').color, ev.data.cal.get(0));
+				$(document).off('mouseup touchend',upSelector);
+				$(document).off('mousemove touchmove',moveSelector);
+				return false;
+			},
+			//Submit button
+			clickSubmit = function (ev) {
+				var cal = $(this).parent();
+				var col = cal.data('colpick').color;
+				cal.data('colpick').origColor = col;
+				setCurrentColor(col, cal.get(0));
+				cal.data('colpick').onSubmit(col, hsbToHex(col), hsbToRgb(col), cal.data('colpick').el);
+			},
+			//Show/hide the color picker
+			show = function (ev) {
+				// Prevent the trigger of any direct parent
+				ev.stopPropagation();
+				var cal = $('#' + $(this).data('colpickId'));
+				cal.data('colpick').onBeforeShow.apply(this, [cal.get(0)]);
+				var pos = $(this).offset();
+				var top = pos.top + this.offsetHeight;
+				var left = pos.left;
+				var viewPort = getViewport();
+				var calW = cal.width();
+				if (left + calW > viewPort.l + viewPort.w) {
+					left -= calW;
+				}
+				cal.css({left: left + 'px', top: top + 'px'});
+				if (cal.data('colpick').onShow.apply(this, [cal.get(0)]) != false) {
+					cal.show();
+				}
+				//Hide when user clicks outside
+				$('html').mousedown({cal:cal}, hide);
+				cal.mousedown(function(ev){ev.stopPropagation();})
+			},
+			hide = function (ev) {
+				if (ev.data.cal.data('colpick').onHide.apply(this, [ev.data.cal.get(0)]) != false) {
+					ev.data.cal.hide();
+				}
+				$('html').off('mousedown', hide);
+			},
+			getViewport = function () {
+				var m = document.compatMode == 'CSS1Compat';
+				return {
+					l : window.pageXOffset || (m ? document.documentElement.scrollLeft : document.body.scrollLeft),
+					w : window.innerWidth || (m ? document.documentElement.clientWidth : document.body.clientWidth)
+				};
+			},
+			//Fix the values if the user enters a negative or high value
+			fixHSB = function (hsb) {
+				return {
+					h: Math.min(360, Math.max(0, hsb.h)),
+					s: Math.min(100, Math.max(0, hsb.s)),
+					b: Math.min(100, Math.max(0, hsb.b))
+				};
+			}, 
+			fixRGB = function (rgb) {
+				return {
+					r: Math.min(255, Math.max(0, rgb.r)),
+					g: Math.min(255, Math.max(0, rgb.g)),
+					b: Math.min(255, Math.max(0, rgb.b))
+				};
+			},
+			fixHex = function (hex) {
+				var len = 6 - hex.length;
+				if (len > 0) {
+					var o = [];
+					for (var i=0; i<len; i++) {
+						o.push('0');
+					}
+					o.push(hex);
+					hex = o.join('');
+				}
+				return hex;
+			},
+			restoreOriginal = function () {
+				var cal = $(this).parent();
+				var col = cal.data('colpick').origColor;
+				cal.data('colpick').color = col;
+				fillRGBFields(col, cal.get(0));
+				fillHexFields(col, cal.get(0));
+				fillHSBFields(col, cal.get(0));
+				setSelector(col, cal.get(0));
+				setHue(col, cal.get(0));
+				setNewColor(col, cal.get(0));
+			};
+		return {
+			init: function (opt) {
+				opt = $.extend({}, defaults, opt||{});
+				//Set color
+				if (typeof opt.color == 'string') {
+					opt.color = hexToHsb(opt.color);
+				} else if (opt.color.r != undefined && opt.color.g != undefined && opt.color.b != undefined) {
+					opt.color = rgbToHsb(opt.color);
+				} else if (opt.color.h != undefined && opt.color.s != undefined && opt.color.b != undefined) {
+					opt.color = fixHSB(opt.color);
+				} else {
+					return this;
+				}
+				
+				//For each selected DOM element
+				return this.each(function () {
+					//If the element does not have an ID
+					if (!$(this).data('colpickId')) {
+						var options = $.extend({}, opt);
+						options.origColor = opt.color;
+						//Generate and assign a random ID
+						var id = 'collorpicker_' + parseInt(Math.random() * 1000);
+						$(this).data('colpickId', id);
+						//Set the tpl's ID and get the HTML
+						var cal = $(tpl).attr('id', id);
+						//Add class according to layout
+						cal.addClass('colpick_'+options.layout+(options.submit?'':' colpick_'+options.layout+'_ns'));
+						//Add class if the color scheme is not default
+						if(options.colorScheme != 'light') {
+							cal.addClass('colpick_'+options.colorScheme);
+						}
+						//Setup submit button
+						cal.find('div.colpick_submit').html(options.submitText).click(clickSubmit);
+						//Setup input fields
+						options.fields = cal.find('input').change(change).blur(blur).focus(focus);
+						cal.find('div.colpick_field_arrs').mousedown(downIncrement).end().find('div.colpick_current_color').click(restoreOriginal);
+						//Setup hue selector
+						options.selector = cal.find('div.colpick_color').on('mousedown touchstart',downSelector);
+						options.selectorIndic = options.selector.find('div.colpick_selector_outer');
+						//Store parts of the plugin
+						options.el = this;
+						options.hue = cal.find('div.colpick_hue_arrs');
+						huebar = options.hue.parent();
+						//Paint the hue bar
+						var UA = navigator.userAgent.toLowerCase();
+						var isIE = navigator.appName === 'Microsoft Internet Explorer';
+						var IEver = isIE ? parseFloat( UA.match( /msie ([0-9]{1,}[\.0-9]{0,})/ )[1] ) : 0;
+						var ngIE = ( isIE && IEver < 10 );
+						var stops = ['#ff0000','#ff0080','#ff00ff','#8000ff','#0000ff','#0080ff','#00ffff','#00ff80','#00ff00','#80ff00','#ffff00','#ff8000','#ff0000'];
+						if(ngIE) {
+							var i, div;
+							for(i=0; i<=11; i++) {
+								div = $('<div></div>').attr('style','height:8.333333%; filter:progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='+stops[i]+', endColorstr='+stops[i+1]+'); -ms-filter: "progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='+stops[i]+', endColorstr='+stops[i+1]+')";');
+								huebar.append(div);
+							}
+						} else {
+							stopList = stops.join(',');
+							huebar.attr('style','background:-webkit-linear-gradient(top,'+stopList+'); background: -o-linear-gradient(top,'+stopList+'); background: -ms-linear-gradient(top,'+stopList+'); background:-moz-linear-gradient(top,'+stopList+'); -webkit-linear-gradient(top,'+stopList+'); background:linear-gradient(to bottom,'+stopList+'); ');
+						}
+						cal.find('div.colpick_hue').on('mousedown touchstart',downHue);
+						options.newColor = cal.find('div.colpick_new_color');
+						options.currentColor = cal.find('div.colpick_current_color');
+						//Store options and fill with default color
+						cal.data('colpick', options);
+						fillRGBFields(options.color, cal.get(0));
+						fillHSBFields(options.color, cal.get(0));
+						fillHexFields(options.color, cal.get(0));
+						setHue(options.color, cal.get(0));
+						setSelector(options.color, cal.get(0));
+						setCurrentColor(options.color, cal.get(0));
+						setNewColor(options.color, cal.get(0));
+						//Append to body if flat=false, else show in place
+						if (options.flat) {
+							cal.appendTo(this).show();
+							cal.css({
+								position: 'relative',
+								display: 'block'
+							});
+						} else {
+							cal.appendTo(document.body);
+							$(this).on(options.showEvent, show);
+							cal.css({
+								position:'absolute'
+							});
+						}
+					}
+				});
+			},
+			//Shows the picker
+			showPicker: function() {
+				return this.each( function () {
+					if ($(this).data('colpickId')) {
+						show.apply(this);
+					}
+				});
+			},
+			//Hides the picker
+			hidePicker: function() {
+				return this.each( function () {
+					if ($(this).data('colpickId')) {
+						$('#' + $(this).data('colpickId')).hide();
+					}
+				});
+			},
+			//Sets a color as new and current (default)
+			setColor: function(col, setCurrent) {
+				setCurrent = (typeof setCurrent === "undefined") ? 1 : setCurrent;
+				if (typeof col == 'string') {
+					col = hexToHsb(col);
+				} else if (col.r != undefined && col.g != undefined && col.b != undefined) {
+					col = rgbToHsb(col);
+				} else if (col.h != undefined && col.s != undefined && col.b != undefined) {
+					col = fixHSB(col);
+				} else {
+					return this;
+				}
+				return this.each(function(){
+					if ($(this).data('colpickId')) {
+						var cal = $('#' + $(this).data('colpickId'));
+						cal.data('colpick').color = col;
+						cal.data('colpick').origColor = col;
+						fillRGBFields(col, cal.get(0));
+						fillHSBFields(col, cal.get(0));
+						fillHexFields(col, cal.get(0));
+						setHue(col, cal.get(0));
+						setSelector(col, cal.get(0));
+						
+						setNewColor(col, cal.get(0));
+						cal.data('colpick').onChange.apply(cal.parent(), [col, hsbToHex(col), hsbToRgb(col), cal.data('colpick').el, 1]);
+						if(setCurrent) {
+							setCurrentColor(col, cal.get(0));
+						}
+					}
+				});
+			}
+		};
+	}();
+	//Color space convertions
+	var hexToRgb = function (hex) {
+		var hex = parseInt(((hex.indexOf('#') > -1) ? hex.substring(1) : hex), 16);
+		return {r: hex >> 16, g: (hex & 0x00FF00) >> 8, b: (hex & 0x0000FF)};
+	};
+	var hexToHsb = function (hex) {
+		return rgbToHsb(hexToRgb(hex));
+	};
+	var rgbToHsb = function (rgb) {
+		var hsb = {h: 0, s: 0, b: 0};
+		var min = Math.min(rgb.r, rgb.g, rgb.b);
+		var max = Math.max(rgb.r, rgb.g, rgb.b);
+		var delta = max - min;
+		hsb.b = max;
+		hsb.s = max != 0 ? 255 * delta / max : 0;
+		if (hsb.s != 0) {
+			if (rgb.r == max) hsb.h = (rgb.g - rgb.b) / delta;
+			else if (rgb.g == max) hsb.h = 2 + (rgb.b - rgb.r) / delta;
+			else hsb.h = 4 + (rgb.r - rgb.g) / delta;
+		} else hsb.h = -1;
+		hsb.h *= 60;
+		if (hsb.h < 0) hsb.h += 360;
+		hsb.s *= 100/255;
+		hsb.b *= 100/255;
+		return hsb;
+	};
+	var hsbToRgb = function (hsb) {
+		var rgb = {};
+		var h = hsb.h;
+		var s = hsb.s*255/100;
+		var v = hsb.b*255/100;
+		if(s == 0) {
+			rgb.r = rgb.g = rgb.b = v;
+		} else {
+			var t1 = v;
+			var t2 = (255-s)*v/255;
+			var t3 = (t1-t2)*(h%60)/60;
+			if(h==360) h = 0;
+			if(h<60) {rgb.r=t1;	rgb.b=t2; rgb.g=t2+t3}
+			else if(h<120) {rgb.g=t1; rgb.b=t2;	rgb.r=t1-t3}
+			else if(h<180) {rgb.g=t1; rgb.r=t2;	rgb.b=t2+t3}
+			else if(h<240) {rgb.b=t1; rgb.r=t2;	rgb.g=t1-t3}
+			else if(h<300) {rgb.b=t1; rgb.g=t2;	rgb.r=t2+t3}
+			else if(h<360) {rgb.r=t1; rgb.g=t2;	rgb.b=t1-t3}
+			else {rgb.r=0; rgb.g=0;	rgb.b=0}
+		}
+		return {r:Math.round(rgb.r), g:Math.round(rgb.g), b:Math.round(rgb.b)};
+	};
+	var rgbToHex = function (rgb) {
+		var hex = [
+			rgb.r.toString(16),
+			rgb.g.toString(16),
+			rgb.b.toString(16)
+		];
+		$.each(hex, function (nr, val) {
+			if (val.length == 1) {
+				hex[nr] = '0' + val;
+			}
+		});
+		return hex.join('');
+	};
+	var hsbToHex = function (hsb) {
+		return rgbToHex(hsbToRgb(hsb));
+	};
+	$.fn.extend({
+		colpick: colpick.init,
+		colpickHide: colpick.hidePicker,
+		colpickShow: colpick.showPicker,
+		colpickSetColor: colpick.setColor
+	});
+	$.extend({
+		colpick:{ 
+			rgbToHex: rgbToHex,
+			rgbToHsb: rgbToHsb,
+			hsbToHex: hsbToHex,
+			hsbToRgb: hsbToRgb,
+			hexToHsb: hexToHsb,
+			hexToRgb: hexToRgb
+		}
+	});
+})(jQuery);
 
 String.prototype.md5 = function () {
   //  discuss at: http://phpjs.org/functions/md5/

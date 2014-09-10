@@ -1734,5 +1734,18 @@ color: #FFF;
 }
 
 .nodeHeader:hover .streamConfig {
-  /*display: block; */
+  display: block;
+}
+
+#streamColor {
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
+  background-color: #DAE0E4;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px silver;
+}
+
+.colpick {
+  z-index: 9000;
 }

@@ -8,6 +8,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     PanelMenu = require('./view/left-panel/Controller.js'),
     Pryv = require('pryv'),
     TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+    UnknownUserView = require('./view/error/unknown-user.js'),
     PUBLIC_TOKEN = 'public',
     STAGING,
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
@@ -28,6 +29,8 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
+
+  testUsername(this.urlUsername);
 
   if (urlInfo.username && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
     $('#login-username').val(this.urlUsername);
@@ -129,6 +132,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
         console.log('** REFUSED! ' + reason);
       },
       error: function (data) {
+        data.error = data.error || data;
         if (data.error && data.error.message && data.error.message !== 'Not signed-on') {
           $('#login form button[type=submit]').prop('disabled', false)
             /*.addClass('btn-pryv-alizarin')*/;
@@ -345,17 +349,26 @@ function initTimeAndFilter(timeView, filter) {
 
 }
 
-
-
-/*var toggleLogin = function () {
-  var $login = $('#login');
-  var opened = $login.data('opened');
-  if (opened) {
-    closeLogin();
+var testUsername = function (username) {
+  var domain;
+  var host  = window.location.host;
+  if (host.indexOf('pryv.li') !== -1) {
+    domain = 'pryv.in';
+  } else if (host.indexOf('pryv.me') !== -1) {
+    domain = 'pryv.io';
+  } else if (host.indexOf('rec.la') !== -1) {
+    domain = 'pryv.in';
   } else {
-    openLogin();
+    domain = 'pryv.io';
   }
-}; */
+  $.post('https://reg.' + domain + '/' + username + '/server')
+    .fail(function () {
+    $('body').html(UnknownUserView);
+    $('body').i18n();
+  });
+};
+
+
 var closeLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');

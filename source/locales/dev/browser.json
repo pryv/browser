@@ -291,6 +291,7 @@
       "delete": {}
     },
     "login": {
+      "invalid-access-token": "Session has expired",
       "invalid-credentials": "Wrong password",
       "unknown-resource": "Unknown username",
       "unknown-username": "Unknown username"
@@ -301,6 +302,12 @@
     "subscribeSlice": {
       "slice-already-exists": "You are already following this slice, or the chosen name already exists",
       "slice-unknown": "The given slice does not exist"
+    },
+    "unknownUser": {
+      "labels": {
+        "title" : "Sorry, this username don't exists",
+        "goToPryv" : "Return to Pryv website"
+      }
     }
   }
 }

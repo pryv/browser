@@ -25,7 +25,7 @@ require('backbone.marionette').$ = $;
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
-
+  Pryv.eventTypes.loadFlat();
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();

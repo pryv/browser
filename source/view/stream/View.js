@@ -37,7 +37,7 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
     this.ui.submitSpinner.hide();
     this.ui.deleteSpinner.hide();
-    this.ui.submitBtn.prop('disabled', true);
+    this.ui.submitBtn.prop('disabled', false);
     var that = this;
     this.ui.name.change(function () {
       this.newName = this.ui.name.val().trim();

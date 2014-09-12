@@ -62,7 +62,7 @@ MonitorsHandler.prototype._filteredStreamsChange = function (streams, batch) {
 
 // ----------------------------- Events from monitors ------------------ //
 
-MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, batch) {
+MonitorsHandler.prototype._onMonitorEventChange = function (changes, batch) {
   var myBatch = this.startBatch('eventChange', batch);
   this._eventsEnterScope(MSGs.REASON.REMOTELY, changes.created, myBatch);
   this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, myBatch);
@@ -72,10 +72,11 @@ MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, ba
 MonitorsHandler.prototype._onMonitorStreamChange = function (changes) {
   this._streamsEnterScope(MSGs.REASON.REMOTELY, changes.created);
   this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed);
+  this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.deleted);
   this._streamsChange(MSGs.REASON.REMOTELY, changes.modified);
 };
 
-MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batchId, batch) {
+MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batch) {
   var myBatch = this.startBatch('filterChange', batch);
   this._eventsEnterScope(changes.filterInfos.signal, changes.enter, myBatch);
   this._eventsLeaveScope(changes.filterInfos.signal, changes.leave, myBatch);

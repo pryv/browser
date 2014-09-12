@@ -99,12 +99,13 @@ module.exports = Marionette.ItemView.extend({
       var update = {
         id: this.stream.id,
         name: this.newName || this.stream.name,
-        parentId: this.newParent || this.stream.parentId,
-        clientData: this.stream.clientData || {}
+        parentId: this.newParent || this.stream.parentId
       };
       update.parentId = this.newParent === '_null' ? null : this.newParent;
-      update.clientData['pryv-browser:bgColor'] = this.newColor ||
-        this.stream.clientData['pryv-browser:bgColor'];
+      if (this.newColor) {
+        update.clientData = this.stream.clientData || {};
+        update.clientData['pryv-browser:bgColor'] = this.newColor;
+      }
       this.stream.connection.streams.update(update, function (err) {
 
         this.ui.submitSpinner.hide();

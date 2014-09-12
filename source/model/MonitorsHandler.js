@@ -48,9 +48,13 @@ MonitorsHandler.prototype._streamsLeaveScope = function (reason, streams, batch)
   this._fireEvent(MSGs.SIGNAL.STREAM_SCOPE_LEAVE, {reason: reason, streams: streams}, batch);
 };
 
-MonitorsHandler.prototype._streamsChange = function (reason, streams, batch) {
+MonitorsHandler.prototype._streamsChange = function (reason, message, batch) {
+  var streams = message.streams;
   if (streams.length === 0) { return; }
-  this._fireEvent(MSGs.SIGNAL.STREAM_CHANGE, {reason: reason, streams: streams}, batch);
+  this._fireEvent(MSGs.SIGNAL.STREAM_CHANGE,
+    {reason: reason, streams: streams,
+      modifiedPreviousProperties:
+        message.modifiedPreviousProperties}, batch);
 };
 
 
@@ -73,7 +77,8 @@ MonitorsHandler.prototype._onMonitorStreamChange = function (changes) {
   this._streamsEnterScope(MSGs.REASON.REMOTELY, changes.created);
   this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed);
   this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.deleted);
-  this._streamsChange(MSGs.REASON.REMOTELY, changes.modified);
+  this._streamsChange(MSGs.REASON.REMOTELY,
+    { streams: changes.modified, modifiedPreviousProperties: changes.modifiedPreviousProperties});
 };
 
 MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batch) {

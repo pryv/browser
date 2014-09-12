@@ -212,6 +212,21 @@ var ConnectionNode = module.exports = TreeNode.implement(
       }
     },
 
+    streamChange: function (stream, reason, callback) {
+      if (this.streamNodes[stream.id]) {
+        this._refreshViewModel();
+
+        console.log('[PERKI AT WORK... should propagate streamChange further]');
+
+      }
+      if (typeof(callback) === 'function') {
+        return callback();
+      } else {
+        return null;
+      }
+      console.log('[WARNING] ConnectionNode.streamChange on unkown stream: ' + stream.id);
+    },
+
     eventLeaveScope: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
       if (node) {

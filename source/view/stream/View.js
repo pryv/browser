@@ -156,9 +156,9 @@ module.exports = Marionette.ItemView.extend({
       parentId = this.stream.parentId,
       result = '';
     if (!parentId) {
-      result += '<option selected="selected" value="_null">Root</options>';
+      result += '<option selected="selected" value="_null">-</options>';
     } else {
-      result += '<option value="_null">Root</options>';
+      result += '<option value="_null">-</options>';
     }
     for (var i = 0; i < rootStreams.length; i++) {
       result += this._walkStreamStructure(rootStreams[i], 1, parentId);

@@ -54,6 +54,16 @@ module.exports = TreeNode.implement(
       connectionNode.streamEnterScope(stream, reason, callback);
     },
 
+    streamChange: function (stream, reason, callback) {
+      var connectionNode = this.connectionNodes[stream.connection.id];
+      if (typeof connectionNode !== 'undefined') {
+        console.log('[WARNING] RootNode.streamChange stream: ' + stream.id +
+          ' for an unkown connection:' + stream.connection.id);
+        return connectionNode.streamChange(stream, reason, callback);
+      }
+      return false;
+    },
+
     eventLeaveScope: function (event, reason, callback) {
       var node = this.connectionNodes[event.connection.id];
       if (node === 'undefined') {

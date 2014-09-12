@@ -41597,7 +41597,7 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
     this.ui.submitSpinner.hide();
     this.ui.deleteSpinner.hide();
-    this.ui.submitBtn.prop('disabled', true);
+    this.ui.submitBtn.prop('disabled', false);
     var that = this;
     this.ui.name.change(function () {
       this.newName = this.ui.name.val().trim();
@@ -41659,12 +41659,13 @@ module.exports = Marionette.ItemView.extend({
       var update = {
         id: this.stream.id,
         name: this.newName || this.stream.name,
-        parentId: this.newParent || this.stream.parentId,
-        clientData: this.stream.clientData || {}
+        parentId: this.newParent || this.stream.parentId
       };
       update.parentId = this.newParent === '_null' ? null : this.newParent;
-      update.clientData['pryv-browser:bgColor'] = this.newColor ||
-        this.stream.clientData['pryv-browser:bgColor'];
+      if (this.newColor) {
+        update.clientData = this.stream.clientData || {};
+        update.clientData['pryv-browser:bgColor'] = this.newColor;
+      }
       this.stream.connection.streams.update(update, function (err) {
 
         this.ui.submitSpinner.hide();
@@ -41715,10 +41716,14 @@ module.exports = Marionette.ItemView.extend({
     var rootStreams = this.stream.connection.datastore.getStreams(),
       parentId = this.stream.parentId,
       result = '';
+    var connName = this.stream.connection.username;
+    if (this.stream.connection._accessInfo.name !== 'pryv-browser') {
+      connName += ' / ' + this.stream.connection._accessInfo.name;
+    }
     if (!parentId) {
-      result += '<option selected="selected" value="_null">Root</options>';
+      result += '<option selected="selected" value="_null">' + connName + '</options>';
     } else {
-      result += '<option value="_null">Root</options>';
+      result += '<option value="_null">' + connName + '</options>';
     }
     for (var i = 0; i < rootStreams.length; i++) {
       result += this._walkStreamStructure(rootStreams[i], 1, parentId);

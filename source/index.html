@@ -265,13 +265,13 @@
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
     <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %>
       <% if (manageStream)  { %>
-      <i class="streamConfig fa fa-cog fa-fw"></i>
+      <i class="streamConfig fa fa-cog fa-fw" title="Edit Stream"></i>
       <% } %>
     </div>
     <% } else if (typeof(content.name) != "undefined" ) { %>
     <div class='nodeHeader '><span class="pins-color 2" style="background-color: <%= bgColor %>"></span><%= content.name %>
       <% if (manageStream)  { %>
-      <i class="streamConfig fa fa-cog fa-fw"></i>
+      <i class="streamConfig fa fa-cog fa-fw" title="Edit Stream"></i>
       <% } %>
     </div>
     <% } else if (typeof(content.username) != "undefined" && content._accessInfo.name !== "pryv-browser") { %>

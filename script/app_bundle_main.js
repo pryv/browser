@@ -21830,13 +21830,13 @@ function Datastore(connection) {
   this.streamsIndex = {}; // streams are linked to their object representation
   this.eventIndex = {}; // events are store by their id
   this.rootStreams = [];
+  this.rootStreamsAll = []; // including trashed streams
 }
 
 module.exports = Datastore;
 
 Datastore.prototype.init = function (callback) {
-  // Hack for browser, we dont want trashed stream (removed {state: 'all'})
-  this.connection.streams._getObjects({}, function (error, result) {
+  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
     if (error) { return callback('Datastore faild to init - '  + error); }
     if (result) {
       this._rebuildStreamIndex(result); // maybe done transparently
@@ -21850,6 +21850,7 @@ Datastore.prototype.init = function (callback) {
 Datastore.prototype._rebuildStreamIndex = function (streamArray) {
   this.streamsIndex = {};
   this.rootStreams = [];
+  this.rootStreamsAll = [];
   this._indexStreamArray(streamArray);
 };
 
@@ -21861,7 +21862,12 @@ Datastore.prototype._indexStreamArray = function (streamArray) {
 
 Datastore.prototype.indexStream = function (stream) {
   this.streamsIndex[stream.id] = stream;
-  if (! stream.parentId) { this.rootStreams.push(stream); }
+  if (! stream.parentId) {
+    this.rootStreamsAll.push(stream);
+    if (! stream.trashed) {
+      this.rootStreams.push(stream);
+    }
+  }
   this._indexStreamArray(stream._children);
   delete stream._children; // cleanup when in datastore mode
   delete stream._parent;
@@ -21869,10 +21875,11 @@ Datastore.prototype.indexStream = function (stream) {
 
 /**
  *
- * @param streamId
+ * @param all True to get all root streams including trashed one
  * @returns Stream or null if not found
  */
-Datastore.prototype.getStreams = function () {
+Datastore.prototype.getStreams = function (all) {
+  if (all) { return this.rootStreamsAll; }
   return this.rootStreams;
 };
 
@@ -22018,6 +22025,7 @@ var Event = module.exports = function Event(connection, data) {
     throw new Error('Cannot create connection less events');
   }
   this.connection = connection;
+  this.trashed = false;
   this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
   escapeHtml(data);
   _.extend(this, data);
@@ -22486,6 +22494,7 @@ var _ = require('underscore'),
 var EXTRA_ALL_EVENTS = {state : 'default', modifiedSince : -100000000 };
 var REALLY_ALL_EVENTS =  EXTRA_ALL_EVENTS; REALLY_ALL_EVENTS.fromTime = -1000000000;
 
+var GETEVENT_MIN_REFRESH_RATE = 2000;
 
 /**
  * Monitoring
@@ -22737,7 +22746,7 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
               this._events.active[event.id] = event;
             }
           } else {
-            if(!event.trashed && event.stream && !event.stream.trashed) {
+            if (!event.trashed && event.stream && !event.stream.trashed) {
               result.created.push(event);
               this._events.active[event.id] = event;
             }
@@ -22748,13 +22757,13 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
       this._fireEvent(signal, result);
 
       // ---
-      this.eventsGetChangesInProgress = false;
-      if (this.eventsGetChangesNeeded) {
-        setTimeout(function () {
+      setTimeout(function () {
+        this.eventsGetChangesInProgress = false;
+        if (this.eventsGetChangesNeeded) {
           this._connectionEventsGetChanges(signal);
-        }.bind(this), 1);
+        }
+      }.bind(this), GETEVENT_MIN_REFRESH_RATE);
 
-      }
     }.bind(this));
 };
 
@@ -22762,33 +22771,23 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
  * @private
  */
 Monitor.prototype._connectionStreamsGetChanges = function (signal) {
-  var streams = {};
-  var created = [], modified = [], trashed = [];
+  var previousStreamsData = {};
+  var created = [], modified = [], modifiedPreviousProperties = {}, trashed = [], deleted = [];
+
   var isStreamChanged = function (streamA, streamB) {
-    var sA = _.pick(streamA, ['id', 'name', 'singleActivity', 'parentId', 'clientData', 'trashed']);
-    var sB = _.pick(streamB, ['id', 'name', 'singleActivity', 'parentId', 'clientData', 'trashed']);
-    if (sA.clientData) {
-      sA.clientData = JSON.stringify(sA.clientData);
-    }
-    if (sB.clientData) {
-      sB.clientData = JSON.stringify(sB.clientData);
-    }
-    return !_.isEqual(sA, sB);
+    return !_.isEqual(streamA, streamB);
   };
-  var getFlatTree = function (stream) {
-    streams[stream.id] = stream;
-    _.each(stream.children, function (child) {
-      getFlatTree(child);
-    });
-  };
+
+
+  // check if the stream has changed it.. and save it in the right message box
   var checkChangedStatus = function (stream) {
 
-    // Trahsed stream are no longer in the datastore
-    // oldversion:
-   /* if (!streams[stream.id]) {
+
+    if (! previousStreamsData[stream.id]) { // new stream
       created.push(stream);
-    } else if (!streamCompare(streams[stream.id], stream)) {
-      if (streams[stream.id].trashed !== stream.trashed) {
+    } else if (isStreamChanged(previousStreamsData[stream.id], stream.getData())) {
+
+      if (previousStreamsData[stream.id].trashed !== stream.trashed) {
         if (!stream.trashed) {
           created.push(stream);
         } else {
@@ -22796,33 +22795,40 @@ Monitor.prototype._connectionStreamsGetChanges = function (signal) {
         }
       } else {
         modified.push(stream);
+        modifiedPreviousProperties[stream.id] = previousStreamsData[stream.id];
       }
-    } */
-    // new version:
-    if (!streams[stream.id]) {
-      created.push(stream);
-    } else if (isStreamChanged(streams[stream.id], stream)) {
-      modified.push(stream);
-      delete streams[stream.id];
-    } else {
-      delete streams[stream.id];
     }
+
     _.each(stream.children, function (child) {
       checkChangedStatus(child);
     });
+    delete previousStreamsData[stream.id];
   };
-  _.each(this.connection.datastore.getStreams(), function (rootStream) {
+
+  //-- get all current streams before matching with new ones --//
+  var getFlatTree = function (stream) {
+    previousStreamsData[stream.id] = stream.getData();
+    //console.log(previousStreamsData[stream.id]);
+
+    _.each(stream.children, function (child) {
+      getFlatTree(child);
+    });
+  };
+  _.each(this.connection.datastore.getStreams(true), function (rootStream) {
     getFlatTree(rootStream);
   });
+
   this.connection.fetchStructure(function (error, result) {
     _.each(result, function (rootStream) {
       checkChangedStatus(rootStream);
     });
-    // each stream remaining in streams[] are trashed streams;
-    _.each(streams, function (stream) {
-      trashed.push(stream);
+    // each stream remaining in streams[] are deleted streams;
+    _.each(previousStreamsData, function (streamData, streamId) {
+      deleted.push(streamId);
     });
-    this._fireEvent(signal, { created : created, trashed : trashed, modified: modified});
+    this._fireEvent(signal,
+      { created : created, trashed : trashed, modified: modified, deleted: deleted,
+        modifiedPreviousProperties: modifiedPreviousProperties});
   }.bind(this));
 };
 
@@ -22913,6 +22919,8 @@ module.exports = Monitor;
 },{"./Filter.js":52,"./utility/SignalEmitter.js":68,"underscore":48}],54:[function(require,module,exports){
 var _ = require('underscore');
 
+
+
 /**
  * TODO write documentation  with use cases.. !!
  * @type {Function}
@@ -22924,10 +22932,26 @@ var Stream = module.exports = function Stream(connection, data) {
   /** those are only used when no datastore **/
   this._parent = null;
   this.parentId = null;
+  this.trashed = false;
   this._children = [];
   data.name = _.escape(data.name);
   _.extend(this, data);
 };
+
+Stream.RW_PROPERTIES =
+  ['name', 'parentId', 'singleActivity', 'clientData', 'trashed'];
+
+/**
+ * get Json object ready to be posted on the API
+ */
+Stream.prototype.getData = function () {
+  var data = {};
+  _.each(Stream.RW_PROPERTIES, function (key) { // only set non null values
+    if (_.has(this, key)) { data[key] = this[key]; }
+  }.bind(this));
+  return data;
+};
+
 
 /**
  * Set or erase clientData properties
@@ -22969,6 +22993,7 @@ Object.defineProperty(Stream.prototype, 'parent', {
 
 /**
  * TODO write documentation
+ * Does not return trashed childrens
  */
 Object.defineProperty(Stream.prototype, 'children', {
   get: function () {
@@ -22979,7 +23004,7 @@ Object.defineProperty(Stream.prototype, 'children', {
     _.each(this.childrenIds, function (childrenId) {
       try {
         var child = this.connection.datastore.getStreamById(childrenId);
-        if (child.parentId === this.id) {
+        if (child.parentId === this.id && ! child.trashed) { // exclude trashed childs
           children.push(child);
         }
       } catch (e) {
@@ -25115,7 +25140,6 @@ eventTypes.loadFlat = function (callback) {
   };
   _getFile('flat.json', myCallback.bind(this));
 };
-eventTypes.loadFlat();
 
 eventTypes.flat = function (eventType) {
   if (!this._flat) {
@@ -27442,7 +27466,7 @@ require('backbone.marionette').$ = $;
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
-
+  Pryv.eventTypes.loadFlat();
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
@@ -28076,7 +28100,7 @@ MonitorsHandler.prototype._filteredStreamsChange = function (streams, batch) {
 
 // ----------------------------- Events from monitors ------------------ //
 
-MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, batch) {
+MonitorsHandler.prototype._onMonitorEventChange = function (changes, batch) {
   var myBatch = this.startBatch('eventChange', batch);
   this._eventsEnterScope(MSGs.REASON.REMOTELY, changes.created, myBatch);
   this._eventsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed, myBatch);
@@ -28086,10 +28110,11 @@ MonitorsHandler.prototype._onMonitorEventChange = function (changes, batchId, ba
 MonitorsHandler.prototype._onMonitorStreamChange = function (changes) {
   this._streamsEnterScope(MSGs.REASON.REMOTELY, changes.created);
   this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed);
+  this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.deleted);
   this._streamsChange(MSGs.REASON.REMOTELY, changes.modified);
 };
 
-MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batchId, batch) {
+MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batch) {
   var myBatch = this.startBatch('filterChange', batch);
   this._eventsEnterScope(changes.filterInfos.signal, changes.enter, myBatch);
   this._eventsLeaveScope(changes.filterInfos.signal, changes.leave, myBatch);
@@ -29149,7 +29174,6 @@ var ConnectionNode = module.exports = TreeNode.implement(
       if (node) {
         node.eventLeaveScope(event, reason, callback);
       }
-
     },
 
     eventChange: function (event, reason, callback) {
@@ -30057,7 +30081,20 @@ var TreeMap = module.exports = function (model) {
     console.log('eventEnter execution:', time);
     refreshTree();
   }.bind(this);
-
+  this.streamLeaveScope = function (content) {
+    console.log('streamLeave', content);
+    _.each(content.streams, function (stream) {
+      stream.connection.events.get(
+        {limit: 9999999999, fromTime: -1000000000, streams: [stream.id], state: 'all'},
+        function (events) {
+        _.each(events, function (event) {
+          console.log('toLeave', event);
+          this.root.eventLeaveScope(event, '', function () {});
+        }.bind(this));
+        refreshTree();
+      }.bind(this));
+    }.bind(this));
+  };
   this.eventLeaveScope = function (content) {
     console.log('eventLeave', content);
     var start = new Date().getTime();
@@ -30136,6 +30173,8 @@ var TreeMap = module.exports = function (model) {
     this.eventChange);
   this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_ENTER,
     this.streamEnterScope);
+  this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_LEAVE,
+    this.streamLeaveScope);
 };
 
 TreeMap.prototype.isOnboarding = function () {
@@ -40024,6 +40063,13 @@ module.exports = Marionette.ItemView.extend({
             this.shushListenerOnce = false;
           }
         }.bind(this));
+        this.MainModel.activeFilter.addEventListener('streamLeaveScope', function () {
+          if (!this.shushListenerOnce) {
+            this.render();
+          } else {
+            this.shushListenerOnce = false;
+          }
+        }.bind(this));
       }
     }.bind(this), 100);
   },
@@ -41503,6 +41549,7 @@ _.extend(Controller.prototype, {
     this.streamConfig = new StreamView({model: new Model({stream: this.stream})});
     this.view.render();
     this.view.streamConfig.show(this.streamConfig);
+    this.streamConfig.on('close', this.close.bind(this));
     this.streamConfig.afterRender();
     this._getModalTitle();
   },
@@ -41533,6 +41580,7 @@ module.exports = Marionette.ItemView.extend({
   template: '#stream-config-template',
   newName: null,
   newColor: null,
+  newParent: null,
   ui: {
     form: 'form',
     submitBtn: '#publish',
@@ -41540,12 +41588,16 @@ module.exports = Marionette.ItemView.extend({
     deleteBtn: '#delete',
     deleteSpinner: '#delete .fa-spinner',
     colorPicker: '#streamColor',
-    name: '#streamName'
+    name: '#streamName',
+    parent: '#streamParent'
   },
   templateHelpers: function () {
     return {
       getColor: function () {
         return this.getColor(this.stream);
+      }.bind(this),
+      getStreamStructure: function () {
+        return this.getStreamStructure();
       }.bind(this)
     };
   },
@@ -41562,6 +41614,10 @@ module.exports = Marionette.ItemView.extend({
       this.newName = this.ui.name.val().trim();
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
+    this.ui.parent.change(function () {
+      this.newParent = this.ui.parent.val();
+      this.ui.submitBtn.prop('disabled', false);
+    }.bind(this));
     this.ui.deleteBtn.click(function () {
       var confirm = window.confirm(i18n.t('stream.messages.confirmDelete'));
       if (confirm) {
@@ -41574,14 +41630,15 @@ module.exports = Marionette.ItemView.extend({
                          i18n.t('common.messages.errUnexpected');
             window.PryvBrowser.showAlert(this.$el, errMsg);
           } else {
-            this.stream.connection.streams.delete(this.stream.id, function (err) {
+            /*this.stream.connection.streams.delete(this.stream.id, function (err) {
               this.ui.deleteSpinner.hide();
               if (err) {
                 var errMsg = i18n.t('stream.common.messages.' + err.id) ||
                   i18n.t('common.messages.errUnexpected');
                 window.PryvBrowser.showAlert(this.$el, errMsg);
               }
-            }.bind(this));
+            }.bind(this)); */
+            this.onActionDone();
           }
         }.bind(this));
       }
@@ -41603,9 +41660,12 @@ module.exports = Marionette.ItemView.extend({
       var update = {
         id: this.stream.id,
         name: this.newName || this.stream.name,
+        parentId: this.newParent || this.stream.parentId,
         clientData: this.stream.clientData || {}
       };
-      update.clientData['pryv-browser:bgColor'] = this.newColor;
+      update.parentId = this.newParent === '_null' ? null : this.newParent;
+      update.clientData['pryv-browser:bgColor'] = this.newColor ||
+        this.stream.clientData['pryv-browser:bgColor'];
       this.stream.connection.streams.update(update, function (err) {
 
         this.ui.submitSpinner.hide();
@@ -41628,9 +41688,15 @@ module.exports = Marionette.ItemView.extend({
           this.ui.submitBtn.prop('disabled', false);
           this.ui.submitBtn.addClass('btn-pryv-alizarin');
           window.PryvBrowser.showAlert(this.$el, errMsg);
+        } else {
+          this.onActionDone();
         }
       }.bind(this));
     }.bind(this));
+  },
+  onActionDone: function () {
+    this.trigger('close');
+    window.location.reload();
   },
   getColor: function (c) {
     if (typeof(c) === 'undefined' || !c) {
@@ -41644,6 +41710,41 @@ module.exports = Marionette.ItemView.extend({
       return this.getColor(c.parent);
     }
     return '';
+  },
+
+  getStreamStructure: function () {
+    var rootStreams = this.stream.connection.datastore.getStreams(),
+      parentId = this.stream.parentId,
+      result = '';
+    if (!parentId) {
+      result += '<option selected="selected" value="_null">Root</options>';
+    } else {
+      result += '<option value="_null">Root</options>';
+    }
+    for (var i = 0; i < rootStreams.length; i++) {
+      result += this._walkStreamStructure(rootStreams[i], 1, parentId);
+    }
+    return result;
+
+  },
+  _walkStreamStructure: function (stream, depth, parentId) {
+    if (stream.id === this.stream.id) {
+      return '';
+    }
+    var indentNbr = 4,
+      result = '<option ';
+    result += stream.id === parentId ? 'selected="selected" ' : '';
+    result += 'value="' + stream.id + '" >';
+    for (var i = 0; i < depth * indentNbr; i++) {
+      result += '&nbsp;';
+    }
+    result += stream.name;
+    result += '</option>';
+    depth++;
+    for (var j = 0; j < stream.children.length; j++) {
+      result += this._walkStreamStructure(stream.children[j], depth, parentId);
+    }
+    return result;
   }
 });
 

@@ -246,7 +246,10 @@
   "stream": {
     "common": {
        "labels": {
-         "title": "Edit stream <strong>__streamName__</strong>"
+         "title": "Edit stream <strong>__streamName__</strong>",
+         "name": "Name",
+         "parent": "Parent",
+         "color": "Color"
        }
     },
     "messages": {

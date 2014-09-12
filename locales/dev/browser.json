@@ -246,8 +246,16 @@
   "stream": {
     "common": {
        "labels": {
-         "title": "Edit a stream"
+         "title": "Edit stream <strong>__streamName__</strong>",
+         "name": "Name",
+         "parent": "Parent",
+         "color": "Color"
        }
+    },
+    "messages": {
+      "confirmDelete": "Are you sure you want to delete this stream? All your data inside this stream will deleted as well",
+      "confirmDeleteMerging": "Are you sure you want to delete this stream?",
+      "mergeParent": "Would you like to move events in this stream to the parent of this stream?"
     }
   },
   "timeframe": {
@@ -291,6 +299,7 @@
       "delete": {}
     },
     "login": {
+      "invalid-access-token": "Session has expired",
       "invalid-credentials": "Wrong password",
       "unknown-resource": "Unknown username",
       "unknown-username": "Unknown username"
@@ -301,6 +310,12 @@
     "subscribeSlice": {
       "slice-already-exists": "You are already following this slice, or the chosen name already exists",
       "slice-unknown": "The given slice does not exist"
+    },
+    "unknownUser": {
+      "labels": {
+        "title" : "Sorry, this username don't exists",
+        "goToPryv" : "Return to Pryv website"
+      }
     }
   }
 }

@@ -156,10 +156,14 @@ module.exports = Marionette.ItemView.extend({
     var rootStreams = this.stream.connection.datastore.getStreams(),
       parentId = this.stream.parentId,
       result = '';
+    var connName = this.stream.connection.username;
+    if (this.stream.connection._accessInfo.name !== 'pryv-browser') {
+      connName += ' / ' + this.stream.connection._accessInfo.name;
+    }
     if (!parentId) {
-      result += '<option selected="selected" value="_null">-</options>';
+      result += '<option selected="selected" value="_null">' + connName + '</options>';
     } else {
-      result += '<option value="_null">-</options>';
+      result += '<option value="_null">' + connName + '</options>';
     }
     for (var i = 0; i < rootStreams.length; i++) {
       result += this._walkStreamStructure(rootStreams[i], 1, parentId);

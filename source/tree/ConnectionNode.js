@@ -217,7 +217,6 @@ var ConnectionNode = module.exports = TreeNode.implement(
       if (node) {
         node.eventLeaveScope(event, reason, callback);
       }
-
     },
 
     eventChange: function (event, reason, callback) {

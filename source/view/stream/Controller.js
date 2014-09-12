@@ -36,6 +36,7 @@ _.extend(Controller.prototype, {
     this.streamConfig = new StreamView({model: new Model({stream: this.stream})});
     this.view.render();
     this.view.streamConfig.show(this.streamConfig);
+    this.streamConfig.on('close', this.close.bind(this));
     this.streamConfig.afterRender();
     this._getModalTitle();
   },

@@ -37,6 +37,13 @@ module.exports = Marionette.ItemView.extend({
             this.shushListenerOnce = false;
           }
         }.bind(this));
+        this.MainModel.activeFilter.addEventListener('streamLeaveScope', function () {
+          if (!this.shushListenerOnce) {
+            this.render();
+          } else {
+            this.shushListenerOnce = false;
+          }
+        }.bind(this));
       }
     }.bind(this), 100);
   },

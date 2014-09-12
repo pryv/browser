@@ -9,6 +9,7 @@ module.exports = Marionette.ItemView.extend({
   template: '#stream-config-template',
   newName: null,
   newColor: null,
+  newParent: null,
   ui: {
     form: 'form',
     submitBtn: '#publish',
@@ -16,12 +17,16 @@ module.exports = Marionette.ItemView.extend({
     deleteBtn: '#delete',
     deleteSpinner: '#delete .fa-spinner',
     colorPicker: '#streamColor',
-    name: '#streamName'
+    name: '#streamName',
+    parent: '#streamParent'
   },
   templateHelpers: function () {
     return {
       getColor: function () {
         return this.getColor(this.stream);
+      }.bind(this),
+      getStreamStructure: function () {
+        return this.getStreamStructure();
       }.bind(this)
     };
   },
@@ -38,6 +43,10 @@ module.exports = Marionette.ItemView.extend({
       this.newName = this.ui.name.val().trim();
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
+    this.ui.parent.change(function () {
+      this.newParent = this.ui.parent.val();
+      this.ui.submitBtn.prop('disabled', false);
+    }.bind(this));
     this.ui.deleteBtn.click(function () {
       var confirm = window.confirm(i18n.t('stream.messages.confirmDelete'));
       if (confirm) {
@@ -50,14 +59,15 @@ module.exports = Marionette.ItemView.extend({
                          i18n.t('common.messages.errUnexpected');
             window.PryvBrowser.showAlert(this.$el, errMsg);
           } else {
-            this.stream.connection.streams.delete(this.stream.id, function (err) {
+            /*this.stream.connection.streams.delete(this.stream.id, function (err) {
               this.ui.deleteSpinner.hide();
               if (err) {
                 var errMsg = i18n.t('stream.common.messages.' + err.id) ||
                   i18n.t('common.messages.errUnexpected');
                 window.PryvBrowser.showAlert(this.$el, errMsg);
               }
-            }.bind(this));
+            }.bind(this)); */
+            this.onActionDone();
           }
         }.bind(this));
       }
@@ -79,9 +89,12 @@ module.exports = Marionette.ItemView.extend({
       var update = {
         id: this.stream.id,
         name: this.newName || this.stream.name,
+        parentId: this.newParent || this.stream.parentId,
         clientData: this.stream.clientData || {}
       };
-      update.clientData['pryv-browser:bgColor'] = this.newColor;
+      update.parentId = this.newParent === '_null' ? null : this.newParent;
+      update.clientData['pryv-browser:bgColor'] = this.newColor ||
+        this.stream.clientData['pryv-browser:bgColor'];
       this.stream.connection.streams.update(update, function (err) {
 
         this.ui.submitSpinner.hide();
@@ -104,9 +117,15 @@ module.exports = Marionette.ItemView.extend({
           this.ui.submitBtn.prop('disabled', false);
           this.ui.submitBtn.addClass('btn-pryv-alizarin');
           window.PryvBrowser.showAlert(this.$el, errMsg);
+        } else {
+          this.onActionDone();
         }
       }.bind(this));
     }.bind(this));
+  },
+  onActionDone: function () {
+    this.trigger('close');
+    window.location.reload();
   },
   getColor: function (c) {
     if (typeof(c) === 'undefined' || !c) {
@@ -120,5 +139,40 @@ module.exports = Marionette.ItemView.extend({
       return this.getColor(c.parent);
     }
     return '';
+  },
+
+  getStreamStructure: function () {
+    var rootStreams = this.stream.connection.datastore.getStreams(),
+      parentId = this.stream.parentId,
+      result = '';
+    if (!parentId) {
+      result += '<option selected="selected" value="_null">Root</options>';
+    } else {
+      result += '<option value="_null">Root</options>';
+    }
+    for (var i = 0; i < rootStreams.length; i++) {
+      result += this._walkStreamStructure(rootStreams[i], 1, parentId);
+    }
+    return result;
+
+  },
+  _walkStreamStructure: function (stream, depth, parentId) {
+    if (stream.id === this.stream.id) {
+      return '';
+    }
+    var indentNbr = 4,
+      result = '<option ';
+    result += stream.id === parentId ? 'selected="selected" ' : '';
+    result += 'value="' + stream.id + '" >';
+    for (var i = 0; i < depth * indentNbr; i++) {
+      result += '&nbsp;';
+    }
+    result += stream.name;
+    result += '</option>';
+    depth++;
+    for (var j = 0; j < stream.children.length; j++) {
+      result += this._walkStreamStructure(stream.children[j], depth, parentId);
+    }
+    return result;
   }
 });

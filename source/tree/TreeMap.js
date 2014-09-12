@@ -220,17 +220,6 @@ var TreeMap = module.exports = function (model) {
   }.bind(this);
   this.streamLeaveScope = function (content) {
     console.log('streamLeave', content);
-    _.each(content.streams, function (stream) {
-      stream.connection.events.get(
-        {limit: 9999999999, fromTime: -1000000000, streams: [stream.id], state: 'all'},
-        function (events) {
-        _.each(events, function (event) {
-          console.log('toLeave', event);
-          this.root.eventLeaveScope(event, '', function () {});
-        }.bind(this));
-        refreshTree();
-      }.bind(this));
-    }.bind(this));
   };
   this.eventLeaveScope = function (content) {
     console.log('eventLeave', content);

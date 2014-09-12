@@ -253,7 +253,9 @@
        }
     },
     "messages": {
-      "confirmDelete": "Are you sure you want to delete this stream? All your data inside this stream will deleted as well"
+      "confirmDelete": "Are you sure you want to delete this stream? All your data inside this stream will deleted as well",
+      "confirmDeleteMerging": "Are you sure you want to delete this stream?",
+      "mergeParent": "Would you like to move events in this stream to the parent of this stream?"
     }
   },
   "timeframe": {

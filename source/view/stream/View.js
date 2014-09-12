@@ -48,7 +48,16 @@ module.exports = Marionette.ItemView.extend({
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
     this.ui.deleteBtn.click(function () {
-      var confirm = window.confirm(i18n.t('stream.messages.confirmDelete'));
+      var mergeParent = false;
+      var confirmDeleteMsg = i18n.t('stream.messages.confirmDelete');
+      if (this.stream.parentId) {
+        mergeParent = window.confirm(i18n.t('stream.messages.mergeParent'));
+        if (mergeParent) {
+          confirmDeleteMsg = i18n.t('stream.messages.confirmDeleteMerging');
+        }
+      }
+
+      var confirm = window.confirm(confirmDeleteMsg);
       if (confirm) {
         this.ui.deleteBtn.prop('disabled', true);
         this.ui.deleteSpinner.show();
@@ -59,17 +68,18 @@ module.exports = Marionette.ItemView.extend({
                          i18n.t('common.messages.errUnexpected');
             window.PryvBrowser.showAlert(this.$el, errMsg);
           } else {
-            /*this.stream.connection.streams.delete(this.stream.id, function (err) {
+            this.stream.connection.streams.delete(this.stream.id, function (err) {
               this.ui.deleteSpinner.hide();
               if (err) {
                 var errMsg = i18n.t('stream.common.messages.' + err.id) ||
                   i18n.t('common.messages.errUnexpected');
                 window.PryvBrowser.showAlert(this.$el, errMsg);
+              } else {
+                this.onActionDone();
               }
-            }.bind(this)); */
-            this.onActionDone();
+            }.bind(this), !!mergeParent);
           }
-        }.bind(this));
+        }.bind(this), !!mergeParent);
       }
     }.bind(this));
     this.ui.colorPicker.colpick({

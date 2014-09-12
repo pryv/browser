@@ -1730,9 +1730,12 @@ color: #FFF;
 }
 .streamConfig {
   display: none;
-  float: right;       
+  float: right;
+  font-size: 1.4em;
 }
-
+.streamConfig:hover {
+  color: #e3e3e3;
+}
 .nodeHeader:hover .streamConfig {
   display: block;
 }

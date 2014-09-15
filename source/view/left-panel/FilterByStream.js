@@ -249,7 +249,7 @@ module.exports = Marionette.ItemView.extend({
       '<div class="pryv-checkbox">' +
       '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
       '"><label for="afilterStream' + UNIQUE_ID + '">' +
-      stream.name + '</label><i class="fa fa-cog fa-fw streamConfig"></i></div></li>';
+      stream.name + '</label><i class="fa fa-cog fa-fw streamConfig" title="Edit stream"></i></div></li>';
     result += '<ul id="collapse' + UNIQUE_ID +
       '" class="panel-collapse  collapse stream-tree-children">' +
       '<div class="panel-body">';

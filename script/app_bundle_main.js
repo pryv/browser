@@ -28086,9 +28086,13 @@ MonitorsHandler.prototype._streamsLeaveScope = function (reason, streams, batch)
   this._fireEvent(MSGs.SIGNAL.STREAM_SCOPE_LEAVE, {reason: reason, streams: streams}, batch);
 };
 
-MonitorsHandler.prototype._streamsChange = function (reason, streams, batch) {
+MonitorsHandler.prototype._streamsChange = function (reason, message, batch) {
+  var streams = message.streams;
   if (streams.length === 0) { return; }
-  this._fireEvent(MSGs.SIGNAL.STREAM_CHANGE, {reason: reason, streams: streams}, batch);
+  this._fireEvent(MSGs.SIGNAL.STREAM_CHANGE,
+    {reason: reason, streams: streams,
+      modifiedPreviousProperties:
+        message.modifiedPreviousProperties}, batch);
 };
 
 
@@ -28111,7 +28115,8 @@ MonitorsHandler.prototype._onMonitorStreamChange = function (changes) {
   this._streamsEnterScope(MSGs.REASON.REMOTELY, changes.created);
   this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.trashed);
   this._streamsLeaveScope(MSGs.REASON.REMOTELY, changes.deleted);
-  this._streamsChange(MSGs.REASON.REMOTELY, changes.modified);
+  this._streamsChange(MSGs.REASON.REMOTELY,
+    { streams: changes.modified, modifiedPreviousProperties: changes.modifiedPreviousProperties});
 };
 
 MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batch) {
@@ -29169,6 +29174,21 @@ var ConnectionNode = module.exports = TreeNode.implement(
       }
     },
 
+    streamChange: function (stream, reason, callback) {
+      if (this.streamNodes[stream.id]) {
+        this._refreshViewModel();
+
+        console.log('[PERKI AT WORK... should propagate streamChange further]');
+
+      }
+      if (typeof(callback) === 'function') {
+        return callback();
+      } else {
+        return null;
+      }
+      console.log('[WARNING] ConnectionNode.streamChange on unkown stream: ' + stream.id);
+    },
+
     eventLeaveScope: function (event, reason, callback) {
       var node = this.streamNodes[event.streamId];
       if (node) {
@@ -29509,6 +29529,16 @@ module.exports = TreeNode.implement(
       connectionNode.streamEnterScope(stream, reason, callback);
     },
 
+    streamChange: function (stream, reason, callback) {
+      var connectionNode = this.connectionNodes[stream.connection.id];
+      if (typeof connectionNode !== 'undefined') {
+        console.log('[WARNING] RootNode.streamChange stream: ' + stream.id +
+          ' for an unkown connection:' + stream.connection.id);
+        return connectionNode.streamChange(stream, reason, callback);
+      }
+      return false;
+    },
+
     eventLeaveScope: function (event, reason, callback) {
       var node = this.connectionNodes[event.connection.id];
       if (node === 'undefined') {
@@ -29564,18 +29594,6 @@ var StreamNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentNode.treeMap, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
-    if (this.connectionNode.connection.accessInfo().type === 'personal') {
-
-      if (this.stream.clientData && this.stream.clientData['pryv-browser:bgColor']) {
-        this.stream.color = this.stream.clientData['pryv-browser:bgColor'];
-      } else if (parentNode.stream && parentNode.stream.clientData &&
-        parentNode.stream.clientData['pryv-browser:bgColor']) {
-        this.stream.color = parentNode.stream.clientData['pryv-browser:bgColor'];
-      } else if (parentNode.stream && parentNode.stream.color) {
-        this.stream.color = parentNode.stream.color;
-      }
-    }
-
 
     /**
      * eventsNodes are stored by their key
@@ -30083,7 +30101,13 @@ var TreeMap = module.exports = function (model) {
   }.bind(this);
   this.streamLeaveScope = function (content) {
     console.log('streamLeave', content);
-  };
+  }.bind(this);
+  this.streamChange = function (content) {
+    console.log('streamChange', content);
+    _.each(content.streams, function (stream) {
+      this.root.streamChange(stream, content.reason, function () {});
+    }, this);
+  }.bind(this);
   this.eventLeaveScope = function (content) {
     console.log('eventLeave', content);
     var start = new Date().getTime();
@@ -30164,6 +30188,8 @@ var TreeMap = module.exports = function (model) {
     this.streamEnterScope);
   this.model.activeFilter.addEventListener(SIGNAL.STREAM_SCOPE_LEAVE,
     this.streamLeaveScope);
+  this.model.activeFilter.addEventListener(SIGNAL.STREAM_CHANGE,
+    this.streamChange);
 };
 
 TreeMap.prototype.isOnboarding = function () {
@@ -41592,6 +41618,9 @@ module.exports = Marionette.ItemView.extend({
   },
   initialize: function () {
     this.stream = this.model.get('stream');
+    this.newName = this.stream.name;
+    this.newParent = this.stream.parentId;
+    this.newColor = this.stream.clientData || {};
   },
   afterRender: function () {
     $('body').i18n();
@@ -41605,6 +41634,9 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
     this.ui.parent.change(function () {
       this.newParent = this.ui.parent.val();
+      if (this.newParent === '_null') {
+        this.newParent = null;
+      }
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
     this.ui.deleteBtn.click(function () {
@@ -41649,7 +41681,7 @@ module.exports = Marionette.ItemView.extend({
       onSubmit: function (hsb, hex, rgb, el) {
         $(el).css('background-color', '#' + hex);
         $(el).colpickHide();
-        this.newColor = '#' + hex;
+        this.newColor['pryv-browser:bgColor'] = '#' + hex;
         that.ui.submitBtn.prop('disabled', false);
       }.bind(this)
     });
@@ -41658,14 +41690,10 @@ module.exports = Marionette.ItemView.extend({
       this.ui.submitSpinner.show();
       var update = {
         id: this.stream.id,
-        name: this.newName || this.stream.name,
-        parentId: this.newParent || this.stream.parentId
+        name: this.newName,
+        parentId: this.newParent,
+        clientData: this.newColor
       };
-      update.parentId = this.newParent === '_null' ? null : this.newParent;
-      if (this.newColor) {
-        update.clientData = this.stream.clientData || {};
-        update.clientData['pryv-browser:bgColor'] = this.newColor;
-      }
       this.stream.connection.streams.update(update, function (err) {
 
         this.ui.submitSpinner.hide();

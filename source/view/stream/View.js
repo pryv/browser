@@ -32,6 +32,9 @@ module.exports = Marionette.ItemView.extend({
   },
   initialize: function () {
     this.stream = this.model.get('stream');
+    this.newName = this.stream.name;
+    this.newParent = this.stream.parentId;
+    this.newColor = this.stream.clientData || {};
   },
   afterRender: function () {
     $('body').i18n();
@@ -45,6 +48,9 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
     this.ui.parent.change(function () {
       this.newParent = this.ui.parent.val();
+      if (this.newParent === '_null') {
+        this.newParent = null;
+      }
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
     this.ui.deleteBtn.click(function () {
@@ -89,7 +95,7 @@ module.exports = Marionette.ItemView.extend({
       onSubmit: function (hsb, hex, rgb, el) {
         $(el).css('background-color', '#' + hex);
         $(el).colpickHide();
-        this.newColor = '#' + hex;
+        this.newColor['pryv-browser:bgColor'] = '#' + hex;
         that.ui.submitBtn.prop('disabled', false);
       }.bind(this)
     });
@@ -98,14 +104,10 @@ module.exports = Marionette.ItemView.extend({
       this.ui.submitSpinner.show();
       var update = {
         id: this.stream.id,
-        name: this.newName || this.stream.name,
-        parentId: this.newParent || this.stream.parentId
+        name: this.newName,
+        parentId: this.newParent,
+        clientData: this.newColor
       };
-      update.parentId = this.newParent === '_null' ? null : this.newParent;
-      if (this.newColor) {
-        update.clientData = this.stream.clientData || {};
-        update.clientData['pryv-browser:bgColor'] = this.newColor;
-      }
       this.stream.connection.streams.update(update, function (err) {
 
         this.ui.submitSpinner.hide();

@@ -15,6 +15,7 @@ module.exports = Marionette.ItemView.extend({
   ui: {
     label: 'label',
     checkbox: 'input[type=checkbox]',
+    streamConfig: '.streamConfig',
     applyBtn: '#filter-by-stream-apply'
   },
   shushListenerOnce: false, //used to note trigger the render when we click on a checkbox
@@ -54,6 +55,24 @@ module.exports = Marionette.ItemView.extend({
     var self = this;
     self.ui.applyBtn.prop('disabled', true);
     self.ui.applyBtn.click(this._applyFilter.bind(this));
+    self.ui.streamConfig.click(function (e) {
+      e.stopPropagation();
+      var $parent = $($(e.currentTarget).parent().parent());
+      var connId = $parent.attr('data-connection');
+      var streamId = $parent.attr('data-stream');
+
+      var conn = this.MainModel.connections.get(connId);
+      if (conn) {
+        var stream = conn.datastore.getStreamById(streamId);
+        if (stream) {
+          this.MainModel.treemap.closeViews();
+          var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
+            this.MainModel.treemap.closeStreamView();
+          }.bind(this));
+          this.MainModel.treemap.showStreamView($modal, stream, self.$el);
+        }
+      }
+    }.bind(this));
     this.ui.label.click(function (e) {
       e.stopPropagation();
       var input = $($(e.currentTarget).parent()).find('input');
@@ -230,7 +249,7 @@ module.exports = Marionette.ItemView.extend({
       '<div class="pryv-checkbox">' +
       '<input type="checkbox" name="filterStream" id="filterStream' + UNIQUE_ID +
       '"><label for="afilterStream' + UNIQUE_ID + '">' +
-      stream.name + '</label></div></li>';
+      stream.name + '</label><i class="fa fa-cog fa-fw streamConfig"></i></div></li>';
     result += '<ul id="collapse' + UNIQUE_ID +
       '" class="panel-collapse  collapse stream-tree-children">' +
       '<div class="panel-body">';

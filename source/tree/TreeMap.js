@@ -449,6 +449,7 @@ TreeMap.prototype.closeViews = function () {
   this.closeSubscribeView();
   this.closeConnectAppsView();
   this.closeOnboardingView();
+  this.closeStreamView();
 };
 
 //======== Detailed View ========\\

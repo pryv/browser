@@ -1740,6 +1740,12 @@ color: #FFF;
   display: block;
 }
 
+.pryv-checkbox:hover .streamConfig {
+  display: block;
+  margin-right: 20px;
+  line-height: 2.2;
+}
+
 #streamColor {
   width: 20px;
   height: 20px;

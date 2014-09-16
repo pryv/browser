@@ -5,14 +5,14 @@
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
   <!-- ENV example -->
   <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.11.7-19/">
+  <base href="{browser-source}_v0.11.7-20/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.11.7-19/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.11.7-19/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.11.7-20/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.11.7-20/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -691,12 +691,11 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.11.7-19</span>
+    <span class="version">Browser v0.11.7-20</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
 <script type="template" id="actions-template">
-    <li><button type="button" class="logo-subscribe btn btn-default btn-block"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.actions.followSlice"></span></button></li>
     <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="ss-share"></span> <span data-i18n="slices.actions.shareSlice"></span></button></li>
     <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="ss-star"></span> <span data-i18n="slices.actions.manageSlices"></span></button></li>
 
@@ -1027,9 +1026,15 @@
 
       <div class="form-group" style="overflow:hidden;">
         <button type="submit" class="btn btn-primary pull-right"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
-        <button id="login-caret" class="btn btn-default pull-right"><span data-i18n="common.actions.cancel"></span></button>
+        <button type="button" id="login-caret" class="btn btn-default pull-right"><span data-i18n="common.actions.cancel"></span></button>
       </div>
       <hr/>
+      <div class="form-group">
+        <script>var redirectRegister = function (url) {
+          location.href = url + '?returnUrl=' + location.href;
+        }</script>
+        <a id="register" href="#" onClick=redirectRegister('https://sw.pryv.li/access/register.html') data-i18n="login.actions.register" target="_self"></a>
+      </div>
       <div class="form-group">
         <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
       </div>
@@ -1043,6 +1048,9 @@
     <ul class="nav navbar-nav navbar-left">
       <li id="togglePanel">
       <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
+      </li>
+      <li>
+        <a href="javascript:void(0)" class="logo-subscribe"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.actions.followSlice"></span></a>
       </li>
       <li id="addEvent">
         <a href="javascript:void(0)" ><span class="icon ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>

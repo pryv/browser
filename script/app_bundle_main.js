@@ -27454,7 +27454,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     STAGING,
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
       'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
-    toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
+    toShowSubscribe = ['nav #toMyPryv', 'nav #togglePanel'];
 
 // temp fix for jQuery not being setup properly in Backbone/Marionette with Browserify
 // probable references:
@@ -27475,7 +27475,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
   if (urlInfo.username && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
     $('#login-username').val(this.urlUsername);
-    openLogin();
+    this.openLogin();
   }
 
   this.publicConnection = null;
@@ -27491,6 +27491,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       this.sharingsConnections.push(new Pryv.Connection(
         this.urlUsername, token, {staging: STAGING}));
     }.bind(this));
+    $('.logo-subscribe').show();
   } else if (this.urlUsername) {
     this.publicConnection =  new Pryv.Connection(
       this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
@@ -27613,10 +27614,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     } else {
       e.stopPropagation();
       $('#login-dropdown .dropdown-menu').css('opacity', 0);
-      openLogin();
+      this.openLogin();
     }
   }.bind(this));
-  $('#login-caret').click(closeLogin);
+  $('#login-caret').click(this.closeLogin);
   $('#login form').submit(function (e) {
     e.preventDefault();
     if (this.loggedConnection) {
@@ -27652,6 +27653,7 @@ Model.prototype.signedIn = function (connection) {
   }
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
+    $('.logo-subscribe').hide();
     if (this.sharingsConnections && this.sharingsConnections.length === 1 &&
       this.sharingsConnections[0] === this.publicConnection) {
       this.sharingsConnections = null;
@@ -27676,8 +27678,9 @@ Model.prototype.signedIn = function (connection) {
     }
 
     this.showSubscribeElement();
+    $('.logo-subscribe').show();
   }
-  closeLogin();
+  this.closeLogin();
 };
 
 Model.prototype.addConnection = function (connection) {
@@ -27810,7 +27813,7 @@ var testUsername = function (username) {
 };
 
 
-var closeLogin = function () {
+Model.prototype.closeLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
   var $timeframeContainer = $('#timeframeContainer');
@@ -27828,7 +27831,7 @@ var closeLogin = function () {
   }
   $login.data('opened', false);
 };
-var openLogin = function () {
+Model.prototype.openLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
   var $timeframeContainer = $('#timeframeContainer');
@@ -29980,8 +29983,12 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSubscribeView();
     }.bind(this));
-    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
-      e.currentTarget);
+    if (this.model.loggedConnection) {
+      this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
+        e.currentTarget);
+    } else {
+      this.model.openLogin();
+    }
   }.bind(this));
 
   $('.logo-create-sharing').click(function (e) {

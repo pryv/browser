@@ -1056,6 +1056,17 @@
       </div>
       <hr/>
       <div class="form-group">
+        <script>var redirectRegister = function (url) {
+          location.href = url + '?returnUrl=' + location.href;
+        }</script>
+        <!-- @if NODE_ENV == 'PRODUCTION' -->
+        <a id="register" href="#" onClick=redirectRegister('https://sw.pryv.me/access/register.html') data-i18n="login.actions.register" target="_self"></a>
+        <!-- @endif -->
+        <!-- @if NODE_ENV != 'PRODUCTION' -->
+        <a id="register" href="#" onClick=redirectRegister('https://sw.pryv.li/access/register.html') data-i18n="login.actions.register" target="_self"></a>
+        <!-- @endif -->
+      </div>
+      <div class="form-group">
         <!-- @if NODE_ENV == 'PRODUCTION' -->
         <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
         <!-- @endif -->

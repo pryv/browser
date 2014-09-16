@@ -131,6 +131,7 @@
   "login": {
     "actions": {
       "login": "Sign in",
+      "register": "Need a account?",
       "resetPassword": "Forgot your password?"
     },
     "labels": {

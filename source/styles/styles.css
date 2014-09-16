@@ -1354,6 +1354,9 @@ color: #BD1727;
   height: 100%;
   vertical-align: middle;
 }
+#register, #register:hover, #register:focus {
+  color: #000000;
+}
 #resetPassword, #resetPassword:hover, #resetPassword:focus {
   color: #000000;
 }

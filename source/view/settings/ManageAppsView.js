@@ -1,4 +1,4 @@
-/* global window, i18n, $, localStorage*/
+/* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -61,7 +61,9 @@ module.exports = Marionette.CompositeView.extend({
                   access.displayName = access.name;
                   if (apps[access.name]) {
                     access.displayName = apps[access.name].displayName;
-                    access.settingsPageURL = apps[access.name].settingsPageURL;
+                    access.settingsPageURL = apps[access.name].settingsPageURL +
+                      '?username=' + this.connection.username + '&auth=' + this.connection.auth +
+                      '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
                     access.iconURL = apps[access.name].iconURL;
                   }
 

@@ -27740,6 +27740,7 @@ Model.prototype.hideLoggedInElement = function () {
   this.renderPanel(this);
   $(toShowWhenLoggedIn.join(',')).hide();
   $(toShowSubscribe.join(',')).hide();
+  $('.logo-subscribe').hide();
 };
 Model.prototype.togglePanel = function (callback) {
   var opened = $('#main-container').data('panel-opened');

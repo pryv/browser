@@ -31942,7 +31942,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],103:[function(require,module,exports){
-/* global window, i18n, $, localStorage*/
+/* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -32022,6 +32022,10 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
+        if (app.appURL && app.appURL.length > 0) {
+          app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
+            '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
+        }
         var m = new App({
           app: app
         });

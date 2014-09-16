@@ -721,7 +721,6 @@
   </div>
 </script>
 <script type="template" id="actions-template">
-    <li><button type="button" class="logo-subscribe btn btn-default btn-block"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.actions.followSlice"></span></button></li>
     <li><button type="button" class="logo-create-sharing btn btn-default btn-block"><span class="ss-share"></span> <span data-i18n="slices.actions.shareSlice"></span></button></li>
     <li><button type="button" class="logo-sharing btn btn-default btn-block"><span class="ss-star"></span> <span data-i18n="slices.actions.manageSlices"></span></button></li>
 
@@ -1052,7 +1051,7 @@
 
       <div class="form-group" style="overflow:hidden;">
         <button type="submit" class="btn btn-primary pull-right"><span data-i18n="login.actions.login"></span> <i class="fa fa-spinner fa-spin"></i></button>
-        <button id="login-caret" class="btn btn-default pull-right"><span data-i18n="common.actions.cancel"></span></button>
+        <button type="button" id="login-caret" class="btn btn-default pull-right"><span data-i18n="common.actions.cancel"></span></button>
       </div>
       <hr/>
       <div class="form-group">
@@ -1084,6 +1083,9 @@
     <ul class="nav navbar-nav navbar-left">
       <li id="togglePanel">
       <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
+      </li>
+      <li>
+        <a href="javascript:void(0)" class="logo-subscribe"><span class="glyphicon glyphicon-star-empty"></span>  <span data-i18n="nav.actions.followSlice"></span></a>
       </li>
       <li id="addEvent">
         <a href="javascript:void(0)" ><span class="icon ss-plus"></span> <span data-i18n="nav.actions.addEvent"></span></a>

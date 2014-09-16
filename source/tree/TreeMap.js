@@ -99,8 +99,12 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSubscribeView();
     }.bind(this));
-    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
-      e.currentTarget);
+    if (this.model.loggedConnection) {
+      this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
+        e.currentTarget);
+    } else {
+      this.model.openLogin();
+    }
   }.bind(this));
 
   $('.logo-create-sharing').click(function (e) {

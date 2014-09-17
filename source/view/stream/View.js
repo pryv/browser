@@ -11,14 +11,16 @@ module.exports = Marionette.ItemView.extend({
   newColor: null,
   newParent: null,
   ui: {
-    form: 'form',
+    form: '#stream-form',
     submitBtn: '#publish',
     submitSpinner: '#publish .fa-spinner',
     deleteBtn: '#delete',
+    cancelBtn: '#cancel',
     deleteSpinner: '#delete .fa-spinner',
     colorPicker: '#streamColor',
     name: '#streamName',
-    parent: '#streamParent'
+    parent: '#streamParent',
+    mergeParent: '#mergeParent'
   },
   templateHelpers: function () {
     return {
@@ -40,6 +42,9 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
     this.ui.submitSpinner.hide();
     this.ui.deleteSpinner.hide();
+    this.ui.cancelBtn.click(function () {
+      this.trigger('close');
+    }.bind(this));
     this.ui.submitBtn.prop('disabled', false);
     var that = this;
     this.ui.name.change(function () {
@@ -53,11 +58,12 @@ module.exports = Marionette.ItemView.extend({
       }
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
-    this.ui.deleteBtn.click(function () {
+    this.ui.deleteBtn.click(function (e) {
+      e.preventDefault();
       var mergeParent = false;
       var confirmDeleteMsg = i18n.t('stream.messages.confirmDelete');
       if (this.stream.parentId) {
-        mergeParent = window.confirm(i18n.t('stream.messages.mergeParent'));
+        mergeParent = !!this.ui.mergeParent.is(':checked');
         if (mergeParent) {
           confirmDeleteMsg = i18n.t('stream.messages.confirmDeleteMerging');
         }

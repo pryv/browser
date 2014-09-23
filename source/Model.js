@@ -8,6 +8,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     PanelMenu = require('./view/left-panel/Controller.js'),
     Pryv = require('pryv'),
     TimeLine = require('./timeframe-selector/timeframe-selector.js'),
+    TimeLineAutoSet = require('./timeframe-selector/timeframe-autoset.js'),
     UnknownUserView = require('./view/error/unknown-user.js'),
     PUBLIC_TOKEN = 'public',
     STAGING,
@@ -218,7 +219,11 @@ Model.prototype.signedIn = function (connection) {
       this.sharingsConnections = null;
     }
     if (!this.sharingsConnections) {
-      this.addConnection(connection);
+      this.addConnection(connection, function () {
+        console.log('### SignedIn connection fully loaded :' + connection.displayId);
+        TimeLineAutoSet.fit(this.timeView, connection);
+
+      }.bind(this));
       if (this.publicConnection) {
         this.removeConnection(this.publicConnection);
       }
@@ -242,7 +247,7 @@ Model.prototype.signedIn = function (connection) {
   this.closeLogin();
 };
 
-Model.prototype.addConnection = function (connection) {
+Model.prototype.addConnection = function (connection, done) {
   if (!this.treemap) {
     this.initBrowser();
   }
@@ -252,10 +257,13 @@ Model.prototype.addConnection = function (connection) {
   if (!connection._privateProfile) {
     connection.privateProfile();
   }
-  var userConnection = this.connections.add(connection),
-    batch = this.activeFilter.startBatch('adding connections');
+  var userConnection = this.connections.add(connection);
+  var batch = this.activeFilter.startBatch('adding connections');
   this.activeFilter.addConnection(userConnection, batch);
-  batch.done();
+  batch.addOnDoneListener('Model', function () {
+    if (done) {  done();  }
+  });
+  batch.done('adding connections');
 };
 Model.prototype.addConnections = function (connections) {
   _.each(connections, function (conn) {

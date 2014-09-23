@@ -26,7 +26,7 @@ Messages.MonitorsHandler = {
     EVENT_SCOPE_ENTER_ADD_CONNECTION : 'connectionAdded',
     EVENT_SCOPE_LEAVE_REMOVE_CONNECTION : 'connectionRemoved',
     REMOTELY : 'remotely',
-    // may happend when several refresh requests overlaps
+    // may append when several refresh requests overlaps
     FORCE : 'forced',
 
     FILTER_STREAMS_CHANGED : 'streamsChanged'

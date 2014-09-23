@@ -96,15 +96,17 @@ MonitorsHandler.prototype._onMonitorFilterChange = function (changes, batch) {
  * get all events that match this filter
  */
 MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
-  var batchWaitForMe = batch ?
-    batch.waitForMeToFinish('addConnection ' + connectionSerialId) : null;
+  batch = this.startBatch('Monitor:addConnection' + connectionSerialId, batch);
+
   if (_.has(this._monitors, connectionSerialId)) {
     console.log('Warning MonitorsHandler.addConnection, already activated: ' + connectionSerialId);
+    batch.done('Monitor:addConnection:MonitorsHandler.addConnection, already activated');
     return;
   }
   var connection = this.model.connections.get(connectionSerialId);
   if (! connection) { // TODO error management
     console.log('MonitorsHandler.addConnection cannot find connection: ' + connectionSerialId);
+    batch.done('Monitor:addConnection: cannot find connection');
     return;
   }
 
@@ -113,13 +115,13 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
     console.log('fetchStructure', arguments);
     if (useLocalStorageError) {
       console.error('failed activating localStorage for ' + connection.id);
-      if (batchWaitForMe) { batchWaitForMe.done(); }
+      batch.done('Monitor:addConnection: failed activating localStorage');
       return;
     }
     var connectionIndex = this.connectionToRemove.indexOf(connection.serialId);
     if (connectionIndex !== -1) {
       this.connectionToRemove[connectionIndex] = null;
-      if (batchWaitForMe) { batchWaitForMe.done(); }
+      batch.done('Monitor:addConnection: this.connectionToRemove');
       return;
     }
     var filterSettings = _.omit(this.rootFilter.getData(), 'streams'); //copy everything but Streams
@@ -132,16 +134,19 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
     // ----- add listeners
     function onMonitorOnLoad(events) {
       this._eventsEnterScope(MSGs.REASON.EVENT_SCOPE_ENTER_ADD_CONNECTION, events, batch);
-      if (batchWaitForMe) { batchWaitForMe.done(); } // called only once at load
     }
-    monitor.addEventListener('started', onMonitorOnLoad.bind(this));
-
-    monitor.addEventListener('eventsChanged', this._onMonitorEventChange.bind(this));
-    monitor.addEventListener('streamsChanged', this._onMonitorStreamChange.bind(this));
-    monitor.addEventListener('filterChanged', this._onMonitorFilterChange.bind(this));
+    monitor.addEventListener(Pryv.MESSAGES.MONITOR.ON_LOAD,
+      onMonitorOnLoad.bind(this));
+    monitor.addEventListener(Pryv.MESSAGES.MONITOR.ON_EVENT_CHANGE,
+      this._onMonitorEventChange.bind(this));
+    monitor.addEventListener(Pryv.MESSAGES.MONITOR.ON_STRUCTURE_CHANGE,
+      this._onMonitorStreamChange.bind(this));
+    monitor.addEventListener(Pryv.MESSAGES.MONITOR.ON_FILTER_CHANGE,
+      this._onMonitorFilterChange.bind(this));
 
     monitor.start(function (error) {
-      console.log('monitor started ' + error);
+      console.log('*** monitor started ' + error);
+      batch.done('Monitor:addConnection'); // called only once at load
     });
   }.bind(this));
 };
@@ -151,16 +156,16 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
  * remove a connection from the list
  */
 MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batch) {
-  var myBatch = this.startBatch('removeConnections', batch);
+
   if (! _.isArray(connectionSerialId)) { connectionSerialId = [connectionSerialId];  }
   _.each(connectionSerialId, function (connectionId) {
-
+    var myBatch = this.startBatch('removeConnections' + connectionSerialId, batch);
     var monitor = this._monitors[connectionId];
     if (! monitor) {
       if (this.connectionToRemove.indexOf(connectionId) === -1) {
         this.connectionToRemove.push(connectionId);
       }
-      myBatch.done();
+      myBatch.done('removeConnections' + connectionSerialId + ' no monitor');
       return;
     }
 
@@ -173,7 +178,7 @@ MonitorsHandler.prototype.removeConnections = function (connectionSerialId, batc
           monitor.getEvents(), myBatch);
         delete self._monitors[connectionId];
         monitor.destroy();
-        myBatch.done();
+        myBatch.done('removeConnections' + connectionSerialId);
       } else if (maxCloseTry > 0) {
         maxCloseTry--;
         _.delay(closeMonitor, 100);
@@ -209,7 +214,7 @@ MonitorsHandler.prototype.focusOnConnections = function (connections) {
       monitor.filter.set({'streamsIds': []}, batch); // shush the connection
     }
   });
-  batch.done();
+  batch.done('focusOnConnections');
 };
 
 
@@ -296,7 +301,7 @@ MonitorsHandler.prototype.focusOnStreams = function (streams) {
     }
   });
   this._filteredStreamsChange(streams, batch);
-  batch.done();
+  batch.done('focusOnStream');
 };
 
 // # Bind filter properties to rootFilter

@@ -364,6 +364,8 @@ module.exports = (function () {
 
   };
 
+
+
   var marginOffset;
   var widthOffset;
   var _openHighlight = function () {
@@ -443,6 +445,11 @@ module.exports = (function () {
       console.warn('setHighlight(): invalid argument', time);
     }
   };
+  var setTimeScale = function (scale) {
+    _scale = scale;
+    setTimeBounds(moment().startOf(scale), moment().endOf(scale));
+    _updateDateScale();
+  };
   var setTimeBounds = function (from, to) {
     init();
     if (moment(from).isValid() && moment(to).isValid() && moment(from).unix() < moment(to).unix()) {
@@ -501,6 +508,7 @@ module.exports = (function () {
 
   var oPublic = {
     init: init,
+    setTimeScale: setTimeScale,
     setTimeBounds: setTimeBounds,
     getTimeBounds: getTimeBounds,
     setHighlight: setHighlight,

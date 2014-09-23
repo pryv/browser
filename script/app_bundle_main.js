@@ -27491,6 +27491,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       this.sharingsConnections.push(new Pryv.Connection(
         this.urlUsername, token, {staging: STAGING}));
     }.bind(this));
+    this.setTimeframeScale(this.sharingsConnections[0]);
     $('.logo-subscribe').show();
   } else if (this.urlUsername) {
     this.publicConnection =  new Pryv.Connection(
@@ -27632,6 +27633,21 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   }.bind(this));
 
 };
+Model.prototype.setTimeframeScale = function (connection) {
+  connection.events.get({state: 'default', limit: 1},
+    function (error, events) {
+      if (events && events[0]) {
+        var eventTime = events[0].time;
+        if (moment().startOf('week').unix() <= eventTime) {
+          this.timeView.setScale('week');
+        } else if (moment().startOf('month').unix() <= eventTime) {
+          this.timeView.setScale('month');
+        } else if (moment().startOf('year').unix() <= eventTime) {
+          this.timeView.setScale('year');
+        }
+      }
+    }.bind(this));
+};
 Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit]').prop('disabled', false);
   $('#login form button[type=submit] .fa-spinner').hide();
@@ -27660,6 +27676,7 @@ Model.prototype.signedIn = function (connection) {
     }
     if (!this.sharingsConnections) {
       this.addConnection(connection);
+      this.setTimeframeScale(connection);
       if (this.publicConnection) {
         this.removeConnection(this.publicConnection);
       }
@@ -28745,13 +28762,19 @@ module.exports = (function () {
     $('.timeItem.selected').click(_openHighlight);
     $('.timeItem').click(_changeTime);
   };
-  var _changeScale = function () {
-    var scale = $(this).attr('data-timeScale');
+  var _changeScale = function (e, scale) {
+    var $scale;
+    if (scale && $('[data-timescale=' + scale + ']').length > 0) {
+      $scale = $('[data-timescale=' + scale + ']');
+    } else {
+      $scale = $(this);
+      scale = $scale.attr('data-timeScale');
+    }
     if (scale === _scale || scale === 'custom') {
       return;
     }
     $('.timeScale').removeClass('selected');
-    $(this).addClass('selected');
+    $scale.addClass('selected');
     if (scale === 'day') {
       if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
           moment().unix() <= moment.unix(_to).unix())) {
@@ -28870,6 +28893,9 @@ module.exports = (function () {
     }
     setHighlight(highlight);
   };
+  var setScale = function (scale) {
+    _changeScale(null, scale);
+  };
   var setHighlight = function (time) {
     init();
     if (moment(time).isValid()) {
@@ -28937,6 +28963,7 @@ module.exports = (function () {
 
   var oPublic = {
     init: init,
+    setScale: setScale,
     setTimeBounds: setTimeBounds,
     getTimeBounds: getTimeBounds,
     setHighlight: setHighlight,
@@ -40355,7 +40382,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],153:[function(require,module,exports){
-/* global window, i18n, $, localStorage*/
+/* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -40436,6 +40463,10 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
+        if (app.appURL && app.appURL.length > 0) {
+          app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
+            '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
+        }
         var m = new App({
           app: app
         });

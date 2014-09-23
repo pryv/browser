@@ -309,13 +309,19 @@ module.exports = (function () {
     $('.timeItem.selected').click(_openHighlight);
     $('.timeItem').click(_changeTime);
   };
-  var _changeScale = function () {
-    var scale = $(this).attr('data-timeScale');
+  var _changeScale = function (e, scale) {
+    var $scale;
+    if (scale && $('[data-timescale=' + scale + ']').length > 0) {
+      $scale = $('[data-timescale=' + scale + ']');
+    } else {
+      $scale = $(this);
+      scale = $scale.attr('data-timeScale');
+    }
     if (scale === _scale || scale === 'custom') {
       return;
     }
     $('.timeScale').removeClass('selected');
-    $(this).addClass('selected');
+    $scale.addClass('selected');
     if (scale === 'day') {
       if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
           moment().unix() <= moment.unix(_to).unix())) {
@@ -434,6 +440,9 @@ module.exports = (function () {
     }
     setHighlight(highlight);
   };
+  var setScale = function (scale) {
+    _changeScale(null, scale);
+  };
   var setHighlight = function (time) {
     init();
     if (moment(time).isValid()) {
@@ -501,6 +510,7 @@ module.exports = (function () {
 
   var oPublic = {
     init: init,
+    setScale: setScale,
     setTimeBounds: setTimeBounds,
     getTimeBounds: getTimeBounds,
     setHighlight: setHighlight,

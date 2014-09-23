@@ -50,6 +50,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       this.sharingsConnections.push(new Pryv.Connection(
         this.urlUsername, token, {staging: STAGING}));
     }.bind(this));
+    this.setTimeframeScale(this.sharingsConnections[0]);
     $('.logo-subscribe').show();
   } else if (this.urlUsername) {
     this.publicConnection =  new Pryv.Connection(
@@ -191,6 +192,21 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   }.bind(this));
 
 };
+Model.prototype.setTimeframeScale = function (connection) {
+  connection.events.get({state: 'default', limit: 1},
+    function (error, events) {
+      if (events && events[0]) {
+        var eventTime = events[0].time;
+        if (moment().startOf('week').unix() <= eventTime) {
+          this.timeView.setScale('week');
+        } else if (moment().startOf('month').unix() <= eventTime) {
+          this.timeView.setScale('month');
+        } else if (moment().startOf('year').unix() <= eventTime) {
+          this.timeView.setScale('year');
+        }
+      }
+    }.bind(this));
+};
 Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit]').prop('disabled', false);
   $('#login form button[type=submit] .fa-spinner').hide();
@@ -219,6 +235,7 @@ Model.prototype.signedIn = function (connection) {
     }
     if (!this.sharingsConnections) {
       this.addConnection(connection);
+      this.setTimeframeScale(connection);
       if (this.publicConnection) {
         this.removeConnection(this.publicConnection);
       }

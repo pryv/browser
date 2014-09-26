@@ -449,6 +449,9 @@ var detectIE = function detectIE() {
   return false;
 };
 
+// TODO: cleanup this mess of having both window.pryvBrowser (ie. Model.js) and window.PryvBrowser
+//       (a big bag of utility and miscellaneous properties every component seems to freely extend)
+
 /**
  * Notifies the error reporting service of the given error.
  *

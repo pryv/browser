@@ -1,14 +1,20 @@
 /* global $ */
-var Marionette = require('backbone.marionette'),
-  Pryv = require('pryv'),
-  _ = require('underscore'),
-  ChartTransform = require('./utils/ChartTransform.js');
+
+var _ = require('underscore'),
+    Marionette = require('backbone.marionette'),
+    pryv = require('pryv'),
+    tsTransform = require('./utils/timeSeriesTransform.js');
+
 var DND_TRANSFER_DATA = null;
+
+//TODO: for readability, reorganize code into actual public/private members, properly ordered
+
 module.exports = Marionette.CompositeView.extend({
   template: '#template-chart-container',
   container: null,
   options: null,
   data: null,
+  c3settings: {},
   plot: null,
   chartContainer: null,
   useExtras: null,
@@ -16,9 +22,7 @@ module.exports = Marionette.CompositeView.extend({
 
   currentlyEdited: null,
 
-
   initialize: function () {
-    _.extend(this, ChartTransform);
     this.listenTo(this.model.get('collection'), 'add', this.render);
     this.listenTo(this.model.get('collection'), 'remove', this.render);
     this.listenTo(this.model, 'change:dimensions', this.resize);
@@ -27,11 +31,10 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   onRender: function () {
-    if (
-      !this.model.get('collection') ||
-      this.model.get('collection').length === 0 ||
-      !this.model.get('container') ||
-      this.model.get('container') === null) {
+    if (! this.model.get('collection') ||
+        this.model.get('collection').length === 0 ||
+        ! this.model.get('container') ||
+        this.model.get('container') === null) {
       if (this.model.get('collection').length === 0) {
         $(this.model.get('container')).empty();
         if (this.model.get('legendContainer')) {
@@ -41,11 +44,10 @@ module.exports = Marionette.CompositeView.extend({
       return;
     }
 
-
     if (this.model.get('legendExtras')) {
       this.useExtras  = true;
       try {
-        if (!Pryv.eventTypes.extras('mass/kg')) {
+        if (! pryv.eventTypes.extras('mass/kg')) {
           this.useExtras = false;
         }
       } catch (e) {
@@ -56,12 +58,9 @@ module.exports = Marionette.CompositeView.extend({
     this.container = this.model.get('container');
 
     if (this.model.get('collection').length === 1 &&
-      this.model.get('collection').at(0).get('events').length === 1 &&
-      this.model.get('singleNumberAsText')) {
-
-
+        this.model.get('collection').at(0).get('events').length === 1 &&
+        this.model.get('singleNumberAsText')) {
       this.singleEventSetup();
-
     } else {
       this.makePlot();
       this.onDateHighLighted();
@@ -69,7 +68,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   makePlot: function () {
-
     var collection = this.model.get('collection');
     this.container = this.model.get('container');
 
@@ -92,10 +90,10 @@ module.exports = Marionette.CompositeView.extend({
     }
     try {
       this.plot = $.plot($(this.chartContainer), this.data, this.options);
+//      this.chart = c3.generate(_.extend(this.c3settings, {bindto: this.chartContainer}));
     } catch (e) {
       //console.warn(e);
     }
-
 
     this.createEventBindings();
 
@@ -113,7 +111,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   resize: function () {
-    if (!this.model.get('dimensions')) {
+    if (! this.model.get('dimensions')) {
       return;
     }
     if (this.model.get('requiresDim')) {
@@ -146,7 +144,6 @@ module.exports = Marionette.CompositeView.extend({
     } ];
     this.options.yaxes = [];
     this.options.xaxis = {};
-
 
     this.options.legend = {
       labelBoxBorderColor: 'transparent'
@@ -193,13 +190,12 @@ module.exports = Marionette.CompositeView.extend({
     }
     if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
       this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
+          this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
     } else if (this.model.get('legendShow')) {
       this.options.legend.show = true;
     } else {
       this.options.legend.show = false;
     }
-
 
     // If pan is activated
     if (this.model.get('allowPan')) {
@@ -209,8 +205,10 @@ module.exports = Marionette.CompositeView.extend({
         cursor: 'move',
         frameRate: 20
       };
-      this.options.xaxis.panRange = [this.getExtremeTimes()[0] - 100000,
-        this.getExtremeTimes()[1] + 100000];
+      this.options.xaxis.panRange = [
+        this.getExtremeTimes()[0] - 100000,
+        this.getExtremeTimes()[1] + 100000
+      ];
     }
 
     if (this.model.get('allowZoom')) {
@@ -226,7 +224,6 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   getExtremeTimes: function () {
-
     var collection = this.model.get('collection');
     var min = Infinity, max = 0;
     collection.each(function (s) {
@@ -235,7 +232,6 @@ module.exports = Marionette.CompositeView.extend({
         min = (events[i].time < min) ? events[i].time : min;
         max = (events[i].time > max) ? events[i].time : max;
       }
-
     });
     return [min * 1000, max * 1000];
   },
@@ -252,15 +248,15 @@ module.exports = Marionette.CompositeView.extend({
 
   /**
    * Adds a series to the plot and configures it based on the model.
-   * @param series, the series to add (a single one)
-   * @param seriesIndex, its index
+   * @param {TimeSeriesModel} series The series to add (a single one)
+   * @param {Number} seriesIndex Its index
    */
   addSeries: function (series, seriesIndex) {
     series.sortData();
-    var data = this.transform(series);
+    var data = tsTransform.transform(series);
     var label = series.get('streamName') + ' (' +
-        (this.useExtras ? Pryv.eventTypes.extras(series.get('type')).symbol ||
-          Pryv.eventTypes.extras(series.get('type')).name.en || '' : series.get('type')) +
+        (this.useExtras ? pryv.eventTypes.extras(series.get('type')).symbol ||
+          pryv.eventTypes.extras(series.get('type')).name.en || '' : series.get('type')) +
         ')';
 
     // Configures series
@@ -269,6 +265,11 @@ module.exports = Marionette.CompositeView.extend({
       label: label,
       yaxis: (seriesIndex + 1)
     });
+    this.c3settings.data = {
+      // TODO: format data to fit C3
+      // - when sum/avg transform: all right (regular timeseries)
+      // - when no transform: processing necessary (fill the gaps) to get regular timeseries
+    };
 
     // Configures the axis
     this.options.yaxes.push({ show: false});
@@ -303,9 +304,11 @@ module.exports = Marionette.CompositeView.extend({
       this.data[seriesIndex].points = { show: (data.length < 2) };
       break;
     case 'bar':
-      this.data[seriesIndex].bars = { show: true,
-                                      barWidth : this.getDurationFunction(series.get('interval'))
-                                        (new Date(2011, 1, 1, 1, 1))};
+      this.data[seriesIndex].bars = {
+        show: true,
+        barWidth : this.getDurationFunction(series.get('interval'))
+                       (new Date(2011, 1, 1, 1, 1))
+      };
       break;
     case 'point':
       this.data[seriesIndex].points = { show: true };
@@ -317,18 +320,40 @@ module.exports = Marionette.CompositeView.extend({
     }
   },
 
+  getDurationFunction: function (interval) {
+    switch (interval) {
+    case 'hourly' :
+      return function () { return 3600 * 1000; };
+    case 'daily' :
+      return function () { return 24 * 3600 * 1000; };
+    case 'weekly' :
+      return function () { return 7 * 24 * 3600 * 1000; };
+    case 'monthly' :
+      return function (d) {
+        return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() * 24 * 3600 * 1000;
+      };
+    case 'yearly' :
+      return function (d) {
+        return (d.getFullYear() % 4 === 0 &&
+            (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
+      };
+    default :
+      return function () {
+        return 0;
+      };
+    }
+  },
+
   setUpContainer: function () {
     // Setting up the chart container
     this.chartContainer = this.container + ' .chartContainer';
     $(this.container).html('<div class="chartContainer"></div>');
-
     $(this.chartContainer).css({
       top: 0,
       left: 0,
       width: '100%',
       height: '100%'
     });
-
   },
 
   // TODO: virer les this imbriques
@@ -357,7 +382,6 @@ module.exports = Marionette.CompositeView.extend({
             }
           }
         }
-
       });
       var toAppend = '';
       if (colorBox) {
@@ -392,12 +416,11 @@ module.exports = Marionette.CompositeView.extend({
     $('#chart-tooltip').remove();
   },
 
-
   onDateHighLighted: function (date) {
-    if (!date) {
+    if (! date) {
       date = this.model.get('highlightedTime');
     }
-    if (!this.plot || !date) {
+    if (! this.plot || ! date) {
       return;
     }
 
@@ -435,7 +458,7 @@ module.exports = Marionette.CompositeView.extend({
   },
 
   highlightEvent: function (event) {
-    if (!this.plot) {
+    if (! this.plot) {
       return;
     }
     this.plot.unhighlight();
@@ -558,10 +581,6 @@ module.exports = Marionette.CompositeView.extend({
       }
     }
   },
-
-
-
-
 
   /* ***********************
    * Click and Point hover Functions
@@ -823,8 +842,8 @@ module.exports = Marionette.CompositeView.extend({
       m.get('events')[0].content + ' ' +
       '</span><span class="unity">' +
       (this.useExtras ?
-        Pryv.eventTypes.extras(m.get('events')[0].type).symbol ||
-        Pryv.eventTypes.extras(m.get('events')[0].type).name.en || '' : m.get('events')[0].type) +
+        pryv.eventTypes.extras(m.get('events')[0].type).symbol ||
+        pryv.eventTypes.extras(m.get('events')[0].type).name.en || '' : m.get('events')[0].type) +
       '</span></div></div></div>');
     }
 

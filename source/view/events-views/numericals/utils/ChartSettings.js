@@ -1,26 +1,4 @@
-
-/* Definition of a virtual node attached to a stream as its child
- *  stream: <streamId>, // the node where it's attached to
- *  name: <my name>,    // the name of that virtual node
- *  filters: [          // an array of filter/setting pairs contained in this virtual node
- *    { filter: f1,
- *      settings:             // settings of that filter, such as color,
- *        [{ color: 'green', // style, ... (especially for charts)
- *        style: 'bar',
- *         ... }, {}]
- *    },
- *    { filter: f2, settings: {...}},
- *    ...
- *   ]
- *   Note:
- *   The filters are ofa special kind. Each filter concerns exactly one type.
- *   The settings override the stream/type pair's default one. Numerical data
- *   would contain style (line, bar, ..), color, transform.
- */
-
-
-
-var Settings = module.exports = function Setting(stream, type, virtualNode, offset) {
+var ChartSettings = module.exports = function ChartSettings(stream, type, virtualNode, offset) {
   this._stream = stream;
   this._type = type;
   this._virtualNode = virtualNode;
@@ -34,8 +12,7 @@ var Settings = module.exports = function Setting(stream, type, virtualNode, offs
   //this._emptyData();
 };
 
-
-Settings.prototype._createIfNotExist = function () {
+ChartSettings.prototype._createIfNotExist = function () {
   if (this._virtualNode) {
     var found = false;
     for (var i = 0; i < this._virtualNode.filters.length; ++i) {
@@ -69,19 +46,16 @@ Settings.prototype._createIfNotExist = function () {
   }
 };
 
-
-Settings.prototype._emptyData = function () {
-  if (!this._virtualNode) {
-    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
-    this._stream.connection.streams._updateWithData(changes, function (error, result) {
-      console.log('clientData for has been pushed:', error, result);
-    });
-  }
+ChartSettings.prototype.get = function (key) {
+  return this._ptr[key];
 };
 
+ChartSettings.prototype.set = function (key, value) {
+  this._ptr[key] = value;
+  this._pushChanges();
+};
 
-
-Settings.prototype._pushChanges = function () {
+ChartSettings.prototype._pushChanges = function () {
   var changes = null;
   if (this._virtualNode) {
     changes = {'browser:virtualnode': this._virtualNode._getDataPointer()};
@@ -99,12 +73,17 @@ Settings.prototype._pushChanges = function () {
 
 };
 
-
-Settings.prototype.set = function (key, value) {
-  this._ptr[key] = value;
-  this._pushChanges();
+/**
+ * Currently unused; see comment in constructor
+ *
+ * @private
+ */
+ChartSettings.prototype._emptyData = function () {
+  if (!this._virtualNode) {
+    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
+    this._stream.connection.streams._updateWithData(changes, function (error, result) {
+      console.log('clientData for has been pushed:', error, result);
+    });
+  }
 };
 
-Settings.prototype.get = function (key) {
-  return this._ptr[key];
-};

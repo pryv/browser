@@ -1,6 +1,6 @@
-
 var Backbone = require('backbone');
 
+// TODO: consider making this a plain constructor instead of a Backbone model for simplicity
 module.exports = Backbone.Model.extend({
   defaults: {
     events: [],

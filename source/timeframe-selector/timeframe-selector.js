@@ -510,6 +510,7 @@ module.exports = (function () {
 
   var oPublic = {
     init: init,
+    getScale: function () { return _scale; },
     setScale: setScale,
     setTimeBounds: setTimeBounds,
     getTimeBounds: getTimeBounds,

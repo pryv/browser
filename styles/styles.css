@@ -744,6 +744,9 @@ text-align: center;*/
   background-color: #ffffff;
   border:none;
 }
+/* modal-small */
+
+.modal-small
 .note-content {
   position: relative;
   height: 100%;

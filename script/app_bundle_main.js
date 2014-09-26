@@ -27454,7 +27454,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     STAGING,
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
       'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
-    toShowSubscribe = ['.logo-subscribe', 'nav #toMyPryv', 'nav #togglePanel'];
+    toShowSubscribe = ['nav #toMyPryv', 'nav #togglePanel'];
 
 // temp fix for jQuery not being setup properly in Backbone/Marionette with Browserify
 // probable references:
@@ -27475,7 +27475,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
   if (urlInfo.username && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
     $('#login-username').val(this.urlUsername);
-    openLogin();
+    this.openLogin();
   }
 
   this.publicConnection = null;
@@ -27491,6 +27491,8 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       this.sharingsConnections.push(new Pryv.Connection(
         this.urlUsername, token, {staging: STAGING}));
     }.bind(this));
+    this.setTimeframeScale(this.sharingsConnections[0]);
+    $('.logo-subscribe').show();
   } else if (this.urlUsername) {
     this.publicConnection =  new Pryv.Connection(
       this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
@@ -27613,10 +27615,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     } else {
       e.stopPropagation();
       $('#login-dropdown .dropdown-menu').css('opacity', 0);
-      openLogin();
+      this.openLogin();
     }
   }.bind(this));
-  $('#login-caret').click(closeLogin);
+  $('#login-caret').click(this.closeLogin);
   $('#login form').submit(function (e) {
     e.preventDefault();
     if (this.loggedConnection) {
@@ -27630,6 +27632,21 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     Pryv.Auth.login(settings);
   }.bind(this));
 
+};
+Model.prototype.setTimeframeScale = function (connection) {
+  connection.events.get({state: 'default', limit: 1},
+    function (error, events) {
+      if (events && events[0]) {
+        var eventTime = events[0].time;
+        if (moment().startOf('week').unix() <= eventTime) {
+          this.timeView.setScale('week');
+        } else if (moment().startOf('month').unix() <= eventTime) {
+          this.timeView.setScale('month');
+        } else if (moment().startOf('year').unix() <= eventTime) {
+          this.timeView.setScale('year');
+        }
+      }
+    }.bind(this));
 };
 Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit]').prop('disabled', false);
@@ -27652,12 +27669,14 @@ Model.prototype.signedIn = function (connection) {
   }
   if (!this.urlUsername || this.urlUsername === connection.username) {// logged into your page
     this.showLoggedInElement();
+    $('.logo-subscribe').hide();
     if (this.sharingsConnections && this.sharingsConnections.length === 1 &&
       this.sharingsConnections[0] === this.publicConnection) {
       this.sharingsConnections = null;
     }
     if (!this.sharingsConnections) {
       this.addConnection(connection);
+      this.setTimeframeScale(connection);
       if (this.publicConnection) {
         this.removeConnection(this.publicConnection);
       }
@@ -27676,8 +27695,9 @@ Model.prototype.signedIn = function (connection) {
     }
 
     this.showSubscribeElement();
+    $('.logo-subscribe').show();
   }
-  closeLogin();
+  this.closeLogin();
 };
 
 Model.prototype.addConnection = function (connection) {
@@ -27737,6 +27757,7 @@ Model.prototype.hideLoggedInElement = function () {
   this.renderPanel(this);
   $(toShowWhenLoggedIn.join(',')).hide();
   $(toShowSubscribe.join(',')).hide();
+  $('.logo-subscribe').hide();
 };
 Model.prototype.togglePanel = function (callback) {
   var opened = $('#main-container').data('panel-opened');
@@ -27810,7 +27831,7 @@ var testUsername = function (username) {
 };
 
 
-var closeLogin = function () {
+Model.prototype.closeLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
   var $timeframeContainer = $('#timeframeContainer');
@@ -27828,7 +27849,7 @@ var closeLogin = function () {
   }
   $login.data('opened', false);
 };
-var openLogin = function () {
+Model.prototype.openLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
   var $timeframeContainer = $('#timeframeContainer');
@@ -28741,13 +28762,19 @@ module.exports = (function () {
     $('.timeItem.selected').click(_openHighlight);
     $('.timeItem').click(_changeTime);
   };
-  var _changeScale = function () {
-    var scale = $(this).attr('data-timeScale');
+  var _changeScale = function (e, scale) {
+    var $scale;
+    if (scale && $('[data-timescale=' + scale + ']').length > 0) {
+      $scale = $('[data-timescale=' + scale + ']');
+    } else {
+      $scale = $(this);
+      scale = $scale.attr('data-timeScale');
+    }
     if (scale === _scale || scale === 'custom') {
       return;
     }
     $('.timeScale').removeClass('selected');
-    $(this).addClass('selected');
+    $scale.addClass('selected');
     if (scale === 'day') {
       if ((_scale === 'custom') || (moment().unix() >= moment.unix(_from).unix() &&
           moment().unix() <= moment.unix(_to).unix())) {
@@ -28866,6 +28893,9 @@ module.exports = (function () {
     }
     setHighlight(highlight);
   };
+  var setScale = function (scale) {
+    _changeScale(null, scale);
+  };
   var setHighlight = function (time) {
     init();
     if (moment(time).isValid()) {
@@ -28933,6 +28963,7 @@ module.exports = (function () {
 
   var oPublic = {
     init: init,
+    setScale: setScale,
     setTimeBounds: setTimeBounds,
     getTimeBounds: getTimeBounds,
     setHighlight: setHighlight,
@@ -29980,8 +30011,12 @@ var TreeMap = module.exports = function (model) {
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {
       this.closeSubscribeView();
     }.bind(this));
-    this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
-      e.currentTarget);
+    if (this.model.loggedConnection) {
+      this.showSubscribeView($modal, this.model.loggedConnection, this.model.sharingsConnections,
+        e.currentTarget);
+    } else {
+      this.model.openLogin();
+    }
   }.bind(this));
 
   $('.logo-create-sharing').click(function (e) {
@@ -31934,7 +31969,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],103:[function(require,module,exports){
-/* global window, i18n, $, localStorage*/
+/* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -32014,6 +32049,10 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
+        if (app.appURL && app.appURL.length > 0) {
+          app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
+            '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
+        }
         var m = new App({
           app: app
         });
@@ -40343,7 +40382,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 },{"backbone.marionette":1}],153:[function(require,module,exports){
-/* global window, i18n, $, localStorage*/
+/* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -40424,6 +40463,10 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
+        if (app.appURL && app.appURL.length > 0) {
+          app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
+            '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
+        }
         var m = new App({
           app: app
         });
@@ -40536,7 +40579,7 @@ _.extend(Controller.prototype, {
 });
 
 },{"./AppListView.js":153,"./ManageAppsView.js":155,"./NavView.js":156,"./PasswordView.js":157,"backbone.marionette":1,"underscore":78}],155:[function(require,module,exports){
-/* global window, i18n, $, localStorage*/
+/* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
 var _ = require('underscore');
@@ -40599,7 +40642,9 @@ module.exports = Marionette.CompositeView.extend({
                   access.displayName = access.name;
                   if (apps[access.name]) {
                     access.displayName = apps[access.name].displayName;
-                    access.settingsPageURL = apps[access.name].settingsPageURL;
+                    access.settingsPageURL = apps[access.name].settingsPageURL +
+                      '?username=' + this.connection.username + '&auth=' + this.connection.auth +
+                      '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
                     access.iconURL = apps[access.name].iconURL;
                   }
 
@@ -41618,14 +41663,16 @@ module.exports = Marionette.ItemView.extend({
   newColor: null,
   newParent: null,
   ui: {
-    form: 'form',
+    form: '#stream-form',
     submitBtn: '#publish',
     submitSpinner: '#publish .fa-spinner',
     deleteBtn: '#delete',
+    cancelBtn: '#cancel',
     deleteSpinner: '#delete .fa-spinner',
     colorPicker: '#streamColor',
     name: '#streamName',
-    parent: '#streamParent'
+    parent: '#streamParent',
+    mergeParent: '#mergeParent'
   },
   templateHelpers: function () {
     return {
@@ -41647,6 +41694,9 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
     this.ui.submitSpinner.hide();
     this.ui.deleteSpinner.hide();
+    this.ui.cancelBtn.click(function () {
+      this.trigger('close');
+    }.bind(this));
     this.ui.submitBtn.prop('disabled', false);
     var that = this;
     this.ui.name.change(function () {
@@ -41660,11 +41710,12 @@ module.exports = Marionette.ItemView.extend({
       }
       this.ui.submitBtn.prop('disabled', false);
     }.bind(this));
-    this.ui.deleteBtn.click(function () {
+    this.ui.deleteBtn.click(function (e) {
+      e.preventDefault();
       var mergeParent = false;
       var confirmDeleteMsg = i18n.t('stream.messages.confirmDelete');
       if (this.stream.parentId) {
-        mergeParent = window.confirm(i18n.t('stream.messages.mergeParent'));
+        mergeParent = !!this.ui.mergeParent.is(':checked');
         if (mergeParent) {
           confirmDeleteMsg = i18n.t('stream.messages.confirmDeleteMerging');
         }

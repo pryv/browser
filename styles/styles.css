@@ -96,7 +96,7 @@ body{
   width: 240px;
   height: 100%;
   position: absolute;
-  z-index: 10000;
+  z-index: 1000;
   top: 0;
   left: -240px;
   overflow: auto;
@@ -744,6 +744,9 @@ text-align: center;*/
   background-color: #ffffff;
   border:none;
 }
+/* modal-small */
+
+.modal-small
 .note-content {
   position: relative;
   height: 100%;
@@ -1353,6 +1356,9 @@ color: #BD1727;
   display: inline-block;
   height: 100%;
   vertical-align: middle;
+}
+#register, #register:hover, #register:focus {
+  color: #000000;
 }
 #resetPassword, #resetPassword:hover, #resetPassword:focus {
   color: #000000;

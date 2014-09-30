@@ -2,32 +2,34 @@ var _ = require('underscore');
 
 var tsTransform = module.exports = {};
 
+/**
+ * @param {TimeSeriesModel} timeSeriesModel
+ * @returns {Object} Object with array props `xCol` and `yCol`
+ *                   (the first item of each one is the column header)
+ */
 tsTransform.transform = function (timeSeriesModel) {
-  if (! timeSeriesModel.get('transform')) {
-    return applyDefault(timeSeriesModel.get('events'));
-  }
+  var aggGroupKeyFn = getAggregationGroupKeyFn(timeSeriesModel.get('interval')),
+      aggGroupTimeFn = getAggregationGroupTimeFn(timeSeriesModel.get('interval'));
 
-  var mapper = getMapFunction(timeSeriesModel.get('interval'));
-  var dater = getDateFunction(timeSeriesModel.get('interval'));
+  var aggGroups = getAggregationGroups(timeSeriesModel.get('events'), aggGroupKeyFn, aggGroupTimeFn);
 
-  var cut = map(timeSeriesModel.get('events'), mapper, dater);
-
-  var r = null;
+  var streamId = timeSeriesModel.get('streamId');
+  var result = {
+    xCol: ['x__' + streamId],
+    yCol: ['y__' + streamId]
+  };
   switch (timeSeriesModel.get('transform')) {
   case 'sum':
-    r = (!timeSeriesModel.get('interval')) ? applyStackedSum(cut) : applySum(cut);
-    break;
+    return (! timeSeriesModel.get('interval')) ?
+        applyStackedSum(aggGroups, result) : applySum(aggGroups, result);
   case 'average':
-    r = applyAverage(cut);
-    break;
+    return applyAverage(aggGroups, result);
   default:
-    r = applyDefault(timeSeriesModel.get('events'));
-    break;
+    return applyDefault(timeSeriesModel.get('events'), result);
   }
-  return r;
 };
 
-function getMapFunction(interval) {
+function getAggregationGroupKeyFn(interval) {
   switch (interval) {
   case 'hourly' :
     return function (d) {
@@ -73,7 +75,7 @@ function getISO8601Week(date) {
   return weekNr;
 }
 
-function getDateFunction(interval) {
+function getAggregationGroupTimeFn(interval) {
   switch (interval) {
   case 'hourly' :
     return function (d) {
@@ -106,19 +108,25 @@ function getDateFunction(interval) {
   }
 }
 
-function map(data, mapper, dater) {
-  var m = _.map(data, function (e) {
+function applyDefault(events, result) {
+  _.each(events, function (e) {
+    result.xCol.push(e.time * 1000);
+    result.yCol.push(getValue(e));
+  });
+  return result;
+}
+
+function getAggregationGroups(events, aggGroupKeyFn, aggGroupTimeFn) {
+  var mappedEvents = _.map(events, function (e) {
     var d = new Date(e.time * 1000);
-    return [mapper(d), +dater(d), +e.content];
+    return {
+      key: aggGroupKeyFn(d),
+      time: +aggGroupTimeFn(d),
+      value: getValue(e)
+    };
   });
-  return _.groupBy(m, function (e) {
-    return e[0];
-  });
-}
-
-function applyDefault(data) {
-  return _.map(data, function (e) {
-    return [e.time * 1000, +e.content];
+  return _.groupBy(mappedEvents, function (e) {
+    return e.key;
   });
 }
 
@@ -126,68 +134,66 @@ function applyDefault(data) {
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}
  out -> [[1234, sum], [145, sum]]
  */
-function applySum(data) {
-  var r = [];
-  var summer = function (a) {
+function applySum(aggregationGroups, result) {
+  _.each(aggregationGroups, function (groupEvents) {
+    result.xCol.push(groupEvents[0].time);
+    result.yCol.push(computeSum(groupEvents));
+  });
+  return result;
+
+  function computeSum(a) {
     return _.reduce(a, function (c, e) {
-      return c + e[2];
+      return c + e.value;
     }, 0);
-  };
-  for (var a in data) {
-    if (data.hasOwnProperty(a)) {
-      r.push([+data[a][0][1], summer(data[a])]);
-    }
   }
-  return r;
 }
 
 /*
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}
  out -> [[1234, sum], [145, sum]]
  */
-function applyStackedSum(data) {
-  var r = [];
-  var previous = 0;
+function applyStackedSum(aggregationGroups, result) {
+  var total = 0;
 
-  var summer = function (a) {
-    return _.reduce(a, function (c, e) {
-      var s = c + e[2] + previous;
-      previous = s;
-      return s;
+  var groupKeys = [];
+  _.each(aggregationGroups, function (groupEvents, key) {
+    groupKeys.push(key);
+  });
+  groupKeys.sort();
+
+  _.each(groupKeys, function (key) {
+    result.xCol.push(aggregationGroups[key][0].time);
+    result.yCol.push(computeStackedSum(aggregationGroups[key]));
+  });
+  return result;
+
+  function computeStackedSum(events) {
+    total += _.reduce(events, function (current, e) {
+      return current + e.value;
     }, 0);
-  };
-
-  var keys = [];
-
-  for (var key in data) {
-    if (data.hasOwnProperty(key)) {
-      keys.push(key);
-    }
+    return total;
   }
-  keys.sort();
-
-  for (var i = 0; i < keys.length; ++i) {
-    r.push([+data[keys[i]][0][1], summer(data[keys[i]])]);
-  }
-  return r;
 }
 
 /*
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}
  out -> [[1234, avg], [145, avg]]
  */
-function applyAverage(data) {
-  var r = [];
-  var averager = function (a) {
-    var s = _.reduce(a, function (c, e) {
-      return c + e[2];
+function applyAverage(aggregationGroups, result) {
+  _.each(aggregationGroups, function (groupEvents, groupKey) {
+    result.xCol.push(groupEvents[0].time);
+    result.yCol.push(computeAverage(groupEvents));
+  });
+  return result;
+
+  function computeAverage(a) {
+    var sum = _.reduce(a, function (c, e) {
+      return c + e.value;
     }, 0);
-    return s / a.length;
-  };
-  for (var a in data) {
-    if (data.hasOwnProperty(a)) {
-      r.push([+data[a][0][1], averager(data[a])]);
-    }
+    return sum / a.length;
   }
-  return r;
+}
+
+function getValue(event) {
+  return +event.content;
 }

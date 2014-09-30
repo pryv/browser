@@ -1,4 +1,4 @@
-/* global $ */
+/* global $, c3 */
 
 var _ = require('underscore'),
     Marionette = require('backbone.marionette'),
@@ -15,6 +15,7 @@ module.exports = Marionette.CompositeView.extend({
   options: null,
   data: null,
   c3settings: {},
+  chart: null,
   plot: null,
   chartContainer: null,
   useExtras: null,
@@ -73,6 +74,11 @@ module.exports = Marionette.CompositeView.extend({
 
     this.options = {};
     this.data = [];
+    this.c3settings.data = {
+      xs: {},
+      columns: [],
+      names: {}
+    };
 
     this.makeOptions();
     this.setUpContainer();
@@ -84,13 +90,18 @@ module.exports = Marionette.CompositeView.extend({
     var eventsNbr = 0;
     _.each(this.data, function (d) {
       eventsNbr += d.data.length;
-    });
+
+      this.c3settings.data.columns.push(d.data.xCol);
+      this.c3settings.data.columns.push(d.data.yCol);
+      this.c3settings.data.xs[d.data.yCol[0]] = d.data.xCol[0];
+      this.c3settings.data.names[d.data.yCol[0]] = d.label;
+    }.bind(this));
     if (this.model.get('showNodeCount')) {
       $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
     }
     try {
-      this.plot = $.plot($(this.chartContainer), this.data, this.options);
-//      this.chart = c3.generate(_.extend(this.c3settings, {bindto: this.chartContainer}));
+//      this.plot = $.plot($(this.chartContainer), this.data, this.options);
+      this.chart = c3.generate(_.extend(this.c3settings, {bindto: this.chartContainer}));
     } catch (e) {
       //console.warn(e);
     }
@@ -252,6 +263,7 @@ module.exports = Marionette.CompositeView.extend({
    * @param {Number} seriesIndex Its index
    */
   addSeries: function (series, seriesIndex) {
+    //TODO: just add the series to a list and postpone C3-specific stuff until chart is actually made
     series.sortData();
     var data = tsTransform.transform(series);
     var label = series.get('streamName') + ' (' +
@@ -265,11 +277,6 @@ module.exports = Marionette.CompositeView.extend({
       label: label,
       yaxis: (seriesIndex + 1)
     });
-    this.c3settings.data = {
-      // TODO: format data to fit C3
-      // - when sum/avg transform: all right (regular timeseries)
-      // - when no transform: processing necessary (fill the gaps) to get regular timeseries
-    };
 
     // Configures the axis
     this.options.yaxes.push({ show: false});
@@ -407,8 +414,8 @@ module.exports = Marionette.CompositeView.extend({
       $('#chart-tooltip').text(content);
     }
     $('#chart-tooltip').css({
-      top: x + this.plot.offset().top,
-      left: y + this.plot.offset().left
+//      top: x + this.plot.offset().top,
+//      left: y + this.plot.offset().left
     }).fadeIn(500);
   },
 
@@ -513,6 +520,7 @@ module.exports = Marionette.CompositeView.extend({
     this.options = null;
     this.data = null;
     this.plot = null;
+    this.chart = null;
   },
 
   createEventBindings: function () {
@@ -599,9 +607,9 @@ module.exports = Marionette.CompositeView.extend({
 
       if (bestFit.distance < sts) {
         //console.log(bestFit.event.time * 1000, +labelTime);
-        var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
-          item.datapoint[0]);
-        this.showTooltip(coords.top - 33, coords.left - 25, bestFit.event.content);
+//        var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
+//          item.datapoint[0]);
+//        this.showTooltip(coords.top - 33, coords.left - 25, bestFit.event.content);
       }
     } else {
       this.removeTooltip();

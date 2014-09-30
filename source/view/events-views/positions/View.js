@@ -20,7 +20,6 @@ module.exports = Marionette.ItemView.extend({
   highlightedPosition: null,
 
   initialize: function () {
-
     this.positions = this.model.get('positions');
     MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
     MapLoader.load().then(function (google) {
@@ -42,6 +41,7 @@ module.exports = Marionette.ItemView.extend({
     this.$el.css('width', '100%');
     this.$el.addClass('animated node');
   },
+
   resize: function () {
     if (this.map && this.bounds) {
       var timer = setInterval(function () {
@@ -59,18 +59,22 @@ module.exports = Marionette.ItemView.extend({
       }.bind(this), 1000);
     }
   },
+
   changePos: function () {
     this.positions = this.model.get('positions');
     this.model.set('eventsNbr', this.positions.length);
     this.render();
   },
+
   renderView: function (container) {
     this.container = container;
     this.render();
   },
+
   onBeforeRender: function () {
     this._initMap();
   },
+
   onRender: function () {
     if (this.container) {
       $('#' + this.container).append(this.el);
@@ -80,6 +84,7 @@ module.exports = Marionette.ItemView.extend({
     }
     this._drawMap(document.getElementById('map-canvas-' + this.model.get('id')));
   },
+
   _initMap: function () {
     if (!this.gmaps) {
       this.waitingForInitMap = true;
@@ -96,7 +101,8 @@ module.exports = Marionette.ItemView.extend({
       streetViewControl: false,
       overviewMapControl: false,
       scrollwheel: true,
-      mapTypeId: this.gmaps.MapTypeId.ROADMAP
+      mapTypeId: this.gmaps.MapTypeId.ROADMAP,
+      styles: this._getMapStyles()
     };
     _.each(this.positions, function (p) {
       geopoint = new this.gmaps.LatLng(p.content.latitude, p.content.longitude);
@@ -114,6 +120,21 @@ module.exports = Marionette.ItemView.extend({
       this.paths[p.streamId].push(geopoint);
     }, this);
   },
+
+  _getMapStyles: function () {
+    var streamCData = this.model.get('stream').clientData,
+        streamColor = streamCData ? streamCData['pryv-browser:bgColor'] : null;
+    if (! streamColor) {
+      return [];
+    }
+    return [{
+      featureType: 'all',
+      stylers: [
+        {hue: streamColor}
+      ]
+    }];
+  },
+
   _drawMap: function ($container) {
     if (!$container) {
       return;

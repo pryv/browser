@@ -38,7 +38,8 @@ module.exports = CommonModel.implement(
         posWidth: this.width,
         posHeight: this.height,
         id: this.id,
-        eventsNbr: this.positions.length
+        eventsNbr: this.positions.length,
+        stream: this.stream
       };
     }
   }

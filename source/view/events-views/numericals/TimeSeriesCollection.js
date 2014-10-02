@@ -1,14 +1,14 @@
 var Backbone = require('backbone'),
-  Model = require('./TimeSeriesModel.js');
+    Model = require('./TimeSeriesModel.js');
 
-module.exports = Backbone.Collection.extend({
-  model: Model,
+var TimeSeriesCollection = {
+  model: Model
+};
 
-  initialize: function (models, options) {
-    this.type = options.type;
-  },
+TimeSeriesCollection.initialize = function (models, options) {
+  this.type = options.type;
+};
 
-  comparator: function () {
+TimeSeriesCollection.comparator = function () {};
 
-  }
-});
+module.exports = Backbone.Collection.extend(TimeSeriesCollection);

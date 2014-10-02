@@ -8,9 +8,7 @@ var _ = require('underscore'),
   TsModel = require('./TimeSeriesModel.js'),
   Settings = require('./utils/ChartSettings.js');
 
-
 var NumericalsPlugin = module.exports = function (events, params, node) {
-
   this.seriesCollection = null;
 
   /* Base event containers */
@@ -51,8 +49,8 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
     }
   }
   $(window).resize(this.debounceRefresh.bind(this));
-
 };
+
 NumericalsPlugin.prototype.eventEnter = function (event) {
   this.streamIds[event.streamId] = event;
   this.events[event.id] = event;
@@ -135,7 +133,6 @@ NumericalsPlugin.prototype.close = function () {
   this.eventDisplayed = null;
   this.needToRender = false;
 };
-
 
 NumericalsPlugin.prototype.refreshCollection = function () {
   if (this.seriesCollection === null) {
@@ -285,9 +282,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
     this.view.onDateHighLighted(this.highlightedTime);
     this.debounceResize();
   }
-
 };
-
 
 NumericalsPlugin.prototype._findEventToDisplay = function () {
   if (this.highlightedTime === Infinity) {
@@ -310,7 +305,6 @@ NumericalsPlugin.prototype._findEventToDisplay = function () {
     }, this);
   }
 };
-
 
 /**
  * Propagates the drag and drop event further up to the TreeMap controller

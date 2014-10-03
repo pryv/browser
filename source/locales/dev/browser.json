@@ -20,7 +20,9 @@
       "delete": "Delete",
       "ok": "OK",
       "save": "Save",
+      "stop": "Stop",
       "stopEditing": "Stop editing",
+      "start": "Start timer",
       "edit": "Edit"
     },
     "labels": {
@@ -48,6 +50,8 @@
         "description": "Description",
         "descriptionPlaceholder": "Description (optional)",
         "detailViewTitle": "__count__ __type__ in <strong>__stream__</strong>",
+        "duration": "Duration",
+        "endDatePicker": "Set end date",
         "streamSelection": "Select a stream",
         "stream": "Stream",
         "tags": "Tags",

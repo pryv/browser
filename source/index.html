@@ -618,11 +618,24 @@
           <%= PryvBrowser.getTimeString(event.time) %>
         </div>
       </div>
+      <% if (event.isRunning() || event.duration > 0) { %>
+      <div class="event-detail-prop-outer col-xs-3">
+        <div class="event-detail-prop-inner">
+          <%= event.description %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-2">
+        <div class="event-detail-prop-inner">
+          <%= displayDuration() %>
+        </div>
+      </div>
+      <% } else { %>
       <div class="event-detail-prop-outer col-xs-5">
         <div class="event-detail-prop-inner">
           <%= event.description %>
         </div>
       </div>
+      <% } %>
       <div class="event-detail-prop-outer col-xs-2">
         <div class="event-detail-prop-inner">
           <% event.tags.forEach(function (tag) { %>
@@ -653,7 +666,13 @@
           <label for="edit-description" data-i18n="events.common.labels.description"></label>
           <input type="text" id="edit-description" class="form-control" value="<%= event.description %>" data-i18n="[placeholder]events.common.labels.descriptionPlaceholder">
         </div>
-        <div class="form-group col-xs-8" style="text-align:right;">
+        <div class="form-group col-xs-4">
+          <label data-i18n="events.common.labels.duration"></label>
+          <div>
+            <%= getDurationControl() %>
+          </div>
+        </div>
+        <div class="form-group col-xs-4" style="text-align:right;">
           <!-- HACK to align with other inputs -->
           <label>&nbsp;</label><br>
           <button id="edit-stop-editing" type="button" class="btn btn-default" data-i18n="common.actions.stopEditing"></button>

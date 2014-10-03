@@ -1,4 +1,4 @@
-/* global $, c3 */
+/* global $, d3, c3, moment, pryvBrowser */
 
 var _ = require('underscore'),
     Marionette = require('backbone.marionette'),
@@ -79,38 +79,101 @@ ChartView.makePlot = function () {
   this.container = this.model.get('container');
 
   this.options = {};
-  this.data = [];
   this.c3settings.data = {
     xs: {},
     columns: [],
-    names: {}
+    names: {},
+    types: {},
+    colors: {}
   };
 
   this.makeOptions();
   this.setUpContainer();
 
-  collection.each(function (s, i) {
-    this.addSeries(s, i);
+  var eventsCount = 0,
+      eventSymbolsPerDataId = {};
+  collection.each(function (series, seriesIndex) {
+    series.sortData();
+    var c3data = this.c3settings.data,
+        seriesData = tsTransform.transform(series),
+        seriesDataId = seriesData.yCol[0];
+
+    c3data.columns.push(seriesData.xCol);
+    c3data.columns.push(seriesData.yCol);
+    c3data.xs[seriesDataId] = seriesData.xCol[0];
+
+    var eventType = series.get('type'),
+        eventSymbol = getEventValueSymbol(eventType,
+            this.useExtras ? pryv.eventTypes.extras(eventType) : null);
+    eventSymbolsPerDataId[seriesDataId] = eventSymbol;
+
+    c3data.names[seriesDataId] = series.get('streamName') + ' (' + eventSymbol + ')';
+
+    switch (series.get('style')) {
+    case 'bar':
+      c3data.types[seriesDataId] = 'bar';
+      break;
+    case 'point':
+      c3data.types[seriesDataId] = 'scatter';
+      break;
+    //case 'line':
+    default:
+      c3data.types[seriesDataId] = series.get('fitting') ? 'spline' : 'line';
+      //TODO: review this
+//      this.data[seriesIndex].points = { show: (data.length < 2) };
+      break;
+    }
+
+    if (series.get('color')) {
+      c3data.colors[seriesDataId] = series.get('color');
+    }
+
+    eventsCount += seriesData.yCol.length;
+
+    // TODO: review/remove what follows
+
+    this.options.yaxes.push({ show: false});
+
+    if (this.model.get('allowPan')) {
+      this.options.yaxes[seriesIndex].panRange = seriesData.length > 1 ?
+          this.getExtremeValues(seriesData) : false;
+    }
+    if (this.model.get('allowZoom')) {
+      this.options.yaxes[seriesIndex].zoomRange = seriesData.length > 1 ?
+          [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
+          false;
+    }
   }.bind(this));
 
-  var eventsNbr = 0;
-  _.each(this.data, function (d) {
-    eventsNbr += d.data.length;
+  // TODO: adjust ticks nuber density from scale & available space, etc.
+  var timeBounds = pryvBrowser.timeView.getTimeBounds(),
+      fromMsTime = timeBounds.from * 1000,
+      toMsTime = timeBounds.to * 1000;
+  this.c3settings.axis = {
+    x: {
+      type: 'timeseries',
+      min: fromMsTime,
+      max: toMsTime,
+      tick: {
+        fit: false,
+        format: getTimeTickLabelFn(pryvBrowser.timeView.getScale(), fromMsTime, toMsTime)
+      }
+    }
+  };
+  this.c3settings.tooltip = {
+    format: {
+      title: getFullTimeLabel,
+      // TODO: name: function (id) {},
+      value: function (value, ratio, id) {
+        return d3.format(eventSymbolsPerDataId[id] + ',.2r')(value);
+      }
+    }
+  };
 
-    this.c3settings.data.columns.push(d.data.xCol);
-    this.c3settings.data.columns.push(d.data.yCol);
-    this.c3settings.data.xs[d.data.yCol[0]] = d.data.xCol[0];
-    this.c3settings.data.names[d.data.yCol[0]] = d.label;
-  }.bind(this));
   if (this.model.get('showNodeCount')) {
-    $(this.container).append('<span class="aggregated-nbr-events">' + eventsNbr + '</span>');
+    $(this.container).append('<span class="aggregated-nbr-events">' + eventsCount + '</span>');
   }
-  try {
-//      this.plot = $.plot($(this.chartContainer), this.data, this.options);
-    this.chart = c3.generate(_.extend(this.c3settings, {bindto: this.chartContainer}));
-  } catch (e) {
-    //console.warn(e);
-  }
+  this.chart = c3.generate(_.extend(this.c3settings, {bindto: this.chartContainer}));
 
   this.createEventBindings();
 
@@ -126,8 +189,96 @@ ChartView.makePlot = function () {
   }
 };
 
+// TODO: extract event type formatting stuff to utility helper
+
+function getEventValueSymbol(eventType, typeExtra) {
+  var symbol;
+  if (typeExtra) {
+    symbol = typeExtra.symbol || typeExtra.name.en;
+  }
+  if (! symbol) {
+    var typeParts = eventType.split('/');
+    symbol = typeParts[typeParts.length - 1];
+  }
+  return symbol;
+}
+
+//TODO: extract time formatting stuff to utility helper
+
+var TickIntervalsFromScale = {
+  day: 'hour',
+  week: 'dayOfWeek',
+  month: 'week',
+  year: 'month',
+  custom: null // to be dynamically determined
+};
+var DateFormats = {
+  hour: 'H',
+  dayOfWeek: 'ddd',
+  week: 'D.M.YYYY',
+  month: 'MMM',
+  year: 'YYYY'
+};
+var TimeTickLabelFns = {
+  hour: function (msTime) {
+    var m = moment(msTime);
+    if (m.minute() === 0) {
+      return m.format(DateFormats.hour);
+    }
+  },
+  dayOfWeek: function (msTime) {
+    var m = moment(msTime);
+    if (m.hour() === 0) {
+      return m.format(DateFormats.dayOfWeek);
+    }
+  },
+  week: function (msTime) {
+    var m = moment(msTime);
+    if (m.weekday() === 0) {
+      return m.format(DateFormats.week);
+    }
+  },
+  month: function (msTime) {
+    var m = moment(msTime);
+    if (m.date() === 1) {
+      return m.format(DateFormats.month);
+    }
+  },
+  year: function (msTime) {
+    var m = moment(msTime);
+    if (m.dayOfYear() === 1) {
+      return m.format(DateFormats.year);
+    }
+  }
+};
+
+function getFullTimeLabel(msTime) {
+  return moment(msTime).calendar();
+}
+
+function getTimeTickLabelFn(timeScale, fromMsTime, toMsTime) {
+  var tickInterval = TickIntervalsFromScale[timeScale];
+  if (! tickInterval) {
+    // custom scale
+    var duration = moment.duration(toMsTime - fromMsTime);
+    if (duration.years() >= 2) {
+      tickInterval = 'year';
+    } else if (duration.months() >= 2) {
+      tickInterval = 'month';
+    } else if (duration.days() >= 14) {
+      tickInterval = 'week';
+    } else if (duration.days() >= 2) {
+      tickInterval = 'dayOfWeek';
+    } else {
+      tickInterval = 'hour';
+    }
+  }
+  return TimeTickLabelFns[tickInterval];
+}
+
 /**
  * Generates the general plot options based on the model
+ * TODO: remove or cleanup
  */
 ChartView.makeOptions = function () {
   var collection = this.model.get('collection');
@@ -239,76 +390,6 @@ ChartView.setUpContainer = function () {
     width: '100%',
     height: '100%'
   });
-};
-
-/**
- * Adds a series to the plot and configures it based on the model.
- * @param {TimeSeriesModel} series The series to add (a single one)
- * @param {Number} seriesIndex Its index
- */
-ChartView.addSeries = function (series, seriesIndex) {
-  //TODO: just add the series to a list and postpone C3-specific stuff until chart is actually made
-  series.sortData();
-  var data = tsTransform.transform(series);
-  var label = series.get('streamName') + ' (' +
-      (this.useExtras ? pryv.eventTypes.extras(series.get('type')).symbol ||
-          pryv.eventTypes.extras(series.get('type')).name.en || '' : series.get('type')) +
-      ')';
-
-  // Configures series
-  this.data.push({
-    data: data,
-    label: label,
-    yaxis: (seriesIndex + 1)
-  });
-
-  // Configures the axis
-  this.options.yaxes.push({ show: false});
-
-  if (this.model.get('allowPan')) {
-    this.options.yaxes[seriesIndex].panRange = data.length > 1 ?
-        this.getExtremeValues(data) : false;
-  }
-  if (this.model.get('allowZoom')) {
-    this.options.yaxes[seriesIndex].zoomRange = data.length > 1 ?
-        [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
-        false;
-  }
-
-  // Configure the serie's color
-  if (series.get('color')) {
-    this.data[seriesIndex].color = series.get('color');
-  }
-
-  // Configures the series' style
-  switch (series.get('style')) {
-    case 'line':
-      this.data[seriesIndex].lines = { show: true };
-      if (series.get('fitting')) {
-        this.data[seriesIndex].curvedLines = {
-          apply: true,
-          fit: true
-          //fitPointDist: 0.5,
-          //curvePointFactor: 4
-        };
-      }
-      this.data[seriesIndex].points = { show: (data.length < 2) };
-      break;
-    case 'bar':
-      this.data[seriesIndex].bars = {
-        show: true,
-        barWidth : this.getDurationFunction(series.get('interval'))
-        (new Date(2011, 1, 1, 1, 1))
-      };
-      break;
-    case 'point':
-      this.data[seriesIndex].points = { show: true };
-      break;
-    default:
-      this.data[seriesIndex].lines = { show: true };
-      this.data[seriesIndex].points = { show: (data.length < 2) };
-      break;
-  }
 };
 
 ChartView.getExtremeTimes = function () {
@@ -515,8 +596,8 @@ ChartView.onClose = function () {
   this.container = null;
   this.chartContainer = null;
   this.options = null;
-  this.data = null;
-  this.plot = null;
+  this.c3settings = null;
+  this.plot = null; // TODO remove
   this.chart = null;
 };
 

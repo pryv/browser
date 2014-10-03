@@ -22094,6 +22094,9 @@ Event.prototype.getPicturePreview = function (width, height) {
   return url;
 };
 
+Event.prototype.isRunning = function () {
+  return !!('duration' in this && !this.duration && this.duration !== 0);
+};
 /**
  * TODO document
  */
@@ -22181,11 +22184,23 @@ var Messages = Filter.Messages = {
    */
   STREAMS_CHANGE : 'streamsChanged',
 
+  /**
+   * called on streams structure changes
+   * content: changes
+   */
+  STRUCTURE_CHANGE : 'structureChange',
+
   /*
    * called on date changes
    * content: streams
    */
-  DATE_CHANGE : 'timeFrameChanged'
+  DATE_CHANGE : 'timeFrameChanged',
+
+  /*
+   * called on state changes
+   * content: {state: value}
+   */
+  STATE_CHANGE : 'stateChanged'
 };
 
 // TODO
@@ -22209,23 +22224,30 @@ function _normalizeTimeFrameST(filterData) {
  * check if this event is in this filter
  */
 Filter.prototype.matchEvent = function (event) {
-  if (event.time > this.toTimeSTNormalized) { return 0; }
-  if (event.time < this.fromTimeSTNormalized) { return 0; }
+  if (event.time > this.toTimeSTNormalized) { return false; }
+  if (event.time < this.fromTimeSTNormalized) { return false; }
 
+
+  if (this._settings.state !== 'all') {
+    if (event.trashed) { return false; }
+  }
 
   if (this._settings.streams) {
 
-    if (this._settings.streams.length === 0) { return 0; }
+    if (this._settings.streams.length === 0) { return false; }
 
     if (this._settings.streams.indexOf(event.streamId) < 0) {
       var found = false;
       event.stream.ancestors.forEach(function (ancestor) {
         if (this._settings.streams.indexOf(ancestor.id) >= 0) {
+          if (this._settings.state !== 'all') {
+            if (ancestor.trashed) { return false; }
+          }
           found = true;
         }
       }.bind(this));
       if (!found) {
-        return 0;
+        return false;
       }
     }
   }
@@ -22233,7 +22255,7 @@ Filter.prototype.matchEvent = function (event) {
 
 
   // TODO complete test
-  return 1;
+  return true;
 };
 
 /**
@@ -22321,7 +22343,7 @@ Filter.prototype.getData = function (ignoreNulls, withDelta) {
     _.extend(result, withDelta);
   }
   _.each(_.keys(result), function (key) {
-    if (result[key] === null) { delete result[key]; }
+    if ((result[key] === null)) { delete result[key]; }
   });
   return result;
 };
@@ -22349,7 +22371,7 @@ Filter.prototype.set = function (keyValueMap, batch) {
     this._setValue(key, value, batch);
   }.bind(this));
 
-  batch.done();
+  batch.done('set');
 };
 
 /**
@@ -22359,7 +22381,7 @@ Filter.prototype.set = function (keyValueMap, batch) {
  * @private
  */
 Filter.prototype._setValue = function (key, newValue, batch) {
-  var waitForMe = batch ? batch.waitForMeToFinish() : null;
+  batch = this.startBatch('setValue:' + key, batch);
 
   if (key === 'limit') {
     this._settings.limit = newValue;
@@ -22368,6 +22390,15 @@ Filter.prototype._setValue = function (key, newValue, batch) {
     return;
   }
 
+
+  if (key === 'state') {
+    if (this._settings.state !== newValue) {
+      this._settings.state = newValue;
+      this._fireFilterChange(Messages.STATE_CHANGE, {state: newValue}, batch);
+    }
+    batch.done('setValue:' + key);
+    return;
+  }
 
   if (key === 'timeFrameST') {
     if (! _.isArray(newValue) || newValue.length !== 2) {
@@ -22378,7 +22409,7 @@ Filter.prototype._setValue = function (key, newValue, batch) {
       this._settings.toTime = newValue[1];
       this._fireFilterChange(Messages.DATE_CHANGE, this.timeFrameST, batch);
     }
-    if (waitForMe) { waitForMe.done(); }
+    batch.done('setValue:' + key);
     return;
   }
 
@@ -22389,6 +22420,7 @@ Filter.prototype._setValue = function (key, newValue, batch) {
 
         return;
       }
+      newValue = null;
     } else if (! _.isArray(newValue)) {
       newValue = [newValue];
     }
@@ -22396,11 +22428,11 @@ Filter.prototype._setValue = function (key, newValue, batch) {
     // TODO check that this stream is valid
     this._settings.streams = newValue;
     this._fireFilterChange(Messages.STREAMS_CHANGE, this.streams, batch);
-    if (waitForMe) { waitForMe.done(); }
+    batch.done('setValue:' + key);
     return;
   }
 
-  if (waitForMe) { waitForMe.done(); }
+  batch.done('setValue:' + key);
   throw new Error('Filter has no property : ' + key);
 };
 
@@ -22491,8 +22523,9 @@ var _ = require('underscore'),
   SignalEmitter = require('./utility/SignalEmitter.js'),
   Filter = require('./Filter.js');
 
-var EXTRA_ALL_EVENTS = {state : 'default', modifiedSince : -100000000 };
-var REALLY_ALL_EVENTS =  EXTRA_ALL_EVENTS; REALLY_ALL_EVENTS.fromTime = -1000000000;
+var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
+var REALLY_ALL_EVENTS =  EXTRA_ALL_EVENTS;
+REALLY_ALL_EVENTS.fromTime = -1000000000;
 
 var GETEVENT_MIN_REFRESH_RATE = 2000;
 
@@ -22543,13 +22576,19 @@ var Messages = Monitor.Messages = {
 
 Monitor.prototype.start = function (done) {
   done = done || function () {};
+  var batch = this.startBatch('Monitor:start');
+  batch.addOnDoneListener('Monitor:startCompletion', function () {
+    //TODO move this logic to ConnectionMonitors ??
+    this.connection.monitors._monitors[this.id] = this;
+    this.connection.monitors._startMonitoring(done);
+  }.bind(this));
+
 
   this.lastSynchedST = -1000000000000;
-  this._initEvents();
+  this._initEvents(batch);
+  batch.done('Monitor:start');
 
-  //TODO move this logic to ConnectionMonitors ??
-  this.connection.monitors._monitors[this.id] = this;
-  this.connection.monitors._startMonitoring(done);
+
 };
 
 
@@ -22576,11 +22615,15 @@ Monitor.prototype._onIoError = function (error) {
   console.log('Monitor _onIoError' + error);
 };
 Monitor.prototype._onIoEventsChanged = function () {
-  this._connectionEventsGetChanges(Messages.ON_EVENT_CHANGE);
+  var batch = this.startBatch('IoEventChanged');
+  this._connectionEventsGetChanges(batch);
+  batch.done('IoEventChanged');
 };
 Monitor.prototype._onIoStreamsChanged = function () {
   console.log('SOCKETIO', '_onIoStreamsChanged');
-  this._connectionStreamsGetChanges(Messages.ON_STRUCTURE_CHANGE);
+  var batch = this.startBatch('IoStreamsChanged');
+  this._connectionStreamsGetChanges(batch);
+  batch.done('IoStreamsChanged');
 };
 
 
@@ -22593,7 +22636,7 @@ Monitor.prototype._saveLastUsedFilter = function () {
 };
 
 
-Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
+Monitor.prototype._onFilterChange = function (signal, batch) {
 
 
   var changes = this.filter.compareToFilterData(this._lastUsedFilterData);
@@ -22621,6 +22664,22 @@ Monitor.prototype._onFilterChange = function (signal, batchId, batch) {
     if (changes.streams < 0) {  // new timeFrame contains more data
       processLocalyOnly = 1;
     }
+  }
+
+  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
+    foundsignal = 1;
+    console.log('** STREAMS_CHANGE', changes.streams);
+    if (changes.streams === 0) {
+      return;
+    }
+    if (changes.streams < 0) {  // new timeFrame contains more data
+      processLocalyOnly = 1;
+    }
+  }
+
+  if (signal.signal === Filter.Messages.STRUCTURE_CHANGE) {
+    foundsignal = 1;
+    // force full refresh
   }
 
 
@@ -22658,8 +22717,8 @@ Monitor.prototype._refilterLocaly = function (signal, extracontent, batch) {
 };
 
 
-Monitor.prototype._initEvents = function () {
-
+Monitor.prototype._initEvents = function (batch) {
+  batch = this.startBatch('Monitor:initEvents', batch);
   this._events = { active : {}};
 
 
@@ -22674,7 +22733,11 @@ Monitor.prototype._initEvents = function () {
 
   this.connection.events.get(filterWith,
     function (error, events) {
-      if (error) { this._fireEvent(Messages.ON_ERROR, error); }
+      if (error) {
+        this._fireEvent(Messages.ON_ERROR, error, batch);
+        batch.done('Monitor:initEvents error');
+        return;
+      }
 
       if (! this.initWithPrefetch) { this.lastSynchedST = this.connection.getServerTime(); }
 
@@ -22688,13 +22751,16 @@ Monitor.prototype._initEvents = function () {
       }.bind(this));
 
 
-      this._fireEvent(Messages.ON_LOAD, result);
+      this._fireEvent(Messages.ON_LOAD, result, batch);
 
       if (this.initWithPrefetch) {
+        batch.waitForMeToFinish('delay');
         setTimeout(function () {
-          this._connectionEventsGetChanges(Messages.ON_EVENT_CHANGE);
+          this._connectionEventsGetChanges(batch);
+          batch.done('delay');
         }.bind(this), 100);
       }
+      batch.done('Monitor:initEvents finished');
 
 
     }.bind(this));
@@ -22707,10 +22773,12 @@ Monitor.prototype._initEvents = function () {
 /**
  * @private
  */
-Monitor.prototype._connectionEventsGetChanges = function (signal) {
-
+Monitor.prototype._connectionEventsGetChanges = function (batch) {
+  batch = this.startBatch('connectionEventsGetChanges', batch);
   if (this.eventsGetChangesInProgress) {
     this.eventsGetChangesNeeded = true;
+    console.log('[WARNING] Skipping _connectionEventsGetChanges because one is in Progress');
+    batch.done('connectionEventsGetChanges in Progress');
     return;
   }
   this.eventsGetChangesInProgress = true;
@@ -22722,9 +22790,10 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
 
 
   var filterWith = this.filter.getData(true, options);
-  if (this.ensureFullCache) { filterWith = REALLY_ALL_EVENTS; }
-  filterWith.modifiedSince = this.lastSynchedST;
-  filterWith.state = 'all';
+  if (this.ensureFullCache) {
+    filterWith = REALLY_ALL_EVENTS;
+    filterWith = _.extend(filterWith, options);
+  }
   this.lastSynchedST = this.connection.getServerTime();
 
   var result = { created : [], trashed : [], modified: []};
@@ -22732,7 +22801,9 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
   this.connection.events.get(filterWith,
     function (error, events) {
       if (error) {
-        this._fireEvent(Messages.ON_ERROR, error);
+        this._fireEvent(Messages.ON_ERROR, error, batch);
+        batch.done('connectionEventsGetChanges error');
+        return;
       }
 
       _.each(events, function (event) {
@@ -22754,13 +22825,14 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
         }
       }.bind(this));
 
-      this._fireEvent(signal, result);
+      this._fireEvent(Messages.ON_EVENT_CHANGE, result, batch);
+      batch.done('connectionEventsGetChanges');
 
       // ---
       setTimeout(function () {
         this.eventsGetChangesInProgress = false;
         if (this.eventsGetChangesNeeded) {
-          this._connectionEventsGetChanges(signal);
+          this._connectionEventsGetChanges();
         }
       }.bind(this), GETEVENT_MIN_REFRESH_RATE);
 
@@ -22770,8 +22842,10 @@ Monitor.prototype._connectionEventsGetChanges = function (signal) {
 /**
  * @private
  */
-Monitor.prototype._connectionStreamsGetChanges = function (signal) {
+Monitor.prototype._connectionStreamsGetChanges = function (batch) {
+  batch = this.startBatch('connectionStreamsGetChanges', batch);
   var previousStreamsData = {};
+  var previousStreamsMap = {}; // !! only used to get back deleted streams..
   var created = [], modified = [], modifiedPreviousProperties = {}, trashed = [], deleted = [];
 
   var isStreamChanged = function (streamA, streamB) {
@@ -22808,7 +22882,7 @@ Monitor.prototype._connectionStreamsGetChanges = function (signal) {
   //-- get all current streams before matching with new ones --//
   var getFlatTree = function (stream) {
     previousStreamsData[stream.id] = stream.getData();
-    //console.log(previousStreamsData[stream.id]);
+    previousStreamsMap[stream.id] = stream;
 
     _.each(stream.children, function (child) {
       getFlatTree(child);
@@ -22819,16 +22893,24 @@ Monitor.prototype._connectionStreamsGetChanges = function (signal) {
   });
 
   this.connection.fetchStructure(function (error, result) {
+    if (error) {
+      batch.done('connectionStreamsGetChanges fetchStructure error');
+      return;
+    }
     _.each(result, function (rootStream) {
       checkChangedStatus(rootStream);
     });
     // each stream remaining in streams[] are deleted streams;
     _.each(previousStreamsData, function (streamData, streamId) {
-      deleted.push(streamId);
+      deleted.push(previousStreamsMap[streamId]);
     });
-    this._fireEvent(signal,
+
+    this._fireEvent(Messages.ON_STRUCTURE_CHANGE,
       { created : created, trashed : trashed, modified: modified, deleted: deleted,
-        modifiedPreviousProperties: modifiedPreviousProperties});
+        modifiedPreviousProperties: modifiedPreviousProperties}, batch);
+
+    this._onFilterChange({signal : Filter.Messages.STRUCTURE_CHANGE}, batch);
+    batch.done('connectionStreamsGetChanges');
   }.bind(this));
 };
 
@@ -22850,6 +22932,9 @@ Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracon
 
 
     // first cleanup same as : this._refilterLocaly(signal, extracontent, batch);
+    if (! this._events) {
+      throw new Error('Not yet started!!!');
+    }
     _.each(_.clone(this._events.active), function (event) {
       if (! this.filter.matchEvent(event)) {
         result1.leave.push(event);
@@ -22883,9 +22968,14 @@ Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracon
 
     var toremove = _.clone(this._events.active);
 
+    batch = this.startBatch('connectionEventsGetAllAndCompare:online', batch);
     this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
       function (error, events) {
-        if (error) { this._fireEvent(Messages.ON_ERROR, error); }
+        if (error) {
+          this._fireEvent(Messages.ON_ERROR, error, batch);
+          batch.done('connectionEventsGetAllAndCompare:online error');
+          return;
+        }
         _.each(events, function (event) {
           if (this._events.active[event.id]) {  // already known event we don't care
             delete toremove[event.id];
@@ -22899,6 +22989,7 @@ Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracon
         }.bind(this));
         result.leave = _.values(toremove); // unmatched events are to be removed
         this._fireEvent(signal, result, batch);
+        batch.done('connectionEventsGetAllAndCompare:online');
       }.bind(this));
   }
 };
@@ -23449,7 +23540,7 @@ Auth.prototype.whoAmI = function (settings) {
         });
         console.log('before access info', this.connection);
         conn.accessInfo(function (error) {
-          console.log('after access info', this.connection, error);
+          console.log('after access info', this.connection);
           if (!error) {
             if (typeof(this.settings.callbacks.signedIn)  === 'function') {
               this.settings.callbacks.signedIn(this.connection);
@@ -25283,7 +25374,7 @@ SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
 
   _.each(this._signalEmitterEvents[signal], function (callback) {
     if (callback !== null &&
-      SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batchId, batch)) {
+      SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batch)) {
       this.removeEventListener(signal, callback);
     }
   }, this);
@@ -25296,48 +25387,76 @@ SignalEmitter.batchSerial = 0;
  *
  * @param batchName Name of the new batch
  * @param orHookOnBatch Existing batch to hook on ("superbatch")
- * @return A batch object (call `stop()` when done)
+ * @return A batch object (call `done()` when done)
  * @private
  */
-SignalEmitter.prototype.startBatch = function (batchName, orHookOnBatch) {
-  if (orHookOnBatch && orHookOnBatch.sender === this) { // test if this batch comes form me
-    return orHookOnBatch.waitForMeToFinish();
+SignalEmitter.prototype.startBatch = function (name, orHookOnBatch) {
+
+  if (! orHookOnBatch) {
+    return new Batch(name, this);
   }
-  var batch = {
-    sender : this,
-    batchName : batchName || '',
-    id : this._signalEmitterName + SignalEmitter.batchSerial++,
-    filter : this,
-    waitFor : 1,
-    doneCallbacks : {},
-
-    waitForMeToFinish : function () {
-      batch.waitFor++;
-      return this;
-    },
-
-    /**
-     * listener are stored in key/map fashion, so addOnDoneListener('bob',..)
-     * may be called several time, callback 'bob', will be done just once
-     * @param key a unique key per callback
-     * @param callback
-     */
-    addOnDoneListener : function (key, callback) {
-      this.doneCallbacks[key] = callback;
-    },
-    done : function (name) {
-      this.waitFor--;
-      if (this.waitFor === 0) {
-        _.each(this.doneCallbacks, function (callback) { callback(); });
-        this.filter._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
-      }
-      if (this.waitFor < 0) {
-        console.error('This batch has been done() to much :' + name);
-      }
-    }
-  };
-  this._fireEvent(SignalEmitter.Messages.BATCH_BEGIN, batch.id, batch);
+  name = orHookOnBatch.name + '/' + name;
+  var batch = new Batch(name, this);
+  orHookOnBatch.waitForMeToFinish(name + ':hook');
+  batch.addOnDoneListener(name, function () {
+    orHookOnBatch.done(name + ':hook');
+  });
   return batch;
+};
+
+var Batch = function (name, owner) {
+  this.owner = owner;
+  this.name = name || 'x';
+  this.id = owner._signalEmitterName + SignalEmitter.batchSerial++;
+  this.waitFor = 0;
+  this.history = [];
+  this.doneCallbacks = {};
+  this.waitForMeToFinish(this.name);
+  this.owner._fireEvent(SignalEmitter.Messages.BATCH_BEGIN, this.id, this);
+
+};
+
+
+
+/**
+ * listener are stored in key/map fashion, so addOnDoneListener('bob',..)
+ * may be called several time, callback 'bob', will be done just once
+ * @param key a unique key per callback
+ * @param callback
+ */
+Batch.prototype.addOnDoneListener = function (key, callback) {
+  this.checkAlreadyDone('addOnDoneListener(' + key + ')');
+  this.doneCallbacks[key] = callback;
+};
+
+Batch.prototype.waitForMeToFinish = function (key) {
+  this.checkAlreadyDone('waitForMeToFinish(' + key + ')');
+  this.waitFor++;
+  this.history.push({wait: key, waitFor: this.waitFor});
+  return this;
+};
+
+Batch.prototype.done = function (key) {
+  this.checkAlreadyDone('done(' + key + ')');
+  key = key || '--';
+  this.waitFor--;
+  this.history.push({done: key, waitFor: this.waitFor});
+  if (this.waitFor === 0) {
+
+    this.doneTriggered = true;
+    _.each(this.doneCallbacks, function (callback) {
+      callback();
+    });
+    delete this.doneCallbacks; // prevents memory leaks
+    this.owner._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
+  }
+};
+
+Batch.prototype.checkAlreadyDone = function (addon) {
+  if (this.doneTriggered) {
+    var msg = 'Batch ' + this.name + ', ' + this.id + ' called ' + addon + '  when already done';
+    throw new Error(msg + '     ' + JSON.stringify(this.history));
+  }
 };
 
 },{"underscore":48}],69:[function(require,module,exports){
@@ -25549,6 +25668,7 @@ module.exports = function (pack)  {
   xhr.onreadystatechange = function () {
     detail += ' xhrstatus:' + xhr.statusText;
     if (xhr.readyState === 0) {
+      pack.callBackSent = 'error in request';
       pack.error({
         message: 'pryvXHRCall unsent',
         detail: detail,
@@ -25576,6 +25696,12 @@ module.exports = function (pack)  {
         headers : parseResponseHeaders(xhr.getAllResponseHeaders())
       };
 
+      if (pack.callBackSent) {
+        console.error('xhr.onreadystatechange called with status==4 even if callback is done:' +
+          pack.callBackSent);
+        return;
+      }
+      pack.callBackSent = 'success';
       pack.success(result, resultInfo);
     }
   };
@@ -25594,6 +25720,7 @@ module.exports = function (pack)  {
   try {
     xhr.send(pack.params);
   } catch (e) {
+    pack.callBackSent = 'error sending request';
     return pack.error({
       message: 'pryvXHRCall unsent',
       detail: detail,
@@ -33621,8 +33748,7 @@ module.exports = Marionette.ItemView.extend({
   id: 'detail-full',
   // addAttachmentContainer: '#add-attachment',
   waitSubmit: false,
-  // addAttachmentId: 0,
-  // attachmentId: {},
+  timer: null,
   ui: {
     editBtn: '#edit-button',
     editForm: '#edit-form',
@@ -33636,20 +33762,46 @@ module.exports = Marionette.ItemView.extend({
     editTimePicker: '#edit-time-picker',
     editTags: '#edit-tags',
     editDescription: '#edit-description',
+    addDuration: '#add-duration',
+    stopDuration: '#stop-duration',
+    editDuration: '#edit-duration',
+    removeDuration: '#remove-duration'
   },
   templateHelpers: function () {
     return {
       getStreamStructure: function () {
         return this.getStreamStructure();
+      }.bind(this),
+      getDurationControl: function () {
+        return this.getDurationControl();
+      }.bind(this),
+      displayDuration: function () {
+        return this.displayDuration();
       }.bind(this)
     };
   },
   initialize: function () {
     this.listenTo(this.model, 'change', this.render);
   },
+  onClose: function () {
+    $('.popover-duration').remove();
+    this.stopTimer();
+  },
+  onBeforeRender: function () {
+    $('.popover-duration').remove();
+    this.stopTimer();
+  },
   onRender: function () {
     $(this.itemViewContainer).html(this.el);
-    //  this.addAttachment();
+
+    this.initAddDuration();
+    this.initEditDuration();
+    if (this.ui.removeDuration) {
+      this.ui.removeDuration.bind('click', this.removeDuration.bind(this));
+    }
+    if (this.ui.stopDuration) {
+      this.ui.stopDuration.bind('click', this.stopDuration.bind(this));
+    }
     this.ui.editBtn.bind('click', this.showEdit.bind(this));
     this.ui.editStopEditing.bind('click', this.hideEdit.bind(this));
     this.ui.editForm.bind('submit', this.submit.bind(this));
@@ -33717,6 +33869,292 @@ module.exports = Marionette.ItemView.extend({
     return result;
 
   },
+  startTimer: function () {
+    this.stopTimer();
+    this.timer = setInterval(function () {
+      if (this.model && this.model.get('event') && this.model.get('event').isRunning()) {
+        var start = moment.unix(this.model.get('event').time);
+        var now = moment();
+        $('.duration-clock').html(moment.preciseDiff(start, now));
+      }
+    }.bind(this), 1000);
+  },
+  stopTimer: function () {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  },
+  /* jshint ignore:start */
+  removeDuration: function () {
+    this.model.get('event').duration = 0;
+    this.ui.saveBtn.trigger('click');
+  },
+  stopDuration: function () {
+    var event = this.model.get('event');
+    if (event.isRunning()) {
+      event.duration = moment().unix() - event.time;
+      this.ui.saveBtn.trigger('click');
+    }
+  },
+  initAddDuration: function () {
+    var that = this;
+    $('#add-duration').popover('destroy');
+    $('#add-duration').popover({
+      html: true,
+      placement: 'top',
+      container: 'body',
+      template: '<div class="popover popover-duration" role="tooltip"><div class="arrow"></div><div class="popover-content"></div></div>',
+      content: function () {
+        return $('<form class="form-horizontal">' +
+          '<div class="form-group">' +
+          '  <label for="endDatePicker">' + i18n.t('events.common.labels.endDatePicker') + '</label>' +
+          '  <div class="input-group date picker" id="endDatePicker">' +
+          '    <input type="text" class="form-control"/> ' +
+          '    <span id="endDateButton" class="input-group-addon">' +
+          '      <span class="fa fa-calendar"></span>' +
+          '    </span>' +
+          '  </div>' +
+          '</div>' +
+          '<button type="button" id="cancel-add-duration" ' +
+          'class="btn btn-default col-md-4"  style="float: none">' +
+          i18n.t('common.actions.cancel') + '</button>' +
+
+          '<button type="button" id="ok-add-duration" class="btn btn-default col-md-7 col-md-offset-1"' +
+          ' style="float: none">' +
+          i18n.t('common.actions.ok') + '</button>' +
+          '<label class="col-md-5">Or</label>' +
+          '<button type="button" id="start-add-duration" class="btn btn-default col-md-7"' +
+          ' style="float: none">' +
+          i18n.t('common.actions.start') + '</button>' +
+          '</form>').html();
+      }
+    });
+    $('#add-duration').on('hidden.bs.popover', function () {
+      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
+    });
+    $('#add-duration').on('shown.bs.popover', function () {
+      var endDate = moment();
+      $(document.body).off('click', '#ok-add-duration');
+      $(document.body).on('click', '#ok-add-duration', function () {
+        endDate = moment(endDate);
+        if (endDate.isValid()) {
+          $('#add-duration').popover('toggle');
+          var event = that.model.get('event');
+          event.duration = endDate.unix() - event.time;
+          that.ui.saveBtn.trigger('click');
+        }
+      });
+      $(document.body).off('click', '#cancel-add-duration');
+      $(document.body).on('click', '#cancel-add-duration', function () {
+        $('#add-duration').popover('toggle');
+      });
+      $(document.body).off('click', '#start-add-duration');
+      $(document.body).on('click', '#start-add-duration', function () {
+        that.model.get('event').duration = null;
+        that.ui.saveBtn.trigger('click');
+        $('#add-duration').popover('toggle');
+      });
+      $(document.body).off('click', '#endDateButton');
+      $(document.body).on('click', '#endDateButton', function () {
+        endDate = moment();
+        $('#endDateButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#endDatePicker input');
+      $(document.body).on('click', '#endDatePicker input', function () {
+        endDate = moment();
+        $('#endDateButton').trigger('click');
+      });
+      $('#endDatePicker').datetimepicker({
+        direction: 'auto',
+        language: i18n.lng()
+      });
+      $('#endDatePicker').on('dp.change', function (e) {
+        endDate = e.date;
+      });
+      $('#endDatePicker').data('DateTimePicker').setDate(endDate);
+    });
+  },
+  initAddDuration: function () {
+    var that = this;
+    $('#add-duration').popover('destroy');
+    $('#add-duration').popover({
+      html: true,
+      placement: 'top',
+      container: 'body',
+      template: '<div class="popover popover-duration" role="tooltip"><div class="arrow"></div><div class="popover-content"></div></div>',
+      content: function () {
+        return $('<form class="form-horizontal">' +
+          '<div class="form-group">' +
+          '  <label for="endDatePicker">' + i18n.t('events.common.labels.endDatePicker') + '</label>' +
+          '  <div class="input-group date picker" id="endDatePicker">' +
+          '    <input type="text" class="form-control"/> ' +
+          '    <span id="endDateButton" class="input-group-addon">' +
+          '      <span class="fa fa-calendar"></span>' +
+          '    </span>' +
+          '  </div>' +
+          '</div>' +
+          '<button type="button" id="cancel-add-duration" ' +
+          'class="btn btn-default col-md-4"  style="float: none">' +
+          i18n.t('common.actions.cancel') + '</button>' +
+
+          '<button type="button" id="ok-add-duration" class="btn btn-default col-md-7 col-md-offset-1"' +
+          ' style="float: none">' +
+          i18n.t('common.actions.ok') + '</button>' +
+          '<label class="col-md-5">Or</label>' +
+          '<button type="button" id="start-add-duration" class="btn btn-default col-md-7"' +
+          ' style="float: none">' +
+          i18n.t('common.actions.start') + '</button>' +
+          '</form>').html();
+      }
+    });
+    $('#add-duration').on('hidden.bs.popover', function () {
+      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
+    });
+    $('#add-duration').on('shown.bs.popover', function () {
+      var endDate = moment();
+      $(document.body).off('click', '#ok-add-duration');
+      $(document.body).on('click', '#ok-add-duration', function () {
+        endDate = moment(endDate);
+        if (endDate.isValid()) {
+          $('#add-duration').popover('toggle');
+          var event = that.model.get('event');
+          event.duration = endDate.unix() - event.time;
+          that.ui.saveBtn.trigger('click');
+        }
+      });
+      $(document.body).off('click', '#cancel-add-duration');
+      $(document.body).on('click', '#cancel-add-duration', function () {
+        $('#add-duration').popover('toggle');
+      });
+      $(document.body).off('click', '#start-add-duration');
+      $(document.body).on('click', '#start-add-duration', function () {
+        that.model.get('event').duration = null;
+        that.ui.saveBtn.trigger('click');
+        $('#add-duration').popover('toggle');
+      });
+      $(document.body).off('click', '#endDateButton');
+      $(document.body).on('click', '#endDateButton', function () {
+        endDate = moment();
+        $('#endDateButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#endDatePicker input');
+      $(document.body).on('click', '#endDatePicker input', function () {
+        endDate = moment();
+        $('#endDateButton').trigger('click');
+      });
+      $('#endDatePicker').datetimepicker({
+        direction: 'auto',
+        language: i18n.lng()
+      });
+      $('#endDatePicker').on('dp.change', function (e) {
+        endDate = e.date;
+      });
+      $('#endDatePicker').data('DateTimePicker').setDate(endDate);
+    });
+  },
+  initEditDuration: function () {
+    var that = this;
+    $('#edit-duration').popover('destroy');
+    $('#edit-duration').popover({
+      html: true,
+      placement: 'top',
+      container: 'body',
+      template: '<div class="popover popover-duration" role="tooltip"><div class="arrow"></div><div class="popover-content"></div></div>',
+      content: function () {
+        return $('<form class="form-horizontal">' +
+          '<div class="form-group">' +
+          '  <label for="endDatePicker">' + i18n.t('events.common.labels.endDatePicker') + '</label>' +
+          '  <div class="input-group date picker" id="endDatePicker">' +
+          '    <input type="text" class="form-control"/> ' +
+          '    <span id="endDateButton" class="input-group-addon">' +
+          '      <span class="fa fa-calendar"></span>' +
+          '    </span>' +
+          '  </div>' +
+          '</div>' +
+          '<button type="button" id="cancel-add-duration" ' +
+          'class="btn btn-default col-md-4"  style="float: none">' +
+          i18n.t('common.actions.cancel') + '</button>' +
+
+          '<button type="button" id="ok-add-duration" class="btn btn-default col-md-7 col-md-offset-1"' +
+          ' style="float: none">' +
+          i18n.t('common.actions.ok') + '</button>' +
+          '</form>').html();
+      }
+    });
+    $('#edit-duration').on('hidden.bs.popover', function () {
+      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
+    });
+    $('#edit-duration').on('shown.bs.popover', function () {
+      var endDate = moment();
+      $(document.body).off('click', '#ok-add-duration');
+      $(document.body).on('click', '#ok-add-duration', function () {
+        endDate = moment(endDate);
+        if (endDate.isValid()) {
+          $('#edit-duration').popover('toggle');
+          var event = that.model.get('event');
+          event.duration = endDate.unix() - event.time;
+          that.ui.saveBtn.trigger('click');
+        }
+      });
+      $(document.body).off('click', '#cancel-add-duration');
+      $(document.body).on('click', '#cancel-add-duration', function () {
+        $('#edit-duration').popover('toggle');
+      });
+      $(document.body).off('click', '#endDateButton');
+      $(document.body).on('click', '#endDateButton', function () {
+        endDate = moment();
+        $('#endDateButton').trigger('click');
+      });
+
+      $(document.body).off('click', '#endDatePicker input');
+      $(document.body).on('click', '#endDatePicker input', function () {
+        endDate = moment();
+        $('#endDateButton').trigger('click');
+      });
+      $('#endDatePicker').datetimepicker({
+        direction: 'auto',
+        language: i18n.lng()
+      });
+      $('#endDatePicker').on('dp.change', function (e) {
+        endDate = e.date;
+      });
+      $('#endDatePicker').data('DateTimePicker').setDate(endDate);
+    });
+  },
+  displayDuration: function () {
+    var event = this.model.get('event');
+    if (event.isRunning()) {
+      this.startTimer();
+      return '<span class="duration-clock"></span>';
+    } else if (event.duration && event.duration > 0) {
+      return '<span>' +
+        moment.preciseDiff(moment.unix(0), moment.unix(event.duration)) +
+        ' (end: ' + window.PryvBrowser.getTimeString(event.time + event.duration) + ' )</span>';
+    }
+  },
+  getDurationControl: function () {
+    var event = this.model.get('event');
+    if (event.isRunning()) {
+      this.startTimer();
+      return '<span class="duration-clock"></span>' +
+      '<button id="stop-duration" class="btn btn-default" data-i18n="common.actions.stop" type="button"></button>';
+    }
+    if (event.duration && event.duration > 0) {
+      return '<span>' +
+        moment.preciseDiff(moment.unix(0), moment.unix(event.duration)) +
+        ' (end: ' + window.PryvBrowser.getTimeString(event.time + event.duration) + ' )</span>' +
+        '<span class="btn-group">' +
+      '<button class="btn btn-default" id="edit-duration" type="button"><i class="fa fa-calendar"></i></button>' +
+      '<button class="btn btn-danger" id="remove-duration" type="button"><i class="fa fa-times"></i></button>' +
+        '</span>';
+    }
+    if (!event.duration || event.duration <= 0) {
+      return '<button class="btn btn-default" id="add-duration" type="button">Add duration</button>';
+    }
+  },
+  /* jshint ignore:end */
   _walkStreamStructure: function (stream, depth, currentStreamId) {
     var indentNbr = 4,
       result = '<option ';

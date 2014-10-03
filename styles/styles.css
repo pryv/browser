@@ -1764,3 +1764,6 @@ color: #FFF;
 .colpick {
   z-index: 9000;
 }
+.popover {
+  z-index: 9010;
+}

@@ -13,10 +13,11 @@ tsTransform.transform = function (timeSeriesModel) {
 
   var aggGroups = getAggregationGroups(timeSeriesModel.get('events'), aggGroupKeyFn, aggGroupTimeFn);
 
-  var streamId = timeSeriesModel.get('streamId');
+  var baseSeriesId = timeSeriesModel.get('streamId') + '_' +
+          timeSeriesModel.get('type').replace('/', '_');
   var result = {
-    xCol: ['x__' + streamId],
-    yCol: ['y__' + streamId]
+    xCol: ['x__' + baseSeriesId],
+    yCol: ['y__' + baseSeriesId]
   };
   switch (timeSeriesModel.get('transform')) {
   case 'sum':

@@ -82,6 +82,7 @@ ChartView.makePlot = function () {
   this.c3settings.data = {
     xs: {},
     columns: [],
+    axes: {},
     names: {},
     types: {},
     colors: {}
@@ -91,7 +92,9 @@ ChartView.makePlot = function () {
   this.setUpContainer();
 
   var eventsCount = 0,
-      eventSymbolsPerDataId = {};
+      eventSymbolsPerDataId = {},
+      yAxisForType = {},
+      yAxesCount = 0;
   collection.each(function (series, seriesIndex) {
     series.sortData();
     var c3data = this.c3settings.data,
@@ -108,6 +111,15 @@ ChartView.makePlot = function () {
     eventSymbolsPerDataId[seriesDataId] = eventSymbol;
 
     c3data.names[seriesDataId] = series.get('streamName') + ' (' + eventSymbol + ')';
+
+    // separate y axis per event type
+    var yAxis = yAxisForType[eventType];
+    if (! yAxis) {
+      yAxesCount++;
+      yAxis = 'y' + (yAxesCount > 1 ? yAxesCount : '');
+      yAxisForType[eventType] = yAxis;
+    }
+    c3data.axes[seriesDataId] = yAxis;
 
     switch (series.get('style')) {
     case 'bar':
@@ -145,10 +157,12 @@ ChartView.makePlot = function () {
     }
   }.bind(this));
 
-  // TODO: adjust ticks nuber density from scale & available space, etc.
-  var timeBounds = pryvBrowser.timeView.getTimeBounds(),
+  // TODO: adjust ticks density from scale & available space, etc.
+  var timeScale = pryvBrowser.timeView.getScale(),
+      timeBounds = pryvBrowser.timeView.getTimeBounds(),
       fromMsTime = timeBounds.from * 1000,
-      toMsTime = timeBounds.to * 1000;
+      toMsTime = timeBounds.to * 1000,
+      tickSettings = getTickSettings(timeScale, fromMsTime, toMsTime);
   this.c3settings.axis = {
     x: {
       type: 'timeseries',
@@ -156,18 +170,27 @@ ChartView.makePlot = function () {
       max: toMsTime,
       tick: {
         fit: false,
-        format: getTimeTickLabelFn(pryvBrowser.timeView.getScale(), fromMsTime, toMsTime)
+        format: tickSettings.getLabel,
+        values: tickSettings.getValues(fromMsTime, toMsTime)
       }
+    },
+    y: {
+      show: yAxesCount === 1
     }
   };
   this.c3settings.tooltip = {
     format: {
       title: getFullTimeLabel,
       // TODO: name: function (id) {},
-      value: function (value, ratio, id) {
-        return d3.format(eventSymbolsPerDataId[id] + ',.2r')(value);
-      }
+//      value: function (value, ratio, id) {
+//        var s = d3.format(eventSymbolsPerDataId[id] + ',.2r')(value);
+//        return s;
+//      }
     }
+  };
+  // TODO: find why svg renders bigger than container element & fix this (shouldn't be needed)
+  this.c3settings.padding = {
+    left: 25
   };
 
   if (this.model.get('showNodeCount')) {
@@ -205,75 +228,77 @@ function getEventValueSymbol(eventType, typeExtra) {
 
 //TODO: extract time formatting stuff to utility helper
 
-var TickIntervalsFromScale = {
+var TickIntervalForScale = {
   day: 'hour',
   week: 'dayOfWeek',
   month: 'week',
   year: 'month',
-  custom: null // to be dynamically determined
+  custom: null // dynamically determined
 };
-var DateFormats = {
-  hour: 'H',
-  dayOfWeek: 'ddd',
-  week: 'D.M.YYYY',
-  month: 'MMM',
-  year: 'YYYY'
-};
-var TimeTickLabelFns = {
-  hour: function (msTime) {
-    var m = moment(msTime);
-    if (m.minute() === 0) {
-      return m.format(DateFormats.hour);
-    }
+
+var TickIntervals = {
+  hour: {
+    format: 'H',
+    momentKey: 'h'
   },
-  dayOfWeek: function (msTime) {
-    var m = moment(msTime);
-    if (m.hour() === 0) {
-      return m.format(DateFormats.dayOfWeek);
-    }
+  dayOfWeek: {
+    format: 'ddd',
+    momentKey: 'd'
   },
-  week: function (msTime) {
-    var m = moment(msTime);
-    if (m.weekday() === 0) {
-      return m.format(DateFormats.week);
-    }
+  week: {
+    format: 'ddd D.M',
+    momentKey: 'w'
   },
-  month: function (msTime) {
-    var m = moment(msTime);
-    if (m.date() === 1) {
-      return m.format(DateFormats.month);
-    }
+  month: {
+    format: 'MMM',
+    momentKey: 'M'
   },
-  year: function (msTime) {
-    var m = moment(msTime);
-    if (m.dayOfYear() === 1) {
-      return m.format(DateFormats.year);
-    }
+  year: {
+    format: 'YYYY',
+    momentKey: 'y'
   }
 };
 
-function getFullTimeLabel(msTime) {
-  return moment(msTime).calendar();
-}
+var TickSettings = {};
+_.each(TickIntervals, function (iValue, iKey) {
+  TickSettings[iKey] = {
+    getLabel: function (msTime) {
+      return moment(msTime).format(iValue.format);
+    },
+    getValues: function (fromMsTime, toMsTime) {
+      var values = [fromMsTime],
+          currentM = moment(fromMsTime);
+      while (+currentM <= toMsTime) {
+        values.push(+currentM);
+        currentM.add(1, iValue.momentKey);
+      }
+      return values;
+    }
+  };
+});
 
-function getTimeTickLabelFn(timeScale, fromMsTime, toMsTime) {
-  var tickInterval = TickIntervalsFromScale[timeScale];
-  if (! tickInterval) {
+function getTickSettings(timeScale, fromMsTime, toMsTime) {
+  var interval = TickIntervalForScale[timeScale];
+  if (! interval) {
     // custom scale
     var duration = moment.duration(toMsTime - fromMsTime);
     if (duration.years() >= 2) {
-      tickInterval = 'year';
+      interval = 'year';
     } else if (duration.months() >= 2) {
-      tickInterval = 'month';
+      interval = 'month';
     } else if (duration.days() >= 14) {
-      tickInterval = 'week';
+      interval = 'week';
     } else if (duration.days() >= 2) {
-      tickInterval = 'dayOfWeek';
+      interval = 'dayOfWeek';
     } else {
-      tickInterval = 'hour';
+      interval = 'hour';
     }
   }
-  return TimeTickLabelFns[tickInterval];
+  return TickSettings[interval];
+}
+
+function getFullTimeLabel(msTime) {
+  return moment(msTime).calendar();
 }
 
 /**
@@ -384,12 +409,6 @@ ChartView.setUpContainer = function () {
   // Setting up the chart container
   this.chartContainer = this.container + ' .chartContainer';
   $(this.container).html('<div class="chartContainer"></div>');
-  $(this.chartContainer).css({
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%'
-  });
 };
 
 ChartView.getExtremeTimes = function () {

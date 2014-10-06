@@ -601,66 +601,56 @@ padding: 0px 15px;
   height: 100%;
 }
 
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.34);
-  shape-rendering: crispEdges;
-}
-
-.circle {
-  fill: #FFF;
-}
-text{font-size:10px;}
-.line
-{
-  stroke: #FFF;
-  fill: none;
-}
+/* Chart styles */
 
 .chartContainer
 {
-  overflow: hidden;
-  width:100%;
-  height:100%;
-}
-.countView {
-  display: table;
-
-}
-/*.countView div:hover {
-  opacity: 0;
-} */
-
-.countView div {
-position: absolute;
-/*display: table-cell;
-vertical-align: middle;
-text-align: center;*/
-  z-index: 100 !important;
-  transition: opacity .1s ease-out;
-  -moz-transition: opacity .1s ease-out;
-  -webkit-transition: opacity .1s ease-out;
-  -o-transition: opacity .1s ease-out;
-  bottom: 1px;
-  right: 1px;
-}
-.countView span {
-
-  border-radius: 70px;
-  background-color: rgba(60, 60, 60, 0.8);
-  padding: 0px 7px;
-  font-size: 11px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.tooltip {
-  position: absolute;
-  display: none;
-  padding: 2px;
-  opacity: 1;
-  z-index: 9999;
+.c3 svg {
+  font: inherit;
+  font-size: 10px;
 }
+
+.chartContainer .c3-legend-item {
+  font-size: 1.1em;
+}
+.chartContainer .c3-axis line, .chartContainer .c3-axis path {
+  stroke: #999;
+}
+.chartContainer .c3-axis text {
+  fill: #999;
+}
+.chartContainer .c3-xgrid-focus {
+  stroke: #999;
+  stroke-dasharray: 5,5;
+}
+
+/* i.e. tooltip container */
+.chartContainer.c3 > div {
+  border: 1px solid #E0E0E0;
+  border-radius: 2px;
+}
+.chartContainer .c3-tooltip {
+  box-shadow: none;
+}
+.chartContainer .c3-tooltip tr {
+  border: none;
+}
+.chartContainer .c3-tooltip th, .chartContainer .c3-tooltip td {
+  border: none;
+  font-size: inherit;
+  color: inherit;
+  background-color: inherit;
+}
+
+
+/* end chart styles */
+
 /** detail view modal **/
 .sharings {
   overflow-y: auto;

@@ -2,6 +2,8 @@ var Backbone = require('backbone');
 
 var ChartModel = {
   defaults: {
+    // TODO: review those fields
+
     container: null,
     view: null,
 
@@ -31,10 +33,10 @@ var ChartModel = {
     onHover: null,
     onDnD: null,
 
-    // Panning and Zooming
-    allowPan: false,      // Allows navigation through the chart
-    allowZoom: false,     // Allows zooming on the chart
-    panZoomButton: false,
+    /**
+     * Allow zooming & panning via subchart control.
+     */
+    enableNavigation: false,
 
     // Display X-axis
     xaxis: null,

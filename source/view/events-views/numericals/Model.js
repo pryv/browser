@@ -235,28 +235,26 @@ NumericalsPlugin.prototype.refreshCollection = function () {
   }
 
 
-  if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0 && this.container) {
+  if ((! this.modelView || ! this.view) && this.seriesCollection.length !== 0 && this.container) {
     this.modelView = new ChartModel({
-        container: '#' + this.container,
-        view: null,
-        requiresDim: true,
-        collection: this.seriesCollection,
-        highlighted: false,
-        highlightedTime: null,
-        allowPieChart: false,
-        dimensions: this.computeDimensions(),
-        legendStyle: 'table', // Legend style: 'list', 'table'
-        legendButton: false,  // A button in the legend
-        legendShow: 'size',     // Show legend or not
-        legendExtras: true,   // use extras in the legend
-        onClick: true,
-        onHover: true,
-        onDnD: true,
-        allowPan: false,      // Allows navigation through the chart
-        allowZoom: false,     // Allows zooming on the chart
-        panZoomButton: false,
-        xaxis: false
-      });
+      container: '#' + this.container,
+      view: null,
+      requiresDim: true,
+      collection: this.seriesCollection,
+      highlighted: false,
+      highlightedTime: null,
+      allowPieChart: false,
+      dimensions: this.computeDimensions(),
+      legendStyle: 'table', // Legend style: 'list', 'table'
+      legendButton: false,  // A button in the legend
+      legendShow: 'size',     // Show legend or not
+      legendExtras: true,   // use extras in the legend
+      onClick: true,
+      onHover: true,
+      onDnD: true,
+      enableNavigation: false,
+      xaxis: false
+    });
     if (typeof(document) !== 'undefined')  {
       this.view = new ChartView({model: this.modelView});
       this.modelView.set('dimensions', this.computeDimensions());

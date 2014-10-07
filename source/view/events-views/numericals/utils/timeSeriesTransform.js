@@ -11,7 +11,8 @@ tsTransform.transform = function (timeSeriesModel) {
   var aggGroupKeyFn = getAggregationGroupKeyFn(timeSeriesModel.get('interval')),
       aggGroupTimeFn = getAggregationGroupTimeFn(timeSeriesModel.get('interval'));
 
-  var aggGroups = getAggregationGroups(timeSeriesModel.get('events'), aggGroupKeyFn, aggGroupTimeFn);
+  var aggGroups = getAggregationGroups(timeSeriesModel.get('events'),
+                                       aggGroupKeyFn, aggGroupTimeFn);
 
   var baseSeriesId = timeSeriesModel.get('streamId') + '_' +
           timeSeriesModel.get('type').replace('/', '_');
@@ -181,7 +182,7 @@ function applyStackedSum(aggregationGroups, result) {
  out -> [[1234, avg], [145, avg]]
  */
 function applyAverage(aggregationGroups, result) {
-  _.each(aggregationGroups, function (groupEvents, groupKey) {
+  _.each(aggregationGroups, function (groupEvents) {
     result.xCol.push(groupEvents[0].time);
     result.yCol.push(computeAverage(groupEvents));
   });

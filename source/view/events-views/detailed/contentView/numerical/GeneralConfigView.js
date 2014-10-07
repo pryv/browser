@@ -42,9 +42,7 @@ module.exports = Marionette.ItemView.extend({
           onClick: false,
           onHover: true,
           onDnD: false,
-          allowPan: true,      // Allows navigation through the chart
-          allowZoom: true,     // Allows zooming on the chart
-          panZoomButton: true,
+          enableNavigation: true,
           xaxis: true,
           editPoint: false,
           showNodeCount: false

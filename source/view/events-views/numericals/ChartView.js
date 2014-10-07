@@ -1,4 +1,4 @@
-/* global $, d3, c3, moment, pryvBrowser */
+/* global $, c3, moment, pryvBrowser */
 
 var _ = require('underscore'),
     Marionette = require('backbone.marionette'),
@@ -12,7 +12,6 @@ var ChartView = {
   data: null,
   c3settings: {},
   chart: null,
-  plot: null,
   chartContainer: null,
   useExtras: null,
   waitExtras: null,
@@ -69,12 +68,12 @@ ChartView.onRender = function () {
       this.model.get('singleNumberAsText')) {
     this.singleEventSetup();
   } else {
-    this.makePlot();
+    this.makeChart();
     this.onDateHighLighted();
   }
 };
 
-ChartView.makePlot = function () {
+ChartView.makeChart = function () {
   var collection = this.model.get('collection');
   this.container = this.model.get('container');
 
@@ -95,7 +94,7 @@ ChartView.makePlot = function () {
       eventSymbolsPerDataId = {},
       yAxisForType = {},
       yAxesCount = 0;
-  collection.each(function (series, seriesIndex) {
+  collection.each(function (series) {
     series.sortData();
     var c3data = this.c3settings.data,
         seriesData = tsTransform.transform(series),
@@ -141,20 +140,6 @@ ChartView.makePlot = function () {
     }
 
     eventsCount += seriesData.yCol.length;
-
-    // TODO: review/remove what follows
-
-    this.options.yaxes.push({ show: false});
-
-    if (this.model.get('allowPan')) {
-      this.options.yaxes[seriesIndex].panRange = seriesData.length > 1 ?
-          this.getExtremeValues(seriesData) : false;
-    }
-    if (this.model.get('allowZoom')) {
-      this.options.yaxes[seriesIndex].zoomRange = seriesData.length > 1 ?
-          [this.getExtremeTimes()[0] - 100000, this.getExtremeTimes()[1] + 100000] :
-          false;
-    }
   }.bind(this));
 
   // TODO: adjust ticks density from scale & available space, etc.
@@ -180,15 +165,24 @@ ChartView.makePlot = function () {
   };
   this.c3settings.tooltip = {
     format: {
-      title: getFullTimeLabel,
-      // TODO: name: function (id) {},
+      title: getFullTimeLabel
+      // TODO for nicer value display
+      // name: function (id) {},
 //      value: function (value, ratio, id) {
 //        var s = d3.format(eventSymbolsPerDataId[id] + ',.2r')(value);
 //        return s;
 //      }
     }
   };
-  // TODO: find why svg renders bigger than container element & fix this (shouldn't be needed)
+  this.c3settings.legend = {
+// not supported yet (solution for now: custom legend):  position: 'top'
+  };
+  // TODO fix: this triggers an issue with model being modified by detailed view
+  // (to reproduce: chart in treemap, open details, back, refresh: treemap chart model corrupted)
+//  if (this.model.get('enableNavigation')) {
+//    this.c3settings.subchart = {show: true};
+//  }
+    // TODO: find why svg renders bigger than container element & fix this (shouldn't be needed)
   this.c3settings.padding = {
     left: 25
   };
@@ -226,7 +220,7 @@ function getEventValueSymbol(eventType, typeExtra) {
   return symbol;
 }
 
-//TODO: extract time formatting stuff to utility helper
+//TODO: consider extracting time formatting stuff to utility helper
 
 var TickIntervalForScale = {
   day: 'hour',
@@ -302,7 +296,7 @@ function getFullTimeLabel(msTime) {
 }
 
 /**
- * Generates the general plot options based on the model
+ * Generates the general chart options based on the model
  * TODO: remove or cleanup
  */
 ChartView.makeOptions = function () {
@@ -378,29 +372,6 @@ ChartView.makeOptions = function () {
   } else {
     this.options.legend.show = false;
   }
-
-  // If pan is activated
-  if (this.model.get('allowPan')) {
-    this.options.pan = {
-      interactive: collection ? (seriesCounts < 2 ?
-        (collection.at(0).get('events').length > 1) : true)  : true,
-      cursor: 'move',
-      frameRate: 20
-    };
-    this.options.xaxis.panRange = [
-      this.getExtremeTimes()[0] - 100000,
-      this.getExtremeTimes()[1] + 100000
-    ];
-  }
-
-  if (this.model.get('allowZoom')) {
-    this.options.zoom = {
-      interactive: true,
-      trigger: 'dblclick',
-      amount: 1.2
-    };
-  }
-  this.options.xaxis.zoomRange = [1000, null];
 
   seriesCounts = null;
 };
@@ -501,108 +472,94 @@ ChartView.rebuildLegend = function (element) {
   $(element).replaceWith(list);
 };
 
-// TODO: remove, obsolete (handled by C3)
-ChartView.showTooltip = function (x, y, content) {
-  if ($('#chart-tooltip').length === 0) {
-    $('body').append('<div id="chart-tooltip" class="tooltip">' + content + '</div>');
-  }
-  if ($('#chart-tooltip').text() !== content) {
-    $('#chart-tooltip').text(content);
-  }
-  $('#chart-tooltip').css({
-//      top: x + this.plot.offset().top,
-//      left: y + this.plot.offset().left
-  }).fadeIn(500);
-};
-
-// TODO: remove, obsolete (handled by C3)
-ChartView.removeTooltip = function () {
-  $('#chart-tooltip').remove();
-};
-
 ChartView.onDateHighLighted = function (date) {
   if (! date) {
     date = this.model.get('highlightedTime');
   }
-  if (! this.plot || ! date) {
+  if (! this.chart || ! date) {
     return;
   }
 
-  this.plot.unhighlight();
+  this.chart.unselect();
 
-  var chartView = this;
-  var data = this.plot.getData();
+  //TODO
 
-  this.model.get('collection').each(function (s, i) {
-    var dF = chartView.getDurationFunction(s.get('interval'));
-    var distance = null;
-    var best = 0;
-
-    for (var j = 0; j < data[i].data.length; ++j) {
-      var duration = dF(new Date(data[i].data[j][0]));
-      var d1 = Math.abs(date - (data[i].data[j][0] / 1000));
-      var d2 = Math.abs(date - ((data[i].data[j][0] + duration) / 1000));
-
-      if (distance === null) {
-        best = j;
-        distance = d1 < d2 ? d1 : d2;
-      } else if ((data[i].data[j][0] / 1000) <= date &&
-        date <= ((data[i].data[j][0] + duration) / 1000)) {
-        best = j;
-        break;
-      } else if (d1 <= distance || d2 <= distance) {
-        best = j;
-        distance = d1 < d2 ? d1 : d2;
-      }
-    }
-
-    best = data[i].data.length === best ? best - 1: best;
-    chartView.plot.highlight(i, best);
-  });
+//  var chartView = this;
+//  var data = this.chart.getData();
+//
+//  this.model.get('collection').each(function (s, i) {
+//    var dF = chartView.getDurationFunction(s.get('interval'));
+//    var distance = null;
+//    var best = 0;
+//
+//    for (var j = 0; j < data[i].data.length; ++j) {
+//      var duration = dF(new Date(data[i].data[j][0]));
+//      var d1 = Math.abs(date - (data[i].data[j][0] / 1000));
+//      var d2 = Math.abs(date - ((data[i].data[j][0] + duration) / 1000));
+//
+//      if (distance === null) {
+//        best = j;
+//        distance = d1 < d2 ? d1 : d2;
+//      } else if ((data[i].data[j][0] / 1000) <= date &&
+//        date <= ((data[i].data[j][0] + duration) / 1000)) {
+//        best = j;
+//        break;
+//      } else if (d1 <= distance || d2 <= distance) {
+//        best = j;
+//        distance = d1 < d2 ? d1 : d2;
+//      }
+//    }
+//
+//    best = data[i].data.length === best ? best - 1: best;
+//    chartView.chart.highlight(i, best);
+//  });
 };
 
-ChartView.highlightEvent = function (event) {
-  if (! this.plot) {
+ChartView.highlightEvent = function (/*event*/) {
+  if (! this.chart) {
     return;
   }
-  this.plot.unhighlight();
-  var c = this.model.get('collection');
-  var e = event;
-  var m = null;
-  var cIdx, eIdx;
-  var connectionId = e.connection.id;
-  var streamId = e.streamId;
-  var streamName = e.stream.name;
+  this.chart.unselect();
 
-  for (var it = 0; it < c.length; ++it) {
-    m = c.at(it);
-    if (m) {
-      if (m.get('connectionId') === connectionId &&
-        m.get('streamId') === streamId &&
-        m.get('streamName') === streamName) {
-        break;
-      }
-    }
-  }
-  if (it !== c.length) {
-    cIdx = it;
-  } else {
-    return;
-  }
+  // TODO
 
-  var data = this.plot.getData()[it];
-  for (it = 0; it < data.data.length; ++it) {
-    var elem = data.data[it];
-    if (elem[0] === e.time * 1000 && elem[1] === +e.content) {
-      break;
-    }
-  }
-  if (it !== data.data.length) {
-    eIdx = it;
-  } else {
-    return;
-  }
-  this.plot.highlight(cIdx, eIdx);
+//  var c = this.model.get('collection');
+//  var e = event;
+//  var m = null;
+//  var cIdx, eIdx;
+//  var connectionId = e.connection.id;
+//  var streamId = e.streamId;
+//  var streamName = e.stream.name;
+//
+//  for (var it = 0; it < c.length; ++it) {
+//    m = c.at(it);
+//    if (m) {
+//      if (m.get('connectionId') === connectionId &&
+//        m.get('streamId') === streamId &&
+//        m.get('streamName') === streamName) {
+//        break;
+//      }
+//    }
+//  }
+//  if (it !== c.length) {
+//    cIdx = it;
+//  } else {
+//    return;
+//  }
+//
+//  var data = this.chart.getData()[it];
+//  for (it = 0; it < data.data.length; ++it) {
+//    var elem = data.data[it];
+//    if (elem[0] === e.time * 1000 && elem[1] === +e.content) {
+//      break;
+//    }
+//  }
+//  if (it !== data.data.length) {
+//    eIdx = it;
+//  } else {
+//    return;
+//  }
+//  this.chart.highlight(cIdx, eIdx);
 };
 
 ChartView.onClose = function () {
@@ -616,62 +573,45 @@ ChartView.onClose = function () {
   this.chartContainer = null;
   this.options = null;
   this.c3settings = null;
-  this.plot = null; // TODO remove
   this.chart = null;
 };
 
 ChartView.createEventBindings = function () {
-  $(this.container).unbind();
+  var $container = $(this.container);
+  $container.unbind();
 
-  $(this.container).bind('resize', function () {
+  $container.bind('resize', function () {
     this.trigger('chart:resize', this.model);
   });
 
-  if (this.model.get('editPoint')) {
-    $(this.container).bind('plotclick', this.onEdit.bind(this));
-  }
+  // TODO review & cleanup
 
-  if (this.model.get('onClick')) {
-    $(this.container).bind('plotclick', this.onClick.bind(this));
-  }
-  if (this.model.get('onHover')) {
-    $(this.container).bind('plothover', this.onHover.bind(this));
-  }
+//  if (this.model.get('editPoint')) {
+//    $container.bind('plotclick', this.onEdit.bind(this));
+//  }
+//
+//  if (this.model.get('onClick')) {
+//    $container.bind('plotclick', this.onClick.bind(this));
+//  }
+//  if (this.model.get('onHover')) {
+//    $container.bind('plothover', this.onHover.bind(this));
+//  }
+
   if (this.model.get('onDnD')) {
-    $(this.container).attr('draggable', true);
-    $(this.container).bind('dragstart', this.onDragStart.bind(this));
-    $(this.container).bind('dragenter', this.onDragEnter.bind(this));
-    $(this.container).bind('dragover', this.onDragOver.bind(this));
-    $(this.container).bind('dragleave', this.onDragLeave.bind(this));
-    $(this.container).bind('drop', this.onDrop.bind(this));
-    $(this.container).bind('dragend', this.onDragEnd.bind(this));
+    $container.attr('draggable', true);
+    $container.bind('dragstart', this.onDragStart.bind(this));
+    $container.bind('dragenter', this.onDragEnter.bind(this));
+    $container.bind('dragover', this.onDragOver.bind(this));
+    $container.bind('dragleave', this.onDragLeave.bind(this));
+    $container.bind('drop', this.onDrop.bind(this));
+    $container.bind('dragend', this.onDragEnd.bind(this));
   }
 
   if (this.model.get('showNodeCount')) {
-    $(this.container).bind('click',
+    $container.bind('click',
     function () {
       this.trigger('nodeClicked');
     }.bind(this));
-  }
-
-  if (this.model.get('allowPan')) {
-    $(this.chartContainer).bind('plotpan', this.onPlotPan.bind(this));
-  }
-  if (this.model.get('allowZoom')) {
-    $(this.chartContainer).bind('plotzoom', this.onPlotPan.bind(this));
-  }
-};
-
-ChartView.onPlotPan = function () {
-  if (this.model.get('legendShow') &&
-      this.model.get('legendStyle') &&
-      this.model.get('legendStyle') === 'list') {
-    if (this.model.get('legendContainer')) {
-      this.rebuildLegend(this.model.get('legendContainer') + ' table');
-    } else {
-      this.rebuildLegend(this.container + ' table');
-    }
-    this.legendButtonBindings();
   }
 };
 
@@ -708,141 +648,98 @@ ChartView.legendButtonClicked = function (e) {
 };
 
 /************************
- * Click and Point hover Functions
+ * Click Functions
  */
 
 ChartView.onClick = function () {
   this.trigger('chart:clicked', this.model);
 };
 
-ChartView.onHover = function (event, pos, item) {
-  if (item) {
-    var labelTime = item.datapoint[0].toFixed(0);
-    var evList = this.model.get('collection').at(item.seriesIndex).get('events');
-    var sts = ((evList[evList.length - 1].time - evList[0].time) * 1000) / evList.length;
-
-    var bestFit = this.findNearestPoint(evList, +labelTime);
-
-    if (bestFit.distance < sts) {
-      //console.log(bestFit.event.time * 1000, +labelTime);
-//        var coords = this.computeCoordinates(0, item.seriesIndex, item.datapoint[1],
-//          item.datapoint[0]);
-//        this.showTooltip(coords.top - 33, coords.left - 25, bestFit.event.content);
-    }
-  } else {
-    this.removeTooltip();
-  }
-};
-
-ChartView.findNearestPoint = function (events, time) {
-  var distance = Infinity;
-  var best = -Infinity;
-  for (var i = 0, l = events.length; i < l; ++i) {
-    var cTime = events[i].time * 1000;
-
-    if (Math.abs(cTime - time) < distance) {
-      distance = Math.abs(cTime - time);
-      best = i;
-    } else {
-      break;
-    }
-  }
-  return {event: events[best], distance: distance};
-};
-
-ChartView.onEdit = function (event, pos, item) {
-  if ($('#chart-pt-editor')) {
-    $('#editPointVal').unbind();
-    $('#editPointBut').unbind();
-    $('#chart-pt-editor').remove();
-  }
-  if (this.model.get('editPoint') && item) {
-    var tc = this.model.get('collection').at(0);
-    if ((tc.get('transform') === 'none' || tc.get('transform') === null) &&
-      (tc.get('interval') === 'none' || tc.get('interval') === null)) {
-      var editedSerie =  this.model.get('collection').at(item.seriesIndex);
-      var allEvents = editedSerie.get('events');
-      var editedEvent = null;
-      for (var i = 0; i < allEvents.length; ++i) {
-        if (allEvents[i].content === item.datapoint[1] &&
-          allEvents[i].time * 1000 === item.datapoint[0]) {
-          editedEvent =  allEvents[i];
-          break;
-        }
-      }
-      this.currentlyEdited = {
-        event: editedEvent,
-        eventId: editedEvent.id,
-        streamId: editedEvent.streamId,
-        value: editedEvent.content,
-        time: editedEvent.time
-      };
-      this.showPointEditor(item.pageY + 5, item.pageX + 5);
-    }
-  }
-};
-
-ChartView.showPointEditor = function (x, y) {
-  $('.modal-content').append(
-    '<div id="chart-pt-editor" class="tooltip has-feedback">' +
-    '  <div class="input-group">' +
-    '    <input type="text" class="form-control" id="editPointVal" placeholder="' +
-      this.currentlyEdited.value + '">' +
-    '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
-    '    <span class="input-group-btn">' +
-    '      <button class="btn" id="editPointBut" type="button">Ok!</button>' +
-    '    </span>' +
-    '  </div>' +
-    '</div>');
-
-  var os = $('.modal-content').offset();
-  $('#chart-pt-editor').css({
-    color: 'none',
-    'background-color': 'none',
-    width: '20%',
-    top: x - os.top,
-    left: y - os.left
-  }).fadeIn(200);
-
-  $('#editPointVal').bind('input', function () {
-    if ($(this).val().length < 1) {
-      $('#chart-pt-editor').removeClass('has-success');
-      $('#chart-pt-editor').removeClass('has-warning');
-      $('#editPointBut').removeClass('btn-success');
-      $('#editPointBut').removeClass('btn-danger');
-    } else if (isNaN($(this).val())) {
-      $('#chart-pt-editor').removeClass('has-success');
-      $('#chart-pt-editor').addClass('has-warning');
-      $('#editPointBut').removeClass('btn-success');
-      $('#editPointBut').addClass('btn-danger');
-    } else {
-      $('#chart-pt-editor').removeClass('has-warning');
-      $('#chart-pt-editor').addClass('has-success');
-      $('#editPointBut').removeClass('btn-danger');
-      $('#editPointBut').addClass('btn-success');
-    }
-  });
-
-  $('#editPointBut').bind('click', function () {
-    this.currentlyEdited.value = +$('#editPointVal').val();
-    this.currentlyEdited.event.content = this.currentlyEdited.value;
-    if ($('#chart-pt-editor')) {
-      $('#editPointVal').unbind();
-      $('#editPointBut').unbind();
-      $('#chart-pt-editor').remove();
-    }
-    this.trigger('eventEdit', this.currentlyEdited);
-    this.render();
-  }.bind(this));
-};
-
-ChartView.computeCoordinates = function (xAxis, yAxis, xPoint, yPoint) {
-  var yAxes = this.plot.getYAxes();
-  var xAxes = this.plot.getXAxes();
-  var coordY = yAxes[yAxis].p2c(xPoint);
-  var coordX = xAxes[xAxis].p2c(yPoint);
-  return { top: coordY, left: coordX};
-};
+//ChartView.onEdit = function (event, pos, item) {
+//  if ($('#chart-pt-editor')) {
+//    $('#editPointVal').unbind();
+//    $('#editPointBut').unbind();
+//    $('#chart-pt-editor').remove();
+//  }
+//  if (this.model.get('editPoint') && item) {
+//    var tc = this.model.get('collection').at(0);
+//    if ((tc.get('transform') === 'none' || tc.get('transform') === null) &&
+//      (tc.get('interval') === 'none' || tc.get('interval') === null)) {
+//      var editedSerie =  this.model.get('collection').at(item.seriesIndex);
+//      var allEvents = editedSerie.get('events');
+//      var editedEvent = null;
+//      for (var i = 0; i < allEvents.length; ++i) {
+//        if (allEvents[i].content === item.datapoint[1] &&
+//          allEvents[i].time * 1000 === item.datapoint[0]) {
+//          editedEvent =  allEvents[i];
+//          break;
+//        }
+//      }
+//      this.currentlyEdited = {
+//        event: editedEvent,
+//        eventId: editedEvent.id,
+//        streamId: editedEvent.streamId,
+//        value: editedEvent.content,
+//        time: editedEvent.time
+//      };
+//      this.showPointEditor(item.pageY + 5, item.pageX + 5);
+//    }
+//  }
+//};
+//
+//ChartView.showPointEditor = function (x, y) {
+//  $('.modal-content').append(
+//    '<div id="chart-pt-editor" class="tooltip has-feedback">' +
+//    '  <div class="input-group">' +
+//    '    <input type="text" class="form-control" id="editPointVal" placeholder="' +
+//      this.currentlyEdited.value + '">' +
+//    '      <span id="feedback" class="glyphicon form-control-feedback"></span>' +
+//    '    <span class="input-group-btn">' +
+//    '      <button class="btn" id="editPointBut" type="button">Ok!</button>' +
+//    '    </span>' +
+//    '  </div>' +
+//    '</div>');
+//
+//  var os = $('.modal-content').offset();
+//  $('#chart-pt-editor').css({
+//    color: 'none',
+//    'background-color': 'none',
+//    width: '20%',
+//    top: x - os.top,
+//    left: y - os.left
+//  }).fadeIn(200);
+//
+//  $('#editPointVal').bind('input', function () {
+//    if ($(this).val().length < 1) {
+//      $('#chart-pt-editor').removeClass('has-success');
+//      $('#chart-pt-editor').removeClass('has-warning');
+//      $('#editPointBut').removeClass('btn-success');
+//      $('#editPointBut').removeClass('btn-danger');
+//    } else if (isNaN($(this).val())) {
+//      $('#chart-pt-editor').removeClass('has-success');
+//      $('#chart-pt-editor').addClass('has-warning');
+//      $('#editPointBut').removeClass('btn-success');
+//      $('#editPointBut').addClass('btn-danger');
+//    } else {
+//      $('#chart-pt-editor').removeClass('has-warning');
+//      $('#chart-pt-editor').addClass('has-success');
+//      $('#editPointBut').removeClass('btn-danger');
+//      $('#editPointBut').addClass('btn-success');
+//    }
+//  });
+//
+//  $('#editPointBut').bind('click', function () {
+//    this.currentlyEdited.value = +$('#editPointVal').val();
+//    this.currentlyEdited.event.content = this.currentlyEdited.value;
+//    if ($('#chart-pt-editor')) {
+//      $('#editPointVal').unbind();
+//      $('#editPointBut').unbind();
+//      $('#chart-pt-editor').remove();
+//    }
+//    this.trigger('eventEdit', this.currentlyEdited);
+//    this.render();
+//  }.bind(this));
+//};
 
 /************************
  * Drag and Drop Functions

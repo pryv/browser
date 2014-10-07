@@ -90,8 +90,7 @@ _.extend(Controller.prototype, {
         onClick: false,
         onHover: true,
         onDnD: false,
-        allowPan: false,      // Allows navigation through the chart
-        allowZoom: false,     // Allows zooming on the chart
+        enableNavigation: false,
         xaxis: true,
         showNodeCount: false
       })});

@@ -619,10 +619,14 @@ padding: 0px 15px;
 .chartContainer .c3-legend-item {
   font-size: 1.1em;
 }
-.chartContainer .c3-axis line, .chartContainer .c3-axis path {
+.chartContainer .c3-axis line,
+.chartContainer .c3-axis path,
+.chartContainer .c3-axis-x line,
+.chartContainer .c3-axis-x path {
   stroke: #999;
 }
-.chartContainer .c3-axis text {
+.chartContainer .c3-axis text,
+.chartContainer .c3-axis-x text{
   fill: #999;
 }
 .chartContainer .c3-xgrid-focus {

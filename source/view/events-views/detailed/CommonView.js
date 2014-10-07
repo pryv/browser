@@ -136,7 +136,7 @@ module.exports = Marionette.ItemView.extend({
         var now = moment();
         $('.duration-clock').html(moment.preciseDiff(start, now));
       }
-    }.bind(this), 1000);
+    }.bind(this), 500);
   },
   stopTimer: function () {
     if (this.timer) {

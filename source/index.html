@@ -619,14 +619,14 @@
         </div>
       </div>
       <% if (event.isRunning() || event.duration > 0) { %>
-      <div class="event-detail-prop-outer col-xs-3">
-        <div class="event-detail-prop-inner">
-          <%= event.description %>
-        </div>
-      </div>
       <div class="event-detail-prop-outer col-xs-2">
         <div class="event-detail-prop-inner">
           <%= displayDuration() %>
+        </div>
+      </div>
+      <div class="event-detail-prop-outer col-xs-3">
+        <div class="event-detail-prop-inner">
+          <%= event.description %>
         </div>
       </div>
       <% } else { %>

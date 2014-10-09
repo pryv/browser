@@ -1,4 +1,4 @@
-/*! browser - v0.12.4 - 2014-10-09 *///Not using strict: uneven strict support in browsers, #392, and causes
+/*! browser - v0.12.5 - 2014-10-09 *///Not using strict: uneven strict support in browsers, #392, and causes
 //problems with requirejs.exec()/transpiler plugins that may not be strict.
 /*jslint regexp: true, nomen: true, sloppy: true */
 /*global window, navigator, document, importScripts, setTimeout, opera */
@@ -11723,7 +11723,6 @@ return isNaN(t)?d:t},g=p(h[0]),m=Math.max(g,p(h[1]||"")),g=a?Math.max(g,a.getFul
     if (secDiff) {
       result.push(pluralize(secDiff, 'second'));
     }
-    result = result.splice(0, 2);
     return result.join(STRINGS.delimiter);
   };
 }(moment));

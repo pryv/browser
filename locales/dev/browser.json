@@ -53,6 +53,7 @@
         "detailViewTitle": "__count__ __type__ in <strong>__stream__</strong>",
         "duration": "Duration",
         "endDatePicker": "Set end date",
+        "removeDuration": "Remove duration",
         "streamSelection": "Select a stream",
         "stream": "Stream",
         "tags": "Tags",

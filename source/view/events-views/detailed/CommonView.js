@@ -45,7 +45,14 @@ module.exports = Marionette.ItemView.extend({
     };
   },
   initialize: function () {
-    this.listenTo(this.model, 'change', this.render);
+    this.listenTo(this.model, 'change', this.modelChanged);
+  },
+  modelChanged: function () {
+    var event = this.model.get('event');
+    if (event) {
+      event.newDuration = event.duration;
+    }
+    this.render();
   },
   onClose: function () {
     $('.popover-duration').remove();

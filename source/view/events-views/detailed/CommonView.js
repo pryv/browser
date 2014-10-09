@@ -81,7 +81,7 @@ module.exports = Marionette.ItemView.extend({
       } else if (event.newDuration && event.newDuration > 0) {
         this.ui.durationStopped.show();
         this.ui.durationStoppedClock.html(moment.preciseDiff(moment.unix(0),
-          moment.unix(event.newDuration)) +
+          moment.unix(event.newDuration)).split(' ').splice(0, 4).join(' ') +
           ' (end: ' + window.PryvBrowser.getTimeString(event.time + event.newDuration) + ' )');
       } else if (!event.newDuration || event.newDuration === 0) {
         this.ui.durationNone.show();
@@ -267,85 +267,6 @@ module.exports = Marionette.ItemView.extend({
       $('#endDatePicker').data('DateTimePicker').setDate(endDate);
     });
   },
-  initAddDuration: function () {
-    var that = this;
-    $('#add-duration').popover('destroy');
-    $('#add-duration').popover({
-      html: true,
-      placement: 'top',
-      container: 'body',
-      template: '<div class="popover popover-duration" role="tooltip"><div class="arrow"></div><div class="popover-content"></div></div>',
-      content: function () {
-        return $('<form class="form-horizontal">' +
-          '<div class="form-group">' +
-          '  <label for="endDatePicker">' + i18n.t('events.common.labels.endDatePicker') + '</label>' +
-          '  <div class="input-group date picker" id="endDatePicker">' +
-          '    <input type="text" class="form-control"/> ' +
-          '    <span id="endDateButton" class="input-group-addon">' +
-          '      <span class="fa fa-calendar"></span>' +
-          '    </span>' +
-          '  </div>' +
-          '</div>' +
-          '<button type="button" id="cancel-add-duration" ' +
-          'class="btn btn-default col-md-4"  style="float: none">' +
-          i18n.t('common.actions.cancel') + '</button>' +
-
-          '<button type="button" id="ok-add-duration" class="btn btn-default col-md-7 col-md-offset-1"' +
-          ' style="float: none">' +
-          i18n.t('common.actions.ok') + '</button>' +
-          '<label class="col-md-5">Or</label>' +
-          '<button type="button" id="start-add-duration" class="btn btn-default col-md-7"' +
-          ' style="float: none">' +
-          i18n.t('common.actions.start') + '</button>' +
-          '</form>').html();
-      }
-    });
-    $('#add-duration').on('hidden.bs.popover', function () {
-      $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
-    });
-    $('#add-duration').on('shown.bs.popover', function () {
-      var endDate = moment();
-      $(document.body).off('click', '#ok-add-duration');
-      $(document.body).on('click', '#ok-add-duration', function () {
-        endDate = moment(endDate);
-        if (endDate.isValid()) {
-          $('#add-duration').popover('toggle');
-          var event = that.model.get('event');
-          event.newDuration = endDate.unix() - event.time;
-          that.render();
-        }
-      });
-      $(document.body).off('click', '#cancel-add-duration');
-      $(document.body).on('click', '#cancel-add-duration', function () {
-        $('#add-duration').popover('toggle');
-      });
-      $(document.body).off('click', '#start-add-duration');
-      $(document.body).on('click', '#start-add-duration', function () {
-        that.model.get('event').newDuration = null;
-        $('#add-duration').popover('toggle');
-        that.render();
-      });
-      $(document.body).off('click', '#endDateButton');
-      $(document.body).on('click', '#endDateButton', function () {
-        endDate = moment();
-        $('#endDateButton').trigger('click');
-      });
-
-      $(document.body).off('click', '#endDatePicker input');
-      $(document.body).on('click', '#endDatePicker input', function () {
-        endDate = moment();
-        $('#endDateButton').trigger('click');
-      });
-      $('#endDatePicker').datetimepicker({
-        direction: 'auto',
-        language: i18n.lng()
-      });
-      $('#endDatePicker').on('dp.change', function (e) {
-        endDate = e.date;
-      });
-      $('#endDatePicker').data('DateTimePicker').setDate(endDate);
-    });
-  },
   initEditDuration: function () {
     var that = this;
     $('#edit-duration').popover('destroy');
@@ -375,17 +296,18 @@ module.exports = Marionette.ItemView.extend({
           '</form>').html();
       }
     });
+    $('#edit-duration').attr('title', i18n.t('events.common.labels.endDatePicker'));
     $('#edit-duration').on('hidden.bs.popover', function () {
       $('.bootstrap-datetimepicker-widget.dropdown-menu').remove();
     });
     $('#edit-duration').on('shown.bs.popover', function () {
-      var endDate = moment();
+      var event = that.model.get('event');
+      var endDate = moment.unix(event.time + event.newDuration);
       $(document.body).off('click', '#ok-add-duration');
       $(document.body).on('click', '#ok-add-duration', function () {
         endDate = moment(endDate);
         if (endDate.isValid()) {
           $('#edit-duration').popover('toggle');
-          var event = that.model.get('event');
           event.newDuration = endDate.unix() - event.time;
           that.render();
         }
@@ -402,7 +324,7 @@ module.exports = Marionette.ItemView.extend({
 
       $(document.body).off('click', '#endDatePicker input');
       $(document.body).on('click', '#endDatePicker input', function () {
-        endDate = moment();
+        endDate = moment.unix(event.time + event.newDuration);
         $('#endDateButton').trigger('click');
       });
       $('#endDatePicker').datetimepicker({
@@ -421,8 +343,9 @@ module.exports = Marionette.ItemView.extend({
       this.startTimer();
       return '<span id="duration-clock"></span>';
     } else if (event.duration && event.duration > 0) {
-      return '<span>' +
-        moment.preciseDiff(moment.unix(0), moment.unix(event.duration)) +
+      var duration =  moment.preciseDiff(moment.unix(0), moment.unix(event.duration)).split(' ');
+      duration = duration.splice(0, 4).join(' ');
+      return '<span>' + duration +
         ' (end: ' + window.PryvBrowser.getTimeString(event.time + event.duration) + ' )</span>';
     }
   },
@@ -434,7 +357,7 @@ module.exports = Marionette.ItemView.extend({
     html += '<div id="duration-stopped" class="duration"><span id="duration-end-clock"></span>' +
         '<span class="btn-group">' +
       '<button class="btn btn-default" id="edit-duration" type="button" title="' + i18n.t('events.common.labels.endDatePicker') + '"><i class="fa fa-calendar"></i></button>' +
-      '<button class="btn btn-danger" id="remove-duration" type="button" title="' +  i18n.t('common.actions.remove') + '"><i class="fa fa-times"></i></button>' +
+      '<button class="btn btn-danger" id="remove-duration" type="button" title="' +  i18n.t('events.common.labels.removeDuration') + '"><i class="fa fa-times"></i></button>' +
         '</span></div>';
     html += '<div id="duration-none" class="duration"><button class="btn btn-default" id="add-duration" type="button">Add duration</button></div>';
     return html;

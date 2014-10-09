@@ -214,9 +214,9 @@ module.exports = Marionette.ItemView.extend({
           '<button type="button" id="ok-add-duration" class="btn btn-default col-md-7 col-md-offset-1"' +
           ' style="float: none">' +
           i18n.t('common.actions.ok') + '</button>' +
-          '<label class="col-md-5">Or</label>' +
-          '<button type="button" id="start-add-duration" class="btn btn-default col-md-7"' +
-          ' style="float: none">' +
+          '<hr>' +
+          '<label>Or...</label>' +
+          '<button type="button" id="start-add-duration" class="btn btn-default btn-block">' +
           i18n.t('common.actions.start') + '</button>' +
           '</form>').html();
       }

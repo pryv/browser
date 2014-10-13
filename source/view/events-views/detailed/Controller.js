@@ -200,6 +200,7 @@ _.extend(Controller.prototype, {
       this.listViewcollection.sort();
       this.commonView.model.trigger('change');
       this.contentView.model.trigger('change');
+      this.contentView.model.trigger('collectionChanged');
     }
   },
 

@@ -309,7 +309,7 @@ module.exports = (function () {
     $('.timeItem.selected').click(_openHighlight);
     $('.timeItem').click(_changeTime);
   };
-  var _changeScale = function (e, scale) {
+  var _changeScale = function (e, scale, from) {
     var $scale;
     if (scale && $('[data-timescale=' + scale + ']').length > 0) {
       $scale = $('[data-timescale=' + scale + ']');
@@ -319,6 +319,10 @@ module.exports = (function () {
     }
     if (scale === _scale || scale === 'custom') {
       return;
+    }
+    if (from) {
+      _from = from;
+      _to = from;
     }
     $('.timeScale').removeClass('selected');
     $scale.addClass('selected');
@@ -440,8 +444,8 @@ module.exports = (function () {
     }
     setHighlight(highlight);
   };
-  var setScale = function (scale) {
-    _changeScale(null, scale);
+  var setScale = function (scale, from) {
+    _changeScale(null, scale, from);
   };
   var setHighlight = function (time) {
     init();

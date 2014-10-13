@@ -193,19 +193,38 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
 };
 Model.prototype.setTimeframeScale = function (connection) {
-  connection.events.get({state: 'default', limit: 1},
-    function (error, events) {
-      if (events && events[0]) {
-        var eventTime = events[0].time;
-        if (moment().startOf('week').unix() <= eventTime) {
-          this.timeView.setScale('week');
-        } else if (moment().startOf('month').unix() <= eventTime) {
-          this.timeView.setScale('month');
-        } else if (moment().startOf('year').unix() <= eventTime) {
-          this.timeView.setScale('year');
-        }
+  if (!this.timeView) {
+    return setTimeout(function () {
+      this.setTimeframeScale(connection);
+    }.bind(this), 500);
+  }
+  var urlInfo = Pryv.utility.urls.parseClientURL(location.href);
+  var  params = urlInfo.parseQuery();
+  if (params.scale) {
+    var scale = params.scale;
+    if (scale === 'day' || scale === 'week' || scale === 'month' || scale === 'year') {
+      var from;
+      if (params.from) {
+        from = parseInt(params.from);
       }
-    }.bind(this));
+      this.timeView.setScale(scale, from);
+
+    }
+  } else {
+    connection.events.get({state: 'default', limit: 1},
+      function (error, events) {
+        if (events && events[0]) {
+          var eventTime = events[0].time;
+          if (moment().startOf('week').unix() <= eventTime) {
+            this.timeView.setScale('week');
+          } else if (moment().startOf('month').unix() <= eventTime) {
+            this.timeView.setScale('month');
+          } else if (moment().startOf('year').unix() <= eventTime) {
+            this.timeView.setScale('year');
+          }
+        }
+      }.bind(this));
+  }
 };
 Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit]').prop('disabled', false);

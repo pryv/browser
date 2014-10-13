@@ -11,6 +11,7 @@ module.exports = Marionette.ItemView.extend({
   template: '#template-detail-content-numerical-edit',
   itemViewContainer: '#detail-content',
   ui: {
+    seriesName: '#detailed-view-chart-series-name',
     selColor: '#detailed-view-chart-color',
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
@@ -57,12 +58,7 @@ module.exports = Marionette.ItemView.extend({
           allowPieChart: false,
           singleNumberAsText: false,
           dimensions: null,
-          legendStyle: 'list', // Legend style: 'list', 'table'
-          legendButton: true,  // A button in the legend
-          legendButtonContent: [],
-          legendShow: true,     // Show legend or not
-          legendContainer: '#legend-container-edit', //false or a a selector
-          legendExtras: true,   // use extras in the legend
+          showLegend: false,
           onClick: false,
           onHover: true,
           onDnD: false,
@@ -72,6 +68,7 @@ module.exports = Marionette.ItemView.extend({
           showNodeCount: false
         });
 
+      this.ui.seriesName.html(this.edited.get('seriesName'));
       this.ui.selColor.css({'background-color': this.edited.get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));

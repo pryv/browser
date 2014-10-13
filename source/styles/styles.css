@@ -616,9 +616,6 @@ padding: 0px 15px;
   font-size: 10px;
 }
 
-.chartContainer .c3-legend-item {
-  font-size: 1.1em;
-}
 .chartContainer .c3-axis line,
 .chartContainer .c3-axis path,
 .chartContainer .c3-axis-x line,
@@ -1156,7 +1153,7 @@ details.open > summary:first-child::before {
 /** CSS for Drag and Drop Dialog using the modal **/
 .modal-dnd-middle {
     position: absolute;
-    top: 60px;
+    top: 50px;
     bottom: 0;/*60px;*/
     width: 100%;
 }
@@ -1193,6 +1190,10 @@ details.open > summary:first-child::before {
     padding: 7px;
 }
 
+.modal-dnd-list ul {
+  list-style-type: none;
+  padding-left: 5px;
+}
 
 .modal-dnd-chart {
   position: absolute;
@@ -1210,37 +1211,58 @@ details.open > summary:first-child::before {
   left: 0px;
 }
 
-.modal-dnd-values {
+.legend-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
 }
-
-.modal-dnd-list {
+/* in detail view */
+#legend-container-general {
+  height: 40px;
 }
-
-.legend-container ul, .modal-dnd-legend ul {
-  margin: 5px 15px;
+ul.legend {
+  padding: 5px 15px 2px;
+  background-color: rgba(255, 255, 255, 0.5);
   list-style-type: none;
-  text-align: right;
+  font-size: 11px;
+  text-align: center;
 }
-
-.legend-container li, .modal-dnd-legend li{
+#legend-container-general ul.legend,
+.modal-dnd-legend ul.legend {
+  margin-top: 5px;
+  background-color: inherit;
+  font-size: inherit;
+}
+ul.legend li {
   display: inline-block;
-  margin-left: 10px;
-  padding: 5px 0 5px 5px;
+  margin: 0 0.5em 2px;
+  border-bottom: 1px solid;
+  padding-bottom: 3px;
+  text-align: center;
+  transition: all 0.1s;
+}
+ul.legend li:hover {
+  margin-top: 0;
+  border-bottom: 5px solid;
+  padding-bottom: 1px;
+}
+ul.legend .legend-item.disabled {
+  color: rgba(51, 51, 51, 0.3);
+}
+ul.legend.actionable .legend-item-text {
+  cursor: pointer;
 }
 
 .modal-dnd-legend .btn {
     margin-right: 3px;
 }
 
-.DnD-legend-color {
-    display: inline-block;
-}
-
-.DnD-legend-text {
+.legend-candidate-item .legend-item-text {
     margin-left: 5px;
 }
 
-.DnD-legend-button {
+.legend-action {
   padding: 5px;
   margin-left: 5px;
 }
@@ -1269,13 +1291,6 @@ ul.modal-dnd-legend > li {
   bottom: 0px;
 }
 
-.legend-container {
-  position: absolute;
-  width: 100%;
-  height: 40px;
-  top: 0px;
-}
-
 #detail-chart-container-edit {
   position: absolute;
   width: 100%;
@@ -1287,12 +1302,8 @@ ul.modal-dnd-legend > li {
   position: absolute;
   border-bottom: 1px solid #e5e5e5;
   width: 100%;
-  height: 100px;
-  top: 40px;
-}
-
-#dc-editor-appearance {
-  margin: 0px 15px;
+  height: 140px;
+  padding: 0 15px;
 }
 
 .form-footer button {

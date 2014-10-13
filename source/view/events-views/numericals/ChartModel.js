@@ -21,12 +21,14 @@ var ChartModel = {
     // Chart dimensions
     dimensions: null,
 
-    // Legend style
-    legendStyle: 'table', // Legend style: 'list', 'table'
-    legendButton: false,  // A button in the legend
-    legendButtonCount: [ 'edit', 'duplicate', 'remove' ],
-    legendShow: true,     // Show legend on size/true/false
-    legendExtras: true,   // use extras in the legend
+    // Legend
+
+    showLegend: true,
+    /**
+     * Default: .legend-container in container
+     */
+    legendContainer: null,
+    legendActions: [ 'edit', 'duplicate', 'remove' ],
 
     /* Events control */
     onClick: null,

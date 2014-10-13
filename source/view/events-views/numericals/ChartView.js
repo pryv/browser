@@ -39,8 +39,7 @@ ChartView.resize = function () {
 ChartView.onRender = function () {
   if (! this.model.get('collection') ||
       this.model.get('collection').length === 0 ||
-      ! this.model.get('container') ||
-      this.model.get('container') === null) {
+      ! this.model.get('container')) {
     if (this.model.get('collection').length === 0) {
       $(this.model.get('container')).empty();
       if (this.model.get('legendContainer')) {
@@ -50,15 +49,13 @@ ChartView.onRender = function () {
     return;
   }
 
-  if (this.model.get('legendExtras')) {
-    this.useExtras  = true;
-    try {
-      if (! pryv.eventTypes.extras('mass/kg')) {
-        this.useExtras = false;
-      }
-    } catch (e) {
+  this.useExtras  = true;
+  try {
+    if (! pryv.eventTypes.extras('mass/kg')) {
       this.useExtras = false;
     }
+  } catch (e) {
+    this.useExtras = false;
   }
 
   this.container = this.model.get('container');
@@ -87,7 +84,6 @@ ChartView.makeChart = function () {
     colors: {}
   };
 
-  this.makeOptions();
   this.setUpContainer();
 
   var eventsCount = 0,
@@ -98,18 +94,19 @@ ChartView.makeChart = function () {
     series.sortData();
     var c3data = this.c3settings.data,
         seriesData = tsTransform.transform(series),
-        seriesDataId = seriesData.yCol[0];
+        seriesId = series.get('seriesId');
 
     c3data.columns.push(seriesData.xCol);
     c3data.columns.push(seriesData.yCol);
-    c3data.xs[seriesDataId] = seriesData.xCol[0];
+    c3data.xs[seriesId] = seriesData.xCol[0];
 
     var eventType = series.get('type'),
         eventSymbol = getEventValueSymbol(eventType,
             this.useExtras ? pryv.eventTypes.extras(eventType) : null);
-    eventSymbolsPerDataId[seriesDataId] = eventSymbol;
+    eventSymbolsPerDataId[seriesId] = eventSymbol;
 
-    c3data.names[seriesDataId] = series.get('streamName') + ' (' + eventSymbol + ')';
+    series.set('seriesName', series.get('streamName') + ' (' + eventSymbol + ')');
+    c3data.names[seriesId] = series.get('seriesName');
 
     // separate y axis per event type
     var yAxis = yAxisForType[eventType];
@@ -118,25 +115,25 @@ ChartView.makeChart = function () {
       yAxis = 'y' + (yAxesCount > 1 ? yAxesCount : '');
       yAxisForType[eventType] = yAxis;
     }
-    c3data.axes[seriesDataId] = yAxis;
+    c3data.axes[seriesId] = yAxis;
 
     switch (series.get('style')) {
     case 'bar':
-      c3data.types[seriesDataId] = 'bar';
+      c3data.types[seriesId] = 'bar';
       break;
     case 'point':
-      c3data.types[seriesDataId] = 'scatter';
+      c3data.types[seriesId] = 'scatter';
       break;
     //case 'line':
     default:
-      c3data.types[seriesDataId] = series.get('fitting') ? 'spline' : 'line';
+      c3data.types[seriesId] = series.get('fitting') ? 'spline' : 'line';
       //TODO: review this
 //      this.data[seriesIndex].points = { show: (data.length < 2) };
       break;
     }
 
     if (series.get('color')) {
-      c3data.colors[seriesDataId] = series.get('color');
+      c3data.colors[seriesId] = series.get('color');
     }
 
     eventsCount += seriesData.yCol.length;
@@ -174,16 +171,15 @@ ChartView.makeChart = function () {
 //      }
     }
   };
-  this.c3settings.legend = {
-// not supported yet (solution for now: custom legend):  position: 'top'
-  };
+  this.c3settings.legend = {show: false};
   // TODO fix: this triggers an issue with model being modified by detailed view
   // (to reproduce: chart in treemap, open details, back, refresh: treemap chart model corrupted)
 //  if (this.model.get('enableNavigation')) {
 //    this.c3settings.subchart = {show: true};
 //  }
-    // TODO: find why svg renders bigger than container element & fix this (shouldn't be needed)
   this.c3settings.padding = {
+    top: this.model.get('showLegend') ? 25 : 0,
+    // TODO: find why svg renders bigger than container element & fix this (shouldn't be needed)
     left: 25
   };
 
@@ -194,16 +190,7 @@ ChartView.makeChart = function () {
 
   this.createEventBindings();
 
-  // build legend as list
-  if (this.model.get('legendStyle') && this.model.get('legendStyle') === 'list') {
-    $('.chartContainer > .legend').attr('id', 'DnD-legend');
-    if (this.model.get('legendContainer')) {
-      this.rebuildLegend(this.model.get('legendContainer') + ' table');
-    } else {
-      this.rebuildLegend(this.container + ' table');
-    }
-    this.legendButtonBindings();
-  }
+  this.makeLegend();
 };
 
 // TODO: extract event type formatting stuff to utility helper
@@ -295,114 +282,10 @@ function getFullTimeLabel(msTime) {
   return moment(msTime).calendar();
 }
 
-/**
- * Generates the general chart options based on the model
- * TODO: remove or cleanup
- */
-ChartView.makeOptions = function () {
-  var collection = this.model.get('collection');
-  var seriesCounts = collection.length;
-  this.options = {};
-  this.options.shadowSize = 0;
-  this.options.grid = {
-    hoverable: true,
-    clickable: true,
-    borderWidth: 0,
-    minBorderMargin: 5,
-    autoHighlight: true
-  };
-  this.options.series = {curvedLines: {active: true}};
-  this.options.xaxes = [ {
-    show: (this.model.get('xaxis') && seriesCounts !== 0),
-    mode: 'time',
-    timeformat: '%e %b %Y %H:%M',
-    ticks: this.getExtremeTimes()
-  } ];
-  this.options.yaxes = [];
-  this.options.xaxis = {};
-
-  this.options.legend = {
-    labelBoxBorderColor: 'transparent'
-  };
-  if (this.model.get('legendButton')) {
-    var model = this.model;
-    this.options.legend.labelFormatter = function (label) {
-      var buttons = model.get('legendButtonContent');
-      var legend = '<span class="DnD-legend-text">' + label + '</span>';
-      for (var i = 0; i < buttons.length; ++i) {
-        switch (buttons[i]) {
-        case 'ready':
-          legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
-            'DnD-legend-button-ready" ' +
-            'href="javascript:;"><span class="fa fa-check"></span></a>';
-          break;
-        case 'duplicate':
-          legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
-            'DnD-legend-button-duplicate" ' +
-            'href="javascript:;"><span class="fa fa-files-o"></span></a>';
-          break;
-        case 'remove':
-          legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
-            'DnD-legend-button-remove" ' +
-            'href="javascript:;"><span class="fa fa-minus"></span></a>';
-          break;
-        case 'edit':
-          legend = legend + '<a class="btn btn-default btn-sm DnD-legend-button ' +
-            'DnD-legend-button-edit" ' +
-            'href="javascript:;"><span class="fa fa-pencil-square-o"></span></a>';
-          break;
-        }
-      }
-      return legend;
-    };
-  } else {
-    this.options.legend.labelFormatter = function (label) {
-      var legend = '<span class="DnD-legend-text">' + label + '</span>';
-      return legend;
-    };
-  }
-  if (this.model.get('legendContainer')) {
-    this.options.legend.container = this.model.get('legendContainer');
-  }
-  if (this.model.get('legendShow') && this.model.get('legendShow') === 'size') {
-    this.options.legend.show = (this.model.get('dimensions').width >= 80 &&
-        this.model.get('dimensions').height >= (19 * seriesCounts) + 15);
-  } else if (this.model.get('legendShow')) {
-    this.options.legend.show = true;
-  } else {
-    this.options.legend.show = false;
-  }
-
-  seriesCounts = null;
-};
-
 ChartView.setUpContainer = function () {
   // Setting up the chart container
   this.chartContainer = this.container + ' .chartContainer';
   $(this.container).html('<div class="chartContainer"></div>');
-};
-
-ChartView.getExtremeTimes = function () {
-  var collection = this.model.get('collection');
-  var min = Infinity, max = 0;
-  collection.each(function (s) {
-    var events = s.get('events');
-    for (var i = 0, l = events.length; i < l; ++i) {
-      min = (events[i].time < min) ? events[i].time : min;
-      max = (events[i].time > max) ? events[i].time : max;
-    }
-  });
-  return [min * 1000, max * 1000];
-};
-
-ChartView.getExtremeValues = function (data) {
-  var e = data;
-  var min = Infinity, max = -Infinity;
-  for (var i = 0; i < e.length; ++i) {
-    min = (e[i][1] < min) ? e[i][1] : min;
-    max = (e[i][1] > max) ? e[i][1] : max;
-  }
-  return [min, max];
 };
 
 ChartView.getDurationFunction = function (interval) {
@@ -429,48 +312,74 @@ ChartView.getDurationFunction = function (interval) {
   }
 };
 
-// TODO: virer les this imbriques
-ChartView.rebuildLegend = function (element) {
-  var list = $('<ul/>');
-  $(element).find('tr').each(function (index) {
-    var colorBox = '';
-    var buttonBox = '';
-    var textBox = '';
-    $(this).children().map(function (/*index2*/) {
-      if ($(this) && $(this).length > 0) {
-        var child = $($(this).get(0));
-        if (child.hasClass('legendColorBox')) {
-          $('div > div', child).addClass('DnD-legend-color');
-          colorBox = $('div > div', child)[0].outerHTML;
-        }
-        if (child.hasClass('legendLabel')) {
-          for (var i = 0; i < child[0].childElementCount; i++) {
-            var c = child[0].childNodes[i];
-            if ($(c).hasClass('DnD-legend-text')) {
-              textBox = $(c)[0].outerHTML;
-            } else if ($(c).hasClass('DnD-legend-button')) {
-              $('a', $(c)).attr('id', 'series-' + index);
-              buttonBox += $(c)[0].outerHTML;
-            }
-          }
-        }
-      }
-    });
-    var toAppend = '';
-    if (colorBox) {
-      toAppend += colorBox;
+ChartView.makeLegend = function () {
+  if (! this.model.get('showLegend')) {
+    return;
+  }
+
+// TODO: cleanup  $('.chartContainer > .legend').attr('id', 'DnD-legend');
+  var $legend = $('<ul class="legend"/>'),
+      c3data = this.c3settings.data,
+      actions = this.model.get('legendActions'),
+      legendContainer = this._getLegendContainer();
+
+  this.model.get('collection').each(function (series) {
+    var $legendItem = $('<li class="legend-item"/>'),
+        seriesId = series.get('seriesId');
+
+    $legendItem.attr('data-id', seriesId)
+        .css('border-color', this.chart.color(seriesId));
+    $legendItem.on('mouseover', function () {
+      this.chart.focus(seriesId);
+    }.bind(this));
+    $legendItem.on('mouseout', function () {
+      this.chart.revert();
+    }.bind(this));
+
+    var $legendItemText = $('<span class="legend-item-text">' + c3data.names[seriesId] + '</span>');
+    $legendItem.append($legendItemText);
+
+    if (actions) {
+      var chartView = this;
+
+      $legend.addClass('actionable');
+
+      $legendItemText.on('click', function () {
+        chartView.chart.toggle(seriesId);
+        $(this).parent().toggleClass('disabled');
+      });
+
+      _.each(actions, function (action) {
+        var $button = $(getLegendActionButtonHTML(action));
+        $button.on('click', function () {
+          chartView.trigger(action, series);
+        });
+        $legendItem.append($button);
+      }.bind(this));
     }
-    if (textBox) {
-      toAppend += textBox;
-    }
-    if (buttonBox) {
-      toAppend += buttonBox;
-    }
-    list.append('<li>' + toAppend + '</li>');
-  });
-  $('div', $(element).parent()).remove();
-  $(element).replaceWith(list);
+
+    $legend.append($legendItem);
+  }.bind(this));
+
+  $(legendContainer).empty().append($legend);
 };
+
+function getLegendActionButtonHTML(action) {
+  var iconClasses = {
+    ready: 'fa-check',
+    duplicate: 'fa-files-o',
+    remove: 'fa-minus',
+    edit: 'fa-cog'
+  };
+  var titles = {
+    ready: '',
+    duplicate: 'Duplicate',
+    remove: 'Remove',
+    edit: 'Edit settings'
+  };
+  return '<a class="legend-action legend-action-' + action + '" href="javascript:;" ' +
+      'title="' + titles[action] + '"><i class="fa ' + iconClasses[action] + '"></i></a>';
+}
 
 ChartView.onDateHighLighted = function (date) {
   if (! date) {
@@ -615,36 +524,20 @@ ChartView.createEventBindings = function () {
   }
 };
 
-ChartView.legendButtonBindings = function () {
-  if (this.model.get('legendButton')) {
-
-    var chartView = this;
-    var buttons = null;
-    var buttonTypes = this.model.get('legendButtonContent');
-    var selector = '';
-    var current = null;
-    var binder = function (i, e) {
-      $(e).on('click', {type: current, index: i},
-        chartView.legendButtonClicked.bind(chartView));
-    };
-    for (var i = 0; i < buttonTypes.length; ++i) {
-      current = buttonTypes[i];
-      selector = '.DnD-legend-button-' + current;
-      if (this.model.get('legendContainer')) {
-        buttons = $(selector, $(this.model.get('legendContainer')));
-      } else {
-        buttons  = $(selector, $(this.container));
-      }
-      buttons.each(binder);
-    }
-  }
+/**
+ * @private
+ */
+ChartView._getLegendContainer = function () {
+  return this.model.get('legendContainer') || this._getDefaultLegendContainer();
 };
 
-ChartView.legendButtonClicked = function (e) {
-  var buttonType = e.data.type;
-  var index = e.data.index;
-  var model = this.model.get('collection').at(index);
-  this.trigger(buttonType, model);
+var DefaultLegendContainerClass = 'legend-container';
+ChartView._getDefaultLegendContainer = function () {
+  var $container = $(this.container);
+  if (! $('.' + DefaultLegendContainerClass, $container).length) {
+    $container.append($('<div class="' + DefaultLegendContainerClass + '"/>'));
+  }
+  return this.container + ' .' + DefaultLegendContainerClass;
 };
 
 /************************

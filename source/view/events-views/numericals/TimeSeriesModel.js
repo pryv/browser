@@ -11,6 +11,9 @@ var TimeSeriesModel = {
     type: null,
     category: null,
 
+    seriesId: null,
+    seriesName: null,
+
     color: null,
     style: null,
     transform: null,

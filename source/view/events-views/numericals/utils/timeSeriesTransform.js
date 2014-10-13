@@ -16,10 +16,13 @@ tsTransform.transform = function (timeSeriesModel) {
 
   var baseSeriesId = timeSeriesModel.get('streamId') + '_' +
           timeSeriesModel.get('type').replace('/', '_');
+  var seriesId = 'y__' + baseSeriesId;
+  timeSeriesModel.set('seriesId', seriesId);
   var result = {
     xCol: ['x__' + baseSeriesId],
-    yCol: ['y__' + baseSeriesId]
+    yCol: [seriesId]
   };
+
   switch (timeSeriesModel.get('transform')) {
   case 'sum':
     return (! timeSeriesModel.get('interval')) ?

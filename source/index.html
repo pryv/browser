@@ -361,7 +361,7 @@
     <div class="modal-dnd-middle">
       <div class="modal-dnd-left">
         <div class="modal-dnd-chart"></div>
-        <div class="modal-dnd-legend">legend</div>
+        <div class="modal-dnd-legend"></div>
       </div>
       <div class="modal-dnd-right">
         <div class="modal-dnd-values">
@@ -380,10 +380,12 @@
       </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
-    <a class="btn btn-default btn-sm DnD-legend-button" href="javascript:;">
-      <span class="fa fa-plus"></span>
-    </a>
-    <span class="DnD-legend-text"><%= displayName() %></span>
+    <span class="legend-candidate-item">
+      <a class="btn btn-default btn-sm legend-action" href="javascript:;" title="Add to view">
+        <i class="fa fa-plus"></i>
+      </a>
+      <span class="legend-item-text "><%= displayName() %></span>
+    </span>
   </script>
   <script type="text/template" id="template-chart-container">
     <div id="chart-container"></div>
@@ -516,9 +518,9 @@
       <div class="detail-chart-container" id="detail-chart-container-general"></div>
   </script>
   <script type="template" id="template-detail-content-numerical-edit">
-      <div class="legend-container" id="legend-container-edit"></div>
       <div class="detail-chart-container" id="detail-chart-container-edit"></div>
       <div class="editor-container">
+        <h4 id="detailed-view-chart-series-name"></h4>
         <div id="dc-editor-appearance" class="form-horizontal">
           <div class="row">
             <div class="col-sm-3">

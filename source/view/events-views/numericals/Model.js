@@ -245,10 +245,8 @@ NumericalsPlugin.prototype.refreshCollection = function () {
       highlightedTime: null,
       allowPieChart: false,
       dimensions: this.computeDimensions(),
-      legendStyle: 'table', // Legend style: 'list', 'table'
-      legendButton: false,  // A button in the legend
-      legendShow: 'size',     // Show legend or not
-      legendExtras: true,   // use extras in the legend
+      showLegend: true,
+      legendActions: false,  // A button in the legend
       onClick: true,
       onHover: true,
       onDnD: true,

@@ -317,14 +317,27 @@ var TreeMap = module.exports = function (model) {
 
 TreeMap.prototype.isOnboarding = function () {
   if (localStorage && localStorage.getItem('skipOnboarding')) {
-    return;
+    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+      if (!error && result.length === 0 &&
+        this.model.urlUsername === this.model.loggedConnection.username) {
+        this.model.loggedConnection.streams.create({id: 'diary', name: 'Diary'},
+          function (err, stream) {
+          if (!err && stream) {
+            setTimeout(function () {
+              this.focusOnStreams([stream]);
+            }.bind(this), 1000);
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+  } else {
+    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+      if (!error && result.length === 0 &&
+        this.model.urlUsername === this.model.loggedConnection.username) {
+        this.showOnboarding();
+      }
+    }.bind(this));
   }
-  this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
-    if (!error && result.length === 0 &&
-      this.model.urlUsername === this.model.loggedConnection.username) {
-      this.showOnboarding();
-    }
-  }.bind(this));
 };
 
 TreeMap.prototype.focusOnConnections = function (connection) {

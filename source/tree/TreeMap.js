@@ -1,4 +1,4 @@
-/* global $, window, location, localStorage */
+/* global $, window, location, localStorage, i18n */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -320,7 +320,8 @@ TreeMap.prototype.isOnboarding = function () {
     this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
       if (!error && result.length === 0 &&
         this.model.urlUsername === this.model.loggedConnection.username) {
-        this.model.loggedConnection.streams.create({id: 'diary', name: 'Diary'},
+        this.model.loggedConnection.streams.create(
+          {id: 'diary', name: i18n.t('onboarding.defaultStreamName')},
           function (err, stream) {
           if (!err && stream) {
             setTimeout(function () {

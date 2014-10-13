@@ -162,13 +162,13 @@ ChartView.makeChart = function () {
   };
   this.c3settings.tooltip = {
     format: {
-      title: getFullTimeLabel
-      // TODO for nicer value display
+      title: getFullTimeLabel,
+      // TODO for nicer value   display
       // name: function (id) {},
-//      value: function (value, ratio, id) {
+      value: function (value/*, ratio, id*/) {
 //        var s = d3.format(eventSymbolsPerDataId[id] + ',.2r')(value);
-//        return s;
-//      }
+        return +value.toFixed(2);
+      }
     }
   };
   this.c3settings.legend = {show: false};
@@ -361,7 +361,10 @@ ChartView.makeLegend = function () {
     $legend.append($legendItem);
   }.bind(this));
 
-  $(legendContainer).empty().append($legend);
+  var $legendContainer = $(legendContainer);
+  $legendContainer.empty().append($legend);
+  //TODO: make that work (causes legend not to show...)
+//  $legendContainer.find('.legend-item-text').dotdotdot();
 };
 
 function getLegendActionButtonHTML(action) {

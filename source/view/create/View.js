@@ -397,8 +397,8 @@ module.exports = Marionette.ItemView.extend({
     var result = '<div id="stream-select"><form>',
       connections  = this.connection._connections,
       open = '';
-    if (this.focusedStream && this.focusedStream.length === 1) {
-      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream[0]);
+    if (this.focusedStream) {
+      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream);
     }
     _.each(connections, function (c) {
       if (!this._isWritePermission(c)) {

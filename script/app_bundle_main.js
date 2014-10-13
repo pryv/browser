@@ -30061,7 +30061,7 @@ StreamNode.registeredEventNodeTypes = {
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
 },{"./TreeNode":92,"./eventsNode/ActivitiesEventsNode.js":94,"./eventsNode/GenericEventsNode.js":95,"./eventsNode/NotesEventsNode.js":96,"./eventsNode/NumericalsEventsNode.js":97,"./eventsNode/PicturesEventsNode.js":98,"./eventsNode/PositionsEventsNode.js":99,"./eventsNode/TweetsEventsNode.js":100,"underscore":78}],91:[function(require,module,exports){
-/* global $, window, location, localStorage */
+/* global $, window, location, localStorage, i18n */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -30380,14 +30380,28 @@ var TreeMap = module.exports = function (model) {
 
 TreeMap.prototype.isOnboarding = function () {
   if (localStorage && localStorage.getItem('skipOnboarding')) {
-    return;
+    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+      if (!error && result.length === 0 &&
+        this.model.urlUsername === this.model.loggedConnection.username) {
+        this.model.loggedConnection.streams.create(
+          {id: 'diary', name: i18n.t('onboarding.defaultStreamName')},
+          function (err, stream) {
+          if (!err && stream) {
+            setTimeout(function () {
+              this.focusOnStreams([stream]);
+            }.bind(this), 1000);
+          }
+        }.bind(this));
+      }
+    }.bind(this));
+  } else {
+    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+      if (!error && result.length === 0 &&
+        this.model.urlUsername === this.model.loggedConnection.username) {
+        this.showOnboarding();
+      }
+    }.bind(this));
   }
-  this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
-    if (!error && result.length === 0 &&
-      this.model.urlUsername === this.model.loggedConnection.username) {
-      this.showOnboarding();
-    }
-  }.bind(this));
 };
 
 TreeMap.prototype.focusOnConnections = function (connection) {
@@ -32777,8 +32791,8 @@ module.exports = Marionette.ItemView.extend({
     var result = '<div id="stream-select"><form>',
       connections  = this.connection._connections,
       open = '';
-    if (this.focusedStream && this.focusedStream.length === 1) {
-      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream[0]);
+    if (this.focusedStream) {
+      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream);
     }
     _.each(connections, function (c) {
       if (!this._isWritePermission(c)) {
@@ -34326,6 +34340,7 @@ _.extend(Controller.prototype, {
       this.listViewcollection.sort();
       this.commonView.model.trigger('change');
       this.contentView.model.trigger('change');
+      this.contentView.model.trigger('collectionChanged');
     }
   },
 
@@ -35211,7 +35226,8 @@ module.exports = Marionette.ItemView.extend({
 },{"backbone.marionette":1,"underscore":78}],123:[function(require,module,exports){
 /* global $, document*/
 var Marionette = require('backbone.marionette'),
-  MapLoader = require('google-maps');
+  MapLoader = require('google-maps'),
+  _ = require('underscore');
 
 module.exports = Marionette.ItemView.extend({
   type: 'Position',
@@ -35223,12 +35239,18 @@ module.exports = Marionette.ItemView.extend({
   map: null,
   waitForGoogle: false,
   marker: null,
+  positions: null,
+  bounds: null,
+  paths: null,
+  markers: null,
   ui: {
     li: 'li.editable',
     edit: '.edit'
   },
   initialize: function () {
+    this.positions = this.model.get('collection');
     this.listenTo(this.model, 'change', this.actualizePosition);
+    this.listenTo(this.model, 'collectionChanged', this.render);
     MapLoader.KEY = 'AIzaSyCWRjaX1-QcCqSK-UKfyR0aBpBwy6hYK5M';
     MapLoader.load().then(function (google) {
       this.google = google;
@@ -35260,6 +35282,85 @@ module.exports = Marionette.ItemView.extend({
       this.marker.setTitle('');
     }
   },
+  _initMap: function () {
+    var geopoint;
+    this.markers = [];
+    this.paths = {};
+    this.mapOptions =  {
+      zoom: 10,
+      zoomControl: false,
+      mapTypeControl: false,
+      scaleControl: false,
+      streetViewControl: false,
+      overviewMapControl: false,
+      scrollwheel: true,
+      mapTypeId: this.google.maps.MapTypeId.ROADMAP
+    };
+    this.positions.each(function (p) {
+      p = p.get('event');
+      geopoint = new this.google.maps.LatLng(p.content.latitude, p.content.longitude);
+      this.markers.push(new this.google.maps.Marker({
+        position: geopoint,
+        visible: false
+      }));
+      if (!this.bounds) {
+        this.bounds = new this.google.maps.LatLngBounds(geopoint, geopoint);
+        this.mapOptions.center = geopoint;
+      } else {
+        this.bounds.extend(geopoint);
+      }
+      if (!this.paths[p.streamId]) {
+        this.paths[p.streamId] = [];
+        geopoint.pathColor = this._getColor(p.stream);
+      }
+      this.paths[p.streamId].push(geopoint);
+    }.bind(this));
+  },
+  _drawMap: function () {
+    if (!this.google.maps) {
+      return;
+    }
+    //this.map = new this.gmaps.Map($container, this.mapOptions);
+    //this.gmaps.event.trigger(this.map, 'resize');
+    this.map.fitBounds(this.bounds);
+    /*var listener = this.gmaps.event.addListener(this.map, 'idle', function () {
+      if (this.map.getZoom() > 10) {
+        this.map.setZoom(10);
+      }
+      this.gmaps.event.removeListener(listener);
+    }.bind(this));*/
+    var gPath, gMarker;
+    _.each(this.paths, function (path) {
+      if (path.length > 1) {
+        gPath = new this.google.maps.Polyline({
+          path: path,
+          strokeColor: path[0].pathColor,
+          strokeOpacity: 1.0,
+          strokeWeight: 6
+        });
+        gPath.setMap(this.map);
+      } else {
+        gMarker = new this.google.maps.Marker({
+          position: path[0]
+        });
+        gMarker.setMap(this.map);
+      }
+    }, this);
+    //gMarker = new MarkerClusterer(this.map, this.markers);
+  },
+  _getColor: function (c) {
+    if (typeof(c) === 'undefined' || !c) {
+      return '';
+    }
+    if (typeof(c.clientData) !== 'undefined' &&
+      typeof(c.clientData['pryv-browser:bgColor']) !== 'undefined') {
+      return c.clientData['pryv-browser:bgColor'];
+    }
+    if (typeof(c.parent) !== 'undefined') {
+      return this._getColor(c.parent);
+    }
+    return '';
+  },
   onRender: function () {
     if (!this.google) {
       this.waitForGoogle = true;
@@ -35281,7 +35382,8 @@ module.exports = Marionette.ItemView.extend({
           this.marker = new this.google.maps.Marker({
             position: new this.google.maps.LatLng(lat, lng)
           });
-
+          this._initMap();
+          this._drawMap();
           this.google.maps.event.addListener(this.marker, 'dragend', function (evt) {
             var event = this.model.get('event');
             event.content.latitude = evt.latLng.lat();
@@ -35314,7 +35416,7 @@ module.exports = Marionette.ItemView.extend({
     }
   }
 });
-},{"backbone.marionette":1,"google-maps":5}],124:[function(require,module,exports){
+},{"backbone.marionette":1,"google-maps":5,"underscore":78}],124:[function(require,module,exports){
 /* global $, FormData, PryvBrowser */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -38763,7 +38865,10 @@ module.exports = Marionette.ItemView.extend({
       } else {
         this.bounds.extend(geopoint);
       }
-      if (!this.paths[p.streamId]) { this.paths[p.streamId] = []; }
+      if (!this.paths[p.streamId]) {
+        this.paths[p.streamId] = [];
+        geopoint.pathColor = this._getColor(p.stream);
+      }
       this.paths[p.streamId].push(geopoint);
     }, this);
   },
@@ -38789,7 +38894,7 @@ module.exports = Marionette.ItemView.extend({
       if (path.length > 1) {
         gPath = new this.gmaps.Polyline({
           path: path,
-          strokeColor: this._generateRandomColor(),
+          strokeColor: path[0].pathColor,
           strokeOpacity: 1.0,
           strokeWeight: 6
         });
@@ -38803,13 +38908,18 @@ module.exports = Marionette.ItemView.extend({
     }, this);
     gMarker = new MarkerClusterer(this.map, this.markers);
   },
-  _generateRandomColor: function () {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.round(Math.random() * 15)];
+  _getColor: function (c) {
+    if (typeof(c) === 'undefined' || !c) {
+      return '';
     }
-    return color;
+    if (typeof(c.clientData) !== 'undefined' &&
+      typeof(c.clientData['pryv-browser:bgColor']) !== 'undefined') {
+      return c.clientData['pryv-browser:bgColor'];
+    }
+    if (typeof(c.parent) !== 'undefined') {
+      return this._getColor(c.parent);
+    }
+    return '';
   },
   onDateHighLighted : function (time) {
     this.highlightedTime = time;

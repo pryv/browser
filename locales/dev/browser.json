@@ -165,6 +165,7 @@
     "actions": {
       "start": "Start"
     },
+    "defaultStreamName": "Diary",
     "labels": {
       "streamInput": "Create your stream",
       "title": "What matters in your life?"

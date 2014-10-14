@@ -302,8 +302,7 @@ _.extend(Controller.prototype, {
             color: s.get('color'),
             style: s.get('style'),
             transform: s.get('transform'),
-            interval: s.get('interval'),
-            fitting: s.get('fitting')
+            interval: s.get('interval')
           });
           eventsCollection.add(eventsModel);
         }

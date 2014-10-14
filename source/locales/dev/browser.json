@@ -67,7 +67,6 @@
     "charts": {
       "labels": {
         "color": "Color",
-        "fitting": "Fitting",
         "operation": "Operation",
         "operationAverage": "Average",
         "operationNone": "None",
@@ -81,7 +80,8 @@
         "type": "Type",
         "typeBar": "Bar",
         "typeLine": "Line",
-        "typePoint": "Point"
+        "typePoint": "Point",
+        "typeSpline": "Spline"
       }
     },
     "generic": {

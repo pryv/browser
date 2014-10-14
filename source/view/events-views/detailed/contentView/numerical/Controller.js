@@ -93,8 +93,7 @@ module.exports = Marionette.ItemView.extend({
             color: s.get('color'),
             style: s.get('style'),
             transform: s.get('transform'),
-            interval: s.get('interval'),
-            fitting: s.get('fitting')
+            interval: s.get('interval')
           })
         );
       }
@@ -147,7 +146,6 @@ module.exports = Marionette.ItemView.extend({
     s.set('style', m.get('style'));
     s.set('transform', m.get('transform'));
     s.set('interval', m.get('interval'));
-    s.set('fitting', m.get('fitting'));
 
     this.closeChild();
     this.viewType = GeneralConfigView;

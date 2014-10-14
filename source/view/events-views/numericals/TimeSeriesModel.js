@@ -12,13 +12,12 @@ var TimeSeriesModel = {
     category: null,
 
     seriesId: null,
-    seriesName: null,
+    seriesLegend: null,
 
     color: null,
     style: null,
     transform: null,
     interval: null,
-    fitting: null,
 
     virtual: null
   }

@@ -182,8 +182,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         color: s.get('color'),
         style: s.get('style'),
         transform: s.get('transform'),
-        interval: s.get('interval'),
-        fitting: s.get('fitting')
+        interval: s.get('interval')
       });
       this.seriesCollection.add(eventsModel);
     }

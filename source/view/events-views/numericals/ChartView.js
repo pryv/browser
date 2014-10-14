@@ -87,6 +87,7 @@ ChartView.makeChart = function () {
   this.setUpContainer();
 
   var eventsCount = 0,
+      streamNamesPerDataId = {},
       eventSymbolsPerDataId = {},
       yAxisForType = {},
       yAxesCount = 0;
@@ -105,8 +106,9 @@ ChartView.makeChart = function () {
             this.useExtras ? pryv.eventTypes.extras(eventType) : null);
     eventSymbolsPerDataId[seriesId] = eventSymbol;
 
-    series.set('seriesName', series.get('streamName') + ' (' + eventSymbol + ')');
-    c3data.names[seriesId] = series.get('seriesName');
+    streamNamesPerDataId[seriesId] = series.get('streamName');
+    c3data.names[seriesId] = streamNamesPerDataId[seriesId];
+    series.set('seriesLegend', streamNamesPerDataId[seriesId] + ' (' + eventSymbol + ')');
 
     // separate y axis per event type
     var yAxis = yAxisForType[eventType];
@@ -124,9 +126,12 @@ ChartView.makeChart = function () {
     case 'point':
       c3data.types[seriesId] = 'scatter';
       break;
+    case 'spline':
+      c3data.types[seriesId] = 'spline';
+      break;
     //case 'line':
     default:
-      c3data.types[seriesId] = series.get('fitting') ? 'spline' : 'line';
+      c3data.types[seriesId] = 'line';
       //TODO: review this
 //      this.data[seriesIndex].points = { show: (data.length < 2) };
       break;
@@ -163,11 +168,8 @@ ChartView.makeChart = function () {
   this.c3settings.tooltip = {
     format: {
       title: getFullTimeLabel,
-      // TODO for nicer value   display
-      // name: function (id) {},
-      value: function (value/*, ratio, id*/) {
-//        var s = d3.format(eventSymbolsPerDataId[id] + ',.2r')(value);
-        return +value.toFixed(2);
+      value: function (value, ratio, id) {
+        return '<strong>' + (+value.toFixed(2)) + '</strong> ' + eventSymbolsPerDataId[id];
       }
     }
   };
@@ -317,9 +319,7 @@ ChartView.makeLegend = function () {
     return;
   }
 
-// TODO: cleanup  $('.chartContainer > .legend').attr('id', 'DnD-legend');
   var $legend = $('<ul class="legend"/>'),
-      c3data = this.c3settings.data,
       actions = this.model.get('legendActions'),
       legendContainer = this._getLegendContainer();
 
@@ -336,7 +336,8 @@ ChartView.makeLegend = function () {
       this.chart.revert();
     }.bind(this));
 
-    var $legendItemText = $('<span class="legend-item-text">' + c3data.names[seriesId] + '</span>');
+    var $legendItemText = $('<span class="legend-item-text">' + series.get('seriesLegend') +
+        '</span>');
     $legendItem.append($legendItemText);
 
     if (actions) {
@@ -394,37 +395,34 @@ ChartView.onDateHighLighted = function (date) {
 
   this.chart.unselect();
 
-  //TODO
+  this.model.get('collection').each(function (series) {
+    var seriesId = series.get('seriesId'),
+//        data = this.chart.data.get(seriesId),
+//        dF = this.getDurationFunction(series.get('interval')),
+//        distance = null,
+        best = 0;
 
-//  var chartView = this;
-//  var data = this.chart.getData();
-//
-//  this.model.get('collection').each(function (s, i) {
-//    var dF = chartView.getDurationFunction(s.get('interval'));
-//    var distance = null;
-//    var best = 0;
-//
-//    for (var j = 0; j < data[i].data.length; ++j) {
-//      var duration = dF(new Date(data[i].data[j][0]));
-//      var d1 = Math.abs(date - (data[i].data[j][0] / 1000));
-//      var d2 = Math.abs(date - ((data[i].data[j][0] + duration) / 1000));
+//    for (var i = 0, len = data.length; i < len; i++) {
+//      var duration = dF(new Date(data[seriesIndex].data[i][0]));
+//      var d1 = Math.abs(date - (data[seriesIndex].data[i][0] / 1000));
+//      var d2 = Math.abs(date - ((data[seriesIndex].data[i][0] + duration) / 1000));
 //
 //      if (distance === null) {
-//        best = j;
+//        best = i;
 //        distance = d1 < d2 ? d1 : d2;
-//      } else if ((data[i].data[j][0] / 1000) <= date &&
-//        date <= ((data[i].data[j][0] + duration) / 1000)) {
-//        best = j;
+//      } else if ((data[seriesIndex].data[i][0] / 1000) <= date &&
+//        date <= ((data[seriesIndex].data[i][0] + duration) / 1000)) {
+//        best = i;
 //        break;
 //      } else if (d1 <= distance || d2 <= distance) {
-//        best = j;
+//        best = i;
 //        distance = d1 < d2 ? d1 : d2;
 //      }
 //    }
-//
-//    best = data[i].data.length === best ? best - 1: best;
-//    chartView.chart.highlight(i, best);
-//  });
+
+//    best = data.length === best ? best - 1: best;
+    this.chart.select([seriesId], [best]);
+  }.bind(this));
 };
 
 ChartView.highlightEvent = function (/*event*/) {

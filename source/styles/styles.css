@@ -1227,6 +1227,7 @@ ul.legend {
   list-style-type: none;
   font-size: 11px;
   text-align: center;
+  word-break: normal;
 }
 #legend-container-general ul.legend,
 .modal-dnd-legend ul.legend {
@@ -1238,13 +1239,13 @@ ul.legend li {
   display: inline-block;
   margin: 0 0.5em 2px;
   border-bottom: 1px solid;
-  padding-bottom: 3px;
+  padding-bottom: 2px;
   text-align: center;
   transition: all 0.1s;
 }
 ul.legend li:hover {
-  margin-top: 0;
-  border-bottom: 5px solid;
+  margin-bottom: 0;
+  border-bottom: 4px solid;
   padding-bottom: 1px;
 }
 ul.legend .legend-item.disabled {

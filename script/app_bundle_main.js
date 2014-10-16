@@ -22238,6 +22238,9 @@ Filter.prototype.matchEvent = function (event) {
 
     if (this._settings.streams.indexOf(event.streamId) < 0) {
       var found = false;
+      if (!event.stream) {
+        return false;
+      }
       event.stream.ancestors.forEach(function (ancestor) {
         if (this._settings.streams.indexOf(ancestor.id) >= 0) {
           if (this._settings.state !== 'all') {
@@ -29776,7 +29779,7 @@ var StreamNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentNode.treeMap, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
-
+    this.oneLevelAggregation = true;
     /**
      * eventsNodes are stored by their key
      **/
@@ -29788,36 +29791,55 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     _needToAggregate: function () {
-      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
-        /* we don't need to aggregate if all the events are in the same stream
-         so we need to walk all the child of this stream with 3 stop condition:
-         - if a stream has more than one stream we aggregate it
-         - if a stream has one stream and one or more eventsNode we aggregate it
-         - if a stream has only eventsNode we don't aggregate it
-         */
-        var node = this, currentAggregated;
-        var numberOfStreamNode, numberOfEventsNode;
-        while (true) {
-          numberOfEventsNode = _.size(node.eventsNodes);
-          currentAggregated = node.aggregated;
-          // force aggregated to false for getChildren to return nonAggregated node
-          node.aggregated = false;
-          numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
-          node.aggregated = currentAggregated;
-          if (numberOfStreamNode === 0) {
-            return false;
-          }
-          if (numberOfStreamNode > 1) {
-            return true;
-          }
-          if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
-            return true;
-          }
-          // at this point the node has only one stream as child
-          node = node.getChildren()[0];
+      if (this.oneLevelAggregation) {
+        var focusedStreams = this.treeMap.getFocusedStreams();
+        if (!focusedStreams.length && !this.stream.parent) {
+          return true;
         }
-      }  else {
-        return false;
+        if (!focusedStreams.length && this.stream.parent) {
+          return false;
+        }
+        var needToAggregate = false;
+        _.each(focusedStreams, function (stream) {
+          if (this.stream.parent && stream.serialId === this.stream.parent.serialId) {
+            needToAggregate = true;
+          }
+        }.bind(this));
+        return needToAggregate;
+      } else {
+        if (this.getWeight() > 0 &&
+          (this.width <= this.minWidth || this.height <= this.minHeight)) {
+          /* we don't need to aggregate if all the events are in the same stream
+           so we need to walk all the child of this stream with 3 stop condition:
+           - if a stream has more than one stream we aggregate it
+           - if a stream has one stream and one or more eventsNode we aggregate it
+           - if a stream has only eventsNode we don't aggregate it
+           */
+
+          var node = this, currentAggregated;
+          var numberOfStreamNode, numberOfEventsNode;
+          while (true) {
+            numberOfEventsNode = _.size(node.eventsNodes);
+            currentAggregated = node.aggregated;
+            // force aggregated to false for getChildren to return nonAggregated node
+            node.aggregated = false;
+            numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
+            node.aggregated = currentAggregated;
+            if (numberOfStreamNode === 0) {
+              return false;
+            }
+            if (numberOfStreamNode > 1) {
+              return true;
+            }
+            if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
+              return true;
+            }
+            // at this point the node has only one stream as child
+            node = node.getChildren()[0];
+          }
+        }  else {
+          return false;
+        }
       }
     },
     _aggregate: function () {
@@ -32214,7 +32236,7 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
-        if (app.appURL && app.appURL.length > 0) {
+        if (app.appURL && app.appURL.length > 0 && app.trustedConnection) {
           app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
             '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
         }
@@ -40984,7 +41006,7 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
-        if (app.appURL && app.appURL.length > 0) {
+        if (app.appURL && app.appURL.length > 0 && app.trustedConnection) {
           app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
             '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
         }
@@ -41163,9 +41185,13 @@ module.exports = Marionette.CompositeView.extend({
                   access.displayName = access.name;
                   if (apps[access.name]) {
                     access.displayName = apps[access.name].displayName;
-                    access.settingsPageURL = apps[access.name].settingsPageURL +
+                    access.settingsPageURL = apps[access.name].settingsPageURL;
+                    if (apps[access.name].trustedConnection) {
+                      access.settingsPageURL +=
                       '?username=' + this.connection.username + '&auth=' + this.connection.auth +
                       '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
+                    }
+
                     access.iconURL = apps[access.name].iconURL;
                   }
 

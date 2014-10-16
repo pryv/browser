@@ -79,7 +79,7 @@ module.exports = Marionette.CompositeView.extend({
   showAppList: function () {
     this.apps.forEach(function (app) {
       if (this.myAppsId.indexOf(app.id) === -1) {
-        if (app.appURL && app.appURL.length > 0) {
+        if (app.appURL && app.appURL.length > 0 && app.trustedConnection) {
           app.appURL += '?username=' + this.connection.username + '&auth=' + this.connection.auth +
             '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
         }

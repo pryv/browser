@@ -924,7 +924,7 @@
   </td>
   <td class="col-md-2 app-settings">
     <% if (app.settingsPageURL && app.settingsPageURL.length > 0) { %>
-      <a class="btn btn-default btn-xs" href="<%= app.settingsPageURL %>" target="_self"><i class="fa fa-cog fa-xs"></i> <span data-i18n="nav.actions.settings"></span></a>
+      <a class="btn btn-default btn-xs" href="<%= app.settingsPageURL %>" target="_blank"><i class="fa fa-cog fa-xs"></i> <span data-i18n="nav.actions.settings"></span></a>
     <% } %>
   </td>
   <td class="col-md-2 app-trash">
@@ -960,7 +960,7 @@
       <div class="app-icon">
         <img src="<%= app.iconURL %>">
         <% if (app.appURL && app.appURL.length > 0) { %>
-          <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_self" data-i18n="settings.connectedApps.actions.connect"></a></p>
+          <p><a href="<%= app.appURL %>" class="btn btn-default" role="button" target="_blank" data-i18n="settings.connectedApps.actions.connect"></a></p>
         <% } %>
       </div>
       <div class="apps-item-content">

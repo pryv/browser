@@ -61,9 +61,13 @@ module.exports = Marionette.CompositeView.extend({
                   access.displayName = access.name;
                   if (apps[access.name]) {
                     access.displayName = apps[access.name].displayName;
-                    access.settingsPageURL = apps[access.name].settingsPageURL +
+                    access.settingsPageURL = apps[access.name].settingsPageURL;
+                    if (apps[access.name].trustedConnection) {
+                      access.settingsPageURL +=
                       '?username=' + this.connection.username + '&auth=' + this.connection.auth +
                       '&domain=' + this.connection.settings.domain + '&returnUrl=' + location.href;
+                    }
+
                     access.iconURL = apps[access.name].iconURL;
                   }
 

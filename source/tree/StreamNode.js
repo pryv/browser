@@ -11,7 +11,7 @@ var StreamNode = module.exports = TreeNode.implement(
     TreeNode.call(this, parentNode.treeMap, parentNode);
     this.stream = stream;
     this.connectionNode = connectionNode;
-
+    this.oneLevelAggregation = true;
     /**
      * eventsNodes are stored by their key
      **/
@@ -23,36 +23,55 @@ var StreamNode = module.exports = TreeNode.implement(
 
 
     _needToAggregate: function () {
-      if (this.getWeight() > 0  && (this.width <= this.minWidth || this.height <= this.minHeight)) {
-        /* we don't need to aggregate if all the events are in the same stream
-         so we need to walk all the child of this stream with 3 stop condition:
-         - if a stream has more than one stream we aggregate it
-         - if a stream has one stream and one or more eventsNode we aggregate it
-         - if a stream has only eventsNode we don't aggregate it
-         */
-        var node = this, currentAggregated;
-        var numberOfStreamNode, numberOfEventsNode;
-        while (true) {
-          numberOfEventsNode = _.size(node.eventsNodes);
-          currentAggregated = node.aggregated;
-          // force aggregated to false for getChildren to return nonAggregated node
-          node.aggregated = false;
-          numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
-          node.aggregated = currentAggregated;
-          if (numberOfStreamNode === 0) {
-            return false;
-          }
-          if (numberOfStreamNode > 1) {
-            return true;
-          }
-          if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
-            return true;
-          }
-          // at this point the node has only one stream as child
-          node = node.getChildren()[0];
+      if (this.oneLevelAggregation) {
+        var focusedStreams = this.treeMap.getFocusedStreams();
+        if (!focusedStreams.length && !this.stream.parent) {
+          return true;
         }
-      }  else {
-        return false;
+        if (!focusedStreams.length && this.stream.parent) {
+          return false;
+        }
+        var needToAggregate = false;
+        _.each(focusedStreams, function (stream) {
+          if (this.stream.parent && stream.serialId === this.stream.parent.serialId) {
+            needToAggregate = true;
+          }
+        }.bind(this));
+        return needToAggregate;
+      } else {
+        if (this.getWeight() > 0 &&
+          (this.width <= this.minWidth || this.height <= this.minHeight)) {
+          /* we don't need to aggregate if all the events are in the same stream
+           so we need to walk all the child of this stream with 3 stop condition:
+           - if a stream has more than one stream we aggregate it
+           - if a stream has one stream and one or more eventsNode we aggregate it
+           - if a stream has only eventsNode we don't aggregate it
+           */
+
+          var node = this, currentAggregated;
+          var numberOfStreamNode, numberOfEventsNode;
+          while (true) {
+            numberOfEventsNode = _.size(node.eventsNodes);
+            currentAggregated = node.aggregated;
+            // force aggregated to false for getChildren to return nonAggregated node
+            node.aggregated = false;
+            numberOfStreamNode = _.size(node.getChildren()) - numberOfEventsNode;
+            node.aggregated = currentAggregated;
+            if (numberOfStreamNode === 0) {
+              return false;
+            }
+            if (numberOfStreamNode > 1) {
+              return true;
+            }
+            if (numberOfStreamNode > 0 && numberOfEventsNode > 0) {
+              return true;
+            }
+            // at this point the node has only one stream as child
+            node = node.getChildren()[0];
+          }
+        }  else {
+          return false;
+        }
       }
     },
     _aggregate: function () {

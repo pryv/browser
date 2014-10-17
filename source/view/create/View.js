@@ -87,7 +87,6 @@ module.exports = Marionette.ItemView.extend({
     this.ui.publish.prop('disabled', false);
     $('.td-progress').hide();
     if (this.step === creationStep.typeSelect) {
-      console.log('DEBUG', this.connection);
       _.each(this.connection._connections, function (conn) {
         if (conn._accessInfo && conn._accessInfo.type === 'personal') {
           conn.accesses.get(function (error, result) {

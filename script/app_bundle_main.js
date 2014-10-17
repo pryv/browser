@@ -30407,13 +30407,7 @@ TreeMap.prototype.isOnboarding = function () {
         this.model.urlUsername === this.model.loggedConnection.username) {
         this.model.loggedConnection.streams.create(
           {id: 'diary', name: i18n.t('onboarding.defaultStreamName')},
-          function (err, stream) {
-          if (!err && stream) {
-            setTimeout(function () {
-              this.focusOnStreams([stream]);
-            }.bind(this), 1000);
-          }
-        }.bind(this));
+          function () {});
       }
     }.bind(this));
   } else {
@@ -32323,6 +32317,13 @@ var _ = require('underscore'),
 var Controller = module.exports = function ($modal, connection, focusedStream, target) {
   this.connection = connection;
   this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
+  if (!this.focusedStream) {
+    _.each(this.connection._connections, function (c) {
+      if (c._accessInfo && c._accessInfo.name === 'pryv-browser') {
+        this.focusedStream = c.datastore.getStreamById('diary');
+      }
+    }.bind(this));
+  }
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';
@@ -32503,7 +32504,6 @@ module.exports = Marionette.ItemView.extend({
     this.ui.publish.prop('disabled', false);
     $('.td-progress').hide();
     if (this.step === creationStep.typeSelect) {
-      console.log('DEBUG', this.connection);
       _.each(this.connection._connections, function (conn) {
         if (conn._accessInfo && conn._accessInfo.type === 'personal') {
           conn.accesses.get(function (error, result) {

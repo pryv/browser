@@ -87,7 +87,6 @@ module.exports = Marionette.ItemView.extend({
     this.ui.publish.prop('disabled', false);
     $('.td-progress').hide();
     if (this.step === creationStep.typeSelect) {
-      console.log('DEBUG', this.connection);
       _.each(this.connection._connections, function (conn) {
         if (conn._accessInfo && conn._accessInfo.type === 'personal') {
           conn.accesses.get(function (error, result) {
@@ -397,8 +396,8 @@ module.exports = Marionette.ItemView.extend({
     var result = '<div id="stream-select"><form>',
       connections  = this.connection._connections,
       open = '';
-    if (this.focusedStream && this.focusedStream.length === 1) {
-      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream[0]);
+    if (this.focusedStream) {
+      this.focusedStream.ancestor = this._getStreamAncestor(this.focusedStream);
     }
     _.each(connections, function (c) {
       if (!this._isWritePermission(c)) {

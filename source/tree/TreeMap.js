@@ -1,4 +1,4 @@
-/* global $, window, location, localStorage */
+/* global $, window, location, localStorage, i18n */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -316,14 +316,22 @@ var TreeMap = module.exports = function (model) {
 
 TreeMap.prototype.isOnboarding = function () {
   if (localStorage && localStorage.getItem('skipOnboarding')) {
-    return;
+    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+      if (!error && result.length === 0 &&
+        this.model.urlUsername === this.model.loggedConnection.username) {
+        this.model.loggedConnection.streams.create(
+          {id: 'diary', name: i18n.t('onboarding.defaultStreamName')},
+          function () {});
+      }
+    }.bind(this));
+  } else {
+    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
+      if (!error && result.length === 0 &&
+        this.model.urlUsername === this.model.loggedConnection.username) {
+        this.showOnboarding();
+      }
+    }.bind(this));
   }
-  this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
-    if (!error && result.length === 0 &&
-      this.model.urlUsername === this.model.loggedConnection.username) {
-      this.showOnboarding();
-    }
-  }.bind(this));
 };
 
 TreeMap.prototype.focusOnConnections = function (connection) {

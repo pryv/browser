@@ -110,7 +110,10 @@ module.exports = Marionette.ItemView.extend({
       } else {
         this.bounds.extend(geopoint);
       }
-      if (!this.paths[p.streamId]) { this.paths[p.streamId] = []; }
+      if (!this.paths[p.streamId]) {
+        this.paths[p.streamId] = [];
+        geopoint.pathColor = this._getColor(p.stream);
+      }
       this.paths[p.streamId].push(geopoint);
     }, this);
   },
@@ -136,7 +139,7 @@ module.exports = Marionette.ItemView.extend({
       if (path.length > 1) {
         gPath = new this.gmaps.Polyline({
           path: path,
-          strokeColor: this._generateRandomColor(),
+          strokeColor: path[0].pathColor,
           strokeOpacity: 1.0,
           strokeWeight: 6
         });
@@ -150,13 +153,18 @@ module.exports = Marionette.ItemView.extend({
     }, this);
     gMarker = new MarkerClusterer(this.map, this.markers);
   },
-  _generateRandomColor: function () {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.round(Math.random() * 15)];
+  _getColor: function (c) {
+    if (typeof(c) === 'undefined' || !c) {
+      return '';
     }
-    return color;
+    if (typeof(c.clientData) !== 'undefined' &&
+      typeof(c.clientData['pryv-browser:bgColor']) !== 'undefined') {
+      return c.clientData['pryv-browser:bgColor'];
+    }
+    if (typeof(c.parent) !== 'undefined') {
+      return this._getColor(c.parent);
+    }
+    return '';
   },
   onDateHighLighted : function (time) {
     this.highlightedTime = time;

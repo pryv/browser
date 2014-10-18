@@ -7,6 +7,13 @@ var _ = require('underscore'),
 var Controller = module.exports = function ($modal, connection, focusedStream, target) {
   this.connection = connection;
   this.focusedStream = _.size(focusedStream) !== 1 ? null : focusedStream[0];
+  if (!this.focusedStream) {
+    _.each(this.connection._connections, function (c) {
+      if (c._accessInfo && c._accessInfo.name === 'pryv-browser') {
+        this.focusedStream = c.datastore.getStreamById('diary');
+      }
+    }.bind(this));
+  }
   this.$modal = $modal;
   this.target = target;
   this.container = '.modal-content';

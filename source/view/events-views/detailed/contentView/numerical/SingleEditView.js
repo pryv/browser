@@ -15,6 +15,7 @@ module.exports = Marionette.ItemView.extend({
     selColor: '#detailed-view-chart-color',
     selStyle: '#detailed-view-chart-style',
     selOperation: '#detailed-view-chart-operation',
+    selIntervalGroup: '#detailed-view-chart-interval-group',
     selInterval: '#detailed-view-chart-interval',
     butOk: '#detailed-view-chart-ok',
     butCancel: '#detailed-view-chart-cancel'
@@ -126,6 +127,8 @@ module.exports = Marionette.ItemView.extend({
     this.edited.set('transform', this.transform);
     this.edited.set('interval', this.interval);
 
+    this.updateEditor();
+
     if (this.chartView) { this.chartView.unbind(); }
     this.chartView.render();
     this.chartView.on('eventEdit', this.onValueEdited.bind(this));
@@ -144,41 +147,48 @@ module.exports = Marionette.ItemView.extend({
     $(this.itemViewContainer).empty();
   },
   updateEditor: function () {
-    var i;
-    var found = false;
-    var options = this.ui.selColor[0].options;
+    var i,
+        editedModel = this.model.get('edited'),
+        colorFound = false,
+        options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('edited').get('color')) {
+      if (options[i].value === editedModel.get('color')) {
         this.ui.selColor[0].selectedIndex = i;
-        found = true;
+        colorFound = true;
         break;
       }
     }
-    if (!found) {
-      if (this.model.get('edited').get('color')) {
+    if (! colorFound) {
+      if (editedModel.get('color')) {
         $(this.ui.selColor).css({
-          'background-color': this.model.get('edited').get('color')
+          'background-color': editedModel.get('color')
         });
       }
     }
 
     options = this.ui.selStyle[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('edited').get('style')) {
+      if (options[i].value === editedModel.get('style')) {
         this.ui.selStyle[0].selectedIndex = i;
         break;
       }
     }
+
     options = this.ui.selOperation[0].options;
+    var transform = editedModel.get('transform');
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('edited').get('transform')) {
+      if (options[i].value === transform) {
         this.ui.selOperation[0].selectedIndex = i;
         break;
       }
     }
+
+    // show/hide interval control depending on transform
+    $(this.ui.selIntervalGroup[0]).toggle(transform !== 'none');
+
     options = this.ui.selInterval[0].options;
     for (i = 0; i < options.length; ++i) {
-      if (options[i].value === this.model.get('edited').get('interval')) {
+      if (options[i].value === editedModel.get('interval')) {
         this.ui.selInterval[0].selectedIndex = i;
         break;
       }

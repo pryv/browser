@@ -15,9 +15,9 @@ var TimeSeriesModel = {
     seriesLegend: null,
 
     color: null,
-    style: null,
-    transform: null,
-    interval: null,
+    style: 'bar',
+    transform: 'sum',
+    interval: 'auto',
 
     virtual: null
   }

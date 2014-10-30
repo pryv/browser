@@ -86,6 +86,12 @@ ChartView.makeChart = function () {
 
   this.setUpContainer();
 
+  var timeScale = pryvBrowser.timeView.getScale(),
+      timeBounds = pryvBrowser.timeView.getTimeBounds(),
+      fromMsTime = timeBounds.from * 1000,
+      toMsTime = timeBounds.to * 1000,
+      autoSeriesInterval = getAutoSeriesInterval(timeScale, fromMsTime, toMsTime);
+
   var eventsCount = 0,
       streamNamesPerDataId = {},
       eventSymbolsPerDataId = {},
@@ -94,7 +100,7 @@ ChartView.makeChart = function () {
   collection.each(function (series) {
     series.sortData();
     var c3data = this.c3settings.data,
-        seriesData = tsTransform.transform(series),
+        seriesData = tsTransform.transform(series, autoSeriesInterval),
         seriesId = series.get('seriesId');
 
     c3data.columns.push(seriesData.xCol);
@@ -120,20 +126,20 @@ ChartView.makeChart = function () {
     c3data.axes[seriesId] = yAxis;
 
     switch (series.get('style')) {
-    case 'bar':
-      c3data.types[seriesId] = 'bar';
-      break;
     case 'point':
       c3data.types[seriesId] = 'scatter';
       break;
     case 'spline':
       c3data.types[seriesId] = 'spline';
       break;
-    //case 'line':
-    default:
+    case 'line':
       c3data.types[seriesId] = 'line';
       //TODO: review this
-//      this.data[seriesIndex].points = { show: (data.length < 2) };
+      //      this.data[seriesIndex].points = { show: (data.length < 2) };
+      break;
+    // case 'bar':
+    default:
+      c3data.types[seriesId] = 'bar';
       break;
     }
 
@@ -145,11 +151,7 @@ ChartView.makeChart = function () {
   }.bind(this));
 
   // TODO: adjust ticks density from scale & available space, etc.
-  var timeScale = pryvBrowser.timeView.getScale(),
-      timeBounds = pryvBrowser.timeView.getTimeBounds(),
-      fromMsTime = timeBounds.from * 1000,
-      toMsTime = timeBounds.to * 1000,
-      tickSettings = getTickSettings(timeScale, fromMsTime, toMsTime);
+  var tickSettings = getTickSettings(timeScale, fromMsTime, toMsTime);
   this.c3settings.axis = {
     x: {
       type: 'timeseries',
@@ -194,6 +196,30 @@ ChartView.makeChart = function () {
 
   this.makeLegend();
 };
+
+var SeriesIntervalForScale = {
+  day: 'hourly',
+  week: 'daily',
+  month: 'daily',
+  year: 'monthly',
+  custom: null // dynamically determined
+};
+
+function getAutoSeriesInterval(timeScale, fromMsTime, toMsTime) {
+  var interval = SeriesIntervalForScale[timeScale];
+  if (! interval) {
+    // custom scale
+    var duration = moment.duration(toMsTime - fromMsTime);
+    if (duration.months() >= 2) {
+      interval = 'monthly';
+    } else if (duration.days() >= 2) {
+      interval = 'daily';
+    } else {
+      interval = 'hourly';
+    }
+  }
+  return interval;
+}
 
 // TODO: extract event type formatting stuff to utility helper
 

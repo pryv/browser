@@ -4,12 +4,18 @@ var tsTransform = module.exports = {};
 
 /**
  * @param {TimeSeriesModel} timeSeriesModel
+ * @param {String} autoInterval The dynamically-determined interval to use if interval is "auto"
  * @returns {Object} Object with array props `xCol` and `yCol`
  *                   (the first item of each one is the column header)
  */
-tsTransform.transform = function (timeSeriesModel) {
-  var aggGroupKeyFn = getAggregationGroupKeyFn(timeSeriesModel.get('interval')),
-      aggGroupTimeFn = getAggregationGroupTimeFn(timeSeriesModel.get('interval'));
+tsTransform.transform = function (timeSeriesModel, autoInterval) {
+  var interval = timeSeriesModel.get('interval');
+  if (interval === 'auto') {
+    interval = autoInterval;
+  }
+
+  var aggGroupKeyFn = getAggregationGroupKeyFn(interval),
+      aggGroupTimeFn = getAggregationGroupTimeFn(interval);
 
   var aggGroups = getAggregationGroups(timeSeriesModel.get('events'),
                                        aggGroupKeyFn, aggGroupTimeFn);
@@ -25,12 +31,11 @@ tsTransform.transform = function (timeSeriesModel) {
 
   switch (timeSeriesModel.get('transform')) {
   case 'sum':
-    return (! timeSeriesModel.get('interval')) ?
-        applyStackedSum(aggGroups, result) : applySum(aggGroups, result);
+    return applySum(aggGroups, result);
   case 'average':
     return applyAverage(aggGroups, result);
   default:
-    return applyDefault(timeSeriesModel.get('events'), result);
+    return applyRaw(timeSeriesModel.get('events'), result);
   }
 };
 
@@ -113,7 +118,7 @@ function getAggregationGroupTimeFn(interval) {
   }
 }
 
-function applyDefault(events, result) {
+function applyRaw(events, result) {
   _.each(events, function (e) {
     result.xCol.push(e.time * 1000);
     result.yCol.push(getValue(e));
@@ -157,28 +162,29 @@ function applySum(aggregationGroups, result) {
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}
  out -> [[1234, sum], [145, sum]]
  */
-function applyStackedSum(aggregationGroups, result) {
-  var total = 0;
-
-  var groupKeys = [];
-  _.each(aggregationGroups, function (groupEvents, key) {
-    groupKeys.push(key);
-  });
-  groupKeys.sort();
-
-  _.each(groupKeys, function (key) {
-    result.xCol.push(aggregationGroups[key][0].time);
-    result.yCol.push(computeStackedSum(aggregationGroups[key]));
-  });
-  return result;
-
-  function computeStackedSum(events) {
-    total += _.reduce(events, function (current, e) {
-      return current + e.value;
-    }, 0);
-    return total;
-  }
-}
+// TODO: cleanup (unused)
+//function applyStackedSum(aggregationGroups, result) {
+//  var total = 0;
+//
+//  var groupKeys = [];
+//  _.each(aggregationGroups, function (groupEvents, key) {
+//    groupKeys.push(key);
+//  });
+//  groupKeys.sort();
+//
+//  _.each(groupKeys, function (key) {
+//    result.xCol.push(aggregationGroups[key][0].time);
+//    result.yCol.push(computeStackedSum(aggregationGroups[key]));
+//  });
+//  return result;
+//
+//  function computeStackedSum(events) {
+//    total += _.reduce(events, function (current, e) {
+//      return current + e.value;
+//    }, 0);
+//    return total;
+//  }
+//}
 
 /*
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}

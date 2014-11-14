@@ -1,4 +1,4 @@
-/* global $, c3, moment, pryvBrowser */
+/* global $, Highcharts, moment, pryvBrowser */
 
 var _ = require('underscore'),
     Marionette = require('backbone.marionette'),
@@ -8,9 +8,8 @@ var _ = require('underscore'),
 var ChartView = {
   template: '#template-chart-container',
   container: null,
-  options: null,
   data: null,
-  c3settings: {},
+  chartSettings: {},
   chart: null,
   chartContainer: null,
   useExtras: null,
@@ -33,6 +32,7 @@ ChartView.resize = function () {
   if (this.model.get('requiresDim')) {
     $(this.chartContainer).css(this.model.get('dimensions'));
   }
+  // TODO: no need to re-render the entire chart here
   this.render();
 };
 
@@ -74,14 +74,9 @@ ChartView.makeChart = function () {
   var collection = this.model.get('collection');
   this.container = this.model.get('container');
 
-  this.options = {};
-  this.c3settings.data = {
-    xs: {},
-    columns: [],
-    axes: {},
-    names: {},
-    types: {},
-    colors: {}
+  var settings = this.chartSettings = {
+    series: [],
+    yAxis: []
   };
 
   this.setUpContainer();
@@ -95,107 +90,103 @@ ChartView.makeChart = function () {
   var eventsCount = 0,
       streamNamesPerDataId = {},
       eventSymbolsPerDataId = {},
-      yAxisForType = {},
-      yAxesCount = 0;
-  collection.each(function (series) {
-    series.sortData();
-    var c3data = this.c3settings.data,
-        seriesData = tsTransform.transform(series, autoSeriesInterval),
-        seriesId = series.get('seriesId');
+      yIndexForType = {};
+  collection.each(function (seriesModel) {
+    seriesModel.sortData();
 
-    c3data.columns.push(seriesData.xCol);
-    c3data.columns.push(seriesData.yCol);
-    c3data.xs[seriesId] = seriesData.xCol[0];
-
-    var eventType = series.get('type'),
+    var seriesId = seriesModel.get('seriesId'),
+        eventType = seriesModel.get('type'),
         eventSymbol = getEventValueSymbol(eventType,
             this.useExtras ? pryv.eventTypes.extras(eventType) : null);
-    eventSymbolsPerDataId[seriesId] = eventSymbol;
 
-    streamNamesPerDataId[seriesId] = series.get('streamName');
-    c3data.names[seriesId] = streamNamesPerDataId[seriesId];
-    series.set('seriesLegend', streamNamesPerDataId[seriesId] + ' (' + eventSymbol + ')');
+    eventSymbolsPerDataId[seriesId] = eventSymbol;
+    streamNamesPerDataId[seriesId] = seriesModel.get('streamName');
+    seriesModel.set('seriesLegend', streamNamesPerDataId[seriesId] + ' (' + eventSymbol + ')');
 
     // separate y axis per event type
-    var yAxis = yAxisForType[eventType];
-    if (! yAxis) {
-      yAxesCount++;
-      yAxis = 'y' + (yAxesCount > 1 ? yAxesCount : '');
-      yAxisForType[eventType] = yAxis;
-    }
-    c3data.axes[seriesId] = yAxis;
-
-    switch (series.get('style')) {
-    case 'point':
-      c3data.types[seriesId] = 'scatter';
-      break;
-    case 'spline':
-      c3data.types[seriesId] = 'spline';
-      break;
-    case 'line':
-      c3data.types[seriesId] = 'line';
-      //TODO: review this
-      //      this.data[seriesIndex].points = { show: (data.length < 2) };
-      break;
-    // case 'bar':
-    default:
-      c3data.types[seriesId] = 'bar';
-      break;
+    var yIndex = yIndexForType[eventType];
+    if (! yIndex) {
+      yIndex = settings.yAxis.push({}) - 1;
+      yIndexForType[eventType] = yIndex;
     }
 
-    if (series.get('color')) {
-      c3data.colors[seriesId] = series.get('color');
+    var series = {
+      id: seriesId,
+      name: seriesModel.get('seriesLegend'),
+      type: getSeriesChartType(seriesModel.get('style')),
+      yAxis: yIndex,
+      data: tsTransform.transform(seriesModel, autoSeriesInterval),
+      tooltip: {valueSuffix: ' ' + eventSymbol}
+    };
+
+    if (seriesModel.get('color')) {
+      series.color = seriesModel.get('color');
     }
 
-    eventsCount += seriesData.yCol.length;
+    settings.series.push(series);
+
+    eventsCount += seriesModel.get('events').length;
   }.bind(this));
 
-  // TODO: adjust ticks density from scale & available space, etc.
   var tickSettings = getTickSettings(timeScale, fromMsTime, toMsTime);
-  this.c3settings.axis = {
-    x: {
-      type: 'timeseries',
-      min: fromMsTime,
-      max: toMsTime,
-      tick: {
-        fit: false,
-        format: tickSettings.getLabel,
-        values: tickSettings.getValues(fromMsTime, toMsTime)
-      }
+  settings.xAxis = {
+    type: 'datetime',
+    min: fromMsTime,
+    max: toMsTime,
+    tickPositions: tickSettings.getValues(fromMsTime, toMsTime),
+    labels: {
+      //fit: false,
+      formatter: tickSettings.getLabel
+    }
+  };
+  settings.tooltip = {
+    shared: true,
+    crosshairs: {
+      width: 1,
+      color: 'gray',
+      dashStyle: 'dot'
     },
-    y: {
-      show: yAxesCount === 1
-    }
+    valueDecimals: 2
+    // formatter: TODO
   };
-  this.c3settings.tooltip = {
-    format: {
-      title: getFullTimeLabel,
-      value: function (value, ratio, id) {
-        return '<strong>' + (+value.toFixed(2)) + '</strong> ' + eventSymbolsPerDataId[id];
-      }
-    }
-  };
-  this.c3settings.legend = {show: false};
+  //{
+  //  format: {
+  //    title: getFullTimeLabel,
+  //    value: function (value, ratio, id) {
+  //      return '<strong>' + (+value.toFixed(2)) + '</strong> ' + eventSymbolsPerDataId[id];
+  //    }
+  //  }
+  //};
+  //settings.legend = {enabled: false};
   // TODO fix: this triggers an issue with model being modified by detailed view
   // (to reproduce: chart in treemap, open details, back, refresh: treemap chart model corrupted)
 //  if (this.model.get('enableNavigation')) {
-//    this.c3settings.subchart = {show: true};
+//    this.chartSettings.subchart = {show: true};
 //  }
-  this.c3settings.padding = {
-    top: this.model.get('showLegend') ? 25 : 0,
-    // TODO: find why svg renders bigger than container element & fix this (shouldn't be needed)
-    left: 25
+  settings.title = {text: ''};
+  settings.chart = {
+    renderTo: $(this.chartContainer)[0]
   };
 
   if (this.model.get('showNodeCount')) {
     $(this.container).append('<span class="aggregated-nbr-events">' + eventsCount + '</span>');
   }
-  this.chart = c3.generate(_.extend(this.c3settings, {bindto: this.chartContainer}));
+  this.chart = new Highcharts.Chart(settings);
 
   this.createEventBindings();
 
-  this.makeLegend();
+  //this.makeLegend();
 };
+
+var ChartTypePerSeriesStyle = {
+  bar: 'column',
+  line: 'line',
+  spline: 'spline',
+  point: 'scatter'
+};
+function getSeriesChartType(seriesStyle) {
+  return ChartTypePerSeriesStyle[seriesStyle] || ChartTypePerSeriesStyle.bar;
+}
 
 var SeriesIntervalForScale = {
   day: 'hourly',
@@ -248,15 +239,18 @@ var TickIntervalForScale = {
 var TickIntervals = {
   hour: {
     format: 'H',
-    momentKey: 'h'
+    momentKey: 'h',
+    interval: 1000 * 60 * 60
   },
   dayOfWeek: {
     format: 'ddd',
-    momentKey: 'd'
+    momentKey: 'd',
+    interval: 1000 * 60 * 60 * 24
   },
   week: {
     format: 'ddd D.M',
-    momentKey: 'w'
+    momentKey: 'w',
+    interval: 1000 * 60 * 60 * 24 * 7
   },
   month: {
     format: 'MMM',
@@ -306,10 +300,12 @@ function getTickSettings(timeScale, fromMsTime, toMsTime) {
   return TickSettings[interval];
 }
 
-function getFullTimeLabel(msTime) {
-  return moment(msTime).calendar();
-}
+// TODO: use or clean up
+//function getFullTimeLabel(msTime) {
+//  return moment(msTime).calendar();
+//}
 
+// TODO: see if we actually need this extra element
 ChartView.setUpContainer = function () {
   // Setting up the chart container
   this.chartContainer = this.container + ' .chartContainer';
@@ -349,20 +345,21 @@ ChartView.makeLegend = function () {
       actions = this.model.get('legendActions'),
       legendContainer = this._getLegendContainer();
 
-  this.model.get('collection').each(function (series) {
+  this.model.get('collection').each(function (seriesModel) {
     var $legendItem = $('<li class="legend-item"/>'),
-        seriesId = series.get('seriesId');
+        seriesId = seriesModel.get('seriesId'),
+        series = this.chart.get(seriesId);
 
     $legendItem.attr('data-id', seriesId)
-        .css('border-color', this.chart.color(seriesId));
+        .css('border-color', series.color);
     $legendItem.on('mouseover', function () {
-      this.chart.focus(seriesId);
+      //TODO: this.chart.focus(seriesId);
     }.bind(this));
     $legendItem.on('mouseout', function () {
-      this.chart.revert();
+      //TODO: this.chart.revert();
     }.bind(this));
 
-    var $legendItemText = $('<span class="legend-item-text">' + series.get('seriesLegend') +
+    var $legendItemText = $('<span class="legend-item-text">' + seriesModel.get('seriesLegend') +
         '</span>');
     $legendItem.append($legendItemText);
 
@@ -379,7 +376,7 @@ ChartView.makeLegend = function () {
       _.each(actions, function (action) {
         var $button = $(getLegendActionButtonHTML(action));
         $button.on('click', function () {
-          chartView.trigger(action, series);
+          chartView.trigger(action, seriesModel);
         });
         $legendItem.append($button);
       }.bind(this));
@@ -419,7 +416,7 @@ ChartView.onDateHighLighted = function (date) {
     return;
   }
 
-  this.chart.unselect();
+  //TODO: this.chart.unselect();
 
   this.model.get('collection').each(function (series) {
     var seriesId = series.get('seriesId'),
@@ -507,8 +504,7 @@ ChartView.onClose = function () {
   $(this.container).empty();
   this.container = null;
   this.chartContainer = null;
-  this.options = null;
-  this.c3settings = null;
+  this.chartSettings = null;
   this.chart = null;
 };
 

@@ -20,22 +20,17 @@ tsTransform.transform = function (timeSeriesModel, autoInterval) {
   var aggGroups = getAggregationGroups(timeSeriesModel.get('events'),
                                        aggGroupKeyFn, aggGroupTimeFn);
 
-  var baseSeriesId = timeSeriesModel.get('streamId') + '_' +
-          timeSeriesModel.get('type').replace('/', '_');
-  var seriesId = 'y__' + baseSeriesId;
-  timeSeriesModel.set('seriesId', seriesId);
-  var result = {
-    xCol: ['x__' + baseSeriesId],
-    yCol: [seriesId]
-  };
+  // TODO: move this to caller
+  timeSeriesModel.set('seriesId', timeSeriesModel.get('streamId') + '_' +
+      timeSeriesModel.get('type').replace('/', '_'));
 
   switch (timeSeriesModel.get('transform')) {
   case 'sum':
-    return applySum(aggGroups, result);
+    return applySum(aggGroups);
   case 'average':
-    return applyAverage(aggGroups, result);
+    return applyAverage(aggGroups);
   default:
-    return applyRaw(timeSeriesModel.get('events'), result);
+    return applyRaw(timeSeriesModel.get('events'));
   }
 };
 
@@ -118,12 +113,14 @@ function getAggregationGroupTimeFn(interval) {
   }
 }
 
-function applyRaw(events, result) {
-  _.each(events, function (e) {
-    result.xCol.push(e.time * 1000);
-    result.yCol.push(getValue(e));
+function applyRaw(events) {
+  return _.map(events, function (e) {
+    return {
+      id: e.id,
+      x: e.time * 1000,
+      y: getValue(e)
+    };
   });
-  return result;
 }
 
 function getAggregationGroups(events, aggGroupKeyFn, aggGroupTimeFn) {
@@ -144,12 +141,14 @@ function getAggregationGroups(events, aggGroupKeyFn, aggGroupTimeFn) {
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}
  out -> [[1234, sum], [145, sum]]
  */
-function applySum(aggregationGroups, result) {
-  _.each(aggregationGroups, function (groupEvents) {
-    result.xCol.push(groupEvents[0].time);
-    result.yCol.push(computeSum(groupEvents));
+function applySum(aggregationGroups) {
+  return _.map(aggregationGroups, function (groupEvents) {
+    return {
+      id: groupEvents[0].key,
+      x: groupEvents[0].time,
+      y: computeSum(groupEvents)
+    };
   });
-  return result;
 
   function computeSum(a) {
     return _.reduce(a, function (c, e) {
@@ -172,11 +171,9 @@ function applySum(aggregationGroups, result) {
 //  });
 //  groupKeys.sort();
 //
-//  _.each(groupKeys, function (key) {
-//    result.xCol.push(aggregationGroups[key][0].time);
-//    result.yCol.push(computeStackedSum(aggregationGroups[key]));
+//  return _.map(groupKeys, function (key) {
+//    return [ aggregationGroups[key][0].time, computeStackedSum(aggregationGroups[key]) ];
 //  });
-//  return result;
 //
 //  function computeStackedSum(events) {
 //    total += _.reduce(events, function (current, e) {
@@ -190,12 +187,14 @@ function applySum(aggregationGroups, result) {
  in -> {1234: [123, 1234, 345], 145: [1234] ,...}
  out -> [[1234, avg], [145, avg]]
  */
-function applyAverage(aggregationGroups, result) {
-  _.each(aggregationGroups, function (groupEvents) {
-    result.xCol.push(groupEvents[0].time);
-    result.yCol.push(computeAverage(groupEvents));
+function applyAverage(aggregationGroups) {
+  return _.map(aggregationGroups, function (groupEvents) {
+    return {
+      id: groupEvents[0].key,
+      x: groupEvents[0].time,
+      y: computeAverage(groupEvents)
+    };
   });
-  return result;
 
   function computeAverage(a) {
     var sum = _.reduce(a, function (c, e) {

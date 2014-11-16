@@ -20,10 +20,6 @@ tsTransform.transform = function (timeSeriesModel, autoInterval) {
   var aggGroups = getAggregationGroups(timeSeriesModel.get('events'),
                                        aggGroupKeyFn, aggGroupTimeFn);
 
-  // TODO: move this to caller
-  timeSeriesModel.set('seriesId', timeSeriesModel.get('streamId') + '_' +
-      timeSeriesModel.get('type').replace('/', '_'));
-
   switch (timeSeriesModel.get('transform')) {
   case 'sum':
     return applySum(aggGroups);

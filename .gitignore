@@ -4,3 +4,4 @@ test/coverage.html
 .idea
 browser.iml
 npm-debug.log
+dist-c3

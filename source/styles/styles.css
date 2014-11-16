@@ -611,7 +611,9 @@ padding: 0px 15px;
   height: 100%;
 }
 
-.c3 svg {
+/* TODO: cleanup (not using c3 anymore) */
+
+.chartContainer svg {
   font: inherit;
   font-size: 10px;
 }

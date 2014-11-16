@@ -32,8 +32,11 @@ ChartView.resize = function () {
   if (this.model.get('requiresDim')) {
     $(this.chartContainer).css(this.model.get('dimensions'));
   }
-  // TODO: no need to re-render the entire chart here
-  this.render();
+  if (this.chart) {
+    this.chart.reflow();
+  } else { // TODO: may not be needed
+    this.render();
+  }
 };
 
 ChartView.onRender = function () {
@@ -71,7 +74,8 @@ ChartView.onRender = function () {
 };
 
 ChartView.makeChart = function () {
-  var collection = this.model.get('collection');
+  var chartView = this,
+      collection = this.model.get('collection');
   this.container = this.model.get('container');
 
   var settings = this.chartSettings = {
@@ -94,11 +98,12 @@ ChartView.makeChart = function () {
   collection.each(function (seriesModel) {
     seriesModel.sortData();
 
-    var seriesId = seriesModel.get('seriesId'),
+    var seriesId = seriesModel.get('streamId') + '_' + seriesModel.get('type').replace('/', '_'),
         eventType = seriesModel.get('type'),
         eventSymbol = getEventValueSymbol(eventType,
             this.useExtras ? pryv.eventTypes.extras(eventType) : null);
 
+    seriesModel.set('seriesId', seriesId);
     eventSymbolsPerDataId[seriesId] = eventSymbol;
     streamNamesPerDataId[seriesId] = seriesModel.get('streamName');
     seriesModel.set('seriesLegend', streamNamesPerDataId[seriesId] + ' (' + eventSymbol + ')');
@@ -106,7 +111,11 @@ ChartView.makeChart = function () {
     // separate y axis per event type
     var yIndex = yIndexForType[eventType];
     if (! yIndex) {
-      yIndex = settings.yAxis.push({}) - 1;
+      yIndex = settings.yAxis.push({
+        title: {text: null},
+        labels: {enabled: false},
+        gridLineWidth: 0
+      }) - 1;
       yIndexForType[eventType] = yIndex;
     }
 
@@ -116,6 +125,13 @@ ChartView.makeChart = function () {
       type: getSeriesChartType(seriesModel.get('style')),
       yAxis: yIndex,
       data: tsTransform.transform(seriesModel, autoSeriesInterval),
+      marker: {
+        symbol: 'circle',
+        radius: 3,
+        lineColor: null,
+        lineWidth: 1,
+        fillColor: '#FFFFFF'
+      },
       tooltip: {valueSuffix: ' ' + eventSymbol}
     };
 
@@ -135,29 +151,54 @@ ChartView.makeChart = function () {
     max: toMsTime,
     tickPositions: tickSettings.getValues(fromMsTime, toMsTime),
     labels: {
-      //fit: false,
       formatter: tickSettings.getLabel
     }
   };
   settings.tooltip = {
     shared: true,
+    borderColor: '#BDC3C7',
+    shadow: false,
     crosshairs: {
       width: 1,
       color: 'gray',
       dashStyle: 'dot'
     },
-    valueDecimals: 2
-    // formatter: TODO
+    formatter: function () {
+      var s = '<strong>' + getFullTimeLabel(this.x) + '</strong>';
+
+      _.forEach(this.points, function (pt) {
+        s += '<br/> <span style="color:' + pt.series.color + '">\u25CF</span> ' +
+            streamNamesPerDataId[pt.series.options.id] +
+            ': <strong>' + (+(pt.y).toFixed(2)) + '</strong> ' +
+            pt.series.tooltipOptions.valueSuffix;
+      }, this);
+
+      return s;
+    }
   };
-  //{
-  //  format: {
-  //    title: getFullTimeLabel,
-  //    value: function (value, ratio, id) {
-  //      return '<strong>' + (+value.toFixed(2)) + '</strong> ' + eventSymbolsPerDataId[id];
-  //    }
-  //  }
-  //};
-  //settings.legend = {enabled: false};
+  if (this.model.get('showLegend')) {
+    var actions = this.model.get('legendActions');
+    settings.legend = {
+      verticalAlign: 'top',
+      itemStyle: {
+        //TODO: see about extracting all styles into a theme (see Highcharts docs)
+        fontSize: '10px',
+        fontWeight: 'normal'
+      },
+      useHTML: true,
+      labelFormatter: function () {
+        var s = this.name;
+        if (actions) {
+          _.each(actions, function (action) {
+            s += ' ' + getLegendActionButtonHTML(this.options.id, action);
+          }.bind(this));
+        }
+        return s;
+      }
+    };
+  } else {
+    settings.legend = {enabled: false};
+  }
   // TODO fix: this triggers an issue with model being modified by detailed view
   // (to reproduce: chart in treemap, open details, back, refresh: treemap chart model corrupted)
 //  if (this.model.get('enableNavigation')) {
@@ -165,17 +206,60 @@ ChartView.makeChart = function () {
 //  }
   settings.title = {text: ''};
   settings.chart = {
-    renderTo: $(this.chartContainer)[0]
+    renderTo: $(this.chartContainer)[0],
+    style: {
+      fontFamily: 'Roboto, Georgia, Arial, sans-serif'
+    }
   };
 
-  if (this.model.get('showNodeCount')) {
-    $(this.container).append('<span class="aggregated-nbr-events">' + eventsCount + '</span>');
-  }
   this.chart = new Highcharts.Chart(settings);
 
-  this.createEventBindings();
+  // event bindings, TODO: review & cleanup
 
-  //this.makeLegend();
+  var $container = $(this.container);
+  $container.off();
+  if (this.model.get('showNodeCount')) {
+    $container.append('<span class="aggregated-nbr-events">' + eventsCount + '</span>');
+    this.chart.container.onclick = function () {
+      this.trigger('nodeClicked');
+    }.bind(this);
+  }
+
+  if (this.model.get('legendActions')) {
+    $('.legend-action', $container).on('click', function () {
+      var $this = $(this),
+          seriesId = $this.data('series-id');
+      var seriesModel = collection.find(function (model) {
+        return model.get('seriesId') === seriesId;
+      });
+      chartView.trigger($this.data('action'), seriesModel);
+    });
+  }
+
+  // TODO review & cleanup
+
+//  if (this.model.get('editPoint')) {
+//    $container.bind('plotclick', this.onEdit.bind(this));
+//  }
+//
+//  if (this.model.get('onClick')) {
+//    $container.bind('plotclick', this.onClick.bind(this));
+//  }
+//  if (this.model.get('onHover')) {
+//    $container.bind('plothover', this.onHover.bind(this));
+//  }
+
+  if (this.model.get('onDnD')) {
+    $container.attr('draggable', true);
+    $container.bind('dragstart', this.onDragStart.bind(this));
+    $container.bind('dragenter', this.onDragEnter.bind(this));
+    $container.bind('dragover', this.onDragOver.bind(this));
+    $container.bind('dragleave', this.onDragLeave.bind(this));
+    $container.bind('drop', this.onDrop.bind(this));
+    $container.bind('dragend', this.onDragEnd.bind(this));
+  }
+
+  // TODO: this.makeLegend();
 };
 
 var ChartTypePerSeriesStyle = {
@@ -265,8 +349,8 @@ var TickIntervals = {
 var TickSettings = {};
 _.each(TickIntervals, function (iValue, iKey) {
   TickSettings[iKey] = {
-    getLabel: function (msTime) {
-      return moment(msTime).format(iValue.format);
+    getLabel: function () {
+      return moment(this.value).format(iValue.format);
     },
     getValues: function (fromMsTime, toMsTime) {
       var values = [fromMsTime],
@@ -300,10 +384,9 @@ function getTickSettings(timeScale, fromMsTime, toMsTime) {
   return TickSettings[interval];
 }
 
-// TODO: use or clean up
-//function getFullTimeLabel(msTime) {
-//  return moment(msTime).calendar();
-//}
+function getFullTimeLabel(msTime) {
+  return moment(msTime).calendar();
+}
 
 // TODO: see if we actually need this extra element
 ChartView.setUpContainer = function () {
@@ -391,7 +474,7 @@ ChartView.makeLegend = function () {
 //  $legendContainer.find('.legend-item-text').dotdotdot();
 };
 
-function getLegendActionButtonHTML(action) {
+function getLegendActionButtonHTML(seriesId, action) {
   var iconClasses = {
     ready: 'fa-check',
     duplicate: 'fa-files-o',
@@ -405,6 +488,7 @@ function getLegendActionButtonHTML(action) {
     edit: 'Edit settings'
   };
   return '<a class="legend-action legend-action-' + action + '" href="javascript:;" ' +
+      'data-series-id="' + seriesId + '" data-action="' + action + '" ' +
       'title="' + titles[action] + '"><i class="fa ' + iconClasses[action] + '"></i></a>';
 }
 
@@ -444,7 +528,7 @@ ChartView.onDateHighLighted = function (date) {
 //    }
 
 //    best = data.length === best ? best - 1: best;
-    this.chart.select([seriesId], [best]);
+//    this.chart.select([seriesId], [best]);
   }.bind(this));
 };
 
@@ -452,7 +536,7 @@ ChartView.highlightEvent = function (/*event*/) {
   if (! this.chart) {
     return;
   }
-  this.chart.unselect();
+  // TODO: this.chart.unselect();
 
   // TODO
 
@@ -506,45 +590,6 @@ ChartView.onClose = function () {
   this.chartContainer = null;
   this.chartSettings = null;
   this.chart = null;
-};
-
-ChartView.createEventBindings = function () {
-  var $container = $(this.container);
-  $container.unbind();
-
-  $container.bind('resize', function () {
-    this.trigger('chart:resize', this.model);
-  });
-
-  // TODO review & cleanup
-
-//  if (this.model.get('editPoint')) {
-//    $container.bind('plotclick', this.onEdit.bind(this));
-//  }
-//
-//  if (this.model.get('onClick')) {
-//    $container.bind('plotclick', this.onClick.bind(this));
-//  }
-//  if (this.model.get('onHover')) {
-//    $container.bind('plothover', this.onHover.bind(this));
-//  }
-
-  if (this.model.get('onDnD')) {
-    $container.attr('draggable', true);
-    $container.bind('dragstart', this.onDragStart.bind(this));
-    $container.bind('dragenter', this.onDragEnter.bind(this));
-    $container.bind('dragover', this.onDragOver.bind(this));
-    $container.bind('dragleave', this.onDragLeave.bind(this));
-    $container.bind('drop', this.onDrop.bind(this));
-    $container.bind('dragend', this.onDragEnd.bind(this));
-  }
-
-  if (this.model.get('showNodeCount')) {
-    $container.bind('click',
-    function () {
-      this.trigger('nodeClicked');
-    }.bind(this));
-  }
 };
 
 /**

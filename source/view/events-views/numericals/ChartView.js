@@ -122,13 +122,6 @@ ChartView.makeChart = function () {
       type: getSeriesChartType(seriesModel.get('style')),
       yAxis: yIndex,
       data: tsTransform.transform(seriesModel, autoSeriesInterval),
-      marker: {
-        symbol: 'circle',
-        radius: 3,
-        lineColor: null,
-        lineWidth: 1,
-        fillColor: '#FFFFFF'
-      },
       tooltip: {valueSuffix: ' ' + eventSymbol}
     };
 
@@ -141,6 +134,34 @@ ChartView.makeChart = function () {
     eventsCount += seriesModel.get('events').length;
   }.bind(this));
 
+  settings.plotOptions = {
+    column: {
+      borderColor: null,
+      borderWidth: 1
+    },
+    series: {
+      marker: {
+        symbol: 'circle',
+        radius: 3,
+        lineColor: null,
+        lineWidth: 1,
+        fillColor: '#FFFFFF',
+        states: {
+          select: {
+            fillColor: null,
+            lineColor: '#BD1727',
+            radius: 5
+          }
+        }
+      },
+      states: {
+        select: {
+          color: null,
+          borderColor: '#BD1727'
+        }
+      }
+    }
+  };
   var tickSettings = getTickSettings(timeScale, fromMsTime, toMsTime);
   settings.xAxis = {
     type: 'datetime',
@@ -394,30 +415,6 @@ ChartView.setUpContainer = function () {
   $(this.container).html('<div class="chartContainer"></div>');
 };
 
-ChartView.getDurationFunction = function (interval) {
-  switch (interval) {
-  case 'hourly' :
-    return function () { return 3600 * 1000; };
-  case 'daily' :
-    return function () { return 24 * 3600 * 1000; };
-  case 'weekly' :
-    return function () { return 7 * 24 * 3600 * 1000; };
-  case 'monthly' :
-    return function (d) {
-      return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() * 24 * 3600 * 1000;
-    };
-  case 'yearly' :
-    return function (d) {
-      return (d.getFullYear() % 4 === 0 &&
-          (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
-    };
-  default :
-    return function () {
-      return 0;
-    };
-  }
-};
-
 function getLegendActionButtonHTML(seriesId, action) {
   var iconClasses = {
     ready: 'fa-check',
@@ -436,53 +433,78 @@ function getLegendActionButtonHTML(seriesId, action) {
       'title="' + titles[action] + '"><i class="fa ' + iconClasses[action] + '"></i></a>';
 }
 
-ChartView.onDateHighLighted = function (date) {
-  if (! date) {
-    date = this.model.get('highlightedTime');
+ChartView.onDateHighLighted = function (highlightedTime) {
+  if (! highlightedTime) {
+    highlightedTime = this.model.get('highlightedTime');
   }
-  if (! this.chart || ! date) {
-    return;
-  }
+  if (! this.chart || ! highlightedTime) { return; }
 
-  //TODO: this.chart.unselect();
+  this._deselectAllPoints();
 
-  this.model.get('collection').each(function (series) {
-    var seriesId = series.get('seriesId'),
-//        data = this.chart.data.get(seriesId),
-//        dF = this.getDurationFunction(series.get('interval')),
-//        distance = null,
+  this.model.get('collection').each(function (seriesModel) {
+    var seriesId = seriesModel.get('seriesId'),
+        points = this.chart.get(seriesId).points,
+        dF = getDurationFunction(seriesModel.get('interval')),
+        distance = null,
         best = 0;
 
-//    for (var i = 0, len = data.length; i < len; i++) {
-//      var duration = dF(new Date(data[seriesIndex].data[i][0]));
-//      var d1 = Math.abs(date - (data[seriesIndex].data[i][0] / 1000));
-//      var d2 = Math.abs(date - ((data[seriesIndex].data[i][0] + duration) / 1000));
-//
-//      if (distance === null) {
-//        best = i;
-//        distance = d1 < d2 ? d1 : d2;
-//      } else if ((data[seriesIndex].data[i][0] / 1000) <= date &&
-//        date <= ((data[seriesIndex].data[i][0] + duration) / 1000)) {
-//        best = i;
-//        break;
-//      } else if (d1 <= distance || d2 <= distance) {
-//        best = i;
-//        distance = d1 < d2 ? d1 : d2;
-//      }
-//    }
+    for (var i = 0, len = points.length; i < len; i++) {
+      var ptTime = points[i].x,
+          duration = dF(new Date(ptTime)),
+          distToStart = Math.abs(highlightedTime - (ptTime / 1000)),
+          distToEnd = Math.abs(highlightedTime - ((ptTime + duration) / 1000));
 
-//    best = data.length === best ? best - 1: best;
-//    this.chart.select([seriesId], [best]);
+      if (distance === null) {
+        best = i;
+        distance = distToStart < distToEnd ? distToStart : distToEnd;
+      } else if ((ptTime / 1000) <= highlightedTime &&
+          highlightedTime <= ((ptTime + duration) / 1000)) {
+        best = i;
+        break;
+      } else if (distToStart <= distance || distToEnd <= distance) {
+        best = i;
+        distance = distToStart < distToEnd ? distToStart : distToEnd;
+      }
+    }
+
+    best = points.length === best ? best - 1: best;
+    points[best].select(true, false);
   }.bind(this));
 };
 
-ChartView.highlightEvent = function (/*event*/) {
-  if (! this.chart) {
-    return;
+function getDurationFunction(interval) {
+  switch (interval) {
+  case 'hourly' :
+    return function () { return 3600 * 1000; };
+  case 'daily' :
+    return function () { return 24 * 3600 * 1000; };
+  case 'weekly' :
+    return function () { return 7 * 24 * 3600 * 1000; };
+  case 'monthly' :
+    return function (d) {
+      return (new Date(d.getFullYear(), d.getMonth(), 0)).getDate() * 24 * 3600 * 1000;
+    };
+  case 'yearly' :
+    return function (d) {
+      return (d.getFullYear() % 4 === 0 &&
+      (d.getFullYear() % 100 !== 0 || d.getFullYear() % 400 === 0)) ? 366 :365;
+    };
+  default :
+    return function () {
+      return 0;
+    };
   }
-  // TODO: this.chart.unselect();
+}
 
-  // TODO
+ChartView.highlightEvent = function (event) {
+  if (! this.chart) { return; }
+
+  this._deselectAllPoints();
+
+  var pt = this.chart.get(event.id);
+  if (pt) {
+    pt.select(true);
+  }
 
 //  var c = this.model.get('collection');
 //  var e = event;
@@ -521,6 +543,10 @@ ChartView.highlightEvent = function (/*event*/) {
 //    return;
 //  }
 //  this.chart.highlight(cIdx, eIdx);
+};
+
+ChartView._deselectAllPoints = function () {
+  _.forEach(this.chart.getSelectedPoints(), function (pt) { pt.select(false); });
 };
 
 ChartView.onClose = function () {
@@ -731,3 +757,41 @@ ChartView.singleEventSetup = function () {
 
 module.exports = Marionette.CompositeView.extend(ChartView);
 
+/**
+ * Highcharts plugin for setting a lower opacity for other series than the one that is hovered
+ * in the legend
+ *
+ * TODO: separate into its own file
+ */
+(function (Highcharts) {
+  var each = Highcharts.each;
+
+  Highcharts.wrap(Highcharts.Legend.prototype, 'renderItem', function (proceed, item) {
+    proceed.call(this, item);
+
+    var isPoint = !!item.series,
+        collection = isPoint ? item.series.points : this.chart.series,
+        groups = isPoint ? ['graphic'] : ['group', 'markerGroup'],
+        element = (this.options.useHTML ? item.legendItem : item.legendGroup).element;
+
+    element.onmouseover = function () {
+      each(collection, function (seriesItem) {
+        if (seriesItem !== item) {
+          each(groups, function (group) {
+            seriesItem[group].animate({opacity: 0.25}, {duration: 150});
+          });
+        }
+      });
+    };
+
+    element.onmouseout = function () {
+      each(collection, function (seriesItem) {
+        if (seriesItem !== item) {
+          each(groups, function (group) {
+            seriesItem[group].animate({opacity: 1}, {duration: 50});
+          });
+        }
+      });
+    };
+  });
+}(Highcharts));

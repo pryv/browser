@@ -67,8 +67,6 @@ module.exports = Marionette.ItemView.extend({
           showNodeCount: false
         });
 
-      this.ui.seriesName.html(this.edited.get('seriesLegend'));
-      this.ui.selColor.css({'background-color': this.edited.get('color')});
       this.chartView = new ChartView({model: this.chartViewModel});
       this.ui.selColor.bind('change', this.editorChange.bind(this));
       this.ui.selStyle.bind('change', this.editorChange.bind(this));
@@ -148,8 +146,12 @@ module.exports = Marionette.ItemView.extend({
   },
   updateEditor: function () {
     var i,
-        editedModel = this.model.get('edited'),
-        colorFound = false,
+        editedModel = this.model.get('edited');
+
+    this.ui.seriesName.html(editedModel.get('seriesLegend'));
+    this.ui.selColor.css({'background-color': editedModel.get('color')});
+
+    var colorFound = false,
         options = this.ui.selColor[0].options;
     for (i = 0; i < options.length; ++i) {
       if (options[i].value === editedModel.get('color')) {

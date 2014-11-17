@@ -45,9 +45,6 @@ ChartView.onRender = function () {
       ! this.model.get('container')) {
     if (this.model.get('collection').length === 0) {
       $(this.model.get('container')).empty();
-      if (this.model.get('legendContainer')) {
-        $(this.model.get('legendContainer')).empty();
-      }
     }
     return;
   }
@@ -182,7 +179,7 @@ ChartView.makeChart = function () {
       verticalAlign: 'top',
       itemStyle: {
         //TODO: see about extracting all styles into a theme (see Highcharts docs)
-        fontSize: '10px',
+        fontSize: actions ? '13px' : '10px',
         fontWeight: 'normal'
       },
       useHTML: true,
@@ -220,6 +217,8 @@ ChartView.makeChart = function () {
   $container.off();
   if (this.model.get('showNodeCount')) {
     $container.append('<span class="aggregated-nbr-events">' + eventsCount + '</span>');
+    // override default Highcharts handlers to let events we need get through
+    this.chart.container.onmousedown = null;
     this.chart.container.onclick = function () {
       this.trigger('nodeClicked');
     }.bind(this);
@@ -419,61 +418,6 @@ ChartView.getDurationFunction = function (interval) {
   }
 };
 
-ChartView.makeLegend = function () {
-  if (! this.model.get('showLegend')) {
-    return;
-  }
-
-  var $legend = $('<ul class="legend"/>'),
-      actions = this.model.get('legendActions'),
-      legendContainer = this._getLegendContainer();
-
-  this.model.get('collection').each(function (seriesModel) {
-    var $legendItem = $('<li class="legend-item"/>'),
-        seriesId = seriesModel.get('seriesId'),
-        series = this.chart.get(seriesId);
-
-    $legendItem.attr('data-id', seriesId)
-        .css('border-color', series.color);
-    $legendItem.on('mouseover', function () {
-      //TODO: this.chart.focus(seriesId);
-    }.bind(this));
-    $legendItem.on('mouseout', function () {
-      //TODO: this.chart.revert();
-    }.bind(this));
-
-    var $legendItemText = $('<span class="legend-item-text">' + seriesModel.get('seriesLegend') +
-        '</span>');
-    $legendItem.append($legendItemText);
-
-    if (actions) {
-      var chartView = this;
-
-      $legend.addClass('actionable');
-
-      $legendItemText.on('click', function () {
-        chartView.chart.toggle(seriesId);
-        $(this).parent().toggleClass('disabled');
-      });
-
-      _.each(actions, function (action) {
-        var $button = $(getLegendActionButtonHTML(action));
-        $button.on('click', function () {
-          chartView.trigger(action, seriesModel);
-        });
-        $legendItem.append($button);
-      }.bind(this));
-    }
-
-    $legend.append($legendItem);
-  }.bind(this));
-
-  var $legendContainer = $(legendContainer);
-  $legendContainer.empty().append($legend);
-  //TODO: make that work (causes legend not to show...)
-//  $legendContainer.find('.legend-item-text').dotdotdot();
-};
-
 function getLegendActionButtonHTML(seriesId, action) {
   var iconClasses = {
     ready: 'fa-check',
@@ -590,22 +534,6 @@ ChartView.onClose = function () {
   this.chartContainer = null;
   this.chartSettings = null;
   this.chart = null;
-};
-
-/**
- * @private
- */
-ChartView._getLegendContainer = function () {
-  return this.model.get('legendContainer') || this._getDefaultLegendContainer();
-};
-
-var DefaultLegendContainerClass = 'legend-container';
-ChartView._getDefaultLegendContainer = function () {
-  var $container = $(this.container);
-  if (! $('.' + DefaultLegendContainerClass, $container).length) {
-    $container.append($('<div class="' + DefaultLegendContainerClass + '"/>'));
-  }
-  return this.container + ' .' + DefaultLegendContainerClass;
 };
 
 /************************

@@ -1199,67 +1199,13 @@ details.open > summary:first-child::before {
 
 .modal-dnd-chart {
   position: absolute;
-  top: 60px;
+  top: 0;
   bottom: 0px;
   right: 240px;
   left: 0px;
 }
 
-.modal-dnd-legend {
-  position: absolute;
-  height: 60px;
-  top: 0px;
-  right: 240px;
-  left: 0px;
-}
-
-.legend-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-}
 /* in detail view */
-#legend-container-general {
-  height: 40px;
-}
-ul.legend {
-  padding: 5px 15px 2px;
-  background-color: rgba(255, 255, 255, 0.5);
-  list-style-type: none;
-  font-size: 11px;
-  text-align: center;
-  word-break: normal;
-}
-#legend-container-general ul.legend,
-.modal-dnd-legend ul.legend {
-  margin-top: 5px;
-  background-color: inherit;
-  font-size: inherit;
-}
-ul.legend li {
-  display: inline-block;
-  margin: 0 0.5em 2px;
-  border-bottom: 1px solid;
-  padding-bottom: 2px;
-  text-align: center;
-  transition: all 0.1s;
-}
-ul.legend li:hover {
-  margin-bottom: 0;
-  border-bottom: 4px solid;
-  padding-bottom: 1px;
-}
-ul.legend .legend-item.disabled {
-  color: rgba(51, 51, 51, 0.3);
-}
-ul.legend.actionable .legend-item-text {
-  cursor: pointer;
-}
-
-.modal-dnd-legend .btn {
-    margin-right: 3px;
-}
 
 .legend-candidate-item .legend-item-text {
     margin-left: 5px;
@@ -1270,28 +1216,14 @@ ul.legend.actionable .legend-item-text {
   margin-left: 5px;
 }
 
-ul.modal-dnd-legend {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-ul.modal-dnd-legend > li {
-  position: relative;
-  padding: 10px 5px;
-  border-bottom: 1px solid #474747;
-  cursor: pointer;
-}
-
-
 
 /** CSS for detailed view for charts using the modal **/
 
 #detail-chart-container-general {
   position: absolute;
   width: 100%;
-  top: 40px;
-  bottom: 0px;
+  top: 0;
+  bottom: 0;
 }
 
 #detail-chart-container-edit {
@@ -1581,6 +1513,10 @@ td > .btn-default.btn-xs  {
   border-bottom: 0px solid #DDD;
   font-weight: 300;
   font-size: 11px;
+}
+.modal-header {
+  position: relative;
+  z-index: 1;
 }
 .modal-title {
   font-size: 14px;

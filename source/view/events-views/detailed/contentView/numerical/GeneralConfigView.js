@@ -35,7 +35,6 @@ module.exports = Marionette.ItemView.extend({
           dimensions: null,
           showLegend: true,
           legendActions: this.model.get('virtual') ? [ 'edit', 'remove' ] : ['edit'],
-          legendContainer: '#legend-container-general', //false or a a selector
           onClick: false,
           onHover: true,
           onDnD: false,

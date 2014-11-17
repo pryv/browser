@@ -81,7 +81,6 @@ _.extend(Controller.prototype, {
         allowPieChart: false,
         dimensions: null,
         showLegend: true,
-        legendContainer: '.modal-dnd-legend',
         legendActions: ['remove'],
         onClick: false,
         onHover: true,

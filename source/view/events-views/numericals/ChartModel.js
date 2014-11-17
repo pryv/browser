@@ -24,10 +24,6 @@ var ChartModel = {
     // Legend
 
     showLegend: true,
-    /**
-     * Default: .legend-container in container
-     */
-    legendContainer: null,
     legendActions: [ 'edit', 'duplicate', 'remove' ],
 
     /* Events control */

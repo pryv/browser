@@ -3,65 +3,60 @@ var _ = require('underscore');
 var tsTransform = module.exports = {};
 
 /**
- * @param {TimeSeriesModel} timeSeriesModel
+ * @param {TimeSeriesModel} seriesModel
  * @param {String} autoInterval The dynamically-determined interval to use if interval is "auto"
  * @returns {Object} Object with array props `xCol` and `yCol`
  *                   (the first item of each one is the column header)
  */
-tsTransform.transform = function (timeSeriesModel, autoInterval) {
-  var interval = timeSeriesModel.get('interval');
-  if (interval === 'auto') {
-    interval = autoInterval;
-  }
+tsTransform.transform = function (events, settings) {
+  var aggGroupKeyFn = tsTransform.getAggregationGroupKeyFn(settings.seriesId, settings.interval),
+      aggGroupTimeFn = tsTransform.getAggregationGroupTimeFn(settings.interval);
 
-  var aggGroupKeyFn = getAggregationGroupKeyFn(interval),
-      aggGroupTimeFn = getAggregationGroupTimeFn(interval);
+  var aggGroups = getAggregationGroups(events, aggGroupKeyFn, aggGroupTimeFn);
 
-  var aggGroups = getAggregationGroups(timeSeriesModel.get('events'),
-                                       aggGroupKeyFn, aggGroupTimeFn);
-
-  switch (timeSeriesModel.get('transform')) {
+  switch (settings.transform) {
   case 'sum':
     return applySum(aggGroups);
   case 'average':
     return applyAverage(aggGroups);
   default:
-    return applyRaw(timeSeriesModel.get('events'));
+    return applyRaw(events);
   }
 };
 
-function getAggregationGroupKeyFn(interval) {
+tsTransform.getAggregationGroupKeyFn = function (seriesId, interval) {
   switch (interval) {
   case 'hourly' :
     return function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+      return seriesId + '_' + d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
           d.getDate().toString() +  '-' + d.getHours().toString();
     };
   case 'daily' :
     return function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
+      return seriesId + '_' + d.getFullYear().toString() +  '-' + d.getMonth().toString() +  '-' +
           d.getDate().toString();
     };
   case 'weekly' :
     return function (d) {
       var msSinceFirstWeekday = d.getDay() * 24 * 3600 * 1000 + d.getHours() * 3600 * 1000;
       var asWeek = new Date(d.getTime() - msSinceFirstWeekday);
-      return asWeek.getFullYear().toString() +  '-' + getISO8601Week(asWeek).toString();
+      return seriesId + '_' + asWeek.getFullYear().toString() +  '-' +
+          getISO8601Week(asWeek).toString();
     };
   case 'monthly' :
     return function (d) {
-      return d.getFullYear().toString() +  '-' + d.getMonth().toString();
+      return seriesId + '_' + d.getFullYear().toString() +  '-' + d.getMonth().toString();
     };
   case 'yearly' :
     return function (d) {
-      return d.getFullYear().toString();
+      return seriesId + '_' + d.getFullYear().toString();
     };
   default :
     return function (d) {
-      return d.getDate().toString();
+      return seriesId + '_' + d.getDate().toString();
     };
   }
-}
+};
 
 /**
  * @returns {number} the week number of this date.
@@ -76,7 +71,7 @@ function getISO8601Week(date) {
   return weekNr;
 }
 
-function getAggregationGroupTimeFn(interval) {
+tsTransform.getAggregationGroupTimeFn = function (interval) {
   switch (interval) {
   case 'hourly' :
     return function (d) {
@@ -107,7 +102,7 @@ function getAggregationGroupTimeFn(interval) {
       return d.getTime();
     };
   }
-}
+};
 
 function applyRaw(events) {
   return _.map(events, function (e) {

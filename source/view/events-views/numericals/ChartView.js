@@ -95,7 +95,7 @@ ChartView.makeChart = function () {
   collection.each(function (seriesModel) {
     seriesModel.sortData();
 
-    var seriesId = seriesModel.get('streamId') + '_' + seriesModel.get('type').replace('/', '_'),
+    var seriesId = getSeriesId(seriesModel.get('streamId'), seriesModel.get('type')),
         eventType = seriesModel.get('type'),
         eventSymbol = getEventValueSymbol(eventType,
             this.useExtras ? pryv.eventTypes.extras(eventType) : null);
@@ -116,12 +116,18 @@ ChartView.makeChart = function () {
       yIndexForType[eventType] = yIndex;
     }
 
+    var setInterval = seriesModel.get('interval');
+    seriesModel.actualInterval = setInterval !== 'auto' ? setInterval : autoSeriesInterval;
     var series = {
       id: seriesId,
       name: seriesModel.get('seriesLegend'),
       type: getSeriesChartType(seriesModel.get('style')),
       yAxis: yIndex,
-      data: tsTransform.transform(seriesModel, autoSeriesInterval),
+      data: tsTransform.transform(seriesModel.get('events'), {
+        seriesId: seriesId,
+        transform: seriesModel.get('transform'),
+        interval: seriesModel.actualInterval
+      }),
       tooltip: {valueSuffix: ' ' + eventSymbol}
     };
 
@@ -278,9 +284,11 @@ ChartView.makeChart = function () {
     $container.bind('drop', this.onDrop.bind(this));
     $container.bind('dragend', this.onDragEnd.bind(this));
   }
-
-  // TODO: this.makeLegend();
 };
+
+function getSeriesId(streamId, eventType) {
+  return streamId + '_' + eventType.replace('/', '_');
+}
 
 var ChartTypePerSeriesStyle = {
   bar: 'column',
@@ -468,7 +476,7 @@ ChartView.onDateHighLighted = function (highlightedTime) {
     }
 
     best = points.length === best ? best - 1: best;
-    points[best].select(true, false);
+    points[best].select(true, true);
   }.bind(this));
 };
 
@@ -502,47 +510,16 @@ ChartView.highlightEvent = function (event) {
   this._deselectAllPoints();
 
   var pt = this.chart.get(event.id);
-  if (pt) {
-    pt.select(true);
+  if (! pt) {
+    var seriesId = getSeriesId(event.streamId, event.type);
+    var seriesModel = this.model.get('collection').find(function (model) {
+      return model.get('seriesId') === seriesId;
+    });
+    var getPtId = tsTransform.getAggregationGroupKeyFn(seriesId, seriesModel.actualInterval);
+    pt = this.chart.get(getPtId(new Date(event.time * 1000)));
   }
 
-//  var c = this.model.get('collection');
-//  var e = event;
-//  var m = null;
-//  var cIdx, eIdx;
-//  var connectionId = e.connection.id;
-//  var streamId = e.streamId;
-//  var streamName = e.stream.name;
-//
-//  for (var it = 0; it < c.length; ++it) {
-//    m = c.at(it);
-//    if (m) {
-//      if (m.get('connectionId') === connectionId &&
-//        m.get('streamId') === streamId &&
-//        m.get('streamName') === streamName) {
-//        break;
-//      }
-//    }
-//  }
-//  if (it !== c.length) {
-//    cIdx = it;
-//  } else {
-//    return;
-//  }
-//
-//  var data = this.chart.getData()[it];
-//  for (it = 0; it < data.data.length; ++it) {
-//    var elem = data.data[it];
-//    if (elem[0] === e.time * 1000 && elem[1] === +e.content) {
-//      break;
-//    }
-//  }
-//  if (it !== data.data.length) {
-//    eIdx = it;
-//  } else {
-//    return;
-//  }
-//  this.chart.highlight(cIdx, eIdx);
+  pt.select(true);
 };
 
 ChartView._deselectAllPoints = function () {

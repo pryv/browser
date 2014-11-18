@@ -230,6 +230,7 @@ ChartView.makeChart = function () {
 //  }
   settings.title = {text: ''};
   settings.chart = {
+    reflow: false,
     renderTo: $(this.chartContainer)[0],
     style: {
       fontFamily: 'Roboto, Georgia, Arial, sans-serif'

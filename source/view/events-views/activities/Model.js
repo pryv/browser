@@ -13,29 +13,15 @@ module.exports = CommonModel.implement(
     this.options = {};
     this.totalTime = 0;
     this.updateEachSecond = false;
-    this.updateTime = _.debounce(this.updateEachSecondTime.bind(this), 2000);
-    this.updateFull = _.debounce(this.fullRefresh.bind(this), 30000);
+
+    this.debounceUpdateTime = _.debounce(this.updateTime.bind(this), 2000);
+
+    this.debounceFullRefresh = _.debounce(this.fullRefresh.bind(this), 30000);
   },
   {
     beforeRefreshModelView: function () {
       this.sumTime();
 
-      this.options = {
-        series: {
-          pie: {
-            show: true,
-            innerRadius: 0.5,
-            label: {
-              show: false,
-              radius: 3 / 4,
-              formatter: function (label) { return label; },
-              background: {
-                opacity: 0
-              }
-            }
-          }
-        }
-      };
       this.modelContent = {
         options: this.options,
         data: this.data,
@@ -48,16 +34,17 @@ module.exports = CommonModel.implement(
         time: this.eventDisplayed.time,
         type: this.eventDisplayed.type,
         eventsNbr: _.size(this.events),
-        dimensions: this.computeDimension(),
+        dimensions: this.computeDimensions(),
         totalTime: this.totalTime
       };
 
       if (this.updateEachSecond) {
-        this.updateTime();
-        this.updateFull();
+        this.debounceUpdateTime();
+        this.debounceFullRefresh();
       }
     },
-    computeDimension: function () {
+
+    computeDimensions: function () {
       var chartSizeWidth = null;
       var chartSizeHeight = null;
 
@@ -78,6 +65,7 @@ module.exports = CommonModel.implement(
       }
       return {width: chartSizeWidth, height: chartSizeHeight};
     },
+
     sumTime : function () {
       this.updateEachSecond = false;
       var timeSumByStream = {};
@@ -107,41 +95,42 @@ module.exports = CommonModel.implement(
       this.data = [];
       for (var s in timeSumByStream) {
         if (timeSumByStream.hasOwnProperty(s)) {
-          var series = {
-            label: timeSumByStream[s].stream.name,
-            data: timeSumByStream[s].time
+          var pt = {
+            name: timeSumByStream[s].stream.name,
+            y: timeSumByStream[s].time
           };
           var cd = timeSumByStream[s].stream.clientData;
           if (cd && cd['pryv-browser:charts'] &&
             cd['pryv-browser:charts']['activity/plain'] &&
             cd['pryv-browser:charts']['activity/plain'].settings &&
-            cd['pryv-browser:charts']['activity/plain'].settings.color ) {
-            series.color = cd['pryv-browser:charts']['activity/plain'].settings.color;
+            cd['pryv-browser:charts']['activity/plain'].settings.color) {
+            pt.color = cd['pryv-browser:charts']['activity/plain'].settings.color;
           }
-          this.data.push(series);
+          this.data.push(pt);
         }
       }
 
       this.totalTime = 0;
       _.each(this.data, function (e) {
-        this.totalTime += e.data;
+        this.totalTime += e.y;
       }.bind(this));
     },
-    updateEachSecondTime: function () {
+
+    updateTime: function () {
       if (this.container && $('#' + this.container).length !== 0  && this.updateEachSecond) {
         this.sumTime();
         if (this.modelView) {
           this.modelView.set('totalTime', this.totalTime);
         }
-        this.updateTime();
+        this.debounceUpdateTime();
       }
     },
+
     fullRefresh: function () {
       if (this.container && $('#' + this.container).length !== 0 && this.updateEachSecond) {
         this.refresh();
-        this.updateFull();
+        this.debounceFullRefresh();
       }
     }
-
   }
 );

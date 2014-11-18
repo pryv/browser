@@ -236,6 +236,7 @@ ChartView.makeChart = function () {
       fontFamily: 'Roboto, Georgia, Arial, sans-serif'
     }
   };
+  settings.credits = {enabled: false};
 
   this.chart = new Highcharts.Chart(settings);
 

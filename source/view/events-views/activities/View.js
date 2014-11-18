@@ -79,6 +79,7 @@ View.onRender = function () {
         renderTo: this.chartContainer,
         type: 'pie'
       },
+      credits: {enabled: false},
       plotOptions: {
         pie: {
           innerSize: '60%',

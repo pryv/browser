@@ -66,29 +66,30 @@ module.exports = CommonModel.implement(
       return {width: chartSizeWidth, height: chartSizeHeight};
     },
 
-    sumTime : function () {
+    sumTime: function () {
       this.updateEachSecond = false;
       var timeSumByStream = {};
 
       // group by stream
       _.each(this.events, function (e) {
-        if (!timeSumByStream[e.streamId]) {
+        if (! e.hasOwnProperty('duration')) { return; }
+
+        if (! timeSumByStream[e.streamId]) {
           timeSumByStream[e.streamId] = {
             stream: e.stream,
             time: 0
           };
         }
-        var toAdd = 0;
 
-        if (e.hasOwnProperty('duration') && !isNaN(e.duration)) {
+        var toAdd = 0;
+        if (e.duration !== null) {
           toAdd = e.duration;
         } else {
           this.updateEachSecond = true;
-          toAdd = (((new Date()).getTime() / 1000) - e.created);
+          toAdd = (((new Date()).getTime() / 1000) - e.time);
         }
         timeSumByStream[e.streamId].time += toAdd;
       }.bind(this));
-
 
       // Merge childs into parent, such that all are a the same level
 

@@ -155,7 +155,7 @@ ChartView.makeChart = function () {
         states: {
           select: {
             fillColor: null,
-            lineColor: '#BD1727',
+            lineColor: null,
             radius: 5
           }
         }

@@ -1,6 +1,7 @@
 var streamUtils = module.exports = {};
 
-var BgColorClientDataKey = streamUtils.BgColorClientDataKey = 'pryv-browser:bgColor';
+var BgColorClientDataKey = streamUtils.BgColorClientDataKey = 'pryv-browser:bgColor',
+    ChartClientDataKey = streamUtils.ChartClientDataKey = 'pryv-browser:charts';
 
 /**
  * Gets the stream's color (if any) from its client data.
@@ -27,10 +28,50 @@ streamUtils.getColor = function (stream, lookupAncestors) {
  *
  * @param stream
  * @param {string} color Hex color code
+ * @returns {string} The color
  */
 streamUtils.setColor = function (stream, color) {
   if (! stream.clientData) {
     stream.clientData = {};
   }
   stream.clientData[BgColorClientDataKey] = color;
+  return color;
+};
+
+/**
+ * Gets the stream's chart settings for the given event type, if any.
+ *
+ * @param {Stream} stream
+ * @param {string} type
+ * @returns {object} The chart settings object, or null if not found
+ */
+streamUtils.getChartSettingsForType = function (stream, type) {
+  if (! stream || ! stream.clientData || ! stream.clientData[ChartClientDataKey] ||
+      ! stream.clientData[ChartClientDataKey][type]) {
+    return null;
+  }
+
+  return stream.clientData[ChartClientDataKey][type].settings || null;
+};
+
+/**
+ * Sets the stream's chart settings for the given event type (initializing client data if needed).
+ *
+ * @param {Stream} stream
+ * @param {string} type
+ * @param {object} settings
+ * @returns {object} The settings
+ */
+streamUtils.setChartSettingsForType = function (stream, type, settings) {
+  if (! stream.clientData) {
+    stream.clientData = {};
+  }
+  if (! stream.clientData[ChartClientDataKey]) {
+    stream.clientData[ChartClientDataKey] = {};
+  }
+  if (! stream.clientData[ChartClientDataKey][type]) {
+    stream.clientData[ChartClientDataKey][type] = {};
+  }
+  stream.clientData[ChartClientDataKey][type].settings = settings;
+  return settings;
 };

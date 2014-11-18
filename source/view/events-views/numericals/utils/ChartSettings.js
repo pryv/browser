@@ -1,3 +1,5 @@
+var streamUtils = require('../../../../utility/streamUtils');
+
 var ChartSettings = module.exports = function ChartSettings(stream, type, virtualNode, offset) {
   this._stream = stream;
   this._type = type;
@@ -9,7 +11,6 @@ var ChartSettings = module.exports = function ChartSettings(stream, type, virtua
   this._ptr = null;
 
   this._createIfNotExist();
-  //this._emptyData();
 };
 
 ChartSettings.prototype._createIfNotExist = function () {
@@ -33,16 +34,10 @@ ChartSettings.prototype._createIfNotExist = function () {
       this._ptr = this._virtualNode.filters[i].settings;
     }
   } else {
-    if (!this._stream.clientData) {
-      this._stream.clientData = {};
+    this._ptr = streamUtils.getChartSettingsForType(this._stream, this._type);
+    if (! this._ptr) {
+      this._ptr = streamUtils.setChartSettingsForType(this._stream, this._type, {});
     }
-    if (!this._stream.clientData['pryv-browser:charts']) {
-      this._stream.clientData['pryv-browser:charts'] = {};
-    }
-    if (!this._stream.clientData['pryv-browser:charts'][this._type]) {
-      this._stream.clientData['pryv-browser:charts'][this._type] = {settings: {}};
-    }
-    this._ptr = this._stream.clientData['pryv-browser:charts'][this._type].settings;
   }
 };
 
@@ -70,20 +65,4 @@ ChartSettings.prototype._pushChanges = function () {
       console.log('clientData for has been pushed:', error, result);
     });
   }
-
 };
-
-/**
- * Currently unused; see comment in constructor
- *
- * @private
- */
-ChartSettings.prototype._emptyData = function () {
-  if (!this._virtualNode) {
-    var changes = {id: this._stream.id, clientData: {'pryv-browser:charts': {}} };
-    this._stream.connection.streams._updateWithData(changes, function (error, result) {
-      console.log('clientData for has been pushed:', error, result);
-    });
-  }
-};
-

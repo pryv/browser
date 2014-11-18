@@ -1,7 +1,8 @@
 /* global $*/
 var _ = require('underscore'),
-  ActivityView = require('./View.js'),
-  CommonModel = require('../common/Model.js');
+    ActivityView = require('./View.js'),
+    CommonModel = require('../common/Model.js'),
+    streamUtils = require('../../../utility/streamUtils');
 
 module.exports = CommonModel.implement(
   function (events, params) {
@@ -96,16 +97,15 @@ module.exports = CommonModel.implement(
       this.data = [];
       for (var s in timeSumByStream) {
         if (timeSumByStream.hasOwnProperty(s)) {
+          var stream = timeSumByStream[s].stream;
           var pt = {
-            name: timeSumByStream[s].stream.name,
+            name: stream.name,
             y: timeSumByStream[s].time
           };
-          var cd = timeSumByStream[s].stream.clientData;
-          if (cd && cd['pryv-browser:charts'] &&
-            cd['pryv-browser:charts']['activity/plain'] &&
-            cd['pryv-browser:charts']['activity/plain'].settings &&
-            cd['pryv-browser:charts']['activity/plain'].settings.color) {
-            pt.color = cd['pryv-browser:charts']['activity/plain'].settings.color;
+          var settings = streamUtils.getChartSettingsForType(stream, 'activity/plain'),
+              color = (settings ? settings.color : '') || streamUtils.getColor(stream, false);
+          if (color) {
+            pt.color = color;
           }
           this.data.push(pt);
         }

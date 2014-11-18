@@ -50,7 +50,6 @@ var Controller = module.exports = function ($modal, events, treemap) {
   this.$content.html($('#template-draganddrop').html());
   this.resizeModal();
 
-  $('.modal-dnd-list').append('<ul></ul>');
   $(window).resize(this.resizeModal.bind(this));
 };
 
@@ -81,17 +80,12 @@ _.extend(Controller.prototype, {
         highlightedTime: null,
         allowPieChart: false,
         dimensions: null,
-        legendContainer: '.modal-dnd-legend',
-        legendStyle: 'list', // Legend style: 'list', 'table'
-        legendButton: true,  // A button in the legend
-        legendButtonContent: ['remove'],
-        legendShow: true,     // Show legend or not
-        legendExtras: true,   // use extras in the legend
+        showLegend: true,
+        legendActions: ['remove'],
         onClick: false,
         onHover: true,
         onDnD: false,
-        allowPan: false,      // Allows navigation through the chart
-        allowZoom: false,     // Allows zooming on the chart
+        enableNavigation: false,
         xaxis: true,
         showNodeCount: false
       })});
@@ -111,43 +105,48 @@ _.extend(Controller.prototype, {
 
     }.bind(this));
 
-    var $ul = $('.modal-dnd-list ul');
-    var el;
+    var $list = $('.modal-dnd-list'),
+        $curContainer,
+        elt;
 
     if (this.eventCollections.note.notNull) {
-      $ul.append('<li>');
-      $('li:last', $ul).text('Notes');
-      this.eventCollectionsViews.note.ul = $('li:last', $ul);
+      $list.append('<h5>Notes</h5>');
+      $curContainer = $('<div>');
+      $list.append($curContainer);
+      this.eventCollectionsViews.note.ul = $curContainer;
       this.eventCollectionsViews.note.render();
-      el = this.eventCollectionsViews.note.el;
-      $('li:last', $ul).append(el);
+      elt = this.eventCollectionsViews.note.el;
+      $curContainer.append(elt);
     }
 
     if (this.eventCollections.picture.notNull) {
-      $ul.append('<li>');
-      $('li:last', $ul).text('Pictures');
-      this.eventCollectionsViews.picture.ul = $('li:last', $ul);
+      $list.append('<h5>Pictures</h5>');
+      $curContainer = $('<div>');
+      $list.append($curContainer);
+      this.eventCollectionsViews.picture.ul = $curContainer;
       this.eventCollectionsViews.picture.render();
-      el = this.eventCollectionsViews.picture.el;
-      $('li:last', $ul).append(el);
+      elt = this.eventCollectionsViews.picture.el;
+      $curContainer.append(elt);
     }
 
     if (this.eventCollections.position.notNull) {
-      $ul.append('<li>');
-      $('li:last', $ul).text('Positions');
-      this.eventCollectionsViews.position.ul = $('li:last', $ul);
+      $list.append('<h5>Positions</h5>');
+      $curContainer = $('<div>');
+      $list.append($curContainer);
+      this.eventCollectionsViews.position.ul = $curContainer;
       this.eventCollectionsViews.position.render();
-      el = this.eventCollectionsViews.position.el;
-      $('li:last', $ul).append(el);
+      elt = this.eventCollectionsViews.position.el;
+      $curContainer.append(elt);
     }
 
     if (this.eventCollections.numerical.notNull) {
-      $ul.append('<li>');
-      $('li:last', $ul).text('Values');
-      this.eventCollectionsViews.numerical.ul = $('li:last', $ul);
+      $list.append('<h5>Values</h5>');
+      $curContainer = $('<div>');
+      $list.append($curContainer);
+      this.eventCollectionsViews.numerical.ul = $curContainer;
       this.eventCollectionsViews.numerical.render();
-      el = this.eventCollectionsViews.numerical.el;
-      $('li:last', $ul).append(el);
+      elt = this.eventCollectionsViews.numerical.el;
+      $curContainer.append(elt);
     }
 
     this.eventCollectionsViews.note.on('itemview:series:click', function (evt) {
@@ -302,8 +301,7 @@ _.extend(Controller.prototype, {
             color: s.get('color'),
             style: s.get('style'),
             transform: s.get('transform'),
-            interval: s.get('interval'),
-            fitting: s.get('fitting')
+            interval: s.get('interval')
           });
           eventsCollection.add(eventsModel);
         }

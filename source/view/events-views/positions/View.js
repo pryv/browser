@@ -1,8 +1,9 @@
 /* global document, $ */
 var  Marionette = require('backbone.marionette'),
-  MapLoader = require('google-maps'),
-  _ = require('underscore'),
-  MarkerClusterer = require('./utility/markerclusterer.js');
+    MapLoader = require('google-maps'),
+    _ = require('underscore'),
+    MarkerClusterer = require('./utility/markerclusterer.js'),
+    streamUtils = require('../../../utility/streamUtils');
 
 module.exports = Marionette.ItemView.extend({
   template: '#positionsView',
@@ -112,7 +113,7 @@ module.exports = Marionette.ItemView.extend({
       }
       if (!this.paths[p.streamId]) {
         this.paths[p.streamId] = [];
-        geopoint.pathColor = this._getColor(p.stream);
+        geopoint.pathColor = streamUtils.getColor(p.stream);
       }
       this.paths[p.streamId].push(geopoint);
     }, this);
@@ -152,19 +153,6 @@ module.exports = Marionette.ItemView.extend({
       }
     }, this);
     gMarker = new MarkerClusterer(this.map, this.markers);
-  },
-  _getColor: function (c) {
-    if (typeof(c) === 'undefined' || !c) {
-      return '';
-    }
-    if (typeof(c.clientData) !== 'undefined' &&
-      typeof(c.clientData['pryv-browser:bgColor']) !== 'undefined') {
-      return c.clientData['pryv-browser:bgColor'];
-    }
-    if (typeof(c.parent) !== 'undefined') {
-      return this._getColor(c.parent);
-    }
-    return '';
   },
   onDateHighLighted : function (time) {
     this.highlightedTime = time;

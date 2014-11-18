@@ -153,7 +153,6 @@ var TreeMap = module.exports = function (model) {
     }
   };
 
-  //window.PryvBrowser = _.extend({}, window.PryvBrowser);
   var refreshTree = window.PryvBrowser.refresh = _.throttle(function () {
     var start = new Date().getTime();
     if (IGNORE_PARAM_CHANGED) {

@@ -4,8 +4,8 @@ var Marionette = require('backbone.marionette'),
   Model = require('../../../numericals/TimeSeriesModel.js'),
   Collection = require('../../../numericals/TimeSeriesCollection.js'),
   Settings = require('../../../numericals/utils/ChartSettings.js'),
-  Sev = require('./SingleEditView.js'),
-  Gcv = require('./GeneralConfigView.js');
+  SingleEditView = require('./SingleEditView.js'),
+  GeneralConfigView = require('./GeneralConfigView.js');
 
 module.exports = Marionette.ItemView.extend({
   type: 'Numerical',
@@ -17,7 +17,7 @@ module.exports = Marionette.ItemView.extend({
   collection: new Collection([], {type: 'All'}),
   view: null,
   viewModel: null,
-  viewType: Gcv,
+  viewType: GeneralConfigView,
   rendered: false,
   needToRender: null,
   firstRender: null,
@@ -36,11 +36,11 @@ module.exports = Marionette.ItemView.extend({
   onRender: function () {
     this.view = new this.viewType({model: this.viewModel});
 
-    if (this.viewType === Gcv) {
+    if (this.viewType === GeneralConfigView) {
       this.view.bind('edit', this.editSeriesEvent.bind(this));
       this.view.bind('duplicate', this.duplicateSeriesEvent.bind(this));
       this.view.bind('remove', this.removeSeriesEvent.bind(this));
-    } else if (this.viewType === Sev) {
+    } else if (this.viewType === SingleEditView) {
       this.view.bind('ready', this.readySeriesEvent.bind(this));
       this.view.bind('cancel', this.cancelSeriesEvent.bind(this));
       this.view.bind('eventEdit', this.eventEdited.bind(this));
@@ -93,8 +93,7 @@ module.exports = Marionette.ItemView.extend({
             color: s.get('color'),
             style: s.get('style'),
             transform: s.get('transform'),
-            interval: s.get('interval'),
-            fitting: s.get('fitting')
+            interval: s.get('interval')
           })
         );
       }
@@ -103,7 +102,7 @@ module.exports = Marionette.ItemView.extend({
   onClose: function () {
     this.view.close();
     this.view = null;
-    this.viewType = Gcv;
+    this.viewType = GeneralConfigView;
     this.viewModel = null;
     this.collection.reset();
     this.collection = null;
@@ -113,13 +112,13 @@ module.exports = Marionette.ItemView.extend({
   editSeriesEvent: function (m) {
 
     this.closeChild();
-    this.viewType = Sev;
+    this.viewType = SingleEditView;
     this.prepareSingleEditModel(m);
     this.render();
   },
   cancelSeriesEvent: function () {
     this.closeChild();
-    this.viewType = Gcv;
+    this.viewType = GeneralConfigView;
     this.prepareGeneralConfigModel();
     this.render();
   },
@@ -147,17 +146,16 @@ module.exports = Marionette.ItemView.extend({
     s.set('style', m.get('style'));
     s.set('transform', m.get('transform'));
     s.set('interval', m.get('interval'));
-    s.set('fitting', m.get('fitting'));
 
     this.closeChild();
-    this.viewType = Gcv;
+    this.viewType = GeneralConfigView;
     this.prepareGeneralConfigModel();
     this.render();
   },
   duplicateSeriesEvent: function (m) {
 
     this.closeChild();
-    this.viewType = Gcv;
+    this.viewType = GeneralConfigView;
     var model = new Model({
       events: m.get('events'),
       connectionId: m.get('connectionId'),
@@ -187,7 +185,7 @@ module.exports = Marionette.ItemView.extend({
 
 
     this.closeChild();
-    this.viewType = Gcv;
+    this.viewType = GeneralConfigView;
     this.collection.remove(m);
     this.prepareGeneralConfigModel();
     this.render();

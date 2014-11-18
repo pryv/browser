@@ -1,5 +1,7 @@
 /* global $, moment, window, i18n */
-var Marionette = require('backbone.marionette');
+var Marionette = require('backbone.marionette'),
+    dateTime = require('../../../utility/dateTime');
+
 module.exports = Marionette.ItemView.extend({
   template: '#template-detail-full',
   itemViewContainer: '#detail-common',
@@ -72,7 +74,7 @@ module.exports = Marionette.ItemView.extend({
     this.ui.stopDuration.bind('click', this.stopDuration.bind(this));
     var event = this.model.get('event');
     if (event) {
-      if (!event.hasOwnProperty('newDuration')) {
+      if (! event.hasOwnProperty('newDuration')) {
         event.newDuration = event.duration;
       }
       if (event.newDuration === null) {
@@ -80,9 +82,10 @@ module.exports = Marionette.ItemView.extend({
         this.ui.durationRunning.show();
       } else if (event.newDuration && event.newDuration > 0) {
         this.ui.durationStopped.show();
-        this.ui.durationStoppedClock.html(moment.preciseDiff(moment.unix(0),
-          moment.unix(event.newDuration)).split(' ').splice(0, 4).join(' ') +
-          ' (end: ' + window.PryvBrowser.getTimeString(event.time + event.newDuration) + ' )');
+        this.ui.durationStoppedClock.html(
+            dateTime.getDurationText(event.newDuration, {nbValues: 2}) +
+            ' (end: ' + dateTime.getTimeText(event.time + event.newDuration) + ')'
+        );
       } else if (!event.newDuration || event.newDuration === 0) {
         this.ui.durationNone.show();
       }
@@ -157,17 +160,13 @@ module.exports = Marionette.ItemView.extend({
   },
   startTimer: function () {
     this.stopTimer();
-    var start, now;
     this.timer = setInterval(function () {
+      var duration = (new Date()).getTime() / 1000 - this.model.get('event').time;
       if (this.model && this.model.get('event') && this.model.get('event').isRunning()) {
-        start = moment.unix(this.model.get('event').time);
-        now = moment();
-        $('#duration-clock').html(moment.preciseDiff(start, now));
+        $('#duration-clock').html(dateTime.getDurationText(duration));
       }
       if (this.model.get('event').newDuration === null) {
-        start = moment.unix(this.model.get('event').time);
-        now = moment();
-        $('#duration-edit-clock').html(moment.preciseDiff(start, now));
+        $('#duration-edit-clock').html(dateTime.getDurationText(duration));
       }
     }.bind(this), 500);
   },
@@ -343,10 +342,8 @@ module.exports = Marionette.ItemView.extend({
       this.startTimer();
       return '<span id="duration-clock"></span>';
     } else if (event.duration && event.duration > 0) {
-      var duration =  moment.preciseDiff(moment.unix(0), moment.unix(event.duration)).split(' ');
-      duration = duration.splice(0, 4).join(' ');
-      return '<span>' + duration +
-        ' (end: ' + window.PryvBrowser.getTimeString(event.time + event.duration) + ' )</span>';
+      return '<span>' + dateTime.getDurationText(event.duration, {nbValues: 2}) +
+        ' (end: ' + dateTime.getTimeText(event.time + event.duration) + ' )</span>';
     }
   },
   getDurationControl: function () {

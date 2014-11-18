@@ -601,66 +601,68 @@ padding: 0px 15px;
   height: 100%;
 }
 
-
-.axis path,
-.axis line {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.34);
-  shape-rendering: crispEdges;
-}
-
-.circle {
-  fill: #FFF;
-}
-text{font-size:10px;}
-.line
-{
-  stroke: #FFF;
-  fill: none;
-}
+/* Chart styles */
 
 .chartContainer
 {
-  overflow: hidden;
-  width:100%;
-  height:100%;
-}
-.countView {
-  display: table;
-
-}
-/*.countView div:hover {
-  opacity: 0;
-} */
-
-.countView div {
-position: absolute;
-/*display: table-cell;
-vertical-align: middle;
-text-align: center;*/
-  z-index: 100 !important;
-  transition: opacity .1s ease-out;
-  -moz-transition: opacity .1s ease-out;
-  -webkit-transition: opacity .1s ease-out;
-  -o-transition: opacity .1s ease-out;
-  bottom: 1px;
-  right: 1px;
-}
-.countView span {
-
-  border-radius: 70px;
-  background-color: rgba(60, 60, 60, 0.8);
-  padding: 0px 7px;
-  font-size: 11px;
-}
-
-.tooltip {
   position: absolute;
-  display: none;
-  padding: 2px;
-  opacity: 1;
-  z-index: 9999;
+  z-index: 1; /* to let other stuff show through */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
+
+.chart-total-label {
+  position: absolute;
+  z-index: 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* TODO: cleanup (not using c3 anymore) */
+
+.chartContainer svg {
+  font: inherit;
+  font-size: 10px;
+}
+
+.chartContainer .c3-axis line,
+.chartContainer .c3-axis path,
+.chartContainer .c3-axis-x line,
+.chartContainer .c3-axis-x path {
+  stroke: #999;
+}
+.chartContainer .c3-axis text,
+.chartContainer .c3-axis-x text{
+  fill: #999;
+}
+.chartContainer .c3-xgrid-focus {
+  stroke: #999;
+  stroke-dasharray: 5,5;
+}
+
+/* i.e. tooltip container */
+.chartContainer.c3 > div {
+  border: 1px solid #E0E0E0;
+  border-radius: 2px;
+}
+.chartContainer .c3-tooltip {
+  box-shadow: none;
+}
+.chartContainer .c3-tooltip tr {
+  border: none;
+}
+.chartContainer .c3-tooltip th, .chartContainer .c3-tooltip td {
+  border: none;
+  font-size: inherit;
+  color: inherit;
+  background-color: inherit;
+}
+
+
+/* end chart styles */
+
 /** detail view modal **/
 .sharings {
   overflow-y: auto;
@@ -1162,7 +1164,7 @@ details.open > summary:first-child::before {
 /** CSS for Drag and Drop Dialog using the modal **/
 .modal-dnd-middle {
     position: absolute;
-    top: 60px;
+    top: 50px;
     bottom: 0;/*60px;*/
     width: 100%;
 }
@@ -1199,71 +1201,29 @@ details.open > summary:first-child::before {
     padding: 7px;
 }
 
+.modal-dnd-list ul {
+  list-style-type: none;
+  padding-left: 5px;
+}
 
 .modal-dnd-chart {
   position: absolute;
-  top: 60px;
+  top: 0;
   bottom: 0px;
   right: 240px;
   left: 0px;
 }
 
-.modal-dnd-legend {
-  position: absolute;
-  height: 60px;
-  top: 0px;
-  right: 240px;
-  left: 0px;
-}
+/* in detail view */
 
-.modal-dnd-values {
-}
-
-.modal-dnd-list {
-}
-
-.legend-container ul, .modal-dnd-legend ul {
-  margin: 5px 15px;
-  list-style-type: none;
-  text-align: right;
-}
-
-.legend-container li, .modal-dnd-legend li{
-  display: inline-block;
-  margin-left: 10px;
-  padding: 5px 0 5px 5px;
-}
-
-.modal-dnd-legend .btn {
-    margin-right: 3px;
-}
-
-.DnD-legend-color {
-    display: inline-block;
-}
-
-.DnD-legend-text {
+.legend-candidate-item .legend-item-text {
     margin-left: 5px;
 }
 
-.DnD-legend-button {
+.legend-action {
   padding: 5px;
   margin-left: 5px;
 }
-
-ul.modal-dnd-legend {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-ul.modal-dnd-legend > li {
-  position: relative;
-  padding: 10px 5px;
-  border-bottom: 1px solid #474747;
-  cursor: pointer;
-}
-
 
 
 /** CSS for detailed view for charts using the modal **/
@@ -1271,15 +1231,8 @@ ul.modal-dnd-legend > li {
 #detail-chart-container-general {
   position: absolute;
   width: 100%;
-  top: 40px;
-  bottom: 0px;
-}
-
-.legend-container {
-  position: absolute;
-  width: 100%;
-  height: 40px;
-  top: 0px;
+  top: 0;
+  bottom: 0;
 }
 
 #detail-chart-container-edit {
@@ -1293,12 +1246,8 @@ ul.modal-dnd-legend > li {
   position: absolute;
   border-bottom: 1px solid #e5e5e5;
   width: 100%;
-  height: 100px;
-  top: 40px;
-}
-
-#dc-editor-appearance {
-  margin: 0px 15px;
+  height: 140px;
+  padding: 0 15px;
 }
 
 .form-footer button {
@@ -1542,53 +1491,6 @@ color: #BD1727;
 
 
 
-/** CSS switches **/
-.onoffswitch {
-  position: relative; width: 90px;
-  -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
-}
-.onoffswitch-checkbox {
-  display: none;
-}
-.onoffswitch-label {
-  display: block; overflow: hidden; cursor: pointer;
-  border: 2px solid #999999; border-radius: 20px;
-}
-.onoffswitch-inner {
-  width: 200%; margin-left: -100%;
-  -moz-transition: margin 0.3s ease-in 0s; -webkit-transition: margin 0.3s ease-in 0s;
-  -o-transition: margin 0.3s ease-in 0s; transition: margin 0.3s ease-in 0s;
-}
-.onoffswitch-inner:before, .onoffswitch-inner:after {
-  float: left; width: 50%; height: 30px; padding: 0; line-height: 30px;
-  font-size: 14px; color: white; /*font-family: Trebuchet, Arial, sans-serif;*/ font-weight: bold;
-  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
-}
-.onoffswitch-inner:before {
-  content: "ON";
-  padding-left: 10px;
-  background-color: #2FCCFF; color: #FFFFFF;
-}
-.onoffswitch-inner:after {
-  content: "OFF";
-  padding-right: 10px;
-  background-color: #EEEEEE; color: #999999;
-  text-align: right;
-}
-.onoffswitch-switch {
-  width: 18px; margin: 6px;
-  background: #FFFFFF;
-  border: 2px solid #999999; border-radius: 20px;
-  position: absolute; top: 0; bottom: 0; right: 56px;
-  -moz-transition: all 0.3s ease-in 0s; -webkit-transition: all 0.3s ease-in 0s;
-  -o-transition: all 0.3s ease-in 0s; transition: all 0.3s ease-in 0s;
-}
-.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
-  margin-left: 0;
-}
-.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
-  right: 0px;
-}
 .fa-check-circle {
   color: #2ecc71;
 }
@@ -1620,6 +1522,10 @@ td > .btn-default.btn-xs  {
   border-bottom: 0px solid #DDD;
   font-weight: 300;
   font-size: 11px;
+}
+.modal-header {
+  position: relative;
+  z-index: 1;
 }
 .modal-title {
   font-size: 14px;

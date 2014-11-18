@@ -33,18 +33,12 @@ module.exports = Marionette.ItemView.extend({
           allowPieChart: false,
           singleNumberAsText: false,
           dimensions: null,
-          legendStyle: 'list', // Legend style: 'list', 'table'
-          legendButton: true,  // A button in the legend
-          legendButtonContent: this.model.get('virtual') ? ['remove', 'edit'] : ['edit'],
-          legendShow: true,     // Show legend or not
-          legendContainer: '#legend-container-general', //false or a a selector
-          legendExtras: true,   // use extras in the legend
+          showLegend: true,
+          legendActions: this.model.get('virtual') ? [ 'edit', 'remove' ] : ['edit'],
           onClick: false,
           onHover: true,
           onDnD: false,
-          allowPan: true,      // Allows navigation through the chart
-          allowZoom: true,     // Allows zooming on the chart
-          panZoomButton: true,
+          enableNavigation: true,
           xaxis: true,
           editPoint: false,
           showNodeCount: false

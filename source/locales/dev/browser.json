@@ -68,21 +68,21 @@
     "charts": {
       "labels": {
         "color": "Color",
-        "fitting": "Fitting",
         "operation": "Operation",
         "operationAverage": "Average",
         "operationNone": "None",
         "operationSum": "Sum",
         "period": "Period",
+        "periodAuto": "Automatic",
         "periodDaily": "Daily",
         "periodMonthly": "Monthly",
-        "periodNone": "None",
         "periodWeekly": "Weekly",
         "periodYearly": "Yearly",
         "type": "Type",
         "typeBar": "Bar",
         "typeLine": "Line",
-        "typePoint": "Point"
+        "typePoint": "Point",
+        "typeSpline": "Spline"
       }
     },
     "generic": {
@@ -137,7 +137,7 @@
   "login": {
     "actions": {
       "login": "Sign in",
-      "register": "No account? [Register here]",
+      "register": "No account? Register here",
       "resetPassword": "Forgot your password?"
     },
     "labels": {

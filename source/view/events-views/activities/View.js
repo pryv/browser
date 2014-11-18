@@ -1,126 +1,145 @@
-/* global $, moment*/
-var  Marionette = require('backbone.marionette');
-var Moment = moment;
-module.exports = Marionette.ItemView.extend({
+/* global $, Highcharts */
+var Marionette = require('backbone.marionette'),
+    dateTime = require('../../../utility/dateTime');
+
+var View = {
   template: '#activityView',
   container: null,
   animation: null,
-  legendContainer: null,
   chartContainer: null,
-  fullChart: null,
   options: null,
-  data: null,
-  initialize: function () {
+  data: null
+};
 
-    //this.listenTo(this.model, 'change', this.change);
-    this.listenTo(this.model, 'change:totalTime', this.updateTotalTime);
-    this.listenTo(this.model, 'change:dimensions', this.change);
-    this.listenTo(this.model, 'change:data', this.change);
-    this.$el.css('height', '100%');
-    this.$el.css('width', '100%');
-    this.$el.addClass('animated node');
+View.initialize = function () {
+  this.listenTo(this.model, 'change:totalTime', this._updateTotalTime);
+  this.listenTo(this.model, 'change:dimensions', this.change);
+  this.listenTo(this.model, 'change:data', this.change);
+  this.$el.css('height', '100%');
+  this.$el.css('width', '100%');
+  this.$el.addClass('animated node');
 
-    this.plot = null;
-    this.options = this.model.get('options');
-    this.data = this.model.get('data');
-  },
-  change: function () {
-    this.plot = null;
-    this.options = this.model.get('options');
-    this.data = this.model.get('data');
-    $('#' + this.container).removeClass('animated ' + this.animation);
-    this.animation = 'tada';
-    this.$el.attr('id', this.model.get('id'));
-    this.render();
-  },
-  renderView: function (container) {
-    this.container = container;
-    this.animation = 'bounceIn';
-    this.render();
-  },
-  onRender: function () {
-    if (this.container) {
-      this.legendContainer = '#' + this.container + ' > div > .fullChart > .pieLegendContainer';
-      this.chartContainer = '#' + this.container + ' > div > .fullChart > .pieChartContainer';
-      this.fullChart = '#' + this.container + '  > div > .fullChart';
-      $('#' + this.container).removeClass('animated fadeIn');
-      $('#' + this.container).html(this.el);
+  this.chart = null;
+  this.options = this.model.get('options');
+  this.data = this.model.get('data');
+};
 
-      var d = this.model.get('dimensions');
-      var square =  (d.width < d.height) ? d.width: d.height;
-      $(this.fullChart).css(d);
+View.change = function () {
+  this.chart = null;
+  this.options = this.model.get('options');
+  this.data = this.model.get('data');
+  $('#' + this.container).removeClass('animated ' + this.animation);
+  this.animation = 'tada';
+  this.$el.attr('id', this.model.get('id'));
+  this.render();
+};
 
-      var cssLegendContainer =  null;
-      var cssChartContainer = null;
-      if (d.width < d.height) {
-        cssLegendContainer = {
-          top: 0 + 'px',
-          height: d.height - square + 'px',
-          width: d.width + 'px'
-        };
-        cssChartContainer = {
-          height: square + 'px',
-          width: square + 'px'
-        };
-      } else {
-        cssLegendContainer = {
-          left: 0 + 'px',
-          height: d.height + 'px',
-          width: d.width - square + 'px',
-          position: 'absolute'
-        };
-        cssChartContainer = {
-          height: square + 'px',
-          width: square + 'px',
-          left: d.width - square + 'px',
-          float: 'right',
-          position: 'absolute'
-        };
-      }
-      $(this.legendContainer).css(cssLegendContainer);
-      $(this.chartContainer).css(cssChartContainer);
-
-      $('#' + this.container).bind('click', function () {
-        this.trigger('nodeClicked');
-      }.bind(this));
-
-      setTimeout(function () {
-        this.options.legend = {
-          show: true,
-          container: $(this.legendContainer)
-        };
-        if (this.model.get('totalTime') === 0) {
-          this.data[0].data = 1;
-        }
-        try {
-          this.plot = $.plot(this.chartContainer, this.data, this.options);
-        } catch (e) {
-          //console.warn(e);
-        }
-
-        setTimeout(this.updateTotalTime.bind(this), 200);
-      }.bind(this), 1000);
-    }
-  },
-  close: function () {
-    this.remove();
-  },
-  updateTotalTime: function () {
-    var m = Moment.duration(this.model.get('totalTime') * 1000);
-    var text =
-      (m.years() !== 0 ? m.years() + ' y ' : '') +
-      (m.months() !== 0 ? m.months() + ' m <br />' : '') +
-      (m.days() !== 0 ? m.days() + ' d ' : '') +
-      (m.hours() !== 0 ? m.hours() + ' h <br />' : '') +
-      (m.minutes() !== 0 ? m.minutes() + ' min ' : '') +
-      (m.seconds() + ' s');
-
-    if ($(this.legendContainer) && $(this.legendContainer + ' > .pie-chart-sum').length !== 0) {
-      $(this.legendContainer + ' > .pie-chart-sum')
-        .html(text);
-    } else {
-      $(this.chartContainer).append('<div class="pie-chart-sum-parent Table-Cell">' +
-        '<span class="pie-chart-sum Center-Block">' + text + '</span></div>');
-    }
+View.resize = function () {
+  if (! this.model.get('dimensions')) {
+    return;
   }
-});
+  if (this.chart) {
+    this.chart.reflow();
+    this._updateTotalTime();
+  } else { // TODO: may not be needed
+    this.render();
+  }
+};
+
+View.renderView = function (container) {
+  this.container = container;
+  this.animation = 'bounceIn';
+  this.render();
+};
+
+View.onRender = function () {
+  if (! this.container) { return; }
+
+  var $container = $('#' + this.container);
+  $container.removeClass('animated fadeIn');
+  $container.html(this.el);
+
+  this.chartContainer = this.container + '-chart';
+  $('#' + this.container + ' .chartContainer').attr('id', this.chartContainer);
+  this.chartTotalLabel = '#' + this.container + ' .chart-total-label';
+
+  // HACK: delay actual rendering until we get why resizing goes wrong on data changes
+  setTimeout(function () {
+    var d = this.model.get('dimensions');
+    $(this.chartContainer).css(d);
+
+    if (this.model.get('totalTime') === 0) {
+      this.data[0].data = 1;
+    }
+
+    this.chart = new Highcharts.Chart({
+      chart: {
+        // transparent to let total duration label show through
+        backgroundColor: null,
+        reflow: false,
+        renderTo: this.chartContainer,
+        type: 'pie'
+      },
+      credits: {enabled: false},
+      plotOptions: {
+        pie: {
+          innerSize: '60%',
+          dataLabels: {
+            enabled: false
+          },
+          showInLegend: true
+        }
+      },
+      legend: {
+        verticalAlign: 'top',
+        itemStyle: {
+          fontSize: '10px',
+          fontWeight: 'normal'
+        }
+      },
+      tooltip: {
+        borderColor: '#BDC3C7',
+        shadow: false,
+        formatter: function () {
+          return '<span style="color:' + this.point.color + '">\u25CF</span> ' + this.point.name +
+              '<br>' + dateTime.getDurationText(this.y, { nbValues: 2, html: true }) +
+              ' (' + (+ (this.percentage).toFixed(2)) + ' %)';
+        }
+      },
+      title: {text: ''},
+      series: [{
+        data: this.data
+      }]
+    });
+    this._updateTotalTime();
+
+    this.chart.container.onmousedown = null;
+    this.chart.container.onclick = function () {
+      this.trigger('nodeClicked');
+    }.bind(this);
+  }.bind(this), 1000);
+};
+
+View.close = function () {
+  this.remove();
+};
+
+View._updateTotalTime = function () {
+  if (! this.chart) { return; }
+
+  var textX = this.chart.plotLeft + (this.chart.plotWidth  * 0.5),
+      textY = this.chart.plotTop  + (this.chart.plotHeight * 0.5);
+
+  var $label = $(this.chartTotalLabel);
+  $label.html(dateTime.getDurationText(this.model.get('totalTime'), {
+    nbValues: 2,
+    html: true,
+    separateLines: true
+  }));
+  $label.css({
+    left: textX - $label.width() * 0.5,
+    top: textY - $label.height() * 0.5
+  });
+};
+
+module.exports = Marionette.ItemView.extend(View);

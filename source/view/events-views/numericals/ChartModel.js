@@ -1,7 +1,9 @@
 var Backbone = require('backbone');
 
-module.exports = Backbone.Model.extend({
+var ChartModel = {
   defaults: {
+    // TODO: review those fields
+
     container: null,
     view: null,
 
@@ -19,22 +21,20 @@ module.exports = Backbone.Model.extend({
     // Chart dimensions
     dimensions: null,
 
-    // Legend style
-    legendStyle: 'table', // Legend style: 'list', 'table'
-    legendButton: false,  // A button in the legend
-    legendButtonCount: ['edit', 'duplicate', 'remove'],
-    legendShow: true,     // Show legend on size/true/false
-    legendExtras: true,   // use extras in the legend
+    // Legend
+
+    showLegend: true,
+    legendActions: [ 'edit', 'duplicate', 'remove' ],
 
     /* Events control */
     onClick: null,
     onHover: null,
     onDnD: null,
 
-    // Panning and Zooming
-    allowPan: false,      // Allows navigation through the chart
-    allowZoom: false,     // Allows zooming on the chart
-    panZoomButton: false,
+    /**
+     * Allow zooming & panning via subchart control.
+     */
+    enableNavigation: false,
 
     // Display X-axis
     xaxis: null,
@@ -44,15 +44,17 @@ module.exports = Backbone.Model.extend({
 
     // Show node count
     showNodeCount: true
-  },
-
-  initialize: function () {
-    this.on('remove', function () {
-      console.log('model: remove received');
-    });
-  },
-
-  setHighlighted: function (highlight) {
-    this.set('highlighted', highlight);
   }
-});
+};
+
+ChartModel.initialize = function () {
+  this.on('remove', function () {
+    console.log('model: remove received');
+  });
+};
+
+ChartModel.setHighlighted = function (highlight) {
+  this.set('highlighted', highlight);
+};
+
+module.exports = Backbone.Model.extend(ChartModel);

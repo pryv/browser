@@ -8,9 +8,7 @@ var _ = require('underscore'),
   TsModel = require('./TimeSeriesModel.js'),
   Settings = require('./utils/ChartSettings.js');
 
-
 var NumericalsPlugin = module.exports = function (events, params, node) {
-
   this.seriesCollection = null;
 
   /* Base event containers */
@@ -51,8 +49,8 @@ var NumericalsPlugin = module.exports = function (events, params, node) {
     }
   }
   $(window).resize(this.debounceRefresh.bind(this));
-
 };
+
 NumericalsPlugin.prototype.eventEnter = function (event) {
   this.streamIds[event.streamId] = event;
   this.events[event.id] = event;
@@ -136,7 +134,6 @@ NumericalsPlugin.prototype.close = function () {
   this.needToRender = false;
 };
 
-
 NumericalsPlugin.prototype.refreshCollection = function () {
   if (this.seriesCollection === null) {
     this.seriesCollection = new TsCollection([], {type: 'any'});
@@ -185,8 +182,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
         color: s.get('color'),
         style: s.get('style'),
         transform: s.get('transform'),
-        interval: s.get('interval'),
-        fitting: s.get('fitting')
+        interval: s.get('interval')
       });
       this.seriesCollection.add(eventsModel);
     }
@@ -238,28 +234,24 @@ NumericalsPlugin.prototype.refreshCollection = function () {
   }
 
 
-  if ((!this.modelView || !this.view) && this.seriesCollection.length !== 0 && this.container) {
+  if ((! this.modelView || ! this.view) && this.seriesCollection.length !== 0 && this.container) {
     this.modelView = new ChartModel({
-        container: '#' + this.container,
-        view: null,
-        requiresDim: true,
-        collection: this.seriesCollection,
-        highlighted: false,
-        highlightedTime: null,
-        allowPieChart: false,
-        dimensions: this.computeDimensions(),
-        legendStyle: 'table', // Legend style: 'list', 'table'
-        legendButton: false,  // A button in the legend
-        legendShow: 'size',     // Show legend or not
-        legendExtras: true,   // use extras in the legend
-        onClick: true,
-        onHover: true,
-        onDnD: true,
-        allowPan: false,      // Allows navigation through the chart
-        allowZoom: false,     // Allows zooming on the chart
-        panZoomButton: false,
-        xaxis: false
-      });
+      container: '#' + this.container,
+      view: null,
+      requiresDim: true,
+      collection: this.seriesCollection,
+      highlighted: false,
+      highlightedTime: null,
+      allowPieChart: false,
+      dimensions: this.computeDimensions(),
+      showLegend: true,
+      legendActions: false,  // A button in the legend
+      onClick: true,
+      onHover: true,
+      onDnD: true,
+      enableNavigation: false,
+      xaxis: false
+    });
     if (typeof(document) !== 'undefined')  {
       this.view = new ChartView({model: this.modelView});
       this.modelView.set('dimensions', this.computeDimensions());
@@ -285,9 +277,7 @@ NumericalsPlugin.prototype.refreshCollection = function () {
     this.view.onDateHighLighted(this.highlightedTime);
     this.debounceResize();
   }
-
 };
-
 
 NumericalsPlugin.prototype._findEventToDisplay = function () {
   if (this.highlightedTime === Infinity) {
@@ -310,7 +300,6 @@ NumericalsPlugin.prototype._findEventToDisplay = function () {
     }, this);
   }
 };
-
 
 /**
  * Propagates the drag and drop event further up to the TreeMap controller

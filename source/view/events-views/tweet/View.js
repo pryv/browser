@@ -1,5 +1,6 @@
-/* global $, window */
-var  Marionette = require('backbone.marionette'),
+/* global $ */
+var Marionette = require('backbone.marionette'),
+    dateTime = require('../../../utility/dateTime'),
     _ = require('underscore');
 
 var getUrl =  function (event) {
@@ -8,7 +9,7 @@ var getUrl =  function (event) {
       date = new Date(event.time * 1000);
   return '<a href="https://twitter.com/' + screenName + '/status/' + id + '"' +
       'data-datetime="' + date.toISOString() + '">' +
-      window.PryvBrowser.getTimeString(event.time) + '</a>';
+      dateTime.getTimeText(event.time) + '</a>';
 };
 module.exports = Marionette.ItemView.extend({
   template: '#picturesView',

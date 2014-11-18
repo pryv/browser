@@ -1,9 +1,13 @@
 /* global $ */
-var Marionette = require('backbone.marionette');
-var Pryv = require('pryv');
-var _ = require('underscore');
+var Marionette = require('backbone.marionette'),
+    dateTime = require('../../../utility/dateTime'),
+    Pryv = require('pryv'),
+    streamUtils = require('../../../utility/streamUtils'),
+    _ = require('underscore');
+
 var UNIQUE_ID = 0;
 var MAX_TEXT_CHAR = 140;
+
 module.exports = Marionette.ItemView.extend({
 
   tagName: 'li',
@@ -30,6 +34,18 @@ module.exports = Marionette.ItemView.extend({
             '<span class="unity">' + unity + '</span>';
       } else  if (type === 'message/twitter') {
         result += this.event.content.text;
+      } else if (type === 'activity/plain') {
+        result += '<span class="pins-color 1" style="background-color: ' +
+            streamUtils.getColor(this.event.stream) + '"></span> ' +
+            this.event.stream.name + '<br>';
+        if (this.event.duration !== null) {
+          result += dateTime.getDurationText(this.event.duration, {
+            html: true,
+            nbValues: 2
+          });
+        } else {
+          result += '(running time)';
+        }
       } else if (type === 'position/wgs84') {
         result += '<span id="' + this.event.id + '" class="fa fa-spinner fa-spin"></span>';
         var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' +

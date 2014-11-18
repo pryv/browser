@@ -468,6 +468,9 @@ var detectIE = function detectIE() {
   return false;
 };
 
+// TODO: cleanup this mess of having both window.pryvBrowser (ie. Model.js) and window.PryvBrowser
+//       (a big bag of utility and miscellaneous properties every component seems to freely extend)
+
 /**
  * Notifies the error reporting service of the given error.
  *
@@ -497,15 +500,11 @@ window.PryvBrowser.showAlert = function (containerSelector, html) {
     html + '</div>');
 };
 
-window.PryvBrowser.getTimeString = function (time) {
-  var result = '';
-  if (moment) {
-    result = moment.unix(time).calendar();
-  } else {
-    result = new Date(time * 1000).toLocalDateString();
-  }
-  return result;
-};
+// HACK: make utilities globally available for access from templates
+
+window.PryvBrowser.dateTime = require('./utility/dateTime');
+
+window.PryvBrowser.streamUtils = require('./utility/streamUtils');
 
 /* jshint -W101 */
 /**

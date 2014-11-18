@@ -24,10 +24,12 @@
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
+  <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/c3/0.3.0/c3.min.css">
   <link rel="stylesheet" type="text/css" href="styles/styles.css">
   <link rel="stylesheet" href="fonts/ss-gizmo.css">
 
   <script type="text/javascript" charset="utf-8" src="script/vendor.js"></script>
+  <script type="text/javascript" charset="utf-8" src="//cdnjs.cloudflare.com/ajax/libs/highcharts/4.0.4/highcharts.js"></script>
   <!-- @if NODE_ENV == 'PRODUCTION' -->
   <script src="script/airbrake-shim.js" data-airbrake-project-id="95886" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="production"></script>
   <!-- @endif -->
@@ -195,7 +197,7 @@
       </div>
     </div>
     <div class="tags"><%= tags %></div>
-    <div class="date"><%= PryvBrowser.getTimeString(time) %></div>
+    <div class="date"><%= PryvBrowser.dateTime.getTimeText(time) %></div>
   </script>
 
   <script id="activityView" type="template">
@@ -203,10 +205,8 @@
       <% if(eventsNbr > 1) { %>
       <span class="aggregated-nbr-events"><%=eventsNbr%></span>
       <% } %>
-      <div class="fullChart">
-          <div class="pieLegendContainer"></div>
-          <div class="pieChartContainer Center-Container is-Table"></div>
-      </div>
+      <div class="chartContainer"></div>
+      <div class="chart-total-label"></div>
   </script>
 
   <script id="genericsView" type="template">
@@ -248,19 +248,7 @@
     return false;
     };
 
-    var findColor = function (c) {
-    if (typeof(c) == "undefined" || !c) {
-    return '';
-    }
-    if ( typeof(c.clientData) != "undefined" && typeof(c.clientData['pryv-browser:bgColor']) !="undefined") {
-     return c.clientData['pryv-browser:bgColor'];
-    }
-    if (typeof(c.parent) != "undefined") {
-      return findColor(c.parent);
-    }
-    return '';
-    }
-    var bgColor = findColor(content);
+    var bgColor = PryvBrowser.streamUtils.getColor(content);
     var manageStream = canManageStream(content);
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
     <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %>
@@ -290,7 +278,7 @@
   </script>
   <script type="text/html" id="template-detailItemView">
     <div class="row detail-item-date">
-        <span class="date"><%= PryvBrowser.getTimeString(event.time) %></span>
+        <span class="date"><%= PryvBrowser.dateTime.getTimeText(event.time) %></span>
     </div>
     <div class="row detail-item-content">
       <%= getPreview() %>
@@ -358,11 +346,10 @@
     <div class="modal-dnd-middle">
       <div class="modal-dnd-left">
         <div class="modal-dnd-chart"></div>
-        <div class="modal-dnd-legend">legend</div>
       </div>
       <div class="modal-dnd-right">
         <div class="modal-dnd-values">
-          <h4>Available content</h4>
+          <h4>Available data</h4>
         </div>
         <div class="modal-dnd-list"></div>
       </div>
@@ -377,10 +364,12 @@
       </div>
   </script>
   <script type="text/template" id="template-draganddrop-itemview">
-    <a class="btn btn-default btn-sm DnD-legend-button" href="javascript:;">
-      <span class="fa fa-plus"></span>
-    </a>
-    <span class="DnD-legend-text"><%= displayName() %></span>
+    <span class="legend-candidate-item">
+      <a class="btn btn-default btn-sm legend-action" href="javascript:;" title="Add to view">
+        <i class="fa fa-plus"></i>
+      </a>
+      <span class="legend-item-text "><%= displayName() %></span>
+    </span>
   </script>
   <script type="text/template" id="template-chart-container">
     <div id="chart-container"></div>
@@ -509,13 +498,12 @@
 
 
   <script type="template" id="template-detail-content-numerical-general">
-      <div class="legend-container" id="legend-container-general"></div>
       <div class="detail-chart-container" id="detail-chart-container-general"></div>
   </script>
   <script type="template" id="template-detail-content-numerical-edit">
-      <div class="legend-container" id="legend-container-edit"></div>
       <div class="detail-chart-container" id="detail-chart-container-edit"></div>
       <div class="editor-container">
+        <h4 id="detailed-view-chart-series-name"></h4>
         <div id="dc-editor-appearance" class="form-horizontal">
           <div class="row">
             <div class="col-sm-3">
@@ -553,6 +541,7 @@
                 <div class="col-sm-7">
                   <select id="detailed-view-chart-style" class="form-control">
                     <option value="line" data-i18n="events.charts.labels.typeLine"></option>
+                    <option value="spline" data-i18n="events.charts.labels.typeSpline"></option>
                     <option value="point" data-i18n="events.charts.labels.typePoint"></option>
                     <option value="bar" data-i18n="events.charts.labels.typeBar"></option>
                   </select>
@@ -572,29 +561,17 @@
               </div>
             </div>
             <div class="col-sm-3">
-              <div class="form-group">
+              <div id="detailed-view-chart-interval-group" class="form-group">
                 <label class="col-sm-5 control-label" data-i18n="events.charts.labels.period"></label>
                 <div class="col-sm-7">
                   <select id="detailed-view-chart-interval" class="form-control">
-                    <option value="none" data-i18n="events.charts.labels.periodNone"></option>
+                    <option value="auto" data-i18n="events.charts.labels.periodAuto"></option>
                     <option value="daily" data-i18n="events.charts.labels.periodDaily"></option>
                     <option value="weekly" data-i18n="events.charts.labels.periodWeekly"></option>
                     <option value="monthly" data-i18n="events.charts.labels.periodMonthly"></option>
                     <option value="yearly" data-i18n="events.charts.labels.periodYearly"></option>
                   </select>
                 </div>
-              </div>
-            </div>
-          </div>
-          <div class="form-group hide">
-            <label class="col-sm-6 control-label" data-i18n="events.charts.labels.fitting"></label>
-            <div class="col-sm-6">
-              <div class="onoffswitch">
-                <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="detailed-view-chart-fitting" checked>
-                <label class="onoffswitch-label" for="detailed-view-chart-fitting">
-                  <div class="onoffswitch-inner"></div>
-                  <div class="onoffswitch-switch"></div>
-                </label>
               </div>
             </div>
           </div>
@@ -615,7 +592,7 @@
       </div>
       <div class="event-detail-prop-outer col-xs-2">
         <div class="event-detail-prop-inner">
-          <%= PryvBrowser.getTimeString(event.time) %>
+          <%= PryvBrowser.dateTime.getTimeText(event.time) %>
         </div>
       </div>
       <% if (event.isRunning() || event.duration > 0) { %>
@@ -693,7 +670,7 @@
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
         </li> -->
-        <li class="event-structure editable" id="current-time"><span data-i18n="events.common.labels.time"></span>: <label><%= PryvBrowser.getTimeString(event.time) %></label>
+        <li class="event-structure editable" id="current-time"><span data-i18n="events.common.labels.time"></span>: <label><%= PryvBrowser.dateTime.getTimeText(event.time) %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
         </li> <!--
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>

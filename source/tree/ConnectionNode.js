@@ -1,9 +1,10 @@
 
-var _ = require('underscore');
-var TreeNode = require('./TreeNode');
-var StreamNode = require('./StreamNode');
-var VirtualNode = require('./VirtualNode.js');
-var Pryv = require('pryv');
+var _ = require('underscore'),
+    TreeNode = require('./TreeNode'),
+    StreamNode = require('./StreamNode'),
+    VirtualNode = require('./VirtualNode.js'),
+    Pryv = require('pryv'),
+    streamUtils = require('../utility/streamUtils');
 
 var STREAM_MARGIN = 20;
 var SERIAL = 0;
@@ -46,8 +47,9 @@ var ConnectionNode = module.exports = TreeNode.implement(
       var usedColor = [];
       if (this.connection.accessInfo().type && this.connection.accessInfo().type === 'personal') {
         this.connection.streams.walkTree(options, function (stream) {
-          if (!stream.parentId && stream.clientData && stream.clientData['pryv-browser:bgColor']) {
-            usedColor.push(stream.clientData['pryv-browser:bgColor']);
+          var color = streamUtils.getColor(stream, false);
+          if (! stream.parentId && color) {
+            usedColor.push(color);
           }
         });
         var freeColors = _.difference(STREAM_COLORS, usedColor);
@@ -55,12 +57,8 @@ var ConnectionNode = module.exports = TreeNode.implement(
           freeColors = STREAM_COLORS;
         }
         this.connection.streams.walkTree(options, function (stream) {
-          if (!stream.parentId &&
-            (!stream.clientData || !stream.clientData['pryv-browser:bgColor'])) {
-            if (!stream.clientData) {
-              stream.clientData = {};
-            }
-            stream.clientData['pryv-browser:bgColor'] = freeColors.shift();
+          if (! stream.parentId && ! streamUtils.getColor(stream, false)) {
+            streamUtils.setColor(stream, freeColors.shift());
             this.connection.streams._updateWithData({id: stream.id, clientData: stream.clientData},
               console.log);
             if (freeColors.length === 0) {

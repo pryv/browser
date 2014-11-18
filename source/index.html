@@ -197,7 +197,7 @@
       </div>
     </div>
     <div class="tags"><%= tags %></div>
-    <div class="date"><%= PryvBrowser.getTimeString(time) %></div>
+    <div class="date"><%= PryvBrowser.dateTime.getTimeText(time) %></div>
   </script>
 
   <script id="activityView" type="template">
@@ -248,19 +248,7 @@
     return false;
     };
 
-    var findColor = function (c) {
-    if (typeof(c) == "undefined" || !c) {
-    return '';
-    }
-    if ( typeof(c.clientData) != "undefined" && typeof(c.clientData['pryv-browser:bgColor']) !="undefined") {
-     return c.clientData['pryv-browser:bgColor'];
-    }
-    if (typeof(c.parent) != "undefined") {
-      return findColor(c.parent);
-    }
-    return '';
-    }
-    var bgColor = findColor(content);
+    var bgColor = PryvBrowser.streamUtils.getColor(content);
     var manageStream = canManageStream(content);
     if (typeof(content.name) != "undefined" && typeof(content.clientData) != "undefined" ) { %>
     <div class='nodeHeader <%= content.clientData.color %>'><span class="pins-color 1" style="background-color: <%= bgColor %>"></span><%= content.name %>
@@ -290,7 +278,7 @@
   </script>
   <script type="text/html" id="template-detailItemView">
     <div class="row detail-item-date">
-        <span class="date"><%= PryvBrowser.getTimeString(event.time) %></span>
+        <span class="date"><%= PryvBrowser.dateTime.getTimeText(event.time) %></span>
     </div>
     <div class="row detail-item-content">
       <%= getPreview() %>
@@ -604,7 +592,7 @@
       </div>
       <div class="event-detail-prop-outer col-xs-2">
         <div class="event-detail-prop-inner">
-          <%= PryvBrowser.getTimeString(event.time) %>
+          <%= PryvBrowser.dateTime.getTimeText(event.time) %>
         </div>
       </div>
       <% if (event.isRunning() || event.duration > 0) { %>
@@ -682,7 +670,7 @@
         <!--
          <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
         </li> -->
-        <li class="event-structure editable" id="current-time"><span data-i18n="events.common.labels.time"></span>: <label><%= PryvBrowser.getTimeString(event.time) %></label>
+        <li class="event-structure editable" id="current-time"><span data-i18n="events.common.labels.time"></span>: <label><%= PryvBrowser.dateTime.getTimeText(event.time) %></label>
           <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
         </li> <!--
         <li class="event-structure" id="current-type">type: <label><%= event.type %></label>

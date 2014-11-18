@@ -1,7 +1,6 @@
 /* global $, window, i18n*/
-var Marionette = require('backbone.marionette');
-
-
+var Marionette = require('backbone.marionette'),
+    streamUtils = require('../../utility/streamUtils');
 
 // The grid view
 module.exports = Marionette.ItemView.extend({
@@ -25,7 +24,7 @@ module.exports = Marionette.ItemView.extend({
   templateHelpers: function () {
     return {
       getColor: function () {
-        return this.getColor(this.stream);
+        return streamUtils.getColor(this.stream);
       }.bind(this),
       getStreamStructure: function () {
         return this.getStreamStructure();
@@ -97,11 +96,11 @@ module.exports = Marionette.ItemView.extend({
     this.ui.colorPicker.colpick({
       colorScheme: 'light',
       layout: 'hex',
-      color: this.getColor(this.stream),
+      color: streamUtils.getColor(this.stream),
       onSubmit: function (hsb, hex, rgb, el) {
         $(el).css('background-color', '#' + hex);
         $(el).colpickHide();
-        this.newColor['pryv-browser:bgColor'] = '#' + hex;
+        this.newColor[streamUtils.BgColorClientDataKey] = '#' + hex;
         that.ui.submitBtn.prop('disabled', false);
       }.bind(this)
     });
@@ -145,19 +144,6 @@ module.exports = Marionette.ItemView.extend({
   onActionDone: function () {
     this.trigger('close');
     window.location.reload();
-  },
-  getColor: function (c) {
-    if (typeof(c) === 'undefined' || !c) {
-      return '';
-    }
-    if (typeof(c.clientData) !== 'undefined' &&
-      typeof(c.clientData['pryv-browser:bgColor']) !== 'undefined') {
-      return c.clientData['pryv-browser:bgColor'];
-    }
-    if (typeof(c.parent) !== 'undefined') {
-      return this.getColor(c.parent);
-    }
-    return '';
   },
 
   getStreamStructure: function () {

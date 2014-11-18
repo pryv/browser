@@ -1,6 +1,7 @@
 /* global $, Highcharts, moment, pryvBrowser */
 
 var _ = require('underscore'),
+    dateTime = require('../../../utility/dateTime'),
     Marionette = require('backbone.marionette'),
     pryv = require('pryv'),
     tsTransform = require('./utils/timeSeriesTransform.js');
@@ -168,7 +169,7 @@ ChartView.makeChart = function () {
       }
     }
   };
-  var tickSettings = getTickSettings(timeScale, fromMsTime, toMsTime);
+  var tickSettings = dateTime.getTickSettings(timeScale, fromMsTime, toMsTime);
   settings.xAxis = {
     type: 'datetime',
     min: fromMsTime,
@@ -188,7 +189,7 @@ ChartView.makeChart = function () {
       dashStyle: 'dot'
     },
     formatter: function () {
-      var s = '<strong>' + getFullTimeLabel(this.x) + '</strong>';
+      var s = '<strong>' + dateTime.getTimeText(this.x) + '</strong>';
 
       _.forEach(this.points, function (pt) {
         s += '<br/> <span style="color:' + pt.series.color + '">\u25CF</span> ' +
@@ -338,84 +339,6 @@ function getEventValueSymbol(eventType, typeExtra) {
     symbol = typeParts[typeParts.length - 1];
   }
   return symbol;
-}
-
-//TODO: consider extracting time formatting stuff to utility helper
-
-var TickIntervalForScale = {
-  day: 'hour',
-  week: 'dayOfWeek',
-  month: 'week',
-  year: 'month',
-  custom: null // dynamically determined
-};
-
-var TickIntervals = {
-  hour: {
-    format: 'H',
-    momentKey: 'h',
-    interval: 1000 * 60 * 60
-  },
-  dayOfWeek: {
-    format: 'ddd',
-    momentKey: 'd',
-    interval: 1000 * 60 * 60 * 24
-  },
-  week: {
-    format: 'ddd D.M',
-    momentKey: 'w',
-    interval: 1000 * 60 * 60 * 24 * 7
-  },
-  month: {
-    format: 'MMM',
-    momentKey: 'M'
-  },
-  year: {
-    format: 'YYYY',
-    momentKey: 'y'
-  }
-};
-
-var TickSettings = {};
-_.each(TickIntervals, function (iValue, iKey) {
-  TickSettings[iKey] = {
-    getLabel: function () {
-      return moment(this.value).format(iValue.format);
-    },
-    getValues: function (fromMsTime, toMsTime) {
-      var values = [fromMsTime],
-          currentM = moment(fromMsTime);
-      while (+currentM <= toMsTime) {
-        values.push(+currentM);
-        currentM.add(1, iValue.momentKey);
-      }
-      return values;
-    }
-  };
-});
-
-function getTickSettings(timeScale, fromMsTime, toMsTime) {
-  var interval = TickIntervalForScale[timeScale];
-  if (! interval) {
-    // custom scale
-    var duration = moment.duration(toMsTime - fromMsTime);
-    if (duration.years() >= 2) {
-      interval = 'year';
-    } else if (duration.months() >= 2) {
-      interval = 'month';
-    } else if (duration.days() >= 14) {
-      interval = 'week';
-    } else if (duration.days() >= 2) {
-      interval = 'dayOfWeek';
-    } else {
-      interval = 'hour';
-    }
-  }
-  return TickSettings[interval];
-}
-
-function getFullTimeLabel(msTime) {
-  return moment(msTime).calendar();
 }
 
 // TODO: see if we actually need this extra element

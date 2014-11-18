@@ -603,8 +603,7 @@ padding: 0px 15px;
 
 /* Chart styles */
 
-.chartContainer
-{
+.chartContainer {
   position: absolute;
   z-index: 1; /* to let other stuff show through */
   top: 0;
@@ -613,53 +612,17 @@ padding: 0px 15px;
   height: 100%;
 }
 
+.chartContainer svg {
+  font: inherit;
+  font-size: 10px;
+}
+
 .chart-total-label {
   position: absolute;
   z-index: 0;
   text-align: center;
   font-size: 13px;
 }
-
-/* TODO: cleanup (not using c3 anymore) */
-
-.chartContainer svg {
-  font: inherit;
-  font-size: 10px;
-}
-
-.chartContainer .c3-axis line,
-.chartContainer .c3-axis path,
-.chartContainer .c3-axis-x line,
-.chartContainer .c3-axis-x path {
-  stroke: #999;
-}
-.chartContainer .c3-axis text,
-.chartContainer .c3-axis-x text{
-  fill: #999;
-}
-.chartContainer .c3-xgrid-focus {
-  stroke: #999;
-  stroke-dasharray: 5,5;
-}
-
-/* i.e. tooltip container */
-.chartContainer.c3 > div {
-  border: 1px solid #E0E0E0;
-  border-radius: 2px;
-}
-.chartContainer .c3-tooltip {
-  box-shadow: none;
-}
-.chartContainer .c3-tooltip tr {
-  border: none;
-}
-.chartContainer .c3-tooltip th, .chartContainer .c3-tooltip td {
-  border: none;
-  font-size: inherit;
-  color: inherit;
-  background-color: inherit;
-}
-
 
 /* end chart styles */
 

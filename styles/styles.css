@@ -5,12 +5,7 @@
   bottom: 0;
   z-index: 1000;
   background-color: #ffffff;
-  /*margin-bottom: -35px;*/
 }
-/*@font-face {
-  font-family: MuseoSans-300;
-  src: url(../fonts/MuseoSans-300.otf);
-}*/
 html{
   height: 100%;
   width: 100%;
@@ -26,11 +21,9 @@ body{
   padding: 0;
   margin: 0;
   font-family: 'Roboto',Georgia,Arial,sans-serif;
-  font-size:13px;
+  font-size: 13px;
   overflow: hidden;
   background-color: #eef0f2;
-  /*font-weight: 300;
-  letter-spacing: 1px;*/
 }
 /* SETTINGS MODAL*/
 #settings-content{
@@ -197,7 +190,7 @@ background-color: #00A8E2;
   cursor: pointer;
 }
 .stream-tree-summary:hover {
-  background-color: #BD1727;
+  background-color: #719726;
   color: #FFF;
 }
 .stream-tree-summary.disclosure::before {
@@ -252,6 +245,7 @@ background-color: #00A8E2;
   -o-transition: margin-left 0.3s ease-in-out;
   transition: margin-left 0.3s ease-in-out;
 }
+
 .logo{
   z-index: 90000;
   position: absolute;
@@ -264,13 +258,11 @@ background-color: #00A8E2;
   background: url(../images/logo-pryv.png) 0 no-repeat;
   margin-left: -15px;
 }
-.logo:hover{
-  /*background-position: -40px 0px;*/
-}
 .logo.loading {
-  background:url(../images/loader3.gif) 0 0 no-repeat;
+  background: url(../images/loader3.gif) 0 0 no-repeat;
   background-color: #3e3e3e;
 }
+
 .menu-button {
   z-index: 90000;
   position: relative;
@@ -290,7 +282,7 @@ line-height: 27px;
 #login-button:hover, #login-button:focus {
   text-decoration: none;
   color: white;
-  background-color: #BD1727;
+  background-color: #719726;
 }
 #login-dropdown .dropdown-menu {
   right: 0;
@@ -461,14 +453,14 @@ padding: 0px 15px;
 }
 .StreamNode > .nodeHeader:hover {
   color: white;
-  background-color: #BD1727;
-  -webkit-box-shadow: 0 0 0 2px #BD1727;
-  box-shadow: 0 0 0 2px #BD1727;
+  background-color: #719726;
+  -webkit-box-shadow: 0 0 0 2px #719726;
+  box-shadow: 0 0 0 2px #719726;
   z-index: 100;
 }
 .EventsNode:hover {
-  -webkit-box-shadow: 0 0 0 2px #BD1727;
-  box-shadow: 0 0 0 2px #BD1727;
+  -webkit-box-shadow: 0 0 0 2px #719726;
+  box-shadow: 0 0 0 2px #719726;
   z-index: 100;
 }
 .ConnectionNode, .StreamNode, .EventsNode{
@@ -1248,7 +1240,7 @@ details.open > summary:first-child::before {
   -o-animation-duration: 0.5s;
 }
 span.ss-navigateleft:hover {
-color: #BD1727;
+color: #719726;
 }
 #login-caret {
   /*font-size: 40px;
@@ -1323,10 +1315,10 @@ color: #BD1727;
   text-align: right;
   padding: 30px 40px;
 }
-  .onboarding header a{
-    color:#BD1727;
-    font-weight: 700;
-  }
+.onboarding header a{
+  color:#719726;
+  font-weight: 700;
+}
 .onboarding .container {
 }
 .onboarding .container h1 {
@@ -1349,7 +1341,7 @@ color: #BD1727;
 }
 
 .onboarding .container .btn.btn-primary {
-  background-color: #BD1727;
+  background-color: #719726;
   font-size: 40px;
   padding: 10px 60px;
   border: 0;
@@ -1367,7 +1359,7 @@ color: #BD1727;
   font-size:28px;
 }
 .onboarding footer {
-  background-color: #BD1727;
+  background-color: #719726;
   position: absolute;
   bottom: 0px;
   width: 100%;
@@ -1522,8 +1514,8 @@ nav .icon-only{
   color: #e3e3e3;
 }*/
 .navbar-inverse .navbar-nav>li>a:focus, .navbar-inverse .navbar-nav>li>a:hover {
-color: #FFF;
-background-color: #BD1727;
+  color: #FFF;
+  background-color: #719726;
 }
 /*.navbar-inverse .dropdown-menu {
   background-color: #3e3e3e;
@@ -1532,7 +1524,7 @@ background-color: #BD1727;
   color: #e3e3e3;
 }*/
 .navbar-inverse .dropdown-menu a:hover {
-  background-color: #BD1727;
+  background-color: #719726;
   color: #fff;
 }
 .navbar-nav>li>a {
@@ -1555,8 +1547,8 @@ nav .gravatar {
 }
 #togglePanel{border-right: 1px solid #F1F1F1;}
 .navbar-inverse .navbar-nav>li.function-highlight>a {
-background-color: #BD1727;
-color: #FFF;
+  background-color: #719726;
+  color: #FFF;
 }
 
 /* temp stuff for generic events detailed view, TODO: cleanup */
@@ -1600,7 +1592,7 @@ color: #FFF;
   color: inherit;
 }
 #logo-beta-mention a:hover, #logo-beta-mention a:focus  {
-  color: #BD1727;
+  color: #719726;
   text-decoration: none;
 }
 .streamConfig {

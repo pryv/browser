@@ -29278,9 +29278,15 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
   Pryv.eventTypes.loadFlat();
+
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
+  var themeName = urlInfo.parseQuery().theme;
+  if (themeName) {
+    $('<link rel="stylesheet" type="text/css" href="themes/' + themeName.toLowerCase() +
+        '/style.css">').appendTo('head');
+  }
 
   testUsername(this.urlUsername);
 
@@ -29350,12 +29356,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     this.controller = new Controller();
     this.treemap = new TreeMap(this);
     this.controller.setTreeMap(this.treemap);
-
-
   };
   // ----------------------- //
 
-  // Singin
+  // Sign in
   //Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
 
   var settings = {
@@ -38928,7 +38932,7 @@ ChartView.makeChart = function () {
       states: {
         select: {
           color: null,
-          borderColor: '#BD1727'
+          borderColor: '#719726'
         }
       }
     }
@@ -38953,7 +38957,7 @@ ChartView.makeChart = function () {
       dashStyle: 'dot'
     },
     formatter: function () {
-      var s = '<strong>' + dateTime.getTimeText(this.x) + '</strong>';
+      var s = '<strong>' + dateTime.getTimeText(this.x / 1000) + '</strong>';
 
       _.forEach(this.points, function (pt) {
         s += '<br/> <span style="color:' + pt.series.color + '">\u25CF</span> ' +

@@ -189,7 +189,7 @@ ChartView.makeChart = function () {
       dashStyle: 'dot'
     },
     formatter: function () {
-      var s = '<strong>' + dateTime.getTimeText(this.x) + '</strong>';
+      var s = '<strong>' + dateTime.getTimeText(this.x / 1000) + '</strong>';
 
       _.forEach(this.points, function (pt) {
         s += '<br/> <span style="color:' + pt.series.color + '">\u25CF</span> ' +

@@ -164,7 +164,7 @@ ChartView.makeChart = function () {
       states: {
         select: {
           color: null,
-          borderColor: '#BD1727'
+          borderColor: '#719726'
         }
       }
     }

@@ -9,14 +9,14 @@
   cursor: pointer;
 }
 .timeItem:hover {
-  color:#BD1727;
+  color:#719726;
 }
 .timeItem.selected {
-  background-color: #BD1727;
+  background-color: #719726;
   color: #fff;
   font-weight: 700;
   /*border-radius: 15px;*/
-  border: 1px solid #BD1727;
+  border: 1px solid #719726;
 }
 #dates {
   color: #666E77;
@@ -46,7 +46,7 @@
   user-select: none;
 }
 a.timeScale:hover {
-  color: #BD1727;
+  color: #719726;
 }
 a.timeScale.selected:hover {
   color: #ffffff;
@@ -62,7 +62,8 @@ a.timeScale.selected:hover {
   color: #666E77;
 }
 .timeScale.selected {
-  background-color: #BD1727;
+  background-color: #719726;
+  border-color: #719726;
   color:#ffffff;
 }
 #timeframe .btn-toolbar .btn-group{float:none;}

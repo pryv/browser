@@ -26,9 +26,15 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
   Pryv.eventTypes.loadFlat();
+
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
+  var themeName = urlInfo.parseQuery().theme;
+  if (themeName) {
+    $('<link rel="stylesheet" type="text/css" href="themes/' + themeName.toLowerCase() +
+        '/style.css">').appendTo('head');
+  }
 
   testUsername(this.urlUsername);
 
@@ -98,12 +104,10 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     this.controller = new Controller();
     this.treemap = new TreeMap(this);
     this.controller.setTreeMap(this.treemap);
-
-
   };
   // ----------------------- //
 
-  // Singin
+  // Sign in
   //Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
 
   var settings = {

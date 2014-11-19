@@ -93,6 +93,12 @@ module.exports = function (grunt) {
           },
           {
             expand: true,
+            cwd: 'source/themes',
+            src: '**',
+            dest: 'dist/themes/'
+          },
+          {
+            expand: true,
             flatten: true,
             filter: 'isFile',
             src: 'source/vendor/airbrake-shim.js',

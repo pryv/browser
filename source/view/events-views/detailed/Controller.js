@@ -6,6 +6,7 @@ var _ = require('underscore'),
     CommonView = require('./CommonView.js'),
     BatchActionView = require('./BatchActionView.js'),
     GenericContentView = require('./contentView/Generic.js'),
+    ActivityContentView = require('./contentView/Activity.js'),
     TweetContentView = require('./contentView/Tweet.js'),
     NoteContentView = require('./contentView/Note.js'),
     NumericalContentView = require('./contentView/numerical/Controller.js'),
@@ -289,6 +290,8 @@ _.extend(Controller.prototype, {
       return {type: 'Position', view: PositionContentView};
     } else if (t === 'message/twitter') {
       return {type: 'Tweet', view: TweetContentView};
+    } else if (t === 'activity/plain') {
+      return {type: 'Activity', view: ActivityContentView};
     } else if (t === 'Creation') {
       return {type: 'Creation', view: CreationView};
     } else if (window.PryvBrowser.eventTypes.isNumerical(evt)) {

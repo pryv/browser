@@ -1,4 +1,4 @@
-/* global $, window, location, i18n, moment, localStorage */
+/* global $, window, document, location, i18n, moment, localStorage */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
     _ = require('underscore'),
     ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -11,6 +11,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     UnknownUserView = require('./view/error/unknown-user.js'),
     PUBLIC_TOKEN = 'public',
     STAGING,
+    themes = require('./themes/index'),
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
       'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
     toShowSubscribe = ['nav #toMyPryv', 'nav #togglePanel'];
@@ -30,11 +31,9 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
-  var themeName = urlInfo.parseQuery().theme;
-  if (themeName) {
-    $('<link rel="stylesheet" type="text/css" href="themes/' + themeName.toLowerCase() +
-        '/style.css">').appendTo('head');
-  }
+  this.queryString = urlInfo.parseQuery();
+
+  this._applyThemeIfAny(this.queryString.theme);
 
   testUsername(this.urlUsername);
 
@@ -62,17 +61,18 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     this.publicConnection =  new Pryv.Connection(
       this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
   }
+
   // create connection handler and filter
   this.onFiltersChanged = function (from, to) {
     this.activeFilter.timeFrameLT = [new Date(from * 1000), new Date(to * 1000)];
   };
-
 
   this.onDateHighlighted = _.throttle(function () {
     if (this.treemap) {
       this.treemap.onDateHighLighted(arguments[0]);
     }
   }, 100);
+
   this.initBrowser = function () {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
@@ -194,8 +194,25 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     settings.password = $('#login-password').val();
     Pryv.Auth.login(settings);
   }.bind(this));
-
 };
+
+Model.prototype._applyThemeIfAny = function (themeId) {
+  if (! themeId) { return; }
+
+  var theme = this.theme = themes[themeId.toLowerCase()];
+  if (! theme) { return; }
+
+  $('<link rel="stylesheet" type="text/css" href="themes/' + theme.id + '/style.css">')
+      .appendTo('head');
+  if (theme.appName) {
+    document.title = theme.appName;
+  }
+  if (theme.favicon) {
+    $('<link rel="shortcut icon" href="themes/' + theme.id + '/' + theme.favicon + '">')
+        .appendTo('head');
+  }
+};
+
 Model.prototype.setTimeframeScale = function (connection) {
   if (!this.timeView) {
     return setTimeout(function () {
@@ -230,6 +247,7 @@ Model.prototype.setTimeframeScale = function (connection) {
       }.bind(this));
   }
 };
+
 Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit]').prop('disabled', false);
   $('#login form button[type=submit] .fa-spinner').hide();
@@ -297,11 +315,13 @@ Model.prototype.addConnection = function (connection) {
   this.activeFilter.addConnection(userConnection, batch);
   batch.done();
 };
+
 Model.prototype.addConnections = function (connections) {
   _.each(connections, function (conn) {
     this.addConnection(conn);
   }.bind(this));
 };
+
 Model.prototype.removeConnection = function (connection) {
   this.activeFilter.removeConnections(connection.serialId);
 };
@@ -311,6 +331,7 @@ Model.prototype.removeConnections = function (connections) {
     this.removeConnection(conn);
   }.bind(this));
 };
+
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.
  */
@@ -322,12 +343,11 @@ Model.prototype.updateTimeFrameLimits = function () {
   }.bind(this), 100))();
 };
 
-
-
 Model.prototype.showLoggedInElement = function () {
   this.renderPanel(this);
   $(toShowWhenLoggedIn.join(',')).show();
 };
+
 Model.prototype.showSubscribeElement = function () {
   this.renderPanel(this);
   var home = location.origin.replace(this.urlUsername, this.loggedConnection.username);
@@ -341,6 +361,7 @@ Model.prototype.hideLoggedInElement = function () {
   $(toShowSubscribe.join(',')).hide();
   $('.logo-subscribe').hide();
 };
+
 Model.prototype.togglePanel = function (callback) {
   var opened = $('#main-container').data('panel-opened');
   if (opened) {
@@ -349,6 +370,7 @@ Model.prototype.togglePanel = function (callback) {
     this.openPanel(callback);
   }
 };
+
 Model.prototype.openPanel = function (callback) {
   var callbackCalled = false;
   var $container = $('#main-container');
@@ -365,6 +387,7 @@ Model.prototype.openPanel = function (callback) {
       });
   }
 };
+
 Model.prototype.closePanel = function (callback) {
   var callbackCalled = false;
   var $container = $('#main-container');
@@ -380,9 +403,11 @@ Model.prototype.closePanel = function (callback) {
       });
   }
 };
+
 Model.prototype.renderPanel = function () {
   PanelMenu.render(this);
 };
+
 function initTimeAndFilter(timeView, filter) {
   var fromTime = new Date(timeView.getTimeBounds().from * 1000),
       toTime = new Date(timeView.getTimeBounds().to * 1000);
@@ -390,10 +415,9 @@ function initTimeAndFilter(timeView, filter) {
   filter.set({
     limit: 50000
   });
-
 }
 
-var testUsername = function (username) {
+function testUsername(username) {
   var domain;
   var host  = window.location.host;
   if (host.indexOf('pryv.li') !== -1) {
@@ -410,8 +434,7 @@ var testUsername = function (username) {
     $('body').html(UnknownUserView);
     $('body').i18n();
   });
-};
-
+}
 
 Model.prototype.closeLogin = function () {
   var $login = $('#login');
@@ -431,6 +454,7 @@ Model.prototype.closeLogin = function () {
   }
   $login.data('opened', false);
 };
+
 Model.prototype.openLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
@@ -452,7 +476,8 @@ Model.prototype.openLogin = function () {
   }
   $login.data('opened', true);
 };
-var detectIE = function detectIE() {
+
+function detectIE() {
   var ua = window.navigator.userAgent;
   var msie = ua.indexOf('MSIE ');
   var trident = ua.indexOf('Trident/');
@@ -470,7 +495,7 @@ var detectIE = function detectIE() {
 
   // other browser
   return false;
-};
+}
 
 // TODO: cleanup this mess of having both window.pryvBrowser (ie. Model.js) and window.PryvBrowser
 //       (a big bag of utility and miscellaneous properties every component seems to freely extend)

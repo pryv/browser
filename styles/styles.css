@@ -425,11 +425,11 @@ padding: 0px 15px;
 /* COLOR DEFAULT PINS */
 .pins-color{
   display: inline-block;
-  width: 10px;
-  background-color: #DAE0E4;
-  height: 10px;
-  border-radius: 5px;
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
   margin-right: 3px;
+  background-color: #DAE0E4;
 }
 .ConnectionNode>.nodeHeader>.pins-color {
   /* No pins for connection */
@@ -701,17 +701,14 @@ padding: 0px 15px;
   background-color: #ffffff;
   border:none;
 }
-/* modal-small */
 
-.modal-small
-.note-content {
+.note-content, .activity-content {
   position: relative;
   height: 100%;
   overflow: auto;
   padding: 15px;
-  list-style-type: none;
 }
-.note-content label{
+.note-content label, .activity-content label {
   font-weight: normal;
   font-size: 22px;
 }
@@ -831,9 +828,8 @@ padding: 0px 15px;
 #detail-content {
   position: absolute;
   top: 0;
-  width: inherit;
   bottom: 110px;
-  top: 0px;
+  width: inherit;
 }
 /* Detail view Edit mode on */
 #modal-left-content.editing #detail-full{
@@ -843,7 +839,7 @@ padding: 0px 15px;
   bottom: 210px;
 }
 
-#modal-left-content li.editing {
+#modal-left-content .editing {
   border-bottom: none;
   padding: 0;
 }

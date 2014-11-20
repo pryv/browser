@@ -3,16 +3,15 @@
 <html xmlns:fb="http://ogp.me/ns/fb#">
 <head>
   <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
-  <!-- ENV example -->
-  <title>Pryv @ Glance</title>
-  <base href="{browser-source}_v0.13.1fix/">
+  <title>Pryv</title>
+  <base href="{browser-source}_v0.13.2/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.13.1fix/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.13.1fix/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.13.2/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.13.2/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -435,10 +434,17 @@
   </script>
   <script type="template" id="template-detail-content-note">
     <% if (event) { %>
-      <li class="event-structure editable" id="current-content"  style="height:100%">
+      <div class="event-structure editable" id="current-content"  style="height:100%">
         <label class="non-editable"><%= getContent() %></label>
         <textarea class="edit form-control" id="edit-content" value="<%= event.content %>" style="height:100%"><%= event.content %></textarea>
-      </li>
+      </div>
+    <% } %>
+  </script>
+  <script type="template" id="template-detail-content-activity">
+    <% if (event) { %>
+    <div class="event-structure" id="current-content" style="height:100%">
+      <label class="non-editable"><%= getContent() %></label>
+    </div>
     <% } %>
   </script>
   <script type="template" id="template-detail-content-picture">
@@ -633,37 +639,6 @@
     </div>
     <% } %>
   </script>
-  <script type="template" id="template-detail-fullqqqq">
-      <% if (event) { %>
-      <ul>
-        <li class="event-structure editable" id="current-streamId"><span data-i18n="events.common.labels.stream"></span>: <label><%= event.streamName
-          %></label>
-          <select class="edit" id="edit-streamId"><%= getStreamStructure() %></select>
-        </li>
-
-        <!--
-         <li class="event-structure" id="current-trashed">trashed: <label><%= event.trashed %></label>
-        </li> -->
-        <li class="event-structure editable" id="current-time"><span data-i18n="events.common.labels.time"></span>: <label><%= PryvBrowser.dateTime.getTimeText(event.time) %></label>
-          <input type="datetime-local" class="edit" id="edit-time" value="<%= new Date(Math.round(event.time * 1000)).toISOString().slice(0, -5) %>">
-        </li> <!--
-        <li class="event-structure" id="current-type">type: <label><%= event.type %></label>
-          <input class="edit" id="edit-type" value="<%= event.type %>">
-        </li> -->
-        <li class="event-structure editable" id="current-description"><span data-i18n="events.common.labels.description"></span>: <label><%=
-          event.description %></label>
-          <input class="edit" id="edit-description" value="<%= event.description %>"></li>
-        <li class="event-structure editable" id="current-tags"><span data-i18n="events.common.labels.tags"></span>:
-          <% event.tags.forEach(function (tag) { %>
-          <label><%= tag %></label>
-          <% }) %>
-          <input class="edit" id="edit-tags" value="<%= event.tags.join(', ').replace('\"', '&quot;') %>"></li>
-
-        <button id ="submit-edit" type="button" class="btn btn-primary"><span data-i18n="common.actions.save"></span> <i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
-        <button id ="trash-edit" type="button" class="btn btn-danger"><span data-i18n="common.actions.delete"></span><i class="fa fa-spinner fa-spin" style="display: none;"></i></button>
-      </ul>
-      <% } %>
-  </script>
   <script type="template" id="template-fusion-graph">
     <div id="fusion-full">
     </div>
@@ -686,7 +661,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.13.1fix</span>
+    <span class="version">Browser v0.13.2</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>

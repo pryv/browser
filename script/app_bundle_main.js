@@ -29250,7 +29250,7 @@ if (typeof define === "function" && define.amd) {
 }).call(this);
 
 },{}],83:[function(require,module,exports){
-/* global $, window, location, i18n, moment, localStorage */
+/* global $, window, document, location, i18n, moment, localStorage */
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
     _ = require('underscore'),
     ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -29263,6 +29263,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     UnknownUserView = require('./view/error/unknown-user.js'),
     PUBLIC_TOKEN = 'public',
     STAGING,
+    themes = require('./themes/index'),
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
       'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
     toShowSubscribe = ['nav #toMyPryv', 'nav #togglePanel'];
@@ -29282,11 +29283,9 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
-  var themeName = urlInfo.parseQuery().theme;
-  if (themeName) {
-    $('<link rel="stylesheet" type="text/css" href="themes/' + themeName.toLowerCase() +
-        '/style.css">').appendTo('head');
-  }
+  this.queryString = urlInfo.parseQuery();
+
+  this._applyThemeIfAny(this.queryString.theme);
 
   testUsername(this.urlUsername);
 
@@ -29314,17 +29313,18 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     this.publicConnection =  new Pryv.Connection(
       this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
   }
+
   // create connection handler and filter
   this.onFiltersChanged = function (from, to) {
     this.activeFilter.timeFrameLT = [new Date(from * 1000), new Date(to * 1000)];
   };
-
 
   this.onDateHighlighted = _.throttle(function () {
     if (this.treemap) {
       this.treemap.onDateHighLighted(arguments[0]);
     }
   }, 100);
+
   this.initBrowser = function () {
     this.connections = new ConnectionsHandler(this);
     this.activeFilter = new MonitorsHandler(this);
@@ -29446,8 +29446,25 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     settings.password = $('#login-password').val();
     Pryv.Auth.login(settings);
   }.bind(this));
-
 };
+
+Model.prototype._applyThemeIfAny = function (themeId) {
+  if (! themeId) { return; }
+
+  var theme = this.theme = themes[themeId.toLowerCase()];
+  if (! theme) { return; }
+
+  $('<link rel="stylesheet" type="text/css" href="themes/' + theme.id + '/style.css">')
+      .appendTo('head');
+  if (theme.appName) {
+    document.title = theme.appName;
+  }
+  if (theme.favicon) {
+    $('<link rel="shortcut icon" href="themes/' + theme.id + '/' + theme.favicon + '">')
+        .appendTo('head');
+  }
+};
+
 Model.prototype.setTimeframeScale = function (connection) {
   if (!this.timeView) {
     return setTimeout(function () {
@@ -29482,6 +29499,7 @@ Model.prototype.setTimeframeScale = function (connection) {
       }.bind(this));
   }
 };
+
 Model.prototype.signedIn = function (connection) {
   $('#login form button[type=submit]').prop('disabled', false);
   $('#login form button[type=submit] .fa-spinner').hide();
@@ -29549,11 +29567,13 @@ Model.prototype.addConnection = function (connection) {
   this.activeFilter.addConnection(userConnection, batch);
   batch.done();
 };
+
 Model.prototype.addConnections = function (connections) {
   _.each(connections, function (conn) {
     this.addConnection(conn);
   }.bind(this));
 };
+
 Model.prototype.removeConnection = function (connection) {
   this.activeFilter.removeConnections(connection.serialId);
 };
@@ -29563,6 +29583,7 @@ Model.prototype.removeConnections = function (connections) {
     this.removeConnection(conn);
   }.bind(this));
 };
+
 /**
  * demo utility that set the timeFrame boundaries to the events displayed.
  */
@@ -29574,12 +29595,11 @@ Model.prototype.updateTimeFrameLimits = function () {
   }.bind(this), 100))();
 };
 
-
-
 Model.prototype.showLoggedInElement = function () {
   this.renderPanel(this);
   $(toShowWhenLoggedIn.join(',')).show();
 };
+
 Model.prototype.showSubscribeElement = function () {
   this.renderPanel(this);
   var home = location.origin.replace(this.urlUsername, this.loggedConnection.username);
@@ -29593,6 +29613,7 @@ Model.prototype.hideLoggedInElement = function () {
   $(toShowSubscribe.join(',')).hide();
   $('.logo-subscribe').hide();
 };
+
 Model.prototype.togglePanel = function (callback) {
   var opened = $('#main-container').data('panel-opened');
   if (opened) {
@@ -29601,6 +29622,7 @@ Model.prototype.togglePanel = function (callback) {
     this.openPanel(callback);
   }
 };
+
 Model.prototype.openPanel = function (callback) {
   var callbackCalled = false;
   var $container = $('#main-container');
@@ -29617,6 +29639,7 @@ Model.prototype.openPanel = function (callback) {
       });
   }
 };
+
 Model.prototype.closePanel = function (callback) {
   var callbackCalled = false;
   var $container = $('#main-container');
@@ -29632,9 +29655,11 @@ Model.prototype.closePanel = function (callback) {
       });
   }
 };
+
 Model.prototype.renderPanel = function () {
   PanelMenu.render(this);
 };
+
 function initTimeAndFilter(timeView, filter) {
   var fromTime = new Date(timeView.getTimeBounds().from * 1000),
       toTime = new Date(timeView.getTimeBounds().to * 1000);
@@ -29642,10 +29667,9 @@ function initTimeAndFilter(timeView, filter) {
   filter.set({
     limit: 50000
   });
-
 }
 
-var testUsername = function (username) {
+function testUsername(username) {
   var domain;
   var host  = window.location.host;
   if (host.indexOf('pryv.li') !== -1) {
@@ -29662,8 +29686,7 @@ var testUsername = function (username) {
     $('body').html(UnknownUserView);
     $('body').i18n();
   });
-};
-
+}
 
 Model.prototype.closeLogin = function () {
   var $login = $('#login');
@@ -29683,6 +29706,7 @@ Model.prototype.closeLogin = function () {
   }
   $login.data('opened', false);
 };
+
 Model.prototype.openLogin = function () {
   var $login = $('#login');
   var $tree = $('#tree');
@@ -29704,7 +29728,8 @@ Model.prototype.openLogin = function () {
   }
   $login.data('opened', true);
 };
-var detectIE = function detectIE() {
+
+function detectIE() {
   var ua = window.navigator.userAgent;
   var msie = ua.indexOf('MSIE ');
   var trident = ua.indexOf('Trident/');
@@ -29722,7 +29747,7 @@ var detectIE = function detectIE() {
 
   // other browser
   return false;
-};
+}
 
 // TODO: cleanup this mess of having both window.pryvBrowser (ie. Model.js) and window.PryvBrowser
 //       (a big bag of utility and miscellaneous properties every component seems to freely extend)
@@ -29799,7 +29824,7 @@ window.PryvBrowser.renderNote = function (content, options) {
   return marked(content);
 };
 
-},{"./model/ConnectionsHandler.js":84,"./model/Messages":85,"./model/MonitorsHandler.js":86,"./orchestrator/Controller.js":87,"./timeframe-selector/timeframe-selector.js":88,"./tree/TreeMap.js":93,"./utility/dateTime":103,"./utility/streamUtils":104,"./view/error/unknown-user.js":112,"./view/left-panel/Controller.js":154,"backbone":4,"backbone.marionette":1,"marked":45,"pryv":70,"underscore":82}],84:[function(require,module,exports){
+},{"./model/ConnectionsHandler.js":84,"./model/Messages":85,"./model/MonitorsHandler.js":86,"./orchestrator/Controller.js":87,"./themes/index":88,"./timeframe-selector/timeframe-selector.js":89,"./tree/TreeMap.js":94,"./utility/dateTime":104,"./utility/streamUtils":106,"./view/error/unknown-user.js":114,"./view/left-panel/Controller.js":157,"backbone":4,"backbone.marionette":1,"marked":45,"pryv":70,"underscore":82}],84:[function(require,module,exports){
 
 //TODO write all add / remove connection logic
 
@@ -30284,6 +30309,24 @@ Controller.prototype.showFusionDialog =
 
 
 },{}],88:[function(require,module,exports){
+var _ = require('underscore');
+
+/**
+ * Theme definitions.
+ * Properties for each theme:
+ * - `id`: must be lowercase and match the theme's folder name
+ * - `appName` (optional): used e.g. to override the page title
+ * - `favicon` (optional): the favicon's relative path from the theme's folder (e.g. "favicon.ico")
+ */
+module.exports = _.reduce([
+  {
+    id: 'domo',
+    appName: 'Domo Safety',
+    favicon: 'favicon.png'
+  }
+], function (map, theme) { map[theme.id] = theme; return map; }, {});
+
+},{"underscore":82}],89:[function(require,module,exports){
 /* global $, document, i18n, window, moment */
 var _ = require('underscore');
 module.exports = (function () {
@@ -30812,7 +30855,7 @@ module.exports = (function () {
   return oPublic;
 })();
 
-},{"underscore":82}],89:[function(require,module,exports){
+},{"underscore":82}],90:[function(require,module,exports){
 
 var _ = require('underscore'),
     TreeNode = require('./TreeNode'),
@@ -31135,7 +31178,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
 
-},{"../utility/streamUtils":104,"./StreamNode":92,"./TreeNode":94,"./VirtualNode.js":95,"pryv":70,"underscore":82}],90:[function(require,module,exports){
+},{"../utility/streamUtils":106,"./StreamNode":93,"./TreeNode":95,"./VirtualNode.js":96,"pryv":70,"underscore":82}],91:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
   RootNode = require('./RootNode'),
   Backbone = require('backbone'),
@@ -31324,7 +31367,7 @@ EventsNode.acceptThisEventType = function () {
 
 
 
-},{"../view/NodeView.js":106,"./RootNode":91,"./TreeNode":94,"backbone":4,"underscore":82}],91:[function(require,module,exports){
+},{"../view/NodeView.js":108,"./RootNode":92,"./TreeNode":95,"backbone":4,"underscore":82}],92:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
@@ -31432,7 +31475,7 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":89,"./TreeNode":94,"underscore":82}],92:[function(require,module,exports){
+},{"./ConnectionNode":90,"./TreeNode":95,"underscore":82}],93:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -31749,7 +31792,7 @@ StreamNode.registeredEventNodeTypes = {
   'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":94,"./eventsNode/ActivitiesEventsNode.js":96,"./eventsNode/GenericEventsNode.js":97,"./eventsNode/NotesEventsNode.js":98,"./eventsNode/NumericalsEventsNode.js":99,"./eventsNode/PicturesEventsNode.js":100,"./eventsNode/PositionsEventsNode.js":101,"./eventsNode/TweetsEventsNode.js":102,"underscore":82}],93:[function(require,module,exports){
+},{"./TreeNode":95,"./eventsNode/ActivitiesEventsNode.js":97,"./eventsNode/GenericEventsNode.js":98,"./eventsNode/NotesEventsNode.js":99,"./eventsNode/NumericalsEventsNode.js":100,"./eventsNode/PicturesEventsNode.js":101,"./eventsNode/PositionsEventsNode.js":102,"./eventsNode/TweetsEventsNode.js":103,"underscore":82}],94:[function(require,module,exports){
 /* global $, window, location, localStorage, i18n */
 
 var RootNode = require('./RootNode.js'),
@@ -32567,7 +32610,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../model/Messages":85,"../view/connect-apps/Controller.js":108,"../view/create/Controller.js":109,"../view/events-views/detailed/Controller.js":118,"../view/events-views/draganddrop/Controller.js":132,"../view/onboarding/View.js":156,"../view/settings/Controller.js":158,"../view/sharings/Controller.js":166,"../view/sharings/create/Controller.js":171,"../view/stream/Controller.js":174,"../view/subscribe/Controller.js":177,"./RootNode.js":91,"./VirtualNode.js":95,"pryv":70,"underscore":82}],94:[function(require,module,exports){
+},{"../model/Messages":85,"../view/connect-apps/Controller.js":110,"../view/create/Controller.js":111,"../view/events-views/detailed/Controller.js":120,"../view/events-views/draganddrop/Controller.js":135,"../view/onboarding/View.js":159,"../view/settings/Controller.js":161,"../view/sharings/Controller.js":169,"../view/sharings/create/Controller.js":174,"../view/stream/Controller.js":177,"../view/subscribe/Controller.js":180,"./RootNode.js":92,"./VirtualNode.js":96,"pryv":70,"underscore":82}],95:[function(require,module,exports){
 /* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -32964,7 +33007,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../utility/treemap.js":105,"../view/NodeView.js":106,"backbone":4,"underscore":82}],95:[function(require,module,exports){
+},{"../utility/treemap.js":107,"../view/NodeView.js":108,"backbone":4,"underscore":82}],96:[function(require,module,exports){
 var Pryv = require('pryv');
 var _ = require('underscore');
 
@@ -33200,7 +33243,7 @@ VirtualNode.nodeHas = function (node) {
   }
 };
 
-},{"pryv":70,"underscore":82}],96:[function(require,module,exports){
+},{"pryv":70,"underscore":82}],97:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/activities/Model.js'),
@@ -33252,7 +33295,7 @@ try {
 }
 
 
-},{"../../view/events-views/activities/Model.js":113,"../EventsNode":90,"underscore":82}],97:[function(require,module,exports){
+},{"../../view/events-views/activities/Model.js":115,"../EventsNode":91,"underscore":82}],98:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   _ = require('underscore'),
@@ -33301,7 +33344,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../../view/events-views/generics/Model.js":135,"../EventsNode":90,"underscore":82}],98:[function(require,module,exports){
+},{"../../view/events-views/generics/Model.js":138,"../EventsNode":91,"underscore":82}],99:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/notes/Model.js'),
@@ -33350,7 +33393,7 @@ try {
 }
 
 
-},{"../../view/events-views/notes/Model.js":137,"../EventsNode":90,"underscore":82}],99:[function(require,module,exports){
+},{"../../view/events-views/notes/Model.js":140,"../EventsNode":91,"underscore":82}],100:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/numericals/Model.js'),
@@ -33399,7 +33442,7 @@ try {
 }
 
 
-},{"../../view/events-views/numericals/Model.js":141,"../EventsNode":90,"underscore":82}],100:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":144,"../EventsNode":91,"underscore":82}],101:[function(require,module,exports){
 /*global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/pictures/Model.js'),
@@ -33449,7 +33492,7 @@ try {
 }
 
 
-},{"../../view/events-views/pictures/Model.js":146,"../EventsNode":90,"underscore":82}],101:[function(require,module,exports){
+},{"../../view/events-views/pictures/Model.js":149,"../EventsNode":91,"underscore":82}],102:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/positions/Model.js'),
@@ -33498,7 +33541,7 @@ try {
 }
 
 
-},{"../../view/events-views/positions/Model.js":148,"../EventsNode":90,"underscore":82}],102:[function(require,module,exports){
+},{"../../view/events-views/positions/Model.js":151,"../EventsNode":91,"underscore":82}],103:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/tweet/Model.js'),
@@ -33547,7 +33590,7 @@ try {
 }
 
 
-},{"../../view/events-views/tweet/Model.js":151,"../EventsNode":90,"underscore":82}],103:[function(require,module,exports){
+},{"../../view/events-views/tweet/Model.js":154,"../EventsNode":91,"underscore":82}],104:[function(require,module,exports){
 /* global moment */
 var _ = require('underscore');
 
@@ -33674,7 +33717,32 @@ dateTime.getTickSettings = function (timeScale, fromMsTime, toMsTime) {
   return TickSettings[interval];
 };
 
-},{"underscore":82}],104:[function(require,module,exports){
+},{"underscore":82}],105:[function(require,module,exports){
+var dateTime = require('./dateTime'),
+    streamUtils = require('./streamUtils');
+
+/**
+ * To hold temporary refactored utility functions, until we have proper file structure with
+ * fully separate modules for each event type (cf. https://trello.com/c/0P6lmhsS/299).
+ */
+var eventUtils = module.exports = {};
+
+eventUtils.getActivityPreview = function (event) {
+  var html =  '<span class="pins-color 1" style="background-color: ' +
+      streamUtils.getColor(event.stream) + '"></span> ' +
+      event.stream.name + '<br>';
+  if (event.duration !== null) {
+    html += dateTime.getDurationText(event.duration, {
+      html: true,
+      nbValues: 2
+    });
+  } else {
+    html += '(running time)';
+  }
+  return html;
+};
+
+},{"./dateTime":104,"./streamUtils":106}],106:[function(require,module,exports){
 var streamUtils = module.exports = {};
 
 var BgColorClientDataKey = streamUtils.BgColorClientDataKey = 'pryv-browser:bgColor',
@@ -33753,7 +33821,7 @@ streamUtils.setChartSettingsForType = function (stream, type, settings) {
   return settings;
 };
 
-},{}],105:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -33945,7 +34013,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":82}],106:[function(require,module,exports){
+},{"underscore":82}],108:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette');
  /* TODO This a the view for each node, with dynamic animation
@@ -34021,7 +34089,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1}],107:[function(require,module,exports){
+},{"backbone.marionette":1}],109:[function(require,module,exports){
 /* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -34130,7 +34198,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 
-},{"backbone":4,"backbone.marionette":1,"underscore":82}],108:[function(require,module,exports){
+},{"backbone":4,"backbone.marionette":1,"underscore":82}],110:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     AppListView = require('./AppListView.js'),
@@ -34179,7 +34247,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./AppListView.js":107,"backbone.marionette":1,"underscore":82}],109:[function(require,module,exports){
+},{"./AppListView.js":109,"backbone.marionette":1,"underscore":82}],111:[function(require,module,exports){
 /* global $ */
 var _ = require('underscore'),
   View = require('./View.js'),
@@ -34247,7 +34315,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./EventModel.js":110,"./View.js":111,"underscore":82}],110:[function(require,module,exports){
+},{"./EventModel.js":112,"./View.js":113,"underscore":82}],112:[function(require,module,exports){
 /* global FormData */
 var Backbone = require('backbone');
 
@@ -34286,7 +34354,7 @@ module.exports = Backbone.Model.extend({
     this.get('event').removeAttachment(fileName, callback);
   }
 });
-},{"backbone":4}],111:[function(require,module,exports){
+},{"backbone":4}],113:[function(require,module,exports){
 /* global $, FileReader, document, window, i18n, navigator*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -35076,7 +35144,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"./EventModel.js":110,"backbone.marionette":1,"google-maps":6,"underscore":82}],112:[function(require,module,exports){
+},{"./EventModel.js":112,"backbone.marionette":1,"google-maps":6,"underscore":82}],114:[function(require,module,exports){
 module.exports = '<div id="main-container">' +
   '<nav class="navbar navbar-inverse navbar-static-top" role="navigation" style="top: 0px;">' +
     '<div id="logo-reload" class="logo">Pryv</div>' +
@@ -35088,7 +35156,7 @@ module.exports = '<div id="main-container">' +
   'data-i18n="error.unknownUser.labels.goToPryv"></a>' +
   '</div>' +
 '</div> ';
-},{}],113:[function(require,module,exports){
+},{}],115:[function(require,module,exports){
 /* global $*/
 var _ = require('underscore'),
     ActivityView = require('./View.js'),
@@ -35227,7 +35295,7 @@ module.exports = CommonModel.implement(
   }
 );
 
-},{"../../../utility/streamUtils":104,"../common/Model.js":115,"./View.js":114,"underscore":82}],114:[function(require,module,exports){
+},{"../../../utility/streamUtils":106,"../common/Model.js":117,"./View.js":116,"underscore":82}],116:[function(require,module,exports){
 /* global $, Highcharts */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../utility/dateTime');
@@ -35374,7 +35442,7 @@ View._updateTotalTime = function () {
 
 module.exports = Marionette.ItemView.extend(View);
 
-},{"../../../utility/dateTime":103,"backbone.marionette":1}],115:[function(require,module,exports){
+},{"../../../utility/dateTime":104,"backbone.marionette":1}],117:[function(require,module,exports){
 /* global $*/
 var _ = require('underscore'),
   Backbone = require('backbone');
@@ -35567,7 +35635,7 @@ _.extend(Model.prototype, {
 
 });
 
-},{"backbone":4,"underscore":82}],116:[function(require,module,exports){
+},{"backbone":4,"underscore":82}],118:[function(require,module,exports){
 /* global $, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -35658,7 +35726,7 @@ function countChecked(collection) {
   return count;
 }
 
-},{"backbone.marionette":1}],117:[function(require,module,exports){
+},{"backbone.marionette":1}],119:[function(require,module,exports){
 /* global $, moment, window, i18n */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../utility/dateTime');
@@ -36039,7 +36107,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/dateTime":103,"backbone.marionette":1}],118:[function(require,module,exports){
+},{"../../../utility/dateTime":104,"backbone.marionette":1}],120:[function(require,module,exports){
 /* global $, i18n, window */
 var _ = require('underscore'),
     Collection = require('./EventCollection.js'),
@@ -36048,6 +36116,7 @@ var _ = require('underscore'),
     CommonView = require('./CommonView.js'),
     BatchActionView = require('./BatchActionView.js'),
     GenericContentView = require('./contentView/Generic.js'),
+    ActivityContentView = require('./contentView/Activity.js'),
     TweetContentView = require('./contentView/Tweet.js'),
     NoteContentView = require('./contentView/Note.js'),
     NumericalContentView = require('./contentView/numerical/Controller.js'),
@@ -36331,6 +36400,8 @@ _.extend(Controller.prototype, {
       return {type: 'Position', view: PositionContentView};
     } else if (t === 'message/twitter') {
       return {type: 'Tweet', view: TweetContentView};
+    } else if (t === 'activity/plain') {
+      return {type: 'Activity', view: ActivityContentView};
     } else if (t === 'Creation') {
       return {type: 'Creation', view: CreationView};
     } else if (window.PryvBrowser.eventTypes.isNumerical(evt)) {
@@ -36371,7 +36442,7 @@ _.extend(Controller.prototype, {
   }.bind(this), 1000)
 });
 
-},{"./BatchActionView.js":116,"./CommonView.js":117,"./EventCollection.js":119,"./EventModel.js":120,"./ListView.js":122,"./contentView/Creation.js":123,"./contentView/Generic.js":124,"./contentView/Note.js":125,"./contentView/Picture.js":126,"./contentView/Position.js":127,"./contentView/Tweet.js":128,"./contentView/numerical/Controller.js":129,"underscore":82}],119:[function(require,module,exports){
+},{"./BatchActionView.js":118,"./CommonView.js":119,"./EventCollection.js":121,"./EventModel.js":122,"./ListView.js":124,"./contentView/Activity.js":125,"./contentView/Creation.js":126,"./contentView/Generic.js":127,"./contentView/Note.js":128,"./contentView/Picture.js":129,"./contentView/Position.js":130,"./contentView/Tweet.js":131,"./contentView/numerical/Controller.js":132,"underscore":82}],121:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./EventModel.js');
 
@@ -36443,7 +36514,7 @@ module.exports = Backbone.Collection.extend({
     return this;
   }
 });
-},{"./EventModel.js":120,"backbone":4}],120:[function(require,module,exports){
+},{"./EventModel.js":122,"backbone":4}],122:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -36513,12 +36584,11 @@ module.exports = Backbone.Model.extend({
     this.get('event').trash(callback);
   }
 });
-},{"backbone":4}],121:[function(require,module,exports){
+},{"backbone":4}],123:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
-    dateTime = require('../../../utility/dateTime'),
     Pryv = require('pryv'),
-    streamUtils = require('../../../utility/streamUtils'),
+    eventUtils = require('../../../utility/eventUtils'),
     _ = require('underscore');
 
 var UNIQUE_ID = 0;
@@ -36551,17 +36621,7 @@ module.exports = Marionette.ItemView.extend({
       } else  if (type === 'message/twitter') {
         result += this.event.content.text;
       } else if (type === 'activity/plain') {
-        result += '<span class="pins-color 1" style="background-color: ' +
-            streamUtils.getColor(this.event.stream) + '"></span> ' +
-            this.event.stream.name + '<br>';
-        if (this.event.duration !== null) {
-          result += dateTime.getDurationText(this.event.duration, {
-            html: true,
-            nbValues: 2
-          });
-        } else {
-          result += '(running time)';
-        }
+        result += eventUtils.getActivityPreview(this.event);
       } else if (type === 'position/wgs84') {
         result += '<span id="' + this.event.id + '" class="fa fa-spinner fa-spin"></span>';
         var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' +
@@ -36666,7 +36726,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/dateTime":103,"../../../utility/streamUtils":104,"backbone.marionette":1,"pryv":70,"underscore":82}],122:[function(require,module,exports){
+},{"../../../utility/eventUtils":105,"backbone.marionette":1,"pryv":70,"underscore":82}],124:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     ItemView = require('./ItemView.js'),
@@ -36739,7 +36799,32 @@ listView._showMore = function () {
 
 module.exports = Marionette.CompositeView.extend(listView);
 
-},{"./ItemView.js":121,"backbone.marionette":1,"underscore":82}],123:[function(require,module,exports){
+},{"./ItemView.js":123,"backbone.marionette":1,"underscore":82}],125:[function(require,module,exports){
+/* global $ */
+var Marionette = require('backbone.marionette'),
+    eventUtils = require('../../../../utility/eventUtils');
+
+module.exports = Marionette.ItemView.extend({
+  type: 'Activity',
+  template: '#template-detail-content-activity',
+  itemViewContainer: '#detail-content',
+  className: 'activity-content',
+  templateHelpers: function () {
+    return {
+      getContent: function () {
+        return eventUtils.getActivityPreview(this.model.get('event'));
+      }.bind(this)
+    };
+  },
+  initialize: function () {
+    this.listenTo(this.model, 'change', this.render);
+  },
+  onRender: function () {
+    $(this.itemViewContainer).html(this.el);
+  }
+});
+
+},{"../../../../utility/eventUtils":105,"backbone.marionette":1}],126:[function(require,module,exports){
 /* global $*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -36862,7 +36947,7 @@ module.exports = Marionette.ItemView.extend({
     return false;
   }
 });
-},{"backbone.marionette":1,"underscore":82}],124:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],127:[function(require,module,exports){
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -37021,7 +37106,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"backbone.marionette":1,"underscore":82}],125:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],128:[function(require,module,exports){
 /* global $, window */
 var Marionette = require('backbone.marionette');
 
@@ -37051,7 +37136,7 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
   },
 });
-},{"backbone.marionette":1}],126:[function(require,module,exports){
+},{"backbone.marionette":1}],129:[function(require,module,exports){
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -37142,7 +37227,7 @@ module.exports = Marionette.ItemView.extend({
     $($elem).removeClass('editing');
   }
 });
-},{"backbone.marionette":1,"underscore":82}],127:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],130:[function(require,module,exports){
 /* global $, document*/
 var Marionette = require('backbone.marionette'),
     MapLoader = require('google-maps'),
@@ -37324,7 +37409,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../../utility/streamUtils":104,"backbone.marionette":1,"google-maps":6,"underscore":82}],128:[function(require,module,exports){
+},{"../../../../utility/streamUtils":106,"backbone.marionette":1,"google-maps":6,"underscore":82}],131:[function(require,module,exports){
 /* global $, FormData, PryvBrowser */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../../utility/dateTime'),
@@ -37380,7 +37465,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../../utility/dateTime":103,"backbone.marionette":1,"underscore":82}],129:[function(require,module,exports){
+},{"../../../../utility/dateTime":104,"backbone.marionette":1,"underscore":82}],132:[function(require,module,exports){
 /* global window, $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -37605,7 +37690,7 @@ module.exports = Marionette.ItemView.extend({
   }, 1000)
 });
 
-},{"../../../numericals/TimeSeriesCollection.js":142,"../../../numericals/TimeSeriesModel.js":143,"../../../numericals/utils/ChartSettings.js":144,"./GeneralConfigView.js":130,"./SingleEditView.js":131,"backbone.marionette":1,"underscore":82}],130:[function(require,module,exports){
+},{"../../../numericals/TimeSeriesCollection.js":145,"../../../numericals/TimeSeriesModel.js":146,"../../../numericals/utils/ChartSettings.js":147,"./GeneralConfigView.js":133,"./SingleEditView.js":134,"backbone.marionette":1,"underscore":82}],133:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -37693,7 +37778,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../numericals/ChartModel.js":139,"../../../numericals/ChartView.js":140,"backbone.marionette":1,"underscore":82}],131:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":142,"../../../numericals/ChartView.js":143,"backbone.marionette":1,"underscore":82}],134:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -37894,7 +37979,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../numericals/ChartModel.js":139,"../../../numericals/ChartView.js":140,"backbone.marionette":1,"underscore":82}],132:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":142,"../../../numericals/ChartView.js":143,"backbone.marionette":1,"underscore":82}],135:[function(require,module,exports){
 /* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
@@ -38343,7 +38428,7 @@ _.extend(Controller.prototype, {
   }, 250)
 });
 
-},{"./../numericals/ChartModel.js":139,"./../numericals/ChartView.js":140,"./../numericals/TimeSeriesCollection.js":142,"./../numericals/TimeSeriesModel.js":143,"./../numericals/utils/ChartSettings.js":144,"./ListView.js":134,"underscore":82}],133:[function(require,module,exports){
+},{"./../numericals/ChartModel.js":142,"./../numericals/ChartView.js":143,"./../numericals/TimeSeriesCollection.js":145,"./../numericals/TimeSeriesModel.js":146,"./../numericals/utils/ChartSettings.js":147,"./ListView.js":137,"underscore":82}],136:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.CompositeView.extend({
@@ -38367,7 +38452,7 @@ module.exports = Marionette.CompositeView.extend({
   }
 });
 
-},{"backbone.marionette":1}],134:[function(require,module,exports){
+},{"backbone.marionette":1}],137:[function(require,module,exports){
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js');
 
@@ -38382,7 +38467,7 @@ module.exports = Marionette.CollectionView.extend({
   }
 });
 
-},{"./ItemView.js":133,"backbone.marionette":1}],135:[function(require,module,exports){
+},{"./ItemView.js":136,"backbone.marionette":1}],138:[function(require,module,exports){
 var _ = require('underscore'),
   GenericsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -38411,7 +38496,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":115,"./View.js":136,"underscore":82}],136:[function(require,module,exports){
+},{"../common/Model.js":117,"./View.js":139,"underscore":82}],139:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette');
 var _ = require('underscore');
@@ -38484,7 +38569,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1,"underscore":82}],137:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],140:[function(require,module,exports){
 var _ = require('underscore'),
   NotesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -38593,7 +38678,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":115,"./View.js":138,"underscore":82}],138:[function(require,module,exports){
+},{"../common/Model.js":117,"./View.js":141,"underscore":82}],141:[function(require,module,exports){
 /* global $, window */
 var  Marionette = require('backbone.marionette'),
     _ = require('underscore');
@@ -38703,7 +38788,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1,"underscore":82}],139:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],142:[function(require,module,exports){
 var Backbone = require('backbone');
 
 var ChartModel = {
@@ -38765,7 +38850,7 @@ ChartModel.setHighlighted = function (highlight) {
 
 module.exports = Backbone.Model.extend(ChartModel);
 
-},{"backbone":4}],140:[function(require,module,exports){
+},{"backbone":4}],143:[function(require,module,exports){
 /* global $, Highcharts, moment, pryvBrowser */
 
 var _ = require('underscore'),
@@ -39466,7 +39551,7 @@ module.exports = Marionette.CompositeView.extend(ChartView);
   });
 }(Highcharts));
 
-},{"../../../utility/dateTime":103,"./utils/timeSeriesTransform.js":145,"backbone.marionette":1,"pryv":70,"underscore":82}],141:[function(require,module,exports){
+},{"../../../utility/dateTime":104,"./utils/timeSeriesTransform.js":148,"backbone.marionette":1,"pryv":70,"underscore":82}],144:[function(require,module,exports){
 /* global window, $ */
 
 var _ = require('underscore'),
@@ -39809,7 +39894,7 @@ NumericalsPlugin.prototype.resize = function () {
   this.view.resize();
 };
 
-},{"../detailed/Controller.js":118,"./ChartModel.js":139,"./ChartView.js":140,"./TimeSeriesCollection.js":142,"./TimeSeriesModel.js":143,"./utils/ChartSettings.js":144,"underscore":82}],142:[function(require,module,exports){
+},{"../detailed/Controller.js":120,"./ChartModel.js":142,"./ChartView.js":143,"./TimeSeriesCollection.js":145,"./TimeSeriesModel.js":146,"./utils/ChartSettings.js":147,"underscore":82}],145:[function(require,module,exports){
 var Backbone = require('backbone'),
     Model = require('./TimeSeriesModel.js');
 
@@ -39825,7 +39910,7 @@ TimeSeriesCollection.comparator = function () {};
 
 module.exports = Backbone.Collection.extend(TimeSeriesCollection);
 
-},{"./TimeSeriesModel.js":143,"backbone":4}],143:[function(require,module,exports){
+},{"./TimeSeriesModel.js":146,"backbone":4}],146:[function(require,module,exports){
 var Backbone = require('backbone');
 
 // TODO: see for making this a plain constructor instead of a Backbone model for simplicity
@@ -39861,7 +39946,7 @@ TimeSeriesModel.sortData = function () {
 
 module.exports = Backbone.Model.extend(TimeSeriesModel);
 
-},{"backbone":4}],144:[function(require,module,exports){
+},{"backbone":4}],147:[function(require,module,exports){
 var streamUtils = require('../../../../utility/streamUtils');
 
 var ChartSettings = module.exports = function ChartSettings(stream, type, virtualNode, offset) {
@@ -39931,7 +40016,7 @@ ChartSettings.prototype._pushChanges = function () {
   }
 };
 
-},{"../../../../utility/streamUtils":104}],145:[function(require,module,exports){
+},{"../../../../utility/streamUtils":106}],148:[function(require,module,exports){
 var _ = require('underscore');
 
 var tsTransform = module.exports = {};
@@ -40133,7 +40218,7 @@ function getValue(event) {
   return +event.content;
 }
 
-},{"underscore":82}],146:[function(require,module,exports){
+},{"underscore":82}],149:[function(require,module,exports){
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -40261,7 +40346,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":115,"./View.js":147,"underscore":82}],147:[function(require,module,exports){
+},{"../common/Model.js":117,"./View.js":150,"underscore":82}],150:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -40365,7 +40450,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1,"underscore":82}],148:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],151:[function(require,module,exports){
 var _ = require('underscore'),
   PositionsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -40411,7 +40496,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":115,"./View.js":149,"underscore":82}],149:[function(require,module,exports){
+},{"../common/Model.js":117,"./View.js":152,"underscore":82}],152:[function(require,module,exports){
 /* global document, $ */
 var  Marionette = require('backbone.marionette'),
     MapLoader = require('google-maps'),
@@ -40603,7 +40688,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/streamUtils":104,"./utility/markerclusterer.js":150,"backbone.marionette":1,"google-maps":6,"underscore":82}],150:[function(require,module,exports){
+},{"../../../utility/streamUtils":106,"./utility/markerclusterer.js":153,"backbone.marionette":1,"google-maps":6,"underscore":82}],153:[function(require,module,exports){
 /* global window, google, document */
 /*jshint -W084 */
 /*jshint -W089 */
@@ -41916,7 +42001,7 @@ Object.keys = Object.keys || function (o) {
   return result;
 };
 
-},{}],151:[function(require,module,exports){
+},{}],154:[function(require,module,exports){
 var _ = require('underscore'),
   TweetsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -42025,7 +42110,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":115,"./View.js":152,"underscore":82}],152:[function(require,module,exports){
+},{"../common/Model.js":117,"./View.js":155,"underscore":82}],155:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../utility/dateTime'),
@@ -42152,14 +42237,14 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/dateTime":103,"backbone.marionette":1,"underscore":82}],153:[function(require,module,exports){
+},{"../../../utility/dateTime":104,"backbone.marionette":1,"underscore":82}],156:[function(require,module,exports){
 
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
   template: '#actions-template'
 });
-},{"backbone.marionette":1}],154:[function(require,module,exports){
+},{"backbone.marionette":1}],157:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   FilterByStreamView = require('./FilterByStream.js'),
@@ -42248,7 +42333,7 @@ var isConnectionsNumberChange = function (MainModel) {
   return res;
 };
 
-},{"./Actions.js":153,"./FilterByStream.js":155,"backbone.marionette":1,"underscore":82}],155:[function(require,module,exports){
+},{"./Actions.js":156,"./FilterByStream.js":158,"backbone.marionette":1,"underscore":82}],158:[function(require,module,exports){
 /*global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -42520,7 +42605,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1,"underscore":82}],156:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],159:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette');
 /* TODO This a the view for each node, with dynamic animation
@@ -42551,7 +42636,7 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
   }
 });
-},{"backbone.marionette":1}],157:[function(require,module,exports){
+},{"backbone.marionette":1}],160:[function(require,module,exports){
 /* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -42661,7 +42746,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 
-},{"backbone":4,"backbone.marionette":1,"underscore":82}],158:[function(require,module,exports){
+},{"backbone":4,"backbone.marionette":1,"underscore":82}],161:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   NavView = require('./NavView.js'),
@@ -42748,7 +42833,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./AppListView.js":157,"./ManageAppsView.js":159,"./NavView.js":160,"./PasswordView.js":161,"backbone.marionette":1,"underscore":82}],159:[function(require,module,exports){
+},{"./AppListView.js":160,"./ManageAppsView.js":162,"./NavView.js":163,"./PasswordView.js":164,"backbone.marionette":1,"underscore":82}],162:[function(require,module,exports){
 /* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -42875,7 +42960,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 
-},{"backbone":4,"backbone.marionette":1,"underscore":82}],160:[function(require,module,exports){
+},{"backbone":4,"backbone.marionette":1,"underscore":82}],163:[function(require,module,exports){
 /*global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -42912,7 +42997,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1,"underscore":82}],161:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],164:[function(require,module,exports){
 /* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -42989,7 +43074,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1}],162:[function(require,module,exports){
+},{"backbone.marionette":1}],165:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./BookmarkModel.js');
 
@@ -42997,7 +43082,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./BookmarkModel.js":165,"backbone":4}],163:[function(require,module,exports){
+},{"./BookmarkModel.js":168,"backbone":4}],166:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -43017,7 +43102,7 @@ module.exports = Marionette.ItemView.extend({
     this.trigger('bookmark:delete', this.model);
   }
 });
-},{"backbone.marionette":1}],164:[function(require,module,exports){
+},{"backbone.marionette":1}],167:[function(require,module,exports){
 /* global $, window, i18n */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./BookmarkItemView.js'),
@@ -43151,7 +43236,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./BookmarkItemView.js":163,"backbone.marionette":1,"pryv":70,"underscore":82}],165:[function(require,module,exports){
+},{"./BookmarkItemView.js":166,"backbone.marionette":1,"pryv":70,"underscore":82}],168:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -43160,7 +43245,7 @@ module.exports = Backbone.Model.extend({
     collection: null
   }
 });
-},{"backbone":4}],166:[function(require,module,exports){
+},{"backbone":4}],169:[function(require,module,exports){
 /* global $, window, i18n */
 var _ = require('underscore'),
   SharingCollection = require('./SharingCollection.js'),
@@ -43335,7 +43420,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./BookmarkCollection.js":162,"./BookmarkListView.js":164,"./BookmarkModel.js":165,"./SharingCollection.js":167,"./SharingListView.js":169,"./SharingModel.js":170,"pryv":70,"underscore":82}],167:[function(require,module,exports){
+},{"./BookmarkCollection.js":165,"./BookmarkListView.js":167,"./BookmarkModel.js":168,"./SharingCollection.js":170,"./SharingListView.js":172,"./SharingModel.js":173,"pryv":70,"underscore":82}],170:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./SharingModel.js');
 
@@ -43343,7 +43428,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./SharingModel.js":170,"backbone":4}],168:[function(require,module,exports){
+},{"./SharingModel.js":173,"backbone":4}],171:[function(require,module,exports){
 /* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -43410,7 +43495,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"backbone.marionette":1}],169:[function(require,module,exports){
+},{"backbone.marionette":1}],172:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./SharingItemView.js'),
@@ -43448,7 +43533,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./SharingItemView.js":168,"backbone.marionette":1,"underscore":82}],170:[function(require,module,exports){
+},{"./SharingItemView.js":171,"backbone.marionette":1,"underscore":82}],173:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -43457,7 +43542,7 @@ module.exports = Backbone.Model.extend({
     collection: null
   }
 });
-},{"backbone":4}],171:[function(require,module,exports){
+},{"backbone":4}],174:[function(require,module,exports){
 /* global $, i18n, window */
 var Marionette = require('backbone.marionette'),
   CreateFormView = require('./CreateFormView.js'),
@@ -43584,7 +43669,7 @@ _.extend(Controller.prototype, {
     this.view.ui.cancel.text(i18n.t('common.actions.close')).addClass('btn-primary');
   }
 });
-},{"./CreateFormView.js":172,"./SuccessView.js":173,"backbone.marionette":1,"underscore":82}],172:[function(require,module,exports){
+},{"./CreateFormView.js":175,"./SuccessView.js":176,"backbone.marionette":1,"underscore":82}],175:[function(require,module,exports){
 /* global $ */
 
 var Marionette = require('backbone.marionette'),
@@ -43737,7 +43822,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1,"underscore":82}],173:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],176:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -43765,7 +43850,7 @@ module.exports = Marionette.ItemView.extend({
     this.token = this.options.token;
   }
 });
-},{"backbone.marionette":1}],174:[function(require,module,exports){
+},{"backbone.marionette":1}],177:[function(require,module,exports){
 /* global $, i18n */
 var Marionette = require('backbone.marionette'),
   Backbone = require('backbone'),
@@ -43823,7 +43908,7 @@ _.extend(Controller.prototype, {
     }));
   }
 });
-},{"./View.js":175,"backbone":4,"backbone.marionette":1,"underscore":82}],175:[function(require,module,exports){
+},{"./View.js":178,"backbone":4,"backbone.marionette":1,"underscore":82}],178:[function(require,module,exports){
 /* global $, window, i18n*/
 var Marionette = require('backbone.marionette'),
     streamUtils = require('../../utility/streamUtils');
@@ -44012,7 +44097,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../utility/streamUtils":104,"backbone.marionette":1}],176:[function(require,module,exports){
+},{"../../utility/streamUtils":106,"backbone.marionette":1}],179:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./Model.js');
 
@@ -44020,7 +44105,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./Model.js":180,"backbone":4}],177:[function(require,module,exports){
+},{"./Model.js":183,"backbone":4}],180:[function(require,module,exports){
 /* global $, window, i18n */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
@@ -44107,7 +44192,7 @@ _.extend(Controller.prototype, {
     }.bind(this));
   }
 });
-},{"./Collection.js":176,"./ListView.js":179,"./Model.js":180,"underscore":82}],178:[function(require,module,exports){
+},{"./Collection.js":179,"./ListView.js":182,"./Model.js":183,"underscore":82}],181:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -44133,7 +44218,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":1}],179:[function(require,module,exports){
+},{"backbone.marionette":1}],182:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -44203,7 +44288,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./ItemView.js":178,"backbone.marionette":1,"underscore":82}],180:[function(require,module,exports){
+},{"./ItemView.js":181,"backbone.marionette":1,"underscore":82}],183:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({

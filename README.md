@@ -1,6 +1,6 @@
 # Pryv Browser
 
-The Pryv web app, featuring @glance view.
+The Pryv web app, featuring the dashboard view.
 
 
 ## Setting up the development environment
@@ -25,3 +25,8 @@ Requires a working copy of our [dev tools repo](https://github.com/pryv/dev-tool
 2. Open `https://{username}.rec.la:4443`, where `{username}` points to an existing staging user
 
 `scripts/start-server.sh [username]` will do the above automatically if your dev tools copy is in `../dev-tools`.
+
+
+## License
+
+[Revised BSD license](https://github.com/pryv/documents/blob/master/license-bsd-revised.md)

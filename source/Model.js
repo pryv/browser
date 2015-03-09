@@ -26,7 +26,12 @@ require('backbone.marionette').$ = $;
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
-  Pryv.eventTypes.loadFlat();
+
+  Pryv.eventTypes.loadFlat(function (err) {
+    if (err) {
+      console.warn('Could not load event types from network: ' + err);
+    }
+  });
 
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
@@ -98,7 +103,11 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       // console.log('onDateMasked', arguments);
     };
 
-    Pryv.eventTypes.loadExtras(function () {});
+    Pryv.eventTypes.loadExtras(function (err) {
+      if (err) {
+        console.warn('Could not load event extras from network: ' + err);
+      }
+    });
 
     // create the TreeMap
     this.controller = new Controller();

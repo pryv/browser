@@ -8,7 +8,10 @@ module.exports = function (grunt) {
         src: ['./source/tree.js'],
         dest: 'dist/script/app_bundle_main.js',
         options: {
-          alias: ['./source/tree.js:SampleApp']
+          alias: ['./source/tree.js:pryvApp'],
+          browserifyOptions: {
+            standalone: 'pryvApp'
+          }
         }
       }
     },

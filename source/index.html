@@ -57,21 +57,20 @@
         $('body').i18n();
         $('#login-button').html(' ' + t('nav.actions.signIn'));
       });
-      var sampleApp = require('SampleApp');
       <!-- @if NODE_ENV == 'PRODUCTION'  -->
       var wrapped = Airbrake.wrap(function() {
-        sampleApp.main(false);
+        pryvApp.main(false);
       });
       wrapped();
         <!-- @endif -->
       <!-- @if NODE_ENV == 'STAGING' -->
       var wrapped = Airbrake.wrap(function() {
-        sampleApp.main(true);
+        pryvApp.main(true);
       });
       wrapped();
       <!-- @endif -->
       <!-- @if NODE_ENV == 'DEVELOPMENT' -->
-      sampleApp.main(true);
+      pryvApp.main(true);
       <!-- @endif -->
 
     });

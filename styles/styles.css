@@ -425,11 +425,11 @@ padding: 0px 15px;
 /* COLOR DEFAULT PINS */
 .pins-color{
   display: inline-block;
-  width: 10px;
-  background-color: #DAE0E4;
-  height: 10px;
-  border-radius: 5px;
+  width: 0.65em;
+  height: 0.65em;
+  border-radius: 50%;
   margin-right: 3px;
+  background-color: #DAE0E4;
 }
 .ConnectionNode>.nodeHeader>.pins-color {
   /* No pins for connection */

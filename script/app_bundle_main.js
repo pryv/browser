@@ -1,4 +1,4 @@
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.pryvApp = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // MarionetteJS (Backbone.Marionette)
 // ----------------------------------
 // v1.8.8
@@ -2476,9 +2476,9 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
 },{"backbone":4,"backbone.babysitter":2,"backbone.wreqr":3,"underscore":82}],2:[function(require,module,exports){
 // Backbone.BabySitter
 // -------------------
-// v0.1.5
+// v0.1.6
 //
-// Copyright (c)2014 Derick Bailey, Muted Solutions, LLC.
+// Copyright (c)2015 Derick Bailey, Muted Solutions, LLC.
 // Distributed under MIT license
 //
 // http://github.com/marionettejs/backbone.babysitter
@@ -2639,7 +2639,7 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
     var methods = ['forEach', 'each', 'map', 'find', 'detect', 'filter',
       'select', 'reject', 'every', 'all', 'some', 'any', 'include',
       'contains', 'invoke', 'toArray', 'first', 'initial', 'rest',
-      'last', 'without', 'isEmpty', 'pluck'];
+      'last', 'without', 'isEmpty', 'pluck', 'reduce'];
   
     _.each(methods, function(method) {
       Container.prototype[method] = function() {
@@ -2654,7 +2654,7 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
   })(Backbone, _);
   
 
-  Backbone.ChildViewContainer.VERSION = '0.1.5';
+  Backbone.ChildViewContainer.VERSION = '0.1.6';
 
   Backbone.ChildViewContainer.noConflict = function () {
     Backbone.ChildViewContainer = previousChildViewContainer;
@@ -4717,1424 +4717,7 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
 
 }));
 
-},{"underscore":5}],5:[function(require,module,exports){
-//     Underscore.js 1.7.0
-//     http://underscorejs.org
-//     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
-//     Underscore may be freely distributed under the MIT license.
-
-(function() {
-
-  // Baseline setup
-  // --------------
-
-  // Establish the root object, `window` in the browser, or `exports` on the server.
-  var root = this;
-
-  // Save the previous value of the `_` variable.
-  var previousUnderscore = root._;
-
-  // Save bytes in the minified (but not gzipped) version:
-  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
-
-  // Create quick reference variables for speed access to core prototypes.
-  var
-    push             = ArrayProto.push,
-    slice            = ArrayProto.slice,
-    concat           = ArrayProto.concat,
-    toString         = ObjProto.toString,
-    hasOwnProperty   = ObjProto.hasOwnProperty;
-
-  // All **ECMAScript 5** native function implementations that we hope to use
-  // are declared here.
-  var
-    nativeIsArray      = Array.isArray,
-    nativeKeys         = Object.keys,
-    nativeBind         = FuncProto.bind;
-
-  // Create a safe reference to the Underscore object for use below.
-  var _ = function(obj) {
-    if (obj instanceof _) return obj;
-    if (!(this instanceof _)) return new _(obj);
-    this._wrapped = obj;
-  };
-
-  // Export the Underscore object for **Node.js**, with
-  // backwards-compatibility for the old `require()` API. If we're in
-  // the browser, add `_` as a global object.
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = _;
-    }
-    exports._ = _;
-  } else {
-    root._ = _;
-  }
-
-  // Current version.
-  _.VERSION = '1.7.0';
-
-  // Internal function that returns an efficient (for current engines) version
-  // of the passed-in callback, to be repeatedly applied in other Underscore
-  // functions.
-  var createCallback = function(func, context, argCount) {
-    if (context === void 0) return func;
-    switch (argCount == null ? 3 : argCount) {
-      case 1: return function(value) {
-        return func.call(context, value);
-      };
-      case 2: return function(value, other) {
-        return func.call(context, value, other);
-      };
-      case 3: return function(value, index, collection) {
-        return func.call(context, value, index, collection);
-      };
-      case 4: return function(accumulator, value, index, collection) {
-        return func.call(context, accumulator, value, index, collection);
-      };
-    }
-    return function() {
-      return func.apply(context, arguments);
-    };
-  };
-
-  // A mostly-internal function to generate callbacks that can be applied
-  // to each element in a collection, returning the desired result — either
-  // identity, an arbitrary callback, a property matcher, or a property accessor.
-  _.iteratee = function(value, context, argCount) {
-    if (value == null) return _.identity;
-    if (_.isFunction(value)) return createCallback(value, context, argCount);
-    if (_.isObject(value)) return _.matches(value);
-    return _.property(value);
-  };
-
-  // Collection Functions
-  // --------------------
-
-  // The cornerstone, an `each` implementation, aka `forEach`.
-  // Handles raw objects in addition to array-likes. Treats all
-  // sparse array-likes as if they were dense.
-  _.each = _.forEach = function(obj, iteratee, context) {
-    if (obj == null) return obj;
-    iteratee = createCallback(iteratee, context);
-    var i, length = obj.length;
-    if (length === +length) {
-      for (i = 0; i < length; i++) {
-        iteratee(obj[i], i, obj);
-      }
-    } else {
-      var keys = _.keys(obj);
-      for (i = 0, length = keys.length; i < length; i++) {
-        iteratee(obj[keys[i]], keys[i], obj);
-      }
-    }
-    return obj;
-  };
-
-  // Return the results of applying the iteratee to each element.
-  _.map = _.collect = function(obj, iteratee, context) {
-    if (obj == null) return [];
-    iteratee = _.iteratee(iteratee, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        results = Array(length),
-        currentKey;
-    for (var index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      results[index] = iteratee(obj[currentKey], currentKey, obj);
-    }
-    return results;
-  };
-
-  var reduceError = 'Reduce of empty array with no initial value';
-
-  // **Reduce** builds up a single result from a list of values, aka `inject`,
-  // or `foldl`.
-  _.reduce = _.foldl = _.inject = function(obj, iteratee, memo, context) {
-    if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index = 0, currentKey;
-    if (arguments.length < 3) {
-      if (!length) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[index++] : index++];
-    }
-    for (; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
-    return memo;
-  };
-
-  // The right-associative version of reduce, also known as `foldr`.
-  _.reduceRight = _.foldr = function(obj, iteratee, memo, context) {
-    if (obj == null) obj = [];
-    iteratee = createCallback(iteratee, context, 4);
-    var keys = obj.length !== + obj.length && _.keys(obj),
-        index = (keys || obj).length,
-        currentKey;
-    if (arguments.length < 3) {
-      if (!index) throw new TypeError(reduceError);
-      memo = obj[keys ? keys[--index] : --index];
-    }
-    while (index--) {
-      currentKey = keys ? keys[index] : index;
-      memo = iteratee(memo, obj[currentKey], currentKey, obj);
-    }
-    return memo;
-  };
-
-  // Return the first value which passes a truth test. Aliased as `detect`.
-  _.find = _.detect = function(obj, predicate, context) {
-    var result;
-    predicate = _.iteratee(predicate, context);
-    _.some(obj, function(value, index, list) {
-      if (predicate(value, index, list)) {
-        result = value;
-        return true;
-      }
-    });
-    return result;
-  };
-
-  // Return all the elements that pass a truth test.
-  // Aliased as `select`.
-  _.filter = _.select = function(obj, predicate, context) {
-    var results = [];
-    if (obj == null) return results;
-    predicate = _.iteratee(predicate, context);
-    _.each(obj, function(value, index, list) {
-      if (predicate(value, index, list)) results.push(value);
-    });
-    return results;
-  };
-
-  // Return all the elements for which a truth test fails.
-  _.reject = function(obj, predicate, context) {
-    return _.filter(obj, _.negate(_.iteratee(predicate)), context);
-  };
-
-  // Determine whether all of the elements match a truth test.
-  // Aliased as `all`.
-  _.every = _.all = function(obj, predicate, context) {
-    if (obj == null) return true;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      if (!predicate(obj[currentKey], currentKey, obj)) return false;
-    }
-    return true;
-  };
-
-  // Determine if at least one element in the object matches a truth test.
-  // Aliased as `any`.
-  _.some = _.any = function(obj, predicate, context) {
-    if (obj == null) return false;
-    predicate = _.iteratee(predicate, context);
-    var keys = obj.length !== +obj.length && _.keys(obj),
-        length = (keys || obj).length,
-        index, currentKey;
-    for (index = 0; index < length; index++) {
-      currentKey = keys ? keys[index] : index;
-      if (predicate(obj[currentKey], currentKey, obj)) return true;
-    }
-    return false;
-  };
-
-  // Determine if the array or object contains a given value (using `===`).
-  // Aliased as `include`.
-  _.contains = _.include = function(obj, target) {
-    if (obj == null) return false;
-    if (obj.length !== +obj.length) obj = _.values(obj);
-    return _.indexOf(obj, target) >= 0;
-  };
-
-  // Invoke a method (with arguments) on every item in a collection.
-  _.invoke = function(obj, method) {
-    var args = slice.call(arguments, 2);
-    var isFunc = _.isFunction(method);
-    return _.map(obj, function(value) {
-      return (isFunc ? method : value[method]).apply(value, args);
-    });
-  };
-
-  // Convenience version of a common use case of `map`: fetching a property.
-  _.pluck = function(obj, key) {
-    return _.map(obj, _.property(key));
-  };
-
-  // Convenience version of a common use case of `filter`: selecting only objects
-  // containing specific `key:value` pairs.
-  _.where = function(obj, attrs) {
-    return _.filter(obj, _.matches(attrs));
-  };
-
-  // Convenience version of a common use case of `find`: getting the first object
-  // containing specific `key:value` pairs.
-  _.findWhere = function(obj, attrs) {
-    return _.find(obj, _.matches(attrs));
-  };
-
-  // Return the maximum element (or element-based computation).
-  _.max = function(obj, iteratee, context) {
-    var result = -Infinity, lastComputed = -Infinity,
-        value, computed;
-    if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
-      for (var i = 0, length = obj.length; i < length; i++) {
-        value = obj[i];
-        if (value > result) {
-          result = value;
-        }
-      }
-    } else {
-      iteratee = _.iteratee(iteratee, context);
-      _.each(obj, function(value, index, list) {
-        computed = iteratee(value, index, list);
-        if (computed > lastComputed || computed === -Infinity && result === -Infinity) {
-          result = value;
-          lastComputed = computed;
-        }
-      });
-    }
-    return result;
-  };
-
-  // Return the minimum element (or element-based computation).
-  _.min = function(obj, iteratee, context) {
-    var result = Infinity, lastComputed = Infinity,
-        value, computed;
-    if (iteratee == null && obj != null) {
-      obj = obj.length === +obj.length ? obj : _.values(obj);
-      for (var i = 0, length = obj.length; i < length; i++) {
-        value = obj[i];
-        if (value < result) {
-          result = value;
-        }
-      }
-    } else {
-      iteratee = _.iteratee(iteratee, context);
-      _.each(obj, function(value, index, list) {
-        computed = iteratee(value, index, list);
-        if (computed < lastComputed || computed === Infinity && result === Infinity) {
-          result = value;
-          lastComputed = computed;
-        }
-      });
-    }
-    return result;
-  };
-
-  // Shuffle a collection, using the modern version of the
-  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
-  _.shuffle = function(obj) {
-    var set = obj && obj.length === +obj.length ? obj : _.values(obj);
-    var length = set.length;
-    var shuffled = Array(length);
-    for (var index = 0, rand; index < length; index++) {
-      rand = _.random(0, index);
-      if (rand !== index) shuffled[index] = shuffled[rand];
-      shuffled[rand] = set[index];
-    }
-    return shuffled;
-  };
-
-  // Sample **n** random values from a collection.
-  // If **n** is not specified, returns a single random element.
-  // The internal `guard` argument allows it to work with `map`.
-  _.sample = function(obj, n, guard) {
-    if (n == null || guard) {
-      if (obj.length !== +obj.length) obj = _.values(obj);
-      return obj[_.random(obj.length - 1)];
-    }
-    return _.shuffle(obj).slice(0, Math.max(0, n));
-  };
-
-  // Sort the object's values by a criterion produced by an iteratee.
-  _.sortBy = function(obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context);
-    return _.pluck(_.map(obj, function(value, index, list) {
-      return {
-        value: value,
-        index: index,
-        criteria: iteratee(value, index, list)
-      };
-    }).sort(function(left, right) {
-      var a = left.criteria;
-      var b = right.criteria;
-      if (a !== b) {
-        if (a > b || a === void 0) return 1;
-        if (a < b || b === void 0) return -1;
-      }
-      return left.index - right.index;
-    }), 'value');
-  };
-
-  // An internal function used for aggregate "group by" operations.
-  var group = function(behavior) {
-    return function(obj, iteratee, context) {
-      var result = {};
-      iteratee = _.iteratee(iteratee, context);
-      _.each(obj, function(value, index) {
-        var key = iteratee(value, index, obj);
-        behavior(result, value, key);
-      });
-      return result;
-    };
-  };
-
-  // Groups the object's values by a criterion. Pass either a string attribute
-  // to group by, or a function that returns the criterion.
-  _.groupBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key].push(value); else result[key] = [value];
-  });
-
-  // Indexes the object's values by a criterion, similar to `groupBy`, but for
-  // when you know that your index values will be unique.
-  _.indexBy = group(function(result, value, key) {
-    result[key] = value;
-  });
-
-  // Counts instances of an object that group by a certain criterion. Pass
-  // either a string attribute to count by, or a function that returns the
-  // criterion.
-  _.countBy = group(function(result, value, key) {
-    if (_.has(result, key)) result[key]++; else result[key] = 1;
-  });
-
-  // Use a comparator function to figure out the smallest index at which
-  // an object should be inserted so as to maintain order. Uses binary search.
-  _.sortedIndex = function(array, obj, iteratee, context) {
-    iteratee = _.iteratee(iteratee, context, 1);
-    var value = iteratee(obj);
-    var low = 0, high = array.length;
-    while (low < high) {
-      var mid = low + high >>> 1;
-      if (iteratee(array[mid]) < value) low = mid + 1; else high = mid;
-    }
-    return low;
-  };
-
-  // Safely create a real, live array from anything iterable.
-  _.toArray = function(obj) {
-    if (!obj) return [];
-    if (_.isArray(obj)) return slice.call(obj);
-    if (obj.length === +obj.length) return _.map(obj, _.identity);
-    return _.values(obj);
-  };
-
-  // Return the number of elements in an object.
-  _.size = function(obj) {
-    if (obj == null) return 0;
-    return obj.length === +obj.length ? obj.length : _.keys(obj).length;
-  };
-
-  // Split a collection into two arrays: one whose elements all satisfy the given
-  // predicate, and one whose elements all do not satisfy the predicate.
-  _.partition = function(obj, predicate, context) {
-    predicate = _.iteratee(predicate, context);
-    var pass = [], fail = [];
-    _.each(obj, function(value, key, obj) {
-      (predicate(value, key, obj) ? pass : fail).push(value);
-    });
-    return [pass, fail];
-  };
-
-  // Array Functions
-  // ---------------
-
-  // Get the first element of an array. Passing **n** will return the first N
-  // values in the array. Aliased as `head` and `take`. The **guard** check
-  // allows it to work with `_.map`.
-  _.first = _.head = _.take = function(array, n, guard) {
-    if (array == null) return void 0;
-    if (n == null || guard) return array[0];
-    if (n < 0) return [];
-    return slice.call(array, 0, n);
-  };
-
-  // Returns everything but the last entry of the array. Especially useful on
-  // the arguments object. Passing **n** will return all the values in
-  // the array, excluding the last N. The **guard** check allows it to work with
-  // `_.map`.
-  _.initial = function(array, n, guard) {
-    return slice.call(array, 0, Math.max(0, array.length - (n == null || guard ? 1 : n)));
-  };
-
-  // Get the last element of an array. Passing **n** will return the last N
-  // values in the array. The **guard** check allows it to work with `_.map`.
-  _.last = function(array, n, guard) {
-    if (array == null) return void 0;
-    if (n == null || guard) return array[array.length - 1];
-    return slice.call(array, Math.max(array.length - n, 0));
-  };
-
-  // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
-  // Especially useful on the arguments object. Passing an **n** will return
-  // the rest N values in the array. The **guard**
-  // check allows it to work with `_.map`.
-  _.rest = _.tail = _.drop = function(array, n, guard) {
-    return slice.call(array, n == null || guard ? 1 : n);
-  };
-
-  // Trim out all falsy values from an array.
-  _.compact = function(array) {
-    return _.filter(array, _.identity);
-  };
-
-  // Internal implementation of a recursive `flatten` function.
-  var flatten = function(input, shallow, strict, output) {
-    if (shallow && _.every(input, _.isArray)) {
-      return concat.apply(output, input);
-    }
-    for (var i = 0, length = input.length; i < length; i++) {
-      var value = input[i];
-      if (!_.isArray(value) && !_.isArguments(value)) {
-        if (!strict) output.push(value);
-      } else if (shallow) {
-        push.apply(output, value);
-      } else {
-        flatten(value, shallow, strict, output);
-      }
-    }
-    return output;
-  };
-
-  // Flatten out an array, either recursively (by default), or just one level.
-  _.flatten = function(array, shallow) {
-    return flatten(array, shallow, false, []);
-  };
-
-  // Return a version of the array that does not contain the specified value(s).
-  _.without = function(array) {
-    return _.difference(array, slice.call(arguments, 1));
-  };
-
-  // Produce a duplicate-free version of the array. If the array has already
-  // been sorted, you have the option of using a faster algorithm.
-  // Aliased as `unique`.
-  _.uniq = _.unique = function(array, isSorted, iteratee, context) {
-    if (array == null) return [];
-    if (!_.isBoolean(isSorted)) {
-      context = iteratee;
-      iteratee = isSorted;
-      isSorted = false;
-    }
-    if (iteratee != null) iteratee = _.iteratee(iteratee, context);
-    var result = [];
-    var seen = [];
-    for (var i = 0, length = array.length; i < length; i++) {
-      var value = array[i];
-      if (isSorted) {
-        if (!i || seen !== value) result.push(value);
-        seen = value;
-      } else if (iteratee) {
-        var computed = iteratee(value, i, array);
-        if (_.indexOf(seen, computed) < 0) {
-          seen.push(computed);
-          result.push(value);
-        }
-      } else if (_.indexOf(result, value) < 0) {
-        result.push(value);
-      }
-    }
-    return result;
-  };
-
-  // Produce an array that contains the union: each distinct element from all of
-  // the passed-in arrays.
-  _.union = function() {
-    return _.uniq(flatten(arguments, true, true, []));
-  };
-
-  // Produce an array that contains every item shared between all the
-  // passed-in arrays.
-  _.intersection = function(array) {
-    if (array == null) return [];
-    var result = [];
-    var argsLength = arguments.length;
-    for (var i = 0, length = array.length; i < length; i++) {
-      var item = array[i];
-      if (_.contains(result, item)) continue;
-      for (var j = 1; j < argsLength; j++) {
-        if (!_.contains(arguments[j], item)) break;
-      }
-      if (j === argsLength) result.push(item);
-    }
-    return result;
-  };
-
-  // Take the difference between one array and a number of other arrays.
-  // Only the elements present in just the first array will remain.
-  _.difference = function(array) {
-    var rest = flatten(slice.call(arguments, 1), true, true, []);
-    return _.filter(array, function(value){
-      return !_.contains(rest, value);
-    });
-  };
-
-  // Zip together multiple lists into a single array -- elements that share
-  // an index go together.
-  _.zip = function(array) {
-    if (array == null) return [];
-    var length = _.max(arguments, 'length').length;
-    var results = Array(length);
-    for (var i = 0; i < length; i++) {
-      results[i] = _.pluck(arguments, i);
-    }
-    return results;
-  };
-
-  // Converts lists into objects. Pass either a single array of `[key, value]`
-  // pairs, or two parallel arrays of the same length -- one of keys, and one of
-  // the corresponding values.
-  _.object = function(list, values) {
-    if (list == null) return {};
-    var result = {};
-    for (var i = 0, length = list.length; i < length; i++) {
-      if (values) {
-        result[list[i]] = values[i];
-      } else {
-        result[list[i][0]] = list[i][1];
-      }
-    }
-    return result;
-  };
-
-  // Return the position of the first occurrence of an item in an array,
-  // or -1 if the item is not included in the array.
-  // If the array is large and already in sort order, pass `true`
-  // for **isSorted** to use binary search.
-  _.indexOf = function(array, item, isSorted) {
-    if (array == null) return -1;
-    var i = 0, length = array.length;
-    if (isSorted) {
-      if (typeof isSorted == 'number') {
-        i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
-      } else {
-        i = _.sortedIndex(array, item);
-        return array[i] === item ? i : -1;
-      }
-    }
-    for (; i < length; i++) if (array[i] === item) return i;
-    return -1;
-  };
-
-  _.lastIndexOf = function(array, item, from) {
-    if (array == null) return -1;
-    var idx = array.length;
-    if (typeof from == 'number') {
-      idx = from < 0 ? idx + from + 1 : Math.min(idx, from + 1);
-    }
-    while (--idx >= 0) if (array[idx] === item) return idx;
-    return -1;
-  };
-
-  // Generate an integer Array containing an arithmetic progression. A port of
-  // the native Python `range()` function. See
-  // [the Python documentation](http://docs.python.org/library/functions.html#range).
-  _.range = function(start, stop, step) {
-    if (arguments.length <= 1) {
-      stop = start || 0;
-      start = 0;
-    }
-    step = step || 1;
-
-    var length = Math.max(Math.ceil((stop - start) / step), 0);
-    var range = Array(length);
-
-    for (var idx = 0; idx < length; idx++, start += step) {
-      range[idx] = start;
-    }
-
-    return range;
-  };
-
-  // Function (ahem) Functions
-  // ------------------
-
-  // Reusable constructor function for prototype setting.
-  var Ctor = function(){};
-
-  // Create a function bound to a given object (assigning `this`, and arguments,
-  // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
-  // available.
-  _.bind = function(func, context) {
-    var args, bound;
-    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    if (!_.isFunction(func)) throw new TypeError('Bind must be called on a function');
-    args = slice.call(arguments, 2);
-    bound = function() {
-      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-      Ctor.prototype = func.prototype;
-      var self = new Ctor;
-      Ctor.prototype = null;
-      var result = func.apply(self, args.concat(slice.call(arguments)));
-      if (_.isObject(result)) return result;
-      return self;
-    };
-    return bound;
-  };
-
-  // Partially apply a function by creating a version that has had some of its
-  // arguments pre-filled, without changing its dynamic `this` context. _ acts
-  // as a placeholder, allowing any combination of arguments to be pre-filled.
-  _.partial = function(func) {
-    var boundArgs = slice.call(arguments, 1);
-    return function() {
-      var position = 0;
-      var args = boundArgs.slice();
-      for (var i = 0, length = args.length; i < length; i++) {
-        if (args[i] === _) args[i] = arguments[position++];
-      }
-      while (position < arguments.length) args.push(arguments[position++]);
-      return func.apply(this, args);
-    };
-  };
-
-  // Bind a number of an object's methods to that object. Remaining arguments
-  // are the method names to be bound. Useful for ensuring that all callbacks
-  // defined on an object belong to it.
-  _.bindAll = function(obj) {
-    var i, length = arguments.length, key;
-    if (length <= 1) throw new Error('bindAll must be passed function names');
-    for (i = 1; i < length; i++) {
-      key = arguments[i];
-      obj[key] = _.bind(obj[key], obj);
-    }
-    return obj;
-  };
-
-  // Memoize an expensive function by storing its results.
-  _.memoize = function(func, hasher) {
-    var memoize = function(key) {
-      var cache = memoize.cache;
-      var address = hasher ? hasher.apply(this, arguments) : key;
-      if (!_.has(cache, address)) cache[address] = func.apply(this, arguments);
-      return cache[address];
-    };
-    memoize.cache = {};
-    return memoize;
-  };
-
-  // Delays a function for the given number of milliseconds, and then calls
-  // it with the arguments supplied.
-  _.delay = function(func, wait) {
-    var args = slice.call(arguments, 2);
-    return setTimeout(function(){
-      return func.apply(null, args);
-    }, wait);
-  };
-
-  // Defers a function, scheduling it to run after the current call stack has
-  // cleared.
-  _.defer = function(func) {
-    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
-  };
-
-  // Returns a function, that, when invoked, will only be triggered at most once
-  // during a given window of time. Normally, the throttled function will run
-  // as much as it can, without ever going more than once per `wait` duration;
-  // but if you'd like to disable the execution on the leading edge, pass
-  // `{leading: false}`. To disable execution on the trailing edge, ditto.
-  _.throttle = function(func, wait, options) {
-    var context, args, result;
-    var timeout = null;
-    var previous = 0;
-    if (!options) options = {};
-    var later = function() {
-      previous = options.leading === false ? 0 : _.now();
-      timeout = null;
-      result = func.apply(context, args);
-      if (!timeout) context = args = null;
-    };
-    return function() {
-      var now = _.now();
-      if (!previous && options.leading === false) previous = now;
-      var remaining = wait - (now - previous);
-      context = this;
-      args = arguments;
-      if (remaining <= 0 || remaining > wait) {
-        clearTimeout(timeout);
-        timeout = null;
-        previous = now;
-        result = func.apply(context, args);
-        if (!timeout) context = args = null;
-      } else if (!timeout && options.trailing !== false) {
-        timeout = setTimeout(later, remaining);
-      }
-      return result;
-    };
-  };
-
-  // Returns a function, that, as long as it continues to be invoked, will not
-  // be triggered. The function will be called after it stops being called for
-  // N milliseconds. If `immediate` is passed, trigger the function on the
-  // leading edge, instead of the trailing.
-  _.debounce = function(func, wait, immediate) {
-    var timeout, args, context, timestamp, result;
-
-    var later = function() {
-      var last = _.now() - timestamp;
-
-      if (last < wait && last > 0) {
-        timeout = setTimeout(later, wait - last);
-      } else {
-        timeout = null;
-        if (!immediate) {
-          result = func.apply(context, args);
-          if (!timeout) context = args = null;
-        }
-      }
-    };
-
-    return function() {
-      context = this;
-      args = arguments;
-      timestamp = _.now();
-      var callNow = immediate && !timeout;
-      if (!timeout) timeout = setTimeout(later, wait);
-      if (callNow) {
-        result = func.apply(context, args);
-        context = args = null;
-      }
-
-      return result;
-    };
-  };
-
-  // Returns the first function passed as an argument to the second,
-  // allowing you to adjust arguments, run code before and after, and
-  // conditionally execute the original function.
-  _.wrap = function(func, wrapper) {
-    return _.partial(wrapper, func);
-  };
-
-  // Returns a negated version of the passed-in predicate.
-  _.negate = function(predicate) {
-    return function() {
-      return !predicate.apply(this, arguments);
-    };
-  };
-
-  // Returns a function that is the composition of a list of functions, each
-  // consuming the return value of the function that follows.
-  _.compose = function() {
-    var args = arguments;
-    var start = args.length - 1;
-    return function() {
-      var i = start;
-      var result = args[start].apply(this, arguments);
-      while (i--) result = args[i].call(this, result);
-      return result;
-    };
-  };
-
-  // Returns a function that will only be executed after being called N times.
-  _.after = function(times, func) {
-    return function() {
-      if (--times < 1) {
-        return func.apply(this, arguments);
-      }
-    };
-  };
-
-  // Returns a function that will only be executed before being called N times.
-  _.before = function(times, func) {
-    var memo;
-    return function() {
-      if (--times > 0) {
-        memo = func.apply(this, arguments);
-      } else {
-        func = null;
-      }
-      return memo;
-    };
-  };
-
-  // Returns a function that will be executed at most one time, no matter how
-  // often you call it. Useful for lazy initialization.
-  _.once = _.partial(_.before, 2);
-
-  // Object Functions
-  // ----------------
-
-  // Retrieve the names of an object's properties.
-  // Delegates to **ECMAScript 5**'s native `Object.keys`
-  _.keys = function(obj) {
-    if (!_.isObject(obj)) return [];
-    if (nativeKeys) return nativeKeys(obj);
-    var keys = [];
-    for (var key in obj) if (_.has(obj, key)) keys.push(key);
-    return keys;
-  };
-
-  // Retrieve the values of an object's properties.
-  _.values = function(obj) {
-    var keys = _.keys(obj);
-    var length = keys.length;
-    var values = Array(length);
-    for (var i = 0; i < length; i++) {
-      values[i] = obj[keys[i]];
-    }
-    return values;
-  };
-
-  // Convert an object into a list of `[key, value]` pairs.
-  _.pairs = function(obj) {
-    var keys = _.keys(obj);
-    var length = keys.length;
-    var pairs = Array(length);
-    for (var i = 0; i < length; i++) {
-      pairs[i] = [keys[i], obj[keys[i]]];
-    }
-    return pairs;
-  };
-
-  // Invert the keys and values of an object. The values must be serializable.
-  _.invert = function(obj) {
-    var result = {};
-    var keys = _.keys(obj);
-    for (var i = 0, length = keys.length; i < length; i++) {
-      result[obj[keys[i]]] = keys[i];
-    }
-    return result;
-  };
-
-  // Return a sorted list of the function names available on the object.
-  // Aliased as `methods`
-  _.functions = _.methods = function(obj) {
-    var names = [];
-    for (var key in obj) {
-      if (_.isFunction(obj[key])) names.push(key);
-    }
-    return names.sort();
-  };
-
-  // Extend a given object with all the properties in passed-in object(s).
-  _.extend = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    var source, prop;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      source = arguments[i];
-      for (prop in source) {
-        if (hasOwnProperty.call(source, prop)) {
-            obj[prop] = source[prop];
-        }
-      }
-    }
-    return obj;
-  };
-
-  // Return a copy of the object only containing the whitelisted properties.
-  _.pick = function(obj, iteratee, context) {
-    var result = {}, key;
-    if (obj == null) return result;
-    if (_.isFunction(iteratee)) {
-      iteratee = createCallback(iteratee, context);
-      for (key in obj) {
-        var value = obj[key];
-        if (iteratee(value, key, obj)) result[key] = value;
-      }
-    } else {
-      var keys = concat.apply([], slice.call(arguments, 1));
-      obj = new Object(obj);
-      for (var i = 0, length = keys.length; i < length; i++) {
-        key = keys[i];
-        if (key in obj) result[key] = obj[key];
-      }
-    }
-    return result;
-  };
-
-   // Return a copy of the object without the blacklisted properties.
-  _.omit = function(obj, iteratee, context) {
-    if (_.isFunction(iteratee)) {
-      iteratee = _.negate(iteratee);
-    } else {
-      var keys = _.map(concat.apply([], slice.call(arguments, 1)), String);
-      iteratee = function(value, key) {
-        return !_.contains(keys, key);
-      };
-    }
-    return _.pick(obj, iteratee, context);
-  };
-
-  // Fill in a given object with default properties.
-  _.defaults = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    for (var i = 1, length = arguments.length; i < length; i++) {
-      var source = arguments[i];
-      for (var prop in source) {
-        if (obj[prop] === void 0) obj[prop] = source[prop];
-      }
-    }
-    return obj;
-  };
-
-  // Create a (shallow-cloned) duplicate of an object.
-  _.clone = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
-  };
-
-  // Invokes interceptor with the obj, and then returns obj.
-  // The primary purpose of this method is to "tap into" a method chain, in
-  // order to perform operations on intermediate results within the chain.
-  _.tap = function(obj, interceptor) {
-    interceptor(obj);
-    return obj;
-  };
-
-  // Internal recursive comparison function for `isEqual`.
-  var eq = function(a, b, aStack, bStack) {
-    // Identical objects are equal. `0 === -0`, but they aren't identical.
-    // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
-    if (a === b) return a !== 0 || 1 / a === 1 / b;
-    // A strict comparison is necessary because `null == undefined`.
-    if (a == null || b == null) return a === b;
-    // Unwrap any wrapped objects.
-    if (a instanceof _) a = a._wrapped;
-    if (b instanceof _) b = b._wrapped;
-    // Compare `[[Class]]` names.
-    var className = toString.call(a);
-    if (className !== toString.call(b)) return false;
-    switch (className) {
-      // Strings, numbers, regular expressions, dates, and booleans are compared by value.
-      case '[object RegExp]':
-      // RegExps are coerced to strings for comparison (Note: '' + /a/i === '/a/i')
-      case '[object String]':
-        // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
-        // equivalent to `new String("5")`.
-        return '' + a === '' + b;
-      case '[object Number]':
-        // `NaN`s are equivalent, but non-reflexive.
-        // Object(NaN) is equivalent to NaN
-        if (+a !== +a) return +b !== +b;
-        // An `egal` comparison is performed for other numeric values.
-        return +a === 0 ? 1 / +a === 1 / b : +a === +b;
-      case '[object Date]':
-      case '[object Boolean]':
-        // Coerce dates and booleans to numeric primitive values. Dates are compared by their
-        // millisecond representations. Note that invalid dates with millisecond representations
-        // of `NaN` are not equivalent.
-        return +a === +b;
-    }
-    if (typeof a != 'object' || typeof b != 'object') return false;
-    // Assume equality for cyclic structures. The algorithm for detecting cyclic
-    // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
-    var length = aStack.length;
-    while (length--) {
-      // Linear search. Performance is inversely proportional to the number of
-      // unique nested structures.
-      if (aStack[length] === a) return bStack[length] === b;
-    }
-    // Objects with different constructors are not equivalent, but `Object`s
-    // from different frames are.
-    var aCtor = a.constructor, bCtor = b.constructor;
-    if (
-      aCtor !== bCtor &&
-      // Handle Object.create(x) cases
-      'constructor' in a && 'constructor' in b &&
-      !(_.isFunction(aCtor) && aCtor instanceof aCtor &&
-        _.isFunction(bCtor) && bCtor instanceof bCtor)
-    ) {
-      return false;
-    }
-    // Add the first object to the stack of traversed objects.
-    aStack.push(a);
-    bStack.push(b);
-    var size, result;
-    // Recursively compare objects and arrays.
-    if (className === '[object Array]') {
-      // Compare array lengths to determine if a deep comparison is necessary.
-      size = a.length;
-      result = size === b.length;
-      if (result) {
-        // Deep compare the contents, ignoring non-numeric properties.
-        while (size--) {
-          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
-        }
-      }
-    } else {
-      // Deep compare objects.
-      var keys = _.keys(a), key;
-      size = keys.length;
-      // Ensure that both objects contain the same number of properties before comparing deep equality.
-      result = _.keys(b).length === size;
-      if (result) {
-        while (size--) {
-          // Deep compare each member
-          key = keys[size];
-          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
-        }
-      }
-    }
-    // Remove the first object from the stack of traversed objects.
-    aStack.pop();
-    bStack.pop();
-    return result;
-  };
-
-  // Perform a deep comparison to check if two objects are equal.
-  _.isEqual = function(a, b) {
-    return eq(a, b, [], []);
-  };
-
-  // Is a given array, string, or object empty?
-  // An "empty" object has no enumerable own-properties.
-  _.isEmpty = function(obj) {
-    if (obj == null) return true;
-    if (_.isArray(obj) || _.isString(obj) || _.isArguments(obj)) return obj.length === 0;
-    for (var key in obj) if (_.has(obj, key)) return false;
-    return true;
-  };
-
-  // Is a given value a DOM element?
-  _.isElement = function(obj) {
-    return !!(obj && obj.nodeType === 1);
-  };
-
-  // Is a given value an array?
-  // Delegates to ECMA5's native Array.isArray
-  _.isArray = nativeIsArray || function(obj) {
-    return toString.call(obj) === '[object Array]';
-  };
-
-  // Is a given variable an object?
-  _.isObject = function(obj) {
-    var type = typeof obj;
-    return type === 'function' || type === 'object' && !!obj;
-  };
-
-  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
-  _.each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
-    _['is' + name] = function(obj) {
-      return toString.call(obj) === '[object ' + name + ']';
-    };
-  });
-
-  // Define a fallback version of the method in browsers (ahem, IE), where
-  // there isn't any inspectable "Arguments" type.
-  if (!_.isArguments(arguments)) {
-    _.isArguments = function(obj) {
-      return _.has(obj, 'callee');
-    };
-  }
-
-  // Optimize `isFunction` if appropriate. Work around an IE 11 bug.
-  if (typeof /./ !== 'function') {
-    _.isFunction = function(obj) {
-      return typeof obj == 'function' || false;
-    };
-  }
-
-  // Is a given object a finite number?
-  _.isFinite = function(obj) {
-    return isFinite(obj) && !isNaN(parseFloat(obj));
-  };
-
-  // Is the given value `NaN`? (NaN is the only number which does not equal itself).
-  _.isNaN = function(obj) {
-    return _.isNumber(obj) && obj !== +obj;
-  };
-
-  // Is a given value a boolean?
-  _.isBoolean = function(obj) {
-    return obj === true || obj === false || toString.call(obj) === '[object Boolean]';
-  };
-
-  // Is a given value equal to null?
-  _.isNull = function(obj) {
-    return obj === null;
-  };
-
-  // Is a given variable undefined?
-  _.isUndefined = function(obj) {
-    return obj === void 0;
-  };
-
-  // Shortcut function for checking if an object has a given property directly
-  // on itself (in other words, not on a prototype).
-  _.has = function(obj, key) {
-    return obj != null && hasOwnProperty.call(obj, key);
-  };
-
-  // Utility Functions
-  // -----------------
-
-  // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
-  // previous owner. Returns a reference to the Underscore object.
-  _.noConflict = function() {
-    root._ = previousUnderscore;
-    return this;
-  };
-
-  // Keep the identity function around for default iteratees.
-  _.identity = function(value) {
-    return value;
-  };
-
-  _.constant = function(value) {
-    return function() {
-      return value;
-    };
-  };
-
-  _.noop = function(){};
-
-  _.property = function(key) {
-    return function(obj) {
-      return obj[key];
-    };
-  };
-
-  // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
-  _.matches = function(attrs) {
-    var pairs = _.pairs(attrs), length = pairs.length;
-    return function(obj) {
-      if (obj == null) return !length;
-      obj = new Object(obj);
-      for (var i = 0; i < length; i++) {
-        var pair = pairs[i], key = pair[0];
-        if (pair[1] !== obj[key] || !(key in obj)) return false;
-      }
-      return true;
-    };
-  };
-
-  // Run a function **n** times.
-  _.times = function(n, iteratee, context) {
-    var accum = Array(Math.max(0, n));
-    iteratee = createCallback(iteratee, context, 1);
-    for (var i = 0; i < n; i++) accum[i] = iteratee(i);
-    return accum;
-  };
-
-  // Return a random integer between min and max (inclusive).
-  _.random = function(min, max) {
-    if (max == null) {
-      max = min;
-      min = 0;
-    }
-    return min + Math.floor(Math.random() * (max - min + 1));
-  };
-
-  // A (possibly faster) way to get the current timestamp as an integer.
-  _.now = Date.now || function() {
-    return new Date().getTime();
-  };
-
-   // List of HTML entities for escaping.
-  var escapeMap = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#x27;',
-    '`': '&#x60;'
-  };
-  var unescapeMap = _.invert(escapeMap);
-
-  // Functions for escaping and unescaping strings to/from HTML interpolation.
-  var createEscaper = function(map) {
-    var escaper = function(match) {
-      return map[match];
-    };
-    // Regexes for identifying a key that needs to be escaped
-    var source = '(?:' + _.keys(map).join('|') + ')';
-    var testRegexp = RegExp(source);
-    var replaceRegexp = RegExp(source, 'g');
-    return function(string) {
-      string = string == null ? '' : '' + string;
-      return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
-    };
-  };
-  _.escape = createEscaper(escapeMap);
-  _.unescape = createEscaper(unescapeMap);
-
-  // If the value of the named `property` is a function then invoke it with the
-  // `object` as context; otherwise, return it.
-  _.result = function(object, property) {
-    if (object == null) return void 0;
-    var value = object[property];
-    return _.isFunction(value) ? object[property]() : value;
-  };
-
-  // Generate a unique integer id (unique within the entire client session).
-  // Useful for temporary DOM ids.
-  var idCounter = 0;
-  _.uniqueId = function(prefix) {
-    var id = ++idCounter + '';
-    return prefix ? prefix + id : id;
-  };
-
-  // By default, Underscore uses ERB-style template delimiters, change the
-  // following template settings to use alternative delimiters.
-  _.templateSettings = {
-    evaluate    : /<%([\s\S]+?)%>/g,
-    interpolate : /<%=([\s\S]+?)%>/g,
-    escape      : /<%-([\s\S]+?)%>/g
-  };
-
-  // When customizing `templateSettings`, if you don't want to define an
-  // interpolation, evaluation or escaping regex, we need one that is
-  // guaranteed not to match.
-  var noMatch = /(.)^/;
-
-  // Certain characters need to be escaped so that they can be put into a
-  // string literal.
-  var escapes = {
-    "'":      "'",
-    '\\':     '\\',
-    '\r':     'r',
-    '\n':     'n',
-    '\u2028': 'u2028',
-    '\u2029': 'u2029'
-  };
-
-  var escaper = /\\|'|\r|\n|\u2028|\u2029/g;
-
-  var escapeChar = function(match) {
-    return '\\' + escapes[match];
-  };
-
-  // JavaScript micro-templating, similar to John Resig's implementation.
-  // Underscore templating handles arbitrary delimiters, preserves whitespace,
-  // and correctly escapes quotes within interpolated code.
-  // NB: `oldSettings` only exists for backwards compatibility.
-  _.template = function(text, settings, oldSettings) {
-    if (!settings && oldSettings) settings = oldSettings;
-    settings = _.defaults({}, settings, _.templateSettings);
-
-    // Combine delimiters into one regular expression via alternation.
-    var matcher = RegExp([
-      (settings.escape || noMatch).source,
-      (settings.interpolate || noMatch).source,
-      (settings.evaluate || noMatch).source
-    ].join('|') + '|$', 'g');
-
-    // Compile the template source, escaping string literals appropriately.
-    var index = 0;
-    var source = "__p+='";
-    text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
-      source += text.slice(index, offset).replace(escaper, escapeChar);
-      index = offset + match.length;
-
-      if (escape) {
-        source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
-      } else if (interpolate) {
-        source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
-      } else if (evaluate) {
-        source += "';\n" + evaluate + "\n__p+='";
-      }
-
-      // Adobe VMs need the match returned to produce the correct offest.
-      return match;
-    });
-    source += "';\n";
-
-    // If a variable is not specified, place data values in local scope.
-    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
-
-    source = "var __t,__p='',__j=Array.prototype.join," +
-      "print=function(){__p+=__j.call(arguments,'');};\n" +
-      source + 'return __p;\n';
-
-    try {
-      var render = new Function(settings.variable || 'obj', '_', source);
-    } catch (e) {
-      e.source = source;
-      throw e;
-    }
-
-    var template = function(data) {
-      return render.call(this, data, _);
-    };
-
-    // Provide the compiled source as a convenience for precompilation.
-    var argument = settings.variable || 'obj';
-    template.source = 'function(' + argument + '){\n' + source + '}';
-
-    return template;
-  };
-
-  // Add a "chain" function. Start chaining a wrapped Underscore object.
-  _.chain = function(obj) {
-    var instance = _(obj);
-    instance._chain = true;
-    return instance;
-  };
-
-  // OOP
-  // ---------------
-  // If Underscore is called as a function, it returns a wrapped object that
-  // can be used OO-style. This wrapper holds altered versions of all the
-  // underscore functions. Wrapped objects may be chained.
-
-  // Helper function to continue chaining intermediate results.
-  var result = function(obj) {
-    return this._chain ? _(obj).chain() : obj;
-  };
-
-  // Add your own custom functions to the Underscore object.
-  _.mixin = function(obj) {
-    _.each(_.functions(obj), function(name) {
-      var func = _[name] = obj[name];
-      _.prototype[name] = function() {
-        var args = [this._wrapped];
-        push.apply(args, arguments);
-        return result.call(this, func.apply(_, args));
-      };
-    });
-  };
-
-  // Add all of the Underscore functions to the wrapper object.
-  _.mixin(_);
-
-  // Add all mutator Array functions to the wrapper.
-  _.each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
-    var method = ArrayProto[name];
-    _.prototype[name] = function() {
-      var obj = this._wrapped;
-      method.apply(obj, arguments);
-      if ((name === 'shift' || name === 'splice') && obj.length === 0) delete obj[0];
-      return result.call(this, obj);
-    };
-  });
-
-  // Add all accessor Array functions to the wrapper.
-  _.each(['concat', 'join', 'slice'], function(name) {
-    var method = ArrayProto[name];
-    _.prototype[name] = function() {
-      return result.call(this, method.apply(this._wrapped, arguments));
-    };
-  });
-
-  // Extracts the result from a wrapped and chained object.
-  _.prototype.value = function() {
-    return this._wrapped;
-  };
-
-  // AMD registration happens at the end for compatibility with AMD loaders
-  // that may not enforce next-turn semantics on modules. Even though general
-  // practice for AMD registration is to be anonymous, underscore registers
-  // as a named module because, like jQuery, it is a base library that is
-  // popular enough to be bundled in a third party lib, but not be part of
-  // an AMD load request. Those cases could generate an error when an
-  // anonymous define() is called outside of a loader request.
-  if (typeof define === 'function' && define.amd) {
-    define('underscore', [], function() {
-      return _;
-    });
-  }
-}.call(this));
-
-},{}],6:[function(require,module,exports){
+},{"underscore":82}],5:[function(require,module,exports){
 // Generated by CoffeeScript 1.6.3
 (function() {
   var Google, Q;
@@ -6207,7 +4790,7 @@ require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof requ
 
 }).call(this);
 
-},{"q":7}],7:[function(require,module,exports){
+},{"q":6}],6:[function(require,module,exports){
 (function (process){
 // vim:ts=4:sts=4:sw=4:
 /*!
@@ -7962,11 +6545,11 @@ return Q;
 });
 
 }).call(this,require('_process'))
-},{"_process":22}],8:[function(require,module,exports){
+},{"_process":22}],7:[function(require,module,exports){
 
-},{}],9:[function(require,module,exports){
-module.exports=require(8)
-},{"/Users/sim/Dropbox/Projets/Pryv/2012-Pryv/dev/browser/node_modules/grunt-browserify/node_modules/browserify/lib/_empty.js":8}],10:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+arguments[4][7][0].apply(exports,arguments)
+},{"dup":7}],9:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -7979,11 +6562,12 @@ var ieee754 = require('ieee754')
 var isArray = require('is-array')
 
 exports.Buffer = Buffer
-exports.SlowBuffer = Buffer
+exports.SlowBuffer = SlowBuffer
 exports.INSPECT_MAX_BYTES = 50
 Buffer.poolSize = 8192 // not used by this implementation
 
 var kMaxLength = 0x3fffffff
+var rootParent = {}
 
 /**
  * If `Buffer.TYPED_ARRAY_SUPPORT`:
@@ -8012,7 +6596,7 @@ Buffer.TYPED_ARRAY_SUPPORT = (function () {
     var buf = new ArrayBuffer(0)
     var arr = new Uint8Array(buf)
     arr.foo = function () { return 42 }
-    return 42 === arr.foo() && // typed array instances can be augmented
+    return arr.foo() === 42 && // typed array instances can be augmented
         typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
         new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
   } catch (e) {
@@ -8040,55 +6624,72 @@ function Buffer (subject, encoding, noZero) {
 
   // Find the length
   var length
-  if (type === 'number')
-    length = subject > 0 ? subject >>> 0 : 0
-  else if (type === 'string') {
-    if (encoding === 'base64')
-      subject = base64clean(subject)
+  if (type === 'number') {
+    length = +subject
+  } else if (type === 'string') {
     length = Buffer.byteLength(subject, encoding)
   } else if (type === 'object' && subject !== null) { // assume object is array-like
     if (subject.type === 'Buffer' && isArray(subject.data))
       subject = subject.data
-    length = +subject.length > 0 ? Math.floor(+subject.length) : 0
-  } else
+    length = +subject.length
+  } else {
     throw new TypeError('must start with number, buffer, array or string')
+  }
 
-  if (this.length > kMaxLength)
+  if (length > kMaxLength)
     throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
       'size: 0x' + kMaxLength.toString(16) + ' bytes')
 
-  var buf
+  if (length < 0)
+    length = 0
+  else
+    length >>>= 0 // Coerce to uint32.
+
+  var self = this
   if (Buffer.TYPED_ARRAY_SUPPORT) {
     // Preferred: Return an augmented `Uint8Array` instance for best performance
-    buf = Buffer._augment(new Uint8Array(length))
+    /*eslint-disable consistent-this */
+    self = Buffer._augment(new Uint8Array(length))
+    /*eslint-enable consistent-this */
   } else {
     // Fallback: Return THIS instance of Buffer (created by `new`)
-    buf = this
-    buf.length = length
-    buf._isBuffer = true
+    self.length = length
+    self._isBuffer = true
   }
 
   var i
   if (Buffer.TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
     // Speed optimization -- use set if we're copying from a typed array
-    buf._set(subject)
+    self._set(subject)
   } else if (isArrayish(subject)) {
     // Treat array-ish objects as a byte array
     if (Buffer.isBuffer(subject)) {
       for (i = 0; i < length; i++)
-        buf[i] = subject.readUInt8(i)
+        self[i] = subject.readUInt8(i)
     } else {
       for (i = 0; i < length; i++)
-        buf[i] = ((subject[i] % 256) + 256) % 256
+        self[i] = ((subject[i] % 256) + 256) % 256
     }
   } else if (type === 'string') {
-    buf.write(subject, 0, encoding)
+    self.write(subject, 0, encoding)
   } else if (type === 'number' && !Buffer.TYPED_ARRAY_SUPPORT && !noZero) {
     for (i = 0; i < length; i++) {
-      buf[i] = 0
+      self[i] = 0
     }
   }
 
+  if (length > 0 && length <= Buffer.poolSize)
+    self.parent = rootParent
+
+  return self
+}
+
+function SlowBuffer (subject, encoding, noZero) {
+  if (!(this instanceof SlowBuffer))
+    return new SlowBuffer(subject, encoding, noZero)
+
+  var buf = new Buffer(subject, encoding, noZero)
+  delete buf.parent
   return buf
 }
 
@@ -8099,6 +6700,8 @@ Buffer.isBuffer = function (b) {
 Buffer.compare = function (a, b) {
   if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b))
     throw new TypeError('Arguments must be Buffers')
+
+  if (a === b) return 0
 
   var x = a.length
   var y = b.length
@@ -8239,7 +6842,8 @@ Buffer.prototype.toString = function (encoding, start, end) {
 }
 
 Buffer.prototype.equals = function (b) {
-  if(!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
   return Buffer.compare(this, b) === 0
 }
 
@@ -8256,6 +6860,7 @@ Buffer.prototype.inspect = function () {
 
 Buffer.prototype.compare = function (b) {
   if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return 0
   return Buffer.compare(this, b)
 }
 
@@ -8299,7 +6904,7 @@ function hexWrite (buf, string, offset, length) {
 }
 
 function utf8Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf8ToBytes(string), buf, offset, length)
+  var charsWritten = blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
   return charsWritten
 }
 
@@ -8318,7 +6923,7 @@ function base64Write (buf, string, offset, length) {
 }
 
 function utf16leWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf16leToBytes(string), buf, offset, length)
+  var charsWritten = blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
   return charsWritten
 }
 
@@ -8338,6 +6943,10 @@ Buffer.prototype.write = function (string, offset, length, encoding) {
   }
 
   offset = Number(offset) || 0
+
+  if (length < 0 || offset < 0 || offset > this.length)
+    throw new RangeError('attempt to write outside buffer bounds')
+
   var remaining = this.length - offset
   if (!length) {
     length = remaining
@@ -8416,13 +7025,19 @@ function asciiSlice (buf, start, end) {
   end = Math.min(buf.length, end)
 
   for (var i = start; i < end; i++) {
-    ret += String.fromCharCode(buf[i])
+    ret += String.fromCharCode(buf[i] & 0x7F)
   }
   return ret
 }
 
 function binarySlice (buf, start, end) {
-  return asciiSlice(buf, start, end)
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i])
+  }
+  return ret
 }
 
 function hexSlice (buf, start, end) {
@@ -8453,7 +7068,7 @@ Buffer.prototype.slice = function (start, end) {
   end = end === undefined ? len : ~~end
 
   if (start < 0) {
-    start += len;
+    start += len
     if (start < 0)
       start = 0
   } else if (start > len) {
@@ -8471,16 +7086,21 @@ Buffer.prototype.slice = function (start, end) {
   if (end < start)
     end = start
 
+  var newBuf
   if (Buffer.TYPED_ARRAY_SUPPORT) {
-    return Buffer._augment(this.subarray(start, end))
+    newBuf = Buffer._augment(this.subarray(start, end))
   } else {
     var sliceLen = end - start
-    var newBuf = new Buffer(sliceLen, undefined, true)
+    newBuf = new Buffer(sliceLen, undefined, true)
     for (var i = 0; i < sliceLen; i++) {
       newBuf[i] = this[i + start]
     }
-    return newBuf
   }
+
+  if (newBuf.length)
+    newBuf.parent = this.parent || this
+
+  return newBuf
 }
 
 /*
@@ -8491,6 +7111,35 @@ function checkOffset (offset, ext, length) {
     throw new RangeError('offset is not uint')
   if (offset + ext > length)
     throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert)
+    checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100))
+    val += this[offset + i] * mul
+
+  return val
+}
+
+Buffer.prototype.readUIntBE = function (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert)
+    checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset + --byteLength]
+  var mul = 1
+  while (byteLength > 0 && (mul *= 0x100))
+    val += this[offset + --byteLength] * mul
+
+  return val
 }
 
 Buffer.prototype.readUInt8 = function (offset, noAssert) {
@@ -8529,6 +7178,44 @@ Buffer.prototype.readUInt32BE = function (offset, noAssert) {
       ((this[offset + 1] << 16) |
       (this[offset + 2] << 8) |
       this[offset + 3])
+}
+
+Buffer.prototype.readIntLE = function (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert)
+    checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100))
+    val += this[offset + i] * mul
+  mul *= 0x80
+
+  if (val >= mul)
+    val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readIntBE = function (offset, byteLength, noAssert) {
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert)
+    checkOffset(offset, byteLength, this.length)
+
+  var i = byteLength
+  var mul = 1
+  var val = this[offset + --i]
+  while (i > 0 && (mul *= 0x100))
+    val += this[offset + --i] * mul
+  mul *= 0x80
+
+  if (val >= mul)
+    val -= Math.pow(2, 8 * byteLength)
+
+  return val
 }
 
 Buffer.prototype.readInt8 = function (offset, noAssert) {
@@ -8599,8 +7286,40 @@ Buffer.prototype.readDoubleBE = function (offset, noAssert) {
 
 function checkInt (buf, value, offset, ext, max, min) {
   if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
-  if (value > max || value < min) throw new TypeError('value is out of bounds')
-  if (offset + ext > buf.length) throw new TypeError('index out of range')
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert)
+    checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var mul = 1
+  var i = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100))
+    this[offset + i] = (value / mul) >>> 0 & 0xFF
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUIntBE = function (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  byteLength = byteLength >>> 0
+  if (!noAssert)
+    checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var i = byteLength - 1
+  var mul = 1
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100))
+    this[offset + i] = (value / mul) >>> 0 & 0xFF
+
+  return offset + byteLength
 }
 
 Buffer.prototype.writeUInt8 = function (value, offset, noAssert) {
@@ -8680,6 +7399,50 @@ Buffer.prototype.writeUInt32BE = function (value, offset, noAssert) {
   return offset + 4
 }
 
+Buffer.prototype.writeIntLE = function (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) {
+    checkInt(this,
+             value,
+             offset,
+             byteLength,
+             Math.pow(2, 8 * byteLength - 1) - 1,
+             -Math.pow(2, 8 * byteLength - 1))
+  }
+
+  var i = 0
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100))
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeIntBE = function (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset >>> 0
+  if (!noAssert) {
+    checkInt(this,
+             value,
+             offset,
+             byteLength,
+             Math.pow(2, 8 * byteLength - 1) - 1,
+             -Math.pow(2, 8 * byteLength - 1))
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100))
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+
+  return offset + byteLength
+}
+
 Buffer.prototype.writeInt8 = function (value, offset, noAssert) {
   value = +value
   offset = offset >>> 0
@@ -8745,8 +7508,9 @@ Buffer.prototype.writeInt32BE = function (value, offset, noAssert) {
 }
 
 function checkIEEE754 (buf, value, offset, ext, max, min) {
-  if (value > max || value < min) throw new TypeError('value is out of bounds')
-  if (offset + ext > buf.length) throw new TypeError('index out of range')
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+  if (offset < 0) throw new RangeError('index out of range')
 }
 
 function writeFloat (buf, value, offset, littleEndian, noAssert) {
@@ -8781,22 +7545,23 @@ Buffer.prototype.writeDoubleBE = function (value, offset, noAssert) {
 
 // copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
 Buffer.prototype.copy = function (target, target_start, start, end) {
-  var source = this
+  var self = this // source
 
   if (!start) start = 0
   if (!end && end !== 0) end = this.length
+  if (target_start >= target.length) target_start = target.length
   if (!target_start) target_start = 0
+  if (end > 0 && end < start) end = start
 
   // Copy 0 bytes; we're done
-  if (end === start) return
-  if (target.length === 0 || source.length === 0) return
+  if (end === start) return 0
+  if (target.length === 0 || self.length === 0) return 0
 
   // Fatal error conditions
-  if (end < start) throw new TypeError('sourceEnd < sourceStart')
-  if (target_start < 0 || target_start >= target.length)
-    throw new TypeError('targetStart out of bounds')
-  if (start < 0 || start >= source.length) throw new TypeError('sourceStart out of bounds')
-  if (end < 0 || end > source.length) throw new TypeError('sourceEnd out of bounds')
+  if (target_start < 0)
+    throw new RangeError('targetStart out of bounds')
+  if (start < 0 || start >= self.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
 
   // Are we oob?
   if (end > this.length)
@@ -8813,6 +7578,8 @@ Buffer.prototype.copy = function (target, target_start, start, end) {
   } else {
     target._set(this.subarray(start, start + len), target_start)
   }
+
+  return len
 }
 
 // fill(value, start=0, end=buffer.length)
@@ -8821,14 +7588,14 @@ Buffer.prototype.fill = function (value, start, end) {
   if (!start) start = 0
   if (!end) end = this.length
 
-  if (end < start) throw new TypeError('end < start')
+  if (end < start) throw new RangeError('end < start')
 
   // Fill 0 bytes; we're done
   if (end === start) return
   if (this.length === 0) return
 
-  if (start < 0 || start >= this.length) throw new TypeError('start out of bounds')
-  if (end < 0 || end > this.length) throw new TypeError('end out of bounds')
+  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
+  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
 
   var i
   if (typeof value === 'number') {
@@ -8894,11 +7661,15 @@ Buffer._augment = function (arr) {
   arr.compare = BP.compare
   arr.copy = BP.copy
   arr.slice = BP.slice
+  arr.readUIntLE = BP.readUIntLE
+  arr.readUIntBE = BP.readUIntBE
   arr.readUInt8 = BP.readUInt8
   arr.readUInt16LE = BP.readUInt16LE
   arr.readUInt16BE = BP.readUInt16BE
   arr.readUInt32LE = BP.readUInt32LE
   arr.readUInt32BE = BP.readUInt32BE
+  arr.readIntLE = BP.readIntLE
+  arr.readIntBE = BP.readIntBE
   arr.readInt8 = BP.readInt8
   arr.readInt16LE = BP.readInt16LE
   arr.readInt16BE = BP.readInt16BE
@@ -8909,10 +7680,14 @@ Buffer._augment = function (arr) {
   arr.readDoubleLE = BP.readDoubleLE
   arr.readDoubleBE = BP.readDoubleBE
   arr.writeUInt8 = BP.writeUInt8
+  arr.writeUIntLE = BP.writeUIntLE
+  arr.writeUIntBE = BP.writeUIntBE
   arr.writeUInt16LE = BP.writeUInt16LE
   arr.writeUInt16BE = BP.writeUInt16BE
   arr.writeUInt32LE = BP.writeUInt32LE
   arr.writeUInt32BE = BP.writeUInt32BE
+  arr.writeIntLE = BP.writeIntLE
+  arr.writeIntBE = BP.writeIntBE
   arr.writeInt8 = BP.writeInt8
   arr.writeInt16LE = BP.writeInt16LE
   arr.writeInt16BE = BP.writeInt16BE
@@ -8929,11 +7704,13 @@ Buffer._augment = function (arr) {
   return arr
 }
 
-var INVALID_BASE64_RE = /[^+\/0-9A-z]/g
+var INVALID_BASE64_RE = /[^+\/0-9A-z\-]/g
 
 function base64clean (str) {
   // Node strips out invalid characters like \n and \t from the string, base64-js does not
   str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
   // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
   while (str.length % 4 !== 0) {
     str = str + '='
@@ -8957,22 +7734,85 @@ function toHex (n) {
   return n.toString(16)
 }
 
-function utf8ToBytes (str) {
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    var b = str.charCodeAt(i)
-    if (b <= 0x7F) {
-      byteArray.push(b)
-    } else {
-      var start = i
-      if (b >= 0xD800 && b <= 0xDFFF) i++
-      var h = encodeURIComponent(str.slice(start, i+1)).substr(1).split('%')
-      for (var j = 0; j < h.length; j++) {
-        byteArray.push(parseInt(h[j], 16))
+function utf8ToBytes (string, units) {
+  units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
+  var bytes = []
+  var i = 0
+
+  for (; i < length; i++) {
+    codePoint = string.charCodeAt(i)
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (leadSurrogate) {
+        // 2 leads in a row
+        if (codePoint < 0xDC00) {
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          leadSurrogate = codePoint
+          continue
+        } else {
+          // valid surrogate pair
+          codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+          leadSurrogate = null
+        }
+      } else {
+        // no lead yet
+
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else {
+          // valid lead
+          leadSurrogate = codePoint
+          continue
+        }
       }
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+      leadSurrogate = null
+    }
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint)
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x200000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else {
+      throw new Error('Invalid code point')
     }
   }
-  return byteArray
+
+  return bytes
 }
 
 function asciiToBytes (str) {
@@ -8984,10 +7824,12 @@ function asciiToBytes (str) {
   return byteArray
 }
 
-function utf16leToBytes (str) {
+function utf16leToBytes (str, units) {
   var c, hi, lo
   var byteArray = []
   for (var i = 0; i < str.length; i++) {
+    if ((units -= 2) < 0) break
+
     c = str.charCodeAt(i)
     hi = c >> 8
     lo = c % 256
@@ -8999,7 +7841,7 @@ function utf16leToBytes (str) {
 }
 
 function base64ToBytes (str) {
-  return base64.toByteArray(str)
+  return base64.toByteArray(base64clean(str))
 }
 
 function blitBuffer (src, dst, offset, length) {
@@ -9019,7 +7861,7 @@ function decodeUtf8Char (str) {
   }
 }
 
-},{"base64-js":11,"ieee754":12,"is-array":13}],11:[function(require,module,exports){
+},{"base64-js":10,"ieee754":11,"is-array":12}],10:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -9034,12 +7876,16 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	var NUMBER = '0'.charCodeAt(0)
 	var LOWER  = 'a'.charCodeAt(0)
 	var UPPER  = 'A'.charCodeAt(0)
+	var PLUS_URL_SAFE = '-'.charCodeAt(0)
+	var SLASH_URL_SAFE = '_'.charCodeAt(0)
 
 	function decode (elt) {
 		var code = elt.charCodeAt(0)
-		if (code === PLUS)
+		if (code === PLUS ||
+		    code === PLUS_URL_SAFE)
 			return 62 // '+'
-		if (code === SLASH)
+		if (code === SLASH ||
+		    code === SLASH_URL_SAFE)
 			return 63 // '/'
 		if (code < NUMBER)
 			return -1 //no match
@@ -9141,7 +7987,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -9227,7 +8073,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 
 /**
  * isArray
@@ -9262,7 +8108,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -9565,7 +8411,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],15:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -9711,7 +8557,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":16,"events":14,"url":42}],16:[function(require,module,exports){
+},{"./lib/request":15,"events":13,"url":40}],15:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -9922,7 +8768,7 @@ var isXHR2Compatible = function (obj) {
     if (typeof FormData !== 'undefined' && obj instanceof FormData) return true;
 };
 
-},{"./response":17,"Base64":18,"inherits":20,"stream":27}],17:[function(require,module,exports){
+},{"./response":16,"Base64":17,"inherits":19,"stream":38}],16:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -10044,7 +8890,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":27,"util":44}],18:[function(require,module,exports){
+},{"stream":38,"util":42}],17:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -10106,7 +8952,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -10121,7 +8967,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":15}],20:[function(require,module,exports){
+},{"http":14}],19:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -10145,6 +8991,11 @@ if (typeof Object.create === 'function') {
     ctor.prototype.constructor = ctor
   }
 }
+
+},{}],20:[function(require,module,exports){
+module.exports = Array.isArray || function (arr) {
+  return Object.prototype.toString.call(arr) == '[object Array]';
+};
 
 },{}],21:[function(require,module,exports){
 (function (process){
@@ -10378,69 +9229,40 @@ var substr = 'ab'.substr(-1) === 'b'
 // shim for using process in browser
 
 var process = module.exports = {};
+var queue = [];
+var draining = false;
 
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canMutationObserver = typeof window !== 'undefined'
-    && window.MutationObserver;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
+function drainQueue() {
+    if (draining) {
+        return;
     }
-
-    var queue = [];
-
-    if (canMutationObserver) {
-        var hiddenDiv = document.createElement("div");
-        var observer = new MutationObserver(function () {
-            var queueList = queue.slice();
-            queue.length = 0;
-            queueList.forEach(function (fn) {
-                fn();
-            });
-        });
-
-        observer.observe(hiddenDiv, { attributes: true });
-
-        return function nextTick(fn) {
-            if (!queue.length) {
-                hiddenDiv.setAttribute('yes', 'no');
-            }
-            queue.push(fn);
-        };
+    draining = true;
+    var currentQueue;
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        var i = -1;
+        while (++i < len) {
+            currentQueue[i]();
+        }
+        len = queue.length;
     }
-
-    if (canPost) {
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
+    draining = false;
+}
+process.nextTick = function (fun) {
+    queue.push(fun);
+    if (!draining) {
+        setTimeout(drainQueue, 0);
     }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
+};
 
 process.title = 'browser';
 process.browser = true;
 process.env = {};
 process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
 
 function noop() {}
 
@@ -10461,6 +9283,7 @@ process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
+process.umask = function() { return 0; };
 
 },{}],23:[function(require,module,exports){
 (function (global){
@@ -11153,138 +9976,9 @@ exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
 },{"./decode":24,"./encode":25}],27:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-module.exports = Stream;
-
-var EE = require('events').EventEmitter;
-var inherits = require('inherits');
-
-inherits(Stream, EE);
-Stream.Readable = require('readable-stream/readable.js');
-Stream.Writable = require('readable-stream/writable.js');
-Stream.Duplex = require('readable-stream/duplex.js');
-Stream.Transform = require('readable-stream/transform.js');
-Stream.PassThrough = require('readable-stream/passthrough.js');
-
-// Backwards-compat with node 0.4.x
-Stream.Stream = Stream;
-
-
-
-// old-style streams.  Note that the pipe method (the only relevant
-// part of this class) is overridden in the Readable class.
-
-function Stream() {
-  EE.call(this);
-}
-
-Stream.prototype.pipe = function(dest, options) {
-  var source = this;
-
-  function ondata(chunk) {
-    if (dest.writable) {
-      if (false === dest.write(chunk) && source.pause) {
-        source.pause();
-      }
-    }
-  }
-
-  source.on('data', ondata);
-
-  function ondrain() {
-    if (source.readable && source.resume) {
-      source.resume();
-    }
-  }
-
-  dest.on('drain', ondrain);
-
-  // If the 'end' option is not supplied, dest.end() will be called when
-  // source gets the 'end' or 'close' events.  Only dest.end() once.
-  if (!dest._isStdio && (!options || options.end !== false)) {
-    source.on('end', onend);
-    source.on('close', onclose);
-  }
-
-  var didOnEnd = false;
-  function onend() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    dest.end();
-  }
-
-
-  function onclose() {
-    if (didOnEnd) return;
-    didOnEnd = true;
-
-    if (typeof dest.destroy === 'function') dest.destroy();
-  }
-
-  // don't leave dangling pipes when there are errors.
-  function onerror(er) {
-    cleanup();
-    if (EE.listenerCount(this, 'error') === 0) {
-      throw er; // Unhandled stream error in pipe.
-    }
-  }
-
-  source.on('error', onerror);
-  dest.on('error', onerror);
-
-  // remove all the event listeners that were added.
-  function cleanup() {
-    source.removeListener('data', ondata);
-    dest.removeListener('drain', ondrain);
-
-    source.removeListener('end', onend);
-    source.removeListener('close', onclose);
-
-    source.removeListener('error', onerror);
-    dest.removeListener('error', onerror);
-
-    source.removeListener('end', cleanup);
-    source.removeListener('close', cleanup);
-
-    dest.removeListener('close', cleanup);
-  }
-
-  source.on('end', cleanup);
-  source.on('close', cleanup);
-
-  dest.on('close', cleanup);
-
-  dest.emit('pipe', source);
-
-  // Allow for unix-like usage: A.pipe(B).pipe(C)
-  return dest;
-};
-
-},{"events":14,"inherits":20,"readable-stream/duplex.js":28,"readable-stream/passthrough.js":38,"readable-stream/readable.js":39,"readable-stream/transform.js":40,"readable-stream/writable.js":41}],28:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":29}],29:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":28}],28:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -11377,7 +10071,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":31,"./_stream_writable":33,"_process":22,"core-util-is":34,"inherits":35}],30:[function(require,module,exports){
+},{"./_stream_readable":30,"./_stream_writable":32,"_process":22,"core-util-is":33,"inherits":19}],29:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -11425,7 +10119,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":32,"core-util-is":34,"inherits":35}],31:[function(require,module,exports){
+},{"./_stream_transform":31,"core-util-is":33,"inherits":19}],30:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -12380,7 +11074,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":29,"_process":22,"buffer":10,"core-util-is":34,"events":14,"inherits":35,"isarray":36,"stream":27,"string_decoder/":37,"util":9}],32:[function(require,module,exports){
+},{"./_stream_duplex":28,"_process":22,"buffer":9,"core-util-is":33,"events":13,"inherits":19,"isarray":20,"stream":38,"string_decoder/":39,"util":8}],31:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -12591,7 +11285,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":29,"core-util-is":34,"inherits":35}],33:[function(require,module,exports){
+},{"./_stream_duplex":28,"core-util-is":33,"inherits":19}],32:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -13072,7 +11766,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":29,"_process":22,"buffer":10,"core-util-is":34,"inherits":35,"stream":27}],34:[function(require,module,exports){
+},{"./_stream_duplex":28,"_process":22,"buffer":9,"core-util-is":33,"inherits":19,"stream":38}],33:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -13182,14 +11876,154 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":10}],35:[function(require,module,exports){
-module.exports=require(20)
-},{"/Users/sim/Dropbox/Projets/Pryv/2012-Pryv/dev/browser/node_modules/grunt-browserify/node_modules/browserify/node_modules/inherits/inherits_browser.js":20}],36:[function(require,module,exports){
-module.exports = Array.isArray || function (arr) {
-  return Object.prototype.toString.call(arr) == '[object Array]';
+},{"buffer":9}],34:[function(require,module,exports){
+module.exports = require("./lib/_stream_passthrough.js")
+
+},{"./lib/_stream_passthrough.js":29}],35:[function(require,module,exports){
+exports = module.exports = require('./lib/_stream_readable.js');
+exports.Stream = require('stream');
+exports.Readable = exports;
+exports.Writable = require('./lib/_stream_writable.js');
+exports.Duplex = require('./lib/_stream_duplex.js');
+exports.Transform = require('./lib/_stream_transform.js');
+exports.PassThrough = require('./lib/_stream_passthrough.js');
+
+},{"./lib/_stream_duplex.js":28,"./lib/_stream_passthrough.js":29,"./lib/_stream_readable.js":30,"./lib/_stream_transform.js":31,"./lib/_stream_writable.js":32,"stream":38}],36:[function(require,module,exports){
+module.exports = require("./lib/_stream_transform.js")
+
+},{"./lib/_stream_transform.js":31}],37:[function(require,module,exports){
+module.exports = require("./lib/_stream_writable.js")
+
+},{"./lib/_stream_writable.js":32}],38:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+module.exports = Stream;
+
+var EE = require('events').EventEmitter;
+var inherits = require('inherits');
+
+inherits(Stream, EE);
+Stream.Readable = require('readable-stream/readable.js');
+Stream.Writable = require('readable-stream/writable.js');
+Stream.Duplex = require('readable-stream/duplex.js');
+Stream.Transform = require('readable-stream/transform.js');
+Stream.PassThrough = require('readable-stream/passthrough.js');
+
+// Backwards-compat with node 0.4.x
+Stream.Stream = Stream;
+
+
+
+// old-style streams.  Note that the pipe method (the only relevant
+// part of this class) is overridden in the Readable class.
+
+function Stream() {
+  EE.call(this);
+}
+
+Stream.prototype.pipe = function(dest, options) {
+  var source = this;
+
+  function ondata(chunk) {
+    if (dest.writable) {
+      if (false === dest.write(chunk) && source.pause) {
+        source.pause();
+      }
+    }
+  }
+
+  source.on('data', ondata);
+
+  function ondrain() {
+    if (source.readable && source.resume) {
+      source.resume();
+    }
+  }
+
+  dest.on('drain', ondrain);
+
+  // If the 'end' option is not supplied, dest.end() will be called when
+  // source gets the 'end' or 'close' events.  Only dest.end() once.
+  if (!dest._isStdio && (!options || options.end !== false)) {
+    source.on('end', onend);
+    source.on('close', onclose);
+  }
+
+  var didOnEnd = false;
+  function onend() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    dest.end();
+  }
+
+
+  function onclose() {
+    if (didOnEnd) return;
+    didOnEnd = true;
+
+    if (typeof dest.destroy === 'function') dest.destroy();
+  }
+
+  // don't leave dangling pipes when there are errors.
+  function onerror(er) {
+    cleanup();
+    if (EE.listenerCount(this, 'error') === 0) {
+      throw er; // Unhandled stream error in pipe.
+    }
+  }
+
+  source.on('error', onerror);
+  dest.on('error', onerror);
+
+  // remove all the event listeners that were added.
+  function cleanup() {
+    source.removeListener('data', ondata);
+    dest.removeListener('drain', ondrain);
+
+    source.removeListener('end', onend);
+    source.removeListener('close', onclose);
+
+    source.removeListener('error', onerror);
+    dest.removeListener('error', onerror);
+
+    source.removeListener('end', cleanup);
+    source.removeListener('close', cleanup);
+
+    dest.removeListener('close', cleanup);
+  }
+
+  source.on('end', cleanup);
+  source.on('close', cleanup);
+
+  dest.on('close', cleanup);
+
+  dest.emit('pipe', source);
+
+  // Allow for unix-like usage: A.pipe(B).pipe(C)
+  return dest;
 };
 
-},{}],37:[function(require,module,exports){
+},{"events":13,"inherits":19,"readable-stream/duplex.js":27,"readable-stream/passthrough.js":34,"readable-stream/readable.js":35,"readable-stream/transform.js":36,"readable-stream/writable.js":37}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13412,25 +12246,7 @@ function base64DetectIncompleteChar(buffer) {
   this.charLength = this.charReceived ? 3 : 0;
 }
 
-},{"buffer":10}],38:[function(require,module,exports){
-module.exports = require("./lib/_stream_passthrough.js")
-
-},{"./lib/_stream_passthrough.js":30}],39:[function(require,module,exports){
-exports = module.exports = require('./lib/_stream_readable.js');
-exports.Stream = require('stream');
-exports.Readable = exports;
-exports.Writable = require('./lib/_stream_writable.js');
-exports.Duplex = require('./lib/_stream_duplex.js');
-exports.Transform = require('./lib/_stream_transform.js');
-exports.PassThrough = require('./lib/_stream_passthrough.js');
-
-},{"./lib/_stream_duplex.js":29,"./lib/_stream_passthrough.js":30,"./lib/_stream_readable.js":31,"./lib/_stream_transform.js":32,"./lib/_stream_writable.js":33,"stream":27}],40:[function(require,module,exports){
-module.exports = require("./lib/_stream_transform.js")
-
-},{"./lib/_stream_transform.js":32}],41:[function(require,module,exports){
-module.exports = require("./lib/_stream_writable.js")
-
-},{"./lib/_stream_writable.js":33}],42:[function(require,module,exports){
+},{"buffer":9}],40:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14139,14 +12955,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":23,"querystring":26}],43:[function(require,module,exports){
+},{"punycode":23,"querystring":26}],41:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],44:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14736,7 +13552,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":43,"_process":22,"inherits":20}],45:[function(require,module,exports){
+},{"./support/isBuffer":41,"_process":22,"inherits":19}],43:[function(require,module,exports){
 (function (global){
 /**
  * marked - a markdown parser
@@ -14760,7 +13576,7 @@ var block = {
   lheading: /^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,
   blockquote: /^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,
   list: /^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,
-  html: /^ *(?:comment|closed|closing) *(?:\n{2,}|\s*$)/,
+  html: /^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,
   def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,
   table: noop,
   paragraph: /^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,
@@ -15608,7 +14424,7 @@ Renderer.prototype.link = function(href, title, text) {
     } catch (e) {
       return '';
     }
-    if (prot.indexOf('javascript:') === 0) {
+    if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0) {
       return '';
     }
   }
@@ -15894,8 +14710,13 @@ function marked(src, opt, callback) {
 
     pending = tokens.length;
 
-    var done = function() {
-      var out, err;
+    var done = function(err) {
+      if (err) {
+        opt.highlight = highlight;
+        return callback(err);
+      }
+
+      var out;
 
       try {
         out = Parser.parse(tokens, opt);
@@ -15924,6 +14745,7 @@ function marked(src, opt, callback) {
           return --pending || done();
         }
         return highlight(token.text, token.lang, function(err, code) {
+          if (err) return done(err);
           if (code == null || code === token.text) {
             return --pending || done();
           }
@@ -15993,7 +14815,7 @@ marked.inlineLexer = InlineLexer.output;
 
 marked.parse = marked;
 
-if (typeof exports === 'object') {
+if (typeof module !== 'undefined' && typeof exports === 'object') {
   module.exports = marked;
 } else if (typeof define === 'function' && define.amd) {
   define(function() { return marked; });
@@ -16006,362 +14828,7 @@ if (typeof exports === 'object') {
 }());
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],46:[function(require,module,exports){
-(function (process,Buffer){
-var CombinedStream = require('combined-stream');
-var util = require('util');
-var path = require('path');
-var http = require('http');
-var https = require('https');
-var parseUrl = require('url').parse;
-var fs = require('fs');
-var mime = require('mime');
-var async = require('async');
-
-module.exports = FormData;
-function FormData() {
-  this._overheadLength = 0;
-  this._valueLength = 0;
-  this._lengthRetrievers = [];
-
-  CombinedStream.call(this);
-}
-util.inherits(FormData, CombinedStream);
-
-FormData.LINE_BREAK = '\r\n';
-
-FormData.prototype.append = function(field, value, options) {
-  options = options || {};
-
-  var append = CombinedStream.prototype.append.bind(this);
-
-  // all that streamy business can't handle numbers
-  if (typeof value == 'number') value = ''+value;
-
-  // https://github.com/felixge/node-form-data/issues/38
-  if (util.isArray(value)) {
-    // Please convert your array into string
-    // the way web server expects it
-    this._error(new Error('Arrays are not supported.'));
-    return;
-  }
-
-  var header = this._multiPartHeader(field, value, options);
-  var footer = this._multiPartFooter(field, value, options);
-
-  append(header);
-  append(value);
-  append(footer);
-
-  // pass along options.knownLength
-  this._trackLength(header, value, options);
-};
-
-FormData.prototype._trackLength = function(header, value, options) {
-  var valueLength = 0;
-
-  // used w/ getLengthSync(), when length is known.
-  // e.g. for streaming directly from a remote server,
-  // w/ a known file a size, and not wanting to wait for
-  // incoming file to finish to get its size.
-  if (options.knownLength != null) {
-    valueLength += +options.knownLength;
-  } else if (Buffer.isBuffer(value)) {
-    valueLength = value.length;
-  } else if (typeof value === 'string') {
-    valueLength = Buffer.byteLength(value);
-  }
-
-  this._valueLength += valueLength;
-
-  // @check why add CRLF? does this account for custom/multiple CRLFs?
-  this._overheadLength +=
-    Buffer.byteLength(header) +
-    + FormData.LINE_BREAK.length;
-
-  // empty or either doesn't have path or not an http response
-  if (!value || ( !value.path && !(value.readable && value.hasOwnProperty('httpVersion')) )) {
-    return;
-  }
-
-  // no need to bother with the length
-  if (!options.knownLength)
-  this._lengthRetrievers.push(function(next) {
-
-    if (value.hasOwnProperty('fd')) {
-
-      // take read range into a account
-      // `end` = Infinity –> read file till the end
-      //
-      // TODO: Looks like there is bug in Node fs.createReadStream
-      // it doesn't respect `end` options without `start` options
-      // Fix it when node fixes it.
-      // https://github.com/joyent/node/issues/7819
-      if (value.end != undefined && value.end != Infinity && value.start != undefined) {
-
-        // when end specified
-        // no need to calculate range
-        // inclusive, starts with 0
-        next(null, value.end+1 - (value.start ? value.start : 0));
-
-      // not that fast snoopy
-      } else {
-        // still need to fetch file size from fs
-        fs.stat(value.path, function(err, stat) {
-
-          var fileSize;
-
-          if (err) {
-            next(err);
-            return;
-          }
-
-          // update final size based on the range options
-          fileSize = stat.size - (value.start ? value.start : 0);
-          next(null, fileSize);
-        });
-      }
-
-    // or http response
-    } else if (value.hasOwnProperty('httpVersion')) {
-      next(null, +value.headers['content-length']);
-
-    // or request stream http://github.com/mikeal/request
-    } else if (value.hasOwnProperty('httpModule')) {
-      // wait till response come back
-      value.on('response', function(response) {
-        value.pause();
-        next(null, +response.headers['content-length']);
-      });
-      value.resume();
-
-    // something else
-    } else {
-      next('Unknown stream');
-    }
-  });
-};
-
-FormData.prototype._multiPartHeader = function(field, value, options) {
-  var boundary = this.getBoundary();
-  var header = '';
-
-  // custom header specified (as string)?
-  // it becomes responsible for boundary
-  // (e.g. to handle extra CRLFs on .NET servers)
-  if (options.header != null) {
-    header = options.header;
-  } else {
-    header += '--' + boundary + FormData.LINE_BREAK +
-      'Content-Disposition: form-data; name="' + field + '"';
-
-    // fs- and request- streams have path property
-    // or use custom filename and/or contentType
-    // TODO: Use request's response mime-type
-    if (options.filename || value.path) {
-      header +=
-        '; filename="' + path.basename(options.filename || value.path) + '"' + FormData.LINE_BREAK +
-        'Content-Type: ' +  (options.contentType || mime.lookup(options.filename || value.path));
-
-    // http response has not
-    } else if (value.readable && value.hasOwnProperty('httpVersion')) {
-      header +=
-        '; filename="' + path.basename(value.client._httpMessage.path) + '"' + FormData.LINE_BREAK +
-        'Content-Type: ' + value.headers['content-type'];
-    }
-
-    header += FormData.LINE_BREAK + FormData.LINE_BREAK;
-  }
-
-  return header;
-};
-
-FormData.prototype._multiPartFooter = function(field, value, options) {
-  return function(next) {
-    var footer = FormData.LINE_BREAK;
-
-    var lastPart = (this._streams.length === 0);
-    if (lastPart) {
-      footer += this._lastBoundary();
-    }
-
-    next(footer);
-  }.bind(this);
-};
-
-FormData.prototype._lastBoundary = function() {
-  return '--' + this.getBoundary() + '--';
-};
-
-FormData.prototype.getHeaders = function(userHeaders) {
-  var formHeaders = {
-    'content-type': 'multipart/form-data; boundary=' + this.getBoundary()
-  };
-
-  for (var header in userHeaders) {
-    formHeaders[header.toLowerCase()] = userHeaders[header];
-  }
-
-  return formHeaders;
-}
-
-FormData.prototype.getCustomHeaders = function(contentType) {
-    contentType = contentType ? contentType : 'multipart/form-data';
-
-    var formHeaders = {
-        'content-type': contentType + '; boundary=' + this.getBoundary(),
-        'content-length': this.getLengthSync()
-    };
-
-    return formHeaders;
-}
-
-FormData.prototype.getBoundary = function() {
-  if (!this._boundary) {
-    this._generateBoundary();
-  }
-
-  return this._boundary;
-};
-
-FormData.prototype._generateBoundary = function() {
-  // This generates a 50 character boundary similar to those used by Firefox.
-  // They are optimized for boyer-moore parsing.
-  var boundary = '--------------------------';
-  for (var i = 0; i < 24; i++) {
-    boundary += Math.floor(Math.random() * 10).toString(16);
-  }
-
-  this._boundary = boundary;
-};
-
-// Note: getLengthSync DOESN'T calculate streams length
-// As workaround one can calculate file size manually
-// and add it as knownLength option
-FormData.prototype.getLengthSync = function(debug) {
-  var knownLength = this._overheadLength + this._valueLength;
-
-  // Don't get confused, there are 3 "internal" streams for each keyval pair
-  // so it basically checks if there is any value added to the form
-  if (this._streams.length) {
-    knownLength += this._lastBoundary().length;
-  }
-
-  // https://github.com/felixge/node-form-data/issues/40
-  if (this._lengthRetrievers.length) {
-    // Some async length retrivers are present
-    // therefore synchronous length calculation is false.
-    // Please use getLength(callback) to get proper length
-    this._error(new Error('Cannot calculate proper length in synchronous way.'));
-  }
-
-  return knownLength;
-};
-
-FormData.prototype.getLength = function(cb) {
-  var knownLength = this._overheadLength + this._valueLength;
-
-  if (this._streams.length) {
-    knownLength += this._lastBoundary().length;
-  }
-
-  if (!this._lengthRetrievers.length) {
-    process.nextTick(cb.bind(this, null, knownLength));
-    return;
-  }
-
-  async.parallel(this._lengthRetrievers, function(err, values) {
-    if (err) {
-      cb(err);
-      return;
-    }
-
-    values.forEach(function(length) {
-      knownLength += length;
-    });
-
-    cb(null, knownLength);
-  });
-};
-
-FormData.prototype.submit = function(params, cb) {
-
-  var request
-    , options
-    , defaults = {
-        method : 'post'
-    };
-
-  // parse provided url if it's string
-  // or treat it as options object
-  if (typeof params == 'string') {
-    params = parseUrl(params);
-
-    options = populate({
-      port: params.port,
-      path: params.pathname,
-      host: params.hostname
-    }, defaults);
-  }
-  else // use custom params
-  {
-    options = populate(params, defaults);
-    // if no port provided use default one
-    if (!options.port) {
-      options.port = options.protocol == 'https:' ? 443 : 80;
-    }
-  }
-
-  // put that good code in getHeaders to some use
-  options.headers = this.getHeaders(params.headers);
-
-  // https if specified, fallback to http in any other case
-  if (params.protocol == 'https:') {
-    request = https.request(options);
-  } else {
-    request = http.request(options);
-  }
-
-  // get content length and fire away
-  this.getLength(function(err, length) {
-
-    // TODO: Add chunked encoding when no length (if err)
-
-    // add content length
-    request.setHeader('Content-Length', length);
-
-    this.pipe(request);
-    if (cb) {
-      request.on('error', cb);
-      request.on('response', cb.bind(this, null));
-    }
-  }.bind(this));
-
-  return request;
-};
-
-FormData.prototype._error = function(err) {
-  if (this.error) return;
-
-  this.error = err;
-  this.pause();
-  this.emit('error', err);
-};
-
-/*
- * Santa's little helpers
- */
-
-// populates missing values
-function populate(dst, src) {
-  for (var prop in src) {
-    if (!dst[prop]) dst[prop] = src[prop];
-  }
-  return dst;
-}
-
-}).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":22,"async":47,"buffer":10,"combined-stream":48,"fs":8,"http":15,"https":19,"mime":50,"path":21,"url":42,"util":44}],47:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (process){
 /*!
  * async
@@ -17488,7 +15955,362 @@ function populate(dst, src) {
 }());
 
 }).call(this,require('_process'))
-},{"_process":22}],48:[function(require,module,exports){
+},{"_process":22}],45:[function(require,module,exports){
+(function (process,Buffer){
+var CombinedStream = require('combined-stream');
+var util = require('util');
+var path = require('path');
+var http = require('http');
+var https = require('https');
+var parseUrl = require('url').parse;
+var fs = require('fs');
+var mime = require('mime');
+var async = require('async');
+
+module.exports = FormData;
+function FormData() {
+  this._overheadLength = 0;
+  this._valueLength = 0;
+  this._lengthRetrievers = [];
+
+  CombinedStream.call(this);
+}
+util.inherits(FormData, CombinedStream);
+
+FormData.LINE_BREAK = '\r\n';
+
+FormData.prototype.append = function(field, value, options) {
+  options = options || {};
+
+  var append = CombinedStream.prototype.append.bind(this);
+
+  // all that streamy business can't handle numbers
+  if (typeof value == 'number') value = ''+value;
+
+  // https://github.com/felixge/node-form-data/issues/38
+  if (util.isArray(value)) {
+    // Please convert your array into string
+    // the way web server expects it
+    this._error(new Error('Arrays are not supported.'));
+    return;
+  }
+
+  var header = this._multiPartHeader(field, value, options);
+  var footer = this._multiPartFooter(field, value, options);
+
+  append(header);
+  append(value);
+  append(footer);
+
+  // pass along options.knownLength
+  this._trackLength(header, value, options);
+};
+
+FormData.prototype._trackLength = function(header, value, options) {
+  var valueLength = 0;
+
+  // used w/ getLengthSync(), when length is known.
+  // e.g. for streaming directly from a remote server,
+  // w/ a known file a size, and not wanting to wait for
+  // incoming file to finish to get its size.
+  if (options.knownLength != null) {
+    valueLength += +options.knownLength;
+  } else if (Buffer.isBuffer(value)) {
+    valueLength = value.length;
+  } else if (typeof value === 'string') {
+    valueLength = Buffer.byteLength(value);
+  }
+
+  this._valueLength += valueLength;
+
+  // @check why add CRLF? does this account for custom/multiple CRLFs?
+  this._overheadLength +=
+    Buffer.byteLength(header) +
+    + FormData.LINE_BREAK.length;
+
+  // empty or either doesn't have path or not an http response
+  if (!value || ( !value.path && !(value.readable && value.hasOwnProperty('httpVersion')) )) {
+    return;
+  }
+
+  // no need to bother with the length
+  if (!options.knownLength)
+  this._lengthRetrievers.push(function(next) {
+
+    if (value.hasOwnProperty('fd')) {
+
+      // take read range into a account
+      // `end` = Infinity –> read file till the end
+      //
+      // TODO: Looks like there is bug in Node fs.createReadStream
+      // it doesn't respect `end` options without `start` options
+      // Fix it when node fixes it.
+      // https://github.com/joyent/node/issues/7819
+      if (value.end != undefined && value.end != Infinity && value.start != undefined) {
+
+        // when end specified
+        // no need to calculate range
+        // inclusive, starts with 0
+        next(null, value.end+1 - (value.start ? value.start : 0));
+
+      // not that fast snoopy
+      } else {
+        // still need to fetch file size from fs
+        fs.stat(value.path, function(err, stat) {
+
+          var fileSize;
+
+          if (err) {
+            next(err);
+            return;
+          }
+
+          // update final size based on the range options
+          fileSize = stat.size - (value.start ? value.start : 0);
+          next(null, fileSize);
+        });
+      }
+
+    // or http response
+    } else if (value.hasOwnProperty('httpVersion')) {
+      next(null, +value.headers['content-length']);
+
+    // or request stream http://github.com/mikeal/request
+    } else if (value.hasOwnProperty('httpModule')) {
+      // wait till response come back
+      value.on('response', function(response) {
+        value.pause();
+        next(null, +response.headers['content-length']);
+      });
+      value.resume();
+
+    // something else
+    } else {
+      next('Unknown stream');
+    }
+  });
+};
+
+FormData.prototype._multiPartHeader = function(field, value, options) {
+  var boundary = this.getBoundary();
+  var header = '';
+
+  // custom header specified (as string)?
+  // it becomes responsible for boundary
+  // (e.g. to handle extra CRLFs on .NET servers)
+  if (options.header != null) {
+    header = options.header;
+  } else {
+    header += '--' + boundary + FormData.LINE_BREAK +
+      'Content-Disposition: form-data; name="' + field + '"';
+
+    // fs- and request- streams have path property
+    // or use custom filename and/or contentType
+    // TODO: Use request's response mime-type
+    if (options.filename || value.path) {
+      header +=
+        '; filename="' + path.basename(options.filename || value.path) + '"' + FormData.LINE_BREAK +
+        'Content-Type: ' +  (options.contentType || mime.lookup(options.filename || value.path));
+
+    // http response has not
+    } else if (value.readable && value.hasOwnProperty('httpVersion')) {
+      header +=
+        '; filename="' + path.basename(value.client._httpMessage.path) + '"' + FormData.LINE_BREAK +
+        'Content-Type: ' + value.headers['content-type'];
+    }
+
+    header += FormData.LINE_BREAK + FormData.LINE_BREAK;
+  }
+
+  return header;
+};
+
+FormData.prototype._multiPartFooter = function(field, value, options) {
+  return function(next) {
+    var footer = FormData.LINE_BREAK;
+
+    var lastPart = (this._streams.length === 0);
+    if (lastPart) {
+      footer += this._lastBoundary();
+    }
+
+    next(footer);
+  }.bind(this);
+};
+
+FormData.prototype._lastBoundary = function() {
+  return '--' + this.getBoundary() + '--';
+};
+
+FormData.prototype.getHeaders = function(userHeaders) {
+  var formHeaders = {
+    'content-type': 'multipart/form-data; boundary=' + this.getBoundary()
+  };
+
+  for (var header in userHeaders) {
+    formHeaders[header.toLowerCase()] = userHeaders[header];
+  }
+
+  return formHeaders;
+}
+
+FormData.prototype.getCustomHeaders = function(contentType) {
+    contentType = contentType ? contentType : 'multipart/form-data';
+
+    var formHeaders = {
+        'content-type': contentType + '; boundary=' + this.getBoundary(),
+        'content-length': this.getLengthSync()
+    };
+
+    return formHeaders;
+}
+
+FormData.prototype.getBoundary = function() {
+  if (!this._boundary) {
+    this._generateBoundary();
+  }
+
+  return this._boundary;
+};
+
+FormData.prototype._generateBoundary = function() {
+  // This generates a 50 character boundary similar to those used by Firefox.
+  // They are optimized for boyer-moore parsing.
+  var boundary = '--------------------------';
+  for (var i = 0; i < 24; i++) {
+    boundary += Math.floor(Math.random() * 10).toString(16);
+  }
+
+  this._boundary = boundary;
+};
+
+// Note: getLengthSync DOESN'T calculate streams length
+// As workaround one can calculate file size manually
+// and add it as knownLength option
+FormData.prototype.getLengthSync = function(debug) {
+  var knownLength = this._overheadLength + this._valueLength;
+
+  // Don't get confused, there are 3 "internal" streams for each keyval pair
+  // so it basically checks if there is any value added to the form
+  if (this._streams.length) {
+    knownLength += this._lastBoundary().length;
+  }
+
+  // https://github.com/felixge/node-form-data/issues/40
+  if (this._lengthRetrievers.length) {
+    // Some async length retrivers are present
+    // therefore synchronous length calculation is false.
+    // Please use getLength(callback) to get proper length
+    this._error(new Error('Cannot calculate proper length in synchronous way.'));
+  }
+
+  return knownLength;
+};
+
+FormData.prototype.getLength = function(cb) {
+  var knownLength = this._overheadLength + this._valueLength;
+
+  if (this._streams.length) {
+    knownLength += this._lastBoundary().length;
+  }
+
+  if (!this._lengthRetrievers.length) {
+    process.nextTick(cb.bind(this, null, knownLength));
+    return;
+  }
+
+  async.parallel(this._lengthRetrievers, function(err, values) {
+    if (err) {
+      cb(err);
+      return;
+    }
+
+    values.forEach(function(length) {
+      knownLength += length;
+    });
+
+    cb(null, knownLength);
+  });
+};
+
+FormData.prototype.submit = function(params, cb) {
+
+  var request
+    , options
+    , defaults = {
+        method : 'post'
+    };
+
+  // parse provided url if it's string
+  // or treat it as options object
+  if (typeof params == 'string') {
+    params = parseUrl(params);
+
+    options = populate({
+      port: params.port,
+      path: params.pathname,
+      host: params.hostname
+    }, defaults);
+  }
+  else // use custom params
+  {
+    options = populate(params, defaults);
+    // if no port provided use default one
+    if (!options.port) {
+      options.port = options.protocol == 'https:' ? 443 : 80;
+    }
+  }
+
+  // put that good code in getHeaders to some use
+  options.headers = this.getHeaders(params.headers);
+
+  // https if specified, fallback to http in any other case
+  if (params.protocol == 'https:') {
+    request = https.request(options);
+  } else {
+    request = http.request(options);
+  }
+
+  // get content length and fire away
+  this.getLength(function(err, length) {
+
+    // TODO: Add chunked encoding when no length (if err)
+
+    // add content length
+    request.setHeader('Content-Length', length);
+
+    this.pipe(request);
+    if (cb) {
+      request.on('error', cb);
+      request.on('response', cb.bind(this, null));
+    }
+  }.bind(this));
+
+  return request;
+};
+
+FormData.prototype._error = function(err) {
+  if (this.error) return;
+
+  this.error = err;
+  this.pause();
+  this.emit('error', err);
+};
+
+/*
+ * Santa's little helpers
+ */
+
+// populates missing values
+function populate(dst, src) {
+  for (var prop in src) {
+    if (!dst[prop]) dst[prop] = src[prop];
+  }
+  return dst;
+}
+
+}).call(this,require('_process'),require("buffer").Buffer)
+},{"_process":22,"async":44,"buffer":9,"combined-stream":46,"fs":7,"http":14,"https":18,"mime":48,"path":21,"url":40,"util":42}],46:[function(require,module,exports){
 (function (Buffer){
 var util = require('util');
 var Stream = require('stream').Stream;
@@ -17680,7 +16502,7 @@ CombinedStream.prototype._emitError = function(err) {
 };
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":10,"delayed-stream":49,"stream":27,"util":44}],49:[function(require,module,exports){
+},{"buffer":9,"delayed-stream":47,"stream":38,"util":42}],47:[function(require,module,exports){
 var Stream = require('stream').Stream;
 var util = require('util');
 
@@ -17781,7 +16603,7 @@ DelayedStream.prototype._checkIfMaxDataSizeExceeded = function() {
   this.emit('error', new Error(message));
 };
 
-},{"stream":27,"util":44}],50:[function(require,module,exports){
+},{"stream":38,"util":42}],48:[function(require,module,exports){
 (function (process,__dirname){
 var path = require('path');
 var fs = require('fs');
@@ -17899,6205 +16721,7 @@ mime.charsets = {
 module.exports = mime;
 
 }).call(this,require('_process'),"/node_modules/pryv/node_modules/form-data/node_modules/mime")
-},{"_process":22,"fs":8,"path":21}],51:[function(require,module,exports){
-//     Underscore.js 1.6.0
-//     http://underscorejs.org
-//     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
-//     Underscore may be freely distributed under the MIT license.
-
-(function() {
-
-  // Baseline setup
-  // --------------
-
-  // Establish the root object, `window` in the browser, or `exports` on the server.
-  var root = this;
-
-  // Save the previous value of the `_` variable.
-  var previousUnderscore = root._;
-
-  // Establish the object that gets returned to break out of a loop iteration.
-  var breaker = {};
-
-  // Save bytes in the minified (but not gzipped) version:
-  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
-
-  // Create quick reference variables for speed access to core prototypes.
-  var
-    push             = ArrayProto.push,
-    slice            = ArrayProto.slice,
-    concat           = ArrayProto.concat,
-    toString         = ObjProto.toString,
-    hasOwnProperty   = ObjProto.hasOwnProperty;
-
-  // All **ECMAScript 5** native function implementations that we hope to use
-  // are declared here.
-  var
-    nativeForEach      = ArrayProto.forEach,
-    nativeMap          = ArrayProto.map,
-    nativeReduce       = ArrayProto.reduce,
-    nativeReduceRight  = ArrayProto.reduceRight,
-    nativeFilter       = ArrayProto.filter,
-    nativeEvery        = ArrayProto.every,
-    nativeSome         = ArrayProto.some,
-    nativeIndexOf      = ArrayProto.indexOf,
-    nativeLastIndexOf  = ArrayProto.lastIndexOf,
-    nativeIsArray      = Array.isArray,
-    nativeKeys         = Object.keys,
-    nativeBind         = FuncProto.bind;
-
-  // Create a safe reference to the Underscore object for use below.
-  var _ = function(obj) {
-    if (obj instanceof _) return obj;
-    if (!(this instanceof _)) return new _(obj);
-    this._wrapped = obj;
-  };
-
-  // Export the Underscore object for **Node.js**, with
-  // backwards-compatibility for the old `require()` API. If we're in
-  // the browser, add `_` as a global object via a string identifier,
-  // for Closure Compiler "advanced" mode.
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = _;
-    }
-    exports._ = _;
-  } else {
-    root._ = _;
-  }
-
-  // Current version.
-  _.VERSION = '1.6.0';
-
-  // Collection Functions
-  // --------------------
-
-  // The cornerstone, an `each` implementation, aka `forEach`.
-  // Handles objects with the built-in `forEach`, arrays, and raw objects.
-  // Delegates to **ECMAScript 5**'s native `forEach` if available.
-  var each = _.each = _.forEach = function(obj, iterator, context) {
-    if (obj == null) return obj;
-    if (nativeForEach && obj.forEach === nativeForEach) {
-      obj.forEach(iterator, context);
-    } else if (obj.length === +obj.length) {
-      for (var i = 0, length = obj.length; i < length; i++) {
-        if (iterator.call(context, obj[i], i, obj) === breaker) return;
-      }
-    } else {
-      var keys = _.keys(obj);
-      for (var i = 0, length = keys.length; i < length; i++) {
-        if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
-      }
-    }
-    return obj;
-  };
-
-  // Return the results of applying the iterator to each element.
-  // Delegates to **ECMAScript 5**'s native `map` if available.
-  _.map = _.collect = function(obj, iterator, context) {
-    var results = [];
-    if (obj == null) return results;
-    if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
-    each(obj, function(value, index, list) {
-      results.push(iterator.call(context, value, index, list));
-    });
-    return results;
-  };
-
-  var reduceError = 'Reduce of empty array with no initial value';
-
-  // **Reduce** builds up a single result from a list of values, aka `inject`,
-  // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
-  _.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
-    var initial = arguments.length > 2;
-    if (obj == null) obj = [];
-    if (nativeReduce && obj.reduce === nativeReduce) {
-      if (context) iterator = _.bind(iterator, context);
-      return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
-    }
-    each(obj, function(value, index, list) {
-      if (!initial) {
-        memo = value;
-        initial = true;
-      } else {
-        memo = iterator.call(context, memo, value, index, list);
-      }
-    });
-    if (!initial) throw new TypeError(reduceError);
-    return memo;
-  };
-
-  // The right-associative version of reduce, also known as `foldr`.
-  // Delegates to **ECMAScript 5**'s native `reduceRight` if available.
-  _.reduceRight = _.foldr = function(obj, iterator, memo, context) {
-    var initial = arguments.length > 2;
-    if (obj == null) obj = [];
-    if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
-      if (context) iterator = _.bind(iterator, context);
-      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
-    }
-    var length = obj.length;
-    if (length !== +length) {
-      var keys = _.keys(obj);
-      length = keys.length;
-    }
-    each(obj, function(value, index, list) {
-      index = keys ? keys[--length] : --length;
-      if (!initial) {
-        memo = obj[index];
-        initial = true;
-      } else {
-        memo = iterator.call(context, memo, obj[index], index, list);
-      }
-    });
-    if (!initial) throw new TypeError(reduceError);
-    return memo;
-  };
-
-  // Return the first value which passes a truth test. Aliased as `detect`.
-  _.find = _.detect = function(obj, predicate, context) {
-    var result;
-    any(obj, function(value, index, list) {
-      if (predicate.call(context, value, index, list)) {
-        result = value;
-        return true;
-      }
-    });
-    return result;
-  };
-
-  // Return all the elements that pass a truth test.
-  // Delegates to **ECMAScript 5**'s native `filter` if available.
-  // Aliased as `select`.
-  _.filter = _.select = function(obj, predicate, context) {
-    var results = [];
-    if (obj == null) return results;
-    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(predicate, context);
-    each(obj, function(value, index, list) {
-      if (predicate.call(context, value, index, list)) results.push(value);
-    });
-    return results;
-  };
-
-  // Return all the elements for which a truth test fails.
-  _.reject = function(obj, predicate, context) {
-    return _.filter(obj, function(value, index, list) {
-      return !predicate.call(context, value, index, list);
-    }, context);
-  };
-
-  // Determine whether all of the elements match a truth test.
-  // Delegates to **ECMAScript 5**'s native `every` if available.
-  // Aliased as `all`.
-  _.every = _.all = function(obj, predicate, context) {
-    predicate || (predicate = _.identity);
-    var result = true;
-    if (obj == null) return result;
-    if (nativeEvery && obj.every === nativeEvery) return obj.every(predicate, context);
-    each(obj, function(value, index, list) {
-      if (!(result = result && predicate.call(context, value, index, list))) return breaker;
-    });
-    return !!result;
-  };
-
-  // Determine if at least one element in the object matches a truth test.
-  // Delegates to **ECMAScript 5**'s native `some` if available.
-  // Aliased as `any`.
-  var any = _.some = _.any = function(obj, predicate, context) {
-    predicate || (predicate = _.identity);
-    var result = false;
-    if (obj == null) return result;
-    if (nativeSome && obj.some === nativeSome) return obj.some(predicate, context);
-    each(obj, function(value, index, list) {
-      if (result || (result = predicate.call(context, value, index, list))) return breaker;
-    });
-    return !!result;
-  };
-
-  // Determine if the array or object contains a given value (using `===`).
-  // Aliased as `include`.
-  _.contains = _.include = function(obj, target) {
-    if (obj == null) return false;
-    if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
-    return any(obj, function(value) {
-      return value === target;
-    });
-  };
-
-  // Invoke a method (with arguments) on every item in a collection.
-  _.invoke = function(obj, method) {
-    var args = slice.call(arguments, 2);
-    var isFunc = _.isFunction(method);
-    return _.map(obj, function(value) {
-      return (isFunc ? method : value[method]).apply(value, args);
-    });
-  };
-
-  // Convenience version of a common use case of `map`: fetching a property.
-  _.pluck = function(obj, key) {
-    return _.map(obj, _.property(key));
-  };
-
-  // Convenience version of a common use case of `filter`: selecting only objects
-  // containing specific `key:value` pairs.
-  _.where = function(obj, attrs) {
-    return _.filter(obj, _.matches(attrs));
-  };
-
-  // Convenience version of a common use case of `find`: getting the first object
-  // containing specific `key:value` pairs.
-  _.findWhere = function(obj, attrs) {
-    return _.find(obj, _.matches(attrs));
-  };
-
-  // Return the maximum element or (element-based computation).
-  // Can't optimize arrays of integers longer than 65,535 elements.
-  // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
-  _.max = function(obj, iterator, context) {
-    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
-      return Math.max.apply(Math, obj);
-    }
-    var result = -Infinity, lastComputed = -Infinity;
-    each(obj, function(value, index, list) {
-      var computed = iterator ? iterator.call(context, value, index, list) : value;
-      if (computed > lastComputed) {
-        result = value;
-        lastComputed = computed;
-      }
-    });
-    return result;
-  };
-
-  // Return the minimum element (or element-based computation).
-  _.min = function(obj, iterator, context) {
-    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
-      return Math.min.apply(Math, obj);
-    }
-    var result = Infinity, lastComputed = Infinity;
-    each(obj, function(value, index, list) {
-      var computed = iterator ? iterator.call(context, value, index, list) : value;
-      if (computed < lastComputed) {
-        result = value;
-        lastComputed = computed;
-      }
-    });
-    return result;
-  };
-
-  // Shuffle an array, using the modern version of the
-  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
-  _.shuffle = function(obj) {
-    var rand;
-    var index = 0;
-    var shuffled = [];
-    each(obj, function(value) {
-      rand = _.random(index++);
-      shuffled[index - 1] = shuffled[rand];
-      shuffled[rand] = value;
-    });
-    return shuffled;
-  };
-
-  // Sample **n** random values from a collection.
-  // If **n** is not specified, returns a single random element.
-  // The internal `guard` argument allows it to work with `map`.
-  _.sample = function(obj, n, guard) {
-    if (n == null || guard) {
-      if (obj.length !== +obj.length) obj = _.values(obj);
-      return obj[_.random(obj.length - 1)];
-    }
-    return _.shuffle(obj).slice(0, Math.max(0, n));
-  };
-
-  // An internal function to generate lookup iterators.
-  var lookupIterator = function(value) {
-    if (value == null) return _.identity;
-    if (_.isFunction(value)) return value;
-    return _.property(value);
-  };
-
-  // Sort the object's values by a criterion produced by an iterator.
-  _.sortBy = function(obj, iterator, context) {
-    iterator = lookupIterator(iterator);
-    return _.pluck(_.map(obj, function(value, index, list) {
-      return {
-        value: value,
-        index: index,
-        criteria: iterator.call(context, value, index, list)
-      };
-    }).sort(function(left, right) {
-      var a = left.criteria;
-      var b = right.criteria;
-      if (a !== b) {
-        if (a > b || a === void 0) return 1;
-        if (a < b || b === void 0) return -1;
-      }
-      return left.index - right.index;
-    }), 'value');
-  };
-
-  // An internal function used for aggregate "group by" operations.
-  var group = function(behavior) {
-    return function(obj, iterator, context) {
-      var result = {};
-      iterator = lookupIterator(iterator);
-      each(obj, function(value, index) {
-        var key = iterator.call(context, value, index, obj);
-        behavior(result, key, value);
-      });
-      return result;
-    };
-  };
-
-  // Groups the object's values by a criterion. Pass either a string attribute
-  // to group by, or a function that returns the criterion.
-  _.groupBy = group(function(result, key, value) {
-    _.has(result, key) ? result[key].push(value) : result[key] = [value];
-  });
-
-  // Indexes the object's values by a criterion, similar to `groupBy`, but for
-  // when you know that your index values will be unique.
-  _.indexBy = group(function(result, key, value) {
-    result[key] = value;
-  });
-
-  // Counts instances of an object that group by a certain criterion. Pass
-  // either a string attribute to count by, or a function that returns the
-  // criterion.
-  _.countBy = group(function(result, key) {
-    _.has(result, key) ? result[key]++ : result[key] = 1;
-  });
-
-  // Use a comparator function to figure out the smallest index at which
-  // an object should be inserted so as to maintain order. Uses binary search.
-  _.sortedIndex = function(array, obj, iterator, context) {
-    iterator = lookupIterator(iterator);
-    var value = iterator.call(context, obj);
-    var low = 0, high = array.length;
-    while (low < high) {
-      var mid = (low + high) >>> 1;
-      iterator.call(context, array[mid]) < value ? low = mid + 1 : high = mid;
-    }
-    return low;
-  };
-
-  // Safely create a real, live array from anything iterable.
-  _.toArray = function(obj) {
-    if (!obj) return [];
-    if (_.isArray(obj)) return slice.call(obj);
-    if (obj.length === +obj.length) return _.map(obj, _.identity);
-    return _.values(obj);
-  };
-
-  // Return the number of elements in an object.
-  _.size = function(obj) {
-    if (obj == null) return 0;
-    return (obj.length === +obj.length) ? obj.length : _.keys(obj).length;
-  };
-
-  // Array Functions
-  // ---------------
-
-  // Get the first element of an array. Passing **n** will return the first N
-  // values in the array. Aliased as `head` and `take`. The **guard** check
-  // allows it to work with `_.map`.
-  _.first = _.head = _.take = function(array, n, guard) {
-    if (array == null) return void 0;
-    if ((n == null) || guard) return array[0];
-    if (n < 0) return [];
-    return slice.call(array, 0, n);
-  };
-
-  // Returns everything but the last entry of the array. Especially useful on
-  // the arguments object. Passing **n** will return all the values in
-  // the array, excluding the last N. The **guard** check allows it to work with
-  // `_.map`.
-  _.initial = function(array, n, guard) {
-    return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
-  };
-
-  // Get the last element of an array. Passing **n** will return the last N
-  // values in the array. The **guard** check allows it to work with `_.map`.
-  _.last = function(array, n, guard) {
-    if (array == null) return void 0;
-    if ((n == null) || guard) return array[array.length - 1];
-    return slice.call(array, Math.max(array.length - n, 0));
-  };
-
-  // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
-  // Especially useful on the arguments object. Passing an **n** will return
-  // the rest N values in the array. The **guard**
-  // check allows it to work with `_.map`.
-  _.rest = _.tail = _.drop = function(array, n, guard) {
-    return slice.call(array, (n == null) || guard ? 1 : n);
-  };
-
-  // Trim out all falsy values from an array.
-  _.compact = function(array) {
-    return _.filter(array, _.identity);
-  };
-
-  // Internal implementation of a recursive `flatten` function.
-  var flatten = function(input, shallow, output) {
-    if (shallow && _.every(input, _.isArray)) {
-      return concat.apply(output, input);
-    }
-    each(input, function(value) {
-      if (_.isArray(value) || _.isArguments(value)) {
-        shallow ? push.apply(output, value) : flatten(value, shallow, output);
-      } else {
-        output.push(value);
-      }
-    });
-    return output;
-  };
-
-  // Flatten out an array, either recursively (by default), or just one level.
-  _.flatten = function(array, shallow) {
-    return flatten(array, shallow, []);
-  };
-
-  // Return a version of the array that does not contain the specified value(s).
-  _.without = function(array) {
-    return _.difference(array, slice.call(arguments, 1));
-  };
-
-  // Split an array into two arrays: one whose elements all satisfy the given
-  // predicate, and one whose elements all do not satisfy the predicate.
-  _.partition = function(array, predicate) {
-    var pass = [], fail = [];
-    each(array, function(elem) {
-      (predicate(elem) ? pass : fail).push(elem);
-    });
-    return [pass, fail];
-  };
-
-  // Produce a duplicate-free version of the array. If the array has already
-  // been sorted, you have the option of using a faster algorithm.
-  // Aliased as `unique`.
-  _.uniq = _.unique = function(array, isSorted, iterator, context) {
-    if (_.isFunction(isSorted)) {
-      context = iterator;
-      iterator = isSorted;
-      isSorted = false;
-    }
-    var initial = iterator ? _.map(array, iterator, context) : array;
-    var results = [];
-    var seen = [];
-    each(initial, function(value, index) {
-      if (isSorted ? (!index || seen[seen.length - 1] !== value) : !_.contains(seen, value)) {
-        seen.push(value);
-        results.push(array[index]);
-      }
-    });
-    return results;
-  };
-
-  // Produce an array that contains the union: each distinct element from all of
-  // the passed-in arrays.
-  _.union = function() {
-    return _.uniq(_.flatten(arguments, true));
-  };
-
-  // Produce an array that contains every item shared between all the
-  // passed-in arrays.
-  _.intersection = function(array) {
-    var rest = slice.call(arguments, 1);
-    return _.filter(_.uniq(array), function(item) {
-      return _.every(rest, function(other) {
-        return _.contains(other, item);
-      });
-    });
-  };
-
-  // Take the difference between one array and a number of other arrays.
-  // Only the elements present in just the first array will remain.
-  _.difference = function(array) {
-    var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
-    return _.filter(array, function(value){ return !_.contains(rest, value); });
-  };
-
-  // Zip together multiple lists into a single array -- elements that share
-  // an index go together.
-  _.zip = function() {
-    var length = _.max(_.pluck(arguments, 'length').concat(0));
-    var results = new Array(length);
-    for (var i = 0; i < length; i++) {
-      results[i] = _.pluck(arguments, '' + i);
-    }
-    return results;
-  };
-
-  // Converts lists into objects. Pass either a single array of `[key, value]`
-  // pairs, or two parallel arrays of the same length -- one of keys, and one of
-  // the corresponding values.
-  _.object = function(list, values) {
-    if (list == null) return {};
-    var result = {};
-    for (var i = 0, length = list.length; i < length; i++) {
-      if (values) {
-        result[list[i]] = values[i];
-      } else {
-        result[list[i][0]] = list[i][1];
-      }
-    }
-    return result;
-  };
-
-  // If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
-  // we need this function. Return the position of the first occurrence of an
-  // item in an array, or -1 if the item is not included in the array.
-  // Delegates to **ECMAScript 5**'s native `indexOf` if available.
-  // If the array is large and already in sort order, pass `true`
-  // for **isSorted** to use binary search.
-  _.indexOf = function(array, item, isSorted) {
-    if (array == null) return -1;
-    var i = 0, length = array.length;
-    if (isSorted) {
-      if (typeof isSorted == 'number') {
-        i = (isSorted < 0 ? Math.max(0, length + isSorted) : isSorted);
-      } else {
-        i = _.sortedIndex(array, item);
-        return array[i] === item ? i : -1;
-      }
-    }
-    if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
-    for (; i < length; i++) if (array[i] === item) return i;
-    return -1;
-  };
-
-  // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
-  _.lastIndexOf = function(array, item, from) {
-    if (array == null) return -1;
-    var hasIndex = from != null;
-    if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) {
-      return hasIndex ? array.lastIndexOf(item, from) : array.lastIndexOf(item);
-    }
-    var i = (hasIndex ? from : array.length);
-    while (i--) if (array[i] === item) return i;
-    return -1;
-  };
-
-  // Generate an integer Array containing an arithmetic progression. A port of
-  // the native Python `range()` function. See
-  // [the Python documentation](http://docs.python.org/library/functions.html#range).
-  _.range = function(start, stop, step) {
-    if (arguments.length <= 1) {
-      stop = start || 0;
-      start = 0;
-    }
-    step = arguments[2] || 1;
-
-    var length = Math.max(Math.ceil((stop - start) / step), 0);
-    var idx = 0;
-    var range = new Array(length);
-
-    while(idx < length) {
-      range[idx++] = start;
-      start += step;
-    }
-
-    return range;
-  };
-
-  // Function (ahem) Functions
-  // ------------------
-
-  // Reusable constructor function for prototype setting.
-  var ctor = function(){};
-
-  // Create a function bound to a given object (assigning `this`, and arguments,
-  // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
-  // available.
-  _.bind = function(func, context) {
-    var args, bound;
-    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    if (!_.isFunction(func)) throw new TypeError;
-    args = slice.call(arguments, 2);
-    return bound = function() {
-      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
-      ctor.prototype = func.prototype;
-      var self = new ctor;
-      ctor.prototype = null;
-      var result = func.apply(self, args.concat(slice.call(arguments)));
-      if (Object(result) === result) return result;
-      return self;
-    };
-  };
-
-  // Partially apply a function by creating a version that has had some of its
-  // arguments pre-filled, without changing its dynamic `this` context. _ acts
-  // as a placeholder, allowing any combination of arguments to be pre-filled.
-  _.partial = function(func) {
-    var boundArgs = slice.call(arguments, 1);
-    return function() {
-      var position = 0;
-      var args = boundArgs.slice();
-      for (var i = 0, length = args.length; i < length; i++) {
-        if (args[i] === _) args[i] = arguments[position++];
-      }
-      while (position < arguments.length) args.push(arguments[position++]);
-      return func.apply(this, args);
-    };
-  };
-
-  // Bind a number of an object's methods to that object. Remaining arguments
-  // are the method names to be bound. Useful for ensuring that all callbacks
-  // defined on an object belong to it.
-  _.bindAll = function(obj) {
-    var funcs = slice.call(arguments, 1);
-    if (funcs.length === 0) throw new Error('bindAll must be passed function names');
-    each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
-    return obj;
-  };
-
-  // Memoize an expensive function by storing its results.
-  _.memoize = function(func, hasher) {
-    var memo = {};
-    hasher || (hasher = _.identity);
-    return function() {
-      var key = hasher.apply(this, arguments);
-      return _.has(memo, key) ? memo[key] : (memo[key] = func.apply(this, arguments));
-    };
-  };
-
-  // Delays a function for the given number of milliseconds, and then calls
-  // it with the arguments supplied.
-  _.delay = function(func, wait) {
-    var args = slice.call(arguments, 2);
-    return setTimeout(function(){ return func.apply(null, args); }, wait);
-  };
-
-  // Defers a function, scheduling it to run after the current call stack has
-  // cleared.
-  _.defer = function(func) {
-    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
-  };
-
-  // Returns a function, that, when invoked, will only be triggered at most once
-  // during a given window of time. Normally, the throttled function will run
-  // as much as it can, without ever going more than once per `wait` duration;
-  // but if you'd like to disable the execution on the leading edge, pass
-  // `{leading: false}`. To disable execution on the trailing edge, ditto.
-  _.throttle = function(func, wait, options) {
-    var context, args, result;
-    var timeout = null;
-    var previous = 0;
-    options || (options = {});
-    var later = function() {
-      previous = options.leading === false ? 0 : _.now();
-      timeout = null;
-      result = func.apply(context, args);
-      context = args = null;
-    };
-    return function() {
-      var now = _.now();
-      if (!previous && options.leading === false) previous = now;
-      var remaining = wait - (now - previous);
-      context = this;
-      args = arguments;
-      if (remaining <= 0) {
-        clearTimeout(timeout);
-        timeout = null;
-        previous = now;
-        result = func.apply(context, args);
-        context = args = null;
-      } else if (!timeout && options.trailing !== false) {
-        timeout = setTimeout(later, remaining);
-      }
-      return result;
-    };
-  };
-
-  // Returns a function, that, as long as it continues to be invoked, will not
-  // be triggered. The function will be called after it stops being called for
-  // N milliseconds. If `immediate` is passed, trigger the function on the
-  // leading edge, instead of the trailing.
-  _.debounce = function(func, wait, immediate) {
-    var timeout, args, context, timestamp, result;
-
-    var later = function() {
-      var last = _.now() - timestamp;
-      if (last < wait) {
-        timeout = setTimeout(later, wait - last);
-      } else {
-        timeout = null;
-        if (!immediate) {
-          result = func.apply(context, args);
-          context = args = null;
-        }
-      }
-    };
-
-    return function() {
-      context = this;
-      args = arguments;
-      timestamp = _.now();
-      var callNow = immediate && !timeout;
-      if (!timeout) {
-        timeout = setTimeout(later, wait);
-      }
-      if (callNow) {
-        result = func.apply(context, args);
-        context = args = null;
-      }
-
-      return result;
-    };
-  };
-
-  // Returns a function that will be executed at most one time, no matter how
-  // often you call it. Useful for lazy initialization.
-  _.once = function(func) {
-    var ran = false, memo;
-    return function() {
-      if (ran) return memo;
-      ran = true;
-      memo = func.apply(this, arguments);
-      func = null;
-      return memo;
-    };
-  };
-
-  // Returns the first function passed as an argument to the second,
-  // allowing you to adjust arguments, run code before and after, and
-  // conditionally execute the original function.
-  _.wrap = function(func, wrapper) {
-    return _.partial(wrapper, func);
-  };
-
-  // Returns a function that is the composition of a list of functions, each
-  // consuming the return value of the function that follows.
-  _.compose = function() {
-    var funcs = arguments;
-    return function() {
-      var args = arguments;
-      for (var i = funcs.length - 1; i >= 0; i--) {
-        args = [funcs[i].apply(this, args)];
-      }
-      return args[0];
-    };
-  };
-
-  // Returns a function that will only be executed after being called N times.
-  _.after = function(times, func) {
-    return function() {
-      if (--times < 1) {
-        return func.apply(this, arguments);
-      }
-    };
-  };
-
-  // Object Functions
-  // ----------------
-
-  // Retrieve the names of an object's properties.
-  // Delegates to **ECMAScript 5**'s native `Object.keys`
-  _.keys = function(obj) {
-    if (!_.isObject(obj)) return [];
-    if (nativeKeys) return nativeKeys(obj);
-    var keys = [];
-    for (var key in obj) if (_.has(obj, key)) keys.push(key);
-    return keys;
-  };
-
-  // Retrieve the values of an object's properties.
-  _.values = function(obj) {
-    var keys = _.keys(obj);
-    var length = keys.length;
-    var values = new Array(length);
-    for (var i = 0; i < length; i++) {
-      values[i] = obj[keys[i]];
-    }
-    return values;
-  };
-
-  // Convert an object into a list of `[key, value]` pairs.
-  _.pairs = function(obj) {
-    var keys = _.keys(obj);
-    var length = keys.length;
-    var pairs = new Array(length);
-    for (var i = 0; i < length; i++) {
-      pairs[i] = [keys[i], obj[keys[i]]];
-    }
-    return pairs;
-  };
-
-  // Invert the keys and values of an object. The values must be serializable.
-  _.invert = function(obj) {
-    var result = {};
-    var keys = _.keys(obj);
-    for (var i = 0, length = keys.length; i < length; i++) {
-      result[obj[keys[i]]] = keys[i];
-    }
-    return result;
-  };
-
-  // Return a sorted list of the function names available on the object.
-  // Aliased as `methods`
-  _.functions = _.methods = function(obj) {
-    var names = [];
-    for (var key in obj) {
-      if (_.isFunction(obj[key])) names.push(key);
-    }
-    return names.sort();
-  };
-
-  // Extend a given object with all the properties in passed-in object(s).
-  _.extend = function(obj) {
-    each(slice.call(arguments, 1), function(source) {
-      if (source) {
-        for (var prop in source) {
-          obj[prop] = source[prop];
-        }
-      }
-    });
-    return obj;
-  };
-
-  // Return a copy of the object only containing the whitelisted properties.
-  _.pick = function(obj) {
-    var copy = {};
-    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
-    each(keys, function(key) {
-      if (key in obj) copy[key] = obj[key];
-    });
-    return copy;
-  };
-
-   // Return a copy of the object without the blacklisted properties.
-  _.omit = function(obj) {
-    var copy = {};
-    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
-    for (var key in obj) {
-      if (!_.contains(keys, key)) copy[key] = obj[key];
-    }
-    return copy;
-  };
-
-  // Fill in a given object with default properties.
-  _.defaults = function(obj) {
-    each(slice.call(arguments, 1), function(source) {
-      if (source) {
-        for (var prop in source) {
-          if (obj[prop] === void 0) obj[prop] = source[prop];
-        }
-      }
-    });
-    return obj;
-  };
-
-  // Create a (shallow-cloned) duplicate of an object.
-  _.clone = function(obj) {
-    if (!_.isObject(obj)) return obj;
-    return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
-  };
-
-  // Invokes interceptor with the obj, and then returns obj.
-  // The primary purpose of this method is to "tap into" a method chain, in
-  // order to perform operations on intermediate results within the chain.
-  _.tap = function(obj, interceptor) {
-    interceptor(obj);
-    return obj;
-  };
-
-  // Internal recursive comparison function for `isEqual`.
-  var eq = function(a, b, aStack, bStack) {
-    // Identical objects are equal. `0 === -0`, but they aren't identical.
-    // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
-    if (a === b) return a !== 0 || 1 / a == 1 / b;
-    // A strict comparison is necessary because `null == undefined`.
-    if (a == null || b == null) return a === b;
-    // Unwrap any wrapped objects.
-    if (a instanceof _) a = a._wrapped;
-    if (b instanceof _) b = b._wrapped;
-    // Compare `[[Class]]` names.
-    var className = toString.call(a);
-    if (className != toString.call(b)) return false;
-    switch (className) {
-      // Strings, numbers, dates, and booleans are compared by value.
-      case '[object String]':
-        // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
-        // equivalent to `new String("5")`.
-        return a == String(b);
-      case '[object Number]':
-        // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
-        // other numeric values.
-        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
-      case '[object Date]':
-      case '[object Boolean]':
-        // Coerce dates and booleans to numeric primitive values. Dates are compared by their
-        // millisecond representations. Note that invalid dates with millisecond representations
-        // of `NaN` are not equivalent.
-        return +a == +b;
-      // RegExps are compared by their source patterns and flags.
-      case '[object RegExp]':
-        return a.source == b.source &&
-               a.global == b.global &&
-               a.multiline == b.multiline &&
-               a.ignoreCase == b.ignoreCase;
-    }
-    if (typeof a != 'object' || typeof b != 'object') return false;
-    // Assume equality for cyclic structures. The algorithm for detecting cyclic
-    // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
-    var length = aStack.length;
-    while (length--) {
-      // Linear search. Performance is inversely proportional to the number of
-      // unique nested structures.
-      if (aStack[length] == a) return bStack[length] == b;
-    }
-    // Objects with different constructors are not equivalent, but `Object`s
-    // from different frames are.
-    var aCtor = a.constructor, bCtor = b.constructor;
-    if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
-                             _.isFunction(bCtor) && (bCtor instanceof bCtor))
-                        && ('constructor' in a && 'constructor' in b)) {
-      return false;
-    }
-    // Add the first object to the stack of traversed objects.
-    aStack.push(a);
-    bStack.push(b);
-    var size = 0, result = true;
-    // Recursively compare objects and arrays.
-    if (className == '[object Array]') {
-      // Compare array lengths to determine if a deep comparison is necessary.
-      size = a.length;
-      result = size == b.length;
-      if (result) {
-        // Deep compare the contents, ignoring non-numeric properties.
-        while (size--) {
-          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
-        }
-      }
-    } else {
-      // Deep compare objects.
-      for (var key in a) {
-        if (_.has(a, key)) {
-          // Count the expected number of properties.
-          size++;
-          // Deep compare each member.
-          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
-        }
-      }
-      // Ensure that both objects contain the same number of properties.
-      if (result) {
-        for (key in b) {
-          if (_.has(b, key) && !(size--)) break;
-        }
-        result = !size;
-      }
-    }
-    // Remove the first object from the stack of traversed objects.
-    aStack.pop();
-    bStack.pop();
-    return result;
-  };
-
-  // Perform a deep comparison to check if two objects are equal.
-  _.isEqual = function(a, b) {
-    return eq(a, b, [], []);
-  };
-
-  // Is a given array, string, or object empty?
-  // An "empty" object has no enumerable own-properties.
-  _.isEmpty = function(obj) {
-    if (obj == null) return true;
-    if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
-    for (var key in obj) if (_.has(obj, key)) return false;
-    return true;
-  };
-
-  // Is a given value a DOM element?
-  _.isElement = function(obj) {
-    return !!(obj && obj.nodeType === 1);
-  };
-
-  // Is a given value an array?
-  // Delegates to ECMA5's native Array.isArray
-  _.isArray = nativeIsArray || function(obj) {
-    return toString.call(obj) == '[object Array]';
-  };
-
-  // Is a given variable an object?
-  _.isObject = function(obj) {
-    return obj === Object(obj);
-  };
-
-  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
-  each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
-    _['is' + name] = function(obj) {
-      return toString.call(obj) == '[object ' + name + ']';
-    };
-  });
-
-  // Define a fallback version of the method in browsers (ahem, IE), where
-  // there isn't any inspectable "Arguments" type.
-  if (!_.isArguments(arguments)) {
-    _.isArguments = function(obj) {
-      return !!(obj && _.has(obj, 'callee'));
-    };
-  }
-
-  // Optimize `isFunction` if appropriate.
-  if (typeof (/./) !== 'function') {
-    _.isFunction = function(obj) {
-      return typeof obj === 'function';
-    };
-  }
-
-  // Is a given object a finite number?
-  _.isFinite = function(obj) {
-    return isFinite(obj) && !isNaN(parseFloat(obj));
-  };
-
-  // Is the given value `NaN`? (NaN is the only number which does not equal itself).
-  _.isNaN = function(obj) {
-    return _.isNumber(obj) && obj != +obj;
-  };
-
-  // Is a given value a boolean?
-  _.isBoolean = function(obj) {
-    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
-  };
-
-  // Is a given value equal to null?
-  _.isNull = function(obj) {
-    return obj === null;
-  };
-
-  // Is a given variable undefined?
-  _.isUndefined = function(obj) {
-    return obj === void 0;
-  };
-
-  // Shortcut function for checking if an object has a given property directly
-  // on itself (in other words, not on a prototype).
-  _.has = function(obj, key) {
-    return hasOwnProperty.call(obj, key);
-  };
-
-  // Utility Functions
-  // -----------------
-
-  // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
-  // previous owner. Returns a reference to the Underscore object.
-  _.noConflict = function() {
-    root._ = previousUnderscore;
-    return this;
-  };
-
-  // Keep the identity function around for default iterators.
-  _.identity = function(value) {
-    return value;
-  };
-
-  _.constant = function(value) {
-    return function () {
-      return value;
-    };
-  };
-
-  _.property = function(key) {
-    return function(obj) {
-      return obj[key];
-    };
-  };
-
-  // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
-  _.matches = function(attrs) {
-    return function(obj) {
-      if (obj === attrs) return true; //avoid comparing an object to itself.
-      for (var key in attrs) {
-        if (attrs[key] !== obj[key])
-          return false;
-      }
-      return true;
-    }
-  };
-
-  // Run a function **n** times.
-  _.times = function(n, iterator, context) {
-    var accum = Array(Math.max(0, n));
-    for (var i = 0; i < n; i++) accum[i] = iterator.call(context, i);
-    return accum;
-  };
-
-  // Return a random integer between min and max (inclusive).
-  _.random = function(min, max) {
-    if (max == null) {
-      max = min;
-      min = 0;
-    }
-    return min + Math.floor(Math.random() * (max - min + 1));
-  };
-
-  // A (possibly faster) way to get the current timestamp as an integer.
-  _.now = Date.now || function() { return new Date().getTime(); };
-
-  // List of HTML entities for escaping.
-  var entityMap = {
-    escape: {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#x27;'
-    }
-  };
-  entityMap.unescape = _.invert(entityMap.escape);
-
-  // Regexes containing the keys and values listed immediately above.
-  var entityRegexes = {
-    escape:   new RegExp('[' + _.keys(entityMap.escape).join('') + ']', 'g'),
-    unescape: new RegExp('(' + _.keys(entityMap.unescape).join('|') + ')', 'g')
-  };
-
-  // Functions for escaping and unescaping strings to/from HTML interpolation.
-  _.each(['escape', 'unescape'], function(method) {
-    _[method] = function(string) {
-      if (string == null) return '';
-      return ('' + string).replace(entityRegexes[method], function(match) {
-        return entityMap[method][match];
-      });
-    };
-  });
-
-  // If the value of the named `property` is a function then invoke it with the
-  // `object` as context; otherwise, return it.
-  _.result = function(object, property) {
-    if (object == null) return void 0;
-    var value = object[property];
-    return _.isFunction(value) ? value.call(object) : value;
-  };
-
-  // Add your own custom functions to the Underscore object.
-  _.mixin = function(obj) {
-    each(_.functions(obj), function(name) {
-      var func = _[name] = obj[name];
-      _.prototype[name] = function() {
-        var args = [this._wrapped];
-        push.apply(args, arguments);
-        return result.call(this, func.apply(_, args));
-      };
-    });
-  };
-
-  // Generate a unique integer id (unique within the entire client session).
-  // Useful for temporary DOM ids.
-  var idCounter = 0;
-  _.uniqueId = function(prefix) {
-    var id = ++idCounter + '';
-    return prefix ? prefix + id : id;
-  };
-
-  // By default, Underscore uses ERB-style template delimiters, change the
-  // following template settings to use alternative delimiters.
-  _.templateSettings = {
-    evaluate    : /<%([\s\S]+?)%>/g,
-    interpolate : /<%=([\s\S]+?)%>/g,
-    escape      : /<%-([\s\S]+?)%>/g
-  };
-
-  // When customizing `templateSettings`, if you don't want to define an
-  // interpolation, evaluation or escaping regex, we need one that is
-  // guaranteed not to match.
-  var noMatch = /(.)^/;
-
-  // Certain characters need to be escaped so that they can be put into a
-  // string literal.
-  var escapes = {
-    "'":      "'",
-    '\\':     '\\',
-    '\r':     'r',
-    '\n':     'n',
-    '\t':     't',
-    '\u2028': 'u2028',
-    '\u2029': 'u2029'
-  };
-
-  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
-
-  // JavaScript micro-templating, similar to John Resig's implementation.
-  // Underscore templating handles arbitrary delimiters, preserves whitespace,
-  // and correctly escapes quotes within interpolated code.
-  _.template = function(text, data, settings) {
-    var render;
-    settings = _.defaults({}, settings, _.templateSettings);
-
-    // Combine delimiters into one regular expression via alternation.
-    var matcher = new RegExp([
-      (settings.escape || noMatch).source,
-      (settings.interpolate || noMatch).source,
-      (settings.evaluate || noMatch).source
-    ].join('|') + '|$', 'g');
-
-    // Compile the template source, escaping string literals appropriately.
-    var index = 0;
-    var source = "__p+='";
-    text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
-      source += text.slice(index, offset)
-        .replace(escaper, function(match) { return '\\' + escapes[match]; });
-
-      if (escape) {
-        source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
-      }
-      if (interpolate) {
-        source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
-      }
-      if (evaluate) {
-        source += "';\n" + evaluate + "\n__p+='";
-      }
-      index = offset + match.length;
-      return match;
-    });
-    source += "';\n";
-
-    // If a variable is not specified, place data values in local scope.
-    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
-
-    source = "var __t,__p='',__j=Array.prototype.join," +
-      "print=function(){__p+=__j.call(arguments,'');};\n" +
-      source + "return __p;\n";
-
-    try {
-      render = new Function(settings.variable || 'obj', '_', source);
-    } catch (e) {
-      e.source = source;
-      throw e;
-    }
-
-    if (data) return render(data, _);
-    var template = function(data) {
-      return render.call(this, data, _);
-    };
-
-    // Provide the compiled function source as a convenience for precompilation.
-    template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
-
-    return template;
-  };
-
-  // Add a "chain" function, which will delegate to the wrapper.
-  _.chain = function(obj) {
-    return _(obj).chain();
-  };
-
-  // OOP
-  // ---------------
-  // If Underscore is called as a function, it returns a wrapped object that
-  // can be used OO-style. This wrapper holds altered versions of all the
-  // underscore functions. Wrapped objects may be chained.
-
-  // Helper function to continue chaining intermediate results.
-  var result = function(obj) {
-    return this._chain ? _(obj).chain() : obj;
-  };
-
-  // Add all of the Underscore functions to the wrapper object.
-  _.mixin(_);
-
-  // Add all mutator Array functions to the wrapper.
-  each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
-    var method = ArrayProto[name];
-    _.prototype[name] = function() {
-      var obj = this._wrapped;
-      method.apply(obj, arguments);
-      if ((name == 'shift' || name == 'splice') && obj.length === 0) delete obj[0];
-      return result.call(this, obj);
-    };
-  });
-
-  // Add all accessor Array functions to the wrapper.
-  each(['concat', 'join', 'slice'], function(name) {
-    var method = ArrayProto[name];
-    _.prototype[name] = function() {
-      return result.call(this, method.apply(this._wrapped, arguments));
-    };
-  });
-
-  _.extend(_.prototype, {
-
-    // Start chaining a wrapped Underscore object.
-    chain: function() {
-      this._chain = true;
-      return this;
-    },
-
-    // Extracts the result from a wrapped and chained object.
-    value: function() {
-      return this._wrapped;
-    }
-
-  });
-
-  // AMD registration happens at the end for compatibility with AMD loaders
-  // that may not enforce next-turn semantics on modules. Even though general
-  // practice for AMD registration is to be anonymous, underscore registers
-  // as a named module because, like jQuery, it is a base library that is
-  // popular enough to be bundled in a third party lib, but not be part of
-  // an AMD load request. Those cases could generate an error when an
-  // anonymous define() is called outside of a loader request.
-  if (typeof define === 'function' && define.amd) {
-    define('underscore', [], function() {
-      return _;
-    });
-  }
-}).call(this);
-
-},{}],52:[function(require,module,exports){
-var _ = require('underscore'),
-    utility = require('./utility/utility.js'),
-    ConnectionEvents = require('./connection/ConnectionEvents.js'),
-    ConnectionStreams = require('./connection/ConnectionStreams.js'),
-    ConnectionProfile = require('./connection/ConnectionProfile.js'),
-    ConnectionBookmarks = require('./connection/ConnectionBookmarks.js'),
-    ConnectionAccesses = require('./connection/ConnectionAccesses.js'),
-    ConnectionMonitors = require('./connection/ConnectionMonitors.js'),
-    ConnectionAccount = require('./connection/ConnectionAccount.js'),
-    CC = require('./connection/ConnectionConstants.js'),
-    Datastore = require('./Datastore.js');
-
-/**
- * @class Connection
- * Create an instance of Connection to Pryv API.
- * The connection will be opened on
- * http[s]://&lt;username>.&lt;domain>:&lt;port>/&lt;extraPath>?auth=&lt;auth>
- *
- * @example
- * // create a connection for the user 'perkikiki' with the token 'TTZycvBTiq'
- * var conn = new pryv.Connection({username: 'perkikiki', auth: 'TTZycvBTiq'});
- *
- * @constructor
- * @this {Connection}
- * @param {Object} [settings]
- * @param {string} settings.username
- * @param {string} settings.auth - the authorization token for this username
- * @param {boolean} [settings.staging = false] use Pryv's staging servers
- * @param {number} [settings.port = 443]
- * @param {string} [settings.domain = 'pryv.io'] change the domain. use "settings.staging = true" to
- * activate 'pryv.in' staging domain.
- * @param {boolean} [settings.ssl = true] Use ssl (https) or no
- * @param {string} [settings.extraPath = ''] append to the connections. Must start with a '/'
- */
-var Connection = module.exports = function Connection() {
-  var settings;
-  if (!arguments[0] || typeof arguments[0] === 'string') {
-    console.warn('new Connection(username, auth, settings) is deprecated.',
-      'Please use new Connection(settings)', arguments);
-    this.username = arguments[0];
-    this.auth = arguments[1];
-    settings = arguments[2];
-  } else {
-    settings = arguments[0];
-    this.username = settings.username;
-    this.auth = settings.auth;
-    if (settings.url) {
-      var urlInfo = utility.urls.parseServerURL(settings.url);
-      this.username = urlInfo.username;
-      settings.hostname = urlInfo.hostname;
-      settings.domain = urlInfo.domain;
-      settings.port = urlInfo.port;
-      settings.extraPath = urlInfo.path === '/' ? '' : urlInfo.path;
-      settings.ssl = urlInfo.isSSL();
-      settings.staging = urlInfo.environment !== 'production';
-    }
-  }
-  this._serialId = Connection._serialCounter++;
-
-  this.settings = _.extend({
-    port: 443,
-    ssl: true,
-    extraPath: '',
-    staging: false
-  }, settings);
-  this.settings.domain = settings.domain ?
-      settings.domain : utility.urls.domains.server[settings.staging ? 'staging' : 'production'];
-
-  this.serverInfos = {
-    // nowLocalTime - nowServerTime
-    deltaTime: null,
-    apiVersion: null,
-    lastSeenLT: null
-  };
-
-  this._accessInfo = null;
-  this._privateProfile = null;
-
-  this._streamSerialCounter = 0;
-  this._eventSerialCounter = 0;
-
-  /**
-   * Manipulate events for this connection
-   * @type {ConnectionEvents}
-   */
-  this.events = new ConnectionEvents(this);
-  /**
-   * Manipulate streams for this connection
-   * @type {ConnectionStreams}
-   */
-  this.streams = new ConnectionStreams(this);
-  /**
-  * Manipulate app profile for this connection
-  * @type {ConnectionProfile}
-  */
-  this.profile = new ConnectionProfile(this);
-  /**
-  * Manipulate bookmarks for this connection
-  * @type {ConnectionProfile}
-  */
-  this.bookmarks = new ConnectionBookmarks(this, Connection);
-  /**
-  * Manipulate accesses for this connection
-  * @type {ConnectionProfile}
-  */
-  this.accesses = new ConnectionAccesses(this);
-  /**
-   * Manipulate this connection monitors
-   */
-  this.monitors = new ConnectionMonitors(this);
-
-  this.account = new ConnectionAccount(this);
-  this.datastore = null;
-
-};
-
-Connection._serialCounter = 0;
-
-
-/**
- * In order to access some properties such as event.stream and get a {Stream} object, you
- * need to fetch the structure at least once. For now, there is now way to be sure that the
- * structure is up to date. Soon we will implement an optional parameter "keepItUpToDate", that
- * will do that for you.
- *
- * TODO implements "keepItUpToDate" logic.
- * @param {Streams~getCallback} callback - array of "root" Streams
- * @returns {Connection} this
- */
-Connection.prototype.fetchStructure = function (callback /*, keepItUpToDate*/) {
-  if (this.datastore) { return this.datastore.init(callback); }
-  this.datastore = new Datastore(this);
-  this.accessInfo(function (error) {
-    if (error) { return callback(error); }
-    this.datastore.init(callback);
-  }.bind(this));
-  return this;
-};
-
-/**
- * Get access information related this connection. This is also the best way to test
- * that the combination username/token is valid.
- * @param {Connection~accessInfoCallback} callback
- * @returns {Connection} this
- */
-Connection.prototype.accessInfo = function (callback) {
-  if (this._accessInfo) { return this._accessInfo; }
-  var url = '/access-info';
-  this.request('GET', url, function (error, result) {
-    if (! error) {
-      this._accessInfo = result;
-    }
-    if (typeof(callback) === 'function') {
-      return callback(error, result);
-    }
-  }.bind(this));
-  return this;
-};
-
-/**
- * Get the private profile related this connection.
- * @param {Connection~privateProfileCallback} callback
- * @returns {Connection} this
- */
-Connection.prototype.privateProfile = function (callback) {
-  if (this._privateProfile) { return this._privateProfile; }
-  this.profile.getPrivate(null, function (error, result) {
-    if (result && result.message) {
-      error = result;
-    }
-    if (! error) {
-      this._privateProfile = result;
-    }
-    if (typeof(callback) === 'function') {
-      return callback(error, result);
-    }
-  }.bind(this));
-  return this;
-};
-
-/**
- * Translate this timestamp (server dimension) to local system dimension
- * This could have been named to "translate2LocalTime"
- * @param {number} serverTime timestamp  (server dimension)
- * @returns {number} timestamp (local dimension) same time space as (new Date()).getTime();
- */
-Connection.prototype.getLocalTime = function (serverTime) {
-  return (serverTime + this.serverInfos.deltaTime) * 1000;
-};
-
-/**
- * Translate this timestamp (local system dimension) to server dimension
- * This could have been named to "translate2ServerTime"
- * @param {number} localTime timestamp  (local dimension) same time space as (new Date()).getTime();
- * @returns {number} timestamp (server dimension)
- */
-Connection.prototype.getServerTime = function (localTime) {
-  if (typeof localTime === 'undefined') { localTime = new Date().getTime(); }
-  return (localTime / 1000) - this.serverInfos.deltaTime;
-};
-
-
-// ------------- monitor this connection --------//
-
-/**
- * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
- * will trigger an event. Changes to the filter will also trigger events if they have an impact on
- * the monitored data.
- * @param {Filter} filter - changes to this filter will be monitored.
- * @returns {Monitor}
- */
-Connection.prototype.monitor = function (filter) {
-  return this.monitors.create(filter);
-};
-
-// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
-
-
-
-/**
- * Do a direct request to Pryv's API.
- * Even if exposed there must be an abstraction for every API call in this library.
- * @param {string} method - GET | POST | PUT | DELETE
- * @param {string} path - to resource, starting with '/' like '/events'
- * @param {Connection~requestCallback} callback
- * @param {Object} jsonData - data to POST or PUT
- */
-Connection.prototype.request = function (method, path, callback, jsonData, isFile,
-                                         progressCallback) {
-
-
-  if (! callback || ! _.isFunction(callback)) {
-    throw new Error('request\'s callback must be a function');
-  }
-  var headers =  { 'authorization': this.auth };
-  var withoutCredentials = false;
-  var payload = JSON.stringify({});
-  if (jsonData && !isFile) {
-    payload = JSON.stringify(jsonData);
-    headers['Content-Type'] = 'application/json; charset=utf-8';
-  }
-  if (isFile) {
-    payload = jsonData;
-    headers['Content-Type'] = 'multipart/form-data';
-    headers['X-Requested-With'] = 'XMLHttpRequest';
-    withoutCredentials = true;
-  }
-
-  var request = utility.request({
-    method : method,
-    host : getHostname(this),
-    port : this.settings.port,
-    ssl : this.settings.ssl,
-    path : this.settings.extraPath + path,
-    headers : headers,
-    payload : payload,
-    progressCallback: progressCallback,
-    //TODO: decide what callback convention to use (Node or jQuery)
-    success : onSuccess.bind(this),
-    error : onError.bind(this),
-    withoutCredentials: withoutCredentials
-  });
-
-  /**
-   * @this {Connection}
-   */
-  function onSuccess(result, resultInfo) {
-    var error = null;
-
-    var apiVersion = resultInfo.headers['API-Version'] || 
-      resultInfo.headers[CC.Api.Headers.ApiVersion];
-
-    // test if API is reached or if we headed into something else
-    if (! apiVersion) {
-      error = {
-        id : CC.Errors.API_UNREACHEABLE,
-        message: 'Cannot find API-Version',
-        details: 'Response code: ' + resultInfo.code +
-          ' Headers: ' + JSON.stringify(resultInfo.headers)
-      };
-    } else if (result.message) {  // API < 0.6
-      error = result.message;
-    } else
-    if (result.error) { // API 0.7
-      error = result.error;
-    } else {
-      this.serverInfos.lastSeenLT = (new Date()).getTime();
-      this.serverInfos.apiVersion = apiVersion || this.serverInfos.apiVersion;
-      if (_.has(resultInfo.headers, CC.Api.Headers.ServerTime)) {
-        this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
-          resultInfo.headers[CC.Api.Headers.ServerTime];
-      }
-    }
-    callback(error, result, resultInfo);
-  }
-
-  function onError(error, resultInfo) {
-    var errorTemp = {
-      id : CC.Errors.API_UNREACHEABLE,
-      message: 'Error on request ',
-      details: 'ERROR: ' + error
-    };
-    callback(errorTemp, null, resultInfo);
-  }
-  return request;
-};
-
-
-
-/**
- * @property {string} Connection.id an unique id that contains all needed information to access
- * this Pryv data source. http[s]://<username>.<domain>:<port>[/extraPath]/?auth=<auth token>
- */
-Object.defineProperty(Connection.prototype, 'id', {
-  get: function () {
-    var id = this.settings.ssl ? 'https://' : 'http://';
-    id += getHostname(this) + ':' +
-        this.settings.port + this.settings.extraPath + '/?auth=' + this.auth;
-    return id;
-  },
-  set: function () { throw new Error('ConnectionNode.id property is read only'); }
-});
-
-/**
- * @property {string} Connection.displayId an id easily readable <username>:<access name>
- */
-Object.defineProperty(Connection.prototype, 'displayId', {
-  get: function () {
-    if (! this._accessInfo) {
-      throw new Error('connection must have been initialized to use displayId. ' +
-        ' You can call accessInfo() for this');
-    }
-    var id = this.username + ':' + this._accessInfo.name;
-    return id;
-  },
-  set: function () { throw new Error('Connection.displayId property is read only'); }
-});
-
-/**
- * @property {String} Connection.serialId A locally-unique id for the connection; can also be
- *                                        used as a client-side id
- */
-Object.defineProperty(Connection.prototype, 'serialId', {
-  get: function () { return 'C' + this._serialId; }
-});
-/**
- * Called with the desired Streams as result.
- * @callback Connection~accessInfoCallback
- * @param {Object} error - eventual error
- * @param {AccessInfo} result
- */
-
-/**
- * @typedef AccessInfo
- * @see http://api.pryv.com/reference.html#data-structure-access
- */
-
-/**
- * Called with the result of the request
- * @callback Connection~requestCallback
- * @param {Object} error - eventual error
- * @param {Object} result - jSonEncoded result
- * @param {Object} resultInfo
- * @param {Number} resultInfo.code - HTTP result code
- * @param {Object} resultInfo.headers - HTTP result headers by key
- */
-
-
-// --------- private utils
-
-function getHostname(connection) {
-  return connection.settings.hostname ||
-      connection.username ?
-      connection.username + '.' + connection.settings.domain : connection.settings.domain;
-}
-
-},{"./Datastore.js":53,"./connection/ConnectionAccesses.js":61,"./connection/ConnectionAccount.js":62,"./connection/ConnectionBookmarks.js":63,"./connection/ConnectionConstants.js":64,"./connection/ConnectionEvents.js":65,"./connection/ConnectionMonitors.js":66,"./connection/ConnectionProfile.js":67,"./connection/ConnectionStreams.js":68,"./utility/utility.js":80,"underscore":51}],53:[function(require,module,exports){
-/**
- * DataStore handles in memory caching of objects.
- * @private
- */
-
-var _ = require('underscore');
-var Event = require('./Event');
-var Stream = require('./Stream');
-
-function Datastore(connection) {
-  this.connection = connection;
-  this.streamsIndex = {}; // streams are linked to their object representation
-  this.eventIndex = {}; // events are store by their id
-  this.rootStreams = [];
-  this.rootStreamsAll = []; // including trashed streams
-}
-
-module.exports = Datastore;
-
-Datastore.prototype.init = function (callback) {
-  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
-    if (error) { return callback('Datastore faild to init - '  + error); }
-    if (result) {
-      this._rebuildStreamIndex(result); // maybe done transparently
-    }
-    callback(null, result);
-  }.bind(this));
-
-  // TODO activate monitoring
-};
-
-Datastore.prototype._rebuildStreamIndex = function (streamArray) {
-  this.streamsIndex = {};
-  this.rootStreams = [];
-  this.rootStreamsAll = [];
-  this._indexStreamArray(streamArray);
-};
-
-Datastore.prototype._indexStreamArray = function (streamArray) {
-  _.each(streamArray, function (stream) {
-    this.indexStream(stream);
-  }.bind(this));
-};
-
-Datastore.prototype.indexStream = function (stream) {
-  this.streamsIndex[stream.id] = stream;
-  if (! stream.parentId) {
-    this.rootStreamsAll.push(stream);
-    if (! stream.trashed) {
-      this.rootStreams.push(stream);
-    }
-  }
-  this._indexStreamArray(stream._children);
-  delete stream._children; // cleanup when in datastore mode
-  delete stream._parent;
-};
-
-/**
- *
- * @param all True to get all root streams including trashed one
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreams = function (all) {
-  if (all) { return this.rootStreamsAll; }
-  return this.rootStreams;
-};
-
-
-/**
- *
- * @param streamId
- * @param test (do no throw error if Stream is not found
- * @returns Stream or null if not found
- */
-Datastore.prototype.getStreamById = function (streamId) {
-  var result = this.streamsIndex[streamId];
-  return result;
-};
-
-//-------------------------
-
-/**
- * @param serialId
- * @returns Event or null if not found
- */
-Datastore.prototype.getEventBySerialId = function (serialId) {
-  var result = null;
-  _.each(this.eventIndex, function (event /*,eventId*/) {
-    if (event.serialId === serialId) { result = event; }
-    // TODO optimize and break
-  }.bind(this));
-  return result;
-};
-
-/**
- * @param eventID
- * @returns Event or null if not found
- */
-Datastore.prototype.getEventById = function (eventId) {
-  return this.eventIndex[eventId];
-
-};
-
-/**
- * @returns allEvents
- */
-Datastore.prototype.getEventsMatchingFilter = function (filter) {
-  var result = [];
-  _.each(this.eventIndex, function (event /*,eventId*/) {
-    if (filter.matchEvent(event)) { result.push(event); }
-  }.bind(this));
-  return result;
-};
-
-
-/**
- * @returns allEvents
- */
-Datastore.prototype.getAllEvents = function () {
-  return _.value(this.eventIndex);
-};
-
-/**
- * @param event
- */
-Datastore.prototype.addEvent = function (event) {
-  if (! event.id) {
-    throw new Error('Datastore.addEvent cannot add event with unkown id', event);
-  }
-  this.eventIndex[event.id] = event;
-};
-
-
-
-/**
- * @param {Object} data to map
- * @return {Event} event
- */
-Datastore.prototype.createOrReuseEvent = function (data) {
-  if (! data.id) {
-    throw new Error('Datastore.createOrReuseEvent cannot create event with ' +
-      ' unkown id' + require('util').inspect(data));
-  }
-
-  var result = this.getEventById(data.id);
-  if (result) {  // found event
-    _.extend(result, data);
-    return result;
-  }
-  // create an event and register it
-  result = new Event(this.connection, data);
-  this.addEvent(result);
-
-  return result;
-};
-
-
-/**
- * @param {Object} data to map
- * @return {Event} event
- */
-Datastore.prototype.createOrReuseStream = function (data) {
-    if (! data.id) {
-        throw new Error('Datastore.createOrReuseStream cannot create stream with ' +
-            ' unkown id' + require('util').inspect(data));
-    }
-
-    var result = this.getStreamById(data.id);
-    if (result) {  // found event
-        _.extend(result, data);
-        return result;
-    }
-    // create an stream and register it
-    result = new Stream(this.connection, data);
-    this.indexStream(result);
-
-    return result;
-};
-
-
-
-},{"./Event":54,"./Stream":57,"underscore":51,"util":44}],54:[function(require,module,exports){
-
-var _ = require('underscore');
-
-var RW_PROPERTIES =
-  ['streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
-    'clientData', 'state', 'modified', 'trashed'];
-
-
-var escapeHtml = function (obj) {
-  _.each(obj, function (value, key) {
-    if (_.isString(value)) {
-      obj[key] = _.escape(value);
-    } else if ((key === 'content' && _.isObject(value)) || (key === 'tags' && _.isArray(value))) {
-      escapeHtml(value);
-    }
-  });
-};
-/**
- *
- * @type {Function}
- * @constructor
- */
-var Event = module.exports = function Event(connection, data) {
-  if (! connection) {
-    throw new Error('Cannot create connection less events');
-  }
-  this.connection = connection;
-  this.trashed = false;
-  this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
-  escapeHtml(data);
-  _.extend(this, data);
-};
-
-/**
- * get Json object ready to be posted on the API
- */
-Event.prototype.getData = function () {
-  var data = {};
-  _.each(RW_PROPERTIES, function (key) { // only set non null values
-    if (_.has(this, key)) { data[key] = this[key]; }
-  }.bind(this));
-  return data;
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.update = function (callback) {
-  this.connection.events.update(this, callback);
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.addAttachment = function (file, callback) {
-  this.connection.events.addAttachment(this.id, file, callback);
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.removeAttachment = function (fileName, callback) {
-  this.connection.events.removeAttachment(this.id, fileName, callback);
-};
-/**
- * TODO create an attachment Class that contains such logic
- * @param {attachment} attachment
- */
-Event.prototype.attachmentUrl = function (attachment) {
-  var url =  this.connection.settings.ssl ? 'https://' : 'http://';
-  url += this.connection.username + '.' + this.connection.settings.domain + '/events/' +
-    this.id + '/' + attachment.id + '?readToken=' + attachment.readToken;
-  return url;
-};
-/**
- *
- * @param {Connection~requestCallback} callback
- */
-Event.prototype.trash = function (callback) {
-  this.connection.events.trash(this, callback);
-};
-/**
- * TODO document and rename to getPicturePreviewUrl
- * @param width
- * @param height
- * @returns {string}
- */
-Event.prototype.getPicturePreview = function (width, height) {
-  width = width ? '&w=' + width : '';
-  height = height ? '&h=' + height : '';
-  var url = this.connection.settings.ssl ? 'https://' : 'http://';
-  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
-    this.id + '?auth=' + this.connection.auth + width + height;
-  return url;
-};
-
-Event.prototype.isRunning = function () {
-  return !!('duration' in this && !this.duration && this.duration !== 0);
-};
-/**
- * TODO document
- */
-Object.defineProperty(Event.prototype, 'timeLT', {
-  get: function () {
-    return this.connection.getLocalTime(this.time);
-  },
-  set: function (newValue) {
-    this.time = this.connection.getServerTime(newValue);
-  }
-});
-
-
-
-/**
- * TODO document
- */
-Object.defineProperty(Event.prototype, 'stream', {
-  get: function () {
-    if (! this.connection.datastore) {
-      throw new Error('call connection.fetchStructure before to get automatic stream mapping.' +
-        ' Or use StreamId');
-    }
-    return this.connection.datastore.getStreamById(this.streamId);
-  },
-  set: function () { throw new Error('Event.stream property is read only'); }
-});
-
-/**
- * TODO document
- */
-Object.defineProperty(Event.prototype, 'url', {
-  get: function () {
-    var url = this.connection.settings.ssl ? 'https://' : 'http://';
-    url += this.connection.username + '.' + this.connection.settings.domain + '/events/' + this.id;
-    return url;
-  },
-  set: function () { throw new Error('Event.url property is read only'); }
-});
-
-
-/**
- * An newly created Event (no id, not synched with API)
- * or an object with sufficient properties to be considered as an Event.
- * @typedef {(Event|Object)} NewEventLike
- * @property {String} streamId
- * @property {String} type
- * @property {number} [time]
- */
-
-},{"underscore":51}],55:[function(require,module,exports){
-var _ = require('underscore'),
-    SignalEmitter = require('./utility/SignalEmitter.js');
-
-/**
- * TODO Filter is badly missing a correct documentation
- * @constructor
- */
-var Filter = module.exports = function Filter(settings) {
-  SignalEmitter.extend(this, Messages, 'Filter');
-
-  this._settings = _.extend({
-    //TODO: set default values
-    streams: null, //ids
-    tags: null,
-    fromTime: null,  // serverTime
-    toTime: null,  // serverTime
-    limit: null,
-    skip: null,
-    types: null,
-    modifiedSince: null,
-    state: null
-  }, settings);
-};
-
-var Messages = Filter.Messages = {
-  /**
-   * generic change event called on any change
-   * content: {filter, signal, content}
-   **/
-  ON_CHANGE : 'changed',
-  /**
-   * called on streams changes
-   * content: streams
-   */
-  STREAMS_CHANGE : 'streamsChanged',
-
-  /**
-   * called on streams structure changes
-   * content: changes
-   */
-  STRUCTURE_CHANGE : 'structureChange',
-
-  /*
-   * called on date changes
-   * content: streams
-   */
-  DATE_CHANGE : 'timeFrameChanged',
-
-  /*
-   * called on state changes
-   * content: {state: value}
-   */
-  STATE_CHANGE : 'stateChanged'
-};
-
-// TODO
-// redundant with get
-function _normalizeTimeFrameST(filterData) {
-  var result = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
-  if (filterData.fromTime || filterData.fromTime === 0) {
-    result[0] = filterData.fromTime;
-  }
-  if (filterData.toTime || filterData.toTime === 0) {
-    result[1] = filterData.toTime;
-  }
-  return result;
-}
-
-
-
-/**
- * TODO write doc
- * TODO complete with tags and state and modified and..
- * check if this event is in this filter
- */
-Filter.prototype.matchEvent = function (event) {
-  if (event.time > this.toTimeSTNormalized) { return false; }
-  if (event.time < this.fromTimeSTNormalized) { return false; }
-
-
-  if (this._settings.state !== 'all') {
-    if (event.trashed) { return false; }
-  }
-
-  if (this._settings.streams) {
-
-    if (this._settings.streams.length === 0) { return false; }
-
-    if (this._settings.streams.indexOf(event.streamId) < 0) {
-      var found = false;
-      if (!event.stream) {
-        return false;
-      }
-      event.stream.ancestors.forEach(function (ancestor) {
-        if (this._settings.streams.indexOf(ancestor.id) >= 0) {
-          if (this._settings.state !== 'all') {
-            if (ancestor.trashed) { return false; }
-          }
-          found = true;
-        }
-      }.bind(this));
-      if (!found) {
-        return false;
-      }
-    }
-  }
-
-
-
-  // TODO complete test
-  return true;
-};
-
-/**
- * Compare this filter with data form another filter
- * @param {Object} filterDataTest data got with filter.getData
- * @returns keymap \{ timeFrame : -1, 0 , 1 \}
- * (1 = more than test, -1 = less data than test, 0 == no changes)
- */
-Filter.prototype.compareToFilterData = function (filterDataTest) {
-  var result = { timeFrame : 0, streams : 0 };
-
-
-  // timeFrame
-  var myTimeFrameST = [this.fromTimeSTNormalized, this.toTimeSTNormalized];
-  var testTimeFrameST = _normalizeTimeFrameST(filterDataTest);
-  console.log(myTimeFrameST);
-  console.log(testTimeFrameST);
-
-  if (myTimeFrameST[0] < testTimeFrameST[0]) {
-    result.timeFrame = 1;
-  } else if (myTimeFrameST[0] > testTimeFrameST[0]) {
-    result.timeFrame = -1;
-  }
-  if (result.timeFrame <= 0) {
-    if (myTimeFrameST[1] > testTimeFrameST[1]) {
-      result.timeFrame = 1;
-    } else  if (myTimeFrameST[1] < testTimeFrameST[1]) {
-      result.timeFrame = -1;
-    }
-  }
-
-  // streams
-  //TODO look if this processing can be optimized
-
-  var nullStream = 0;
-  if (! this._settings.streams) {
-    if (filterDataTest.streams) {
-      result.streams = 1;
-    }
-    nullStream = 1;
-  }
-  if (! filterDataTest.streams) {
-    if (this._settings.streams) {
-      result.streams = -1;
-    }
-    nullStream = 1;
-  }
-
-  if (! nullStream) {
-    var notinTest = _.difference(this._settings.streams, filterDataTest.streams);
-    if (notinTest.length > 0) {
-      result.streams = 1;
-    } else {
-      var notinLocal = _.difference(filterDataTest.streams, this._settings.streams);
-      if (notinLocal.length > 0) {
-        result.streams = -1;
-      }
-    }
-  }
-
-  return result;
-};
-
-/**
- * Create a clone of this filter and changes some properties
- * @param properties
- * @returns pryv.Filter
- */
-Filter.prototype.cloneWithDelta = function (properties) {
-  var newProps = _.clone(this._settings);
-  _.extend(newProps, properties);
-  return new Filter(newProps);
-};
-
-/**
- *
- * @param ignoreNulls (optional) boolean
- * @param withDelta (optional) apply this differences on the data
- * @returns {*}
- */
-Filter.prototype.getData = function (ignoreNulls, withDelta) {
-  ignoreNulls = ignoreNulls || false;
-  var result = _.clone(this._settings);
-  if (withDelta)  {
-    _.extend(result, withDelta);
-  }
-  _.each(_.keys(result), function (key) {
-    if ((result[key] === null)) { delete result[key]; }
-  });
-  return result;
-};
-
-/**
- * @private
- */
-Filter.prototype._fireFilterChange = function (signal, content, batch) {
-  // generic
-  this._fireEvent(Messages.ON_CHANGE, {filter: this, signal: signal, content: content}, batch);
-  // specific
-  this._fireEvent(signal, content, batch);
-};
-
-/**
- * TODO review documentation and add example
- * Change several values of the filter in batch.. this wil group all events behind a batch id
- * @param keyValueMap {Object}
- * @param batch {SignalEmitter~Batch}
- */
-Filter.prototype.set = function (keyValueMap, batch) {
-  batch = this.startBatch('set', batch);
-
-  _.each(keyValueMap, function (value, key) {
-    this._setValue(key, value, batch);
-  }.bind(this));
-
-  batch.done('set');
-};
-
-/**
- * Internal that take in charge of changing values
- * @param keyValueMap
- * @param batch
- * @private
- */
-Filter.prototype._setValue = function (key, newValue, batch) {
-  batch = this.startBatch('setValue:' + key, batch);
-
-  if (key === 'limit') {
-    this._settings.limit = newValue;
-
-    // TODO handle changes
-    return;
-  }
-
-
-  if (key === 'state') {
-    if (this._settings.state !== newValue) {
-      this._settings.state = newValue;
-      this._fireFilterChange(Messages.STATE_CHANGE, {state: newValue}, batch);
-    }
-    batch.done('setValue:' + key);
-    return;
-  }
-
-  if (key === 'timeFrameST') {
-    if (! _.isArray(newValue) || newValue.length !== 2) {
-      throw new Error('Filter.timeFrameST is an Array of two timestamps [fromTime, toTime]');
-    }
-    if (this._settings.fromTime !== newValue[0] || this._settings.toTime !== newValue[1]) {
-      this._settings.fromTime = newValue[0];
-      this._settings.toTime = newValue[1];
-      this._fireFilterChange(Messages.DATE_CHANGE, this.timeFrameST, batch);
-    }
-    batch.done('setValue:' + key);
-    return;
-  }
-
-  if (key === 'streamsIds') {
-
-    if (newValue === null || typeof newValue === 'undefined') {
-      if (this._settings.streams === null) {
-
-        return;
-      }
-      newValue = null;
-    } else if (! _.isArray(newValue)) {
-      newValue = [newValue];
-    }
-
-    // TODO check that this stream is valid
-    this._settings.streams = newValue;
-    this._fireFilterChange(Messages.STREAMS_CHANGE, this.streams, batch);
-    batch.done('setValue:' + key);
-    return;
-  }
-
-  batch.done('setValue:' + key);
-  throw new Error('Filter has no property : ' + key);
-};
-
-/**
- * get toTime, return Number.POSITIVE_INFINITY if null
- */
-Object.defineProperty(Filter.prototype, 'toTimeSTNormalized', {
-  get: function () {
-    if (this._settings.toTime || this._settings.toTime === 0) {
-      return this._settings.toTime;
-    }
-    return Number.POSITIVE_INFINITY;
-  }
-});
-
-/**
- * get fromTime, return Number.POSITIVE_INFINITY if null
- */
-Object.defineProperty(Filter.prototype, 'fromTimeSTNormalized', {
-  get: function () {
-    if (this._settings.fromTime || this._settings.fromTime === 0) {
-      return this._settings.fromTime;
-    }
-    return Number.NEGATIVE_INFINITY;
-  }
-});
-
-
-
-/**
- * timeFrameChange ..  [fromTime, toTime]
- * setting them to "null" => ALL
- */
-Object.defineProperty(Filter.prototype, 'timeFrameST', {
-  get: function () {
-    return [this._settings.toTime, this._settings.fromTime];
-  },
-  set: function (newValue) {
-    this._setValue('timeFrameST', newValue);
-    return this.timeFrameST;
-  }
-});
-
-
-/**
- * StreamIds ..
- * setting them to "null" => ALL and to "[]" => NONE
- */
-Object.defineProperty(Filter.prototype, 'streamsIds', {
-  get: function () {
-    return this._settings.streams;
-  },
-  set: function (newValue) {
-    this._setValue('streamsIds', newValue);
-    return this._settings.streams;
-  }
-});
-
-
-/**
- * return true if context (stream is on a single stream)
- * This is usefull to check when creating and event in a context.
- * This way, no need to ask the user for a stream specification.
- * TODO determine if this should stay in the lib.. or handle by apps
- */
-Filter.prototype.focusedOnSingleStream = function () {
-  if (_.isArray(this._settings.streams) && this._settings.streams.length === 1) {
-    return this._settings.streams[0];
-  }
-  return null;
-};
-
-/**
- * An pryv Filter or an object corresponding at what we can get with Filter.getData().
- * @typedef {(Filter|Object)} FilterLike
- * @property {String[]} [streams]
- * @property {String[]} [tags]
- * @property {number} [fromTime] -- serverTime
- * @property {number} [toTime] -- serverTime
- * @property {number} [modifiedSince] -- serverTime
- * @property {number} [limit] -- response to 'n' events
- * @property {number} [skip] -- skip the first 'n' events of he response
- */
-
-
-},{"./utility/SignalEmitter.js":71,"underscore":51}],56:[function(require,module,exports){
-var _ = require('underscore'),
-  SignalEmitter = require('./utility/SignalEmitter.js'),
-  Filter = require('./Filter.js');
-
-var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
-var REALLY_ALL_EVENTS =  EXTRA_ALL_EVENTS;
-REALLY_ALL_EVENTS.fromTime = -1000000000;
-REALLY_ALL_EVENTS.toTime = 10000000000;
-
-var GETEVENT_MIN_REFRESH_RATE = 2000;
-
-/**
- * Monitoring
- * @type {Function}
- * @constructor
- */
-function Monitor(connection, filter) {
-  SignalEmitter.extend(this, Messages, 'Monitor');
-  this.connection = connection;
-  this.id = 'M' + Monitor.serial++;
-
-  this.filter = filter;
-
-  this._lastUsedFilterData = filter.getData();
-
-  if (this.filter.state) {
-    throw new Error('Monitors only work for default state, not trashed or all');
-  }
-
-  this.filter.addEventListener(Filter.Messages.ON_CHANGE, this._onFilterChange.bind(this));
-  this._events = null;
-
-
-  // -- optimization & caching
-  this.useCacheForEventsGetAllAndCompare = true;  // will look into cache before online
-  this.ensureFullCache = true; // will fill the cache with ALL pryv content
-  this.initWithPrefetch = 100; // prefetch some events before ensuringFullCache
-}
-
-Monitor.serial = 0;
-
-var Messages = Monitor.Messages = {
-  /** content: events **/
-  ON_LOAD : 'started',
-  /** content: error **/
-  ON_ERROR : 'error',
-  /** content: { enter: [], leave: [], change } **/
-  ON_EVENT_CHANGE : 'eventsChanged',
-  /** content: streams **/
-  ON_STRUCTURE_CHANGE : 'streamsChanged',
-  /** content: ? **/
-  ON_FILTER_CHANGE : 'filterChanged'
-};
-
-// ----------- prototype  public ------------//
-
-Monitor.prototype.start = function (done) {
-  done = done || function () {};
-  var batch = this.startBatch('Monitor:start');
-  batch.addOnDoneListener('Monitor:startCompletion', function () {
-    //TODO move this logic to ConnectionMonitors ??
-    this.connection.monitors._monitors[this.id] = this;
-    this.connection.monitors._startMonitoring(done);
-  }.bind(this));
-
-
-  this.lastSynchedST = -1000000000000;
-  this._initEvents(batch);
-  batch.done('Monitor:start');
-
-
-};
-
-
-Monitor.prototype.destroy = function () {
-  //TODO move this logic to ConnectionMonitors ??
-  delete this.connection.monitors._monitors[this.id];
-  if (_.keys(this.connection.monitors._monitors).length === 0) {
-    this.connection.monitors._stopMonitoring();
-  }
-};
-
-Monitor.prototype.getEvents = function () {
-  if (! this._events || ! this._events.active) {return []; }
-  return _.toArray(this._events.active);
-};
-
-// ------------ private ----------//
-
-// ----------- iOSocket ------//
-Monitor.prototype._onIoConnect = function () {
-  console.log('Monitor onConnect');
-};
-Monitor.prototype._onIoError = function (error) {
-  console.log('Monitor _onIoError' + error);
-};
-Monitor.prototype._onIoEventsChanged = function () {
-  var batch = this.startBatch('IoEventChanged');
-  this._connectionEventsGetChanges(batch);
-  batch.done('IoEventChanged');
-};
-Monitor.prototype._onIoStreamsChanged = function () {
-  console.log('SOCKETIO', '_onIoStreamsChanged');
-  var batch = this.startBatch('IoStreamsChanged');
-  this._connectionStreamsGetChanges(batch);
-  batch.done('IoStreamsChanged');
-};
-
-
-
-// -----------  filter changes ----------- //
-
-
-Monitor.prototype._saveLastUsedFilter = function () {
-  this._lastUsedFilterData = this.filter.getData();
-};
-
-
-Monitor.prototype._onFilterChange = function (signal, batch) {
-
-
-  var changes = this.filter.compareToFilterData(this._lastUsedFilterData);
-
-  var processLocalyOnly = 0;
-  var foundsignal = 0;
-  if (signal.signal === Filter.Messages.DATE_CHANGE) {  // only load events if date is wider
-    foundsignal = 1;
-    console.log('** DATE CHANGE ', changes.timeFrame);
-    if (changes.timeFrame === 0) {
-      return;
-    }
-    if (changes.timeFrame < 0) {  // new timeFrame contains more data
-      processLocalyOnly = 1;
-    }
-
-  }
-
-  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
-    foundsignal = 1;
-    console.log('** STREAMS_CHANGE', changes.streams);
-    if (changes.streams === 0) {
-      return;
-    }
-    if (changes.streams < 0) {  // new timeFrame contains more data
-      processLocalyOnly = 1;
-    }
-  }
-
-  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
-    foundsignal = 1;
-    console.log('** STREAMS_CHANGE', changes.streams);
-    if (changes.streams === 0) {
-      return;
-    }
-    if (changes.streams < 0) {  // new timeFrame contains more data
-      processLocalyOnly = 1;
-    }
-  }
-
-  if (signal.signal === Filter.Messages.STRUCTURE_CHANGE) {
-    foundsignal = 1;
-    // force full refresh
-  }
-
-
-  if (! foundsignal) {
-    throw new Error('Signal not found :' + signal.signal);
-  }
-
-  this._saveLastUsedFilter();
-
-
-
-  if (processLocalyOnly) {
-    this._refilterLocaly(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
-  } else {
-    this._connectionEventsGetAllAndCompare(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
-  }
-};
-
-// ----------- internal ----------------- //
-
-/**
- * Process events locally
- */
-Monitor.prototype._refilterLocaly = function (signal, extracontent, batch) {
-
-  var result = { enter : [], leave : [] };
-  _.extend(result, extracontent); // pass extracontent to receivers
-  _.each(_.clone(this._events.active), function (event) {
-    if (! this.filter.matchEvent(event)) {
-      result.leave.push(event);
-      delete this._events.active[event.id];
-    }
-  }.bind(this));
-  this._fireEvent(signal, result, batch);
-};
-
-
-Monitor.prototype._initEvents = function (batch) {
-  batch = this.startBatch('Monitor:initEvents', batch);
-  this._events = { active : {}};
-
-
-  var filterWith = this.filter.getData(true, EXTRA_ALL_EVENTS);
-
-  if (this.initWithPrefetch) {
-    filterWith.limit = this.initWithPrefetch;
-  } else {
-    if (this.ensureFullCache) {  filterWith = REALLY_ALL_EVENTS; }
-  }
-
-
-  this.connection.events.get(filterWith,
-    function (error, events) {
-      if (error) {
-        this._fireEvent(Messages.ON_ERROR, error, batch);
-        batch.done('Monitor:initEvents error');
-        return;
-      }
-
-      if (! this.initWithPrefetch) { this.lastSynchedST = this.connection.getServerTime(); }
-
-      var result = [];
-
-      _.each(events, function (event) {
-        if (! this.ensureFullCache || this.filter.matchEvent(event)) {
-          this._events.active[event.id] = event;
-          result.push(event);
-        }
-      }.bind(this));
-
-
-      this._fireEvent(Messages.ON_LOAD, result, batch);
-
-      if (this.initWithPrefetch) {
-        batch.waitForMeToFinish('delay');
-        setTimeout(function () {
-          this._connectionEventsGetChanges(batch);
-          batch.done('delay');
-        }.bind(this), 100);
-      }
-      batch.done('Monitor:initEvents finished');
-
-
-    }.bind(this));
-};
-
-
-
-
-
-/**
- * @private
- */
-Monitor.prototype._connectionEventsGetChanges = function (batch) {
-  batch = this.startBatch('connectionEventsGetChanges', batch);
-  if (this.eventsGetChangesInProgress) {
-    this.eventsGetChangesNeeded = true;
-    console.log('[WARNING] Skipping _connectionEventsGetChanges because one is in Progress');
-    batch.done('connectionEventsGetChanges in Progress');
-    return;
-  }
-  this.eventsGetChangesInProgress = true;
-  this.eventsGetChangesNeeded = false;
-
-
-  // var options = { modifiedSince : this.lastSynchedST};
-  var options = { modifiedSince : this.lastSynchedST, state : 'all'};
-
-
-  var filterWith = this.filter.getData(true, options);
-  if (this.ensureFullCache) {
-    filterWith = REALLY_ALL_EVENTS;
-    filterWith = _.extend(filterWith, options);
-  }
-  this.lastSynchedST = this.connection.getServerTime();
-
-  var result = { created : [], trashed : [], modified: []};
-
-  this.connection.events.get(filterWith,
-    function (error, events) {
-      if (error) {
-        this._fireEvent(Messages.ON_ERROR, error, batch);
-        batch.done('connectionEventsGetChanges error');
-        return;
-      }
-
-      _.each(events, function (event) {
-        if (! this.ensureFullCache || this.filter.matchEvent(event)) {
-          if (this._events.active[event.id]) {
-            if (event.trashed && !this._events.active[event.id].trashed) { // trashed
-              result.trashed.push(event);
-              delete this._events.active[event.id];
-            } else {
-              result.modified.push(event);
-              this._events.active[event.id] = event;
-            }
-          } else {
-            if (!event.trashed && event.stream && !event.stream.trashed) {
-              result.created.push(event);
-              this._events.active[event.id] = event;
-            }
-          }
-        }
-      }.bind(this));
-
-      this._fireEvent(Messages.ON_EVENT_CHANGE, result, batch);
-      batch.done('connectionEventsGetChanges');
-
-      // ---
-      setTimeout(function () {
-        this.eventsGetChangesInProgress = false;
-        if (this.eventsGetChangesNeeded) {
-          this._connectionEventsGetChanges();
-        }
-      }.bind(this), GETEVENT_MIN_REFRESH_RATE);
-
-    }.bind(this));
-};
-
-/**
- * @private
- */
-Monitor.prototype._connectionStreamsGetChanges = function (batch) {
-  batch = this.startBatch('connectionStreamsGetChanges', batch);
-  var previousStreamsData = {};
-  var previousStreamsMap = {}; // !! only used to get back deleted streams..
-  var created = [], modified = [], modifiedPreviousProperties = {}, trashed = [], deleted = [];
-
-  var isStreamChanged = function (streamA, streamB) {
-    return !_.isEqual(streamA, streamB);
-  };
-
-
-  // check if the stream has changed it.. and save it in the right message box
-  var checkChangedStatus = function (stream) {
-
-
-    if (! previousStreamsData[stream.id]) { // new stream
-      created.push(stream);
-    } else if (isStreamChanged(previousStreamsData[stream.id], stream.getData())) {
-
-      if (previousStreamsData[stream.id].trashed !== stream.trashed) {
-        if (!stream.trashed) {
-          created.push(stream);
-        } else {
-          trashed.push(stream);
-        }
-      } else {
-        modified.push(stream);
-        modifiedPreviousProperties[stream.id] = previousStreamsData[stream.id];
-      }
-    }
-
-    _.each(stream.children, function (child) {
-      checkChangedStatus(child);
-    });
-    delete previousStreamsData[stream.id];
-  };
-
-  //-- get all current streams before matching with new ones --//
-  var getFlatTree = function (stream) {
-    previousStreamsData[stream.id] = stream.getData();
-    previousStreamsMap[stream.id] = stream;
-
-    _.each(stream.children, function (child) {
-      getFlatTree(child);
-    });
-  };
-  _.each(this.connection.datastore.getStreams(true), function (rootStream) {
-    getFlatTree(rootStream);
-  });
-
-  this.connection.fetchStructure(function (error, result) {
-    if (error) {
-      batch.done('connectionStreamsGetChanges fetchStructure error');
-      return;
-    }
-    _.each(result, function (rootStream) {
-      checkChangedStatus(rootStream);
-    });
-    // each stream remaining in streams[] are deleted streams;
-    _.each(previousStreamsData, function (streamData, streamId) {
-      deleted.push(previousStreamsMap[streamId]);
-    });
-
-    this._fireEvent(Messages.ON_STRUCTURE_CHANGE,
-      { created : created, trashed : trashed, modified: modified, deleted: deleted,
-        modifiedPreviousProperties: modifiedPreviousProperties}, batch);
-
-    this._onFilterChange({signal : Filter.Messages.STRUCTURE_CHANGE}, batch);
-    batch.done('connectionStreamsGetChanges');
-  }.bind(this));
-};
-
-/**
- * @private
- */
-Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracontent, batch) {
-  this.lastSynchedST = this.connection.getServerTime();
-
-
-  if (this.useCacheForEventsGetAllAndCompare) {
-
-
-
-    // POC code to look into in-memory events for matching events..
-    // do not activate until cache handles DELETE
-    var result1 = { enter : [], leave : []};
-    _.extend(result1, extracontent);
-
-
-    // first cleanup same as : this._refilterLocaly(signal, extracontent, batch);
-    if (! this._events) {
-      throw new Error('Not yet started!!!');
-    }
-    _.each(_.clone(this._events.active), function (event) {
-      if (! this.filter.matchEvent(event)) {
-        result1.leave.push(event);
-        delete this._events.active[event.id];
-      }
-    }.bind(this));
-
-
-
-    var cachedEvents = this.connection.datastore.getEventsMatchingFilter(this.filter);
-    _.each(cachedEvents, function (event) {
-      if (! this._events.active[event.id]) {  // we don't care for already known event
-        this._events.active[event.id] = event; // store it
-        result1.enter.push(event);
-      }
-    }.bind(this));
-
-
-
-    this._fireEvent(signal, result1, batch);
-
-    // remove all events not matching filter
-
-
-  }
-
-  // look online
-  if (! this.ensureFullCache)  { // not needed when full cache is enabled
-    var result = { enter : [] };
-    _.extend(result, extracontent); // pass extracontent to receivers
-
-    var toremove = _.clone(this._events.active);
-
-    batch = this.startBatch('connectionEventsGetAllAndCompare:online', batch);
-    this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
-      function (error, events) {
-        if (error) {
-          this._fireEvent(Messages.ON_ERROR, error, batch);
-          batch.done('connectionEventsGetAllAndCompare:online error');
-          return;
-        }
-        _.each(events, function (event) {
-          if (this._events.active[event.id]) {  // already known event we don't care
-            delete toremove[event.id];
-          } else {
-            this._events.active[event.id] = event;
-            result.enter.push(event);
-          }
-        }.bind(this));
-        _.each(_.keys(toremove), function (streamid) {
-          delete this._events.active[streamid]; // cleanup not found streams
-        }.bind(this));
-        result.leave = _.values(toremove); // unmatched events are to be removed
-        this._fireEvent(signal, result, batch);
-        batch.done('connectionEventsGetAllAndCompare:online');
-      }.bind(this));
-  }
-};
-
-
-/**
- * TODO write doc
- * return informations on events
- */
-Monitor.prototype.stats = function (force, callback) {
-  this.connection.profile.getTimeLimits(force, callback);
-};
-
-module.exports = Monitor;
-
-
-
-},{"./Filter.js":55,"./utility/SignalEmitter.js":71,"underscore":51}],57:[function(require,module,exports){
-var _ = require('underscore');
-
-
-
-/**
- * TODO write documentation  with use cases.. !!
- * @type {Function}
- */
-var Stream = module.exports = function Stream(connection, data) {
-  this.connection = connection;
-
-  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
-  /** those are only used when no datastore **/
-  this._parent = null;
-  this.parentId = null;
-  this.trashed = false;
-  this._children = [];
-  data.name = _.escape(data.name);
-  _.extend(this, data);
-};
-
-Stream.RW_PROPERTIES =
-  ['name', 'parentId', 'singleActivity', 'clientData', 'trashed'];
-
-/**
- * get Json object ready to be posted on the API
- */
-Stream.prototype.getData = function () {
-  var data = {};
-  _.each(Stream.RW_PROPERTIES, function (key) { // only set non null values
-    if (_.has(this, key)) { data[key] = this[key]; }
-  }.bind(this));
-  return data;
-};
-
-
-/**
- * Set or erase clientData properties
- * @example // set x=25 and delete y
- * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValueMap
- * @param {Connection~requestCallback} callback
- */
-Stream.prototype.setClientData = function (keyValueMap, callback) {
-  return this.connection.streams.setClientData(this, keyValueMap, callback);
-};
-
-Object.defineProperty(Stream.prototype, 'parent', {
-  get: function () {
-
-    if (!this.parentId) {
-      return null;
-    }
-    if (!this.connection.datastore) { // we use this._parent and this._children
-      return this._parent;
-    }
-
-    return this.connection.datastore.getStreamById(this.parentId);
-  },
-  set: function (p) {
-    if (p instanceof Stream) {
-      p = p.id;
-    }
-
-    this.parentId = p;
-
-    if (!this.connection.datastore) { // we use this._parent and this._children
-      this._parent = p;
-    }
-    throw new Error('Stream.parent property is read only');
-  }
-});
-
-/**
- * TODO write documentation
- * Does not return trashed childrens
- */
-Object.defineProperty(Stream.prototype, 'children', {
-  get: function () {
-    if (!this.connection.datastore) { // we use this._parent and this._children
-      return this._children;
-    }
-    var children = [];
-    _.each(this.childrenIds, function (childrenId) {
-      try {
-        var child = this.connection.datastore.getStreamById(childrenId);
-        if (child.parentId === this.id && ! child.trashed) { // exclude trashed childs
-          children.push(child);
-        }
-      } catch (e) {
-        console.warn('cannot find child', e);
-      }
-    }.bind(this));
-    return children;
-  },
-  set: function () {
-    throw new Error('Stream.children property is read only');
-  }
-});
-
-// TODO write test
-Object.defineProperty(Stream.prototype, 'ancestors', {
-  get: function () {
-    if (!this.parentId || this.parent === null) {
-      return [];
-    }
-    var result = this.parent.ancestors;
-    result.push(this.parent);
-    return result;
-  },
-  set: function () {
-    throw new Error('Stream.ancestors property is read only');
-  }
-});
-
-
-
-
-
-
-
-},{"underscore":51}],58:[function(require,module,exports){
-/* global confirm, document, navigator, location, window */
-
-var utility = require('../utility/utility.js');
-var Connection = require('../Connection.js');
-var _ = require('underscore');
-
-
-//--------------------- access ----------//
-/**
- * @class Auth
- * */
-var Auth = function () {
-};
-
-
-_.extend(Auth.prototype, {
-  connection: null, // actual connection managed by Auth
-  config: {
-    // TODO: clean up this hard-coded mess and rely on the one and only Pryv URL domains reference
-    registerURL: {ssl: true, host: 'reg.pryv.io'},
-    registerStagingURL: {ssl: true, host: 'reg.pryv.in'},
-    localDevel : false,
-    sdkFullPath: 'https://dlw0lofo79is5.cloudfront.net/lib-javascript/latest'
-  },
-  state: null,  // actual state
-  window: null,  // popup window reference (if any)
-  spanButton: null, // an element on the app web page that can be controlled
-  buttonHTML: '',
-  onClick: {}, // functions called when button is clicked
-  settings: null,
-  pollingID: false,
-  pollingIsOn: true, //may be turned off if we can communicate between windows
-  cookieEnabled: false,
-  ignoreStateFromURL: false // turned to true in case of loggout
-});
-
-/**
- * Method to initialize the data required for authorization.
- * @method _init
- * @access private
- */
-Auth._init = function (i) {
-  // start only if utility is loaded
-  if (typeof utility === 'undefined') {
-    if (i > 100) {
-      throw new Error('Cannot find utility');
-    }
-    i++;
-    return setTimeout('Auth._init(' + i + ')', 10 * i);
-  }
-
-  utility.loadExternalFiles(
-    Auth.prototype.config.sdkFullPath + '/assets/buttonSigninPryv.css', 'css');
-
-  var urlInfo = utility.urls.parseClientURL();
-  console.log('detected environment: ' + urlInfo.environment);
-  if (urlInfo.environment === 'staging') {
-    Auth.prototype.config.registerURL = Auth.prototype.config.registerStagingURL;
-  }
-
-  console.log('init done');
-};
-
-
-Auth._init(1);
-
-//--------------------- UI Content -----------//
-
-
-Auth.prototype.uiSupportedLanguages = ['en', 'fr'];
-
-Auth.prototype.uiButton = function (onClick, buttonText) {
-  if (utility.supportCSS3()) {
-    return '<div id="pryv-access-btn" class="pryv-access-btn-signin" data-onclick-action="' +
-      onClick + '">' +
-      '<a class="pryv-access-btn pryv-access-btn-pryv-access-color" href="#">' +
-      '<span class="logoSignin">Y</span></a>' +
-      '<a class="pryv-access-btn pryv-access-btn-pryv-access-color"  href="#"><span>' +
-      buttonText + '</span></a></div>';
-  } else   {
-    return '<a href="#" id ="pryv-access-btn" data-onclick-action="' + onClick +
-      '" class="pryv-access-btn-signinImage" ' +
-      'src="' + this.config.sdkFullPath + '/assets/btnSignIn.png" >' + buttonText + '</a>';
-  }
-};
-
-Auth.prototype.uiErrorButton = function () {
-  var strs = {
-    'en': { 'msg': 'Error :(' },
-    'fr': { 'msg': 'Erreur :('}
-  }[this.settings.languageCode];
-  this.onClick.Error = function () {
-    this.logout();
-    return false;
-  }.bind(this);
-  return this.uiButton('Error', strs.msg);
-};
-
-Auth.prototype.uiLoadingButton = function () {
-  var strs = {
-    'en': { 'msg': 'Loading...' },
-    'fr': { 'msg': 'Chargement...'}
-  }[this.settings.languageCode];
-  this.onClick.Loading = function () {
-    return false;
-  };
-  return this.uiButton('Loading', strs.msg);
-
-};
-
-Auth.prototype.uiSigninButton = function () {
-  var strs = {
-    'en': { 'msg': 'Sign in' },
-    'fr': { 'msg': 'S\'identifier' }
-  }[this.settings.languageCode];
-  this.onClick.Signin = function () {
-    this.popupLogin();
-    return false;
-  }.bind(this);
-  return this.uiButton('Signin', strs.msg);
-
-};
-
-Auth.prototype.uiConfirmLogout = function () {
-  var strs = {
-    'en': { 'logout': 'Sign out?'},
-    'fr': { 'logout': 'Se déconnecter?'}
-  }[this.settings.languageCode];
-
-  if (confirm(strs.logout)) {
-    this.logout();
-  }
-};
-
-Auth.prototype.uiInButton = function (username) {
-  this.onClick.In = function () {
-    this.uiConfirmLogout();
-    return false;
-  }.bind(this);
-  return this.uiButton('In', username);
-};
-
-Auth.prototype.uiRefusedButton = function (message) {
-  console.log('Pryv access [REFUSED]' + message);
-  var strs = {
-    'en': { 'msg': 'access refused'},
-    'fr': { 'msg': 'Accès refusé'}
-  }[this.settings.languageCode];
-  this.onClick.Refused = function () {
-    this.retry();
-    return false;
-  }.bind(this);
-  return this.uiButton('Refused', strs.msg);
-
-};
-
-//--------------- end of UI ------------------//
-
-
-Auth.prototype.updateButton = function (html) {
-  this.buttonHTML = html;
-  if (! this.settings.spanButtonID) { return; }
-
-  utility.domReady(function () {
-    if (! this.spanButton) {
-      var element = document.getElementById(this.settings.spanButtonID);
-      if (typeof(element) === 'undefined' || element === null) {
-        throw new Error('access-SDK cannot find span ID: "' +
-          this.settings.spanButtonID + '"');
-      } else {
-        this.spanButton = element;
-      }
-    }
-    this.spanButton.innerHTML = this.buttonHTML;
-    this.spanButton.onclick = function (e) {
-      e.preventDefault();
-      var element = document.getElementById('pryv-access-btn');
-      console.log('onClick', this.spanButton,
-        element.getAttribute('data-onclick-action'));
-      this.onClick[element.getAttribute('data-onclick-action')]();
-    }.bind(this);
-  }.bind(this));
-};
-
-Auth.prototype.internalError = function (message, jsonData) {
-  this.stateChanged({id: 'INTERNAL_ERROR', message: message, data: jsonData});
-};
-
-//STATE HUB
-Auth.prototype.stateChanged  = function (data) {
-
-
-  if (data.id) { // error
-    if (this.settings.callbacks.error) {
-      this.settings.callbacks.error(data.id, data.message);
-    }
-    this.updateButton(this.uiErrorButton());
-    console.log('Error: ' + JSON.stringify(data));
-    // this.logout();   Why should I retry if it failed already once?
-  }
-
-  if (data.status === this.state.status) {
-    return;
-  }
-  if (data.status === 'LOADED') { // skip
-    return;
-  }
-  if (data.status === 'POPUPINIT') { // skip
-    return;
-  }
-
-  this.state = data;
-  if (this.state.status === 'NEED_SIGNIN') {
-    this.stateNeedSignin();
-  }
-  if (this.state.status === 'REFUSED') {
-    this.stateRefused();
-  }
-
-  if (this.state.status === 'ACCEPTED') {
-    this.stateAccepted();
-  }
-
-};
-
-//STATE 0 Init
-Auth.prototype.stateInitialization = function () {
-  this.state = {status : 'initialization'};
-  this.updateButton(this.uiLoadingButton());
-  if (this.settings.callbacks.initialization) {
-    this.settings.callbacks.initialization();
-  }
-};
-
-//STATE 1 Need Signin
-Auth.prototype.stateNeedSignin = function () {
-  this.updateButton(this.uiSigninButton());
-  if (this.settings.callbacks.needSignin) {
-    this.settings.callbacks.needSignin(this.state.url, this.state.poll,
-      this.state.poll_rate_ms);
-  }
-};
-
-
-//STATE 2 User logged in and authorized
-Auth.prototype.stateAccepted = function () {
-  if (this.cookieEnabled) {
-    utility.docCookies.setItem('access_username', this.state.username, 3600);
-    utility.docCookies.setItem('access_token', this.state.token, 3600);
-  }
-  this.updateButton(this.uiInButton(this.state.username));
-
-  this.connection.username = this.state.username;
-  this.connection.auth = this.state.token;
-  if (this.settings.callbacks.accepted) {
-    this.settings.callbacks.accepted(this.state.username, this.state.token, this.state.lang);
-  }
-  if (this.settings.callbacks.signedIn) {
-    this.settings.callbacks.signedIn(this.connection, this.state.lang);
-  }
-};
-
-//STATE 3 User refused
-Auth.prototype.stateRefused = function () {
-  this.updateButton(this.uiRefusedButton(this.state.message));
-  if (this.settings.callbacks.refused) {
-    this.settings.callbacks.refused('refused:' + this.state.message);
-  }
-};
-
-
-/**
- * clear all references
- */
-Auth.prototype.logout = function () {
-  this.ignoreStateFromURL = true;
-  if (this.cookieEnabled) {
-    utility.docCookies.removeItem('access_username');
-    utility.docCookies.removeItem('access_token');
-  }
-  this.state = null;
-  if (this.settings.callbacks.accepted) {
-    this.settings.callbacks.accepted(false, false, false);
-  }
-  if (this.settings.callbacks.signedOut) {
-    this.settings.callbacks.signedOut(this.connection);
-  }
-  this.connection = null;
-  this.setup(this.settings);
-};
-
-/**
- * clear references and try again
- */
-Auth.prototype.retry = Auth.prototype.logout;
-
-
-
-
-/* jshint -W101 */
-// TODO: the 4 methods below belong elsewhere (e.g. static methods of Connection); original author please check with @sgoumaz
-
-/**
- * TODO: discuss whether signature should be `(settings, callback)`
- * @param settings
- */
-Auth.prototype.login = function (settings) {
-  // cookies
-  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
-  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
-    document.cookie = 'testcookie';
-    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
-  }
-
-  var urlInfo = utility.urls.parseClientURL();
-  var defaultDomain = utility.urls.domains.server[urlInfo.environment];
-  this.settings = settings = _.defaults(settings, {
-    ssl: true,
-    domain: defaultDomain
-  });
-
-  this.connection = new Connection({
-    ssl: settings.ssl,
-    domain: settings.domain
-  });
-
-  var pack = {
-    ssl: settings.ssl,
-    host: settings.username + '.' + settings.domain,
-    path: '/auth/login',
-    params: {
-      appId : settings.appId,
-      username : settings.username,
-      password : settings.password
-    },
-    success: function (data)  {
-      if (data.token) {
-        if (this.cookieEnabled && settings.rememberMe) {
-          utility.docCookies.setItem('access_username', settings.username, 3600);
-          utility.docCookies.setItem('access_token', data.token, 3600);
-          utility.docCookies.setItem('access_preferredLanguage', data.preferredLanguage, 3600);
-        }
-        console.log('set cookie', this.cookieEnabled, settings.rememberMe,
-          utility.docCookies.getItem('access_username'),
-          utility.docCookies.getItem('access_token'));
-        this.connection.username = settings.username;
-        this.connection.auth = data.token;
-        if (typeof(this.settings.callbacks.signedIn)  === 'function') {
-          this.settings.callbacks.signedIn(this.connection);
-        }
-      } else {
-        if (typeof(this.settings.callbacks.error) === 'function') {
-          this.settings.callbacks.error(data);
-        }
-      }
-    }.bind(this),
-    error: function (jsonError) {
-      if (typeof(this.settings.callbacks.error) === 'function') {
-        this.settings.callbacks.error(jsonError);
-      }
-    }.bind(this)
-  };
-
-  utility.request(pack);
-};
-
-// TODO: must be an instance member of Connection instead
-Auth.prototype.trustedLogout = function () {
-  var path = '/auth/logout';
-  if (this.connection) {
-    this.connection.request('POST', path, function (error) {
-      if (error && typeof(this.settings.callbacks.error) === 'function') {
-        return this.settings.callbacks.error(error);
-      }
-      if (!error && typeof(this.settings.callbacks.signedOut) === 'function') {
-        return this.settings.callbacks.signedOut(this.connection);
-      }
-    }.bind(this));
-  }
-};
-
-Auth.prototype.whoAmI = function (settings) {
-  var urlInfo = utility.urls.parseClientURL();
-  var defaultDomain = utility.urls.domains.server[urlInfo.environment];
-  this.settings = settings = _.defaults(settings, {
-    ssl: true,
-    domain: defaultDomain
-  });
-
-  this.connection = new Connection({
-    ssl: settings.ssl,
-    domain: settings.domain
-  });
-
-  var pack = {
-    ssl: settings.ssl,
-    host: settings.username + '.' + settings.domain,
-    path :  '/auth/who-am-i',
-    method: 'GET',
-    success : function (data)  {
-      if (data.token) {
-        this.connection.username = data.username;
-        this.connection.auth = data.token;
-        var conn = new Connection(data.username, data.token, {
-          ssl: settings.ssl,
-          domain: settings.domain
-        });
-        console.log('before access info', this.connection);
-        conn.accessInfo(function (error) {
-          console.log('after access info', this.connection);
-          if (!error) {
-            if (typeof(this.settings.callbacks.signedIn)  === 'function') {
-              this.settings.callbacks.signedIn(this.connection);
-            }
-          } else {
-            if (typeof(this.settings.callbacks.error) === 'function') {
-              this.settings.callbacks.error(error);
-            }
-          }
-        }.bind(this));
-
-      } else {
-        if (typeof(this.settings.callbacks.error) === 'function') {
-          this.settings.callbacks.error(data);
-        }
-      }
-    }.bind(this),
-    error : function (jsonError) {
-      if (typeof(this.settings.callbacks.error) === 'function') {
-        this.settings.callbacks.error(jsonError);
-      }
-    }.bind(this)
-  };
-
-  utility.request(pack);
-};
-
-Auth.prototype.loginWithCookie = function (settings) {
-  var urlInfo = utility.urls.parseClientURL();
-  var defaultDomain = utility.urls.domains.server[urlInfo.environment];
-  this.settings = settings = _.defaults(settings, {
-    ssl: true,
-    domain: defaultDomain
-  });
-
-  this.connection = new Connection({
-    ssl: settings.ssl,
-    domain: settings.domain
-  });
-
-  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
-  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
-    document.cookie = 'testcookie';
-    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
-  }
-  var cookieUserName = this.cookieEnabled ? utility.docCookies.getItem('access_username') : false;
-  var cookieToken = this.cookieEnabled ? utility.docCookies.getItem('access_token') : false;
-  console.log('get cookie', cookieUserName, cookieToken);
-  if (cookieUserName && cookieToken) {
-    this.connection.username = cookieUserName;
-    this.connection.auth = cookieToken;
-    if (typeof(this.settings.callbacks.signedIn) === 'function') {
-      this.settings.callbacks.signedIn(this.connection);
-    }
-    return this.connection;
-  }
-  return false;
-};
-
-
-
-
-
-/**
- *
- * @param settings
- * @returns {Connection} the connection managed by Auth.. A new one is created each time setup is
- * called.
- */
-Auth.prototype.setup = function (settings) {
-  this.state = null;
-
-  //--- check the browser capabilities
-
-
-  // cookies
-  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
-  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
-    document.cookie = 'testcookie';
-    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
-  }
-
-  //TODO check settings..
-
-  settings.languageCode =
-    utility.getPreferredLanguage(this.uiSupportedLanguages, settings.languageCode);
-
-  //-- returnURL
-  settings.returnURL = settings.returnURL || 'auto#';
-  if (settings.returnURL) {
-    // check the trailer
-    var trailer = settings.returnURL.charAt(settings.returnURL.length - 1);
-    if ('#&?'.indexOf(trailer) < 0) {
-      throw new Error('Pryv access: Last character of --returnURL setting-- is not ' +
-        '"?", "&" or "#": ' + settings.returnURL);
-    }
-
-    // set self as return url?
-    var returnself = (settings.returnURL.indexOf('self') === 0);
-    if (settings.returnURL.indexOf('auto') === 0) {
-      returnself = utility.browserIsMobileOrTablet();
-      if (!returnself) { settings.returnURL = false; }
-    }
-
-    if (returnself) {
-      var myParams = settings.returnURL.substring(4);
-      // eventually clean-up current url from previous pryv returnURL
-      settings.returnURL = this._cleanStatusFromURL() + myParams;
-    }
-
-    if (settings.returnURL) {
-      if (settings.returnURL.indexOf('http') < 0) {
-        throw new Error('Pryv access: --returnURL setting-- does not start with http: ' +
-          settings.returnURL);
-      }
-    }
-  }
-
-  //  spanButtonID is checked only when possible
-  this.settings = settings;
-
-  var params = {
-    requestingAppId : settings.requestingAppId,
-    requestedPermissions : settings.requestedPermissions,
-    languageCode : settings.languageCode,
-    returnURL : settings.returnURL
-  };
-
-  if (this.config.localDevel) {
-    // return url will be forced to https://l.pryv.in:4443/Auth.html
-    params.localDevel = this.config.localDevel;
-  }
-
-  this.stateInitialization();
-  // TODO: clean up this hard-coded mess and rely on the one and only Pryv URL domains reference
-  var domain = (this.config.registerURL.host === 'reg.pryv.io') ? 'pryv.io' : 'pryv.in';
-
-  this.connection = new Connection(null, null, {ssl: this.config.registerURL.ssl, domain: domain});
-  // look if we have a returning user (document.cookie)
-  var cookieUserName = this.cookieEnabled ? utility.docCookies.getItem('access_username') : false;
-  var cookieToken = this.cookieEnabled ? utility.docCookies.getItem('access_token') : false;
-
-  // look in the URL if we are returning from a login process
-  var stateFromURL =  this._getStatusFromURL();
-
-  if (stateFromURL && (! this.ignoreStateFromURL)) {
-    this.stateChanged(stateFromURL);
-  } else if (cookieToken && cookieUserName) {
-    this.stateChanged({status: 'ACCEPTED', username: cookieUserName, token: cookieToken});
-  } else { // launch process $
-
-    var pack = {
-      path :  '/access',
-      params : params,
-      success : function (data)  {
-        if (data.status && data.status !== 'ERROR') {
-          this.stateChanged(data);
-        } else {
-          // TODO call shouldn't failed
-          this.internalError('/access Invalid data: ', data);
-        }
-      }.bind(this),
-      error : function (jsonError) {
-        this.internalError('/access ajax call failed: ', jsonError);
-      }.bind(this)
-    };
-
-    utility.request(_.extend(pack, this.config.registerURL));
-
-
-  }
-
-
-  return this.connection;
-};
-
-//logout the user if
-
-//read the polling
-Auth.prototype.poll = function poll() {
-  if (this.pollingIsOn && this.state.poll_rate_ms) {
-    // remove eventually waiting poll..
-    if (this.pollingID) { clearTimeout(this.pollingID); }
-
-
-    var pack = {
-      path :  '/access/' + this.state.key,
-      method : 'GET',
-      success : function (data)  {
-        this.stateChanged(data);
-      }.bind(this),
-      error : function (jsonError) {
-        this.internalError('poll failed: ', jsonError);
-      }.bind(this)
-    };
-
-    utility.request(_.extend(pack, this.config.registerURL));
-
-
-    this.pollingID = setTimeout(this.poll.bind(this), this.state.poll_rate_ms);
-  } else {
-    console.log('stopped polling: on=' + this.pollingIsOn + ' rate:' + this.state.poll_rate_ms);
-  }
-};
-
-
-//messaging between browser window and window.opener
-Auth.prototype.popupCallBack = function (event) {
-  // Do not use 'this' here !
-  if (this.settings.forcePolling) { return; }
-  if (event.source !== this.window) {
-    console.log('popupCallBack event.source does not match Auth.window');
-    return false;
-  }
-  console.log('from popup >>> ' + JSON.stringify(event.data));
-  this.pollingIsOn = false; // if we can receive messages we stop polling
-  this.stateChanged(event.data);
-};
-
-
-
-Auth.prototype.popupLogin = function popupLogin() {
-  if ((! this.state) || (! this.state.url)) {
-    throw new Error('Pryv Sign-In Error: NO SETUP. Please call Auth.setup() first.');
-  }
-
-  if (this.settings.returnURL) {
-    location.href = this.state.url;
-    return;
-  }
-
-  // start polling
-  setTimeout(this.poll(), 1000);
-
-  var screenX = typeof window.screenX !== 'undefined' ? window.screenX : window.screenLeft,
-    screenY = typeof window.screenY !== 'undefined' ? window.screenY : window.screenTop,
-    outerWidth = typeof window.outerWidth !== 'undefined' ?
-      window.outerWidth : document.body.clientWidth,
-    outerHeight = typeof window.outerHeight !== 'undefined' ?
-      window.outerHeight : (document.body.clientHeight - 22),
-    width    = 270,
-    height   = 420,
-    left     = parseInt(screenX + ((outerWidth - width) / 2), 10),
-    top      = parseInt(screenY + ((outerHeight - height) / 2.5), 10),
-    features = (
-      'width=' + width +
-        ',height=' + height +
-        ',left=' + left +
-        ',top=' + top +
-        ',scrollbars=yes'
-      );
-
-
-  window.addEventListener('message', this.popupCallBack.bind(this), false);
-
-  this.window = window.open(this.state.url, 'prYv Sign-in', features);
-
-  if (! this.window) {
-    // TODO try to fall back on access
-    console.log('FAILED_TO_OPEN_WINDOW');
-  } else {
-    if (window.focus) {
-      this.window.focus();
-    }
-  }
-
-  return false;
-};
-
-
-
-
-//util to grab parameters from url query string
-Auth.prototype._getStatusFromURL = function () {
-  var vars = {};
-  window.location.href.replace(/[?#&]+prYv([^=&]+)=([^&]*)/gi,
-    function (m, key, value) {
-      vars[key] = value;
-    });
-
-  //TODO check validity of status
-
-  return (vars.key) ? vars : false;
-};
-
-//util to grab parameters from url query string
-Auth.prototype._cleanStatusFromURL = function () {
-  return window.location.href.replace(/[?#&]+prYv([^=&]+)=([^&]*)/gi, '');
-};
-
-//-------------------- UTILS ---------------------//
-
-module.exports = new Auth();
-
-},{"../Connection.js":52,"../utility/utility.js":80,"underscore":51}],59:[function(require,module,exports){
-
-module.exports = {};
-},{}],60:[function(require,module,exports){
-var utility = require('../utility/utility.js');
-
-module.exports =  utility.isBrowser() ?
-    require('./Auth-browser.js') : require('./Auth-node.js');
-
-},{"../utility/utility.js":80,"./Auth-browser.js":58,"./Auth-node.js":59}],61:[function(require,module,exports){
-var apiPathAccesses = '/accesses';
-var _ = require('underscore');
-
-/**
- * @class Accesses
- * @link http://api.pryv.com/reference.html#methods-accesses
- * @link http://api.pryv.com/reference.html#data-structure-access
- * @param {Connection} connection
- * @constructor
- */
-function Accesses(connection) {
-  this.connection = connection;
-}
-/**
- * @param {Connection~requestCallback} callback
- */
-Accesses.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathAccesses, function (err, res) {
-    var accesses = res.accesses || res.access;
-    if (typeof(callback) === 'function') {
-      callback(err, accesses);
-    }
-  });
-};
-
-/**
- * TODO complete documentation
- * @param access
- * @param callback
- */
-Accesses.prototype.create = function (access, callback) {
-  this.connection.request('POST', apiPathAccesses, function (err, res) {
-    var access = res.access;
-    if (typeof(callback) === 'function') {
-      callback(err, access);
-    }
-  }, access);
-};
-
-/**
- * TODO complete documentation
- * @param access
- * @param callback
- */
-Accesses.prototype.update = function (access, callback) {
-  if (access.id) {
-    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
-      _.pick(access, 'name', 'deviceName', 'permissions'));
-  } else {
-    if (callback && _.isFunction(callback)) {
-      return callback('No access id found');
-    }
-
-  }
-};
-
-/**
- * TODO complete documentation
- * @param access
- * @param callback
- */
-Accesses.prototype.delete = function (sharingId, callback) {
-  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
-    var error = err;
-    if (result && result.message) {
-      error = result;
-    }
-    callback(error, result);
-  });
-};
-module.exports = Accesses;
-},{"underscore":51}],62:[function(require,module,exports){
-var apiPathAccount = '/account';
-
-function Account(connection) {
-  this.connection = connection;
-}
-
-Account.prototype.changePassword = function (oldPassword, newPassword, callback) {
-  this.connection.request('POST', apiPathAccount + '/change-password', function (err) {
-    if (typeof(callback) === 'function') {
-      callback(err);
-    }
-  }, {'oldPassword': oldPassword, 'newPassword': newPassword});
-};
-Account.prototype.getInfo = function (callback) {
-  this.connection.request('GET', apiPathAccount, function (error, result) {
-    if (typeof(callback) === 'function') {
-      if (result && result.account) {
-        result = result.account;
-      }
-      callback(error, result);
-    }
-  });
-};
-
-module.exports = Account;
-},{}],63:[function(require,module,exports){
-var apiPathBookmarks = '/followed-slices',
-  Connection = require('../Connection.js'),
-  _ = require('underscore');
-
-/**
- * @class Bookmarks
- * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
- * @param {Connection} connection
- * @constructor
- */
-function Bookmarks(connection, Conn) {
-  this.connection = connection;
-  Connection = Conn;
-}
-/**
- * @param {Connection~requestCallback} callback
- */
-Bookmarks.prototype.get = function (callback) {
-  this.connection.request('GET', apiPathBookmarks, function (error, res) {
-    var result = [],
-      bookmarks = res.followedSlices || res.followedSlice;
-    _.each(bookmarks, function (bookmark) {
-      bookmark.url = bookmark.url.replace(/\.li/, '.in');
-      bookmark.url = bookmark.url.replace(/\.me/, '.io');
-      var conn =  new Connection({
-        auth: bookmark.accessToken,
-        url: bookmark.url,
-        name: bookmark.name,
-        bookmarkId: bookmark.id
-      });
-      result.push(conn);
-    });
-    callback(error, result);
-  });
-};
-
-/**
- * TODO complete documentation
- * @param bookmark
- * @param callback
- * @returns {*}
- */
-Bookmarks.prototype.create = function (bookmark, callback) {
-  if (bookmark.name && bookmark.url && bookmark.accessToken) {
-    this.connection.request('POST', apiPathBookmarks, function (err, result) {
-      var error = err;
-      if (!error) {
-        var conn =  new Connection({
-          auth: bookmark.accessToken,
-          url: bookmark.url,
-          name: bookmark.name,
-          bookmarkId: result.followedSlice.id
-        });
-        bookmark = conn;
-      }
-      callback(error, bookmark);
-    }, bookmark);
-    return bookmark;
-  }
-};
-
-/**
- * TODO complete documentation
- * @param bookmarkId
- * @param callback
- */
-Bookmarks.prototype.delete = function (bookmarkId, callback) {
-  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
-    var error = err;
-    if (result && result.message) {
-      error = result;
-    }
-    callback(error, result);
-  });
-};
-
-module.exports = Bookmarks;
-},{"../Connection.js":52,"underscore":51}],64:[function(require,module,exports){
-exports.Errors = {
-  API_UNREACHEABLE : 'API_UNREACHEABLE',
-  INVALID_RESULT_CODE : 'INVALID_RESULT_CODE'
-};
-
-exports.Api = {
-  Headers : {
-    ServerTime : 'server-time',
-    ApiVersion : 'api-version'
-  }
-};
-},{}],65:[function(require,module,exports){
-var utility = require('../utility/utility.js'),
-  _ = require('underscore'),
-  Filter = require('../Filter'),
-  Event = require('../Event'),
-  CC = require('./ConnectionConstants.js');
-
-/**
- * @class ConnectionEvents
- *
- * Coverage of the API
- *  GET /events -- 100%
- *  POST /events -- only data (no object)
- *  POST /events/start -- 0%
- *  POST /events/stop -- 0%
- *  PUT /events/{event-id} -- 100%
- *  DELETE /events/{event-id} -- only data (no object)
- *  POST /events/batch -- only data (no object)
- *
- *  attached files manipulations are covered by Event
- *
- *
- * @param {Connection} connection
- * @constructor
- */
-function ConnectionEvents(connection) {
-  this.connection = connection;
-}
-
-
-/**
- * @example
- * // get events from the Diary stream
- * conn.events.get({streamId : 'diary'},
- *  function(events) {
- *    console.log('got ' + events.length + ' events)
- *  }
- * );
- * @param {FilterLike} filter
- * @param {ConnectionEvents~getCallback} doneCallback
- * @param {ConnectionEvents~partialResultCallback} partialResultCallback
- */
-ConnectionEvents.prototype.get = function (filter, doneCallback, partialResultCallback) {
-  //TODO handle caching
-  var result = [];
-  filter = filter || {};
-  this._get(filter, function (error, res) {
-    if (error) {
-      result = null;
-    } else {
-      var eventList = res.events || res.event;
-      _.each(eventList, function (eventData) {
-
-        var event = null;
-        if (!this.connection.datastore) { // no datastore   break
-          event = new Event(this.connection, eventData);
-        } else {
-          event = this.connection.datastore.createOrReuseEvent(eventData);
-        }
-
-        result.push(event);
-
-      }.bind(this));
-    }
-    doneCallback(error, result);
-
-    if (partialResultCallback) { partialResultCallback(result); }
-  }.bind(this));
-
-};
-
-/**
- * @param {Event} event
- * @param {Connection~requestCallback} callback
- */
-ConnectionEvents.prototype.update = function (event, callback) {
-  this._updateWithIdAndData(event.id, event.getData(), callback);
-};
-
-/**
- * @param {Event | eventId} event
- * @param {Connection~requestCallback} callback
- */
-ConnectionEvents.prototype.trash = function (event, callback) {
-  this.trashWithId(event.id, callback);
-};
-
-/**
- * @param {String} eventId
- * @param {Connection~requestCallback} callback
- */
-ConnectionEvents.prototype.trashWithId = function (eventId, callback) {
-  var url = '/events/' + eventId;
-  this.connection.request('DELETE', url, function (error, result) {
-    // assume there is only one event (no batch for now)
-    if (result && result.event) {
-      if (! this.connection.datastore) { // no datastore   break
-        result = new Event(this.connection, result.event);
-      } else {
-        result = this.connection.datastore.createOrReuseEvent(result.event);
-      }
-    }  else {
-      result = null;
-    }
-    if (callback && typeof(callback) === 'function') {
-      callback(error, result);
-    }
-  }.bind(this), null);
-};
-
-/**
- * This is the preferred method to create an event, or to create it on the API.
- * The function return the newly created object.. It will be updated when posted on the API.
- * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
- * the same connection and not exists on the API.
- * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
- * @param {Boolean} [start = false] if set to true will POST the event to /events/start
- * @return {Event} event
- */
-ConnectionEvents.prototype.create = function (newEventlike, callback) {
-  _create.call(this, newEventlike, callback, false);
-};
-
-
-/**
- * This is the preferred method to create and start an event, Starts a new period event.
- * This is equivalent to starting an event with a null duration. In singleActivity streams,
- * also stops the previously running period event if any.
- * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
- * the same connection and not exists on the API.
- * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
- * @return {Event} event
- */
-ConnectionEvents.prototype.start = function (newEventlike, callback) {
-  _create.call(this, newEventlike, callback, true);
-};
-
-
-// common call for create and start
-function _create(newEventlike, callback, start) {
-  var event = null;
-  if (newEventlike instanceof Event) {
-    if (newEventlike.connection !== this.connection) {
-      return callback(new Error('event.connection does not match current connection'));
-    }
-    if (newEventlike.id) {
-      return callback(new Error('cannot create an event already existing on the API'));
-    }
-    event = newEventlike;
-  } else {
-    event = new Event(this.connection, newEventlike);
-  }
-
-  var url = '/events';
-  if (start) { url = '/events/start'; }
-
-
-  this.connection.request('POST', url, function (err, result, resultInfo) {
-    if (! err && resultInfo.code !== 201) {
-      err = {id : CC.Errors.INVALID_RESULT_CODE};
-    }
-    /**
-     * Change will happend with offline caching...
-     *
-     * An error may hapend 400.. or other if app is behind an non-opened gateway. Thus making
-     * difficult to detect if the error is a real bad request.
-     * The first step would be to consider only bad request if the response can be identified
-     * as coming from a valid api-server. If not, we should cache the event for later synch
-     * then remove the error and send the cached version of the event.
-     *
-     */
-    // TODO if err === API_UNREACHABLE then save event in cache
-    if (result && ! err) {
-      _.extend(event, result.event);
-      if (this.connection.datastore) {  // if datastore is activated register new event
-        this.connection.datastore.addEvent(event);
-      }
-    }
-    if (_.isFunction(callback)) {
-
-      callback(err, err ? null : event);
-    }
-  }.bind(this), event.getData());
-  return event;
-}
-
-
-
-
-/**
- * Stop an event by it's Id
- * @param {EventLike} event -- minimum {id} -- if typeof Event, must belong to
- * the same connection and not exists on the API.
- * @param {Date} [date = now] the date to set to stop the event
- * @param {ConnectionEvents~eventStoppedOnTheAPI} callback
- * @return {Event} event
- */
-ConnectionEvents.prototype.stopEvent = function (eventlike, date, callback) {
-  var url = '/events/stop';
-
-  var data = {id : eventlike.id };
-  if (date) { data.time = date.getTime() / 1000; }
-
-
-  this.connection.request('POST', url, function (err, result, resultInfo) {
-    if (! err && resultInfo.code !== 200) {
-      err = {id : CC.Errors.INVALID_RESULT_CODE};
-    }
-
-
-    // TODO if err === API_UNREACHABLE then save event in cache
-    /*
-    if (result && ! err) {
-      if (this.connection.datastore) {  // if datastore is activated register new event
-
-      }
-    } */
-    if (_.isFunction(callback)) {
-      callback(err, err ? null : result.stoppedId);
-    }
-  }.bind(this), data);
-};
-
-
-
-/**
- * Stop any event in this stream
- * @param {StreamLike} stream -- minimum {id} -- if typeof Stream, must belong to
- * the same connection and not exists on the API.
- * @param {Date} [date = now] the date to set to stop the event
- * @param {String} [type = null] stop any matching eventType is this stream.
- * @param {ConnectionEvents~eventStoppedOnTheAPI} callback
- * @return {Event} event
- */
-ConnectionEvents.prototype.stopStream = function (streamLike, date, type, callback) {
-  var url = '/events/stop';
-
-  var data = {streamId : streamLike.id };
-  if (date) { data.time = date.getTime() / 1000; }
-  if (type) { data.type = type; }
-
-
-  this.connection.request('POST', url, function (err, result, resultInfo) {
-    if (! err && resultInfo.code !== 200) {
-      err = {id : CC.Errors.INVALID_RESULT_CODE};
-    }
-
-    // TODO if err === API_UNREACHABLE then cache the stop instruction for later synch
-
-    if (_.isFunction(callback)) {
-      callback(err, err ? null : result.stoppedId);
-    }
-  }.bind(this), data);
-};
-
-
-/**
- * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
- * the same connection and not exists on the API.
- * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
- * @param {FormData} the formData to post for fileUpload. On node.js
- * refers to pryv.utility.forgeFormData
- * @return {Event} event
- */
-ConnectionEvents.prototype.createWithAttachment =
-  function (newEventLike, formData, callback, progressCallback) {
-    var event = null;
-    if (newEventLike instanceof Event) {
-      if (newEventLike.connection !== this.connection) {
-        return callback(new Error('event.connection does not match current connection'));
-      }
-      if (newEventLike.id) {
-        return callback(new Error('cannot create an event already existing on the API'));
-      }
-      event = newEventLike;
-    } else {
-      event = new Event(this.connection, newEventLike);
-    }
-    formData.append('event', JSON.stringify(event.getData()));
-    var url = '/events';
-    this.connection.request('POST', url, function (err, result) {
-      if (result) {
-        _.extend(event, result.event);
-
-        if (this.connection.datastore) {  // if datastore is activated register new event
-          this.connection.datastore.addEvent(event);
-        }
-
-      }
-      callback(err, event);
-    }.bind(this), formData, true, progressCallback);
-  };
-ConnectionEvents.prototype.addAttachment = function (eventId, file, callback, progressCallback) {
-  var url = '/events/' + eventId;
-  this.connection.request('POST', url, callback, file, true, progressCallback);
-};
-ConnectionEvents.prototype.removeAttachment = function (eventId, fileName, callback) {
-  var url = '/events/' + eventId + '/' + fileName;
-  this.connection.request('DELETE', url, callback);
-};
-/**
- * //TODO rename to batch
- * //TODO make it NewEventLike compatible
- * //TODO once it support an array of mixed values Event and EventLike, the, no need for
- *  callBackWithEventsBeforeRequest at it will. A dev who want Event object just have to create
- *  them before
- * This is the prefered method to create events in batch
- * @param {Object[]} eventsData -- minimum {streamId, type }
- * @param {ConnectionEvents~eventBatchCreatedOnTheAPI}
- * @param {function} [callBackWithEventsBeforeRequest] mostly for testing purposes
- * @return {Event[]} events
- */
-ConnectionEvents.prototype.batchWithData =
-  function (eventsData, callback, callBackWithEventsBeforeRequest) {
-    if (!_.isArray(eventsData)) { eventsData = [eventsData]; }
-
-    var createdEvents = [];
-    var eventMap = {};
-
-    var url = '/';
-    // use the serialId as a temporary Id for the batch
-    _.each(eventsData, function (eventData, i) {
-
-      var event =  new Event(this.connection, eventData);
-
-      createdEvents.push(event);
-      eventMap[i] = event;
-    }.bind(this));
-
-    if (callBackWithEventsBeforeRequest) {
-      callBackWithEventsBeforeRequest(createdEvents);
-    }
-
-    var mapBeforePush = function (evs) {
-      return _.map(evs, function (e) {
-        return {
-          method: 'events.create',
-          params: e
-        };
-      });
-    };
-
-    this.connection.request('POST', url, function (err, result) {
-      if (!err && result) {
-        _.each(result.results, function (eventData, i) {
-          _.extend(eventMap[i], eventData.event); // add the data to the event
-
-          if (this.connection.datastore) {  // if datastore is activated register new event
-            this.connection.datastore.addEvent(eventMap[i]);
-          }
-
-
-        }.bind(this));
-      }
-      callback(err, createdEvents);
-    }.bind(this), mapBeforePush(eventsData));
-
-    return createdEvents;
-  };
-
-// --- raw access to the API
-
-/**
- * TODO anonymise by renaming to function _get(..
- * @param {FilterLike} filter
- * @param {Connection~requestCallback} callback
- * @private
- */
-ConnectionEvents.prototype._get = function (filter, callback) {
-  var tParams = filter;
-  if (filter instanceof Filter) { tParams = filter.getData(true); }
-  if (_.has(tParams, 'streams') && tParams.streams.length === 0) { // dead end filter..
-    return callback(null, []);
-  }
-  var url = '/events?' + utility.getQueryParametersString(tParams);
-  this.connection.request('GET', url, callback, null);
-};
-
-
-/**
- * TODO anonymise by renaming to function _xx(..
- * @param {String} eventId
- * @param {Object} data
- * @param  {Connection~requestCallback} callback
- * @private
- */
-ConnectionEvents.prototype._updateWithIdAndData = function (eventId, data, callback) {
-  var url = '/events/' + eventId;
-  this.connection.request('PUT', url, function (error, result) {
-    if (!error && result && result.event) {
-      if (!this.connection.datastore) {
-        result = new Event(this.connection, result.event);
-      } else {
-        result = this.connection.datastore.createOrReuseEvent(result.event);
-      }
-    } else {
-      result = null;
-    }
-    if (callback && typeof(callback) === 'function') {
-      callback(error, result);
-    }
-  }.bind(this), data);
-};
-
-
-/**
- * @private
- * @param {Event} event
- * @param {Object} the data to map
- */
-ConnectionEvents.prototype._registerNewEvent = function (event, data) {
-
-
-  if (! event.connection.datastore) { // no datastore   break
-    _.extend(event, data);
-    return event;
-  }
-
-  return event.connection.datastore.createOrReuseEvent(this, data);
-};
-
-module.exports = ConnectionEvents;
-
-/**
- * Called with the desired Events as result.
- * @callback ConnectionEvents~getCallback
- * @param {Object} error - eventual error
- * @param {Event[]} result
- */
-
-
-/**
- * Called each time a "part" of the result is received
- * @callback ConnectionEvents~partialResultCallback
- * @param {Event[]} result
- */
-
-
-/**
- * Called when an event is created on the API
- * @callback ConnectionEvents~eventCreatedOnTheAPI
- * @param {Object} error - eventual error
- * @param {Event} event
- */
-
-/**
- * Called when an event is created on the API
- * @callback ConnectionEvents~eventStoppedOnTheAPI
- * @param {Object} error - eventual error
- * @param {String} stoppedEventId or null if event not found
- */
-
-/**
- * Called when batch create an array of events on the API
- * @callback ConnectionEvents~eventBatchCreatedOnTheAPI
- * @param {Object} error - eventual error
- * @param {Event[]} events
- */
-
-},{"../Event":54,"../Filter":55,"../utility/utility.js":80,"./ConnectionConstants.js":64,"underscore":51}],66:[function(require,module,exports){
-var _ = require('underscore'),
-    utility = require('../utility/utility'),
-    Monitor = require('../Monitor');
-
-/**
- * @class ConnectionMonitors
- * @private
- *
- * @param {Connection} connection
- * @constructor
- */
-function ConnectionMonitors(connection) {
-  this.connection = connection;
-  this._monitors = {};
-  this.ioSocket = null;
-}
-
-/**
- * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
- * will trigger an event. Changes to the filter will also trigger events if they have an impact on
- * the monitored data.
- * @param {Filter} filter - changes to this filter will be monitored.
- * @returns {Monitor}
- */
-ConnectionMonitors.prototype.create = function (filter) {
-  if (!this.connection.username) {
-    console.error('Cannot create a monitor for a connection without username:', this.connection);
-    return null;
-  }
-  return new Monitor(this.connection, filter);
-};
-
-
-
-/**
- * TODO
- * @private
- */
-ConnectionMonitors.prototype._stopMonitoring = function (/*callback*/) {
-
-};
-
-/**
- * Internal for Connection.Monitor
- * Maybe moved in Monitor by the way
- * @param callback
- * @private
- * @return {Object} XHR or Node http request
- */
-ConnectionMonitors.prototype._startMonitoring = function (callback) {
-  if (!this.connection.username) {
-    console.error('Cannot start monitoring for a connection without username:', this.connection);
-    return callback(true);
-  }
-  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
-
-  var settings = {
-    host : this.connection.username + '.' + this.connection.settings.domain,
-    port : this.connection.settings.port,
-    ssl : this.connection.settings.ssl,
-    path : this.connection.settings.extraPath + '/' + this.connection.username,
-    namespace : '/' + this.connection.username,
-    auth : this.connection.auth
-  };
-
-  this.ioSocket = utility.ioConnect(settings);
-
-  this.ioSocket.on('connect', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
-  }.bind(this));
-  this.ioSocket.on('error', function (error) {
-    _.each(this._monitors, function (monitor) { monitor._onIoError(error); });
-  }.bind(this));
-  this.ioSocket.on('eventsChanged', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoEventsChanged(); });
-  }.bind(this));
-  this.ioSocket.on('streamsChanged', function () {
-    _.each(this._monitors, function (monitor) { monitor._onIoStreamsChanged(); });
-  }.bind(this));
-  callback(null);
-};
-
-module.exports = ConnectionMonitors;
-
-
-
-},{"../Monitor":56,"../utility/utility":80,"underscore":51}],67:[function(require,module,exports){
-var apiPathPrivateProfile = '/profile/private';
-var apiPathPublicProfile = '/profile/app';
-
-
-/**
- * @class Profile
- * @link http://api.pryv.com/reference.html#methods-app-profile
- */
-
-/**
- * Accessible by connection.profile.xxx`
- * @param {Connection} connection
- * @constructor
- */
-function Profile(connection) {
-  this.connection = connection;
-  this.timeLimits = null;
-}
-
-
-
-
-/**
- * @param {String | null} key
- * @param {Connection~requestCallback} callback - handles the response
- */
-Profile.prototype.getPrivate = function (key, callback) {
-  this._get(apiPathPrivateProfile, key, callback);
-};
-/**
- * @param {String | null} key
- * @param {Connection~requestCallback} callback - handles the response
- */
-Profile.prototype.getPublic = function (key, callback) {
-  this._get(apiPathPublicProfile, key, callback);
-};
-
-
-/**
- * @example
- * // set x=25 and delete y
- * conn.profile.setPrivate({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValuePairs
- * @param {Connection~requestCallback} callback - handles the response
- */
-Profile.prototype.setPrivate = function (keyValuePairs, callback) {
-  this._set(apiPathPrivateProfile, keyValuePairs, callback);
-};
-/**
- * @example
- * // set x=25 and delete y
- * conn.profile.setPublic({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValuePairs
- * @param {Connection~requestCallback} callback - handles the response
- */
-Profile.prototype.setPublic = function (keyValuePairs, callback) {
-  this._set(apiPathPublicProfile, keyValuePairs, callback);
-};
-
-/**
- * TODO write documentation
- */
-Profile.prototype.getTimeLimits = function (force, callback) {
-  if (!force && this.timeLimits) {
-    if (callback && typeof(callback) === 'function') {
-      callback(this.timeLimits);
-    }
-  } else {
-    var i = 2;
-    this.timeLimits = {
-      timeFrameST : [],
-      timeFrameLT : []
-    };
-    this.connection.events.get({
-      toTime: 9900000000,
-      fromTime: 0,
-      limit: 1,
-      sortAscending: false,
-      state: 'all'
-    }, function (error, events) {
-      if (!error && events) {
-        this.timeLimits.timeFrameST[1] = events[0].time;
-        this.timeLimits.timeFrameLT[1] = events[0].timeLT;
-      }
-      i--;
-      if (i === 0) {
-        if (callback && typeof(callback) === 'function') {
-          callback(this.timeLimits);
-        }
-      }
-    }.bind(this));
-    this.connection.events.get({
-      toTime: 9900000000, // TODO add a constant UNDEFINED_TO_TIME in constant
-      fromTime: -9900000000, // TODO add a constant UNDEFINED_FROM_TIME in constant
-      limit: 1,
-      sortAscending: true,
-      state: 'all'
-    }, function (error, events) {
-      if (!error && events) {
-        this.timeLimits.timeFrameST[0] = events[0].time;
-        this.timeLimits.timeFrameLT[0] = events[0].timeLT;
-      }
-      i--;
-      if (i === 0) {
-        if (callback && typeof(callback) === 'function') {
-          callback(this.timeLimits);
-        }
-      }
-    }.bind(this));
-  }
-};
-
-
-// --------- private stuff to be hidden
-
-/**
- * @private
- * @param {String | null} key
- * @param {Connection~requestCallback} callback - handles the response
- */
-Profile.prototype._get = function (path, key, callback) {
-
-  function myCallBack(error, result) {
-    console.warn(result);
-    result = result.profile || null;
-    if (key !== null && result) {
-      result = result[key];
-    }
-    callback(error, result);
-  }
-  this.connection.request('GET', path, myCallBack);
-};
-
-/**
- * @private
- * @example
- * // set x=25 and delete y
- * conn.profile.set({x : 25, y : null}, function(error) { console.log('done'); });
- *
- * @param {Object} keyValuePairs
- * @param {Connection~requestCallback} callback - handles the response
- */
-Profile.prototype._set = function (path, keyValuePairs, callback) {
-  this.connection.request('PUT', path, callback, keyValuePairs);
-};
-
-module.exports = Profile;
-},{}],68:[function(require,module,exports){
-var _ = require('underscore'),
-  utility = require('../utility/utility.js'),
-  Stream = require('../Stream.js');
-
-/**
- * @class ConnectionStreams
- * @description
- * ##Coverage of the API
- *
- *  * GET /streams -- 100%
- *  * POST /streams -- only data (no object)
- *  * PUT /streams -- 0%
- *  * DELETE /streams/{stream-id} -- 0%
- *
- *
- *
- * @param {Connection} connection
- * @constructor
- */
-function ConnectionStreams(connection) {
-  this.connection = connection;
-  this._streamsIndex = {};
-}
-
-
-/**
- * @typedef ConnectionStreamsOptions parameters than can be passed along a Stream request
- * @property {string} parentId  if parentId is null you will get all the "root" streams.
- * @property {string} [state] 'all' || null  - if null you get only "active" streams
- **/
-
-
-/**
- * @param {ConnectionStreamsOptions} options
- * @param {ConnectionStreams~getCallback} callback - handles the response
- */
-ConnectionStreams.prototype.get = function (options, callback) {
-  if (this.connection.datastore) {
-    var resultTree = [];
-    if (options && _.has(options, 'parentId')) {
-      resultTree = this.connection.datastore.getStreamById(options.parentId).children;
-    } else {
-      resultTree = this.connection.datastore.getStreams();
-    }
-    if (resultTree.length > 0) {
-      callback(null, resultTree);
-    } else {
-      this._getObjects(options, callback);
-    }
-  } else {
-    this._getObjects(options, callback);
-  }
-};
-
-/**
- * TODO make it object-aware like for Events
- * TODO why to we need a _create ?
- * TODO could return Stream object synchronously before calling the API
- * @param streamData
- * @param callback
- */
-ConnectionStreams.prototype.create = function (streamData, callback) {
-  streamData = _.pick(streamData, 'id', 'name', 'parentId', 'singleActivity',
-    'clientData', 'trashed');
-  return this._createWithData(streamData, callback);
-};
-
-
-ConnectionStreams.prototype.update = function (streamData, callback) {
-
-  if (typeof streamData === 'object') {
-    streamData = [ streamData ];
-  }
-
-  _.each(streamData, function (e) {
-    var s = _.pick(e, 'id', 'name', 'parentId', 'singleActivity',
-      'clientData', 'trashed');
-    var url = '/streams/' + s.id;
-    this.connection.request('PUT', url, function (error, result) {
-      if (!error && result && result.stream) {
-
-        this._getObjects(null, function (err, res) {
-          if (!err && res) {
-            if (!this.connection.datastore) {
-              result = new Stream(this.connection, result.stream);
-            } else {
-              result = this.connection.datastore.createOrReuseStream(result.stream);
-              if (result.parent &&
-                _.indexOf(result.parent.childrenIds, result.id) === -1) {
-                result.parent.childrenIds.push(result.id);
-              }
-            }
-          } else {
-            result = null;
-          }
-
-          if (callback && typeof(callback) === 'function') {
-            callback(err, result);
-          }
-        }.bind(this));
-
-      } else {
-        result = null;
-      }
-      if (error && callback && typeof(callback) === 'function') {
-        callback(error, null);
-      }
-    }.bind(this), s);
-  }.bind(this));
-};
-
-
-/**
- * @param streamData
- * @param callback
- * @param mergeEventsWithParent
- */
-ConnectionStreams.prototype.delete = function (streamData, callback, mergeEventsWithParent) {
-  var id;
-  if (streamData && streamData.id) {
-    id = streamData.id;
-  } else {
-    id = streamData;
-  }
-
-  mergeEventsWithParent = mergeEventsWithParent ? true : false;
-  var url = '/streams/' + id + '?mergeEventsWithParent=' + mergeEventsWithParent;
-  this.connection.request('DELETE', url, function (error, resultData) {
-    var stream = null;
-    if (!error && resultData && resultData.stream) {
-      streamData.id = resultData.stream.id;
-      stream = new Stream(this.connection, resultData.stream);
-      if (this.connection.datastore) {
-        this.connection.datastore.indexStream(stream);
-      }
-    }
-    if (_.isFunction(callback)) {
-      return callback(error, error ? null : resultData.stream);
-    }
-  }.bind(this));
-};
-
-
-/**
- * TODO remove it's unused
- * @param {ConnectionStreamsOptions} options
- * @param {ConnectionStreams~getCallback} callback - handles the response
- */
-ConnectionStreams.prototype.updateProperties = function (stream, properties, options, callback) {
-  if (this.connection.datastore) {
-    var resultTree = [];
-    if (options && _.has(options, 'parentId')) {
-      resultTree = this.connection.datastore.getStreamById(options.parentId).children;
-    } else {
-      resultTree = this.connection.datastore.getStreams();
-    }
-    callback(null, resultTree);
-  } else {
-    this._getObjects(options, callback);
-  }
-};
-
-
-/**
- * TODO remove it's unused and could lead to miscomprehension
- * Get a Stream by it's Id.
- * Works only if fetchStructure has been done once.
- * @param {string} streamId
- * @throws {Error} Connection.fetchStructure must have been called before.
- */
-ConnectionStreams.prototype.getById = function (streamId) {
-  if (!this.connection.datastore) {
-    throw new Error('Call connection.fetchStructure before, to get automatic stream mapping');
-  }
-  return this.connection.datastore.getStreamById(streamId);
-};
-
-
-// ------------- Raw calls to the API ----------- //
-
-/**
- * get streams on the API
- * @private
- * @param {ConnectionStreams~options} opts
- * @param callback
- */
-ConnectionStreams.prototype._getData = function (opts, callback) {
-  var url = opts ? '/streams?' + utility.getQueryParametersString(opts) : '/streams';
-  this.connection.request('GET', url, callback, null);
-};
-
-
-/**
- * TODO makes it return the Stream object before doing the online request
- * TODO create a streamLike Object
- * Create a stream on the API with a jsonObject
- * @private
- * @param {Object} streamData an object array.. typically one that can be obtained with
- * stream.getData()
- * @param callback
- */
-ConnectionStreams.prototype._createWithData = function (streamData, callback) {
-  var url = '/streams';
-  this.connection.request('POST', url, function (err, resultData) {
-    var stream = null;
-    if (!err && resultData) {
-      streamData.id = resultData.stream.id;
-      stream = new Stream(this.connection, resultData.stream);
-      if (this.connection.datastore) {
-        this.connection.datastore.indexStream(stream);
-      }
-    }
-    if (_.isFunction(callback)) {
-      return callback(err, err ? null : stream);
-    }
-  }.bind(this), streamData);
-};
-
-/**
- * Update a stream on the API with a jsonObject
- * @private
- * @param {Object} streamData an object array.. typically one that can be obtained with
- * stream.getData()
- * @param callback
- */
-ConnectionStreams.prototype._updateWithData = function (streamData, callback) {
-  var url = '/streams/' + streamData.id;
-  this.connection.request('PUT', url, callback, streamData);
-};
-
-// -- helper for get --- //
-
-/**
- * @private
- * @param {ConnectionStreams~options} options
- */
-ConnectionStreams.prototype._getObjects = function (options, callback) {
-  options = options || {};
-  options.parentId = options.parentId || null;
-  var streamsIndex = {};
-  var resultTree = [];
-  this._getData(options, function (error, result) {
-    if (error) {
-      return callback('Stream.get failed: ' + JSON.stringify(error));
-    }
-    var treeData = result.streams || result.stream;
-    ConnectionStreams.Utils.walkDataTree(treeData, function (streamData) {
-      var stream = new Stream(this.connection, streamData);
-      streamsIndex[streamData.id] = stream;
-      if (stream.parentId === options.parentId) { // attached to the rootNode or filter
-        resultTree.push(stream);
-        stream._parent = null;
-        stream._children = [];
-      } else {
-        // localStorage will cleanup  parent / children link if needed
-        stream._parent = streamsIndex[stream.parentId];
-        stream._parent._children.push(stream);
-      }
-    }.bind(this));
-    callback(null, resultTree);
-  }.bind(this));
-};
-
-
-/**
- * Called once per streams
- * @callback ConnectionStreams~walkTreeEachStreams
- * @param {Stream} stream
- */
-
-/**
- * Called when walk is done
- * @callback ConnectionStreams~walkTreeDone
- */
-
-/**
- * Walk the tree structure.. parents are always announced before childrens
- * @param {ConnectionStreams~options} options
- * @param {ConnectionStreams~walkTreeEachStreams} eachStream
- * @param {ConnectionStreams~walkTreeDone} done
- */
-ConnectionStreams.prototype.walkTree = function (options, eachStream, done) {
-  this.get(options, function (error, result) {
-    if (error) {
-      return done('Stream.walkTree failed: ' + error);
-    }
-    ConnectionStreams.Utils.walkObjectTree(result, eachStream);
-    if (done) {
-      done(null);
-    }
-  });
-};
-
-
-/**
- * Get the all the streams of the Tree in a list.. parents firsts
- * @param {ConnectionStreams~options} options
- * @param {ConnectionStreams~getFlatenedObjectsDone} done
- */
-ConnectionStreams.prototype.getFlatenedObjects = function (options, callback) {
-  var result = [];
-  this.walkTree(options,
-    function (stream) { // each stream
-      result.push(stream);
-    }, function (error) {  // done
-      if (error) {
-        return callback(error);
-      }
-      callback(null, result);
-    }.bind(this));
-};
-
-
-/**
- * Utility to debug a tree structure
- * @param {ConnectionStreams[]} arrayOfStreams
- */
-ConnectionStreams.prototype.getDisplayTree = function (arrayOfStreams) {
-  return ConnectionStreams.Utils._debugTree(arrayOfStreams);
-};
-
-/**
- * Utility to get a Stream Tree as if was sent by the API
- * @param {ConnectionStreams[]} arrayOfStreams
- */
-ConnectionStreams.prototype.toJSON = function (arrayOfStreams) {
-  return ConnectionStreams.Utils.toJSON(arrayOfStreams);
-};
-
-
-// TODO Validate that it's the good place for them .. Could have been in Stream or utility
-ConnectionStreams.Utils = {
-
-  /**
-   * Make a pure JSON object from an array of Stream.. shoudl be the same than what we
-   * get from the API
-   * @param streamArray
-   * @param eachStream
-   */
-  toJSON: function (arrayOfStreams) {
-
-    var result = [];
-    if (!arrayOfStreams || !arrayOfStreams instanceof Array) {
-      throw new Error('expected an array for argument :' + arrayOfStreams);
-    }
-
-    _.each(arrayOfStreams, function (stream) {
-      if (!stream || !stream instanceof Stream) {
-        throw new Error('expected a Streams array ' + stream);
-      }
-      result.push({
-        name: stream.name,
-        id: stream.id,
-        parentId: stream.parentId,
-        singleActivity: stream.singleActivity,
-        clientData: stream.clientData,
-        trashed: stream.trashed,
-        created: stream.created,
-        createdBy: stream.createdBy,
-        modified: stream.modified,
-        modifiedBy: stream.modifiedBy,
-        children: ConnectionStreams.Utils.toJSON(stream.children)
-      });
-    });
-    return result;
-  },
-
-  /**
-   * Walk thru a streamArray of objects
-   * @param streamTree
-   * @param callback function(stream)
-   */
-  walkObjectTree: function (streamArray, eachStream) {
-    _.each(streamArray, function (stream) {
-      eachStream(stream);
-      ConnectionStreams.Utils.walkObjectTree(stream.children, eachStream);
-    });
-  },
-
-  /**
-   * Walk thru a streamTree obtained from the API. Replaces the children[] by childrenIds[].
-   * This is used to Flaten the Tree
-   * @param streamTree
-   * @param callback function(streamData, subTree)  subTree is the descendance tree
-   */
-  walkDataTree: function (streamTree, callback) {
-    _.each(streamTree, function (streamStruct) {
-      var stream = _.omit(streamStruct, 'children');
-      stream.childrenIds = [];
-      var subTree = {};
-      callback(stream, subTree);
-      if (_.has(streamStruct, 'children')) {
-        subTree = streamStruct.children;
-
-        _.each(streamStruct.children, function (childTree) {
-          stream.childrenIds.push(childTree.id);
-        });
-        this.walkDataTree(streamStruct.children, callback);
-      }
-    }.bind(this));
-  },
-
-
-  /**
-   * ShowTree
-   */
-  _debugTree: function (arrayOfStreams) {
-    var result = [];
-    if (!arrayOfStreams || !arrayOfStreams instanceof Array) {
-      throw new Error('expected an array for argument :' + arrayOfStreams);
-    }
-    _.each(arrayOfStreams, function (stream) {
-      if (!stream || !stream instanceof Stream) {
-        throw new Error('expected a Streams array ' + stream);
-      }
-      result.push({
-        name: stream.name,
-        id: stream.id,
-        parentId: stream.parentId,
-        children: ConnectionStreams.Utils._debugTree(stream.children)
-      });
-    });
-    return result;
-  }
-
-};
-
-module.exports = ConnectionStreams;
-
-/**
- * Called with the desired streams as result.
- * @callback ConnectionStreams~getCallback
- * @param {Object} error - eventual error
- * @param {Stream[]} result
- */
-
-
-},{"../Stream.js":57,"../utility/utility.js":80,"underscore":51}],69:[function(require,module,exports){
-
-var utility = require('./utility/utility');
-var eventTypes = module.exports = { };
-
-// staging cloudfront https://d1kp76srklnnah.cloudfront.net/dist/data-types/event-extras.json
-// staging direct https://sw.pryv.li/dist/data-types/event-extras.json
-
-var HOSTNAME = 'd1kp76srklnnah.cloudfront.net';
-var PATH = '/dist/data-types/';
-
-
-/**
- * @private
- * @param fileName
- * @param callback
- */
-function _getFile(fileName, callback) {
-  utility.request({
-    method : 'GET',
-    host : HOSTNAME,
-    path : PATH + fileName,
-    port : 443,
-    ssl : true,
-    withoutCredentials: true,
-    success : function (result) { callback(null, result); },
-    error : function (error) { callback(error, null); }
-  });
-}
-
-/**
- * @link http://api.pryv.com/event-typez.html#about-json-file
- * @param {eventTypes~contentCallback} callback
- */
-eventTypes.loadHierarchical = function (callback) {
-  var myCallback = function (error, result) {
-    this._hierarchical = result;
-    callback(error, result);
-  };
-  _getFile('hierarchical.json', myCallback.bind(this));
-};
-
-eventTypes.hierarchical = function () {
-  if (!this._hierarchical) {
-    throw new Error('Call eventTypes.loadHierarchical, before accessing hierarchical');
-  }
-  return this._hierarchical;
-};
-
-
-
-/**
- * @link http://api.pryv.com/event-typez.html#about-json-file
- * @param {eventTypes~contentCallback} callback
- */
-
-eventTypes.loadFlat = function (callback) {
-  var myCallback = function (error, result) {
-    this._flat = result;
-    if (callback && typeof(callback) === 'function') {
-      callback(error, result);
-    }
-  };
-  _getFile('flat.json', myCallback.bind(this));
-};
-
-eventTypes.flat = function (eventType) {
-  if (!this._flat) {
-    throw new Error('Call eventTypes.loadFlat, before accessing flat');
-  }
-  return this._flat.types[eventType];
-};
-
-/**
- * @link http://api.pryv.com/event-typez.html#about-json-file
- * @param {eventTypes~contentCallback} callback
- */
-eventTypes.loadExtras = function (callback) {
-  var myCallback = function (error, result) {
-    this._extras = result;
-    callback(error, result);
-  };
-  _getFile('extras.json', myCallback.bind(this));
-};
-
-eventTypes.extras = function (eventType) {
-  if (!this._extras) {
-    throw new Error('Call eventTypes.loadExtras, before accessing extras');
-  }
-  var type = eventType.split('/');
-  if (this._extras.extras[type[0]] && this._extras.extras[type[0]].formats[type[1]]) {
-    return this._extras.extras[type[0]].formats[type[1]];
-  }
-  return null;
-};
-
-eventTypes.isNumerical = function (eventOrEventType) {
-  if (! eventOrEventType) { return false; }
-  var type;
-  if (eventOrEventType.type) {
-    type = eventOrEventType.type;
-  } else {
-    type = eventOrEventType;
-  }
-  var def = eventTypes.flat(type);
-  if (! def) { return false; }
-  return (def.type === 'number');
-};
-
-/**
- * Called with the result of the request
- * @callback eventTypes~contentCallback
- * @param {Object} error - eventual error
- * @param {Object} result - jSonEncoded result
- */
-
-},{"./utility/utility":80}],70:[function(require,module,exports){
-module.exports = {
-  // TODO: fix singleton (see with me [sgoumaz] if needed)
-  Auth: require('./auth/Auth.js'),
-  Connection: require('./Connection.js'),
-  Event: require('./Event.js'),
-  Stream: require('./Stream.js'),
-  Filter: require('./Filter.js'),
-
-  eventTypes: require('./eventTypes.js'),
-  utility: require('./utility/utility.js'),
-  MESSAGES: {
-    MONITOR: require('./Monitor.js').Messages
-  }
-};
-
-},{"./Connection.js":52,"./Event.js":54,"./Filter.js":55,"./Monitor.js":56,"./Stream.js":57,"./auth/Auth.js":60,"./eventTypes.js":69,"./utility/utility.js":80}],71:[function(require,module,exports){
-/**
- * (event)Emitter renamed to avoid confusion with prvy's events
- */
-
-
-var _ = require('underscore');
-
-var SignalEmitter = module.exports = function (messagesMap) {
-  SignalEmitter.extend(this, messagesMap);
-};
-
-
-SignalEmitter.extend = function (object, messagesMap, name) {
-  if (! name) {
-    throw new Error('"name" parameter must be set');
-  }
-  object._signalEmitterEvents = {};
-  _.each(_.values(messagesMap), function (value) {
-    object._signalEmitterEvents[value] = [];
-  });
-  _.extend(object, SignalEmitter.prototype);
-  object._signalEmitterName = name;
-};
-
-
-SignalEmitter.Messages = {
-  /** called when a batch of changes is expected, content: <batchId> unique**/
-  BATCH_BEGIN : 'beginBatch',
-  /** called when a batch of changes is done, content: <batchId> unique**/
-  BATCH_DONE : 'doneBatch',
-  /** if an eventListener return this string, it will be removed automatically **/
-  UNREGISTER_LISTENER : 'unregisterMePlease'
-};
-
-/**
- * Add an event listener
- * @param signal one of  Messages.SIGNAL.*.*
- * @param callback function(content) .. content vary on each signal.
- * If the callback returns SignalEmitter.Messages.UNREGISTER_LISTENER it will be removed
- * @return the callback function for further reference
- */
-SignalEmitter.prototype.addEventListener = function (signal, callback) {
-  this._signalEmitterEvents[signal].push(callback);
-  return callback;
-};
-
-
-/**
- * remove the callback matching this signal
- */
-SignalEmitter.prototype.removeEventListener = function (signal, callback) {
-  for (var i = 0; i < this._signalEmitterEvents[signal].length; i++) {
-    if (this._signalEmitterEvents[signal][i] === callback) {
-      this._signalEmitterEvents[signal][i] = null;
-    }
-  }
-};
-
-
-/**
- * A changes occurred on the filter
- * @param signal
- * @param content
- * @param batch
- * @private
- */
-SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
-  var batchId = batch ? batch.id : null;
-  if (! signal) { throw new Error(); }
-
-  var batchStr = batchId ? ' batch: ' + batchId + ', ' + batch.batchName : '';
-  console.log('FireEvent-' + this._signalEmitterName  + ' : ' + signal + batchStr);
-
-  _.each(this._signalEmitterEvents[signal], function (callback) {
-    if (callback !== null &&
-      SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batch)) {
-      this.removeEventListener(signal, callback);
-    }
-  }, this);
-};
-
-
-SignalEmitter.batchSerial = 0;
-/**
- * Start a batch process
- *
- * @param batchName Name of the new batch
- * @param orHookOnBatch Existing batch to hook on ("superbatch")
- * @return A batch object (call `done()` when done)
- * @private
- */
-SignalEmitter.prototype.startBatch = function (name, orHookOnBatch) {
-
-  if (! orHookOnBatch) {
-    return new Batch(name, this);
-  }
-  name = orHookOnBatch.name + '/' + name;
-  var batch = new Batch(name, this);
-  orHookOnBatch.waitForMeToFinish(name + ':hook');
-  batch.addOnDoneListener(name, function () {
-    orHookOnBatch.done(name + ':hook');
-  });
-  return batch;
-};
-
-var Batch = function (name, owner) {
-  this.owner = owner;
-  this.name = name || 'x';
-  this.id = owner._signalEmitterName + SignalEmitter.batchSerial++;
-  this.waitFor = 0;
-  this.history = [];
-  this.doneCallbacks = {};
-  this.waitForMeToFinish(this.name);
-  this.owner._fireEvent(SignalEmitter.Messages.BATCH_BEGIN, this.id, this);
-
-};
-
-
-
-/**
- * listener are stored in key/map fashion, so addOnDoneListener('bob',..)
- * may be called several time, callback 'bob', will be done just once
- * @param key a unique key per callback
- * @param callback
- */
-Batch.prototype.addOnDoneListener = function (key, callback) {
-  this.checkAlreadyDone('addOnDoneListener(' + key + ')');
-  this.doneCallbacks[key] = callback;
-};
-
-Batch.prototype.waitForMeToFinish = function (key) {
-  this.checkAlreadyDone('waitForMeToFinish(' + key + ')');
-  this.waitFor++;
-  this.history.push({wait: key, waitFor: this.waitFor});
-  return this;
-};
-
-Batch.prototype.done = function (key) {
-  this.checkAlreadyDone('done(' + key + ')');
-  key = key || '--';
-  this.waitFor--;
-  this.history.push({done: key, waitFor: this.waitFor});
-  if (this.waitFor === 0) {
-
-    this.doneTriggered = true;
-    _.each(this.doneCallbacks, function (callback) {
-      callback();
-    });
-    delete this.doneCallbacks; // prevents memory leaks
-    this.owner._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
-  }
-};
-
-Batch.prototype.checkAlreadyDone = function (addon) {
-  if (this.doneTriggered) {
-    var msg = 'Batch ' + this.name + ', ' + this.id + ' called ' + addon + '  when already done';
-    throw new Error(msg + '     ' + JSON.stringify(this.history));
-  }
-};
-
-},{"underscore":51}],72:[function(require,module,exports){
-/* jshint ignore:start */
-
-/*\
- |*|
- |*|  :: cookies.js ::
- |*|
- |*|  A complete cookies reader/writer framework with full unicode support.
- |*|
- |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
- |*|
- |*|  Syntaxes:
- |*|
- |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
- |*|  * docCookies.getItem(name)
- |*|  * docCookies.removeItem(name[, path])
- |*|  * docCookies.hasItem(name)
- |*|  * docCookies.keys()
- |*|
- \*/
-module.exports = {
-  getItem: function (sKey) {
-    if (!sKey || !this.hasItem(sKey)) { return null; }
-    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
-        escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
-  },
-  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
-    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
-    var sExpires = "";
-    if (vEnd) {
-      switch (vEnd.constructor) {
-        case Number:
-          sExpires = vEnd === Infinity ?
-              "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
-          break;
-        case String:
-          sExpires = "; expires=" + vEnd;
-          break;
-        case Date:
-          sExpires = "; expires=" + vEnd.toGMTString();
-          break;
-      }
-    }
-    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
-  },
-  removeItem: function (sKey, sPath) {
-    if (!sKey || !this.hasItem(sKey)) { return; }
-    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
-  },
-  hasItem: function (sKey) {
-    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
-  },
-  keys: /* optional method: you can safely remove it! */ function () {
-    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
-    return aKeys;
-  }
-};
-
-},{}],73:[function(require,module,exports){
-/* jshint ignore:start */
-
-/*!
- * domready (c) Dustin Diaz 2012 - License MIT
- */
-module.exports = function (ready) {
-
-
-  var fns = [], fn, f = false,
-      doc = document,
-      testEl = doc.documentElement,
-      hack = testEl.doScroll,
-      domContentLoaded = 'DOMContentLoaded',
-      addEventListener = 'addEventListener',
-      onreadystatechange = 'onreadystatechange',
-      readyState = 'readyState',
-      loaded = /^loade|c/.test(doc[readyState]);
-
-  function flush(f) {
-    loaded = 1;
-    while (f = fns.shift()) {
-      f()
-    }
-  }
-
-  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
-    doc.removeEventListener(domContentLoaded, fn, f);
-    flush();
-  }, f);
-
-
-  hack && doc.attachEvent(onreadystatechange, fn = function () {
-    if (/^c/.test(doc[readyState])) {
-      doc.detachEvent(onreadystatechange, fn);
-      flush();
-    }
-  });
-
-  return (ready = hack ?
-      function (fn) {
-        self != top ?
-            loaded ? fn() : fns.push(fn) :
-            function () {
-              console.log("on dom ready 2");
-              try {
-                testEl.doScroll('left')
-              } catch (e) {
-                return setTimeout(function() { ready(fn) }, 50)
-              }
-              fn()
-            }()
-      } :
-      function (fn) {
-        loaded ? fn() : fns.push(fn)
-      })
-}();
-
-},{}],74:[function(require,module,exports){
-/**
- * Common regexps
- * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
- */
-module.exports = {
-  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
-  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
-};
-
-},{}],75:[function(require,module,exports){
-/**
- *
- * @param {Object} pack json with
- * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
- * @param {String} pack.host : fully qualified host name
- * @param {Number} pack.port : port to use
- * @param {String} pack.path : the request PATH
- * @param {Object} [pack.headers] : key / value map of headers
- * @param {Object} [pack.params] : the payload -- only with POST/PUT
- * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
- * @param {Function} pack.success : function (result, resultInfo)
- * @param {Function} pack.error : function (error, resultInfo)
- * @param {String} [pack.info] : a text
- * @param {Boolean} [pack.async = true]
- * @param {Number} [pack.expectedStatus] : http result code
- * @param {Boolean} [pack.ssl = true]
- * @param {Boolean} [pack.withoutCredentials = false]
- */
-module.exports = function (pack)  {
-  pack.info = pack.info || '';
-  var parseResult = pack.parseResult || 'json';
-
-  if (!pack.hasOwnProperty('async')) {
-    pack.async = true;
-  }
-
-  // ------------ request TYPE
-  pack.method = pack.method || 'POST';
-  // method override test
-  if (false && pack.method === 'DELETE') {
-    pack.method = 'POST';
-    pack.params =  pack.params || {};
-    pack.params._method = 'DELETE';
-  }
-
-  // ------------- request HEADERS
-
-
-  pack.headers = pack.headers || {};
-
-  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
-
-    if (pack.headers['Content-Type'] === 'multipart/form-data') {
-      delete pack.headers['Content-Type'];
-    } else {
-      pack.headers['Content-Type'] =
-          pack.headers['Content-Type'] || 'application/json; charset=utf-8';
-    }
-
-    //if (pack.method === 'POST') {
-    if (pack.params) {
-      pack.params = JSON.stringify(pack.params);
-    } else {
-      pack.params = pack.payload || {};
-    }
-  }
-
-
-
-  // -------------- error
-  pack.error = pack.error || function (error) {
-    throw new Error(JSON.stringify(error, function (key, value) {
-      if (value === null) { return; }
-      if (value === '') { return; }
-      return value;
-    }, 2));
-  };
-
-  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
-
-  // --------------- request
-  var xhr = _initXHR(),
-      httpMode = pack.ssl ? 'https://' : 'http://',
-      url = httpMode + pack.host + pack.path;
-  xhr.open(pack.method, url, pack.async);
-  xhr.withCredentials = pack.withoutCredentials ? false : true;
-
-
-  xhr.onreadystatechange = function () {
-    detail += ' xhrstatus:' + xhr.statusText;
-    if (xhr.readyState === 0) {
-      pack.callBackSent = 'error in request';
-      pack.error({
-        message: 'pryvXHRCall unsent',
-        detail: detail,
-        id: 'INTERNAL_ERROR',
-        xhr: xhr
-      });
-    } else if (xhr.readyState === 4) {
-      var result = null;
-
-      if (parseResult === 'json') {
-        var response = xhr.responseText;
-        response = response.trim() === '' ? '{}' : response;
-        try { result = JSON.parse(response); } catch (e) {
-          return pack.error({
-            message: 'Data is not JSON',
-            detail: xhr.responseText + '\n' + detail,
-            id: 'RESULT_NOT_JSON',
-            xhr: xhr
-          });
-        }
-      }
-      var resultInfo = {
-        xhr : xhr,
-        code : xhr.status,
-        headers : parseResponseHeaders(xhr.getAllResponseHeaders())
-      };
-
-      if (pack.callBackSent) {
-        console.error('xhr.onreadystatechange called with status==4 even if callback is done:' +
-          pack.callBackSent);
-        return;
-      }
-      pack.callBackSent = 'success';
-      pack.success(result, resultInfo);
-    }
-  };
-  if (pack.progressCallback && typeof(pack.progressCallback) === 'function') {
-    xhr.upload.addEventListener('progress', function (e) {
-      return pack.progressCallback(e);
-    }, false);
-  }
-  for (var key in pack.headers) {
-    if (pack.headers.hasOwnProperty(key)) {
-      xhr.setRequestHeader(key, pack.headers[key]);
-    }
-  }
-
-  //--- sending the request
-  try {
-    xhr.send(pack.params);
-  } catch (e) {
-    pack.callBackSent = 'error sending request';
-    return pack.error({
-      message: 'pryvXHRCall unsent',
-      detail: detail,
-      id: 'INTERNAL_ERROR',
-      error: e,
-      xhr: xhr
-    });
-  }
-  return xhr;
-};
-
-/**
- * Method to initialize XMLHttpRequest.
- * @method _initXHR
- * @access private
- * @return object
- */
-/* jshint -W117 */
-var _initXHR = function () {
-  var XHR = null;
-
-  try { XHR = new XMLHttpRequest(); }
-  catch (e) {
-    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
-    catch (e2) {
-      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
-      catch (e3) {
-        console.log('XMLHttpRequest implementation not found.');
-      }
-      console.log('XMLHttpRequest implementation not found.');
-    }
-    console.log('XMLHttpRequest implementation not found.');
-  }
-  return XHR;
-};
-
-
-/**
- * XmlHttpRequest's getAllResponseHeaders() method returns a string of response
- * headers according to the format described here:
- * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method
- * This method parses that string into a user-friendly key/value pair object.
- */
-function parseResponseHeaders(headerStr) {
-  var headers = {};
-  if (!headerStr) {
-    return headers;
-  }
-  var headerPairs = headerStr.split('\u000d\u000a');
-  for (var i = 0; i < headerPairs.length; i++) {
-    var headerPair = headerPairs[i];
-    // Can't use split() here because it does the wrong thing
-    // if the header value has the string ": " in it.
-    var index = headerPair.indexOf('\u003a\u0020');
-    if (index > 0) {
-      var key = headerPair.substring(0, index).toLowerCase();
-      var val = headerPair.substring(index + 2);
-      headers[key] = val;
-    }
-  }
-  return headers;
-}
-
-},{}],76:[function(require,module,exports){
-(function (Buffer){
-//TODO align with XHR error
-
-//TODO: sort out the callback convention
-
-var FormData = require('form-data');
-var _ = require('underscore');
-
-/**
- *
- * @param {Object} pack json with
- * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
- * @param {String} pack.host : fully qualified host name
- * @param {Number} pack.port : port to use
- * @param {String} pack.path : the request PATH
- * @param {Object} [pack.headers] : key / value map of headers
- * @param {Object} [pack.params] : the payload -- only with POST/PUT
- * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
- * @param {Function} pack.success : function (result, resultInfo)
- * @param {Function} pack.error : function (error, resultInfo)
- * @param {String} [pack.info] : a text
- * @param {Boolean} [pack.async = true]
- * @param {Number} [pack.expectedStatus] : http result code
- * @param {Boolean} [pack.ssl = true]
- */
-module.exports = function (pack)  {
-
-
-  var httpOptions = {
-    host: pack.host,
-    port: pack.port,
-    path: pack.path,
-    method: pack.method,
-    rejectUnauthorized: false,
-    headers : pack.headers
-  };
-
-
-  var parseResult = pack.parseResult || 'json';
-  var httpMode = pack.ssl ? 'https' : 'http';
-  var http = require(httpMode);
-  var aborted = false;
-
-  if (pack.payload instanceof FormData) {
-    httpOptions.method = 'post';
-    _.extend(httpOptions.headers, pack.payload.getHeaders());
-  } else {
-    if (pack.payload) {
-      pack.headers['Content-Length'] = Buffer.byteLength(pack.payload, 'utf-8');
-    }
-  }
-
-  var req = http.request(httpOptions, function (res) {
-    var bodyarr = [];
-    res.on('data', function (chunk) {  bodyarr.push(chunk); });
-    res.on('end', function () {
-      var resultInfo = {
-        code : res.statusCode,
-        headers : res.headers
-      };
-      var result = null;
-      if (parseResult === 'json') {
-        try {
-          var response = bodyarr.join('').trim() === '' ? '{}' : bodyarr.join('').trim();
-          result = JSON.parse(response);
-        } catch (error) {
-          return onError('request failed to parse JSON in response' +
-            bodyarr.join('')
-          );
-        }
-      }
-      return pack.success(result, resultInfo);
-    });
-
-  });
-
-
-  var detail = 'Request: ' + httpOptions.method + ' ' +
-    httpMode + '://' + httpOptions.host + ':' + httpOptions.port + '' + httpOptions.path;
-
-
-
-  var onError = function (reason) {
-    if (!aborted) {
-      aborted = true;
-      return pack.error(reason + '\n' + detail, null);
-    }
-  };
-
-  req.on('error', function (e) {
-      return onError('Error: ' + e.message);
-  });
-
-
-  req.on('socket', function (socket) {
-    socket.setTimeout(30000);
-    socket.on('timeout', function () {
-      req.abort();
-      return onError('Timeout');
-    });
-  });
-
-
-  if (pack.payload instanceof FormData) {
-    pack.payload.pipe(req);
-  } else {
-
-    if (pack.payload) {
-      req.write(pack.payload, 'utf8');
-    }
-  }
-  req.end();
-
-  return req;
-};
-
-}).call(this,require("buffer").Buffer)
-},{"buffer":10,"form-data":46,"underscore":51}],77:[function(require,module,exports){
-/* global document */
-
-var urls = module.exports = {};
-
-/**
- * The one and only reference for Pryv domain names.
- * TODO: client and server will merge
- */
-urls.domains = {
-  client: {
-    production: 'pryv.me',
-    staging: 'pryv.li',
-    test: 'rec.la'
-  },
-  server: {
-    production: 'pryv.io',
-    staging: 'pryv.in',
-    test: 'pryv.in'
-  }
-};
-
-/**
- * Detects the Pryv environment from the given domain and client/server indication.
- *
- * @param {string} domain
- * @param {string} type "client" or "server"
- * @returns {string} "production", "staging" or "other"
- */
-urls.getEnvironment = function (domain, type) {
-  var domains = this.domains[type];
-  if (! type || ! domains) {
-    throw new Error('Invalid type "' + type + '"; expected "client" or "server"');
-  }
-
-  switch (domain) {
-  case domains.production:
-    return 'production';
-  case domains.staging:
-    return 'staging';
-  case domains.test:
-    return 'test';
-  default:
-    return 'other';
-  }
-};
-
-/* jshint -W101 */
-/**
- * Extracts base components from a browser URL string
- * (e.g. today: "https://username.pryv.me:443/some/path").
- *
- * @param url Defaults to `document.location` if available
- * @returns {URLInfo}
- */
-urls.parseClientURL = function (url) {
-  return new URLInfo(url, 'client');
-};
-
-/**
- * Extracts base components from a standard Pryv API URL string
- * (e.g. "https://username.pryv.io:443/some/path").
- *
- * @param url
- * @returns {URLInfo}
- */
-urls.parseServerURL = function (url) {
-  return new URLInfo(url, 'server');
-};
-
-/**
- * @param {String} url
- * @param {String} type "client" or "server"
- * @constructor
- */
-function URLInfo(url, type) {
-  var loc;
-  if (document) {
-    // browser
-    if (url) {
-      loc = document.createElement('a');
-      loc.href = url;
-    } else {
-      loc = document.location;
-    }
-  } else {
-    // node
-    if (! url) {
-      throw new Error('`url` is required');
-    }
-    loc = require('url').parse(url);
-  }
-  if (! (type === 'client' || type === 'server')) {
-    throw new Error('`type` must be either "client" or "server"');
-  }
-  this.type = type;
-
-  this.protocol = loc.protocol;
-  this.hostname = loc.hostname;
-  this.port = loc.port || (this.protocol === 'https:' ? 443 : 80);
-  this.path = loc.pathname;
-  this.hash = loc.hash;
-  this.search = loc.search;
-
-  var splitHostname = loc.hostname.split('.');
-  if (splitHostname.length >= 3 /* TODO: check & remove, shouldn't be necessary && splitHostname[0].match(this.regex.username)*/) {
-    this.subdomain = splitHostname[0];
-  }
-  this.domain = loc.hostname.substr(loc.hostname.indexOf('.') + 1);
-
-  this.environment = urls.getEnvironment(this.domain, this.type);
-
-  // if known environment, extract username
-  // (we currently assume username === subdomain; this will change for client URLs)
-  if (this.subdomain && this.environment !== 'other') {
-    this.username = this.subdomain;
-  }
-}
-
-URLInfo.prototype.isSSL = function () {
-  return this.protocol === 'https:';
-};
-
-URLInfo.prototype.parseQuery = function () {
-  var objURL = {};
-  this.search.replace(new RegExp('([^?=&]+)(=([^&]*))?', 'g'), function ($0, $1, $2, $3) {
-    objURL[$1] = $3;
-  });
-  return objURL;
-};
-
-URLInfo.prototype.parseSharingTokens = function () {
-  if (this.type !== 'client') {
-    throw new Error('Can only parse on client URLs');
-  }
-  var splitPath = this.hash.split('/');
-  var sharingsIndex = splitPath.indexOf('sharings');
-  if (sharingsIndex !== -1) {
-    return splitPath.splice(sharingsIndex + 1).filter(function (s) { return s.length > 0; });
-  } else {
-    return [];
-  }
-};
-
-},{"url":42}],78:[function(require,module,exports){
-/* global document, navigator */
-
-/**
- * Browser-only utils
- */
-var utility = module.exports = {};
-
-utility.getHostFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.hostname;
-};
-
-utility.getPortFromUrl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.port === '' ? null : location.port;
-};
-
-utility.isUrlSsl = function (url) {
-  var location;
-  if (url) {
-    location = document.createElement('a');
-    location.href = url;
-  } else {
-    location = document.location;
-  }
-  return location.protocol === 'https:';
-};
-
-/**
- *  List grabbed from
- *  https://github.com/codefuze/js-mobile-tablet-redirect/blob/master/mobile-redirect.js
- *
- *  @return {Boolean} `true` if browser is seen as a mobile or tablet
- */
-utility.browserIsMobileOrTablet = function () {
-  /* jshint -W101*/
-  return (/iphone|ipod|android|blackberry|opera mini|opera mobi|skyfire|maemo|windows phone|palm|iemobile|symbian|symbianos|fennec|ipad|android 3|sch-i800|playbook|tablet|kindle|gt-p1000|sgh-t849|shw-m180s|a510|a511|a100|dell streak|silk/i.test(navigator.userAgent.toLowerCase()));
-};
-
-/**
- * Method to get the preferred language, either from desiredLanguage or from the browser settings
- * @method getPreferredLanguage
- * @param {Array} supportedLanguages an array of supported languages encoded on 2characters
- * @param {String} desiredLanguage (optional) get this language if supported
- */
-utility.getPreferredLanguage = function (supportedLanguages, desiredLanguage) {
-  if (desiredLanguage) {
-    if (supportedLanguages.indexOf(desiredLanguage) >= 0) { return desiredLanguage; }
-  }
-  var lct = null;
-  if (navigator.language) {
-    lct = navigator.language.toLowerCase().substring(0, 2);
-  } else if (navigator.userLanguage) {
-    lct = navigator.userLanguage.toLowerCase().substring(0, 2);
-  } else if (navigator.userAgent.indexOf('[') !== -1) {
-    var start = navigator.userAgent.indexOf('[');
-    var end = navigator.userAgent.indexOf(']');
-    lct = navigator.userAgent.substring(start + 1, end).toLowerCase();
-  }
-  if (desiredLanguage) {
-    if (lct.indexOf(desiredLanguage) >= 0) { return lct; }
-  }
-
-  return supportedLanguages[0];
-};
-
-
-/**
- * //TODO check if it's robust
- * Method to check the browser supports CSS3.
- * @method supportCSS3
- * @return boolean
- */
-utility.supportCSS3 = function ()  {
-  var stub = document.createElement('div'),
-    testProperty = 'textShadow';
-
-  if (testProperty in stub.style) { return true; }
-
-  testProperty = testProperty.replace(/^[a-z]/, function (val) {
-    return val.toUpperCase();
-  });
-
-  return false;
-};
-
-/**
- * Method to load external files like javascript and stylesheet. this version
- * of method only support to file types - js|javascript and css|stylesheet.
- *
- * @method loadExternalFiles
- * @param {String} filename
- * @param {String} type 'js' or 'css'
- */
-utility.loadExternalFiles = function (filename, type)  {
-  var tag = null;
-
-  type = type.toLowerCase();
-
-  if (type === 'js' || type === 'javascript') {
-    tag = document.createElement('script');
-    tag.setAttribute('type', 'text/javascript');
-    tag.setAttribute('src', filename);
-  } else if (type === 'css' || type === 'stylesheet')  {
-    tag = document.createElement('link');
-    tag.setAttribute('rel', 'stylesheet');
-    tag.setAttribute('type', 'text/css');
-    tag.setAttribute('href', filename);
-  }
-
-  if (tag !== null || tag !== undefined) {
-    document.getElementsByTagName('head')[0].appendChild(tag);
-  }
-};
-
-utility.docCookies = require('./docCookies');
-
-utility.domReady = require('./domReady');
-
-utility.request = require('./request-browser');
-
-},{"./docCookies":72,"./domReady":73,"./request-browser":75}],79:[function(require,module,exports){
-/**
- * Node-only utils
- */
-var FormData = require('form-data');
-
-var utility = module.exports = {};
-
-utility.request = require('./request-node');
-
-
-/**
- * Create or complete FormData object for attachements
- * @param id {String} id of the element to add (may be 'attachment0')
- * @param data {Data} the data to send
- * @param options {Object}
- * @param options.filename {String}
- * @param options.type {String}
- */
-utility.forgeFormData = function (id, data, options, appendTo) {
-  var formData = appendTo || new FormData();
-  formData.append(id, data, options);
-  return formData;
-};
-},{"./request-node":76,"form-data":46}],80:[function(require,module,exports){
-var socketIO = require('socket.io-client'),
-    _ = require('underscore');
-
-var utility = module.exports = {};
-
-/**
- * @returns {Boolean} `true` if we're in a web browser environment
- */
-utility.isBrowser = function () {
-  return typeof(window) !== 'undefined';
-};
-
-utility.SignalEmitter = require('./SignalEmitter.js');
-
-/**
- * Merges two object (key/value map) and remove "null" properties
- *
- * @param {Object} sourceA
- * @param {Object} sourceB
- * @returns {*|Block|Node|Tag}
- */
-utility.mergeAndClean = function (sourceA, sourceB) {
-  sourceA = sourceA || {};
-  sourceB = sourceB || {};
-  var result = _.clone(sourceA);
-  _.extend(result, sourceB);
-  _.each(_.keys(result), function (key) {
-    if (result[key] === null) { delete result[key]; }
-  });
-  return result;
-};
-
-/**
- * Creates a query string from an object (key/value map)
- *
- * @param {Object} data
- * @returns {String} key1=value1&key2=value2....
- */
-utility.getQueryParametersString = function (data) {
-  data = this.mergeAndClean(data);
-  return Object.keys(data).map(function (key) {
-    if (data[key] !== null) {
-      if (_.isArray(data[key])) {
-        data[key] = this.mergeAndClean(data[key]);
-        var keyE = encodeURIComponent(key + '[]');
-        return data[key].map(function (subData) {
-          return keyE + '=' + encodeURIComponent(subData);
-        }).join('&');
-      } else {
-        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
-      }
-    }
-  }, this).join('&');
-};
-
-utility.regex = require('./regex');
-
-/**
- * Cross-platform string endsWith
- *
- * @param {String} string
- * @param {String} suffix
- * @returns {Boolean}
- */
-utility.endsWith = function (string, suffix) {
-  return string.indexOf(suffix, string.length - suffix.length) !== -1;
-};
-
-utility.ioConnect = function (settings) {
-  var httpMode = settings.ssl ? 'https' : 'http';
-  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
-      settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
-
-  return socketIO.connect(url, {'force new connection': true});
-};
-
-utility.urls = require('./urls');
-
-// platform-specific members
-_.extend(utility, utility.isBrowser() ?
-    require('./utility-browser.js') : require('./utility-node.js'));
-
-},{"./SignalEmitter.js":71,"./regex":74,"./urls":77,"./utility-browser.js":78,"./utility-node.js":79,"socket.io-client":81,"underscore":51}],81:[function(require,module,exports){
+},{"_process":22,"fs":7,"path":21}],49:[function(require,module,exports){
 /*! Socket.IO.js build:0.9.17, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -27971,7 +20595,10493 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
-},{}],82:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
+//     Underscore.js 1.6.0
+//     http://underscorejs.org
+//     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+//     Underscore may be freely distributed under the MIT license.
+
+(function() {
+
+  // Baseline setup
+  // --------------
+
+  // Establish the root object, `window` in the browser, or `exports` on the server.
+  var root = this;
+
+  // Save the previous value of the `_` variable.
+  var previousUnderscore = root._;
+
+  // Establish the object that gets returned to break out of a loop iteration.
+  var breaker = {};
+
+  // Save bytes in the minified (but not gzipped) version:
+  var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
+
+  // Create quick reference variables for speed access to core prototypes.
+  var
+    push             = ArrayProto.push,
+    slice            = ArrayProto.slice,
+    concat           = ArrayProto.concat,
+    toString         = ObjProto.toString,
+    hasOwnProperty   = ObjProto.hasOwnProperty;
+
+  // All **ECMAScript 5** native function implementations that we hope to use
+  // are declared here.
+  var
+    nativeForEach      = ArrayProto.forEach,
+    nativeMap          = ArrayProto.map,
+    nativeReduce       = ArrayProto.reduce,
+    nativeReduceRight  = ArrayProto.reduceRight,
+    nativeFilter       = ArrayProto.filter,
+    nativeEvery        = ArrayProto.every,
+    nativeSome         = ArrayProto.some,
+    nativeIndexOf      = ArrayProto.indexOf,
+    nativeLastIndexOf  = ArrayProto.lastIndexOf,
+    nativeIsArray      = Array.isArray,
+    nativeKeys         = Object.keys,
+    nativeBind         = FuncProto.bind;
+
+  // Create a safe reference to the Underscore object for use below.
+  var _ = function(obj) {
+    if (obj instanceof _) return obj;
+    if (!(this instanceof _)) return new _(obj);
+    this._wrapped = obj;
+  };
+
+  // Export the Underscore object for **Node.js**, with
+  // backwards-compatibility for the old `require()` API. If we're in
+  // the browser, add `_` as a global object via a string identifier,
+  // for Closure Compiler "advanced" mode.
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = _;
+    }
+    exports._ = _;
+  } else {
+    root._ = _;
+  }
+
+  // Current version.
+  _.VERSION = '1.6.0';
+
+  // Collection Functions
+  // --------------------
+
+  // The cornerstone, an `each` implementation, aka `forEach`.
+  // Handles objects with the built-in `forEach`, arrays, and raw objects.
+  // Delegates to **ECMAScript 5**'s native `forEach` if available.
+  var each = _.each = _.forEach = function(obj, iterator, context) {
+    if (obj == null) return obj;
+    if (nativeForEach && obj.forEach === nativeForEach) {
+      obj.forEach(iterator, context);
+    } else if (obj.length === +obj.length) {
+      for (var i = 0, length = obj.length; i < length; i++) {
+        if (iterator.call(context, obj[i], i, obj) === breaker) return;
+      }
+    } else {
+      var keys = _.keys(obj);
+      for (var i = 0, length = keys.length; i < length; i++) {
+        if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
+      }
+    }
+    return obj;
+  };
+
+  // Return the results of applying the iterator to each element.
+  // Delegates to **ECMAScript 5**'s native `map` if available.
+  _.map = _.collect = function(obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+    each(obj, function(value, index, list) {
+      results.push(iterator.call(context, value, index, list));
+    });
+    return results;
+  };
+
+  var reduceError = 'Reduce of empty array with no initial value';
+
+  // **Reduce** builds up a single result from a list of values, aka `inject`,
+  // or `foldl`. Delegates to **ECMAScript 5**'s native `reduce` if available.
+  _.reduce = _.foldl = _.inject = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
+    if (obj == null) obj = [];
+    if (nativeReduce && obj.reduce === nativeReduce) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduce(iterator, memo) : obj.reduce(iterator);
+    }
+    each(obj, function(value, index, list) {
+      if (!initial) {
+        memo = value;
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, value, index, list);
+      }
+    });
+    if (!initial) throw new TypeError(reduceError);
+    return memo;
+  };
+
+  // The right-associative version of reduce, also known as `foldr`.
+  // Delegates to **ECMAScript 5**'s native `reduceRight` if available.
+  _.reduceRight = _.foldr = function(obj, iterator, memo, context) {
+    var initial = arguments.length > 2;
+    if (obj == null) obj = [];
+    if (nativeReduceRight && obj.reduceRight === nativeReduceRight) {
+      if (context) iterator = _.bind(iterator, context);
+      return initial ? obj.reduceRight(iterator, memo) : obj.reduceRight(iterator);
+    }
+    var length = obj.length;
+    if (length !== +length) {
+      var keys = _.keys(obj);
+      length = keys.length;
+    }
+    each(obj, function(value, index, list) {
+      index = keys ? keys[--length] : --length;
+      if (!initial) {
+        memo = obj[index];
+        initial = true;
+      } else {
+        memo = iterator.call(context, memo, obj[index], index, list);
+      }
+    });
+    if (!initial) throw new TypeError(reduceError);
+    return memo;
+  };
+
+  // Return the first value which passes a truth test. Aliased as `detect`.
+  _.find = _.detect = function(obj, predicate, context) {
+    var result;
+    any(obj, function(value, index, list) {
+      if (predicate.call(context, value, index, list)) {
+        result = value;
+        return true;
+      }
+    });
+    return result;
+  };
+
+  // Return all the elements that pass a truth test.
+  // Delegates to **ECMAScript 5**'s native `filter` if available.
+  // Aliased as `select`.
+  _.filter = _.select = function(obj, predicate, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(predicate, context);
+    each(obj, function(value, index, list) {
+      if (predicate.call(context, value, index, list)) results.push(value);
+    });
+    return results;
+  };
+
+  // Return all the elements for which a truth test fails.
+  _.reject = function(obj, predicate, context) {
+    return _.filter(obj, function(value, index, list) {
+      return !predicate.call(context, value, index, list);
+    }, context);
+  };
+
+  // Determine whether all of the elements match a truth test.
+  // Delegates to **ECMAScript 5**'s native `every` if available.
+  // Aliased as `all`.
+  _.every = _.all = function(obj, predicate, context) {
+    predicate || (predicate = _.identity);
+    var result = true;
+    if (obj == null) return result;
+    if (nativeEvery && obj.every === nativeEvery) return obj.every(predicate, context);
+    each(obj, function(value, index, list) {
+      if (!(result = result && predicate.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  };
+
+  // Determine if at least one element in the object matches a truth test.
+  // Delegates to **ECMAScript 5**'s native `some` if available.
+  // Aliased as `any`.
+  var any = _.some = _.any = function(obj, predicate, context) {
+    predicate || (predicate = _.identity);
+    var result = false;
+    if (obj == null) return result;
+    if (nativeSome && obj.some === nativeSome) return obj.some(predicate, context);
+    each(obj, function(value, index, list) {
+      if (result || (result = predicate.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  };
+
+  // Determine if the array or object contains a given value (using `===`).
+  // Aliased as `include`.
+  _.contains = _.include = function(obj, target) {
+    if (obj == null) return false;
+    if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+    return any(obj, function(value) {
+      return value === target;
+    });
+  };
+
+  // Invoke a method (with arguments) on every item in a collection.
+  _.invoke = function(obj, method) {
+    var args = slice.call(arguments, 2);
+    var isFunc = _.isFunction(method);
+    return _.map(obj, function(value) {
+      return (isFunc ? method : value[method]).apply(value, args);
+    });
+  };
+
+  // Convenience version of a common use case of `map`: fetching a property.
+  _.pluck = function(obj, key) {
+    return _.map(obj, _.property(key));
+  };
+
+  // Convenience version of a common use case of `filter`: selecting only objects
+  // containing specific `key:value` pairs.
+  _.where = function(obj, attrs) {
+    return _.filter(obj, _.matches(attrs));
+  };
+
+  // Convenience version of a common use case of `find`: getting the first object
+  // containing specific `key:value` pairs.
+  _.findWhere = function(obj, attrs) {
+    return _.find(obj, _.matches(attrs));
+  };
+
+  // Return the maximum element or (element-based computation).
+  // Can't optimize arrays of integers longer than 65,535 elements.
+  // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
+  _.max = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.max.apply(Math, obj);
+    }
+    var result = -Infinity, lastComputed = -Infinity;
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      if (computed > lastComputed) {
+        result = value;
+        lastComputed = computed;
+      }
+    });
+    return result;
+  };
+
+  // Return the minimum element (or element-based computation).
+  _.min = function(obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.min.apply(Math, obj);
+    }
+    var result = Infinity, lastComputed = Infinity;
+    each(obj, function(value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      if (computed < lastComputed) {
+        result = value;
+        lastComputed = computed;
+      }
+    });
+    return result;
+  };
+
+  // Shuffle an array, using the modern version of the
+  // [Fisher-Yates shuffle](http://en.wikipedia.org/wiki/Fisher–Yates_shuffle).
+  _.shuffle = function(obj) {
+    var rand;
+    var index = 0;
+    var shuffled = [];
+    each(obj, function(value) {
+      rand = _.random(index++);
+      shuffled[index - 1] = shuffled[rand];
+      shuffled[rand] = value;
+    });
+    return shuffled;
+  };
+
+  // Sample **n** random values from a collection.
+  // If **n** is not specified, returns a single random element.
+  // The internal `guard` argument allows it to work with `map`.
+  _.sample = function(obj, n, guard) {
+    if (n == null || guard) {
+      if (obj.length !== +obj.length) obj = _.values(obj);
+      return obj[_.random(obj.length - 1)];
+    }
+    return _.shuffle(obj).slice(0, Math.max(0, n));
+  };
+
+  // An internal function to generate lookup iterators.
+  var lookupIterator = function(value) {
+    if (value == null) return _.identity;
+    if (_.isFunction(value)) return value;
+    return _.property(value);
+  };
+
+  // Sort the object's values by a criterion produced by an iterator.
+  _.sortBy = function(obj, iterator, context) {
+    iterator = lookupIterator(iterator);
+    return _.pluck(_.map(obj, function(value, index, list) {
+      return {
+        value: value,
+        index: index,
+        criteria: iterator.call(context, value, index, list)
+      };
+    }).sort(function(left, right) {
+      var a = left.criteria;
+      var b = right.criteria;
+      if (a !== b) {
+        if (a > b || a === void 0) return 1;
+        if (a < b || b === void 0) return -1;
+      }
+      return left.index - right.index;
+    }), 'value');
+  };
+
+  // An internal function used for aggregate "group by" operations.
+  var group = function(behavior) {
+    return function(obj, iterator, context) {
+      var result = {};
+      iterator = lookupIterator(iterator);
+      each(obj, function(value, index) {
+        var key = iterator.call(context, value, index, obj);
+        behavior(result, key, value);
+      });
+      return result;
+    };
+  };
+
+  // Groups the object's values by a criterion. Pass either a string attribute
+  // to group by, or a function that returns the criterion.
+  _.groupBy = group(function(result, key, value) {
+    _.has(result, key) ? result[key].push(value) : result[key] = [value];
+  });
+
+  // Indexes the object's values by a criterion, similar to `groupBy`, but for
+  // when you know that your index values will be unique.
+  _.indexBy = group(function(result, key, value) {
+    result[key] = value;
+  });
+
+  // Counts instances of an object that group by a certain criterion. Pass
+  // either a string attribute to count by, or a function that returns the
+  // criterion.
+  _.countBy = group(function(result, key) {
+    _.has(result, key) ? result[key]++ : result[key] = 1;
+  });
+
+  // Use a comparator function to figure out the smallest index at which
+  // an object should be inserted so as to maintain order. Uses binary search.
+  _.sortedIndex = function(array, obj, iterator, context) {
+    iterator = lookupIterator(iterator);
+    var value = iterator.call(context, obj);
+    var low = 0, high = array.length;
+    while (low < high) {
+      var mid = (low + high) >>> 1;
+      iterator.call(context, array[mid]) < value ? low = mid + 1 : high = mid;
+    }
+    return low;
+  };
+
+  // Safely create a real, live array from anything iterable.
+  _.toArray = function(obj) {
+    if (!obj) return [];
+    if (_.isArray(obj)) return slice.call(obj);
+    if (obj.length === +obj.length) return _.map(obj, _.identity);
+    return _.values(obj);
+  };
+
+  // Return the number of elements in an object.
+  _.size = function(obj) {
+    if (obj == null) return 0;
+    return (obj.length === +obj.length) ? obj.length : _.keys(obj).length;
+  };
+
+  // Array Functions
+  // ---------------
+
+  // Get the first element of an array. Passing **n** will return the first N
+  // values in the array. Aliased as `head` and `take`. The **guard** check
+  // allows it to work with `_.map`.
+  _.first = _.head = _.take = function(array, n, guard) {
+    if (array == null) return void 0;
+    if ((n == null) || guard) return array[0];
+    if (n < 0) return [];
+    return slice.call(array, 0, n);
+  };
+
+  // Returns everything but the last entry of the array. Especially useful on
+  // the arguments object. Passing **n** will return all the values in
+  // the array, excluding the last N. The **guard** check allows it to work with
+  // `_.map`.
+  _.initial = function(array, n, guard) {
+    return slice.call(array, 0, array.length - ((n == null) || guard ? 1 : n));
+  };
+
+  // Get the last element of an array. Passing **n** will return the last N
+  // values in the array. The **guard** check allows it to work with `_.map`.
+  _.last = function(array, n, guard) {
+    if (array == null) return void 0;
+    if ((n == null) || guard) return array[array.length - 1];
+    return slice.call(array, Math.max(array.length - n, 0));
+  };
+
+  // Returns everything but the first entry of the array. Aliased as `tail` and `drop`.
+  // Especially useful on the arguments object. Passing an **n** will return
+  // the rest N values in the array. The **guard**
+  // check allows it to work with `_.map`.
+  _.rest = _.tail = _.drop = function(array, n, guard) {
+    return slice.call(array, (n == null) || guard ? 1 : n);
+  };
+
+  // Trim out all falsy values from an array.
+  _.compact = function(array) {
+    return _.filter(array, _.identity);
+  };
+
+  // Internal implementation of a recursive `flatten` function.
+  var flatten = function(input, shallow, output) {
+    if (shallow && _.every(input, _.isArray)) {
+      return concat.apply(output, input);
+    }
+    each(input, function(value) {
+      if (_.isArray(value) || _.isArguments(value)) {
+        shallow ? push.apply(output, value) : flatten(value, shallow, output);
+      } else {
+        output.push(value);
+      }
+    });
+    return output;
+  };
+
+  // Flatten out an array, either recursively (by default), or just one level.
+  _.flatten = function(array, shallow) {
+    return flatten(array, shallow, []);
+  };
+
+  // Return a version of the array that does not contain the specified value(s).
+  _.without = function(array) {
+    return _.difference(array, slice.call(arguments, 1));
+  };
+
+  // Split an array into two arrays: one whose elements all satisfy the given
+  // predicate, and one whose elements all do not satisfy the predicate.
+  _.partition = function(array, predicate) {
+    var pass = [], fail = [];
+    each(array, function(elem) {
+      (predicate(elem) ? pass : fail).push(elem);
+    });
+    return [pass, fail];
+  };
+
+  // Produce a duplicate-free version of the array. If the array has already
+  // been sorted, you have the option of using a faster algorithm.
+  // Aliased as `unique`.
+  _.uniq = _.unique = function(array, isSorted, iterator, context) {
+    if (_.isFunction(isSorted)) {
+      context = iterator;
+      iterator = isSorted;
+      isSorted = false;
+    }
+    var initial = iterator ? _.map(array, iterator, context) : array;
+    var results = [];
+    var seen = [];
+    each(initial, function(value, index) {
+      if (isSorted ? (!index || seen[seen.length - 1] !== value) : !_.contains(seen, value)) {
+        seen.push(value);
+        results.push(array[index]);
+      }
+    });
+    return results;
+  };
+
+  // Produce an array that contains the union: each distinct element from all of
+  // the passed-in arrays.
+  _.union = function() {
+    return _.uniq(_.flatten(arguments, true));
+  };
+
+  // Produce an array that contains every item shared between all the
+  // passed-in arrays.
+  _.intersection = function(array) {
+    var rest = slice.call(arguments, 1);
+    return _.filter(_.uniq(array), function(item) {
+      return _.every(rest, function(other) {
+        return _.contains(other, item);
+      });
+    });
+  };
+
+  // Take the difference between one array and a number of other arrays.
+  // Only the elements present in just the first array will remain.
+  _.difference = function(array) {
+    var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
+    return _.filter(array, function(value){ return !_.contains(rest, value); });
+  };
+
+  // Zip together multiple lists into a single array -- elements that share
+  // an index go together.
+  _.zip = function() {
+    var length = _.max(_.pluck(arguments, 'length').concat(0));
+    var results = new Array(length);
+    for (var i = 0; i < length; i++) {
+      results[i] = _.pluck(arguments, '' + i);
+    }
+    return results;
+  };
+
+  // Converts lists into objects. Pass either a single array of `[key, value]`
+  // pairs, or two parallel arrays of the same length -- one of keys, and one of
+  // the corresponding values.
+  _.object = function(list, values) {
+    if (list == null) return {};
+    var result = {};
+    for (var i = 0, length = list.length; i < length; i++) {
+      if (values) {
+        result[list[i]] = values[i];
+      } else {
+        result[list[i][0]] = list[i][1];
+      }
+    }
+    return result;
+  };
+
+  // If the browser doesn't supply us with indexOf (I'm looking at you, **MSIE**),
+  // we need this function. Return the position of the first occurrence of an
+  // item in an array, or -1 if the item is not included in the array.
+  // Delegates to **ECMAScript 5**'s native `indexOf` if available.
+  // If the array is large and already in sort order, pass `true`
+  // for **isSorted** to use binary search.
+  _.indexOf = function(array, item, isSorted) {
+    if (array == null) return -1;
+    var i = 0, length = array.length;
+    if (isSorted) {
+      if (typeof isSorted == 'number') {
+        i = (isSorted < 0 ? Math.max(0, length + isSorted) : isSorted);
+      } else {
+        i = _.sortedIndex(array, item);
+        return array[i] === item ? i : -1;
+      }
+    }
+    if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
+    for (; i < length; i++) if (array[i] === item) return i;
+    return -1;
+  };
+
+  // Delegates to **ECMAScript 5**'s native `lastIndexOf` if available.
+  _.lastIndexOf = function(array, item, from) {
+    if (array == null) return -1;
+    var hasIndex = from != null;
+    if (nativeLastIndexOf && array.lastIndexOf === nativeLastIndexOf) {
+      return hasIndex ? array.lastIndexOf(item, from) : array.lastIndexOf(item);
+    }
+    var i = (hasIndex ? from : array.length);
+    while (i--) if (array[i] === item) return i;
+    return -1;
+  };
+
+  // Generate an integer Array containing an arithmetic progression. A port of
+  // the native Python `range()` function. See
+  // [the Python documentation](http://docs.python.org/library/functions.html#range).
+  _.range = function(start, stop, step) {
+    if (arguments.length <= 1) {
+      stop = start || 0;
+      start = 0;
+    }
+    step = arguments[2] || 1;
+
+    var length = Math.max(Math.ceil((stop - start) / step), 0);
+    var idx = 0;
+    var range = new Array(length);
+
+    while(idx < length) {
+      range[idx++] = start;
+      start += step;
+    }
+
+    return range;
+  };
+
+  // Function (ahem) Functions
+  // ------------------
+
+  // Reusable constructor function for prototype setting.
+  var ctor = function(){};
+
+  // Create a function bound to a given object (assigning `this`, and arguments,
+  // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
+  // available.
+  _.bind = function(func, context) {
+    var args, bound;
+    if (nativeBind && func.bind === nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!_.isFunction(func)) throw new TypeError;
+    args = slice.call(arguments, 2);
+    return bound = function() {
+      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      ctor.prototype = null;
+      var result = func.apply(self, args.concat(slice.call(arguments)));
+      if (Object(result) === result) return result;
+      return self;
+    };
+  };
+
+  // Partially apply a function by creating a version that has had some of its
+  // arguments pre-filled, without changing its dynamic `this` context. _ acts
+  // as a placeholder, allowing any combination of arguments to be pre-filled.
+  _.partial = function(func) {
+    var boundArgs = slice.call(arguments, 1);
+    return function() {
+      var position = 0;
+      var args = boundArgs.slice();
+      for (var i = 0, length = args.length; i < length; i++) {
+        if (args[i] === _) args[i] = arguments[position++];
+      }
+      while (position < arguments.length) args.push(arguments[position++]);
+      return func.apply(this, args);
+    };
+  };
+
+  // Bind a number of an object's methods to that object. Remaining arguments
+  // are the method names to be bound. Useful for ensuring that all callbacks
+  // defined on an object belong to it.
+  _.bindAll = function(obj) {
+    var funcs = slice.call(arguments, 1);
+    if (funcs.length === 0) throw new Error('bindAll must be passed function names');
+    each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
+    return obj;
+  };
+
+  // Memoize an expensive function by storing its results.
+  _.memoize = function(func, hasher) {
+    var memo = {};
+    hasher || (hasher = _.identity);
+    return function() {
+      var key = hasher.apply(this, arguments);
+      return _.has(memo, key) ? memo[key] : (memo[key] = func.apply(this, arguments));
+    };
+  };
+
+  // Delays a function for the given number of milliseconds, and then calls
+  // it with the arguments supplied.
+  _.delay = function(func, wait) {
+    var args = slice.call(arguments, 2);
+    return setTimeout(function(){ return func.apply(null, args); }, wait);
+  };
+
+  // Defers a function, scheduling it to run after the current call stack has
+  // cleared.
+  _.defer = function(func) {
+    return _.delay.apply(_, [func, 1].concat(slice.call(arguments, 1)));
+  };
+
+  // Returns a function, that, when invoked, will only be triggered at most once
+  // during a given window of time. Normally, the throttled function will run
+  // as much as it can, without ever going more than once per `wait` duration;
+  // but if you'd like to disable the execution on the leading edge, pass
+  // `{leading: false}`. To disable execution on the trailing edge, ditto.
+  _.throttle = function(func, wait, options) {
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    options || (options = {});
+    var later = function() {
+      previous = options.leading === false ? 0 : _.now();
+      timeout = null;
+      result = func.apply(context, args);
+      context = args = null;
+    };
+    return function() {
+      var now = _.now();
+      if (!previous && options.leading === false) previous = now;
+      var remaining = wait - (now - previous);
+      context = this;
+      args = arguments;
+      if (remaining <= 0) {
+        clearTimeout(timeout);
+        timeout = null;
+        previous = now;
+        result = func.apply(context, args);
+        context = args = null;
+      } else if (!timeout && options.trailing !== false) {
+        timeout = setTimeout(later, remaining);
+      }
+      return result;
+    };
+  };
+
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  _.debounce = function(func, wait, immediate) {
+    var timeout, args, context, timestamp, result;
+
+    var later = function() {
+      var last = _.now() - timestamp;
+      if (last < wait) {
+        timeout = setTimeout(later, wait - last);
+      } else {
+        timeout = null;
+        if (!immediate) {
+          result = func.apply(context, args);
+          context = args = null;
+        }
+      }
+    };
+
+    return function() {
+      context = this;
+      args = arguments;
+      timestamp = _.now();
+      var callNow = immediate && !timeout;
+      if (!timeout) {
+        timeout = setTimeout(later, wait);
+      }
+      if (callNow) {
+        result = func.apply(context, args);
+        context = args = null;
+      }
+
+      return result;
+    };
+  };
+
+  // Returns a function that will be executed at most one time, no matter how
+  // often you call it. Useful for lazy initialization.
+  _.once = function(func) {
+    var ran = false, memo;
+    return function() {
+      if (ran) return memo;
+      ran = true;
+      memo = func.apply(this, arguments);
+      func = null;
+      return memo;
+    };
+  };
+
+  // Returns the first function passed as an argument to the second,
+  // allowing you to adjust arguments, run code before and after, and
+  // conditionally execute the original function.
+  _.wrap = function(func, wrapper) {
+    return _.partial(wrapper, func);
+  };
+
+  // Returns a function that is the composition of a list of functions, each
+  // consuming the return value of the function that follows.
+  _.compose = function() {
+    var funcs = arguments;
+    return function() {
+      var args = arguments;
+      for (var i = funcs.length - 1; i >= 0; i--) {
+        args = [funcs[i].apply(this, args)];
+      }
+      return args[0];
+    };
+  };
+
+  // Returns a function that will only be executed after being called N times.
+  _.after = function(times, func) {
+    return function() {
+      if (--times < 1) {
+        return func.apply(this, arguments);
+      }
+    };
+  };
+
+  // Object Functions
+  // ----------------
+
+  // Retrieve the names of an object's properties.
+  // Delegates to **ECMAScript 5**'s native `Object.keys`
+  _.keys = function(obj) {
+    if (!_.isObject(obj)) return [];
+    if (nativeKeys) return nativeKeys(obj);
+    var keys = [];
+    for (var key in obj) if (_.has(obj, key)) keys.push(key);
+    return keys;
+  };
+
+  // Retrieve the values of an object's properties.
+  _.values = function(obj) {
+    var keys = _.keys(obj);
+    var length = keys.length;
+    var values = new Array(length);
+    for (var i = 0; i < length; i++) {
+      values[i] = obj[keys[i]];
+    }
+    return values;
+  };
+
+  // Convert an object into a list of `[key, value]` pairs.
+  _.pairs = function(obj) {
+    var keys = _.keys(obj);
+    var length = keys.length;
+    var pairs = new Array(length);
+    for (var i = 0; i < length; i++) {
+      pairs[i] = [keys[i], obj[keys[i]]];
+    }
+    return pairs;
+  };
+
+  // Invert the keys and values of an object. The values must be serializable.
+  _.invert = function(obj) {
+    var result = {};
+    var keys = _.keys(obj);
+    for (var i = 0, length = keys.length; i < length; i++) {
+      result[obj[keys[i]]] = keys[i];
+    }
+    return result;
+  };
+
+  // Return a sorted list of the function names available on the object.
+  // Aliased as `methods`
+  _.functions = _.methods = function(obj) {
+    var names = [];
+    for (var key in obj) {
+      if (_.isFunction(obj[key])) names.push(key);
+    }
+    return names.sort();
+  };
+
+  // Extend a given object with all the properties in passed-in object(s).
+  _.extend = function(obj) {
+    each(slice.call(arguments, 1), function(source) {
+      if (source) {
+        for (var prop in source) {
+          obj[prop] = source[prop];
+        }
+      }
+    });
+    return obj;
+  };
+
+  // Return a copy of the object only containing the whitelisted properties.
+  _.pick = function(obj) {
+    var copy = {};
+    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
+    each(keys, function(key) {
+      if (key in obj) copy[key] = obj[key];
+    });
+    return copy;
+  };
+
+   // Return a copy of the object without the blacklisted properties.
+  _.omit = function(obj) {
+    var copy = {};
+    var keys = concat.apply(ArrayProto, slice.call(arguments, 1));
+    for (var key in obj) {
+      if (!_.contains(keys, key)) copy[key] = obj[key];
+    }
+    return copy;
+  };
+
+  // Fill in a given object with default properties.
+  _.defaults = function(obj) {
+    each(slice.call(arguments, 1), function(source) {
+      if (source) {
+        for (var prop in source) {
+          if (obj[prop] === void 0) obj[prop] = source[prop];
+        }
+      }
+    });
+    return obj;
+  };
+
+  // Create a (shallow-cloned) duplicate of an object.
+  _.clone = function(obj) {
+    if (!_.isObject(obj)) return obj;
+    return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
+  };
+
+  // Invokes interceptor with the obj, and then returns obj.
+  // The primary purpose of this method is to "tap into" a method chain, in
+  // order to perform operations on intermediate results within the chain.
+  _.tap = function(obj, interceptor) {
+    interceptor(obj);
+    return obj;
+  };
+
+  // Internal recursive comparison function for `isEqual`.
+  var eq = function(a, b, aStack, bStack) {
+    // Identical objects are equal. `0 === -0`, but they aren't identical.
+    // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+    if (a === b) return a !== 0 || 1 / a == 1 / b;
+    // A strict comparison is necessary because `null == undefined`.
+    if (a == null || b == null) return a === b;
+    // Unwrap any wrapped objects.
+    if (a instanceof _) a = a._wrapped;
+    if (b instanceof _) b = b._wrapped;
+    // Compare `[[Class]]` names.
+    var className = toString.call(a);
+    if (className != toString.call(b)) return false;
+    switch (className) {
+      // Strings, numbers, dates, and booleans are compared by value.
+      case '[object String]':
+        // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
+        // equivalent to `new String("5")`.
+        return a == String(b);
+      case '[object Number]':
+        // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
+        // other numeric values.
+        return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+      case '[object Date]':
+      case '[object Boolean]':
+        // Coerce dates and booleans to numeric primitive values. Dates are compared by their
+        // millisecond representations. Note that invalid dates with millisecond representations
+        // of `NaN` are not equivalent.
+        return +a == +b;
+      // RegExps are compared by their source patterns and flags.
+      case '[object RegExp]':
+        return a.source == b.source &&
+               a.global == b.global &&
+               a.multiline == b.multiline &&
+               a.ignoreCase == b.ignoreCase;
+    }
+    if (typeof a != 'object' || typeof b != 'object') return false;
+    // Assume equality for cyclic structures. The algorithm for detecting cyclic
+    // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+    var length = aStack.length;
+    while (length--) {
+      // Linear search. Performance is inversely proportional to the number of
+      // unique nested structures.
+      if (aStack[length] == a) return bStack[length] == b;
+    }
+    // Objects with different constructors are not equivalent, but `Object`s
+    // from different frames are.
+    var aCtor = a.constructor, bCtor = b.constructor;
+    if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
+                             _.isFunction(bCtor) && (bCtor instanceof bCtor))
+                        && ('constructor' in a && 'constructor' in b)) {
+      return false;
+    }
+    // Add the first object to the stack of traversed objects.
+    aStack.push(a);
+    bStack.push(b);
+    var size = 0, result = true;
+    // Recursively compare objects and arrays.
+    if (className == '[object Array]') {
+      // Compare array lengths to determine if a deep comparison is necessary.
+      size = a.length;
+      result = size == b.length;
+      if (result) {
+        // Deep compare the contents, ignoring non-numeric properties.
+        while (size--) {
+          if (!(result = eq(a[size], b[size], aStack, bStack))) break;
+        }
+      }
+    } else {
+      // Deep compare objects.
+      for (var key in a) {
+        if (_.has(a, key)) {
+          // Count the expected number of properties.
+          size++;
+          // Deep compare each member.
+          if (!(result = _.has(b, key) && eq(a[key], b[key], aStack, bStack))) break;
+        }
+      }
+      // Ensure that both objects contain the same number of properties.
+      if (result) {
+        for (key in b) {
+          if (_.has(b, key) && !(size--)) break;
+        }
+        result = !size;
+      }
+    }
+    // Remove the first object from the stack of traversed objects.
+    aStack.pop();
+    bStack.pop();
+    return result;
+  };
+
+  // Perform a deep comparison to check if two objects are equal.
+  _.isEqual = function(a, b) {
+    return eq(a, b, [], []);
+  };
+
+  // Is a given array, string, or object empty?
+  // An "empty" object has no enumerable own-properties.
+  _.isEmpty = function(obj) {
+    if (obj == null) return true;
+    if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
+    for (var key in obj) if (_.has(obj, key)) return false;
+    return true;
+  };
+
+  // Is a given value a DOM element?
+  _.isElement = function(obj) {
+    return !!(obj && obj.nodeType === 1);
+  };
+
+  // Is a given value an array?
+  // Delegates to ECMA5's native Array.isArray
+  _.isArray = nativeIsArray || function(obj) {
+    return toString.call(obj) == '[object Array]';
+  };
+
+  // Is a given variable an object?
+  _.isObject = function(obj) {
+    return obj === Object(obj);
+  };
+
+  // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.
+  each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {
+    _['is' + name] = function(obj) {
+      return toString.call(obj) == '[object ' + name + ']';
+    };
+  });
+
+  // Define a fallback version of the method in browsers (ahem, IE), where
+  // there isn't any inspectable "Arguments" type.
+  if (!_.isArguments(arguments)) {
+    _.isArguments = function(obj) {
+      return !!(obj && _.has(obj, 'callee'));
+    };
+  }
+
+  // Optimize `isFunction` if appropriate.
+  if (typeof (/./) !== 'function') {
+    _.isFunction = function(obj) {
+      return typeof obj === 'function';
+    };
+  }
+
+  // Is a given object a finite number?
+  _.isFinite = function(obj) {
+    return isFinite(obj) && !isNaN(parseFloat(obj));
+  };
+
+  // Is the given value `NaN`? (NaN is the only number which does not equal itself).
+  _.isNaN = function(obj) {
+    return _.isNumber(obj) && obj != +obj;
+  };
+
+  // Is a given value a boolean?
+  _.isBoolean = function(obj) {
+    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
+  };
+
+  // Is a given value equal to null?
+  _.isNull = function(obj) {
+    return obj === null;
+  };
+
+  // Is a given variable undefined?
+  _.isUndefined = function(obj) {
+    return obj === void 0;
+  };
+
+  // Shortcut function for checking if an object has a given property directly
+  // on itself (in other words, not on a prototype).
+  _.has = function(obj, key) {
+    return hasOwnProperty.call(obj, key);
+  };
+
+  // Utility Functions
+  // -----------------
+
+  // Run Underscore.js in *noConflict* mode, returning the `_` variable to its
+  // previous owner. Returns a reference to the Underscore object.
+  _.noConflict = function() {
+    root._ = previousUnderscore;
+    return this;
+  };
+
+  // Keep the identity function around for default iterators.
+  _.identity = function(value) {
+    return value;
+  };
+
+  _.constant = function(value) {
+    return function () {
+      return value;
+    };
+  };
+
+  _.property = function(key) {
+    return function(obj) {
+      return obj[key];
+    };
+  };
+
+  // Returns a predicate for checking whether an object has a given set of `key:value` pairs.
+  _.matches = function(attrs) {
+    return function(obj) {
+      if (obj === attrs) return true; //avoid comparing an object to itself.
+      for (var key in attrs) {
+        if (attrs[key] !== obj[key])
+          return false;
+      }
+      return true;
+    }
+  };
+
+  // Run a function **n** times.
+  _.times = function(n, iterator, context) {
+    var accum = Array(Math.max(0, n));
+    for (var i = 0; i < n; i++) accum[i] = iterator.call(context, i);
+    return accum;
+  };
+
+  // Return a random integer between min and max (inclusive).
+  _.random = function(min, max) {
+    if (max == null) {
+      max = min;
+      min = 0;
+    }
+    return min + Math.floor(Math.random() * (max - min + 1));
+  };
+
+  // A (possibly faster) way to get the current timestamp as an integer.
+  _.now = Date.now || function() { return new Date().getTime(); };
+
+  // List of HTML entities for escaping.
+  var entityMap = {
+    escape: {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;'
+    }
+  };
+  entityMap.unescape = _.invert(entityMap.escape);
+
+  // Regexes containing the keys and values listed immediately above.
+  var entityRegexes = {
+    escape:   new RegExp('[' + _.keys(entityMap.escape).join('') + ']', 'g'),
+    unescape: new RegExp('(' + _.keys(entityMap.unescape).join('|') + ')', 'g')
+  };
+
+  // Functions for escaping and unescaping strings to/from HTML interpolation.
+  _.each(['escape', 'unescape'], function(method) {
+    _[method] = function(string) {
+      if (string == null) return '';
+      return ('' + string).replace(entityRegexes[method], function(match) {
+        return entityMap[method][match];
+      });
+    };
+  });
+
+  // If the value of the named `property` is a function then invoke it with the
+  // `object` as context; otherwise, return it.
+  _.result = function(object, property) {
+    if (object == null) return void 0;
+    var value = object[property];
+    return _.isFunction(value) ? value.call(object) : value;
+  };
+
+  // Add your own custom functions to the Underscore object.
+  _.mixin = function(obj) {
+    each(_.functions(obj), function(name) {
+      var func = _[name] = obj[name];
+      _.prototype[name] = function() {
+        var args = [this._wrapped];
+        push.apply(args, arguments);
+        return result.call(this, func.apply(_, args));
+      };
+    });
+  };
+
+  // Generate a unique integer id (unique within the entire client session).
+  // Useful for temporary DOM ids.
+  var idCounter = 0;
+  _.uniqueId = function(prefix) {
+    var id = ++idCounter + '';
+    return prefix ? prefix + id : id;
+  };
+
+  // By default, Underscore uses ERB-style template delimiters, change the
+  // following template settings to use alternative delimiters.
+  _.templateSettings = {
+    evaluate    : /<%([\s\S]+?)%>/g,
+    interpolate : /<%=([\s\S]+?)%>/g,
+    escape      : /<%-([\s\S]+?)%>/g
+  };
+
+  // When customizing `templateSettings`, if you don't want to define an
+  // interpolation, evaluation or escaping regex, we need one that is
+  // guaranteed not to match.
+  var noMatch = /(.)^/;
+
+  // Certain characters need to be escaped so that they can be put into a
+  // string literal.
+  var escapes = {
+    "'":      "'",
+    '\\':     '\\',
+    '\r':     'r',
+    '\n':     'n',
+    '\t':     't',
+    '\u2028': 'u2028',
+    '\u2029': 'u2029'
+  };
+
+  var escaper = /\\|'|\r|\n|\t|\u2028|\u2029/g;
+
+  // JavaScript micro-templating, similar to John Resig's implementation.
+  // Underscore templating handles arbitrary delimiters, preserves whitespace,
+  // and correctly escapes quotes within interpolated code.
+  _.template = function(text, data, settings) {
+    var render;
+    settings = _.defaults({}, settings, _.templateSettings);
+
+    // Combine delimiters into one regular expression via alternation.
+    var matcher = new RegExp([
+      (settings.escape || noMatch).source,
+      (settings.interpolate || noMatch).source,
+      (settings.evaluate || noMatch).source
+    ].join('|') + '|$', 'g');
+
+    // Compile the template source, escaping string literals appropriately.
+    var index = 0;
+    var source = "__p+='";
+    text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
+      source += text.slice(index, offset)
+        .replace(escaper, function(match) { return '\\' + escapes[match]; });
+
+      if (escape) {
+        source += "'+\n((__t=(" + escape + "))==null?'':_.escape(__t))+\n'";
+      }
+      if (interpolate) {
+        source += "'+\n((__t=(" + interpolate + "))==null?'':__t)+\n'";
+      }
+      if (evaluate) {
+        source += "';\n" + evaluate + "\n__p+='";
+      }
+      index = offset + match.length;
+      return match;
+    });
+    source += "';\n";
+
+    // If a variable is not specified, place data values in local scope.
+    if (!settings.variable) source = 'with(obj||{}){\n' + source + '}\n';
+
+    source = "var __t,__p='',__j=Array.prototype.join," +
+      "print=function(){__p+=__j.call(arguments,'');};\n" +
+      source + "return __p;\n";
+
+    try {
+      render = new Function(settings.variable || 'obj', '_', source);
+    } catch (e) {
+      e.source = source;
+      throw e;
+    }
+
+    if (data) return render(data, _);
+    var template = function(data) {
+      return render.call(this, data, _);
+    };
+
+    // Provide the compiled function source as a convenience for precompilation.
+    template.source = 'function(' + (settings.variable || 'obj') + '){\n' + source + '}';
+
+    return template;
+  };
+
+  // Add a "chain" function, which will delegate to the wrapper.
+  _.chain = function(obj) {
+    return _(obj).chain();
+  };
+
+  // OOP
+  // ---------------
+  // If Underscore is called as a function, it returns a wrapped object that
+  // can be used OO-style. This wrapper holds altered versions of all the
+  // underscore functions. Wrapped objects may be chained.
+
+  // Helper function to continue chaining intermediate results.
+  var result = function(obj) {
+    return this._chain ? _(obj).chain() : obj;
+  };
+
+  // Add all of the Underscore functions to the wrapper object.
+  _.mixin(_);
+
+  // Add all mutator Array functions to the wrapper.
+  each(['pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift'], function(name) {
+    var method = ArrayProto[name];
+    _.prototype[name] = function() {
+      var obj = this._wrapped;
+      method.apply(obj, arguments);
+      if ((name == 'shift' || name == 'splice') && obj.length === 0) delete obj[0];
+      return result.call(this, obj);
+    };
+  });
+
+  // Add all accessor Array functions to the wrapper.
+  each(['concat', 'join', 'slice'], function(name) {
+    var method = ArrayProto[name];
+    _.prototype[name] = function() {
+      return result.call(this, method.apply(this._wrapped, arguments));
+    };
+  });
+
+  _.extend(_.prototype, {
+
+    // Start chaining a wrapped Underscore object.
+    chain: function() {
+      this._chain = true;
+      return this;
+    },
+
+    // Extracts the result from a wrapped and chained object.
+    value: function() {
+      return this._wrapped;
+    }
+
+  });
+
+  // AMD registration happens at the end for compatibility with AMD loaders
+  // that may not enforce next-turn semantics on modules. Even though general
+  // practice for AMD registration is to be anonymous, underscore registers
+  // as a named module because, like jQuery, it is a base library that is
+  // popular enough to be bundled in a third party lib, but not be part of
+  // an AMD load request. Those cases could generate an error when an
+  // anonymous define() is called outside of a loader request.
+  if (typeof define === 'function' && define.amd) {
+    define('underscore', [], function() {
+      return _;
+    });
+  }
+}).call(this);
+
+},{}],51:[function(require,module,exports){
+var _ = require('underscore'),
+    utility = require('./utility/utility.js'),
+    ConnectionEvents = require('./connection/ConnectionEvents.js'),
+    ConnectionStreams = require('./connection/ConnectionStreams.js'),
+    ConnectionProfile = require('./connection/ConnectionProfile.js'),
+    ConnectionBookmarks = require('./connection/ConnectionBookmarks.js'),
+    ConnectionAccesses = require('./connection/ConnectionAccesses.js'),
+    ConnectionMonitors = require('./connection/ConnectionMonitors.js'),
+    ConnectionAccount = require('./connection/ConnectionAccount.js'),
+    CC = require('./connection/ConnectionConstants.js'),
+    Datastore = require('./Datastore.js');
+
+/**
+ * @class Connection
+ * Create an instance of Connection to Pryv API.
+ * The connection will be opened on
+ * http[s]://&lt;username>.&lt;domain>:&lt;port>/&lt;extraPath>?auth=&lt;auth>
+ *
+ * @example
+ * // create a connection for the user 'perkikiki' with the token 'TTZycvBTiq'
+ * var conn = new pryv.Connection({username: 'perkikiki', auth: 'TTZycvBTiq'});
+ *
+ * @constructor
+ * @this {Connection}
+ * @param {Object} [settings]
+ * @param {string} settings.username
+ * @param {string} settings.auth - the authorization token for this username
+ * @param {boolean} [settings.staging = false] use Pryv's staging servers
+ * @param {number} [settings.port = 443]
+ * @param {string} [settings.domain = 'pryv.io'] change the domain. use "settings.staging = true" to
+ * activate 'pryv.in' staging domain.
+ * @param {boolean} [settings.ssl = true] Use ssl (https) or no
+ * @param {string} [settings.extraPath = ''] append to the connections. Must start with a '/'
+ */
+var Connection = module.exports = function Connection() {
+  var settings;
+  if (!arguments[0] || typeof arguments[0] === 'string') {
+    console.warn('new Connection(username, auth, settings) is deprecated.',
+      'Please use new Connection(settings)', arguments);
+    this.username = arguments[0];
+    this.auth = arguments[1];
+    settings = arguments[2];
+  } else {
+    settings = arguments[0];
+    this.username = settings.username;
+    this.auth = settings.auth;
+    if (settings.url) {
+      var urlInfo = utility.urls.parseServerURL(settings.url);
+      this.username = urlInfo.username;
+      settings.hostname = urlInfo.hostname;
+      settings.domain = urlInfo.domain;
+      settings.port = urlInfo.port;
+      settings.extraPath = urlInfo.path === '/' ? '' : urlInfo.path;
+      settings.ssl = urlInfo.isSSL();
+      settings.staging = urlInfo.environment !== 'production';
+    }
+  }
+  this._serialId = Connection._serialCounter++;
+
+  this.settings = _.extend({
+    port: 443,
+    ssl: true,
+    extraPath: '',
+    staging: false
+  }, settings);
+  this.settings.domain = settings.domain ?
+      settings.domain : utility.urls.domains.server[settings.staging ? 'staging' : 'production'];
+
+  this.serverInfos = {
+    // nowLocalTime - nowServerTime
+    deltaTime: null,
+    apiVersion: null,
+    lastSeenLT: null
+  };
+
+  this._accessInfo = null;
+  this._privateProfile = null;
+
+  this._streamSerialCounter = 0;
+  this._eventSerialCounter = 0;
+
+  /**
+   * Manipulate events for this connection
+   * @type {ConnectionEvents}
+   */
+  this.events = new ConnectionEvents(this);
+  /**
+   * Manipulate streams for this connection
+   * @type {ConnectionStreams}
+   */
+  this.streams = new ConnectionStreams(this);
+  /**
+  * Manipulate app profile for this connection
+  * @type {ConnectionProfile}
+  */
+  this.profile = new ConnectionProfile(this);
+  /**
+  * Manipulate bookmarks for this connection
+  * @type {ConnectionProfile}
+  */
+  this.bookmarks = new ConnectionBookmarks(this, Connection);
+  /**
+  * Manipulate accesses for this connection
+  * @type {ConnectionProfile}
+  */
+  this.accesses = new ConnectionAccesses(this);
+  /**
+   * Manipulate this connection monitors
+   */
+  this.monitors = new ConnectionMonitors(this);
+
+  this.account = new ConnectionAccount(this);
+  this.datastore = null;
+
+};
+
+Connection._serialCounter = 0;
+
+
+/**
+ * In order to access some properties such as event.stream and get a {Stream} object, you
+ * need to fetch the structure at least once. For now, there is now way to be sure that the
+ * structure is up to date. Soon we will implement an optional parameter "keepItUpToDate", that
+ * will do that for you.
+ *
+ * TODO implements "keepItUpToDate" logic.
+ * @param {Streams~getCallback} callback - array of "root" Streams
+ * @returns {Connection} this
+ */
+Connection.prototype.fetchStructure = function (callback /*, keepItUpToDate*/) {
+  if (this.datastore) { return this.datastore.init(callback); }
+  this.datastore = new Datastore(this);
+  this.accessInfo(function (error) {
+    if (error) { return callback(error); }
+    this.datastore.init(callback);
+  }.bind(this));
+  return this;
+};
+
+/**
+ * Get access information related this connection. This is also the best way to test
+ * that the combination username/token is valid.
+ * @param {Connection~accessInfoCallback} callback
+ * @returns {Connection} this
+ */
+Connection.prototype.accessInfo = function (callback) {
+  if (this._accessInfo) { return this._accessInfo; }
+  var url = '/access-info';
+  this.request('GET', url, function (error, result) {
+    if (! error) {
+      this._accessInfo = result;
+    }
+    if (typeof(callback) === 'function') {
+      return callback(error, result);
+    }
+  }.bind(this));
+  return this;
+};
+
+/**
+ * Get the private profile related this connection.
+ * @param {Connection~privateProfileCallback} callback
+ * @returns {Connection} this
+ */
+Connection.prototype.privateProfile = function (callback) {
+  if (this._privateProfile) { return this._privateProfile; }
+  this.profile.getPrivate(null, function (error, result) {
+    if (result && result.message) {
+      error = result;
+    }
+    if (! error) {
+      this._privateProfile = result;
+    }
+    if (typeof(callback) === 'function') {
+      return callback(error, result);
+    }
+  }.bind(this));
+  return this;
+};
+
+/**
+ * Translate this timestamp (server dimension) to local system dimension
+ * This could have been named to "translate2LocalTime"
+ * @param {number} serverTime timestamp  (server dimension)
+ * @returns {number} timestamp (local dimension) same time space as (new Date()).getTime();
+ */
+Connection.prototype.getLocalTime = function (serverTime) {
+  return (serverTime + this.serverInfos.deltaTime) * 1000;
+};
+
+/**
+ * Translate this timestamp (local system dimension) to server dimension
+ * This could have been named to "translate2ServerTime"
+ * @param {number} localTime timestamp  (local dimension) same time space as (new Date()).getTime();
+ * @returns {number} timestamp (server dimension)
+ */
+Connection.prototype.getServerTime = function (localTime) {
+  if (typeof localTime === 'undefined') { localTime = new Date().getTime(); }
+  return (localTime / 1000) - this.serverInfos.deltaTime;
+};
+
+
+// ------------- monitor this connection --------//
+
+/**
+ * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
+ * will trigger an event. Changes to the filter will also trigger events if they have an impact on
+ * the monitored data.
+ * @param {Filter} filter - changes to this filter will be monitored.
+ * @returns {Monitor}
+ */
+Connection.prototype.monitor = function (filter) {
+  return this.monitors.create(filter);
+};
+
+// ------------- start / stop Monitoring is called by Monitor constructor / destructor -----//
+
+
+
+/**
+ * Do a direct request to Pryv's API.
+ * Even if exposed there must be an abstraction for every API call in this library.
+ * @param {string} method - GET | POST | PUT | DELETE
+ * @param {string} path - to resource, starting with '/' like '/events'
+ * @param {Connection~requestCallback} callback
+ * @param {Object} jsonData - data to POST or PUT
+ */
+Connection.prototype.request = function (method, path, callback, jsonData, isFile,
+                                         progressCallback) {
+
+
+  if (! callback || ! _.isFunction(callback)) {
+    throw new Error('request\'s callback must be a function');
+  }
+  var headers =  { 'authorization': this.auth };
+  var withoutCredentials = false;
+  var payload = JSON.stringify({});
+  if (jsonData && !isFile) {
+    payload = JSON.stringify(jsonData);
+    headers['Content-Type'] = 'application/json; charset=utf-8';
+  }
+  if (isFile) {
+    payload = jsonData;
+    headers['Content-Type'] = 'multipart/form-data';
+    headers['X-Requested-With'] = 'XMLHttpRequest';
+    withoutCredentials = true;
+  }
+
+  var request = utility.request({
+    method : method,
+    host : getHostname(this),
+    port : this.settings.port,
+    ssl : this.settings.ssl,
+    path : this.settings.extraPath + path,
+    headers : headers,
+    payload : payload,
+    progressCallback: progressCallback,
+    //TODO: decide what callback convention to use (Node or jQuery)
+    success : onSuccess.bind(this),
+    error : onError.bind(this),
+    withoutCredentials: withoutCredentials
+  });
+
+  /**
+   * @this {Connection}
+   */
+  function onSuccess(result, resultInfo) {
+    var error = null;
+
+    var apiVersion = resultInfo.headers['API-Version'] || 
+      resultInfo.headers[CC.Api.Headers.ApiVersion];
+
+    // test if API is reached or if we headed into something else
+    if (! apiVersion) {
+      error = {
+        id : CC.Errors.API_UNREACHEABLE,
+        message: 'Cannot find API-Version',
+        details: 'Response code: ' + resultInfo.code +
+          ' Headers: ' + JSON.stringify(resultInfo.headers)
+      };
+    } else if (result.message) {  // API < 0.6
+      error = result.message;
+    } else
+    if (result.error) { // API 0.7
+      error = result.error;
+    } else {
+      this.serverInfos.lastSeenLT = (new Date()).getTime();
+      this.serverInfos.apiVersion = apiVersion || this.serverInfos.apiVersion;
+      if (_.has(resultInfo.headers, CC.Api.Headers.ServerTime)) {
+        this.serverInfos.deltaTime = (this.serverInfos.lastSeenLT / 1000) -
+          resultInfo.headers[CC.Api.Headers.ServerTime];
+      }
+    }
+    callback(error, result, resultInfo);
+  }
+
+  function onError(error, resultInfo) {
+    var errorTemp = {
+      id : CC.Errors.API_UNREACHEABLE,
+      message: 'Error on request ',
+      details: 'ERROR: ' + error
+    };
+    callback(errorTemp, null, resultInfo);
+  }
+  return request;
+};
+
+
+
+/**
+ * @property {string} Connection.id an unique id that contains all needed information to access
+ * this Pryv data source. http[s]://<username>.<domain>:<port>[/extraPath]/?auth=<auth token>
+ */
+Object.defineProperty(Connection.prototype, 'id', {
+  get: function () {
+    var id = this.settings.ssl ? 'https://' : 'http://';
+    id += getHostname(this) + ':' +
+        this.settings.port + this.settings.extraPath + '/?auth=' + this.auth;
+    return id;
+  },
+  set: function () { throw new Error('ConnectionNode.id property is read only'); }
+});
+
+/**
+ * @property {string} Connection.displayId an id easily readable <username>:<access name>
+ */
+Object.defineProperty(Connection.prototype, 'displayId', {
+  get: function () {
+    if (! this._accessInfo) {
+      throw new Error('connection must have been initialized to use displayId. ' +
+        ' You can call accessInfo() for this');
+    }
+    var id = this.username + ':' + this._accessInfo.name;
+    return id;
+  },
+  set: function () { throw new Error('Connection.displayId property is read only'); }
+});
+
+/**
+ * @property {String} Connection.serialId A locally-unique id for the connection; can also be
+ *                                        used as a client-side id
+ */
+Object.defineProperty(Connection.prototype, 'serialId', {
+  get: function () { return 'C' + this._serialId; }
+});
+/**
+ * Called with the desired Streams as result.
+ * @callback Connection~accessInfoCallback
+ * @param {Object} error - eventual error
+ * @param {AccessInfo} result
+ */
+
+/**
+ * @typedef AccessInfo
+ * @see http://api.pryv.com/reference.html#data-structure-access
+ */
+
+/**
+ * Called with the result of the request
+ * @callback Connection~requestCallback
+ * @param {Object} error - eventual error
+ * @param {Object} result - jSonEncoded result
+ * @param {Object} resultInfo
+ * @param {Number} resultInfo.code - HTTP result code
+ * @param {Object} resultInfo.headers - HTTP result headers by key
+ */
+
+
+// --------- private utils
+
+function getHostname(connection) {
+  return connection.settings.hostname ||
+      connection.username ?
+      connection.username + '.' + connection.settings.domain : connection.settings.domain;
+}
+
+},{"./Datastore.js":52,"./connection/ConnectionAccesses.js":60,"./connection/ConnectionAccount.js":61,"./connection/ConnectionBookmarks.js":62,"./connection/ConnectionConstants.js":63,"./connection/ConnectionEvents.js":64,"./connection/ConnectionMonitors.js":65,"./connection/ConnectionProfile.js":66,"./connection/ConnectionStreams.js":67,"./utility/utility.js":81,"underscore":50}],52:[function(require,module,exports){
+/**
+ * DataStore handles in memory caching of objects.
+ * @private
+ */
+
+var _ = require('underscore');
+var Event = require('./Event');
+var Stream = require('./Stream');
+
+function Datastore(connection) {
+  this.connection = connection;
+  this.streamsIndex = {}; // streams are linked to their object representation
+  this.eventIndex = {}; // events are store by their id
+  this.rootStreams = [];
+  this.rootStreamsAll = []; // including trashed streams
+}
+
+module.exports = Datastore;
+
+Datastore.prototype.init = function (callback) {
+  this.connection.streams._getObjects({state: 'all'}, function (error, result) {
+    if (error) { return callback('Datastore faild to init - '  + error); }
+    if (result) {
+      this._rebuildStreamIndex(result); // maybe done transparently
+    }
+    callback(null, result);
+  }.bind(this));
+
+  // TODO activate monitoring
+};
+
+Datastore.prototype._rebuildStreamIndex = function (streamArray) {
+  this.streamsIndex = {};
+  this.rootStreams = [];
+  this.rootStreamsAll = [];
+  this._indexStreamArray(streamArray);
+};
+
+Datastore.prototype._indexStreamArray = function (streamArray) {
+  _.each(streamArray, function (stream) {
+    this.indexStream(stream);
+  }.bind(this));
+};
+
+Datastore.prototype.indexStream = function (stream) {
+  this.streamsIndex[stream.id] = stream;
+  if (! stream.parentId) {
+    this.rootStreamsAll.push(stream);
+    if (! stream.trashed) {
+      this.rootStreams.push(stream);
+    }
+  }
+  this._indexStreamArray(stream._children);
+  delete stream._children; // cleanup when in datastore mode
+  delete stream._parent;
+};
+
+/**
+ *
+ * @param all True to get all root streams including trashed one
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreams = function (all) {
+  if (all) { return this.rootStreamsAll; }
+  return this.rootStreams;
+};
+
+
+/**
+ *
+ * @param streamId
+ * @param test (do no throw error if Stream is not found
+ * @returns Stream or null if not found
+ */
+Datastore.prototype.getStreamById = function (streamId) {
+  var result = this.streamsIndex[streamId];
+  return result;
+};
+
+//-------------------------
+
+/**
+ * @param serialId
+ * @returns Event or null if not found
+ */
+Datastore.prototype.getEventBySerialId = function (serialId) {
+  var result = null;
+  _.each(this.eventIndex, function (event /*,eventId*/) {
+    if (event.serialId === serialId) { result = event; }
+    // TODO optimize and break
+  }.bind(this));
+  return result;
+};
+
+/**
+ * @param eventID
+ * @returns Event or null if not found
+ */
+Datastore.prototype.getEventById = function (eventId) {
+  return this.eventIndex[eventId];
+
+};
+
+/**
+ * @returns allEvents
+ */
+Datastore.prototype.getEventsMatchingFilter = function (filter) {
+  var result = [];
+  _.each(this.eventIndex, function (event /*,eventId*/) {
+    if (filter.matchEvent(event)) { result.push(event); }
+  }.bind(this));
+  return result;
+};
+
+
+/**
+ * @returns allEvents
+ */
+Datastore.prototype.getAllEvents = function () {
+  return _.value(this.eventIndex);
+};
+
+/**
+ * @param event
+ */
+Datastore.prototype.addEvent = function (event) {
+  if (! event.id) {
+    throw new Error('Datastore.addEvent cannot add event with unkown id', event);
+  }
+  this.eventIndex[event.id] = event;
+};
+
+
+
+/**
+ * @param {Object} data to map
+ * @return {Event} event
+ */
+Datastore.prototype.createOrReuseEvent = function (data) {
+  if (! data.id) {
+    throw new Error('Datastore.createOrReuseEvent cannot create event with ' +
+      ' unkown id' + require('util').inspect(data));
+  }
+
+  var result = this.getEventById(data.id);
+  if (result) {  // found event
+    _.extend(result, data);
+    return result;
+  }
+  // create an event and register it
+  result = new Event(this.connection, data);
+  this.addEvent(result);
+
+  return result;
+};
+
+
+/**
+ * @param {Object} data to map
+ * @return {Event} event
+ */
+Datastore.prototype.createOrReuseStream = function (data) {
+    if (! data.id) {
+        throw new Error('Datastore.createOrReuseStream cannot create stream with ' +
+            ' unkown id' + require('util').inspect(data));
+    }
+
+    var result = this.getStreamById(data.id);
+    if (result) {  // found event
+        _.extend(result, data);
+        return result;
+    }
+    // create an stream and register it
+    result = new Stream(this.connection, data);
+    this.indexStream(result);
+
+    return result;
+};
+
+
+
+},{"./Event":53,"./Stream":56,"underscore":50,"util":42}],53:[function(require,module,exports){
+
+var _ = require('underscore');
+
+var RW_PROPERTIES =
+  ['streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
+    'clientData', 'state', 'modified', 'trashed'];
+
+
+var escapeHtml = function (obj) {
+  _.each(obj, function (value, key) {
+    if (_.isString(value)) {
+      obj[key] = _.escape(value);
+    } else if ((key === 'content' && _.isObject(value)) || (key === 'tags' && _.isArray(value))) {
+      escapeHtml(value);
+    }
+  });
+};
+/**
+ *
+ * @type {Function}
+ * @constructor
+ */
+var Event = module.exports = function Event(connection, data) {
+  if (! connection) {
+    throw new Error('Cannot create connection less events');
+  }
+  this.connection = connection;
+  this.trashed = false;
+  this.serialId = this.connection.serialId + '>E' + this.connection._eventSerialCounter++;
+  escapeHtml(data);
+  _.extend(this, data);
+};
+
+/**
+ * get Json object ready to be posted on the API
+ */
+Event.prototype.getData = function () {
+  var data = {};
+  _.each(RW_PROPERTIES, function (key) { // only set non null values
+    if (_.has(this, key)) { data[key] = this[key]; }
+  }.bind(this));
+  return data;
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.update = function (callback) {
+  this.connection.events.update(this, callback);
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.addAttachment = function (file, callback) {
+  this.connection.events.addAttachment(this.id, file, callback);
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.removeAttachment = function (fileName, callback) {
+  this.connection.events.removeAttachment(this.id, fileName, callback);
+};
+/**
+ * TODO create an attachment Class that contains such logic
+ * @param {attachment} attachment
+ */
+Event.prototype.attachmentUrl = function (attachment) {
+  var url =  this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + '/events/' +
+    this.id + '/' + attachment.id + '?readToken=' + attachment.readToken;
+  return url;
+};
+/**
+ *
+ * @param {Connection~requestCallback} callback
+ */
+Event.prototype.delete = Event.prototype.trash = function (callback) {
+  this.connection.events.trash(this, callback);
+};
+/**
+ * TODO document and rename to getPicturePreviewUrl
+ * @param width
+ * @param height
+ * @returns {string}
+ */
+Event.prototype.getPicturePreview = function (width, height) {
+  width = width ? '&w=' + width : '';
+  height = height ? '&h=' + height : '';
+  var url = this.connection.settings.ssl ? 'https://' : 'http://';
+  url += this.connection.username + '.' + this.connection.settings.domain + ':3443/events/' +
+    this.id + '?auth=' + this.connection.auth + width + height;
+  return url;
+};
+
+Event.prototype.isRunning = function () {
+  return !!('duration' in this && !this.duration && this.duration !== 0);
+};
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'timeLT', {
+  get: function () {
+    return this.connection.getLocalTime(this.time);
+  },
+  set: function (newValue) {
+    this.time = this.connection.getServerTime(newValue);
+  }
+});
+
+
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'stream', {
+  get: function () {
+    if (! this.connection.datastore) {
+      throw new Error('call connection.fetchStructure before to get automatic stream mapping.' +
+        ' Or use StreamId');
+    }
+    return this.connection.datastore.getStreamById(this.streamId);
+  },
+  set: function () { throw new Error('Event.stream property is read only'); }
+});
+
+/**
+ * TODO document
+ */
+Object.defineProperty(Event.prototype, 'url', {
+  get: function () {
+    var url = this.connection.settings.ssl ? 'https://' : 'http://';
+    url += this.connection.username + '.' + this.connection.settings.domain + '/events/' + this.id;
+    return url;
+  },
+  set: function () { throw new Error('Event.url property is read only'); }
+});
+
+
+/**
+ * An newly created Event (no id, not synched with API)
+ * or an object with sufficient properties to be considered as an Event.
+ * @typedef {(Event|Object)} NewEventLike
+ * @property {String} streamId
+ * @property {String} type
+ * @property {number} [time]
+ */
+
+},{"underscore":50}],54:[function(require,module,exports){
+var _ = require('underscore'),
+    SignalEmitter = require('./utility/SignalEmitter.js');
+
+/**
+ * TODO Filter is badly missing a correct documentation
+ * @constructor
+ */
+var Filter = module.exports = function Filter(settings) {
+  SignalEmitter.extend(this, Messages, 'Filter');
+
+  this._settings = _.extend({
+    //TODO: set default values
+    streams: null, //ids
+    tags: null,
+    fromTime: null,  // serverTime
+    toTime: null,  // serverTime
+    limit: null,
+    skip: null,
+    types: null,
+    modifiedSince: null,
+    state: null
+  }, settings);
+};
+
+var Messages = Filter.Messages = {
+  /**
+   * generic change event called on any change
+   * content: {filter, signal, content}
+   **/
+  ON_CHANGE : 'changed',
+  /**
+   * called on streams changes
+   * content: streams
+   */
+  STREAMS_CHANGE : 'streamsChanged',
+
+  /**
+   * called on streams structure changes
+   * content: changes
+   */
+  STRUCTURE_CHANGE : 'structureChange',
+
+  /*
+   * called on date changes
+   * content: streams
+   */
+  DATE_CHANGE : 'timeFrameChanged',
+
+  /*
+   * called on state changes
+   * content: {state: value}
+   */
+  STATE_CHANGE : 'stateChanged'
+};
+
+// TODO
+// redundant with get
+function _normalizeTimeFrameST(filterData) {
+  var result = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+  if (filterData.fromTime || filterData.fromTime === 0) {
+    result[0] = filterData.fromTime;
+  }
+  if (filterData.toTime || filterData.toTime === 0) {
+    result[1] = filterData.toTime;
+  }
+  return result;
+}
+
+
+
+/**
+ * TODO write doc
+ * TODO complete with tags and state and modified and..
+ * check if this event is in this filter
+ */
+Filter.prototype.matchEvent = function (event) {
+  if (event.time > this.toTimeSTNormalized) { return false; }
+  if (event.time < this.fromTimeSTNormalized) { return false; }
+
+
+  if (this._settings.state !== 'all') {
+    if (event.trashed) { return false; }
+  }
+
+  if (this._settings.streams) {
+
+    if (this._settings.streams.length === 0) { return false; }
+
+    if (this._settings.streams.indexOf(event.streamId) < 0) {
+      var found = false;
+      if (!event.stream) {
+        return false;
+      }
+      event.stream.ancestors.forEach(function (ancestor) {
+        if (this._settings.streams.indexOf(ancestor.id) >= 0) {
+          if (this._settings.state !== 'all') {
+            if (ancestor.trashed) { return false; }
+          }
+          found = true;
+        }
+      }.bind(this));
+      if (!found) {
+        return false;
+      }
+    }
+  }
+
+
+
+  // TODO complete test
+  return true;
+};
+
+/**
+ * Compare this filter with data form another filter
+ * @param {Object} filterDataTest data got with filter.getData
+ * @returns keymap \{ timeFrame : -1, 0 , 1 \}
+ * (1 = more than test, -1 = less data than test, 0 == no changes)
+ */
+Filter.prototype.compareToFilterData = function (filterDataTest) {
+  var result = { timeFrame : 0, streams : 0 };
+
+
+  // timeFrame
+  var myTimeFrameST = [this.fromTimeSTNormalized, this.toTimeSTNormalized];
+  var testTimeFrameST = _normalizeTimeFrameST(filterDataTest);
+  console.log(myTimeFrameST);
+  console.log(testTimeFrameST);
+
+  if (myTimeFrameST[0] < testTimeFrameST[0]) {
+    result.timeFrame = 1;
+  } else if (myTimeFrameST[0] > testTimeFrameST[0]) {
+    result.timeFrame = -1;
+  }
+  if (result.timeFrame <= 0) {
+    if (myTimeFrameST[1] > testTimeFrameST[1]) {
+      result.timeFrame = 1;
+    } else  if (myTimeFrameST[1] < testTimeFrameST[1]) {
+      result.timeFrame = -1;
+    }
+  }
+
+  // streams
+  //TODO look if this processing can be optimized
+
+  var nullStream = 0;
+  if (! this._settings.streams) {
+    if (filterDataTest.streams) {
+      result.streams = 1;
+    }
+    nullStream = 1;
+  }
+  if (! filterDataTest.streams) {
+    if (this._settings.streams) {
+      result.streams = -1;
+    }
+    nullStream = 1;
+  }
+
+  if (! nullStream) {
+    var notinTest = _.difference(this._settings.streams, filterDataTest.streams);
+    if (notinTest.length > 0) {
+      result.streams = 1;
+    } else {
+      var notinLocal = _.difference(filterDataTest.streams, this._settings.streams);
+      if (notinLocal.length > 0) {
+        result.streams = -1;
+      }
+    }
+  }
+
+  return result;
+};
+
+/**
+ * Create a clone of this filter and changes some properties
+ * @param properties
+ * @returns pryv.Filter
+ */
+Filter.prototype.cloneWithDelta = function (properties) {
+  var newProps = _.clone(this._settings);
+  _.extend(newProps, properties);
+  return new Filter(newProps);
+};
+
+/**
+ *
+ * @param ignoreNulls (optional) boolean
+ * @param withDelta (optional) apply this differences on the data
+ * @returns {*}
+ */
+Filter.prototype.getData = function (ignoreNulls, withDelta) {
+  ignoreNulls = ignoreNulls || false;
+  var result = _.clone(this._settings);
+  if (withDelta)  {
+    _.extend(result, withDelta);
+  }
+  _.each(_.keys(result), function (key) {
+    if ((result[key] === null)) { delete result[key]; }
+  });
+  return result;
+};
+
+/**
+ * @private
+ */
+Filter.prototype._fireFilterChange = function (signal, content, batch) {
+  // generic
+  this._fireEvent(Messages.ON_CHANGE, {filter: this, signal: signal, content: content}, batch);
+  // specific
+  this._fireEvent(signal, content, batch);
+};
+
+/**
+ * TODO review documentation and add example
+ * Change several values of the filter in batch.. this wil group all events behind a batch id
+ * @param keyValueMap {Object}
+ * @param batch {SignalEmitter~Batch}
+ */
+Filter.prototype.set = function (keyValueMap, batch) {
+  batch = this.startBatch('set', batch);
+
+  _.each(keyValueMap, function (value, key) {
+    this._setValue(key, value, batch);
+  }.bind(this));
+
+  batch.done('set');
+};
+
+/**
+ * Internal that take in charge of changing values
+ * @param keyValueMap
+ * @param batch
+ * @private
+ */
+Filter.prototype._setValue = function (key, newValue, batch) {
+  batch = this.startBatch('setValue:' + key, batch);
+
+  if (key === 'limit') {
+    this._settings.limit = newValue;
+
+    // TODO handle changes
+    return;
+  }
+
+
+  if (key === 'state') {
+    if (this._settings.state !== newValue) {
+      this._settings.state = newValue;
+      this._fireFilterChange(Messages.STATE_CHANGE, {state: newValue}, batch);
+    }
+    batch.done('setValue:' + key);
+    return;
+  }
+
+  if (key === 'timeFrameST') {
+    if (! _.isArray(newValue) || newValue.length !== 2) {
+      throw new Error('Filter.timeFrameST is an Array of two timestamps [fromTime, toTime]');
+    }
+    if (this._settings.fromTime !== newValue[0] || this._settings.toTime !== newValue[1]) {
+      this._settings.fromTime = newValue[0];
+      this._settings.toTime = newValue[1];
+      this._fireFilterChange(Messages.DATE_CHANGE, this.timeFrameST, batch);
+    }
+    batch.done('setValue:' + key);
+    return;
+  }
+
+  if (key === 'streamsIds') {
+
+    if (newValue === null || typeof newValue === 'undefined') {
+      if (this._settings.streams === null) {
+
+        return;
+      }
+      newValue = null;
+    } else if (! _.isArray(newValue)) {
+      newValue = [newValue];
+    }
+
+    // TODO check that this stream is valid
+    this._settings.streams = newValue;
+    this._fireFilterChange(Messages.STREAMS_CHANGE, this.streams, batch);
+    batch.done('setValue:' + key);
+    return;
+  }
+
+  batch.done('setValue:' + key);
+  throw new Error('Filter has no property : ' + key);
+};
+
+/**
+ * get toTime, return Number.POSITIVE_INFINITY if null
+ */
+Object.defineProperty(Filter.prototype, 'toTimeSTNormalized', {
+  get: function () {
+    if (this._settings.toTime || this._settings.toTime === 0) {
+      return this._settings.toTime;
+    }
+    return Number.POSITIVE_INFINITY;
+  }
+});
+
+/**
+ * get fromTime, return Number.POSITIVE_INFINITY if null
+ */
+Object.defineProperty(Filter.prototype, 'fromTimeSTNormalized', {
+  get: function () {
+    if (this._settings.fromTime || this._settings.fromTime === 0) {
+      return this._settings.fromTime;
+    }
+    return Number.NEGATIVE_INFINITY;
+  }
+});
+
+
+
+/**
+ * timeFrameChange ..  [fromTime, toTime]
+ * setting them to "null" => ALL
+ */
+Object.defineProperty(Filter.prototype, 'timeFrameST', {
+  get: function () {
+    return [this._settings.toTime, this._settings.fromTime];
+  },
+  set: function (newValue) {
+    this._setValue('timeFrameST', newValue);
+    return this.timeFrameST;
+  }
+});
+
+
+/**
+ * StreamIds ..
+ * setting them to "null" => ALL and to "[]" => NONE
+ */
+Object.defineProperty(Filter.prototype, 'streamsIds', {
+  get: function () {
+    return this._settings.streams;
+  },
+  set: function (newValue) {
+    this._setValue('streamsIds', newValue);
+    return this._settings.streams;
+  }
+});
+
+
+/**
+ * return true if context (stream is on a single stream)
+ * This is usefull to check when creating and event in a context.
+ * This way, no need to ask the user for a stream specification.
+ * TODO determine if this should stay in the lib.. or handle by apps
+ */
+Filter.prototype.focusedOnSingleStream = function () {
+  if (_.isArray(this._settings.streams) && this._settings.streams.length === 1) {
+    return this._settings.streams[0];
+  }
+  return null;
+};
+
+/**
+ * An pryv Filter or an object corresponding at what we can get with Filter.getData().
+ * @typedef {(Filter|Object)} FilterLike
+ * @property {String[]} [streams]
+ * @property {String[]} [tags]
+ * @property {number} [fromTime] -- serverTime
+ * @property {number} [toTime] -- serverTime
+ * @property {number} [modifiedSince] -- serverTime
+ * @property {number} [limit] -- response to 'n' events
+ * @property {number} [skip] -- skip the first 'n' events of he response
+ */
+
+
+},{"./utility/SignalEmitter.js":72,"underscore":50}],55:[function(require,module,exports){
+var _ = require('underscore'),
+  SignalEmitter = require('./utility/SignalEmitter.js'),
+  Filter = require('./Filter.js');
+
+var EXTRA_ALL_EVENTS = {state : 'all', modifiedSince : -100000000 };
+var REALLY_ALL_EVENTS =  EXTRA_ALL_EVENTS;
+REALLY_ALL_EVENTS.fromTime = -1000000000;
+REALLY_ALL_EVENTS.toTime = 10000000000;
+
+var GETEVENT_MIN_REFRESH_RATE = 2000;
+
+/**
+ * Monitoring
+ * @type {Function}
+ * @constructor
+ */
+function Monitor(connection, filter) {
+  SignalEmitter.extend(this, Messages, 'Monitor');
+  this.connection = connection;
+  this.id = 'M' + Monitor.serial++;
+
+  this.filter = filter;
+
+  this._lastUsedFilterData = filter.getData();
+
+  if (this.filter.state) {
+    throw new Error('Monitors only work for default state, not trashed or all');
+  }
+
+  this.filter.addEventListener(Filter.Messages.ON_CHANGE, this._onFilterChange.bind(this));
+  this._events = null;
+
+
+  // -- optimization & caching
+  this.useCacheForEventsGetAllAndCompare = true;  // will look into cache before online
+  this.ensureFullCache = true; // will fill the cache with ALL pryv content
+  this.initWithPrefetch = 100; // prefetch some events before ensuringFullCache
+}
+
+Monitor.serial = 0;
+
+var Messages = Monitor.Messages = {
+  /** content: events **/
+  ON_LOAD : 'started',
+  /** content: error **/
+  ON_ERROR : 'error',
+  /** content: { enter: [], leave: [], change } **/
+  ON_EVENT_CHANGE : 'eventsChanged',
+  /** content: streams **/
+  ON_STRUCTURE_CHANGE : 'streamsChanged',
+  /** content: ? **/
+  ON_FILTER_CHANGE : 'filterChanged'
+};
+
+// ----------- prototype  public ------------//
+
+Monitor.prototype.start = function (done) {
+  done = done || function () {};
+  var batch = this.startBatch('Monitor:start');
+  batch.addOnDoneListener('Monitor:startCompletion', function () {
+    //TODO move this logic to ConnectionMonitors ??
+    this.connection.monitors._monitors[this.id] = this;
+    this.connection.monitors._startMonitoring(done);
+  }.bind(this));
+
+
+  this.lastSynchedST = -1000000000000;
+  this._initEvents(batch);
+  batch.done('Monitor:start');
+
+
+};
+
+
+Monitor.prototype.destroy = function () {
+  //TODO move this logic to ConnectionMonitors ??
+  delete this.connection.monitors._monitors[this.id];
+  if (_.keys(this.connection.monitors._monitors).length === 0) {
+    this.connection.monitors._stopMonitoring();
+  }
+};
+
+Monitor.prototype.getEvents = function () {
+  if (! this._events || ! this._events.active) {return []; }
+  return _.toArray(this._events.active);
+};
+
+// ------------ private ----------//
+
+// ----------- iOSocket ------//
+Monitor.prototype._onIoConnect = function () {
+  console.log('Monitor onConnect');
+};
+Monitor.prototype._onIoError = function (error) {
+  console.log('Monitor _onIoError' + error);
+};
+Monitor.prototype._onIoEventsChanged = function () {
+  var batch = this.startBatch('IoEventChanged');
+  this._connectionEventsGetChanges(batch);
+  batch.done('IoEventChanged');
+};
+Monitor.prototype._onIoStreamsChanged = function () {
+  console.log('SOCKETIO', '_onIoStreamsChanged');
+  var batch = this.startBatch('IoStreamsChanged');
+  this._connectionStreamsGetChanges(batch);
+  batch.done('IoStreamsChanged');
+};
+
+
+
+// -----------  filter changes ----------- //
+
+
+Monitor.prototype._saveLastUsedFilter = function () {
+  this._lastUsedFilterData = this.filter.getData();
+};
+
+
+Monitor.prototype._onFilterChange = function (signal, batch) {
+
+
+  var changes = this.filter.compareToFilterData(this._lastUsedFilterData);
+
+  var processLocalyOnly = 0;
+  var foundsignal = 0;
+  if (signal.signal === Filter.Messages.DATE_CHANGE) {  // only load events if date is wider
+    foundsignal = 1;
+    console.log('** DATE CHANGE ', changes.timeFrame);
+    if (changes.timeFrame === 0) {
+      return;
+    }
+    if (changes.timeFrame < 0) {  // new timeFrame contains more data
+      processLocalyOnly = 1;
+    }
+
+  }
+
+  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
+    foundsignal = 1;
+    console.log('** STREAMS_CHANGE', changes.streams);
+    if (changes.streams === 0) {
+      return;
+    }
+    if (changes.streams < 0) {  // new timeFrame contains more data
+      processLocalyOnly = 1;
+    }
+  }
+
+  if (signal.signal === Filter.Messages.STREAMS_CHANGE) {
+    foundsignal = 1;
+    console.log('** STREAMS_CHANGE', changes.streams);
+    if (changes.streams === 0) {
+      return;
+    }
+    if (changes.streams < 0) {  // new timeFrame contains more data
+      processLocalyOnly = 1;
+    }
+  }
+
+  if (signal.signal === Filter.Messages.STRUCTURE_CHANGE) {
+    foundsignal = 1;
+    // force full refresh
+  }
+
+
+  if (! foundsignal) {
+    throw new Error('Signal not found :' + signal.signal);
+  }
+
+  this._saveLastUsedFilter();
+
+
+
+  if (processLocalyOnly) {
+    this._refilterLocaly(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
+  } else {
+    this._connectionEventsGetAllAndCompare(Messages.ON_FILTER_CHANGE, {filterInfos: signal}, batch);
+  }
+};
+
+// ----------- internal ----------------- //
+
+/**
+ * Process events locally
+ */
+Monitor.prototype._refilterLocaly = function (signal, extracontent, batch) {
+
+  var result = { enter : [], leave : [] };
+  _.extend(result, extracontent); // pass extracontent to receivers
+  _.each(_.clone(this._events.active), function (event) {
+    if (! this.filter.matchEvent(event)) {
+      result.leave.push(event);
+      delete this._events.active[event.id];
+    }
+  }.bind(this));
+  this._fireEvent(signal, result, batch);
+};
+
+
+Monitor.prototype._initEvents = function (batch) {
+  batch = this.startBatch('Monitor:initEvents', batch);
+  this._events = { active : {}};
+
+
+  var filterWith = this.filter.getData(true, EXTRA_ALL_EVENTS);
+
+  if (this.initWithPrefetch) {
+    filterWith.limit = this.initWithPrefetch;
+  } else {
+    if (this.ensureFullCache) {  filterWith = REALLY_ALL_EVENTS; }
+  }
+
+
+  this.connection.events.get(filterWith,
+    function (error, events) {
+      if (error) {
+        this._fireEvent(Messages.ON_ERROR, error, batch);
+        batch.done('Monitor:initEvents error');
+        return;
+      }
+
+      if (! this.initWithPrefetch) { this.lastSynchedST = this.connection.getServerTime(); }
+
+      var result = [];
+
+      _.each(events, function (event) {
+        if (! this.ensureFullCache || this.filter.matchEvent(event)) {
+          this._events.active[event.id] = event;
+          result.push(event);
+        }
+      }.bind(this));
+
+
+      this._fireEvent(Messages.ON_LOAD, result, batch);
+
+      if (this.initWithPrefetch) {
+        batch.waitForMeToFinish('delay');
+        setTimeout(function () {
+          this._connectionEventsGetChanges(batch);
+          batch.done('delay');
+        }.bind(this), 100);
+      }
+      batch.done('Monitor:initEvents finished');
+
+
+    }.bind(this));
+};
+
+
+
+
+
+/**
+ * @private
+ */
+Monitor.prototype._connectionEventsGetChanges = function (batch) {
+  batch = this.startBatch('connectionEventsGetChanges', batch);
+  if (this.eventsGetChangesInProgress) {
+    this.eventsGetChangesNeeded = true;
+    console.log('[WARNING] Skipping _connectionEventsGetChanges because one is in Progress');
+    batch.done('connectionEventsGetChanges in Progress');
+    return;
+  }
+  this.eventsGetChangesInProgress = true;
+  this.eventsGetChangesNeeded = false;
+
+
+  // var options = { modifiedSince : this.lastSynchedST};
+  var options = { modifiedSince : this.lastSynchedST, state : 'all'};
+
+
+  var filterWith = this.filter.getData(true, options);
+  if (this.ensureFullCache) {
+    filterWith = REALLY_ALL_EVENTS;
+    filterWith = _.extend(filterWith, options);
+  }
+  this.lastSynchedST = this.connection.getServerTime();
+
+  var result = { created : [], trashed : [], modified: []};
+
+  this.connection.events.get(filterWith,
+    function (error, events) {
+      if (error) {
+        this._fireEvent(Messages.ON_ERROR, error, batch);
+        batch.done('connectionEventsGetChanges error');
+        return;
+      }
+
+      _.each(events, function (event) {
+        if (! this.ensureFullCache || this.filter.matchEvent(event)) {
+          if (this._events.active[event.id]) {
+            if (event.trashed && !this._events.active[event.id].trashed) { // trashed
+              result.trashed.push(event);
+              delete this._events.active[event.id];
+            } else {
+              result.modified.push(event);
+              this._events.active[event.id] = event;
+            }
+          } else {
+            if (this.ensureFullCache) { // can test streams  state (trashed)
+              if (!event.trashed && event.stream && !event.stream.trashed) {
+                result.created.push(event);
+                this._events.active[event.id] = event;
+              }
+            } else {  // cannot test stream state
+              if (!event.trashed) {
+                result.created.push(event);
+                this._events.active[event.id] = event;
+              }
+            }
+          }
+        }
+      }.bind(this));
+
+      this._fireEvent(Messages.ON_EVENT_CHANGE, result, batch);
+      batch.done('connectionEventsGetChanges');
+
+      // ---
+      setTimeout(function () {
+        this.eventsGetChangesInProgress = false;
+        if (this.eventsGetChangesNeeded) {
+          this._connectionEventsGetChanges();
+        }
+      }.bind(this), GETEVENT_MIN_REFRESH_RATE);
+
+    }.bind(this));
+};
+
+/**
+ * @private
+ */
+Monitor.prototype._connectionStreamsGetChanges = function (batch) {
+  batch = this.startBatch('connectionStreamsGetChanges', batch);
+  var previousStreamsData = {};
+  var previousStreamsMap = {}; // !! only used to get back deleted streams..
+  var created = [], modified = [], modifiedPreviousProperties = {}, trashed = [], deleted = [];
+
+  var isStreamChanged = function (streamA, streamB) {
+    return !_.isEqual(streamA, streamB);
+  };
+
+
+  // check if the stream has changed it.. and save it in the right message box
+  var checkChangedStatus = function (stream) {
+
+
+    if (! previousStreamsData[stream.id]) { // new stream
+      created.push(stream);
+    } else if (isStreamChanged(previousStreamsData[stream.id], stream.getData())) {
+
+      if (previousStreamsData[stream.id].trashed !== stream.trashed) {
+        if (!stream.trashed) {
+          created.push(stream);
+        } else {
+          trashed.push(stream);
+        }
+      } else {
+        modified.push(stream);
+        modifiedPreviousProperties[stream.id] = previousStreamsData[stream.id];
+      }
+    }
+
+    _.each(stream.children, function (child) {
+      checkChangedStatus(child);
+    });
+    delete previousStreamsData[stream.id];
+  };
+
+  //-- get all current streams before matching with new ones --//
+  var getFlatTree = function (stream) {
+    previousStreamsData[stream.id] = stream.getData();
+    previousStreamsMap[stream.id] = stream;
+
+    _.each(stream.children, function (child) {
+      getFlatTree(child);
+    });
+  };
+  _.each(this.connection.datastore.getStreams(true), function (rootStream) {
+    getFlatTree(rootStream);
+  });
+
+  this.connection.fetchStructure(function (error, result) {
+    if (error) {
+      batch.done('connectionStreamsGetChanges fetchStructure error');
+      return;
+    }
+    _.each(result, function (rootStream) {
+      checkChangedStatus(rootStream);
+    });
+    // each stream remaining in streams[] are deleted streams;
+    _.each(previousStreamsData, function (streamData, streamId) {
+      deleted.push(previousStreamsMap[streamId]);
+    });
+
+    this._fireEvent(Messages.ON_STRUCTURE_CHANGE,
+      { created : created, trashed : trashed, modified: modified, deleted: deleted,
+        modifiedPreviousProperties: modifiedPreviousProperties}, batch);
+
+    this._onFilterChange({signal : Filter.Messages.STRUCTURE_CHANGE}, batch);
+    batch.done('connectionStreamsGetChanges');
+  }.bind(this));
+};
+
+/**
+ * @private
+ */
+Monitor.prototype._connectionEventsGetAllAndCompare = function (signal, extracontent, batch) {
+  this.lastSynchedST = this.connection.getServerTime();
+
+
+  if (this.useCacheForEventsGetAllAndCompare) {
+
+
+
+    // POC code to look into in-memory events for matching events..
+    // do not activate until cache handles DELETE
+    var result1 = { enter : [], leave : []};
+    _.extend(result1, extracontent);
+
+
+    // first cleanup same as : this._refilterLocaly(signal, extracontent, batch);
+    if (! this._events) {
+      throw new Error('Not yet started!!!');
+    }
+    _.each(_.clone(this._events.active), function (event) {
+      if (! this.filter.matchEvent(event)) {
+        result1.leave.push(event);
+        delete this._events.active[event.id];
+      }
+    }.bind(this));
+
+
+
+    var cachedEvents = this.connection.datastore.getEventsMatchingFilter(this.filter);
+    _.each(cachedEvents, function (event) {
+      if (! this._events.active[event.id]) {  // we don't care for already known event
+        this._events.active[event.id] = event; // store it
+        result1.enter.push(event);
+      }
+    }.bind(this));
+
+
+
+    this._fireEvent(signal, result1, batch);
+
+    // remove all events not matching filter
+
+
+  }
+
+  // look online
+  if (! this.ensureFullCache)  { // not needed when full cache is enabled
+    var result = { enter : [] };
+    _.extend(result, extracontent); // pass extracontent to receivers
+
+    var toremove = _.clone(this._events.active);
+
+    batch = this.startBatch('connectionEventsGetAllAndCompare:online', batch);
+    this.connection.events.get(this.filter.getData(true, EXTRA_ALL_EVENTS),
+      function (error, events) {
+        if (error) {
+          this._fireEvent(Messages.ON_ERROR, error, batch);
+          batch.done('connectionEventsGetAllAndCompare:online error');
+          return;
+        }
+        _.each(events, function (event) {
+          if (this._events.active[event.id]) {  // already known event we don't care
+            delete toremove[event.id];
+          } else {
+            this._events.active[event.id] = event;
+            result.enter.push(event);
+          }
+        }.bind(this));
+        _.each(_.keys(toremove), function (streamid) {
+          delete this._events.active[streamid]; // cleanup not found streams
+        }.bind(this));
+        result.leave = _.values(toremove); // unmatched events are to be removed
+        this._fireEvent(signal, result, batch);
+        batch.done('connectionEventsGetAllAndCompare:online');
+      }.bind(this));
+  }
+};
+
+
+/**
+ * TODO write doc
+ * return informations on events
+ */
+Monitor.prototype.stats = function (force, callback) {
+  this.connection.profile.getTimeLimits(force, callback);
+};
+
+module.exports = Monitor;
+
+
+
+},{"./Filter.js":54,"./utility/SignalEmitter.js":72,"underscore":50}],56:[function(require,module,exports){
+var _ = require('underscore');
+
+
+
+/**
+ * TODO write documentation  with use cases.. !!
+ * @type {Function}
+ */
+var Stream = module.exports = function Stream(connection, data) {
+  this.connection = connection;
+
+  this.serialId = this.connection.serialId + '>S' + this.connection._streamSerialCounter++;
+  /** those are only used when no datastore **/
+  this._parent = null;
+  this.parentId = null;
+  this.trashed = false;
+  this._children = [];
+  data.name = _.escape(data.name);
+  _.extend(this, data);
+};
+
+Stream.RW_PROPERTIES =
+  ['name', 'parentId', 'singleActivity', 'clientData', 'trashed'];
+
+/**
+ * get Json object ready to be posted on the API
+ */
+Stream.prototype.getData = function () {
+  var data = {};
+  _.each(Stream.RW_PROPERTIES, function (key) { // only set non null values
+    if (_.has(this, key)) { data[key] = this[key]; }
+  }.bind(this));
+  return data;
+};
+
+
+/**
+ * Set or erase clientData properties
+ * @example // set x=25 and delete y
+ * stream.setClientData({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValueMap
+ * @param {Connection~requestCallback} callback
+ */
+Stream.prototype.setClientData = function (keyValueMap, callback) {
+  return this.connection.streams.setClientData(this, keyValueMap, callback);
+};
+
+Object.defineProperty(Stream.prototype, 'parent', {
+  get: function () {
+
+    if (!this.parentId) {
+      return null;
+    }
+    if (!this.connection.datastore) { // we use this._parent and this._children
+      return this._parent;
+    }
+
+    return this.connection.datastore.getStreamById(this.parentId);
+  },
+  set: function (p) {
+    if (p instanceof Stream) {
+      p = p.id;
+    }
+
+    this.parentId = p;
+
+    if (!this.connection.datastore) { // we use this._parent and this._children
+      this._parent = p;
+    }
+    throw new Error('Stream.parent property is read only');
+  }
+});
+
+/**
+ * TODO write documentation
+ * Does not return trashed childrens
+ */
+Object.defineProperty(Stream.prototype, 'children', {
+  get: function () {
+    if (!this.connection.datastore) { // we use this._parent and this._children
+      return this._children;
+    }
+    var children = [];
+    _.each(this.childrenIds, function (childrenId) {
+      try {
+        var child = this.connection.datastore.getStreamById(childrenId);
+        if (child.parentId === this.id && ! child.trashed) { // exclude trashed childs
+          children.push(child);
+        }
+      } catch (e) {
+        console.warn('cannot find child', e);
+      }
+    }.bind(this));
+    return children;
+  },
+  set: function () {
+    throw new Error('Stream.children property is read only');
+  }
+});
+
+// TODO write test
+Object.defineProperty(Stream.prototype, 'ancestors', {
+  get: function () {
+    if (!this.parentId || this.parent === null) {
+      return [];
+    }
+    var result = this.parent.ancestors;
+    result.push(this.parent);
+    return result;
+  },
+  set: function () {
+    throw new Error('Stream.ancestors property is read only');
+  }
+});
+
+
+
+
+
+
+
+},{"underscore":50}],57:[function(require,module,exports){
+/* global confirm, document, navigator, location, window */
+
+var utility = require('../utility/utility.js');
+var Connection = require('../Connection.js');
+var _ = require('underscore');
+
+
+//--------------------- access ----------//
+/**
+ * @class Auth
+ * */
+var Auth = function () {
+};
+
+
+_.extend(Auth.prototype, {
+  connection: null, // actual connection managed by Auth
+  config: {
+    // TODO: clean up this hard-coded mess and rely on the one and only Pryv URL domains reference
+    registerURL: {ssl: true, host: 'reg.pryv.io'},
+    registerStagingURL: {ssl: true, host: 'reg.pryv.in'},
+    localDevel : false,
+    sdkFullPath: 'https://dlw0lofo79is5.cloudfront.net/lib-javascript/latest'
+  },
+  state: null,  // actual state
+  window: null,  // popup window reference (if any)
+  spanButton: null, // an element on the app web page that can be controlled
+  buttonHTML: '',
+  onClick: {}, // functions called when button is clicked
+  settings: null,
+  pollingID: false,
+  pollingIsOn: true, //may be turned off if we can communicate between windows
+  cookieEnabled: false,
+  ignoreStateFromURL: false // turned to true in case of loggout
+});
+
+/**
+ * Method to initialize the data required for authorization.
+ * @method _init
+ * @access private
+ */
+Auth._init = function (i) {
+  // start only if utility is loaded
+  if (typeof utility === 'undefined') {
+    if (i > 100) {
+      throw new Error('Cannot find utility');
+    }
+    i++;
+    return setTimeout('Auth._init(' + i + ')', 10 * i);
+  }
+
+  utility.loadExternalFiles(
+    Auth.prototype.config.sdkFullPath + '/assets/buttonSigninPryv.css', 'css');
+
+  var urlInfo = utility.urls.parseClientURL();
+  console.log('detected environment: ' + urlInfo.environment);
+  if (urlInfo.environment === 'staging') {
+    Auth.prototype.config.registerURL = Auth.prototype.config.registerStagingURL;
+  }
+
+  console.log('init done');
+};
+
+
+Auth._init(1);
+
+//--------------------- UI Content -----------//
+
+
+Auth.prototype.uiSupportedLanguages = ['en', 'fr'];
+
+Auth.prototype.uiButton = function (onClick, buttonText) {
+  if (utility.supportCSS3()) {
+    return '<div id="pryv-access-btn" class="pryv-access-btn-signin" data-onclick-action="' +
+      onClick + '">' +
+      '<a class="pryv-access-btn pryv-access-btn-pryv-access-color" href="#">' +
+      '<span class="logoSignin">Y</span></a>' +
+      '<a class="pryv-access-btn pryv-access-btn-pryv-access-color"  href="#"><span>' +
+      buttonText + '</span></a></div>';
+  } else   {
+    return '<a href="#" id ="pryv-access-btn" data-onclick-action="' + onClick +
+      '" class="pryv-access-btn-signinImage" ' +
+      'src="' + this.config.sdkFullPath + '/assets/btnSignIn.png" >' + buttonText + '</a>';
+  }
+};
+
+Auth.prototype.uiErrorButton = function () {
+  var strs = {
+    'en': { 'msg': 'Error :(' },
+    'fr': { 'msg': 'Erreur :('}
+  }[this.settings.languageCode];
+  this.onClick.Error = function () {
+    this.logout();
+    return false;
+  }.bind(this);
+  return this.uiButton('Error', strs.msg);
+};
+
+Auth.prototype.uiLoadingButton = function () {
+  var strs = {
+    'en': { 'msg': 'Loading...' },
+    'fr': { 'msg': 'Chargement...'}
+  }[this.settings.languageCode];
+  this.onClick.Loading = function () {
+    return false;
+  };
+  return this.uiButton('Loading', strs.msg);
+
+};
+
+Auth.prototype.uiSigninButton = function () {
+  var strs = {
+    'en': { 'msg': 'Sign in' },
+    'fr': { 'msg': 'S\'identifier' }
+  }[this.settings.languageCode];
+  this.onClick.Signin = function () {
+    this.popupLogin();
+    return false;
+  }.bind(this);
+  return this.uiButton('Signin', strs.msg);
+
+};
+
+Auth.prototype.uiConfirmLogout = function () {
+  var strs = {
+    'en': { 'logout': 'Sign out?'},
+    'fr': { 'logout': 'Se déconnecter?'}
+  }[this.settings.languageCode];
+
+  if (confirm(strs.logout)) {
+    this.logout();
+  }
+};
+
+Auth.prototype.uiInButton = function (username) {
+  this.onClick.In = function () {
+    this.uiConfirmLogout();
+    return false;
+  }.bind(this);
+  return this.uiButton('In', username);
+};
+
+Auth.prototype.uiRefusedButton = function (message) {
+  console.log('Pryv access [REFUSED]' + message);
+  var strs = {
+    'en': { 'msg': 'access refused'},
+    'fr': { 'msg': 'Accès refusé'}
+  }[this.settings.languageCode];
+  this.onClick.Refused = function () {
+    this.retry();
+    return false;
+  }.bind(this);
+  return this.uiButton('Refused', strs.msg);
+
+};
+
+//--------------- end of UI ------------------//
+
+
+Auth.prototype.updateButton = function (html) {
+  this.buttonHTML = html;
+  if (! this.settings.spanButtonID) { return; }
+
+  utility.domReady(function () {
+    if (! this.spanButton) {
+      var element = document.getElementById(this.settings.spanButtonID);
+      if (typeof(element) === 'undefined' || element === null) {
+        throw new Error('access-SDK cannot find span ID: "' +
+          this.settings.spanButtonID + '"');
+      } else {
+        this.spanButton = element;
+      }
+    }
+    this.spanButton.innerHTML = this.buttonHTML;
+    this.spanButton.onclick = function (e) {
+      e.preventDefault();
+      var element = document.getElementById('pryv-access-btn');
+      console.log('onClick', this.spanButton,
+        element.getAttribute('data-onclick-action'));
+      this.onClick[element.getAttribute('data-onclick-action')]();
+    }.bind(this);
+  }.bind(this));
+};
+
+Auth.prototype.internalError = function (message, jsonData) {
+  this.stateChanged({id: 'INTERNAL_ERROR', message: message, data: jsonData});
+};
+
+//STATE HUB
+Auth.prototype.stateChanged  = function (data) {
+
+
+  if (data.id) { // error
+    if (this.settings.callbacks.error) {
+      this.settings.callbacks.error(data.id, data.message);
+    }
+    this.updateButton(this.uiErrorButton());
+    console.log('Error: ' + JSON.stringify(data));
+    // this.logout();   Why should I retry if it failed already once?
+  }
+
+  if (data.status === this.state.status) {
+    return;
+  }
+  if (data.status === 'LOADED') { // skip
+    return;
+  }
+  if (data.status === 'POPUPINIT') { // skip
+    return;
+  }
+
+  this.state = data;
+  if (this.state.status === 'NEED_SIGNIN') {
+    this.stateNeedSignin();
+  }
+  if (this.state.status === 'REFUSED') {
+    this.stateRefused();
+  }
+
+  if (this.state.status === 'ACCEPTED') {
+    this.stateAccepted();
+  }
+
+};
+
+//STATE 0 Init
+Auth.prototype.stateInitialization = function () {
+  this.state = {status : 'initialization'};
+  this.updateButton(this.uiLoadingButton());
+  if (this.settings.callbacks.initialization) {
+    this.settings.callbacks.initialization();
+  }
+};
+
+//STATE 1 Need Signin
+Auth.prototype.stateNeedSignin = function () {
+  this.updateButton(this.uiSigninButton());
+  if (this.settings.callbacks.needSignin) {
+    this.settings.callbacks.needSignin(this.state.url, this.state.poll,
+      this.state.poll_rate_ms);
+  }
+};
+
+
+//STATE 2 User logged in and authorized
+Auth.prototype.stateAccepted = function () {
+  if (this.cookieEnabled) {
+    utility.docCookies.setItem('access_username', this.state.username, 3600);
+    utility.docCookies.setItem('access_token', this.state.token, 3600);
+  }
+  this.updateButton(this.uiInButton(this.state.username));
+
+  this.connection.username = this.state.username;
+  this.connection.auth = this.state.token;
+  if (this.settings.callbacks.accepted) {
+    this.settings.callbacks.accepted(this.state.username, this.state.token, this.state.lang);
+  }
+  if (this.settings.callbacks.signedIn) {
+    this.settings.callbacks.signedIn(this.connection, this.state.lang);
+  }
+};
+
+//STATE 3 User refused
+Auth.prototype.stateRefused = function () {
+  this.updateButton(this.uiRefusedButton(this.state.message));
+  if (this.settings.callbacks.refused) {
+    this.settings.callbacks.refused('refused:' + this.state.message);
+  }
+};
+
+
+/**
+ * clear all references
+ */
+Auth.prototype.logout = function () {
+  this.ignoreStateFromURL = true;
+  if (this.cookieEnabled) {
+    utility.docCookies.removeItem('access_username');
+    utility.docCookies.removeItem('access_token');
+  }
+  this.state = null;
+  if (this.settings.callbacks.accepted) {
+    this.settings.callbacks.accepted(false, false, false);
+  }
+  if (this.settings.callbacks.signedOut) {
+    this.settings.callbacks.signedOut(this.connection);
+  }
+  this.connection = null;
+  this.setup(this.settings);
+};
+
+/**
+ * clear references and try again
+ */
+Auth.prototype.retry = Auth.prototype.logout;
+
+
+
+
+/* jshint -W101 */
+// TODO: the 4 methods below belong elsewhere (e.g. static methods of Connection); original author please check with @sgoumaz
+
+/**
+ * TODO: discuss whether signature should be `(settings, callback)`
+ * @param settings
+ */
+Auth.prototype.login = function (settings) {
+  // cookies
+  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
+  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
+    document.cookie = 'testcookie';
+    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
+  }
+
+  var urlInfo = utility.urls.parseClientURL();
+  var defaultDomain = utility.urls.domains.server[urlInfo.environment];
+  this.settings = settings = _.defaults(settings, {
+    ssl: true,
+    domain: defaultDomain
+  });
+
+  this.connection = new Connection({
+    ssl: settings.ssl,
+    domain: settings.domain
+  });
+
+  var pack = {
+    ssl: settings.ssl,
+    host: settings.username + '.' + settings.domain,
+    path: '/auth/login',
+    params: {
+      appId : settings.appId,
+      username : settings.username,
+      password : settings.password
+    },
+    success: function (data)  {
+      if (data.token) {
+        if (this.cookieEnabled && settings.rememberMe) {
+          utility.docCookies.setItem('access_username', settings.username, 3600);
+          utility.docCookies.setItem('access_token', data.token, 3600);
+          utility.docCookies.setItem('access_preferredLanguage', data.preferredLanguage, 3600);
+        }
+        console.log('set cookie', this.cookieEnabled, settings.rememberMe,
+          utility.docCookies.getItem('access_username'),
+          utility.docCookies.getItem('access_token'));
+        this.connection.username = settings.username;
+        this.connection.auth = data.token;
+        if (typeof(this.settings.callbacks.signedIn)  === 'function') {
+          this.settings.callbacks.signedIn(this.connection);
+        }
+      } else {
+        if (typeof(this.settings.callbacks.error) === 'function') {
+          this.settings.callbacks.error(data);
+        }
+      }
+    }.bind(this),
+    error: function (jsonError) {
+      if (typeof(this.settings.callbacks.error) === 'function') {
+        this.settings.callbacks.error(jsonError);
+      }
+    }.bind(this)
+  };
+
+  utility.request(pack);
+};
+
+// TODO: must be an instance member of Connection instead
+Auth.prototype.trustedLogout = function () {
+  var path = '/auth/logout';
+  if (this.connection) {
+    this.connection.request('POST', path, function (error) {
+      if (error && typeof(this.settings.callbacks.error) === 'function') {
+        return this.settings.callbacks.error(error);
+      }
+      if (!error && typeof(this.settings.callbacks.signedOut) === 'function') {
+        return this.settings.callbacks.signedOut(this.connection);
+      }
+    }.bind(this));
+  }
+};
+
+Auth.prototype.whoAmI = function (settings) {
+  var urlInfo = utility.urls.parseClientURL();
+  var defaultDomain = utility.urls.domains.server[urlInfo.environment];
+  this.settings = settings = _.defaults(settings, {
+    ssl: true,
+    domain: defaultDomain
+  });
+
+  this.connection = new Connection({
+    ssl: settings.ssl,
+    domain: settings.domain
+  });
+
+  var pack = {
+    ssl: settings.ssl,
+    host: settings.username + '.' + settings.domain,
+    path :  '/auth/who-am-i',
+    method: 'GET',
+    success : function (data)  {
+      if (data.token) {
+        this.connection.username = data.username;
+        this.connection.auth = data.token;
+        var conn = new Connection(data.username, data.token, {
+          ssl: settings.ssl,
+          domain: settings.domain
+        });
+        console.log('before access info', this.connection);
+        conn.accessInfo(function (error) {
+          console.log('after access info', this.connection);
+          if (!error) {
+            if (typeof(this.settings.callbacks.signedIn)  === 'function') {
+              this.settings.callbacks.signedIn(this.connection);
+            }
+          } else {
+            if (typeof(this.settings.callbacks.error) === 'function') {
+              this.settings.callbacks.error(error);
+            }
+          }
+        }.bind(this));
+
+      } else {
+        if (typeof(this.settings.callbacks.error) === 'function') {
+          this.settings.callbacks.error(data);
+        }
+      }
+    }.bind(this),
+    error : function (jsonError) {
+      if (typeof(this.settings.callbacks.error) === 'function') {
+        this.settings.callbacks.error(jsonError);
+      }
+    }.bind(this)
+  };
+
+  utility.request(pack);
+};
+
+Auth.prototype.loginWithCookie = function (settings) {
+  var urlInfo = utility.urls.parseClientURL();
+  var defaultDomain = utility.urls.domains.server[urlInfo.environment];
+  this.settings = settings = _.defaults(settings, {
+    ssl: true,
+    domain: defaultDomain
+  });
+
+  this.connection = new Connection({
+    ssl: settings.ssl,
+    domain: settings.domain
+  });
+
+  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
+  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
+    document.cookie = 'testcookie';
+    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
+  }
+  var cookieUserName = this.cookieEnabled ? utility.docCookies.getItem('access_username') : false;
+  var cookieToken = this.cookieEnabled ? utility.docCookies.getItem('access_token') : false;
+  console.log('get cookie', cookieUserName, cookieToken);
+  if (cookieUserName && cookieToken) {
+    this.connection.username = cookieUserName;
+    this.connection.auth = cookieToken;
+    if (typeof(this.settings.callbacks.signedIn) === 'function') {
+      this.settings.callbacks.signedIn(this.connection);
+    }
+    return this.connection;
+  }
+  return false;
+};
+
+
+
+
+
+/**
+ *
+ * @param settings
+ * @returns {Connection} the connection managed by Auth.. A new one is created each time setup is
+ * called.
+ */
+Auth.prototype.setup = function (settings) {
+  this.state = null;
+
+  //--- check the browser capabilities
+
+
+  // cookies
+  this.cookieEnabled = (navigator.cookieEnabled) ? true : false;
+  if (typeof navigator.cookieEnabled === 'undefined' && !this.cookieEnabled) {  //if not IE4+ NS6+
+    document.cookie = 'testcookie';
+    this.cookieEnabled = (document.cookie.indexOf('testcookie') !== -1) ? true : false;
+  }
+
+  //TODO check settings..
+
+  settings.languageCode =
+    utility.getPreferredLanguage(this.uiSupportedLanguages, settings.languageCode);
+
+  //-- returnURL
+  settings.returnURL = settings.returnURL || 'auto#';
+  if (settings.returnURL) {
+    // check the trailer
+    var trailer = settings.returnURL.charAt(settings.returnURL.length - 1);
+    if ('#&?'.indexOf(trailer) < 0) {
+      throw new Error('Pryv access: Last character of --returnURL setting-- is not ' +
+        '"?", "&" or "#": ' + settings.returnURL);
+    }
+
+    // set self as return url?
+    var returnself = (settings.returnURL.indexOf('self') === 0);
+    if (settings.returnURL.indexOf('auto') === 0) {
+      returnself = utility.browserIsMobileOrTablet();
+      if (!returnself) { settings.returnURL = false; }
+    }
+
+    if (returnself) {
+      var myParams = settings.returnURL.substring(4);
+      // eventually clean-up current url from previous pryv returnURL
+      settings.returnURL = this._cleanStatusFromURL() + myParams;
+    }
+
+    if (settings.returnURL) {
+      if (settings.returnURL.indexOf('http') < 0) {
+        throw new Error('Pryv access: --returnURL setting-- does not start with http: ' +
+          settings.returnURL);
+      }
+    }
+  }
+
+  //  spanButtonID is checked only when possible
+  this.settings = settings;
+
+  var params = {
+    requestingAppId : settings.requestingAppId,
+    requestedPermissions : settings.requestedPermissions,
+    languageCode : settings.languageCode,
+    returnURL : settings.returnURL
+  };
+
+  if (this.config.localDevel) {
+    // return url will be forced to https://l.pryv.in:4443/Auth.html
+    params.localDevel = this.config.localDevel;
+  }
+
+  this.stateInitialization();
+  // TODO: clean up this hard-coded mess and rely on the one and only Pryv URL domains reference
+  var domain = (this.config.registerURL.host === 'reg.pryv.io') ? 'pryv.io' : 'pryv.in';
+
+  this.connection = new Connection(null, null, {ssl: this.config.registerURL.ssl, domain: domain});
+  // look if we have a returning user (document.cookie)
+  var cookieUserName = this.cookieEnabled ? utility.docCookies.getItem('access_username') : false;
+  var cookieToken = this.cookieEnabled ? utility.docCookies.getItem('access_token') : false;
+
+  // look in the URL if we are returning from a login process
+  var stateFromURL =  this._getStatusFromURL();
+
+  if (stateFromURL && (! this.ignoreStateFromURL)) {
+    this.stateChanged(stateFromURL);
+  } else if (cookieToken && cookieUserName) {
+    this.stateChanged({status: 'ACCEPTED', username: cookieUserName, token: cookieToken});
+  } else { // launch process $
+
+    var pack = {
+      path :  '/access',
+      params : params,
+      success : function (data)  {
+        if (data.status && data.status !== 'ERROR') {
+          this.stateChanged(data);
+        } else {
+          // TODO call shouldn't failed
+          this.internalError('/access Invalid data: ', data);
+        }
+      }.bind(this),
+      error : function (jsonError) {
+        this.internalError('/access ajax call failed: ', jsonError);
+      }.bind(this)
+    };
+
+    utility.request(_.extend(pack, this.config.registerURL));
+
+
+  }
+
+
+  return this.connection;
+};
+
+//logout the user if
+
+//read the polling
+Auth.prototype.poll = function poll() {
+  if (this.pollingIsOn && this.state.poll_rate_ms) {
+    // remove eventually waiting poll..
+    if (this.pollingID) { clearTimeout(this.pollingID); }
+
+
+    var pack = {
+      path :  '/access/' + this.state.key,
+      method : 'GET',
+      success : function (data)  {
+        this.stateChanged(data);
+      }.bind(this),
+      error : function (jsonError) {
+        this.internalError('poll failed: ', jsonError);
+      }.bind(this)
+    };
+
+    utility.request(_.extend(pack, this.config.registerURL));
+
+
+    this.pollingID = setTimeout(this.poll.bind(this), this.state.poll_rate_ms);
+  } else {
+    console.log('stopped polling: on=' + this.pollingIsOn + ' rate:' + this.state.poll_rate_ms);
+  }
+};
+
+
+//messaging between browser window and window.opener
+Auth.prototype.popupCallBack = function (event) {
+  // Do not use 'this' here !
+  if (this.settings.forcePolling) { return; }
+  if (event.source !== this.window) {
+    console.log('popupCallBack event.source does not match Auth.window');
+    return false;
+  }
+  console.log('from popup >>> ' + JSON.stringify(event.data));
+  this.pollingIsOn = false; // if we can receive messages we stop polling
+  this.stateChanged(event.data);
+};
+
+
+
+Auth.prototype.popupLogin = function popupLogin() {
+  if ((! this.state) || (! this.state.url)) {
+    throw new Error('Pryv Sign-In Error: NO SETUP. Please call Auth.setup() first.');
+  }
+
+  if (this.settings.returnURL) {
+    location.href = this.state.url;
+    return;
+  }
+
+  // start polling
+  setTimeout(this.poll(), 1000);
+
+  var screenX = typeof window.screenX !== 'undefined' ? window.screenX : window.screenLeft,
+    screenY = typeof window.screenY !== 'undefined' ? window.screenY : window.screenTop,
+    outerWidth = typeof window.outerWidth !== 'undefined' ?
+      window.outerWidth : document.body.clientWidth,
+    outerHeight = typeof window.outerHeight !== 'undefined' ?
+      window.outerHeight : (document.body.clientHeight - 22),
+    width    = 270,
+    height   = 420,
+    left     = parseInt(screenX + ((outerWidth - width) / 2), 10),
+    top      = parseInt(screenY + ((outerHeight - height) / 2.5), 10),
+    features = (
+      'width=' + width +
+        ',height=' + height +
+        ',left=' + left +
+        ',top=' + top +
+        ',scrollbars=yes'
+      );
+
+
+  window.addEventListener('message', this.popupCallBack.bind(this), false);
+
+  this.window = window.open(this.state.url, 'prYv Sign-in', features);
+
+  if (! this.window) {
+    // TODO try to fall back on access
+    console.log('FAILED_TO_OPEN_WINDOW');
+  } else {
+    if (window.focus) {
+      this.window.focus();
+    }
+  }
+
+  return false;
+};
+
+
+
+
+//util to grab parameters from url query string
+Auth.prototype._getStatusFromURL = function () {
+  var vars = {};
+  window.location.href.replace(/[?#&]+prYv([^=&]+)=([^&]*)/gi,
+    function (m, key, value) {
+      vars[key] = value;
+    });
+
+  //TODO check validity of status
+
+  return (vars.key) ? vars : false;
+};
+
+//util to grab parameters from url query string
+Auth.prototype._cleanStatusFromURL = function () {
+  return window.location.href.replace(/[?#&]+prYv([^=&]+)=([^&]*)/gi, '');
+};
+
+//-------------------- UTILS ---------------------//
+
+module.exports = new Auth();
+
+},{"../Connection.js":51,"../utility/utility.js":81,"underscore":50}],58:[function(require,module,exports){
+
+module.exports = {};
+},{}],59:[function(require,module,exports){
+var utility = require('../utility/utility.js');
+
+module.exports =  utility.isBrowser() ?
+    require('./Auth-browser.js') : require('./Auth-node.js');
+
+},{"../utility/utility.js":81,"./Auth-browser.js":57,"./Auth-node.js":58}],60:[function(require,module,exports){
+var apiPathAccesses = '/accesses';
+var _ = require('underscore');
+
+/**
+ * @class Accesses
+ * @link http://api.pryv.com/reference.html#methods-accesses
+ * @link http://api.pryv.com/reference.html#data-structure-access
+ * @param {Connection} connection
+ * @constructor
+ */
+function Accesses(connection) {
+  this.connection = connection;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Accesses.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathAccesses, function (err, res) {
+    var accesses = res.accesses || res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, accesses);
+    }
+  });
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.create = function (access, callback) {
+  this.connection.request('POST', apiPathAccesses, function (err, res) {
+    var access = res.access;
+    if (typeof(callback) === 'function') {
+      callback(err, access);
+    }
+  }, access);
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.update = function (access, callback) {
+  if (access.id) {
+    this.connection.request('PUT', apiPathAccesses + '/' + access.id, callback,
+      _.pick(access, 'name', 'deviceName', 'permissions'));
+  } else {
+    if (callback && _.isFunction(callback)) {
+      return callback('No access id found');
+    }
+
+  }
+};
+
+/**
+ * TODO complete documentation
+ * @param access
+ * @param callback
+ */
+Accesses.prototype.delete = function (sharingId, callback) {
+  this.connection.request('DELETE', apiPathAccesses + '/' + sharingId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+module.exports = Accesses;
+},{"underscore":50}],61:[function(require,module,exports){
+var apiPathAccount = '/account';
+
+function Account(connection) {
+  this.connection = connection;
+}
+
+Account.prototype.changePassword = function (oldPassword, newPassword, callback) {
+  this.connection.request('POST', apiPathAccount + '/change-password', function (err) {
+    if (typeof(callback) === 'function') {
+      callback(err);
+    }
+  }, {'oldPassword': oldPassword, 'newPassword': newPassword});
+};
+Account.prototype.getInfo = function (callback) {
+  this.connection.request('GET', apiPathAccount, function (error, result) {
+    if (typeof(callback) === 'function') {
+      if (result && result.account) {
+        result = result.account;
+      }
+      callback(error, result);
+    }
+  });
+};
+
+module.exports = Account;
+},{}],62:[function(require,module,exports){
+var apiPathBookmarks = '/followed-slices',
+  Connection = require('../Connection.js'),
+  _ = require('underscore');
+
+/**
+ * @class Bookmarks
+ * @link http://api.pryv.com/reference.html#data-structure-subscriptions-aka-bookmarks
+ * @param {Connection} connection
+ * @constructor
+ */
+function Bookmarks(connection, Conn) {
+  this.connection = connection;
+  Connection = Conn;
+}
+/**
+ * @param {Connection~requestCallback} callback
+ */
+Bookmarks.prototype.get = function (callback) {
+  this.connection.request('GET', apiPathBookmarks, function (error, res) {
+    var result = [],
+      bookmarks = res.followedSlices || res.followedSlice;
+    _.each(bookmarks, function (bookmark) {
+      bookmark.url = bookmark.url.replace(/\.li/, '.in');
+      bookmark.url = bookmark.url.replace(/\.me/, '.io');
+      var conn =  new Connection({
+        auth: bookmark.accessToken,
+        url: bookmark.url,
+        name: bookmark.name,
+        bookmarkId: bookmark.id
+      });
+      result.push(conn);
+    });
+    callback(error, result);
+  });
+};
+
+/**
+ * TODO complete documentation
+ * @param bookmark
+ * @param callback
+ * @returns {*}
+ */
+Bookmarks.prototype.create = function (bookmark, callback) {
+  if (bookmark.name && bookmark.url && bookmark.accessToken) {
+    this.connection.request('POST', apiPathBookmarks, function (err, result) {
+      var error = err;
+      if (!error) {
+        var conn =  new Connection({
+          auth: bookmark.accessToken,
+          url: bookmark.url,
+          name: bookmark.name,
+          bookmarkId: result.followedSlice.id
+        });
+        bookmark = conn;
+      }
+      callback(error, bookmark);
+    }, bookmark);
+    return bookmark;
+  }
+};
+
+/**
+ * TODO complete documentation
+ * @param bookmarkId
+ * @param callback
+ */
+Bookmarks.prototype.delete = function (bookmarkId, callback) {
+  this.connection.request('DELETE', apiPathBookmarks + '/' + bookmarkId, function (err, result) {
+    var error = err;
+    if (result && result.message) {
+      error = result;
+    }
+    callback(error, result);
+  });
+};
+
+module.exports = Bookmarks;
+},{"../Connection.js":51,"underscore":50}],63:[function(require,module,exports){
+exports.Errors = {
+  API_UNREACHEABLE : 'API_UNREACHEABLE',
+  INVALID_RESULT_CODE : 'INVALID_RESULT_CODE'
+};
+
+exports.Api = {
+  Headers : {
+    ServerTime : 'server-time',
+    ApiVersion : 'api-version'
+  }
+};
+},{}],64:[function(require,module,exports){
+var utility = require('../utility/utility.js'),
+  _ = require('underscore'),
+  Filter = require('../Filter'),
+  Event = require('../Event'),
+  CC = require('./ConnectionConstants.js');
+
+/**
+ * @class ConnectionEvents
+ *
+ * Coverage of the API
+ *  GET /events -- 100%
+ *  POST /events -- only data (no object)
+ *  POST /events/start -- 0%
+ *  POST /events/stop -- 0%
+ *  PUT /events/{event-id} -- 100%
+ *  DELETE /events/{event-id} -- only data (no object)
+ *  POST /events/batch -- only data (no object)
+ *
+ *  attached files manipulations are covered by Event
+ *
+ *
+ * @param {Connection} connection
+ * @constructor
+ */
+function ConnectionEvents(connection) {
+  this.connection = connection;
+}
+
+
+/**
+ * @example
+ * // get events from the Diary stream
+ * conn.events.get({streamId : 'diary'},
+ *  function(events) {
+ *    console.log('got ' + events.length + ' events)
+ *  }
+ * );
+ * @param {FilterLike} filter
+ * @param {ConnectionEvents~getCallback} doneCallback
+ * @param {ConnectionEvents~partialResultCallback} partialResultCallback
+ */
+ConnectionEvents.prototype.get = function (filter, doneCallback, partialResultCallback) {
+  //TODO handle caching
+  var result = [];
+  filter = filter || {};
+  this._get(filter, function (error, res) {
+    if (error) {
+      result = null;
+    } else {
+      var eventList = res.events || res.event;
+      _.each(eventList, function (eventData) {
+
+        var event = null;
+        if (!this.connection.datastore) { // no datastore   break
+          event = new Event(this.connection, eventData);
+        } else {
+          event = this.connection.datastore.createOrReuseEvent(eventData);
+        }
+
+        result.push(event);
+
+      }.bind(this));
+    }
+    doneCallback(error, result);
+
+    if (partialResultCallback) { partialResultCallback(result); }
+  }.bind(this));
+
+};
+
+/**
+ * @param {Event} event
+ * @param {Connection~requestCallback} callback
+ */
+ConnectionEvents.prototype.update = function (event, callback) {
+  this._updateWithIdAndData(event.id, event.getData(), callback);
+};
+
+/**
+ * @param {Event | eventId} event
+ * @param {Connection~requestCallback} callback
+ */
+ConnectionEvents.prototype.delete = ConnectionEvents.prototype.trash = function (event, callback) {
+  this.trashWithId(event.id, callback);
+};
+
+/**
+ * @param {String} eventId
+ * @param {Connection~requestCallback} callback
+ */
+ConnectionEvents.prototype.trashWithId = function (eventId, callback) {
+  var url = '/events/' + eventId;
+  this.connection.request('DELETE', url, function (error, result) {
+    // assume there is only one event (no batch for now)
+    if (result && result.event) {
+      if (! this.connection.datastore) { // no datastore   break
+        result = new Event(this.connection, result.event);
+      } else {
+        result = this.connection.datastore.createOrReuseEvent(result.event);
+      }
+    }  else {
+      result = null;
+    }
+    if (callback && typeof(callback) === 'function') {
+      callback(error, result);
+    }
+  }.bind(this), null);
+};
+
+/**
+ * This is the preferred method to create an event, or to create it on the API.
+ * The function return the newly created object.. It will be updated when posted on the API.
+ * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
+ * the same connection and not exists on the API.
+ * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
+ * @param {Boolean} [start = false] if set to true will POST the event to /events/start
+ * @return {Event} event
+ */
+ConnectionEvents.prototype.create = function (newEventlike, callback) {
+  _create.call(this, newEventlike, callback, false);
+};
+
+
+/**
+ * This is the preferred method to create and start an event, Starts a new period event.
+ * This is equivalent to starting an event with a null duration. In singleActivity streams,
+ * also stops the previously running period event if any.
+ * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
+ * the same connection and not exists on the API.
+ * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
+ * @return {Event} event
+ */
+ConnectionEvents.prototype.start = function (newEventlike, callback) {
+  _create.call(this, newEventlike, callback, true);
+};
+
+
+// common call for create and start
+function _create(newEventlike, callback, start) {
+  var event = null;
+  if (newEventlike instanceof Event) {
+    if (newEventlike.connection !== this.connection) {
+      return callback(new Error('event.connection does not match current connection'));
+    }
+    if (newEventlike.id) {
+      return callback(new Error('cannot create an event already existing on the API'));
+    }
+    event = newEventlike;
+  } else {
+    event = new Event(this.connection, newEventlike);
+  }
+
+  var url = '/events';
+  if (start) { url = '/events/start'; }
+
+
+  this.connection.request('POST', url, function (err, result, resultInfo) {
+    if (! err && resultInfo.code !== 201) {
+      err = {id : CC.Errors.INVALID_RESULT_CODE};
+    }
+    /**
+     * Change will happend with offline caching...
+     *
+     * An error may hapend 400.. or other if app is behind an non-opened gateway. Thus making
+     * difficult to detect if the error is a real bad request.
+     * The first step would be to consider only bad request if the response can be identified
+     * as coming from a valid api-server. If not, we should cache the event for later synch
+     * then remove the error and send the cached version of the event.
+     *
+     */
+    // TODO if err === API_UNREACHABLE then save event in cache
+    if (result && ! err) {
+      _.extend(event, result.event);
+      if (this.connection.datastore) {  // if datastore is activated register new event
+        this.connection.datastore.addEvent(event);
+      }
+    }
+    if (_.isFunction(callback)) {
+
+      callback(err, err ? null : event);
+    }
+  }.bind(this), event.getData());
+  return event;
+}
+
+
+
+
+/**
+ * Stop an event by it's Id
+ * @param {EventLike} event -- minimum {id} -- if typeof Event, must belong to
+ * the same connection and not exists on the API.
+ * @param {Date} [date = now] the date to set to stop the event
+ * @param {ConnectionEvents~eventStoppedOnTheAPI} callback
+ * @return {Event} event
+ */
+ConnectionEvents.prototype.stopEvent = function (eventlike, date, callback) {
+  var url = '/events/stop';
+
+  var data = {id : eventlike.id };
+  if (date) { data.time = date.getTime() / 1000; }
+
+
+  this.connection.request('POST', url, function (err, result, resultInfo) {
+    if (! err && resultInfo.code !== 200) {
+      err = {id : CC.Errors.INVALID_RESULT_CODE};
+    }
+
+
+    // TODO if err === API_UNREACHABLE then save event in cache
+    /*
+    if (result && ! err) {
+      if (this.connection.datastore) {  // if datastore is activated register new event
+
+      }
+    } */
+    if (_.isFunction(callback)) {
+      callback(err, err ? null : result.stoppedId);
+    }
+  }.bind(this), data);
+};
+
+
+
+/**
+ * Stop any event in this stream
+ * @param {StreamLike} stream -- minimum {id} -- if typeof Stream, must belong to
+ * the same connection and not exists on the API.
+ * @param {Date} [date = now] the date to set to stop the event
+ * @param {String} [type = null] stop any matching eventType is this stream.
+ * @param {ConnectionEvents~eventStoppedOnTheAPI} callback
+ * @return {Event} event
+ */
+ConnectionEvents.prototype.stopStream = function (streamLike, date, type, callback) {
+  var url = '/events/stop';
+
+  var data = {streamId : streamLike.id };
+  if (date) { data.time = date.getTime() / 1000; }
+  if (type) { data.type = type; }
+
+
+  this.connection.request('POST', url, function (err, result, resultInfo) {
+    if (! err && resultInfo.code !== 200) {
+      err = {id : CC.Errors.INVALID_RESULT_CODE};
+    }
+
+    // TODO if err === API_UNREACHABLE then cache the stop instruction for later synch
+
+    if (_.isFunction(callback)) {
+      callback(err, err ? null : result.stoppedId);
+    }
+  }.bind(this), data);
+};
+
+
+/**
+ * @param {NewEventLike} event -- minimum {streamId, type } -- if typeof Event, must belong to
+ * the same connection and not exists on the API.
+ * @param {ConnectionEvents~eventCreatedOnTheAPI} callback
+ * @param {FormData} the formData to post for fileUpload. On node.js
+ * refers to pryv.utility.forgeFormData
+ * @return {Event} event
+ */
+ConnectionEvents.prototype.createWithAttachment =
+  function (newEventLike, formData, callback, progressCallback) {
+    var event = null;
+    if (newEventLike instanceof Event) {
+      if (newEventLike.connection !== this.connection) {
+        return callback(new Error('event.connection does not match current connection'));
+      }
+      if (newEventLike.id) {
+        return callback(new Error('cannot create an event already existing on the API'));
+      }
+      event = newEventLike;
+    } else {
+      event = new Event(this.connection, newEventLike);
+    }
+    formData.append('event', JSON.stringify(event.getData()));
+    var url = '/events';
+    this.connection.request('POST', url, function (err, result) {
+      if (result) {
+        _.extend(event, result.event);
+
+        if (this.connection.datastore) {  // if datastore is activated register new event
+          this.connection.datastore.addEvent(event);
+        }
+
+      }
+      callback(err, event);
+    }.bind(this), formData, true, progressCallback);
+  };
+ConnectionEvents.prototype.addAttachment = function (eventId, file, callback, progressCallback) {
+  var url = '/events/' + eventId;
+  this.connection.request('POST', url, callback, file, true, progressCallback);
+};
+ConnectionEvents.prototype.removeAttachment = function (eventId, fileName, callback) {
+  var url = '/events/' + eventId + '/' + fileName;
+  this.connection.request('DELETE', url, callback);
+};
+/**
+ * //TODO rename to batch
+ * //TODO make it NewEventLike compatible
+ * //TODO once it support an array of mixed values Event and EventLike, the, no need for
+ *  callBackWithEventsBeforeRequest at it will. A dev who want Event object just have to create
+ *  them before
+ * This is the prefered method to create events in batch
+ * @param {Object[]} eventsData -- minimum {streamId, type }
+ * @param {ConnectionEvents~eventBatchCreatedOnTheAPI}
+ * @param {function} [callBackWithEventsBeforeRequest] mostly for testing purposes
+ * @return {Event[]} events
+ */
+ConnectionEvents.prototype.batchWithData =
+  function (eventsData, callback, callBackWithEventsBeforeRequest) {
+    if (!_.isArray(eventsData)) { eventsData = [eventsData]; }
+
+    var createdEvents = [];
+    var eventMap = {};
+
+    var url = '/';
+    // use the serialId as a temporary Id for the batch
+    _.each(eventsData, function (eventData, i) {
+
+      var event =  new Event(this.connection, eventData);
+
+      createdEvents.push(event);
+      eventMap[i] = event;
+    }.bind(this));
+
+    if (callBackWithEventsBeforeRequest) {
+      callBackWithEventsBeforeRequest(createdEvents);
+    }
+
+    var mapBeforePush = function (evs) {
+      return _.map(evs, function (e) {
+        return {
+          method: 'events.create',
+          params: e
+        };
+      });
+    };
+
+    this.connection.request('POST', url, function (err, result) {
+      if (!err && result) {
+        _.each(result.results, function (eventData, i) {
+          _.extend(eventMap[i], eventData.event); // add the data to the event
+
+          if (this.connection.datastore) {  // if datastore is activated register new event
+            this.connection.datastore.addEvent(eventMap[i]);
+          }
+
+
+        }.bind(this));
+      }
+      callback(err, createdEvents);
+    }.bind(this), mapBeforePush(eventsData));
+
+    return createdEvents;
+  };
+
+// --- raw access to the API
+
+/**
+ * TODO anonymise by renaming to function _get(..
+ * @param {FilterLike} filter
+ * @param {Connection~requestCallback} callback
+ * @private
+ */
+ConnectionEvents.prototype._get = function (filter, callback) {
+  var tParams = filter;
+  if (filter instanceof Filter) { tParams = filter.getData(true); }
+  if (_.has(tParams, 'streams') && tParams.streams.length === 0) { // dead end filter..
+    return callback(null, []);
+  }
+  var url = '/events?' + utility.getQueryParametersString(tParams);
+  this.connection.request('GET', url, callback, null);
+};
+
+
+/**
+ * TODO anonymise by renaming to function _xx(..
+ * @param {String} eventId
+ * @param {Object} data
+ * @param  {Connection~requestCallback} callback
+ * @private
+ */
+ConnectionEvents.prototype._updateWithIdAndData = function (eventId, data, callback) {
+  var url = '/events/' + eventId;
+  this.connection.request('PUT', url, function (error, result) {
+    if (!error && result && result.event) {
+      if (!this.connection.datastore) {
+        result = new Event(this.connection, result.event);
+      } else {
+        result = this.connection.datastore.createOrReuseEvent(result.event);
+      }
+    } else {
+      result = null;
+    }
+    if (callback && typeof(callback) === 'function') {
+      callback(error, result);
+    }
+  }.bind(this), data);
+};
+
+
+/**
+ * @private
+ * @param {Event} event
+ * @param {Object} the data to map
+ */
+ConnectionEvents.prototype._registerNewEvent = function (event, data) {
+
+
+  if (! event.connection.datastore) { // no datastore   break
+    _.extend(event, data);
+    return event;
+  }
+
+  return event.connection.datastore.createOrReuseEvent(this, data);
+};
+
+module.exports = ConnectionEvents;
+
+/**
+ * Called with the desired Events as result.
+ * @callback ConnectionEvents~getCallback
+ * @param {Object} error - eventual error
+ * @param {Event[]} result
+ */
+
+
+/**
+ * Called each time a "part" of the result is received
+ * @callback ConnectionEvents~partialResultCallback
+ * @param {Event[]} result
+ */
+
+
+/**
+ * Called when an event is created on the API
+ * @callback ConnectionEvents~eventCreatedOnTheAPI
+ * @param {Object} error - eventual error
+ * @param {Event} event
+ */
+
+/**
+ * Called when an event is created on the API
+ * @callback ConnectionEvents~eventStoppedOnTheAPI
+ * @param {Object} error - eventual error
+ * @param {String} stoppedEventId or null if event not found
+ */
+
+/**
+ * Called when batch create an array of events on the API
+ * @callback ConnectionEvents~eventBatchCreatedOnTheAPI
+ * @param {Object} error - eventual error
+ * @param {Event[]} events
+ */
+
+},{"../Event":53,"../Filter":54,"../utility/utility.js":81,"./ConnectionConstants.js":63,"underscore":50}],65:[function(require,module,exports){
+var _ = require('underscore'),
+    utility = require('../utility/utility'),
+    Monitor = require('../Monitor');
+
+/**
+ * @class ConnectionMonitors
+ * @private
+ *
+ * @param {Connection} connection
+ * @constructor
+ */
+function ConnectionMonitors(connection) {
+  this.connection = connection;
+  this._monitors = {};
+  this.ioSocket = null;
+}
+
+/**
+ * Start monitoring this Connection. Any change that occurs on the connection (add, delete, change)
+ * will trigger an event. Changes to the filter will also trigger events if they have an impact on
+ * the monitored data.
+ * @param {Filter} filter - changes to this filter will be monitored.
+ * @returns {Monitor}
+ */
+ConnectionMonitors.prototype.create = function (filter) {
+  if (!this.connection.username) {
+    console.error('Cannot create a monitor for a connection without username:', this.connection);
+    return null;
+  }
+  return new Monitor(this.connection, filter);
+};
+
+
+
+/**
+ * TODO
+ * @private
+ */
+ConnectionMonitors.prototype._stopMonitoring = function (/*callback*/) {
+
+};
+
+/**
+ * Internal for Connection.Monitor
+ * Maybe moved in Monitor by the way
+ * @param callback
+ * @private
+ * @return {Object} XHR or Node http request
+ */
+ConnectionMonitors.prototype._startMonitoring = function (callback) {
+  if (!this.connection.username) {
+    console.error('Cannot start monitoring for a connection without username:', this.connection);
+    return callback(true);
+  }
+  if (this.ioSocket) { return callback(null/*, ioSocket*/); }
+
+  var settings = {
+    host : this.connection.username + '.' + this.connection.settings.domain,
+    port : this.connection.settings.port,
+    ssl : this.connection.settings.ssl,
+    path : this.connection.settings.extraPath + '/' + this.connection.username,
+    namespace : '/' + this.connection.username,
+    auth : this.connection.auth
+  };
+
+  this.ioSocket = utility.ioConnect(settings);
+
+  this.ioSocket.on('connect', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoConnect(); });
+  }.bind(this));
+  this.ioSocket.on('error', function (error) {
+    _.each(this._monitors, function (monitor) { monitor._onIoError(error); });
+  }.bind(this));
+  this.ioSocket.on('eventsChanged', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoEventsChanged(); });
+  }.bind(this));
+  this.ioSocket.on('streamsChanged', function () {
+    _.each(this._monitors, function (monitor) { monitor._onIoStreamsChanged(); });
+  }.bind(this));
+  callback(null);
+};
+
+module.exports = ConnectionMonitors;
+
+
+
+},{"../Monitor":55,"../utility/utility":81,"underscore":50}],66:[function(require,module,exports){
+var apiPathPrivateProfile = '/profile/private';
+var apiPathPublicProfile = '/profile/app';
+
+
+/**
+ * @class Profile
+ * @link http://api.pryv.com/reference.html#methods-app-profile
+ */
+
+/**
+ * Accessible by connection.profile.xxx`
+ * @param {Connection} connection
+ * @constructor
+ */
+function Profile(connection) {
+  this.connection = connection;
+  this.timeLimits = null;
+}
+
+
+
+
+/**
+ * @param {String | null} key
+ * @param {Connection~requestCallback} callback - handles the response
+ */
+Profile.prototype.getPrivate = function (key, callback) {
+  this._get(apiPathPrivateProfile, key, callback);
+};
+/**
+ * @param {String | null} key
+ * @param {Connection~requestCallback} callback - handles the response
+ */
+Profile.prototype.getPublic = function (key, callback) {
+  this._get(apiPathPublicProfile, key, callback);
+};
+
+
+/**
+ * @example
+ * // set x=25 and delete y
+ * conn.profile.setPrivate({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValuePairs
+ * @param {Connection~requestCallback} callback - handles the response
+ */
+Profile.prototype.setPrivate = function (keyValuePairs, callback) {
+  this._set(apiPathPrivateProfile, keyValuePairs, callback);
+};
+/**
+ * @example
+ * // set x=25 and delete y
+ * conn.profile.setPublic({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValuePairs
+ * @param {Connection~requestCallback} callback - handles the response
+ */
+Profile.prototype.setPublic = function (keyValuePairs, callback) {
+  this._set(apiPathPublicProfile, keyValuePairs, callback);
+};
+
+/**
+ * TODO write documentation
+ */
+Profile.prototype.getTimeLimits = function (force, callback) {
+  if (!force && this.timeLimits) {
+    if (callback && typeof(callback) === 'function') {
+      callback(this.timeLimits);
+    }
+  } else {
+    var i = 2;
+    this.timeLimits = {
+      timeFrameST : [],
+      timeFrameLT : []
+    };
+    this.connection.events.get({
+      toTime: 9900000000,
+      fromTime: 0,
+      limit: 1,
+      sortAscending: false,
+      state: 'all'
+    }, function (error, events) {
+      if (!error && events) {
+        this.timeLimits.timeFrameST[1] = events[0].time;
+        this.timeLimits.timeFrameLT[1] = events[0].timeLT;
+      }
+      i--;
+      if (i === 0) {
+        if (callback && typeof(callback) === 'function') {
+          callback(this.timeLimits);
+        }
+      }
+    }.bind(this));
+    this.connection.events.get({
+      toTime: 9900000000, // TODO add a constant UNDEFINED_TO_TIME in constant
+      fromTime: -9900000000, // TODO add a constant UNDEFINED_FROM_TIME in constant
+      limit: 1,
+      sortAscending: true,
+      state: 'all'
+    }, function (error, events) {
+      if (!error && events) {
+        this.timeLimits.timeFrameST[0] = events[0].time;
+        this.timeLimits.timeFrameLT[0] = events[0].timeLT;
+      }
+      i--;
+      if (i === 0) {
+        if (callback && typeof(callback) === 'function') {
+          callback(this.timeLimits);
+        }
+      }
+    }.bind(this));
+  }
+};
+
+
+// --------- private stuff to be hidden
+
+/**
+ * @private
+ * @param {String | null} key
+ * @param {Connection~requestCallback} callback - handles the response
+ */
+Profile.prototype._get = function (path, key, callback) {
+
+  function myCallBack(error, result) {
+    console.warn(result);
+    result = result.profile || null;
+    if (key !== null && result) {
+      result = result[key];
+    }
+    callback(error, result);
+  }
+  this.connection.request('GET', path, myCallBack);
+};
+
+/**
+ * @private
+ * @example
+ * // set x=25 and delete y
+ * conn.profile.set({x : 25, y : null}, function(error) { console.log('done'); });
+ *
+ * @param {Object} keyValuePairs
+ * @param {Connection~requestCallback} callback - handles the response
+ */
+Profile.prototype._set = function (path, keyValuePairs, callback) {
+  this.connection.request('PUT', path, callback, keyValuePairs);
+};
+
+module.exports = Profile;
+},{}],67:[function(require,module,exports){
+var _ = require('underscore'),
+  utility = require('../utility/utility.js'),
+  Stream = require('../Stream.js');
+
+/**
+ * @class ConnectionStreams
+ * @description
+ * ##Coverage of the API
+ *
+ *  * GET /streams -- 100%
+ *  * POST /streams -- only data (no object)
+ *  * PUT /streams -- 0%
+ *  * DELETE /streams/{stream-id} -- 0%
+ *
+ *
+ *
+ * @param {Connection} connection
+ * @constructor
+ */
+function ConnectionStreams(connection) {
+  this.connection = connection;
+  this._streamsIndex = {};
+}
+
+
+/**
+ * @typedef ConnectionStreamsOptions parameters than can be passed along a Stream request
+ * @property {string} parentId  if parentId is null you will get all the "root" streams.
+ * @property {string} [state] 'all' || null  - if null you get only "active" streams
+ **/
+
+
+/**
+ * @param {ConnectionStreamsOptions} options
+ * @param {ConnectionStreams~getCallback} callback - handles the response
+ */
+ConnectionStreams.prototype.get = function (options, callback) {
+  if (this.connection.datastore) {
+    var resultTree = [];
+    if (options && _.has(options, 'parentId')) {
+      resultTree = this.connection.datastore.getStreamById(options.parentId).children;
+    } else {
+      resultTree = this.connection.datastore.getStreams();
+    }
+    if (resultTree.length > 0) {
+      callback(null, resultTree);
+    } else {
+      this._getObjects(options, callback);
+    }
+  } else {
+    this._getObjects(options, callback);
+  }
+};
+
+/**
+ * TODO make it object-aware like for Events
+ * TODO why to we need a _create ?
+ * TODO could return Stream object synchronously before calling the API
+ * @param streamData
+ * @param callback
+ */
+ConnectionStreams.prototype.create = function (streamData, callback) {
+  streamData = _.pick(streamData, 'id', 'name', 'parentId', 'singleActivity',
+    'clientData', 'trashed');
+  return this._createWithData(streamData, callback);
+};
+
+
+ConnectionStreams.prototype.update = function (streamData, callback) {
+
+  if (typeof streamData === 'object') {
+    streamData = [ streamData ];
+  }
+
+  _.each(streamData, function (e) {
+    var s = _.pick(e, 'id', 'name', 'parentId', 'singleActivity',
+      'clientData', 'trashed');
+    var url = '/streams/' + s.id;
+    this.connection.request('PUT', url, function (error, result) {
+      if (!error && result && result.stream) {
+
+        this._getObjects(null, function (err, res) {
+          if (!err && res) {
+            if (!this.connection.datastore) {
+              result = new Stream(this.connection, result.stream);
+            } else {
+              result = this.connection.datastore.createOrReuseStream(result.stream);
+              if (result.parent &&
+                _.indexOf(result.parent.childrenIds, result.id) === -1) {
+                result.parent.childrenIds.push(result.id);
+              }
+            }
+          } else {
+            result = null;
+          }
+
+          if (callback && typeof(callback) === 'function') {
+            callback(err, result);
+          }
+        }.bind(this));
+
+      } else {
+        result = null;
+      }
+      if (error && callback && typeof(callback) === 'function') {
+        callback(error, null);
+      }
+    }.bind(this), s);
+  }.bind(this));
+};
+
+
+/**
+ * @param streamData
+ * @param callback
+ * @param mergeEventsWithParent
+ */
+ConnectionStreams.prototype.delete = ConnectionStreams.prototype.trash =
+    function (streamData, callback, mergeEventsWithParent) {
+  var id;
+  if (streamData && streamData.id) {
+    id = streamData.id;
+  } else {
+    id = streamData;
+  }
+
+  mergeEventsWithParent = mergeEventsWithParent ? true : false;
+  var url = '/streams/' + id + '?mergeEventsWithParent=' + mergeEventsWithParent;
+  this.connection.request('DELETE', url, function (error, resultData) {
+    var stream = null;
+    if (!error && resultData && resultData.stream) {
+      streamData.id = resultData.stream.id;
+      stream = new Stream(this.connection, resultData.stream);
+      if (this.connection.datastore) {
+        this.connection.datastore.indexStream(stream);
+      }
+    }
+    if (_.isFunction(callback)) {
+      return callback(error, error ? null : resultData.stream);
+    }
+  }.bind(this));
+};
+
+
+/**
+ * TODO remove it's unused
+ * @param {ConnectionStreamsOptions} options
+ * @param {ConnectionStreams~getCallback} callback - handles the response
+ */
+ConnectionStreams.prototype.updateProperties = function (stream, properties, options, callback) {
+  if (this.connection.datastore) {
+    var resultTree = [];
+    if (options && _.has(options, 'parentId')) {
+      resultTree = this.connection.datastore.getStreamById(options.parentId).children;
+    } else {
+      resultTree = this.connection.datastore.getStreams();
+    }
+    callback(null, resultTree);
+  } else {
+    this._getObjects(options, callback);
+  }
+};
+
+
+/**
+ * TODO remove it's unused and could lead to miscomprehension
+ * Get a Stream by it's Id.
+ * Works only if fetchStructure has been done once.
+ * @param {string} streamId
+ * @throws {Error} Connection.fetchStructure must have been called before.
+ */
+ConnectionStreams.prototype.getById = function (streamId) {
+  if (!this.connection.datastore) {
+    throw new Error('Call connection.fetchStructure before, to get automatic stream mapping');
+  }
+  return this.connection.datastore.getStreamById(streamId);
+};
+
+
+// ------------- Raw calls to the API ----------- //
+
+/**
+ * get streams on the API
+ * @private
+ * @param {ConnectionStreams~options} opts
+ * @param callback
+ */
+ConnectionStreams.prototype._getData = function (opts, callback) {
+  var url = opts ? '/streams?' + utility.getQueryParametersString(opts) : '/streams';
+  this.connection.request('GET', url, callback, null);
+};
+
+
+/**
+ * TODO makes it return the Stream object before doing the online request
+ * TODO create a streamLike Object
+ * Create a stream on the API with a jsonObject
+ * @private
+ * @param {Object} streamData an object array.. typically one that can be obtained with
+ * stream.getData()
+ * @param callback
+ */
+ConnectionStreams.prototype._createWithData = function (streamData, callback) {
+  var url = '/streams';
+  this.connection.request('POST', url, function (err, resultData) {
+    var stream = null;
+    if (!err && resultData) {
+      streamData.id = resultData.stream.id;
+      stream = new Stream(this.connection, resultData.stream);
+      if (this.connection.datastore) {
+        this.connection.datastore.indexStream(stream);
+      }
+    }
+    if (_.isFunction(callback)) {
+      return callback(err, err ? null : stream);
+    }
+  }.bind(this), streamData);
+};
+
+/**
+ * Update a stream on the API with a jsonObject
+ * @private
+ * @param {Object} streamData an object array.. typically one that can be obtained with
+ * stream.getData()
+ * @param callback
+ */
+ConnectionStreams.prototype._updateWithData = function (streamData, callback) {
+  var url = '/streams/' + streamData.id;
+  this.connection.request('PUT', url, callback, streamData);
+};
+
+// -- helper for get --- //
+
+/**
+ * @private
+ * @param {ConnectionStreams~options} options
+ */
+ConnectionStreams.prototype._getObjects = function (options, callback) {
+  options = options || {};
+  options.parentId = options.parentId || null;
+  var streamsIndex = {};
+  var resultTree = [];
+  this._getData(options, function (error, result) {
+    if (error) {
+      return callback('Stream.get failed: ' + JSON.stringify(error));
+    }
+    var treeData = result.streams || result.stream;
+    ConnectionStreams.Utils.walkDataTree(treeData, function (streamData) {
+      var stream = new Stream(this.connection, streamData);
+      streamsIndex[streamData.id] = stream;
+      if (stream.parentId === options.parentId) { // attached to the rootNode or filter
+        resultTree.push(stream);
+        stream._parent = null;
+        stream._children = [];
+      } else {
+        // localStorage will cleanup  parent / children link if needed
+        stream._parent = streamsIndex[stream.parentId];
+        stream._parent._children.push(stream);
+      }
+    }.bind(this));
+    callback(null, resultTree);
+  }.bind(this));
+};
+
+
+/**
+ * Called once per streams
+ * @callback ConnectionStreams~walkTreeEachStreams
+ * @param {Stream} stream
+ */
+
+/**
+ * Called when walk is done
+ * @callback ConnectionStreams~walkTreeDone
+ */
+
+/**
+ * Walk the tree structure.. parents are always announced before childrens
+ * @param {ConnectionStreams~options} options
+ * @param {ConnectionStreams~walkTreeEachStreams} eachStream
+ * @param {ConnectionStreams~walkTreeDone} done
+ */
+ConnectionStreams.prototype.walkTree = function (options, eachStream, done) {
+  this.get(options, function (error, result) {
+    if (error) {
+      return done('Stream.walkTree failed: ' + error);
+    }
+    ConnectionStreams.Utils.walkObjectTree(result, eachStream);
+    if (done) {
+      done(null);
+    }
+  });
+};
+
+
+/**
+ * Get the all the streams of the Tree in a list.. parents firsts
+ * @param {ConnectionStreams~options} options
+ * @param {ConnectionStreams~getFlatenedObjectsDone} done
+ */
+ConnectionStreams.prototype.getFlatenedObjects = function (options, callback) {
+  var result = [];
+  this.walkTree(options,
+    function (stream) { // each stream
+      result.push(stream);
+    }, function (error) {  // done
+      if (error) {
+        return callback(error);
+      }
+      callback(null, result);
+    }.bind(this));
+};
+
+
+/**
+ * Utility to debug a tree structure
+ * @param {ConnectionStreams[]} arrayOfStreams
+ */
+ConnectionStreams.prototype.getDisplayTree = function (arrayOfStreams) {
+  return ConnectionStreams.Utils._debugTree(arrayOfStreams);
+};
+
+/**
+ * Utility to get a Stream Tree as if was sent by the API
+ * @param {ConnectionStreams[]} arrayOfStreams
+ */
+ConnectionStreams.prototype.toJSON = function (arrayOfStreams) {
+  return ConnectionStreams.Utils.toJSON(arrayOfStreams);
+};
+
+
+// TODO Validate that it's the good place for them .. Could have been in Stream or utility
+ConnectionStreams.Utils = {
+
+  /**
+   * Make a pure JSON object from an array of Stream.. shoudl be the same than what we
+   * get from the API
+   * @param streamArray
+   * @param eachStream
+   */
+  toJSON: function (arrayOfStreams) {
+
+    var result = [];
+    if (!arrayOfStreams || !arrayOfStreams instanceof Array) {
+      throw new Error('expected an array for argument :' + arrayOfStreams);
+    }
+
+    _.each(arrayOfStreams, function (stream) {
+      if (!stream || !stream instanceof Stream) {
+        throw new Error('expected a Streams array ' + stream);
+      }
+      result.push({
+        name: stream.name,
+        id: stream.id,
+        parentId: stream.parentId,
+        singleActivity: stream.singleActivity,
+        clientData: stream.clientData,
+        trashed: stream.trashed,
+        created: stream.created,
+        createdBy: stream.createdBy,
+        modified: stream.modified,
+        modifiedBy: stream.modifiedBy,
+        children: ConnectionStreams.Utils.toJSON(stream.children)
+      });
+    });
+    return result;
+  },
+
+  /**
+   * Walk thru a streamArray of objects
+   * @param streamTree
+   * @param callback function(stream)
+   */
+  walkObjectTree: function (streamArray, eachStream) {
+    _.each(streamArray, function (stream) {
+      eachStream(stream);
+      ConnectionStreams.Utils.walkObjectTree(stream.children, eachStream);
+    });
+  },
+
+  /**
+   * Walk thru a streamTree obtained from the API. Replaces the children[] by childrenIds[].
+   * This is used to Flaten the Tree
+   * @param streamTree
+   * @param callback function(streamData, subTree)  subTree is the descendance tree
+   */
+  walkDataTree: function (streamTree, callback) {
+    _.each(streamTree, function (streamStruct) {
+      var stream = _.omit(streamStruct, 'children');
+      stream.childrenIds = [];
+      var subTree = {};
+      callback(stream, subTree);
+      if (_.has(streamStruct, 'children')) {
+        subTree = streamStruct.children;
+
+        _.each(streamStruct.children, function (childTree) {
+          stream.childrenIds.push(childTree.id);
+        });
+        this.walkDataTree(streamStruct.children, callback);
+      }
+    }.bind(this));
+  },
+
+
+  /**
+   * ShowTree
+   */
+  _debugTree: function (arrayOfStreams) {
+    var result = [];
+    if (!arrayOfStreams || !arrayOfStreams instanceof Array) {
+      throw new Error('expected an array for argument :' + arrayOfStreams);
+    }
+    _.each(arrayOfStreams, function (stream) {
+      if (!stream || !stream instanceof Stream) {
+        throw new Error('expected a Streams array ' + stream);
+      }
+      result.push({
+        name: stream.name,
+        id: stream.id,
+        parentId: stream.parentId,
+        children: ConnectionStreams.Utils._debugTree(stream.children)
+      });
+    });
+    return result;
+  }
+
+};
+
+module.exports = ConnectionStreams;
+
+/**
+ * Called with the desired streams as result.
+ * @callback ConnectionStreams~getCallback
+ * @param {Object} error - eventual error
+ * @param {Stream[]} result
+ */
+
+
+},{"../Stream.js":56,"../utility/utility.js":81,"underscore":50}],68:[function(require,module,exports){
+module.exports={
+  "version": "0.2.9",
+  "sets": {
+    "basic-measurements-metric": {
+      "name": {
+        "en": "Metric measures (basics)",
+        "fr": "Mesures métriques de base"
+      },
+      "description": {
+        "en": "Kg, m, Km, ... "
+      },
+      "types": {
+        "count": [
+          "generic"
+        ],
+        "length": [
+          "cm",
+          "km",
+          "m",
+          "mm"
+        ],
+        "mass": [
+          "kg",
+          "g",
+          "t"
+        ],
+        "temperature": [
+          "c"
+        ],
+        "ratio": [
+          "percent"
+        ],
+        "speed": [
+          "km-h",
+          "m-s"
+        ],
+        "volume": [
+          "l",
+          "m3",
+          "ml"
+        ]
+      }
+    },
+    "generic-measurements-metric": {
+      "name": {
+        "en": "Metric measures",
+        "fr": "Mesures métriques"
+      },
+      "description": {
+        "en": "Kg, m, Km, ... "
+      },
+      "types": {
+        "area": [
+          "ha",
+          "km2",
+          "m2"
+        ],
+        "electric-current": [
+          "a"
+        ],
+        "electromotive-force": [
+          "v"
+        ],
+        "energy": [
+          "cal",
+          "j",
+          "kcal"
+        ],
+        "frequency": [
+          "hz",
+          "bpm",
+          "rpm"
+        ],
+        "length": [
+          "cm",
+          "km",
+          "m",
+          "mm"
+        ],
+        "mass": [
+          "kg",
+          "g",
+          "t"
+        ],
+        "power": [
+          "hp",
+          "kw",
+          "w"
+        ],
+        "pressure": [
+          "bar",
+          "kg-m2",
+          "pa",
+          "kpa"
+        ],
+        "temperature": [
+          "c"
+        ],
+        "speed": [
+          "km-h",
+          "m-s"
+        ],
+        "volume": [
+          "l",
+          "m3",
+          "ml"
+        ]
+      }
+    },
+    "basic-measurements-imperial": {
+      "name": {
+        "en": "Imperial measures (basics)",
+        "fr": "Mesures, système impérial (de base)"
+      },
+      "description": {
+        "en": "lb, in, ft, ..."
+      },
+      "types": {
+        "count": [
+          "generic"
+        ],
+        "length": [
+          "ch",
+          "lea",
+          "ft",
+          "in",
+          "mi",
+          "fur",
+          "yd"
+        ],
+        "mass": [
+          "lb",
+          "oz",
+          "s-t",
+          "st"
+        ],
+        "temperature": [
+          "f"
+        ],
+        "ratio": [
+          "percent"
+        ],
+        "speed": [
+          "ft-s",
+          "m-min",
+          "mph"
+        ],
+        "volume": [
+          "c",
+          "floz",
+          "galgb",
+          "pt",
+          "qt",
+          "tbs",
+          "tsp"
+        ]
+      }
+    },
+    "generic-measurements-imperial": {
+      "name": {
+        "en": "Imperial measures",
+        "fr": "Mesures, système impérial"
+      },
+      "description": {
+        "en": "lb, in, ft, ..."
+      },
+      "types": {
+        "area": [
+          "ac",
+          "ft2",
+          "in2",
+          "yd2",
+          "mi2"
+        ],
+        "electric-current": [
+          "a"
+        ],
+        "electromotive-force": [
+          "v"
+        ],
+        "energy": [
+          "btu",
+          "erg",
+          "ftlb",
+          "kcal"
+        ],
+        "force": [
+          "pdl"
+        ],
+        "length": [
+          "ch",
+          "lea",
+          "ft",
+          "in",
+          "mi",
+          "fur",
+          "yd"
+        ],
+        "mass": [
+          "lb",
+          "oz",
+          "s-t",
+          "st"
+        ],
+        "power": [
+          "hp"
+        ],
+        "pressure": [
+          "inhg",
+          "psi"
+        ],
+        "temperature": [
+          "f"
+        ],
+        "speed": [
+          "ft-s",
+          "m-min",
+          "mph"
+        ],
+        "volume": [
+          "c",
+          "floz",
+          "galgb",
+          "pt",
+          "qt",
+          "tbs",
+          "tsp"
+        ]
+      }
+    },
+    "basic-measurements-us": {
+      "name": {
+        "en": "US measures (basics)",
+        "fr": "Mesures USA (de base)"
+      },
+      "description": {
+        "en": "yd, mil, oz, ..."
+      },
+      "types": {
+        "count": [
+          "generic"
+        ],
+        "length": [
+          "ch",
+          "ft",
+          "in",
+          "mil",
+          "mi",
+          "fur",
+          "p",
+          "pica",
+          "yd"
+        ],
+        "mass": [
+          "gr",
+          "dr",
+          "l-t",
+          "lb",
+          "oz"
+        ],
+        "temperature": [
+          "f"
+        ],
+        "ratio": [
+          "percent"
+        ],
+        "speed": [
+          "ft-s",
+          "m-min",
+          "mph"
+        ],
+        "volume": [
+          "c",
+          "floz",
+          "ft3",
+          "galus",
+          "in3",
+          "yd3",
+          "pt",
+          "qt",
+          "bbloil",
+          "tbs",
+          "tsp"
+        ]
+      }
+    },
+    "generic-measurements-us": {
+      "name": {
+        "en": "US measures",
+        "fr": "Mesures USA"
+      },
+      "description": {
+        "en": "yd, mil, oz, ..."
+      },
+      "types": {
+        "area": [
+          "ac",
+          "ft2",
+          "in2",
+          "yd2"
+        ],
+        "electric-current": [
+          "a"
+        ],
+        "electromotive-force": [
+          "v"
+        ],
+        "length": [
+          "ch",
+          "ft",
+          "in",
+          "mil",
+          "mi",
+          "fur",
+          "p",
+          "pica",
+          "yd"
+        ],
+        "mass": [
+          "gr",
+          "dr",
+          "l-t",
+          "lb",
+          "oz"
+        ],
+        "power": [
+          "hp"
+        ],
+        "pressure": [
+          "inhg",
+          "psi"
+        ],
+        "temperature": [
+          "f"
+        ],
+        "speed": [
+          "ft-s",
+          "m-min",
+          "mph"
+        ],
+        "volume": [
+          "c",
+          "floz",
+          "ft3",
+          "galus",
+          "in3",
+          "yd3",
+          "pt",
+          "qt",
+          "bbloil",
+          "tbs",
+          "tsp"
+        ]
+      }
+    },
+    "money-most-used": {
+      "name": {
+        "en": "Most used currencies",
+        "fr": "Devises les plus utilisées"
+      },
+      "description": {
+        "en": "$, €, ¥, ..."
+      },
+      "types": {
+        "money": [
+          "eur",
+          "usd",
+          "cny",
+          "gbp",
+          "jpy",
+          "chf",
+          "cad"
+        ]
+      }
+    },
+    "money-europe": {
+      "name": {
+        "en": "Currencies Europe",
+        "fr": "Devises Europe"
+      },
+      "description": {
+        "en": "€, £, CHF, ..."
+      },
+      "types": {
+        "money": [
+          "all",
+          "byr",
+          "bam",
+          "bgn",
+          "hrk",
+          "czk",
+          "dkk",
+          "eek",
+          "eur",
+          "fkp",
+          "gip",
+          "ggp",
+          "huf",
+          "isk",
+          "irr",
+          "jep",
+          "lvl",
+          "ltl",
+          "mkd",
+          "ang",
+          "nok",
+          "pln",
+          "ron",
+          "rub",
+          "shp",
+          "rsd",
+          "sek",
+          "chf",
+          "try",
+          "trl",
+          "uah",
+          "gbp"
+        ]
+      }
+    },
+    "money-america": {
+      "name": {
+        "en": "Currencies Americas",
+        "fr": "Devises Amériques"
+      },
+      "description": {
+        "en": "$US, $CAD,  BRL, ..."
+      },
+      "types": {
+        "money": [
+          "ars",
+          "bsd",
+          "bbd",
+          "bzd",
+          "bmd",
+          "bob",
+          "brl",
+          "cad",
+          "kyd",
+          "clp",
+          "cop",
+          "crc",
+          "cup",
+          "dop",
+          "xcd",
+          "svc",
+          "fjd",
+          "gtq",
+          "gyd",
+          "jmd",
+          "mxn",
+          "nio",
+          "pab",
+          "pyg",
+          "pen",
+          "shp",
+          "srd",
+          "ttd",
+          "usd",
+          "uyu",
+          "vef"
+        ]
+      }
+    },
+    "money-asia": {
+      "name": {
+        "en": "Currencies Asia",
+        "fr": "Devises Asie"
+      },
+      "description": {
+        "en": "¥, 元, INR, ..."
+      },
+      "types": {
+        "money": [
+          "azn",
+          "khr",
+          "cny",
+          "hnl",
+          "inr",
+          "idr",
+          "jpy",
+          "kzt",
+          "kpw",
+          "krw",
+          "kgs",
+          "lak",
+          "myr",
+          "mur",
+          "mnt",
+          "npr",
+          "pkr",
+          "rub",
+          "scr",
+          "sgd",
+          "lkr",
+          "syp",
+          "twd",
+          "thb",
+          "try",
+          "trl",
+          "uzs",
+          "vnd"
+        ]
+      }
+    },
+    "money-africa": {
+      "name": {
+        "en": "Currencies Africa",
+        "fr": "Devises Afrique"
+      },
+      "description": {
+        "en": "BWP, EGP, GHC, ..."
+      },
+      "types": {
+        "money": [
+          "bwp",
+          "egp",
+          "ghc",
+          "mzn",
+          "nad",
+          "ngn",
+          "sos",
+          "zar",
+          "zwd"
+        ]
+      }
+    },
+    "money-indonesia-australia": {
+      "name": {
+        "en": "Currencies Oceania & Indonesia",
+        "fr": "Devises Océanie & Indonésie"
+      },
+      "description": {
+        "en": "$AU, $NZ, PHP, ... "
+      },
+      "types": {
+        "money": [
+          "aud",
+          "nzd",
+          "php",
+          "sbd",
+          "tvd"
+        ]
+      }
+    },
+    "money-middleeast": {
+      "name": {
+        "en": "Currencies Middle East",
+        "fr": "Devises Moyen-Orient"
+      },
+      "description": {
+        "en": "AFN, BND, OMR, ...."
+      },
+      "types": {
+        "money": [
+          "afn",
+          "bnd",
+          "egp",
+          "imp",
+          "lbp",
+          "omr",
+          "qar",
+          "sar",
+          "syp",
+          "yer"
+        ]
+      }
+    },
+    "generic-medical": {
+      "name": {
+        "en": "Common health mesures",
+        "fr": "Mesures de santé courantes"
+      },
+      "description": {
+        "en": "mmhg, bpm, ..."
+      },
+      "types": {
+        "count": [
+          "steps"
+        ],
+        "density": [
+          "mg-dl",
+          "mmol-l"
+        ],
+        "pressure": [
+          "mmhg"
+        ],
+        "frequency": [
+          "bpm"
+        ]
+      }
+    },
+    "navigation": {
+      "name": {
+        "en": "Navigation",
+        "fr": "Navigation"
+      },
+      "description": {
+        "en": "nmi, °, kt, ..."
+      },
+      "types": {
+        "angle": [
+          "deg",
+          "grad",
+          "rad"
+        ],
+        "length": [
+          "nmi",
+          "ftm",
+          "cb"
+        ],
+        "speed": [
+          "kt"
+        ]
+      }
+    },
+    "all-measures": {
+      "name": {
+        "en": "All measures",
+        "fr": "Toutes les mesures"
+      },
+      "types": {
+        "absorbed-dose": [
+          "gy"
+        ],
+        "absorbed-dose-equivalent": [
+          "sv"
+        ],
+        "absorbed-dose-rate": [
+          "gy-s"
+        ],
+        "mol": [
+          "mol"
+        ],
+        "angle": [
+          "deg",
+          "grad",
+          "rad"
+        ],
+        "angular-acceleration": [
+          "rad-s2"
+        ],
+        "area": [
+          "ac",
+          "ft2",
+          "ha",
+          "in2",
+          "km2",
+          "m2",
+          "mm2",
+          "yd2",
+          "mi2"
+        ],
+        "capacitance": [
+          "f"
+        ],
+        "catalytic-activity": [
+          "kat"
+        ],
+        "data-quantity": [
+          "b",
+          "bits",
+          "gb",
+          "gbits",
+          "kb",
+          "kbits",
+          "mb",
+          "mbits",
+          "tb"
+        ],
+        "density": [
+          "g-dl",
+          "kg-m3",
+          "mg-dl",
+          "mmol-l"
+        ],
+        "time": [
+          "d",
+          "h",
+          "min",
+          "ms",
+          "s",
+          "y"
+        ],
+        "dynamic-viscosity": [
+          "pa-s"
+        ],
+        "electric-charge": [
+          "c"
+        ],
+        "electric-charge-line-density": [
+          "c-m"
+        ],
+        "electric-current": [
+          "a"
+        ],
+        "electrical-conductivity": [
+          "s"
+        ],
+        "electromotive-force": [
+          "v"
+        ],
+        "energy": [
+          "btu",
+          "cal",
+          "ev",
+          "erg",
+          "ftlb",
+          "j",
+          "kcal",
+          "ws",
+          "kwh",
+          "nm",
+          "wh"
+        ],
+        "force": [
+          "dyn",
+          "n",
+          "pdl"
+        ],
+        "length": [
+          "a",
+          "au",
+          "cm",
+          "ch",
+          "lea",
+          "ft",
+          "in",
+          "km",
+          "ly",
+          "m",
+          "mil",
+          "mi",
+          "fur",
+          "mm",
+          "nmi",
+          "p",
+          "pica",
+          "ftm",
+          "cb",
+          "um",
+          "yd"
+        ],
+        "luminous-intensity": [
+          "cd"
+        ],
+        "mass": [
+          "gr",
+          "dr",
+          "kg",
+          "g",
+          "l-t",
+          "lb",
+          "t",
+          "oz",
+          "s-t",
+          "st"
+        ],
+        "power": [
+          "btu-min",
+          "ftlb-s",
+          "hp",
+          "kw",
+          "w"
+        ],
+        "pressure": [
+          "at",
+          "bar",
+          "cmhg",
+          "inhg",
+          "kg-m2",
+          "pa",
+          "kpa",
+          "psf",
+          "psi"
+        ],
+        "temperature": [
+          "c",
+          "f",
+          "k"
+        ],
+        "speed": [
+          "ft-m",
+          "ft-s",
+          "km-h",
+          "kt",
+          "m-min",
+          "m-s",
+          "mph"
+        ],
+        "volume": [
+          "c",
+          "cm3",
+          "floz",
+          "ft3",
+          "galgb",
+          "galus",
+          "in3",
+          "yd3",
+          "l",
+          "m3",
+          "ml",
+          "pt",
+          "qt",
+          "bbloil",
+          "tbs",
+          "tsp"
+        ]
+      }
+    }
+  },
+  "extras": {
+    "count": {
+      "name": {
+        "en": "Count",
+        "fr": "Compte"
+      },
+      "formats": {
+        "steps": {
+          "name": {
+            "en": "Steps",
+            "fr": "Pas"
+          }
+        },
+        "generic": {
+          "name": {
+            "en": "Units",
+            "fr": "Unités"
+          }
+        }
+      }
+    },
+    "money": {
+      "name": {
+        "en": "Money",
+        "fr": "Argent"
+      },
+      "formats": {
+        "chf": {
+          "name": {
+            "en": "Switzerland Franc",
+            "fr": "Franc Suisse"
+          },
+          "symbol": "CHF"
+        },
+        "cny": {
+          "name": {
+            "en": "China Yuan Renminbi",
+            "fr": "Yuan Ren-Min-Bi"
+          },
+          "symbol": "¥"
+        },
+        "eur": {
+          "symbol": "€",
+          "name": {
+            "en": "Euro",
+            "fr": "Euro"
+          }
+        },
+        "gbp": {
+          "name": {
+            "en": "United Kingdom Pound",
+            "fr": "Livre"
+          },
+          "symbol": "£"
+        },
+        "jpy": {
+          "name": {
+            "en": "Japan Yen",
+            "fr": "Yen japonais"
+          },
+          "symbol": "¥"
+        },
+        "usd": {
+          "name": {
+            "en": "United States Dollar",
+            "fr": "Dollar des États-Unis"
+          },
+          "symbol": "$"
+        },
+        "btc": {
+          "name": {
+            "en": "Bitcoin"
+          },
+          "symbol": "฿"
+        },
+        "all": {
+          "name": {
+            "en": "Albania Lek",
+            "fr": "Lek Albanai"
+          },
+          "symbol": "Lek"
+        },
+        "afn": {
+          "name": {
+            "en": "Afghanistan Afghani",
+            "fr": "Afghani"
+          },
+          "symbol": "؋"
+        },
+        "ars": {
+          "name": {
+            "en": "Argentina Peso",
+            "fr": "Peso argentin"
+          },
+          "symbol": "$"
+        },
+        "awg": {
+          "name": {
+            "en": "Aruba Guilder",
+            "fr": "Florin d'Aruba"
+          },
+          "symbol": "ƒ"
+        },
+        "aud": {
+          "name": {
+            "en": "Australia Dollar",
+            "fr": "Dollar australien"
+          },
+          "symbol": "$"
+        },
+        "azn": {
+          "name": {
+            "en": "Azerbaijan New Manat",
+            "fr": "Manat"
+          },
+          "symbol": "ман"
+        },
+        "bsd": {
+          "name": {
+            "en": "Bahamas Dollar",
+            "fr": "Dollar des Bahamas"
+          },
+          "symbol": "$"
+        },
+        "bbd": {
+          "name": {
+            "en": "Barbados Dollar",
+            "fr": "Dollar de Barbade"
+          },
+          "symbol": "$"
+        },
+        "byr": {
+          "name": {
+            "en": "Belarus Ruble",
+            "fr": "Rouble bélorusse"
+          },
+          "symbol": "p."
+        },
+        "bzd": {
+          "name": {
+            "en": "Belize Dollar",
+            "fr": "Dollar de Belize"
+          },
+          "symbol": "BZ$"
+        },
+        "bmd": {
+          "name": {
+            "en": "Bermuda Dollar",
+            "fr": "Dollar des Bermudes"
+          },
+          "symbol": "$"
+        },
+        "bob": {
+          "name": {
+            "en": "Bolivia Boliviano",
+            "fr": "Boliviano"
+          },
+          "symbol": "$b"
+        },
+        "bam": {
+          "name": {
+            "en": "Bosnia and Herzegovina Convertible Marka"
+          },
+          "symbol": "KM"
+        },
+        "bwp": {
+          "name": {
+            "en": "Botswana Pula"
+          },
+          "symbol": "P"
+        },
+        "bgn": {
+          "name": {
+            "en": "Bulgaria Lev",
+            "fr": "Bulgarian Lev"
+          },
+          "symbol": "лв"
+        },
+        "brl": {
+          "name": {
+            "en": "Brazil Real",
+            "fr": "Real"
+          },
+          "symbol": "R$"
+        },
+        "bnd": {
+          "name": {
+            "en": "Brunei Darussalam Dollar",
+            "fr": "Dollar de Brunei"
+          },
+          "symbol": "$"
+        },
+        "khr": {
+          "name": {
+            "en": "Cambodia Riel",
+            "fr": "Riel"
+          },
+          "symbol": "៛"
+        },
+        "cad": {
+          "name": {
+            "en": "Canada Dollar",
+            "fr": "Dollar canadien"
+          },
+          "symbol": "$"
+        },
+        "kyd": {
+          "name": {
+            "en": "Cayman Islands Dollar",
+            "fr": "Dollar des Iles Caïmans"
+          },
+          "symbol": "$"
+        },
+        "clp": {
+          "name": {
+            "en": "Chile Peso",
+            "fr": "Peso chilien"
+          },
+          "symbol": "$"
+        },
+        "cop": {
+          "name": {
+            "en": "Colombia Peso",
+            "fr": "Peso colombien"
+          },
+          "symbol": "$"
+        },
+        "crc": {
+          "name": {
+            "en": "Costa Rica Colon",
+            "fr": "Colon de Costa Rica"
+          },
+          "symbol": "₡"
+        },
+        "hrk": {
+          "name": {
+            "en": "Croatia Kuna",
+            "fr": "Kuna"
+          },
+          "symbol": "kn"
+        },
+        "cup": {
+          "name": {
+            "en": "Cuba Peso",
+            "fr": "Peso cubain"
+          },
+          "symbol": "₱"
+        },
+        "czk": {
+          "name": {
+            "en": "Czech Republic Koruna"
+          },
+          "symbol": "Kč"
+        },
+        "dkk": {
+          "name": {
+            "en": "Denmark Krone",
+            "fr": "Couronne danoise"
+          },
+          "symbol": "kr"
+        },
+        "dop": {
+          "name": {
+            "en": "Dominican Republic Peso",
+            "fr": "Peso dominicain"
+          },
+          "symbol": "RD$"
+        },
+        "xcd": {
+          "name": {
+            "en": "East Caribbean Dollar",
+            "fr": "Dollar des Caraïbes orientales"
+          },
+          "symbol": "$"
+        },
+        "egp": {
+          "name": {
+            "en": "Egypt Pound",
+            "fr": "Livre égyptienne"
+          },
+          "symbol": "£"
+        },
+        "svc": {
+          "name": {
+            "en": "El Salvador Colon",
+            "fr": "Colon du El Salvador"
+          },
+          "symbol": "$"
+        },
+        "eek": {
+          "name": {
+            "en": "Estonia Kroon",
+            "fr": "Couronne estonienne"
+          },
+          "symbol": "kr"
+        },
+        "fkp": {
+          "name": {
+            "en": "Falkland Islands (Malvinas) Pound"
+          },
+          "symbol": "£"
+        },
+        "fjd": {
+          "name": {
+            "en": "Fiji Dollar"
+          },
+          "symbol": "$"
+        },
+        "ghc": {
+          "name": {
+            "en": "Ghana Cedis"
+          },
+          "symbol": "¢"
+        },
+        "gip": {
+          "name": {
+            "en": "Gibraltar Pound"
+          },
+          "symbol": "£"
+        },
+        "gtq": {
+          "name": {
+            "en": "Guatemala Quetzal"
+          },
+          "symbol": "Q"
+        },
+        "ggp": {
+          "name": {
+            "en": "Guernsey Pound"
+          },
+          "symbol": "£"
+        },
+        "gyd": {
+          "name": {
+            "en": "Guyana Dollar"
+          },
+          "symbol": "$"
+        },
+        "hnl": {
+          "name": {
+            "en": "Honduras Lempira"
+          },
+          "symbol": "L"
+        },
+        "hkd": {
+          "name": {
+            "en": "Hong Kong Dollar"
+          },
+          "symbol": "$"
+        },
+        "huf": {
+          "name": {
+            "en": "Hungary Forint"
+          },
+          "symbol": "Ft"
+        },
+        "isk": {
+          "name": {
+            "en": "Iceland Krona"
+          },
+          "symbol": "kr"
+        },
+        "inr": {
+          "name": {
+            "en": "India Rupee",
+            "fr": "Rhoupie indienne"
+          }
+        },
+        "idr": {
+          "name": {
+            "en": "Indonesia Rupiah"
+          },
+          "symbol": "Rp"
+        },
+        "irr": {
+          "name": {
+            "en": "Iran Rial"
+          },
+          "symbol": "﷼"
+        },
+        "imp": {
+          "name": {
+            "en": "Isle of Man Pound"
+          },
+          "symbol": "£"
+        },
+        "ils": {
+          "name": {
+            "en": "Israel Shekel"
+          },
+          "symbol": "₪"
+        },
+        "jmd": {
+          "name": {
+            "en": "Jamaica Dollar"
+          },
+          "symbol": "J$"
+        },
+        "jep": {
+          "name": {
+            "en": "Jersey Pound"
+          },
+          "symbol": "£"
+        },
+        "kzt": {
+          "name": {
+            "en": "Kazakhstan Tenge"
+          },
+          "symbol": "лв"
+        },
+        "kpw": {
+          "name": {
+            "en": "Korea (North) Won",
+            "fr": "Won de la Corée du Nord"
+          },
+          "symbol": "₩"
+        },
+        "krw": {
+          "name": {
+            "en": "Korea (South) Won",
+            "fr": "Won"
+          },
+          "symbol": "₩"
+        },
+        "kgs": {
+          "name": {
+            "en": "Kyrgyzstan Som"
+          },
+          "symbol": "лв"
+        },
+        "lak": {
+          "name": {
+            "en": "Laos Kip"
+          },
+          "symbol": "₭"
+        },
+        "lvl": {
+          "name": {
+            "en": "Latvia Lat",
+            "fr": "Lat letton"
+          },
+          "symbol": "Ls"
+        },
+        "lbp": {
+          "name": {
+            "en": "Lebanon Pound"
+          },
+          "symbol": "£"
+        },
+        "lrd": {
+          "name": {
+            "en": "Liberia Dollar"
+          },
+          "symbol": "$"
+        },
+        "ltl": {
+          "name": {
+            "en": "Lithuania Litas"
+          },
+          "symbol": "Lt"
+        },
+        "mkd": {
+          "name": {
+            "en": "Macedonia Denar"
+          },
+          "symbol": "ден"
+        },
+        "myr": {
+          "name": {
+            "en": "Malaysia Ringgit"
+          },
+          "symbol": "RM"
+        },
+        "mur": {
+          "name": {
+            "en": "Mauritius Rupee"
+          },
+          "symbol": "₨"
+        },
+        "mxn": {
+          "name": {
+            "en": "Mexico Peso"
+          },
+          "symbol": "$"
+        },
+        "mnt": {
+          "name": {
+            "en": "Mongolia Tughrik"
+          },
+          "symbol": "₮"
+        },
+        "mzn": {
+          "name": {
+            "en": "Mozambique Metical"
+          },
+          "symbol": "MT"
+        },
+        "nad": {
+          "name": {
+            "en": "Namibia Dollar"
+          },
+          "symbol": "$"
+        },
+        "npr": {
+          "name": {
+            "en": "Nepal Rupee"
+          },
+          "symbol": "₨"
+        },
+        "ang": {
+          "name": {
+            "en": "Netherlands Antilles Guilder",
+            "fr": "Florin des Antilles"
+          },
+          "symbol": "ƒ"
+        },
+        "nzd": {
+          "name": {
+            "en": "New Zealand Dollar",
+            "fr": "Dollar néo-zélandais"
+          },
+          "symbol": "$"
+        },
+        "nio": {
+          "name": {
+            "en": "Nicaragua Cordoba"
+          },
+          "symbol": "C$"
+        },
+        "ngn": {
+          "name": {
+            "en": "Nigeria Naira"
+          },
+          "symbol": "₦"
+        },
+        "nok": {
+          "name": {
+            "en": "Norway Krone",
+            "fr": "Couronne norvégienne"
+          },
+          "symbol": "kr"
+        },
+        "omr": {
+          "name": {
+            "en": "Oman Rial"
+          },
+          "symbol": "﷼"
+        },
+        "pkr": {
+          "name": {
+            "en": "Pakistan Rupee"
+          },
+          "symbol": "₨"
+        },
+        "pab": {
+          "name": {
+            "en": "Panama Balboa"
+          },
+          "symbol": "B/."
+        },
+        "pyg": {
+          "name": {
+            "en": "Paraguay Guarani"
+          },
+          "symbol": "Gs"
+        },
+        "pen": {
+          "name": {
+            "en": "Peru Nuevo Sol"
+          },
+          "symbol": "S/."
+        },
+        "php": {
+          "name": {
+            "en": "Philippines Peso"
+          },
+          "symbol": "₱"
+        },
+        "pln": {
+          "name": {
+            "en": "Poland Zloty"
+          },
+          "symbol": "zł"
+        },
+        "qar": {
+          "name": {
+            "en": "Qatar Riyal"
+          },
+          "symbol": "﷼"
+        },
+        "ron": {
+          "name": {
+            "en": "Romania New Leu"
+          },
+          "symbol": "lei"
+        },
+        "rub": {
+          "name": {
+            "en": "Russia Ruble"
+          },
+          "symbol": "руб"
+        },
+        "shp": {
+          "name": {
+            "en": "Saint Helena Pound"
+          },
+          "symbol": "£"
+        },
+        "sar": {
+          "name": {
+            "en": "Saudi Arabia Riyal",
+            "fr": "Riyal saoudien"
+          },
+          "symbol": "﷼"
+        },
+        "rsd": {
+          "name": {
+            "en": "Serbia Dinar"
+          },
+          "symbol": "Дин."
+        },
+        "scr": {
+          "name": {
+            "en": "Seychelles Rupee"
+          },
+          "symbol": "₨"
+        },
+        "sgd": {
+          "name": {
+            "en": "Singapore Dollar"
+          },
+          "symbol": "$"
+        },
+        "sbd": {
+          "name": {
+            "en": "Solomon Islands Dollar"
+          },
+          "symbol": "$"
+        },
+        "sos": {
+          "name": {
+            "en": "Somalia Shilling"
+          },
+          "symbol": "S"
+        },
+        "zar": {
+          "name": {
+            "en": "South Africa Rand",
+            "fr": "Rand"
+          },
+          "symbol": "R"
+        },
+        "lkr": {
+          "name": {
+            "en": "Sri Lanka Rupee"
+          },
+          "symbol": "₨"
+        },
+        "sek": {
+          "name": {
+            "en": "Sweden Krona"
+          },
+          "symbol": "kr"
+        },
+        "srd": {
+          "name": {
+            "en": "Suriname Dollar"
+          },
+          "symbol": "$"
+        },
+        "syp": {
+          "name": {
+            "en": "Syria Pound"
+          },
+          "symbol": "£"
+        },
+        "twd": {
+          "name": {
+            "en": "Taiwan New Dollar"
+          },
+          "symbol": "NT$"
+        },
+        "thb": {
+          "name": {
+            "en": "Thailand Baht"
+          },
+          "symbol": "฿"
+        },
+        "ttd": {
+          "name": {
+            "en": "Trinidad and Tobago Dollar"
+          },
+          "symbol": "TT$"
+        },
+        "try": {
+          "name": {
+            "en": "Turkey Lira"
+          }
+        },
+        "trl": {
+          "name": {
+            "en": "Turkey Lira"
+          },
+          "symbol": "₤"
+        },
+        "tvd": {
+          "name": {
+            "en": "Tuvalu Dollar"
+          },
+          "symbol": "$"
+        },
+        "uah": {
+          "name": {
+            "en": "Ukraine Hryvna"
+          },
+          "symbol": "₴"
+        },
+        "uyu": {
+          "name": {
+            "en": "Uruguay Peso"
+          },
+          "symbol": "$U"
+        },
+        "uzs": {
+          "name": {
+            "en": "Uzbekistan Som"
+          },
+          "symbol": "лв"
+        },
+        "vef": {
+          "name": {
+            "en": "Venezuela Bolivar"
+          },
+          "symbol": "Bs"
+        },
+        "vnd": {
+          "name": {
+            "en": "Viet Nam Dong"
+          },
+          "symbol": "₫"
+        },
+        "yer": {
+          "name": {
+            "en": "Yemen Rial"
+          },
+          "symbol": "﷼"
+        },
+        "zwd": {
+          "name": {
+            "en": "Zimbabwe Dollar"
+          },
+          "symbol": "Z$"
+        }
+      }
+    },
+    "temperature": {
+      "name": {
+        "en": "Temperature",
+        "fr": "Température"
+      },
+      "formats": {
+        "c": {
+          "name": {
+            "en": "Degrees Celsius",
+            "fr": "Degrés Celsius"
+          },
+          "symbol": "°C"
+        },
+        "f": {
+          "name": {
+            "en": "Degrees Fahrenheit",
+            "fr": "Degrés Fahrenheit"
+          },
+          "symbol": "°F"
+        },
+        "k": {
+          "name": {
+            "en": "Degrees Kelvin",
+            "fr": "Degrés Kelvin"
+          },
+          "symbol": "°K"
+        }
+      }
+    },
+    "length": {
+      "name": {
+        "fr": "Longueur",
+        "en": "Length"
+      },
+      "formats": {
+        "cm": {
+          "name": {
+            "en": "Centimeters",
+            "fr": "Centimètres"
+          },
+          "symbol": "cm"
+        },
+        "km": {
+          "name": {
+            "en": "Kilometers",
+            "fr": "Kilomètres"
+          },
+          "symbol": "km"
+        },
+        "m": {
+          "name": {
+            "en": "Meters",
+            "fr": "Mètres"
+          },
+          "symbol": "m"
+        },
+        "mm": {
+          "name": {
+            "en": "Millimeters",
+            "fr": "Millimètres"
+          },
+          "symbol": "mm"
+        },
+        "a": {
+          "name": {
+            "en": "Ångströms",
+            "fr": "Ångströms"
+          },
+          "symbol": "Å"
+        },
+        "au": {
+          "name": {
+            "en": "Astronomical units",
+            "fr": "Unités astronomiques"
+          },
+          "symbol": "AU"
+        },
+        "ch": {
+          "name": {
+            "en": "Chains",
+            "fr": "Chaînes"
+          },
+          "symbol": "ch"
+        },
+        "lea": {
+          "name": {
+            "en": "Leagues",
+            "fr": "Lieues"
+          },
+          "symbol": "lea"
+        },
+        "ft": {
+          "name": {
+            "en": "Feet",
+            "fr": "Pieds"
+          },
+          "symbol": "ft"
+        },
+        "in": {
+          "name": {
+            "en": "Inches",
+            "fr": "Pouces"
+          },
+          "symbol": "In"
+        },
+        "ly": {
+          "name": {
+            "en": "Light-years",
+            "fr": "Années-lumière"
+          },
+          "symbol": "ly"
+        },
+        "mil": {
+          "name": {
+            "en": "Mils",
+            "fr": "Mils"
+          },
+          "symbol": "mil"
+        },
+        "mi": {
+          "name": {
+            "en": "Miles",
+            "fr": "Miles"
+          },
+          "symbol": "mi"
+        },
+        "fur": {
+          "name": {
+            "en": "Furlongs",
+            "fr": "Furlongs"
+          },
+          "symbol": "fur"
+        },
+        "nmi": {
+          "name": {
+            "en": "Miles (nautical)",
+            "fr": "Miles nautiques"
+          },
+          "symbol": "nmi"
+        },
+        "p": {
+          "name": {
+            "en": "Points",
+            "fr": "Points"
+          },
+          "symbol": "p"
+        },
+        "pica": {
+          "name": {
+            "en": "Picas",
+            "fr": "Picas"
+          },
+          "symbol": "P̸"
+        },
+        "ftm": {
+          "name": {
+            "en": "Fathoms",
+            "fr": "Fathoms"
+          },
+          "symbol": "ftm"
+        },
+        "cb": {
+          "name": {
+            "en": "Cables",
+            "fr": "Cables"
+          },
+          "symbol": "cb"
+        },
+        "um": {
+          "name": {
+            "en": "Microns",
+            "fr": "Microns"
+          },
+          "symbol": "µm"
+        },
+        "yd": {
+          "name": {
+            "en": "Yards",
+            "fr": "Verges"
+          },
+          "symbol": "yd"
+        }
+      }
+    },
+    "mass": {
+      "formats": {
+        "g": {
+          "name": {
+            "en": "Grams",
+            "fr": "Grammes"
+          },
+          "symbol": "g"
+        },
+        "kg": {
+          "name": {
+            "en": "Kilograms",
+            "fr": "Kilogrammes"
+          },
+          "symbol": "Kg"
+        },
+        "gr": {
+          "name": {
+            "en": "Grains",
+            "fr": "Grains"
+          },
+          "symbol": "gr"
+        },
+        "dr": {
+          "name": {
+            "en": "Drams",
+            "fr": "Drams"
+          },
+          "symbol": "dr"
+        },
+        "l-t": {
+          "name": {
+            "en": "Long tons",
+            "fr": "Tonnes longues"
+          },
+          "symbol": "L/T"
+        },
+        "lb": {
+          "name": {
+            "en": "Pounds",
+            "fr": "Livres"
+          },
+          "symbol": "lb"
+        },
+        "t": {
+          "name": {
+            "en": "Metric tons",
+            "fr": "Tonnes métriques"
+          },
+          "symbol": "Mg"
+        },
+        "oz": {
+          "name": {
+            "en": "Ounces",
+            "fr": "Onces"
+          },
+          "symbol": "oz"
+        },
+        "s-t": {
+          "name": {
+            "en": "Short tons",
+            "fr": "Tonnes courtes"
+          },
+          "symbol": "S/T"
+        },
+        "st": {
+          "name": {
+            "en": "Stones",
+            "fr": "Stones"
+          },
+          "symbol": "st"
+        }
+      },
+      "name": {
+        "en": "Mass",
+        "fr": "Masse"
+      }
+    },
+    "absorbed-dose": {
+      "formats": {
+        "gy": {
+          "name": {
+            "en": "Grays",
+            "fr": "Grays"
+          },
+          "symbol": "Gy"
+        }
+      },
+      "name": {
+        "en": "Absorbed dose",
+        "fr": "Dose absorbée"
+      }
+    },
+    "absorbed-dose-equivalent": {
+      "formats": {
+        "sv": {
+          "name": {
+            "en": "Sieverts",
+            "fr": "Sieverts"
+          },
+          "symbol": "Sv"
+        }
+      },
+      "name": {
+        "en": "Dose equivalent",
+        "fr": "Dose équivalente"
+      }
+    },
+    "absorbed-dose-rate": {
+      "formats": {
+        "gy-s": {
+          "name": {
+            "en": "Grays/second",
+            "fr": "Grays/seconde"
+          },
+          "symbol": "Gy/s"
+        }
+      },
+      "name": {
+        "en": "Absorbed dose rate",
+        "fr": "Débit de dose absorbée"
+      }
+    },
+    "angle": {
+      "formats": {
+        "deg": {
+          "name": {
+            "en": "Degrees",
+            "fr": "Degrés"
+          },
+          "symbol": "°"
+        },
+        "grad": {
+          "name": {
+            "en": "Gradians",
+            "fr": "Grades"
+          },
+          "symbol": "grad"
+        },
+        "rad": {
+          "name": {
+            "en": "Radians",
+            "fr": "Radians"
+          },
+          "symbol": "rad"
+        }
+      },
+      "name": {
+        "en": "Angle",
+        "fr": "Angle"
+      }
+    },
+    "angular-acceleration": {
+      "formats": {
+        "rad-s2": {
+          "name": {
+            "en": "Radians/second squared",
+            "fr": "Radians/seconde carrée"
+          },
+          "symbol": "rad/s²"
+        }
+      },
+      "name": {
+        "en": "Angular acceleration",
+        "fr": "Accélération angulaire"
+      }
+    },
+    "area": {
+      "formats": {
+        "ac": {
+          "name": {
+            "en": "Acres (imperial)",
+            "fr": "Acres (anglo-saxon)"
+          },
+          "symbol": "ac"
+        },
+        "ft2": {
+          "name": {
+            "en": "Square feet",
+            "fr": "Pieds carrés"
+          },
+          "symbol": "ft²"
+        },
+        "ha": {
+          "name": {
+            "en": "Hectares",
+            "fr": "Hectares"
+          },
+          "symbol": "ha"
+        },
+        "in2": {
+          "name": {
+            "en": "Square inches",
+            "fr": "Pouces carrés"
+          },
+          "symbol": "in²"
+        },
+        "km2": {
+          "name": {
+            "en": "Square kilometers",
+            "fr": "Kilomètres carrés"
+          },
+          "symbol": "km²"
+        },
+        "m2": {
+          "name": {
+            "en": "Square meters",
+            "fr": "Mètres carrés"
+          },
+          "symbol": "m²"
+        },
+        "mm2": {
+          "name": {
+            "en": "Square millimeters",
+            "fr": "Millimètres carrés"
+          },
+          "symbol": "mm²"
+        },
+        "yd2": {
+          "name": {
+            "en": "Square yards",
+            "fr": "Verges carrées"
+          },
+          "symbol": "yd²"
+        },
+        "mi2": {
+          "name": {
+            "en": "Square miles",
+            "fr": "Milles carrés"
+          },
+          "symbol": "mi²"
+        }
+      },
+      "name": {
+        "en": "Area",
+        "fr": "Aire"
+      }
+    },
+    "capacitance": {
+      "formats": {
+        "f": {
+          "name": {
+            "en": "Farads",
+            "fr": "Farads"
+          },
+          "symbol": "F"
+        }
+      },
+      "name": {
+        "en": "Capacitance",
+        "fr": "Capacitance"
+      }
+    },
+    "catalytic-activity": {
+      "formats": {
+        "kat": {
+          "name": {
+            "en": "Katals",
+            "fr": "Katals"
+          },
+          "symbol": "kat"
+        }
+      },
+      "name": {
+        "en": "Catalytic activity",
+        "fr": "Activité catalytique"
+      }
+    },
+    "data-quantity": {
+      "formats": {
+        "b": {
+          "name": {
+            "en": "Bytes",
+            "fr": "Octets"
+          },
+          "symbol": "B"
+        },
+        "bits": {
+          "name": {
+            "en": "Bits",
+            "fr": "Bits"
+          },
+          "symbol": "bit"
+        },
+        "gb": {
+          "name": {
+            "en": "Gigabytes",
+            "fr": "Gigaoctets"
+          },
+          "symbol": "Gb"
+        },
+        "gbits": {
+          "name": {
+            "en": "Gigabits",
+            "fr": "Gigabits"
+          },
+          "symbol": "Gbit"
+        },
+        "kb": {
+          "name": {
+            "en": "Kilobytes",
+            "fr": "Kilooctets"
+          },
+          "symbol": "Kb"
+        },
+        "kbits": {
+          "name": {
+            "en": "Kilobits",
+            "fr": "Kilobits"
+          },
+          "symbol": "Kbit"
+        },
+        "mb": {
+          "name": {
+            "en": "Megabytes",
+            "fr": "Megaoctets"
+          },
+          "symbol": "Mb"
+        },
+        "mbits": {
+          "name": {
+            "en": "Megabits",
+            "fr": "Megabits"
+          },
+          "symbol": "Mbit"
+        },
+        "tb": {
+          "name": {
+            "en": "Terabytes",
+            "fr": "Teraoctets"
+          },
+          "symbol": "Tb"
+        }
+      },
+      "name": {
+        "en": "Data quantity",
+        "fr": "Quantité de données"
+      }
+    },
+    "density": {
+      "formats": {
+        "g-dl": {
+          "name": {
+            "en": "Grams/deciliter",
+            "fr": "Grammes/décilitre"
+          },
+          "symbol": "g/dL"
+        },
+        "kg-m3": {
+          "name": {
+            "en": "Kilograms/cubic meter",
+            "fr": "Kilogrammes/mètre cube"
+          },
+          "symbol": "kg/m³"
+        },
+        "mg-dl": {
+          "name": {
+            "en": "Milligrams/deciliter",
+            "fr": "Milligrammes/décilitre"
+          },
+          "symbol": "mg/dL"
+        },
+        "mmol-l": {
+          "name": {
+            "en": "Millimoles/liter",
+            "fr": "Millimoles/litre"
+          },
+          "symbol": "mmol/L"
+        }
+      },
+      "name": {
+        "en": "Density",
+        "fr": "Densité"
+      }
+    },
+    "dynamic-viscosity": {
+      "formats": {
+        "pa-s": {
+          "name": {
+            "en": "Pascals/second",
+            "fr": "Pascals/seconde"
+          },
+          "symbol": "Pa/s"
+        }
+      },
+      "name": {
+        "en": "Dynamic viscosity",
+        "fr": "Viscosité dynamique"
+      }
+    },
+    "electric-charge": {
+      "formats": {
+        "c": {
+          "name": {
+            "en": "Coulombs",
+            "fr": "Coulombs"
+          },
+          "symbol": "C"
+        }
+      },
+      "name": {
+        "en": "Electric charge",
+        "fr": "Charge électrique"
+      }
+    },
+    "electric-charge-line-density": {
+      "formats": {
+        "c-m": {
+          "name": {
+            "en": "Coulombs/meter",
+            "fr": "Coulombs/mètre"
+          },
+          "symbol": "C/m"
+        }
+      },
+      "name": {
+        "en": "Electric charge line density",
+        "fr": "Densité linéique de charge électrique"
+      }
+    },
+    "electric-current": {
+      "formats": {
+        "a": {
+          "name": {
+            "en": "Amperes",
+            "fr": "Ampères"
+          },
+          "symbol": "A"
+        }
+      },
+      "name": {
+        "en": "Electric current",
+        "fr": "Courant électrique"
+      }
+    },
+    "electrical-conductivity": {
+      "formats": {
+        "s": {
+          "name": {
+            "en": "Siemens",
+            "fr": "Siemens"
+          },
+          "symbol": "S"
+        }
+      },
+      "name": {
+        "en": "Electrical conductivity",
+        "fr": "Conductivité électrique"
+      }
+    },
+    "electromotive-force": {
+      "formats": {
+        "v": {
+          "name": {
+            "en": "Volts",
+            "fr": "Volts"
+          },
+          "symbol": "V"
+        }
+      },
+      "name": {
+        "en": "Electromotive force",
+        "fr": "Force électromotrice"
+      }
+    },
+    "energy": {
+      "formats": {
+        "btu": {
+          "name": {
+            "en": "British thermal units",
+            "fr": "British thermal units"
+          },
+          "symbol": "BTU"
+        },
+        "cal": {
+          "name": {
+            "en": "Calories",
+            "fr": "Calories"
+          },
+          "symbol": "cal"
+        },
+        "ev": {
+          "name": {
+            "en": "Electron-volts",
+            "fr": "Électron-volts"
+          },
+          "symbol": "eV"
+        },
+        "erg": {
+          "name": {
+            "en": "Ergs",
+            "fr": "Ergs"
+          },
+          "symbol": "Erg"
+        },
+        "ftlb": {
+          "name": {
+            "en": "Foot-pounds",
+            "fr": "Pied-livres"
+          },
+          "symbol": "ft·lb"
+        },
+        "j": {
+          "name": {
+            "en": "Joules",
+            "fr": "Joules"
+          },
+          "symbol": "J"
+        },
+        "kcal": {
+          "name": {
+            "en": "Kilogram-calories",
+            "fr": "Kilocalories"
+          },
+          "symbol": "kg·cal"
+        },
+        "ws": {
+          "name": {
+            "en": "Watt-seconds",
+            "fr": "Watt-secondes"
+          },
+          "symbol": "Ws"
+        },
+        "kwh": {
+          "name": {
+            "en": "Kilowatt-hours",
+            "fr": "Kilowatt-heures"
+          },
+          "symbol": "kW·h"
+        },
+        "nm": {
+          "name": {
+            "en": "Newton-meters",
+            "fr": "Newton-mètres"
+          },
+          "symbol": "N·m"
+        },
+        "wh": {
+          "name": {
+            "en": "Watt-hours",
+            "fr": "Watt-heures"
+          },
+          "symbol": "W·h"
+        }
+      },
+      "name": {
+        "en": "Energy",
+        "fr": "Energie"
+      }
+    },
+    "force": {
+      "formats": {
+        "dyn": {
+          "name": {
+            "en": "Dynes",
+            "fr": "Dynes"
+          },
+          "symbol": "dyn"
+        },
+        "n": {
+          "name": {
+            "en": "Newtons",
+            "fr": "Newtons"
+          },
+          "symbol": "N"
+        },
+        "pdl": {
+          "name": {
+            "en": "Poundals",
+            "fr": "Poundals"
+          },
+          "symbol": "Pdl"
+        }
+      },
+      "name": {
+        "en": "Force",
+        "fr": "Force"
+      }
+    },
+    "frequency": {
+      "formats": {
+        "rpm": {
+          "name": {
+            "en": "Revolutions per minute",
+            "fr": "Rotations par minute"
+          },
+          "symbol": "rpm"
+        },
+        "hz": {
+          "name": {
+            "en": "Hertz",
+            "fr": "Hertz"
+          },
+          "symbol": "Hz"
+        },
+        "bpm": {
+          "name": {
+            "en": "Beats per minute",
+            "fr": "Battements par minute"
+          },
+          "symbol": "bpm"
+        }
+      },
+      "name": {
+        "en": "Frequency",
+        "fr": "Fréquence"
+      }
+    },
+    "luminous-intensity": {
+      "formats": {
+        "cd": {
+          "name": {
+            "en": "Candelas",
+            "fr": "Candelas"
+          },
+          "symbol": "Cd"
+        }
+      },
+      "name": {
+        "en": "Luminous intensity",
+        "fr": "Intensité lumineuse"
+      }
+    },
+    "mol": {
+      "formats": {
+        "mol": {
+          "name": {
+            "en": "Moles",
+            "fr": "Moles"
+          },
+          "symbol": "Mol"
+        }
+      },
+      "name": {
+        "en": "Amount of substance",
+        "fr": "Quantité de matière"
+      }
+    },
+    "power": {
+      "formats": {
+        "btu-min": {
+          "name": {
+            "en": "BTUs/minute",
+            "fr": "BTUs/minute"
+          },
+          "symbol": "BTU/min"
+        },
+        "ftlb-s": {
+          "name": {
+            "en": "Foot-pounds/second",
+            "fr": "Pied-livres/seconde"
+          },
+          "symbol": "ft·lb/s"
+        },
+        "hp": {
+          "name": {
+            "en": "Horsepower",
+            "fr": "Chevaux"
+          },
+          "symbol": "hp"
+        },
+        "kw": {
+          "name": {
+            "en": "Kilowatts",
+            "fr": "Kilowatts"
+          },
+          "symbol": "kW"
+        },
+        "w": {
+          "name": {
+            "en": "Watts",
+            "fr": "Watts"
+          },
+          "symbol": "W"
+        }
+      },
+      "name": {
+        "en": "Power",
+        "fr": "Puissance"
+      }
+    },
+    "pressure": {
+      "formats": {
+        "at": {
+          "name": {
+            "en": "Atmospheres",
+            "fr": "Atmosphères"
+          },
+          "symbol": "at"
+        },
+        "bar": {
+          "name": {
+            "en": "Bars",
+            "fr": "Bars"
+          },
+          "symbol": "bar"
+        },
+        "cmhg": {
+          "name": {
+            "en": "Centimeters of mercury",
+            "fr": "Centimètres de mercure"
+          },
+          "symbol": "cmHg"
+        },
+        "inhg": {
+          "name": {
+            "en": "Inches of mercury",
+            "fr": "Pouces de mercure"
+          },
+          "symbol": "inHg"
+        },
+        "kg-m2": {
+          "name": {
+            "en": "Kilograms/square meter",
+            "fr": "Kilogrammes/mètre cube"
+          },
+          "symbol": "kg/m²"
+        },
+        "mmhg": {
+          "name": {
+            "en": "Millimeters of mercury",
+            "fr": "Millimètres de mercure"
+          },
+          "symbol": "mmHg"
+        },
+        "pa": {
+          "name": {
+            "en": "Pascals",
+            "fr": "Pascals"
+          },
+          "symbol": "Pa"
+        },
+        "kpa": {
+          "name": {
+            "en": "Kilo Pascals",
+            "fr": "Kilo Pascals"
+          },
+          "symbol": "kPa"
+        },
+        "psf": {
+          "name": {
+            "en": "Pounds/square foot",
+            "fr": "Livres/pied carré"
+          },
+          "symbol": "psf"
+        },
+        "psi": {
+          "name": {
+            "en": "Pounds/square inch",
+            "fr": "Livres/pouce carré"
+          },
+          "symbol": "psi"
+        }
+      },
+      "name": {
+        "en": "Pressure",
+        "fr": "Pression"
+      }
+    },
+    "ratio": {
+      "formats": {
+        "percent": {
+          "name": {
+            "en": "Percentage",
+            "fr": "Pourcentage"
+          }
+        }
+      },
+      "name": {
+        "en": "Ratio",
+        "fr": "Ratio"
+      }
+    },
+    "speed": {
+      "formats": {
+        "ft-m": {
+          "name": {
+            "en": "Feet/minute",
+            "fr": "Pieds/minute"
+          },
+          "symbol": "ft/m"
+        },
+        "ft-s": {
+          "name": {
+            "en": "Feet/second",
+            "fr": "Pieds/seconde"
+          },
+          "symbol": "ft/s"
+        },
+        "km-h": {
+          "name": {
+            "en": "Kilometers/hour",
+            "fr": "Kilomètres/heure"
+          },
+          "symbol": "km/h"
+        },
+        "kt": {
+          "name": {
+            "en": "Knots",
+            "fr": "Noeuds"
+          },
+          "symbol": "kt"
+        },
+        "m-min": {
+          "name": {
+            "en": "Miles/minute",
+            "fr": "Miles/minute"
+          },
+          "symbol": "m/min"
+        },
+        "m-s": {
+          "name": {
+            "en": "Meters/second",
+            "fr": "Mètres/seconde"
+          },
+          "symbol": "m/s"
+        },
+        "mph": {
+          "name": {
+            "en": "Miles/hour",
+            "fr": "Miles/heure"
+          },
+          "symbol": "mph"
+        }
+      },
+      "name": {
+        "en": "Speed",
+        "fr": "Vitesse"
+      }
+    },
+    "volume": {
+      "formats": {
+        "c": {
+          "name": {
+            "en": "Cups",
+            "fr": "Tasses"
+          },
+          "symbol": "c"
+        },
+        "cm3": {
+          "name": {
+            "en": "Cubic centimeters",
+            "fr": "Centimètres cube"
+          },
+          "symbol": "cm³"
+        },
+        "floz": {
+          "name": {
+            "en": "Fluid ounces",
+            "fr": "Onces liquides"
+          },
+          "symbol": "fl oz"
+        },
+        "ft3": {
+          "name": {
+            "en": "Cubic feet",
+            "fr": "Pieds cube"
+          },
+          "symbol": "cu ft"
+        },
+        "galgb": {
+          "name": {
+            "en": "Gallons imperial",
+            "fr": "Gallons impériaux"
+          },
+          "symbol": "gal GB"
+        },
+        "galus": {
+          "name": {
+            "en": "Gallons US",
+            "fr": "Gallons US"
+          },
+          "symbol": "gal US"
+        },
+        "in3": {
+          "name": {
+            "en": "Cubic inches",
+            "fr": "Pouce cube"
+          },
+          "symbol": "cu in"
+        },
+        "yd3": {
+          "name": {
+            "en": "Cubic yards",
+            "fr": "Verges cube"
+          },
+          "symbol": "cu yd"
+        },
+        "l": {
+          "name": {
+            "en": "Liters",
+            "fr": "Litres"
+          },
+          "symbol": "L"
+        },
+        "m3": {
+          "name": {
+            "en": "Cubic meters",
+            "fr": "Mètres cube"
+          },
+          "symbol": "m³"
+        },
+        "ml": {
+          "name": {
+            "en": "Milliliters",
+            "fr": "Millilitres"
+          },
+          "symbol": "mL"
+        },
+        "pt": {
+          "name": {
+            "en": "Pints",
+            "fr": "Pintes"
+          },
+          "symbol": "pt"
+        },
+        "qt": {
+          "name": {
+            "en": "Quarts",
+            "fr": "Quarts"
+          },
+          "symbol": "qt"
+        },
+        "bbloil": {
+          "name": {
+            "en": "Barrels (oil)",
+            "fr": "Barils (pétrole)"
+          },
+          "symbol": "bbl (oil)"
+        },
+        "tbs": {
+          "name": {
+            "en": "Tablespoons",
+            "fr": "Cuillères à soupe"
+          },
+          "symbol": "tbs"
+        },
+        "tsp": {
+          "name": {
+            "en": "Teaspoons",
+            "fr": "Cuillères à café"
+          },
+          "symbol": "tsp"
+        }
+      },
+      "name": {
+        "en": "Volume",
+        "fr": "Volume"
+      }
+    },
+    "time": {
+      "formats": {
+        "d": {
+          "name": {
+            "en": "Days",
+            "fr": "Jours"
+          },
+          "symbol": "d"
+        },
+        "h": {
+          "name": {
+            "en": "Hours",
+            "fr": "Heures"
+          },
+          "symbol": "h"
+        },
+        "min": {
+          "name": {
+            "en": "Minutes",
+            "fr": "Minutes"
+          },
+          "symbol": "min"
+        },
+        "ms": {
+          "name": {
+            "en": "Milliseconds",
+            "fr": "Millisecondes"
+          },
+          "symbol": "ms"
+        },
+        "s": {
+          "name": {
+            "en": "Seconds",
+            "fr": "Secondes"
+          },
+          "symbol": "s"
+        },
+        "y": {
+          "name": {
+            "en": "Years (Julian)",
+            "fr": "Années (juliennes)"
+          },
+          "symbol": "yr"
+        }
+      },
+      "name": {
+        "en": "Time",
+        "fr": "Temps"
+      }
+    }
+  }
+}
+},{}],69:[function(require,module,exports){
+module.exports={
+  "version": "0.2.9",
+  "types": {
+    "activity/plain": {
+      "description": "Plain activity event with no specific content; the activity is defined by the event's stream, time and duration, and possibly description and tags.",
+      "type": "null"
+    },
+    "audio/attached": {
+      "description": "The audio source is the file attached to the event (no explicit content defined).\nYou can use the event's duration to mirror the recording's duration.",
+      "type": "null",
+      "attachmentRequired": true
+    },
+    "audio/url": {
+      "description": "A reference to an audio file online.",
+      "type": "string",
+      "pattern": "^(https?)://.+$"
+    },
+    "call/name": {
+      "description": "The contact's name (or a free-form identifier)",
+      "type": "string"
+    },
+    "call/skype": {
+      "description": "The Skype id",
+      "type": "string"
+    },
+    "call/telephone": {
+      "description": "The phone number",
+      "type": "string"
+    },
+    "contact/facebook": {
+      "type": "object",
+      "description": "A Facebook user as specified in the Graph API: https://developers.facebook.com/docs/reference/api/user/",
+      "additionalProperties": "true",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "contact/vcard": {
+      "description": "A business card in vCard 2.0-3.x format. See: rfc2425, rfc2426.",
+      "type": "string"
+    },
+    "encrypted/aes-text-base64": {
+      "description": "AES encrypted payload, with a <em>text</em> key and a <em>Base64</em> payload.",
+      "type": "object",
+      "properties": {
+        "payload": {
+          "description": "The encrypted data.",
+          "type": "string"
+        },
+        "keyRef": {
+          "description": "A reference (e.g. id, name in keychain) to the key to use for decryption.",
+          "type": "string"
+        },
+        "hint": {
+          "description": "Alternative to <code>keyRef</code>. A textual hint about which key to use for decryption.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "payload"
+      ]
+    },
+    "file/attached": {
+      "description": "The file is attached to the event",
+      "type": "null",
+      "attachmentRequired": true
+    },
+    "file/attached-multiple": {
+      "description": "A set of file attached. Structure can be declared in the filenames.",
+      "attachmentRequired": true,
+      "type": "null"
+    },
+    "file/url": {
+      "description": "A reference to a file hosted elsewhere",
+      "type": "string",
+      "pattern": "^(https?)://.+$"
+    },
+    "message/email": {
+      "description": "An e-mail message.",
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "cc": {
+          "type": "string"
+        },
+        "bcc": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "message-id": {
+          "type": "string"
+        },
+        "reply-to": {
+          "type": "string"
+        },
+        "x-headers": {
+          "description": "Key/value map of `X-*` headers",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "body": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "body"
+      ]
+    },
+    "message/facebook": {
+      "description": "A Facebook post. See [Facebook's API docs](https://developers.facebook.com/docs/reference/api/post/) for reference. Facebook properties `message` and `created_time` map to event `description` and `time` respectively. Facebook attached pictures can be directly mapped to attachments. Other Facebook properties such as `link`, `source`, `privacy` are allowed.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "id"
+          ]
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "id"
+                ]
+              }
+            }
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "description": "Either a fully qualified \"URL\" for an external source or a \"filename\" for a Flash Movie or Video attached to this event."
+        },
+        "properties": {
+          "type": "string",
+          "description": "Relative to `source`: a list of properties for an uploaded video, for example, the length of the video.",
+          "additionalProperties": true
+        },
+        "picture": {
+          "description": "Either a fully qualified \"URL\" for an external picture or a \"filename\" for a picture attached to this event.",
+          "type": "string"
+        },
+        "status-type": {
+          "description": "One of mobile_status_update, created_note, added_photos, added_video, shared_story, created_group, created_event, wall_post, app_created_story, published_story, tagged_in_photo, approved_friend",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "message"
+      ]
+    },
+    "message/twitter": {
+      "description": "A Twitter post. Twitter property `created_at` maps to event `time`. Other Twitter properties (see [Twitter's API docs](https://dev.twitter.com/docs/api/1.1/get/statuses/show/%3Aid)) are allowed.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "screen-name": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "screen-name",
+        "text"
+      ]
+    },
+    "money/aed": {
+      "type": "number"
+    },
+    "money/ang": {
+      "type": "number",
+      "description": "Netherlands Antilles Guilder"
+    },
+    "money/ars": {
+      "type": "number",
+      "description": "Argentina Peso"
+    },
+    "money/aud": {
+      "type": "number",
+      "description": "Australia Dollar"
+    },
+    "money/bgn": {
+      "type": "number",
+      "description": "Bulgaria Lev"
+    },
+    "money/bhd": {
+      "type": "number"
+    },
+    "money/bnd": {
+      "type": "number",
+      "description": "Brunei Darussalam Dollar"
+    },
+    "money/bob": {
+      "type": "number",
+      "description": "Bolivia Boliviano"
+    },
+    "money/brl": {
+      "type": "number",
+      "description": "Brazil Real"
+    },
+    "money/bwp": {
+      "type": "number",
+      "description": "Botswana Pula"
+    },
+    "money/cad": {
+      "type": "number",
+      "description": "Canada Dollar"
+    },
+    "money/chf": {
+      "type": "number",
+      "description": "Switzerland Franc"
+    },
+    "money/clp": {
+      "type": "number",
+      "description": "Chile Peso"
+    },
+    "money/cny": {
+      "type": "number",
+      "description": "China Yuan Renminbi"
+    },
+    "money/cop": {
+      "type": "number",
+      "description": "Colombia Peso"
+    },
+    "money/crc": {
+      "type": "number",
+      "description": "Costa Rica Colon"
+    },
+    "money/czk": {
+      "type": "number",
+      "description": "Czech Republic Koruna"
+    },
+    "money/dkk": {
+      "type": "number",
+      "description": "Denmark Krone"
+    },
+    "money/dop": {
+      "type": "number",
+      "description": "Dominican Republic Peso"
+    },
+    "money/dzd": {
+      "type": "number"
+    },
+    "money/eek": {
+      "type": "number",
+      "description": "Estonia Kroon"
+    },
+    "money/egp": {
+      "type": "number",
+      "description": "Egypt Pound"
+    },
+    "money/eur": {
+      "type": "number",
+      "description": "Euro"
+    },
+    "money/fjd": {
+      "type": "number",
+      "description": "Fiji Dollar"
+    },
+    "money/gbp": {
+      "type": "number",
+      "description": "United Kingdom Pound"
+    },
+    "money/hkd": {
+      "type": "number",
+      "description": "Hong Kong Dollar"
+    },
+    "money/hnl": {
+      "type": "number",
+      "description": "Honduras Lempira"
+    },
+    "money/hrk": {
+      "type": "number",
+      "description": "Croatia Kuna"
+    },
+    "money/huf": {
+      "type": "number",
+      "description": "Hungary Forint"
+    },
+    "money/idr": {
+      "type": "number",
+      "description": "Indonesia Rupiah"
+    },
+    "money/ils": {
+      "type": "number",
+      "description": "Israel Shekel"
+    },
+    "money/inr": {
+      "type": "number",
+      "description": "India Rupee"
+    },
+    "money/jmd": {
+      "type": "number",
+      "description": "Jamaica Dollar"
+    },
+    "money/jod": {
+      "type": "number"
+    },
+    "money/jpy": {
+      "type": "number",
+      "description": "Japan Yen"
+    },
+    "money/kes": {
+      "type": "number"
+    },
+    "money/krw": {
+      "type": "number",
+      "description": "Korea (South) Won"
+    },
+    "money/kwd": {
+      "type": "number"
+    },
+    "money/kyd": {
+      "type": "number",
+      "description": "Cayman Islands Dollar"
+    },
+    "money/kzt": {
+      "type": "number",
+      "description": "Kazakhstan Tenge"
+    },
+    "money/lbp": {
+      "type": "number",
+      "description": "Lebanon Pound"
+    },
+    "money/lkr": {
+      "type": "number",
+      "description": "Sri Lanka Rupee"
+    },
+    "money/ltl": {
+      "type": "number",
+      "description": "Lithuania Litas"
+    },
+    "money/lvl": {
+      "type": "number",
+      "description": "Latvia Lat"
+    },
+    "money/mad": {
+      "type": "number"
+    },
+    "money/mdl": {
+      "type": "number"
+    },
+    "money/mkd": {
+      "type": "number",
+      "description": "Macedonia Denar"
+    },
+    "money/mur": {
+      "type": "number",
+      "description": "Mauritius Rupee"
+    },
+    "money/mxn": {
+      "type": "number",
+      "description": "Mexico Peso"
+    },
+    "money/myr": {
+      "type": "number",
+      "description": "Malaysia Ringgit"
+    },
+    "money/nad": {
+      "type": "number",
+      "description": "Namibia Dollar"
+    },
+    "money/ngn": {
+      "type": "number",
+      "description": "Nigeria Naira"
+    },
+    "money/nio": {
+      "type": "number",
+      "description": "Nicaragua Cordoba"
+    },
+    "money/nok": {
+      "type": "number",
+      "description": "Norway Krone"
+    },
+    "money/npr": {
+      "type": "number",
+      "description": "Nepal Rupee"
+    },
+    "money/nzd": {
+      "type": "number",
+      "description": "New Zealand Dollar"
+    },
+    "money/omr": {
+      "type": "number",
+      "description": "Oman Rial"
+    },
+    "money/pen": {
+      "type": "number",
+      "description": "Peru Nuevo Sol"
+    },
+    "money/pgk": {
+      "type": "number"
+    },
+    "money/php": {
+      "type": "number",
+      "description": "Philippines Peso"
+    },
+    "money/pkr": {
+      "type": "number",
+      "description": "Pakistan Rupee"
+    },
+    "money/pln": {
+      "type": "number",
+      "description": "Poland Zloty"
+    },
+    "money/pyg": {
+      "type": "number",
+      "description": "Paraguay Guarani"
+    },
+    "money/qar": {
+      "type": "number",
+      "description": "Qatar Riyal"
+    },
+    "money/ron": {
+      "type": "number",
+      "description": "Romania New Leu"
+    },
+    "money/rsd": {
+      "type": "number",
+      "description": "Serbia Dinar"
+    },
+    "money/rub": {
+      "type": "number",
+      "description": "Russia Ruble"
+    },
+    "money/sar": {
+      "type": "number",
+      "description": "Saudi Arabia Riyal"
+    },
+    "money/scr": {
+      "type": "number",
+      "description": "Seychelles Rupee"
+    },
+    "money/sek": {
+      "type": "number",
+      "description": "Sweden Krona"
+    },
+    "money/sgd": {
+      "type": "number",
+      "description": "Singapore Dollar"
+    },
+    "money/skk": {
+      "type": "number"
+    },
+    "money/sll": {
+      "type": "number"
+    },
+    "money/svc": {
+      "type": "number",
+      "description": "El Salvador Colon"
+    },
+    "money/thb": {
+      "type": "number",
+      "description": "Thailand Baht"
+    },
+    "money/tnd": {
+      "type": "number"
+    },
+    "money/try": {
+      "type": "number",
+      "description": "Turkey Lira"
+    },
+    "money/ttd": {
+      "type": "number",
+      "description": "Trinidad and Tobago Dollar"
+    },
+    "money/twd": {
+      "type": "number",
+      "description": "Taiwan New Dollar"
+    },
+    "money/tzs": {
+      "type": "number"
+    },
+    "money/uah": {
+      "type": "number",
+      "description": "Ukraine Hryvna"
+    },
+    "money/ugx": {
+      "type": "number"
+    },
+    "money/usd": {
+      "type": "number",
+      "description": "United States Dollar"
+    },
+    "money/uyu": {
+      "type": "number",
+      "description": "Uruguay Peso"
+    },
+    "money/uzs": {
+      "type": "number",
+      "description": "Uzbekistan Som"
+    },
+    "money/vnd": {
+      "type": "number",
+      "description": "Viet Nam Dong"
+    },
+    "money/yer": {
+      "type": "number",
+      "description": "Yemen Rial"
+    },
+    "money/zar": {
+      "type": "number",
+      "description": "South Africa Rand"
+    },
+    "money/zmk": {
+      "type": "number"
+    },
+    "money/btc": {
+      "description": "Bitcoin",
+      "type": "number"
+    },
+    "money/all": {
+      "description": "Albania Lek",
+      "type": "number"
+    },
+    "money/afn": {
+      "description": "Afghanistan Afghani",
+      "type": "number"
+    },
+    "money/awg": {
+      "description": "Aruba Guilder",
+      "type": "number"
+    },
+    "money/azn": {
+      "description": "Azerbaijan New Manat",
+      "type": "number"
+    },
+    "money/bsd": {
+      "description": "Bahamas Dollar",
+      "type": "number"
+    },
+    "money/bbd": {
+      "description": "Barbados Dollar",
+      "type": "number"
+    },
+    "money/byr": {
+      "description": "Belarus Ruble",
+      "type": "number"
+    },
+    "money/bzd": {
+      "description": "Belize Dollar",
+      "type": "number"
+    },
+    "money/bmd": {
+      "description": "Bermuda Dollar",
+      "type": "number"
+    },
+    "money/bam": {
+      "description": "Bosnia and Herzegovina Convertible Marka",
+      "type": "number"
+    },
+    "money/khr": {
+      "description": "Cambodia Riel",
+      "type": "number"
+    },
+    "money/cup": {
+      "description": "Cuba Peso",
+      "type": "number"
+    },
+    "money/xcd": {
+      "description": "East Caribbean Dollar",
+      "type": "number"
+    },
+    "money/fkp": {
+      "description": "Falkland Islands (Malvinas) Pound",
+      "type": "number"
+    },
+    "money/ghc": {
+      "description": "Ghana Cedis",
+      "type": "number"
+    },
+    "money/gip": {
+      "description": "Gibraltar Pound",
+      "type": "number"
+    },
+    "money/gtq": {
+      "description": "Guatemala Quetzal",
+      "type": "number"
+    },
+    "money/ggp": {
+      "description": "Guernsey Pound",
+      "type": "number"
+    },
+    "money/gyd": {
+      "description": "Guyana Dollar",
+      "type": "number"
+    },
+    "money/isk": {
+      "description": "Iceland Krona",
+      "type": "number"
+    },
+    "money/irr": {
+      "description": "Iran Rial",
+      "type": "number"
+    },
+    "money/imp": {
+      "description": "Isle of Man Pound",
+      "type": "number"
+    },
+    "money/jep": {
+      "description": "Jersey Pound",
+      "type": "number"
+    },
+    "money/kpw": {
+      "description": "Korea (North) Won",
+      "type": "number"
+    },
+    "money/kgs": {
+      "description": "Kyrgyzstan Som",
+      "type": "number"
+    },
+    "money/lak": {
+      "description": "Laos Kip",
+      "type": "number"
+    },
+    "money/lrd": {
+      "description": "Liberia Dollar",
+      "type": "number"
+    },
+    "money/mnt": {
+      "description": "Mongolia Tughrik",
+      "type": "number"
+    },
+    "money/mzn": {
+      "description": "Mozambique Metical",
+      "type": "number"
+    },
+    "money/pab": {
+      "description": "Panama Balboa",
+      "type": "number"
+    },
+    "money/shp": {
+      "description": "Saint Helena Pound",
+      "type": "number"
+    },
+    "money/sbd": {
+      "description": "Solomon Islands Dollar",
+      "type": "number"
+    },
+    "money/sos": {
+      "description": "Somalia Shilling",
+      "type": "number"
+    },
+    "money/srd": {
+      "description": "Suriname Dollar",
+      "type": "number"
+    },
+    "money/syp": {
+      "description": "Syria Pound",
+      "type": "number"
+    },
+    "money/trl": {
+      "description": "Turkey Lira",
+      "type": "number"
+    },
+    "money/tvd": {
+      "description": "Tuvalu Dollar",
+      "type": "number"
+    },
+    "money/vef": {
+      "description": "Venezuela Bolivar",
+      "type": "number"
+    },
+    "money/zwd": {
+      "description": "Zimbabwe Dollar",
+      "type": "number"
+    },
+    "mood/rating": {
+      "description": "Rating of mood (float value) 0:worst -> 1:best",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "mood/emoticon": {
+      "description": "ASCII Art emoticon",
+      "type": "string"
+    },
+    "music/basic": {
+      "description": "Inspired from id3 key/pair",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "artist": {
+          "type": "string"
+        },
+        "album": {
+          "type": "string"
+        },
+        "track": {
+          "type": "integer"
+        },
+        "year": {
+          "type": "integer"
+        },
+        "genre": {
+          "type": "string"
+        }
+      }
+    },
+    "music/soundcloud": {
+      "description": "See [Soundcloud track properties](http://developers.soundcloud.com/docs/api/reference#tracks).",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "note/html": {
+      "description": "An HTML-formatted note.",
+      "type": "string",
+      "maxLength": 4194304
+    },
+    "note/txt": {
+      "description": "A plain-text note.",
+      "type": "string",
+      "maxLength": 4194304
+    },
+    "note/webclip": {
+      "description": "An HTML-formatted note associated to its source URL.",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^(https?)://.+$"
+        },
+        "content": {
+          "description": "An HTML-formatted string.",
+          "type": "string",
+          "maxLength": 4194304
+        }
+      },
+      "required": [
+        "url"
+      ]
+    },
+    "numset/*": {
+      "description": "The format key is freely defined.\n\nFor example, a heart measurement with type `numset/heart` and content:\n```\n{ \n  \"systolic\": { \"pressure/mmhg\": 105 },\n  \"diastolic\": { \"pressure/mmhg\": 64 },\n  \"rate\": { \"frequency/bpm\": 88 }\n}\n```\n\n ",
+      "type": "object",
+      "patternProperties": {
+        "^(/[^/]+)+$": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": "false",
+      "required": []
+    },
+    "picture/base64": {
+      "description": "The picture is caried in base64 (utf-8) encoded in string",
+      "type": "string",
+      "properties": {
+        "payload": {
+          "type": "string",
+          "description": "base64 encoded content"
+        },
+        "format": {
+          "type": "string",
+          "description": "The data format \"gif\", \"jpeg\", \"png\", \"tiff\", \"vnd.microsoft.com\", \"svg+xml\""
+        },
+        "filename": {
+          "description": "A filename",
+          "type": "string"
+        }
+      },
+      "required": [
+        "payload",
+        "format"
+      ]
+    },
+    "picture/attached": {
+      "description": "The picture is the image file attached to the event (no explicit content defined). TODO: list accepted formats.",
+      "type": "null",
+      "attachmentRequired": true
+    },
+    "picture/url": {
+      "description": "A reference to a picture file online.",
+      "type": "string",
+      "pattern": "^(https?)://.+$"
+    },
+    "position/wgs84": {
+      "description": "The latest revision of the World Geodetic System (used by GPS).",
+      "type": "object",
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "description": "Unit: degrees north from the equator."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Unit: degrees east from the zero meridian."
+        },
+        "altitude": {
+          "type": "number",
+          "description": "Unit: meters above sea level."
+        },
+        "horizontalAccuracy": {
+          "type": "number",
+          "description": "The radius of uncertainty for latitude and longitude. Unit: meters. Negative if latitude and longitude are invalid."
+        },
+        "verticalAccuracy": {
+          "type": "number",
+          "description": "The radius of uncertainty for altitude. Unit: meters. Negative if altitude is invalid."
+        },
+        "speed": {
+          "type": "number",
+          "description": "For informational purposes only. Unit: meters / second. Negative if invalid."
+        },
+        "bearing": {
+          "type": "number",
+          "description": "Unit: degrees clockwise from north. Negative if invalid."
+        }
+      },
+      "required": [
+        "latitude",
+        "longitude"
+      ]
+    },
+    "ratio/generic": {
+      "description": "Generic ratio.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "relativeTo": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "relativeTo"
+      ]
+    },
+    "ratio/percent": {
+      "description": "A percentage value.",
+      "type": "number"
+    },
+    "url/http": {
+      "description": "An HTTP or HTTPS resource.",
+      "type": "string",
+      "pattern": "^(https?)://.+$"
+    },
+    "video/attached": {
+      "description": "The video is the file attached to the event (no explicit content defined). TODO: list accepted formats.",
+      "type": "null",
+      "attachmentRequired": true
+    },
+    "video/url": {
+      "description": "A reference to an video file online.",
+      "type": "string",
+      "pattern": "^(https?)://.+$"
+    },
+    "video/vimeo": {
+      "description": "A Vimeo video ID.",
+      "type": "string"
+    },
+    "video/youtube": {
+      "description": "A YouTube video ID.",
+      "type": "string"
+    },
+    "absorbed-dose/gy": {
+      "description": "Gray",
+      "type": "number"
+    },
+    "absorbed-dose-equivalent/sv": {
+      "description": "Sievert",
+      "type": "number"
+    },
+    "absorbed-dose-rate/gy-s": {
+      "description": "Gray per second",
+      "type": "number"
+    },
+    "angle/deg": {
+      "description": "Degrees",
+      "type": "number"
+    },
+    "angle/grad": {
+      "description": "Grade",
+      "type": "number"
+    },
+    "angle/rad": {
+      "description": "Radians",
+      "type": "number"
+    },
+    "angular-acceleration/rad-s2": {
+      "description": "Radians per second squared",
+      "type": "number"
+    },
+    "angular-speed/rad-s": {
+      "description": "Radians per second",
+      "type": "number"
+    },
+    "area/ac": {
+      "description": "Acres (imperial)",
+      "type": "number"
+    },
+    "area/ft2": {
+      "description": "Square feet",
+      "type": "number"
+    },
+    "area/ha": {
+      "description": "Hectares",
+      "type": "number"
+    },
+    "area/in2": {
+      "description": "Square inches",
+      "type": "number"
+    },
+    "area/km2": {
+      "description": "Square kilometers",
+      "type": "number"
+    },
+    "area/m2": {
+      "description": "Square meter",
+      "type": "number"
+    },
+    "area/mm2": {
+      "description": "Square millimeters",
+      "type": "number"
+    },
+    "area/yd2": {
+      "description": "Square yards",
+      "type": "number"
+    },
+    "area/mi2": {
+      "description": "Square miles",
+      "type": "number"
+    },
+    "capacitance/f": {
+      "description": "Farad",
+      "type": "number"
+    },
+    "catalytic-activity/kat": {
+      "description": "Katal",
+      "type": "number"
+    },
+    "count/steps": {
+      "description": "Number of steps",
+      "type": "number"
+    },
+    "count/generic": {
+      "description": "For general items that demand no particular handling.",
+      "type": "number"
+    },
+    "data-quantity/b": {
+      "description": "Bytes",
+      "type": "number"
+    },
+    "data-quantity/bits": {
+      "description": "Bits",
+      "type": "number"
+    },
+    "data-quantity/gb": {
+      "description": "Gigabytes",
+      "type": "number"
+    },
+    "data-quantity/gbits": {
+      "description": "Gigabits",
+      "type": "number"
+    },
+    "data-quantity/kb": {
+      "description": "Kilobytes",
+      "type": "number"
+    },
+    "data-quantity/kbits": {
+      "description": "Kilobits",
+      "type": "number"
+    },
+    "data-quantity/mb": {
+      "description": "Megabytes",
+      "type": "number"
+    },
+    "data-quantity/mbits": {
+      "description": "Megabits",
+      "type": "number"
+    },
+    "data-quantity/tb": {
+      "description": "Terabytes",
+      "type": "number"
+    },
+    "density/g-dl": {
+      "description": "Grams per deciliter",
+      "type": "number"
+    },
+    "density/kg-m3": {
+      "description": "Kilograms per cubic meter",
+      "type": "number"
+    },
+    "density/mmol-l": {
+      "description": "Millimoles per liter",
+      "type": "number"
+    },
+    "density/mg-dl": {
+      "description": "Milligrams per deciliter",
+      "type": "number"
+    },
+    "dynamic-viscosity/pa-s": {
+      "description": "Pascal second",
+      "type": "number"
+    },
+    "electric-charge/c": {
+      "description": "Coulomb ",
+      "type": "number"
+    },
+    "electric-charge-line-density/c-m": {
+      "description": "Coulomb per meter",
+      "type": "number"
+    },
+    "electric-current/a": {
+      "description": "Ampere",
+      "type": "number"
+    },
+    "electrical-conductivity/s": {
+      "description": "Siemens",
+      "type": "number"
+    },
+    "electromotive-force/v": {
+      "description": "Volt",
+      "type": "number"
+    },
+    "energy/btu": {
+      "description": "British Thermal Units",
+      "type": "number"
+    },
+    "energy/cal": {
+      "description": "Calories",
+      "type": "number"
+    },
+    "energy/ev": {
+      "description": "Electron-Volts",
+      "type": "number"
+    },
+    "energy/erg": {
+      "description": "Ergs",
+      "type": "number"
+    },
+    "energy/ftlb": {
+      "description": "Foot-Pounds",
+      "type": "number"
+    },
+    "energy/j": {
+      "description": "Joules",
+      "type": "number"
+    },
+    "energy/kcal": {
+      "description": "Kilo-calories",
+      "type": "number"
+    },
+    "energy/ws": {
+      "description": "Watt-seconds",
+      "type": "number"
+    },
+    "energy/kwh": {
+      "description": "Kilowatt-hours",
+      "type": "number"
+    },
+    "energy/nm": {
+      "description": "Newton-meters",
+      "type": "number"
+    },
+    "energy/wh": {
+      "description": "Watt-hours",
+      "type": "number"
+    },
+    "force/dyn": {
+      "description": "Dynes",
+      "type": "number"
+    },
+    "force/n": {
+      "description": "Newtons",
+      "type": "number"
+    },
+    "force/pdl": {
+      "description": "Poundals",
+      "type": "number"
+    },
+    "frequency/bpm": {
+      "description": "Beats per minute",
+      "type": "number"
+    },
+    "frequency/ghz": {
+      "description": "Gigahertz",
+      "type": "number"
+    },
+    "frequency/hz": {
+      "description": "Hertz (also known as cycles per second) ",
+      "type": "number"
+    },
+    "frequency/khz": {
+      "description": "Kilohertz",
+      "type": "number"
+    },
+    "frequency/megahz": {
+      "description": "Megahertz",
+      "type": "number"
+    },
+    "frequency/millihz": {
+      "description": "Millihertz",
+      "type": "number"
+    },
+    "frequency/nhz": {
+      "description": "Nanohertz",
+      "type": "number"
+    },
+    "frequency/rpm": {
+      "description": "Revolutions per minute",
+      "type": "number"
+    },
+    "frequency/thz": {
+      "description": "Terahertz",
+      "type": "number"
+    },
+    "frequency/uhz": {
+      "description": "Microhertz",
+      "type": "number"
+    },
+    "length/cm": {
+      "description": "Centimeters",
+      "type": "number"
+    },
+    "length/m": {
+      "description": "Meters",
+      "type": "number"
+    },
+    "length/mm": {
+      "description": "Millimeters",
+      "type": "number"
+    },
+    "length/km": {
+      "description": "Kilometers",
+      "type": "number"
+    },
+    "length/a": {
+      "description": "Ångströms",
+      "type": "number"
+    },
+    "length/au": {
+      "description": "Astronomical units",
+      "type": "number"
+    },
+    "length/ch": {
+      "description": "Chains",
+      "type": "number"
+    },
+    "length/lea": {
+      "description": "Leagues",
+      "type": "number"
+    },
+    "length/ft": {
+      "description": "Feet",
+      "type": "number"
+    },
+    "length/in": {
+      "description": "Inches",
+      "type": "number"
+    },
+    "length/ly": {
+      "description": "Light-years",
+      "type": "number"
+    },
+    "length/mil": {
+      "description": "Mil",
+      "type": "number"
+    },
+    "length/mi": {
+      "description": "Miles",
+      "type": "number"
+    },
+    "length/fur": {
+      "description": "Furlongs",
+      "type": "number"
+    },
+    "length/nmi": {
+      "description": "Miles (nautical)",
+      "type": "number"
+    },
+    "length/p": {
+      "description": "Points",
+      "type": "number"
+    },
+    "length/pica": {
+      "description": "Picas",
+      "type": "number"
+    },
+    "length/ftm": {
+      "description": "Fathoms",
+      "type": "number"
+    },
+    "length/cb": {
+      "description": "Cables",
+      "type": "number"
+    },
+    "length/um": {
+      "description": "Microns",
+      "type": "number"
+    },
+    "length/yd": {
+      "description": "Yards",
+      "type": "number"
+    },
+    "luminous-intensity/cd": {
+      "description": "Candela",
+      "type": "number"
+    },
+    "mass/kg": {
+      "description": "Kilograms",
+      "type": "number"
+    },
+    "mass/gr": {
+      "description": "Grains",
+      "type": "number"
+    },
+    "mass/dr": {
+      "description": "Drams",
+      "type": "number"
+    },
+    "mass/g": {
+      "description": "Grams",
+      "type": "number"
+    },
+    "mass/l-t": {
+      "description": "Long tons",
+      "type": "number"
+    },
+    "mass/lb": {
+      "description": "Pounds",
+      "type": "number"
+    },
+    "mass/t": {
+      "description": "Metric tons",
+      "type": "number"
+    },
+    "mass/oz": {
+      "description": "Ounces",
+      "type": "number"
+    },
+    "mass/s-t": {
+      "description": "Short tons",
+      "type": "number"
+    },
+    "mass/st": {
+      "description": "Stone",
+      "type": "number"
+    },
+    "mol/mol": {
+      "description": "Mole ",
+      "type": "number"
+    },
+    "mol/lb-mol": {
+      "description": "Pound-mole.",
+      "type": "number"
+    },
+    "power/btu-min": {
+      "description": "BTUs/minute",
+      "type": "number"
+    },
+    "power/ftlb-s": {
+      "description": "Foot-pounds/second",
+      "type": "number"
+    },
+    "power/hp": {
+      "description": "Horsepower",
+      "type": "number"
+    },
+    "power/kw": {
+      "description": "Kilowatts",
+      "type": "number"
+    },
+    "power/w": {
+      "description": "Watts",
+      "type": "number"
+    },
+    "pressure/at": {
+      "description": "Atmospheres",
+      "type": "number"
+    },
+    "pressure/bar": {
+      "description": "Bars",
+      "type": "number"
+    },
+    "pressure/mmhg": {
+      "description": "Millimeters of mercury",
+      "type": "number"
+    },
+    "pressure/cmhg": {
+      "description": "Centimeters of mercury",
+      "type": "number"
+    },
+    "pressure/inhg": {
+      "description": "Inches of mercury",
+      "type": "number"
+    },
+    "pressure/kg-m2": {
+      "description": "Kilograms/square meter",
+      "type": "number"
+    },
+    "pressure/pa": {
+      "description": "Pascals",
+      "type": "number"
+    },
+    "pressure/kpa": {
+      "description": "Kilo pascals",
+      "type": "number"
+    },
+    "pressure/psf": {
+      "description": "Pounds/square foot",
+      "type": "number"
+    },
+    "pressure/psi": {
+      "description": "Pounds/square inch",
+      "type": "number"
+    },
+    "speed/ft-m": {
+      "description": "Feet/minute",
+      "type": "number"
+    },
+    "speed/ft-s": {
+      "description": "Feet/second",
+      "type": "number"
+    },
+    "speed/km-h": {
+      "description": "Kilometers/hour",
+      "type": "number"
+    },
+    "speed/kt": {
+      "description": "Knots",
+      "type": "number"
+    },
+    "speed/m-min": {
+      "description": "Miles/minute",
+      "type": "number"
+    },
+    "speed/m-s": {
+      "description": "Meters/second",
+      "type": "number"
+    },
+    "speed/mph": {
+      "description": "Miles/hour",
+      "type": "number"
+    },
+    "temperature/c": {
+      "description": "Celsius",
+      "type": "number"
+    },
+    "temperature/k": {
+      "description": "Kelvin",
+      "type": "number"
+    },
+    "temperature/f": {
+      "description": "Fahrenheit",
+      "type": "number"
+    },
+    "time/d": {
+      "description": "Days",
+      "type": "number"
+    },
+    "time/h": {
+      "description": "Hours",
+      "type": "number"
+    },
+    "time/min": {
+      "description": "Minutes",
+      "type": "number"
+    },
+    "time/ms": {
+      "description": "Milliseconds",
+      "type": "number"
+    },
+    "time/s": {
+      "description": "Seconds",
+      "type": "number"
+    },
+    "time/y": {
+      "description": "Years",
+      "type": "number"
+    },
+    "volume/l": {
+      "description": "Liters",
+      "type": "number"
+    },
+    "volume/m3": {
+      "description": "Cubic meters",
+      "type": "number"
+    },
+    "volume/c": {
+      "description": "Cups",
+      "type": "number"
+    },
+    "volume/cm3": {
+      "description": "Cubic centimeters",
+      "type": "number"
+    },
+    "volume/floz": {
+      "description": "Fluid ounces",
+      "type": "number"
+    },
+    "volume/ft3": {
+      "description": "Cubic feet",
+      "type": "number"
+    },
+    "volume/galgb": {
+      "description": "Gallons imperial",
+      "type": "number"
+    },
+    "volume/galus": {
+      "description": "Gallons US",
+      "type": "number"
+    },
+    "volume/in3": {
+      "description": "Cubic inches",
+      "type": "number"
+    },
+    "volume/yd3": {
+      "description": "Cubic yard",
+      "type": "number"
+    },
+    "volume/ml": {
+      "description": "Milliliters",
+      "type": "number"
+    },
+    "volume/pt": {
+      "description": "Pints",
+      "type": "number"
+    },
+    "volume/qt": {
+      "description": "Quarts",
+      "type": "number"
+    },
+    "volume/bbloil": {
+      "description": "Barrels (oil)",
+      "type": "number"
+    },
+    "volume/tbs": {
+      "description": "Tablespoons",
+      "type": "number"
+    },
+    "volume/tsp": {
+      "description": "Teaspoons",
+      "type": "number"
+    }
+  }
+}
+},{}],70:[function(require,module,exports){
+var utility = require('./utility/utility'),
+    _ = require('underscore');
+
+/**
+ * Event types directory data.
+ * @link http://api.pryv.com/event-types/
+ */
+var eventTypes = module.exports = {};
+
+// staging cloudfront: https://d1kp76srklnnah.cloudfront.net/dist/data-types/event-extras.json
+// staging direct: https://sw.pryv.li/dist/data-types/event-extras.json
+var HOSTNAME = 'd1kp76srklnnah.cloudfront.net',
+    PATH = '/dist/data-types/',
+    FLATFILE = 'flat.json',
+    EXTRASFILE = 'extras.json',
+    // TODO: discuss if hierarchical data is really needed (apparently not); remove all that if not
+    HIERARCHICALFILE = 'hierarchical.json';
+
+// load default data (fallback)
+var types = require('./event-types.default.json'),
+    extras = require('./event-extras.default.json'),
+    hierarchical = null;
+types.isDefault = true;
+extras.isDefault = true;
+
+/**
+ * @link http://api.pryv.com/event-types/#json-file
+ * @param {Function} callback
+ */
+eventTypes.loadFlat = function (callback) {
+  if (! callback || typeof(callback) !== 'function') {
+    callback = function () {};
+  }
+  requestFile(FLATFILE, function (err, result) {
+    if (err) { return callback(err); }
+    if (! isValidTypesFile(result)) {
+      return callback(new Error('Missing or corrupt types file: "' +
+                                HOSTNAME + PATH + FLATFILE + '"'));
+    }
+    _.extend_.extend(types, result);
+    types.isDefault = false;
+    callback(null, types);
+  });
+};
+
+/**
+ * Performs a basic check to avoid corrupt data (more smoke test than actual validation).
+ * @param {Object} data
+ */
+function isValidTypesFile(data) {
+  return data && data.version && data.types && data.types['activity/plain'];
+}
+
+eventTypes.flat = function (eventType) {
+  return types.types[eventType];
+};
+
+/**
+ * @link http://api.pryv.com/event-types/#json-file
+ * @param {Function} callback
+ */
+eventTypes.loadExtras = function (callback) {
+  if (! callback || typeof(callback) !== 'function') {
+    callback = function () {};
+  }
+  requestFile(EXTRASFILE, function (err, result) {
+    if (err) { return callback(err); }
+    if (! isValidExtrasFile(result)) {
+      return callback(new Error('Missing or corrupt extras file: "' +
+                                HOSTNAME + PATH + EXTRASFILE + '"'));
+    }
+    _.extend_.extend(extras, result);
+    extras.isDefault = false;
+    callback(null, extras);
+  });
+};
+
+/**
+ * Performs a basic check to avoid corrupt data (more smoke test than actual validation).
+ * @param {Object} data
+ */
+function isValidExtrasFile(data) {
+  return data && data.version && data.extras && data.extras.count && data.extras.count.formats;
+}
+
+eventTypes.extras = function (eventType) {
+  var parts = eventType.split('/');
+  return extras.extras[parts[0]] && extras.extras[parts[0]].formats[parts[1]] ?
+      extras.extras[parts[0]].formats[parts[1]] : null;
+};
+
+eventTypes.isNumerical = function (eventOrEventType) {
+  if (! eventOrEventType) { return false; }
+  var type;
+  if (eventOrEventType.type) {
+    type = eventOrEventType.type;
+  } else {
+    type = eventOrEventType;
+  }
+  var def = eventTypes.flat(type);
+  return def ? def.type === 'number' : false;
+};
+
+/**
+ * @link http://api.pryv.com/event-types/#json-file
+ * @param {Function} callback
+ */
+eventTypes.loadHierarchical = function (callback) {
+  if (! callback || typeof(callback) !== 'function') {
+    callback = function () {};
+  }
+  requestFile(HIERARCHICALFILE, function (err, result) {
+    if (err) { return callback(err); }
+    hierarchical = result;
+    hierarchical.isDefault = false;
+    callback(null, hierarchical);
+  });
+};
+
+eventTypes.hierarchical = function () {
+  if (! hierarchical) {
+    throw new Error('Load data via loadHierarchical() first');
+  }
+  return hierarchical;
+};
+
+/**
+ * @private
+ * @param fileName
+ * @param callback
+ */
+function requestFile(fileName, callback) {
+  utility.request({
+    method : 'GET',
+    host : HOSTNAME,
+    path : PATH + fileName,
+    port : 443,
+    ssl : true,
+    withoutCredentials: true,
+    success : function (result) { callback(null, result); },
+    error : function (error) { callback(error, null); }
+  });
+}
+
+},{"./event-extras.default.json":68,"./event-types.default.json":69,"./utility/utility":81,"underscore":50}],71:[function(require,module,exports){
+module.exports = {
+  // TODO: fix singleton (see with me [sgoumaz] if needed)
+  Auth: require('./auth/Auth.js'),
+  Connection: require('./Connection.js'),
+  Event: require('./Event.js'),
+  Stream: require('./Stream.js'),
+  Filter: require('./Filter.js'),
+
+  eventTypes: require('./eventTypes.js'),
+  utility: require('./utility/utility.js'),
+  MESSAGES: {
+    MONITOR: require('./Monitor.js').Messages
+  }
+};
+
+},{"./Connection.js":51,"./Event.js":53,"./Filter.js":54,"./Monitor.js":55,"./Stream.js":56,"./auth/Auth.js":59,"./eventTypes.js":70,"./utility/utility.js":81}],72:[function(require,module,exports){
+/**
+ * (event)Emitter renamed to avoid confusion with prvy's events
+ */
+
+
+var _ = require('underscore');
+
+var SignalEmitter = module.exports = function (messagesMap) {
+  SignalEmitter.extend(this, messagesMap);
+};
+
+
+SignalEmitter.extend = function (object, messagesMap, name) {
+  if (! name) {
+    throw new Error('"name" parameter must be set');
+  }
+  object._signalEmitterEvents = {};
+  _.each(_.values(messagesMap), function (value) {
+    object._signalEmitterEvents[value] = [];
+  });
+  _.extend(object, SignalEmitter.prototype);
+  object._signalEmitterName = name;
+};
+
+
+SignalEmitter.Messages = {
+  /** called when a batch of changes is expected, content: <batchId> unique**/
+  BATCH_BEGIN : 'beginBatch',
+  /** called when a batch of changes is done, content: <batchId> unique**/
+  BATCH_DONE : 'doneBatch',
+  /** if an eventListener return this string, it will be removed automatically **/
+  UNREGISTER_LISTENER : 'unregisterMePlease'
+};
+
+/**
+ * Add an event listener
+ * @param signal one of  Messages.SIGNAL.*.*
+ * @param callback function(content) .. content vary on each signal.
+ * If the callback returns SignalEmitter.Messages.UNREGISTER_LISTENER it will be removed
+ * @return the callback function for further reference
+ */
+SignalEmitter.prototype.addEventListener = function (signal, callback) {
+  this._signalEmitterEvents[signal].push(callback);
+  return callback;
+};
+
+
+/**
+ * remove the callback matching this signal
+ */
+SignalEmitter.prototype.removeEventListener = function (signal, callback) {
+  for (var i = 0; i < this._signalEmitterEvents[signal].length; i++) {
+    if (this._signalEmitterEvents[signal][i] === callback) {
+      this._signalEmitterEvents[signal][i] = null;
+    }
+  }
+};
+
+
+/**
+ * A changes occurred on the filter
+ * @param signal
+ * @param content
+ * @param batch
+ * @private
+ */
+SignalEmitter.prototype._fireEvent = function (signal, content, batch) {
+  var batchId = batch ? batch.id : null;
+  if (! signal) { throw new Error(); }
+
+  var batchStr = batchId ? ' batch: ' + batchId + ', ' + batch.batchName : '';
+  console.log('FireEvent-' + this._signalEmitterName  + ' : ' + signal + batchStr);
+
+  _.each(this._signalEmitterEvents[signal], function (callback) {
+    if (callback !== null &&
+      SignalEmitter.Messages.UNREGISTER_LISTENER === callback(content, batch)) {
+      this.removeEventListener(signal, callback);
+    }
+  }, this);
+};
+
+
+SignalEmitter.batchSerial = 0;
+/**
+ * Start a batch process
+ *
+ * @param batchName Name of the new batch
+ * @param orHookOnBatch Existing batch to hook on ("superbatch")
+ * @return A batch object (call `done()` when done)
+ * @private
+ */
+SignalEmitter.prototype.startBatch = function (name, orHookOnBatch) {
+
+  if (! orHookOnBatch) {
+    return new Batch(name, this);
+  }
+  name = orHookOnBatch.name + '/' + name;
+  var batch = new Batch(name, this);
+  orHookOnBatch.waitForMeToFinish(name + ':hook');
+  batch.addOnDoneListener(name, function () {
+    orHookOnBatch.done(name + ':hook');
+  });
+  return batch;
+};
+
+var Batch = function (name, owner) {
+  this.owner = owner;
+  this.name = name || 'x';
+  this.id = owner._signalEmitterName + SignalEmitter.batchSerial++;
+  this.waitFor = 0;
+  this.history = [];
+  this.doneCallbacks = {};
+  this.waitForMeToFinish(this.name);
+  this.owner._fireEvent(SignalEmitter.Messages.BATCH_BEGIN, this.id, this);
+
+};
+
+
+
+/**
+ * listener are stored in key/map fashion, so addOnDoneListener('bob',..)
+ * may be called several time, callback 'bob', will be done just once
+ * @param key a unique key per callback
+ * @param callback
+ */
+Batch.prototype.addOnDoneListener = function (key, callback) {
+  this.checkAlreadyDone('addOnDoneListener(' + key + ')');
+  this.doneCallbacks[key] = callback;
+};
+
+Batch.prototype.waitForMeToFinish = function (key) {
+  this.checkAlreadyDone('waitForMeToFinish(' + key + ')');
+  this.waitFor++;
+  this.history.push({wait: key, waitFor: this.waitFor});
+  return this;
+};
+
+Batch.prototype.done = function (key) {
+  this.checkAlreadyDone('done(' + key + ')');
+  key = key || '--';
+  this.waitFor--;
+  this.history.push({done: key, waitFor: this.waitFor});
+  if (this.waitFor === 0) {
+
+    this.doneTriggered = true;
+    _.each(this.doneCallbacks, function (callback) {
+      callback();
+    });
+    delete this.doneCallbacks; // prevents memory leaks
+    this.owner._fireEvent(SignalEmitter.Messages.BATCH_DONE, this.id, this);
+  }
+};
+
+Batch.prototype.checkAlreadyDone = function (addon) {
+  if (this.doneTriggered) {
+    var msg = 'Batch ' + this.name + ', ' + this.id + ' called ' + addon + '  when already done';
+    throw new Error(msg + '     ' + JSON.stringify(this.history));
+  }
+};
+
+},{"underscore":50}],73:[function(require,module,exports){
+/* jshint ignore:start */
+
+/*\
+ |*|
+ |*|  :: cookies.js ::
+ |*|
+ |*|  A complete cookies reader/writer framework with full unicode support.
+ |*|
+ |*|  https://developer.mozilla.org/en-US/docs/DOM/document.cookie
+ |*|
+ |*|  Syntaxes:
+ |*|
+ |*|  * docCookies.setItem(name, value[, end[, path[, domain[, secure]]]])
+ |*|  * docCookies.getItem(name)
+ |*|  * docCookies.removeItem(name[, path])
+ |*|  * docCookies.hasItem(name)
+ |*|  * docCookies.keys()
+ |*|
+ \*/
+module.exports = {
+  getItem: function (sKey) {
+    if (!sKey || !this.hasItem(sKey)) { return null; }
+    return unescape(document.cookie.replace(new RegExp("(?:^|.*;\\s*)" +
+        escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*((?:[^;](?!;))*[^;]?).*"), "$1"));
+  },
+  setItem: function (sKey, sValue, vEnd, sPath, sDomain, bSecure) {
+    if (!sKey || /^(?:expires|max\-age|path|domain|secure)$/i.test(sKey)) { return; }
+    var sExpires = "";
+    if (vEnd) {
+      switch (vEnd.constructor) {
+        case Number:
+          sExpires = vEnd === Infinity ?
+              "; expires=Tue, 19 Jan 2038 03:14:07 GMT" : "; max-age=" + vEnd;
+          break;
+        case String:
+          sExpires = "; expires=" + vEnd;
+          break;
+        case Date:
+          sExpires = "; expires=" + vEnd.toGMTString();
+          break;
+      }
+    }
+    document.cookie = escape(sKey) + "=" + escape(sValue) + sExpires + (sDomain ? "; domain=" + sDomain : "") + (sPath ? "; path=" + sPath : "") + (bSecure ? "; secure" : "");
+  },
+  removeItem: function (sKey, sPath) {
+    if (!sKey || !this.hasItem(sKey)) { return; }
+    document.cookie = escape(sKey) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sPath ? "; path=" + sPath : "");
+  },
+  hasItem: function (sKey) {
+    return (new RegExp("(?:^|;\\s*)" + escape(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
+  },
+  keys: /* optional method: you can safely remove it! */ function () {
+    var aKeys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+    for (var nIdx = 0; nIdx < aKeys.length; nIdx++) { aKeys[nIdx] = unescape(aKeys[nIdx]); }
+    return aKeys;
+  }
+};
+
+},{}],74:[function(require,module,exports){
+/* jshint ignore:start */
+
+/*!
+ * domready (c) Dustin Diaz 2012 - License MIT
+ */
+module.exports = function (ready) {
+
+
+  var fns = [], fn, f = false,
+      doc = document,
+      testEl = doc.documentElement,
+      hack = testEl.doScroll,
+      domContentLoaded = 'DOMContentLoaded',
+      addEventListener = 'addEventListener',
+      onreadystatechange = 'onreadystatechange',
+      readyState = 'readyState',
+      loaded = /^loade|c/.test(doc[readyState]);
+
+  function flush(f) {
+    loaded = 1;
+    while (f = fns.shift()) {
+      f()
+    }
+  }
+
+  doc[addEventListener] && doc[addEventListener](domContentLoaded, fn = function () {
+    doc.removeEventListener(domContentLoaded, fn, f);
+    flush();
+  }, f);
+
+
+  hack && doc.attachEvent(onreadystatechange, fn = function () {
+    if (/^c/.test(doc[readyState])) {
+      doc.detachEvent(onreadystatechange, fn);
+      flush();
+    }
+  });
+
+  return (ready = hack ?
+      function (fn) {
+        self != top ?
+            loaded ? fn() : fns.push(fn) :
+            function () {
+              console.log("on dom ready 2");
+              try {
+                testEl.doScroll('left')
+              } catch (e) {
+                return setTimeout(function() { ready(fn) }, 50)
+              }
+              fn()
+            }()
+      } :
+      function (fn) {
+        loaded ? fn() : fns.push(fn)
+      })
+}();
+
+},{}],75:[function(require,module,exports){
+/**
+ * Common regexps
+ * TODO: fix naming to "commonRegexps", "Username" and "Email" (they are constants)
+ */
+module.exports = {
+  username :  /^([a-zA-Z0-9])(([a-zA-Z0-9\-]){3,21})([a-zA-Z0-9])$/,
+  email : /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/
+};
+
+},{}],76:[function(require,module,exports){
+/**
+ *
+ * @param {Object} pack json with
+ * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
+ * @param {String} pack.host : fully qualified host name
+ * @param {Number} pack.port : port to use
+ * @param {String} pack.path : the request PATH
+ * @param {Object} [pack.headers] : key / value map of headers
+ * @param {Object} [pack.params] : the payload -- only with POST/PUT
+ * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
+ * @param {Function} pack.success : function (result, resultInfo)
+ * @param {Function} pack.error : function (error, resultInfo)
+ * @param {String} [pack.info] : a text
+ * @param {Boolean} [pack.async = true]
+ * @param {Number} [pack.expectedStatus] : http result code
+ * @param {Boolean} [pack.ssl = true]
+ * @param {Boolean} [pack.withoutCredentials = false]
+ */
+module.exports = function (pack)  {
+  pack.info = pack.info || '';
+  var parseResult = pack.parseResult || 'json';
+
+  if (!pack.hasOwnProperty('async')) {
+    pack.async = true;
+  }
+
+  // ------------ request TYPE
+  pack.method = pack.method || 'POST';
+  // method override test
+  if (false && pack.method === 'DELETE') {
+    pack.method = 'POST';
+    pack.params =  pack.params || {};
+    pack.params._method = 'DELETE';
+  }
+
+  // ------------- request HEADERS
+
+
+  pack.headers = pack.headers || {};
+
+  if (pack.method === 'POST' || pack.method === 'PUT') {// add json headers is POST or PUT
+
+    if (pack.headers['Content-Type'] === 'multipart/form-data') {
+      delete pack.headers['Content-Type'];
+    } else {
+      pack.headers['Content-Type'] =
+          pack.headers['Content-Type'] || 'application/json; charset=utf-8';
+    }
+
+    //if (pack.method === 'POST') {
+    if (pack.params) {
+      pack.params = JSON.stringify(pack.params);
+    } else {
+      pack.params = pack.payload || {};
+    }
+  }
+
+
+
+  // -------------- error
+  pack.error = pack.error || function (error) {
+    throw new Error(JSON.stringify(error, function (key, value) {
+      if (value === null) { return; }
+      if (value === '') { return; }
+      return value;
+    }, 2));
+  };
+
+  var detail = pack.info + ', req: ' + pack.method + ' ' + pack.url;
+
+  // --------------- request
+  var xhr = _initXHR(),
+      httpMode = pack.ssl ? 'https://' : 'http://',
+      url = httpMode + pack.host + pack.path;
+  xhr.open(pack.method, url, pack.async);
+  xhr.withCredentials = pack.withoutCredentials ? false : true;
+
+
+  xhr.onreadystatechange = function () {
+    detail += ' xhrstatus:' + xhr.statusText;
+    if (xhr.readyState === 0) {
+      pack.callBackSent = 'error in request';
+      pack.error({
+        message: 'pryvXHRCall unsent',
+        detail: detail,
+        id: 'INTERNAL_ERROR',
+        xhr: xhr
+      });
+    } else if (xhr.readyState === 4) {
+      var result = null;
+
+      if (parseResult === 'json') {
+        var response = xhr.responseText;
+        response = response.trim() === '' ? '{}' : response;
+        try { result = JSON.parse(response); } catch (e) {
+          return pack.error({
+            message: 'Data is not JSON',
+            detail: xhr.responseText + '\n' + detail,
+            id: 'RESULT_NOT_JSON',
+            xhr: xhr
+          });
+        }
+      }
+      var resultInfo = {
+        xhr : xhr,
+        code : xhr.status,
+        headers : parseResponseHeaders(xhr.getAllResponseHeaders())
+      };
+
+      if (pack.callBackSent) {
+        console.error('xhr.onreadystatechange called with status==4 even if callback is done:' +
+          pack.callBackSent);
+        return;
+      }
+      pack.callBackSent = 'success';
+      pack.success(result, resultInfo);
+    }
+  };
+  if (pack.progressCallback && typeof(pack.progressCallback) === 'function') {
+    xhr.upload.addEventListener('progress', function (e) {
+      return pack.progressCallback(e);
+    }, false);
+  }
+  for (var key in pack.headers) {
+    if (pack.headers.hasOwnProperty(key)) {
+      xhr.setRequestHeader(key, pack.headers[key]);
+    }
+  }
+
+  //--- sending the request
+  try {
+    xhr.send(pack.params);
+  } catch (e) {
+    pack.callBackSent = 'error sending request';
+    return pack.error({
+      message: 'pryvXHRCall unsent',
+      detail: detail,
+      id: 'INTERNAL_ERROR',
+      error: e,
+      xhr: xhr
+    });
+  }
+  return xhr;
+};
+
+/**
+ * Method to initialize XMLHttpRequest.
+ * @method _initXHR
+ * @access private
+ * @return object
+ */
+/* jshint -W117 */
+var _initXHR = function () {
+  var XHR = null;
+
+  try { XHR = new XMLHttpRequest(); }
+  catch (e) {
+    try { XHR = new ActiveXObject('Msxml2.XMLHTTP'); }
+    catch (e2) {
+      try { XHR = new ActiveXObject('Microsoft.XMLHTTP'); }
+      catch (e3) {
+        console.log('XMLHttpRequest implementation not found.');
+      }
+      console.log('XMLHttpRequest implementation not found.');
+    }
+    console.log('XMLHttpRequest implementation not found.');
+  }
+  return XHR;
+};
+
+
+/**
+ * XmlHttpRequest's getAllResponseHeaders() method returns a string of response
+ * headers according to the format described here:
+ * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method
+ * This method parses that string into a user-friendly key/value pair object.
+ */
+function parseResponseHeaders(headerStr) {
+  var headers = {};
+  if (!headerStr) {
+    return headers;
+  }
+  var headerPairs = headerStr.split('\u000d\u000a');
+  for (var i = 0; i < headerPairs.length; i++) {
+    var headerPair = headerPairs[i];
+    // Can't use split() here because it does the wrong thing
+    // if the header value has the string ": " in it.
+    var index = headerPair.indexOf('\u003a\u0020');
+    if (index > 0) {
+      var key = headerPair.substring(0, index).toLowerCase();
+      var val = headerPair.substring(index + 2);
+      headers[key] = val;
+    }
+  }
+  return headers;
+}
+
+},{}],77:[function(require,module,exports){
+(function (Buffer){
+//TODO align with XHR error
+
+//TODO: sort out the callback convention
+
+var FormData = require('form-data');
+var _ = require('underscore');
+
+/**
+ *
+ * @param {Object} pack json with
+ * @param {Object} [pack.type = 'POST'] : 'GET/DELETE/POST/PUT'
+ * @param {String} pack.host : fully qualified host name
+ * @param {Number} pack.port : port to use
+ * @param {String} pack.path : the request PATH
+ * @param {Object} [pack.headers] : key / value map of headers
+ * @param {Object} [pack.params] : the payload -- only with POST/PUT
+ * @param {String} [pack.parseResult = 'json'] : 'text' for no parsing
+ * @param {Function} pack.success : function (result, resultInfo)
+ * @param {Function} pack.error : function (error, resultInfo)
+ * @param {String} [pack.info] : a text
+ * @param {Boolean} [pack.async = true]
+ * @param {Number} [pack.expectedStatus] : http result code
+ * @param {Boolean} [pack.ssl = true]
+ */
+module.exports = function (pack)  {
+
+
+  var httpOptions = {
+    host: pack.host,
+    port: pack.port,
+    path: pack.path,
+    method: pack.method,
+    rejectUnauthorized: false,
+    headers : pack.headers
+  };
+
+
+  var parseResult = pack.parseResult || 'json';
+  var httpMode = pack.ssl ? 'https' : 'http';
+  var http = require(httpMode);
+  var aborted = false;
+
+  if (pack.payload instanceof FormData) {
+    httpOptions.method = 'post';
+    _.extend(httpOptions.headers, pack.payload.getHeaders());
+  } else {
+    if (pack.payload) {
+      pack.headers['Content-Length'] = Buffer.byteLength(pack.payload, 'utf-8');
+    }
+  }
+
+  var req = http.request(httpOptions, function (res) {
+    var bodyarr = [];
+    res.on('data', function (chunk) {  bodyarr.push(chunk); });
+    res.on('end', function () {
+      var resultInfo = {
+        code : res.statusCode,
+        headers : res.headers
+      };
+      var result = null;
+      if (parseResult === 'json') {
+        try {
+          var response = bodyarr.join('').trim() === '' ? '{}' : bodyarr.join('').trim();
+          result = JSON.parse(response);
+        } catch (error) {
+          return onError('request failed to parse JSON in response' +
+            bodyarr.join('')
+          );
+        }
+      }
+      return pack.success(result, resultInfo);
+    });
+
+  });
+
+
+  var detail = 'Request: ' + httpOptions.method + ' ' +
+    httpMode + '://' + httpOptions.host + ':' + httpOptions.port + '' + httpOptions.path;
+
+
+
+  var onError = function (reason) {
+    if (!aborted) {
+      aborted = true;
+      return pack.error(reason + '\n' + detail, null);
+    }
+  };
+
+  req.on('error', function (e) {
+      return onError('Error: ' + e.message);
+  });
+
+
+  req.on('socket', function (socket) {
+    socket.setTimeout(30000);
+    socket.on('timeout', function () {
+      req.abort();
+      return onError('Timeout');
+    });
+  });
+
+
+  if (pack.payload instanceof FormData) {
+    pack.payload.pipe(req);
+  } else {
+
+    if (pack.payload) {
+      req.write(pack.payload, 'utf8');
+    }
+  }
+  req.end();
+
+  return req;
+};
+
+}).call(this,require("buffer").Buffer)
+},{"buffer":9,"form-data":45,"underscore":50}],78:[function(require,module,exports){
+/* global document */
+
+var urls = module.exports = {};
+
+/**
+ * The one and only reference for Pryv domain names.
+ * TODO: client and server will merge
+ */
+urls.domains = {
+  client: {
+    production: 'pryv.me',
+    staging: 'pryv.li',
+    test: 'rec.la'
+  },
+  server: {
+    production: 'pryv.io',
+    staging: 'pryv.in',
+    test: 'pryv.in'
+  }
+};
+
+/**
+ * Detects the Pryv environment from the given domain and client/server indication.
+ *
+ * @param {string} domain
+ * @param {string} type "client" or "server"
+ * @returns {string} "production", "staging" or "other"
+ */
+urls.getEnvironment = function (domain, type) {
+  var domains = this.domains[type];
+  if (! type || ! domains) {
+    throw new Error('Invalid type "' + type + '"; expected "client" or "server"');
+  }
+
+  switch (domain) {
+  case domains.production:
+    return 'production';
+  case domains.staging:
+    return 'staging';
+  case domains.test:
+    return 'test';
+  default:
+    return 'other';
+  }
+};
+
+/* jshint -W101 */
+/**
+ * Extracts base components from a browser URL string
+ * (e.g. today: "https://username.pryv.me:443/some/path").
+ *
+ * @param url Defaults to `document.location` if available
+ * @returns {URLInfo}
+ */
+urls.parseClientURL = function (url) {
+  return new URLInfo(url, 'client');
+};
+
+/**
+ * Extracts base components from a standard Pryv API URL string
+ * (e.g. "https://username.pryv.io:443/some/path").
+ *
+ * @param url
+ * @returns {URLInfo}
+ */
+urls.parseServerURL = function (url) {
+  return new URLInfo(url, 'server');
+};
+
+/**
+ * @param {String} url
+ * @param {String} type "client" or "server"
+ * @constructor
+ */
+function URLInfo(url, type) {
+  var loc;
+  if (document) {
+    // browser
+    if (url) {
+      loc = document.createElement('a');
+      loc.href = url;
+    } else {
+      loc = document.location;
+    }
+  } else {
+    // node
+    if (! url) {
+      throw new Error('`url` is required');
+    }
+    loc = require('url').parse(url);
+  }
+  if (! (type === 'client' || type === 'server')) {
+    throw new Error('`type` must be either "client" or "server"');
+  }
+  this.type = type;
+
+  this.protocol = loc.protocol;
+  this.hostname = loc.hostname;
+  this.port = loc.port || (this.protocol === 'https:' ? 443 : 80);
+  this.path = loc.pathname;
+  this.hash = loc.hash;
+  this.search = loc.search;
+
+  var splitHostname = loc.hostname.split('.');
+  if (splitHostname.length >= 3 /* TODO: check & remove, shouldn't be necessary && splitHostname[0].match(this.regex.username)*/) {
+    this.subdomain = splitHostname[0];
+  }
+  this.domain = loc.hostname.substr(loc.hostname.indexOf('.') + 1);
+
+  this.environment = urls.getEnvironment(this.domain, this.type);
+
+  // if known environment, extract username
+  // (we currently assume username === subdomain; this will change for client URLs)
+  if (this.subdomain && this.environment !== 'other') {
+    this.username = this.subdomain;
+  }
+}
+
+URLInfo.prototype.isSSL = function () {
+  return this.protocol === 'https:';
+};
+
+URLInfo.prototype.parseQuery = function () {
+  var objURL = {};
+  this.search.replace(new RegExp('([^?=&]+)(=([^&]*))?', 'g'), function ($0, $1, $2, $3) {
+    objURL[$1] = $3;
+  });
+  return objURL;
+};
+
+URLInfo.prototype.parseSharingTokens = function () {
+  if (this.type !== 'client') {
+    throw new Error('Can only parse on client URLs');
+  }
+  var splitPath = this.hash.split('/');
+  var sharingsIndex = splitPath.indexOf('sharings');
+  if (sharingsIndex !== -1) {
+    return splitPath.splice(sharingsIndex + 1).filter(function (s) { return s.length > 0; });
+  } else {
+    return [];
+  }
+};
+
+},{"url":40}],79:[function(require,module,exports){
+/* global document, navigator */
+
+/**
+ * Browser-only utils
+ */
+var utility = module.exports = {};
+
+utility.getHostFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.hostname;
+};
+
+utility.getPortFromUrl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.port === '' ? null : location.port;
+};
+
+utility.isUrlSsl = function (url) {
+  var location;
+  if (url) {
+    location = document.createElement('a');
+    location.href = url;
+  } else {
+    location = document.location;
+  }
+  return location.protocol === 'https:';
+};
+
+/**
+ *  List grabbed from
+ *  https://github.com/codefuze/js-mobile-tablet-redirect/blob/master/mobile-redirect.js
+ *
+ *  @return {Boolean} `true` if browser is seen as a mobile or tablet
+ */
+utility.browserIsMobileOrTablet = function () {
+  /* jshint -W101*/
+  return (/iphone|ipod|android|blackberry|opera mini|opera mobi|skyfire|maemo|windows phone|palm|iemobile|symbian|symbianos|fennec|ipad|android 3|sch-i800|playbook|tablet|kindle|gt-p1000|sgh-t849|shw-m180s|a510|a511|a100|dell streak|silk/i.test(navigator.userAgent.toLowerCase()));
+};
+
+/**
+ * Method to get the preferred language, either from desiredLanguage or from the browser settings
+ * @method getPreferredLanguage
+ * @param {Array} supportedLanguages an array of supported languages encoded on 2characters
+ * @param {String} desiredLanguage (optional) get this language if supported
+ */
+utility.getPreferredLanguage = function (supportedLanguages, desiredLanguage) {
+  if (desiredLanguage) {
+    if (supportedLanguages.indexOf(desiredLanguage) >= 0) { return desiredLanguage; }
+  }
+  var lct = null;
+  if (navigator.language) {
+    lct = navigator.language.toLowerCase().substring(0, 2);
+  } else if (navigator.userLanguage) {
+    lct = navigator.userLanguage.toLowerCase().substring(0, 2);
+  } else if (navigator.userAgent.indexOf('[') !== -1) {
+    var start = navigator.userAgent.indexOf('[');
+    var end = navigator.userAgent.indexOf(']');
+    lct = navigator.userAgent.substring(start + 1, end).toLowerCase();
+  }
+  if (desiredLanguage) {
+    if (lct.indexOf(desiredLanguage) >= 0) { return lct; }
+  }
+
+  return supportedLanguages[0];
+};
+
+
+/**
+ * //TODO check if it's robust
+ * Method to check the browser supports CSS3.
+ * @method supportCSS3
+ * @return boolean
+ */
+utility.supportCSS3 = function ()  {
+  var stub = document.createElement('div'),
+    testProperty = 'textShadow';
+
+  if (testProperty in stub.style) { return true; }
+
+  testProperty = testProperty.replace(/^[a-z]/, function (val) {
+    return val.toUpperCase();
+  });
+
+  return false;
+};
+
+/**
+ * Method to load external files like javascript and stylesheet. this version
+ * of method only support to file types - js|javascript and css|stylesheet.
+ *
+ * @method loadExternalFiles
+ * @param {String} filename
+ * @param {String} type 'js' or 'css'
+ */
+utility.loadExternalFiles = function (filename, type)  {
+  var tag = null;
+
+  type = type.toLowerCase();
+
+  if (type === 'js' || type === 'javascript') {
+    tag = document.createElement('script');
+    tag.setAttribute('type', 'text/javascript');
+    tag.setAttribute('src', filename);
+  } else if (type === 'css' || type === 'stylesheet')  {
+    tag = document.createElement('link');
+    tag.setAttribute('rel', 'stylesheet');
+    tag.setAttribute('type', 'text/css');
+    tag.setAttribute('href', filename);
+  }
+
+  if (tag !== null || tag !== undefined) {
+    document.getElementsByTagName('head')[0].appendChild(tag);
+  }
+};
+
+utility.docCookies = require('./docCookies');
+
+utility.domReady = require('./domReady');
+
+utility.request = require('./request-browser');
+
+},{"./docCookies":73,"./domReady":74,"./request-browser":76}],80:[function(require,module,exports){
+/**
+ * Node-only utils
+ */
+var FormData = require('form-data');
+
+var utility = module.exports = {};
+
+utility.request = require('./request-node');
+
+
+/**
+ * Create or complete FormData object for attachements
+ * @param id {String} id of the element to add (may be 'attachment0')
+ * @param data {Data} the data to send
+ * @param options {Object}
+ * @param options.filename {String}
+ * @param options.type {String}
+ */
+utility.forgeFormData = function (id, data, options, appendTo) {
+  var formData = appendTo || new FormData();
+  formData.append(id, data, options);
+  return formData;
+};
+},{"./request-node":77,"form-data":45}],81:[function(require,module,exports){
+var socketIO = require('socket.io-client'),
+    _ = require('underscore');
+
+var utility = module.exports = {};
+
+/**
+ * @returns {Boolean} `true` if we're in a web browser environment
+ */
+utility.isBrowser = function () {
+  return typeof(window) !== 'undefined';
+};
+
+utility.SignalEmitter = require('./SignalEmitter.js');
+
+/**
+ * Merges two object (key/value map) and remove "null" properties
+ *
+ * @param {Object} sourceA
+ * @param {Object} sourceB
+ * @returns {*|Block|Node|Tag}
+ */
+utility.mergeAndClean = function (sourceA, sourceB) {
+  sourceA = sourceA || {};
+  sourceB = sourceB || {};
+  var result = _.clone(sourceA);
+  _.extend(result, sourceB);
+  _.each(_.keys(result), function (key) {
+    if (result[key] === null) { delete result[key]; }
+  });
+  return result;
+};
+
+/**
+ * Creates a query string from an object (key/value map)
+ *
+ * @param {Object} data
+ * @returns {String} key1=value1&key2=value2....
+ */
+utility.getQueryParametersString = function (data) {
+  data = this.mergeAndClean(data);
+  return Object.keys(data).map(function (key) {
+    if (data[key] !== null) {
+      if (_.isArray(data[key])) {
+        data[key] = this.mergeAndClean(data[key]);
+        var keyE = encodeURIComponent(key + '[]');
+        return data[key].map(function (subData) {
+          return keyE + '=' + encodeURIComponent(subData);
+        }).join('&');
+      } else {
+        return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
+      }
+    }
+  }, this).join('&');
+};
+
+utility.regex = require('./regex');
+
+/**
+ * Cross-platform string endsWith
+ *
+ * @param {String} string
+ * @param {String} suffix
+ * @returns {Boolean}
+ */
+utility.endsWith = function (string, suffix) {
+  return string.indexOf(suffix, string.length - suffix.length) !== -1;
+};
+
+utility.ioConnect = function (settings) {
+  var httpMode = settings.ssl ? 'https' : 'http';
+  var url = httpMode + '://' + settings.host + ':' + settings.port + '' +
+      settings.path + '?auth=' + settings.auth + '&resource=' + settings.namespace;
+
+  return socketIO.connect(url, {'force new connection': true});
+};
+
+utility.urls = require('./urls');
+
+// platform-specific members
+_.extend(utility, utility.isBrowser() ?
+    require('./utility-browser.js') : require('./utility-node.js'));
+
+},{"./SignalEmitter.js":72,"./regex":75,"./urls":78,"./utility-browser.js":79,"./utility-node.js":80,"socket.io-client":49,"underscore":50}],82:[function(require,module,exports){
 //     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -29278,7 +32388,12 @@ require('backbone.marionette').$ = $;
 var Model = module.exports = function (staging) {  //setup env with grunt
   STAGING = !!staging;
   window.Pryv = Pryv;
-  Pryv.eventTypes.loadFlat();
+
+  Pryv.eventTypes.loadFlat(function (err) {
+    if (err) {
+      console.warn('Could not load event types from network: ' + err);
+    }
+  });
 
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlUsername = urlInfo.username;
@@ -29350,7 +32465,11 @@ var Model = module.exports = function (staging) {  //setup env with grunt
       // console.log('onDateMasked', arguments);
     };
 
-    Pryv.eventTypes.loadExtras(function () {});
+    Pryv.eventTypes.loadExtras(function (err) {
+      if (err) {
+        console.warn('Could not load event extras from network: ' + err);
+      }
+    });
 
     // create the TreeMap
     this.controller = new Controller();
@@ -29824,7 +32943,7 @@ window.PryvBrowser.renderNote = function (content, options) {
   return marked(content);
 };
 
-},{"./model/ConnectionsHandler.js":84,"./model/Messages":85,"./model/MonitorsHandler.js":86,"./orchestrator/Controller.js":87,"./themes/index":88,"./timeframe-selector/timeframe-selector.js":89,"./tree/TreeMap.js":94,"./utility/dateTime":104,"./utility/streamUtils":106,"./view/error/unknown-user.js":114,"./view/left-panel/Controller.js":157,"backbone":4,"backbone.marionette":1,"marked":45,"pryv":70,"underscore":82}],84:[function(require,module,exports){
+},{"./model/ConnectionsHandler.js":84,"./model/Messages":85,"./model/MonitorsHandler.js":86,"./orchestrator/Controller.js":87,"./themes/index":88,"./timeframe-selector/timeframe-selector.js":89,"./tree/TreeMap.js":95,"./utility/dateTime":105,"./utility/streamUtils":107,"./view/error/unknown-user.js":115,"./view/left-panel/Controller.js":158,"backbone":4,"backbone.marionette":1,"marked":43,"pryv":71,"underscore":82}],84:[function(require,module,exports){
 
 //TODO write all add / remove connection logic
 
@@ -29914,7 +33033,7 @@ Messages.MonitorsHandler = {
     FILTER_STREAMS_CHANGED : 'streamsChanged'
   }
 };
-},{"pryv":70}],86:[function(require,module,exports){
+},{"pryv":71}],86:[function(require,module,exports){
 
 var _ = require('underscore');
 var Filter = require('pryv').Filter;
@@ -30282,7 +33401,7 @@ MonitorsHandler.prototype.stats = function (force, callback) {
     });
   });
 };
-},{"./Messages":85,"pryv":70,"underscore":82}],87:[function(require,module,exports){
+},{"./Messages":85,"pryv":71,"underscore":82}],87:[function(require,module,exports){
 
 var Controller = module.exports = function () {
   this.treeMap = null;
@@ -30856,6 +33975,20 @@ module.exports = (function () {
 })();
 
 },{"underscore":82}],90:[function(require,module,exports){
+/*global require, window*/
+// ---------- helpers that should be  adapted to BackBone fashion ----------- //
+
+var Model = require('./Model.js');
+
+
+//----- test -------//
+/*jshint -W098 */
+exports.main = function (STAGING) {
+
+  var model = new Model(STAGING);
+  window.pryvBrowser = model;
+};
+},{"./Model.js":83}],91:[function(require,module,exports){
 
 var _ = require('underscore'),
     TreeNode = require('./TreeNode'),
@@ -31178,7 +34311,7 @@ Object.defineProperty(ConnectionNode.prototype, 'id', {
   set: function () { throw new Error('ConnectionNode.id property is read only'); }
 });
 
-},{"../utility/streamUtils":106,"./StreamNode":93,"./TreeNode":95,"./VirtualNode.js":96,"pryv":70,"underscore":82}],91:[function(require,module,exports){
+},{"../utility/streamUtils":107,"./StreamNode":94,"./TreeNode":96,"./VirtualNode.js":97,"pryv":71,"underscore":82}],92:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
   RootNode = require('./RootNode'),
   Backbone = require('backbone'),
@@ -31367,7 +34500,7 @@ EventsNode.acceptThisEventType = function () {
 
 
 
-},{"../view/NodeView.js":108,"./RootNode":92,"./TreeNode":95,"backbone":4,"underscore":82}],92:[function(require,module,exports){
+},{"../view/NodeView.js":109,"./RootNode":93,"./TreeNode":96,"backbone":4,"underscore":82}],93:[function(require,module,exports){
 var TreeNode = require('./TreeNode'),
     ConnectionNode = require('./ConnectionNode'),
     _ = require('underscore');
@@ -31475,7 +34608,7 @@ module.exports = TreeNode.implement(
   });
 
 
-},{"./ConnectionNode":90,"./TreeNode":95,"underscore":82}],93:[function(require,module,exports){
+},{"./ConnectionNode":91,"./TreeNode":96,"underscore":82}],94:[function(require,module,exports){
 var TreeNode = require('./TreeNode');
 var _ = require('underscore');
 
@@ -31792,7 +34925,7 @@ StreamNode.registeredEventNodeTypes = {
   'TweetsEventsNode' : require('./eventsNode/TweetsEventsNode.js'),
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
-},{"./TreeNode":95,"./eventsNode/ActivitiesEventsNode.js":97,"./eventsNode/GenericEventsNode.js":98,"./eventsNode/NotesEventsNode.js":99,"./eventsNode/NumericalsEventsNode.js":100,"./eventsNode/PicturesEventsNode.js":101,"./eventsNode/PositionsEventsNode.js":102,"./eventsNode/TweetsEventsNode.js":103,"underscore":82}],94:[function(require,module,exports){
+},{"./TreeNode":96,"./eventsNode/ActivitiesEventsNode.js":98,"./eventsNode/GenericEventsNode.js":99,"./eventsNode/NotesEventsNode.js":100,"./eventsNode/NumericalsEventsNode.js":101,"./eventsNode/PicturesEventsNode.js":102,"./eventsNode/PositionsEventsNode.js":103,"./eventsNode/TweetsEventsNode.js":104,"underscore":82}],95:[function(require,module,exports){
 /* global $, window, location, localStorage, i18n */
 
 var RootNode = require('./RootNode.js'),
@@ -32610,7 +35743,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../model/Messages":85,"../view/connect-apps/Controller.js":110,"../view/create/Controller.js":111,"../view/events-views/detailed/Controller.js":120,"../view/events-views/draganddrop/Controller.js":135,"../view/onboarding/View.js":159,"../view/settings/Controller.js":161,"../view/sharings/Controller.js":169,"../view/sharings/create/Controller.js":174,"../view/stream/Controller.js":177,"../view/subscribe/Controller.js":180,"./RootNode.js":92,"./VirtualNode.js":96,"pryv":70,"underscore":82}],95:[function(require,module,exports){
+},{"../model/Messages":85,"../view/connect-apps/Controller.js":111,"../view/create/Controller.js":112,"../view/events-views/detailed/Controller.js":121,"../view/events-views/draganddrop/Controller.js":136,"../view/onboarding/View.js":160,"../view/settings/Controller.js":162,"../view/sharings/Controller.js":170,"../view/sharings/create/Controller.js":175,"../view/stream/Controller.js":178,"../view/subscribe/Controller.js":181,"./RootNode.js":93,"./VirtualNode.js":97,"pryv":71,"underscore":82}],96:[function(require,module,exports){
 /* global $, window */
 var _ = require('underscore'),
   NodeView = require('../view/NodeView.js'),
@@ -33007,7 +36140,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../utility/treemap.js":107,"../view/NodeView.js":108,"backbone":4,"underscore":82}],96:[function(require,module,exports){
+},{"../utility/treemap.js":108,"../view/NodeView.js":109,"backbone":4,"underscore":82}],97:[function(require,module,exports){
 var Pryv = require('pryv');
 var _ = require('underscore');
 
@@ -33243,7 +36376,7 @@ VirtualNode.nodeHas = function (node) {
   }
 };
 
-},{"pryv":70,"underscore":82}],97:[function(require,module,exports){
+},{"pryv":71,"underscore":82}],98:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/activities/Model.js'),
@@ -33295,7 +36428,7 @@ try {
 }
 
 
-},{"../../view/events-views/activities/Model.js":115,"../EventsNode":91,"underscore":82}],98:[function(require,module,exports){
+},{"../../view/events-views/activities/Model.js":116,"../EventsNode":92,"underscore":82}],99:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   _ = require('underscore'),
@@ -33344,7 +36477,7 @@ try {
   console.warn('cannot define window.PryvBrowser');
 }
 
-},{"../../view/events-views/generics/Model.js":138,"../EventsNode":91,"underscore":82}],99:[function(require,module,exports){
+},{"../../view/events-views/generics/Model.js":139,"../EventsNode":92,"underscore":82}],100:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/notes/Model.js'),
@@ -33393,7 +36526,7 @@ try {
 }
 
 
-},{"../../view/events-views/notes/Model.js":140,"../EventsNode":91,"underscore":82}],100:[function(require,module,exports){
+},{"../../view/events-views/notes/Model.js":141,"../EventsNode":92,"underscore":82}],101:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/numericals/Model.js'),
@@ -33442,7 +36575,7 @@ try {
 }
 
 
-},{"../../view/events-views/numericals/Model.js":144,"../EventsNode":91,"underscore":82}],101:[function(require,module,exports){
+},{"../../view/events-views/numericals/Model.js":145,"../EventsNode":92,"underscore":82}],102:[function(require,module,exports){
 /*global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/pictures/Model.js'),
@@ -33492,7 +36625,7 @@ try {
 }
 
 
-},{"../../view/events-views/pictures/Model.js":149,"../EventsNode":91,"underscore":82}],102:[function(require,module,exports){
+},{"../../view/events-views/pictures/Model.js":150,"../EventsNode":92,"underscore":82}],103:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/positions/Model.js'),
@@ -33541,7 +36674,7 @@ try {
 }
 
 
-},{"../../view/events-views/positions/Model.js":151,"../EventsNode":91,"underscore":82}],103:[function(require,module,exports){
+},{"../../view/events-views/positions/Model.js":152,"../EventsNode":92,"underscore":82}],104:[function(require,module,exports){
 /* global window */
 var EventsNode = require('../EventsNode'),
   EventsView = require('../../view/events-views/tweet/Model.js'),
@@ -33590,7 +36723,7 @@ try {
 }
 
 
-},{"../../view/events-views/tweet/Model.js":154,"../EventsNode":91,"underscore":82}],104:[function(require,module,exports){
+},{"../../view/events-views/tweet/Model.js":155,"../EventsNode":92,"underscore":82}],105:[function(require,module,exports){
 /* global moment */
 var _ = require('underscore');
 
@@ -33717,7 +36850,7 @@ dateTime.getTickSettings = function (timeScale, fromMsTime, toMsTime) {
   return TickSettings[interval];
 };
 
-},{"underscore":82}],105:[function(require,module,exports){
+},{"underscore":82}],106:[function(require,module,exports){
 var dateTime = require('./dateTime'),
     streamUtils = require('./streamUtils');
 
@@ -33742,7 +36875,7 @@ eventUtils.getActivityPreview = function (event) {
   return html;
 };
 
-},{"./dateTime":104,"./streamUtils":106}],106:[function(require,module,exports){
+},{"./dateTime":105,"./streamUtils":107}],107:[function(require,module,exports){
 var streamUtils = module.exports = {};
 
 var BgColorClientDataKey = streamUtils.BgColorClientDataKey = 'pryv-browser:bgColor',
@@ -33821,7 +36954,7 @@ streamUtils.setChartSettingsForType = function (stream, type, settings) {
   return settings;
 };
 
-},{}],107:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 
 var _ = require('underscore');
 var TreemapUtils = module.exports = TreemapUtils || {};
@@ -34013,7 +37146,7 @@ TreemapUtils.squarify = function (rect, vals) {
   }
   return layout;
 };
-},{"underscore":82}],108:[function(require,module,exports){
+},{"underscore":82}],109:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette');
  /* TODO This a the view for each node, with dynamic animation
@@ -34089,7 +37222,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1}],109:[function(require,module,exports){
+},{"backbone.marionette":1}],110:[function(require,module,exports){
 /* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -34198,7 +37331,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 
-},{"backbone":4,"backbone.marionette":1,"underscore":82}],110:[function(require,module,exports){
+},{"backbone":4,"backbone.marionette":1,"underscore":82}],111:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     AppListView = require('./AppListView.js'),
@@ -34247,7 +37380,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./AppListView.js":109,"backbone.marionette":1,"underscore":82}],111:[function(require,module,exports){
+},{"./AppListView.js":110,"backbone.marionette":1,"underscore":82}],112:[function(require,module,exports){
 /* global $ */
 var _ = require('underscore'),
   View = require('./View.js'),
@@ -34315,7 +37448,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./EventModel.js":112,"./View.js":113,"underscore":82}],112:[function(require,module,exports){
+},{"./EventModel.js":113,"./View.js":114,"underscore":82}],113:[function(require,module,exports){
 /* global FormData */
 var Backbone = require('backbone');
 
@@ -34354,7 +37487,7 @@ module.exports = Backbone.Model.extend({
     this.get('event').removeAttachment(fileName, callback);
   }
 });
-},{"backbone":4}],113:[function(require,module,exports){
+},{"backbone":4}],114:[function(require,module,exports){
 /* global $, FileReader, document, window, i18n, navigator*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -35144,7 +38277,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"./EventModel.js":112,"backbone.marionette":1,"google-maps":6,"underscore":82}],114:[function(require,module,exports){
+},{"./EventModel.js":113,"backbone.marionette":1,"google-maps":5,"underscore":82}],115:[function(require,module,exports){
 module.exports = '<div id="main-container">' +
   '<nav class="navbar navbar-inverse navbar-static-top" role="navigation" style="top: 0px;">' +
     '<div id="logo-reload" class="logo">Pryv</div>' +
@@ -35156,7 +38289,7 @@ module.exports = '<div id="main-container">' +
   'data-i18n="error.unknownUser.labels.goToPryv"></a>' +
   '</div>' +
 '</div> ';
-},{}],115:[function(require,module,exports){
+},{}],116:[function(require,module,exports){
 /* global $*/
 var _ = require('underscore'),
     ActivityView = require('./View.js'),
@@ -35295,7 +38428,7 @@ module.exports = CommonModel.implement(
   }
 );
 
-},{"../../../utility/streamUtils":106,"../common/Model.js":117,"./View.js":116,"underscore":82}],116:[function(require,module,exports){
+},{"../../../utility/streamUtils":107,"../common/Model.js":118,"./View.js":117,"underscore":82}],117:[function(require,module,exports){
 /* global $, Highcharts */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../utility/dateTime');
@@ -35442,7 +38575,7 @@ View._updateTotalTime = function () {
 
 module.exports = Marionette.ItemView.extend(View);
 
-},{"../../../utility/dateTime":104,"backbone.marionette":1}],117:[function(require,module,exports){
+},{"../../../utility/dateTime":105,"backbone.marionette":1}],118:[function(require,module,exports){
 /* global $*/
 var _ = require('underscore'),
   Backbone = require('backbone');
@@ -35635,7 +38768,7 @@ _.extend(Model.prototype, {
 
 });
 
-},{"backbone":4,"underscore":82}],118:[function(require,module,exports){
+},{"backbone":4,"underscore":82}],119:[function(require,module,exports){
 /* global $, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -35726,7 +38859,7 @@ function countChecked(collection) {
   return count;
 }
 
-},{"backbone.marionette":1}],119:[function(require,module,exports){
+},{"backbone.marionette":1}],120:[function(require,module,exports){
 /* global $, moment, window, i18n */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../utility/dateTime');
@@ -36107,7 +39240,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/dateTime":104,"backbone.marionette":1}],120:[function(require,module,exports){
+},{"../../../utility/dateTime":105,"backbone.marionette":1}],121:[function(require,module,exports){
 /* global $, i18n, window */
 var _ = require('underscore'),
     Collection = require('./EventCollection.js'),
@@ -36442,7 +39575,7 @@ _.extend(Controller.prototype, {
   }.bind(this), 1000)
 });
 
-},{"./BatchActionView.js":118,"./CommonView.js":119,"./EventCollection.js":121,"./EventModel.js":122,"./ListView.js":124,"./contentView/Activity.js":125,"./contentView/Creation.js":126,"./contentView/Generic.js":127,"./contentView/Note.js":128,"./contentView/Picture.js":129,"./contentView/Position.js":130,"./contentView/Tweet.js":131,"./contentView/numerical/Controller.js":132,"underscore":82}],121:[function(require,module,exports){
+},{"./BatchActionView.js":119,"./CommonView.js":120,"./EventCollection.js":122,"./EventModel.js":123,"./ListView.js":125,"./contentView/Activity.js":126,"./contentView/Creation.js":127,"./contentView/Generic.js":128,"./contentView/Note.js":129,"./contentView/Picture.js":130,"./contentView/Position.js":131,"./contentView/Tweet.js":132,"./contentView/numerical/Controller.js":133,"underscore":82}],122:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./EventModel.js');
 
@@ -36514,7 +39647,7 @@ module.exports = Backbone.Collection.extend({
     return this;
   }
 });
-},{"./EventModel.js":122,"backbone":4}],122:[function(require,module,exports){
+},{"./EventModel.js":123,"backbone":4}],123:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -36584,7 +39717,7 @@ module.exports = Backbone.Model.extend({
     this.get('event').trash(callback);
   }
 });
-},{"backbone":4}],123:[function(require,module,exports){
+},{"backbone":4}],124:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     Pryv = require('pryv'),
@@ -36726,7 +39859,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/eventUtils":105,"backbone.marionette":1,"pryv":70,"underscore":82}],124:[function(require,module,exports){
+},{"../../../utility/eventUtils":106,"backbone.marionette":1,"pryv":71,"underscore":82}],125:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     ItemView = require('./ItemView.js'),
@@ -36799,7 +39932,7 @@ listView._showMore = function () {
 
 module.exports = Marionette.CompositeView.extend(listView);
 
-},{"./ItemView.js":123,"backbone.marionette":1,"underscore":82}],125:[function(require,module,exports){
+},{"./ItemView.js":124,"backbone.marionette":1,"underscore":82}],126:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     eventUtils = require('../../../../utility/eventUtils');
@@ -36824,7 +39957,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../../utility/eventUtils":105,"backbone.marionette":1}],126:[function(require,module,exports){
+},{"../../../../utility/eventUtils":106,"backbone.marionette":1}],127:[function(require,module,exports){
 /* global $*/
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -36947,7 +40080,7 @@ module.exports = Marionette.ItemView.extend({
     return false;
   }
 });
-},{"backbone.marionette":1,"underscore":82}],127:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],128:[function(require,module,exports){
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -37106,7 +40239,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"backbone.marionette":1,"underscore":82}],128:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],129:[function(require,module,exports){
 /* global $, window */
 var Marionette = require('backbone.marionette');
 
@@ -37136,7 +40269,7 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
   },
 });
-},{"backbone.marionette":1}],129:[function(require,module,exports){
+},{"backbone.marionette":1}],130:[function(require,module,exports){
 /* global $, FormData */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -37227,7 +40360,7 @@ module.exports = Marionette.ItemView.extend({
     $($elem).removeClass('editing');
   }
 });
-},{"backbone.marionette":1,"underscore":82}],130:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],131:[function(require,module,exports){
 /* global $, document*/
 var Marionette = require('backbone.marionette'),
     MapLoader = require('google-maps'),
@@ -37409,7 +40542,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../../utility/streamUtils":106,"backbone.marionette":1,"google-maps":6,"underscore":82}],131:[function(require,module,exports){
+},{"../../../../utility/streamUtils":107,"backbone.marionette":1,"google-maps":5,"underscore":82}],132:[function(require,module,exports){
 /* global $, FormData, PryvBrowser */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../../utility/dateTime'),
@@ -37465,7 +40598,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../../utility/dateTime":104,"backbone.marionette":1,"underscore":82}],132:[function(require,module,exports){
+},{"../../../../utility/dateTime":105,"backbone.marionette":1,"underscore":82}],133:[function(require,module,exports){
 /* global window, $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -37690,7 +40823,7 @@ module.exports = Marionette.ItemView.extend({
   }, 1000)
 });
 
-},{"../../../numericals/TimeSeriesCollection.js":145,"../../../numericals/TimeSeriesModel.js":146,"../../../numericals/utils/ChartSettings.js":147,"./GeneralConfigView.js":133,"./SingleEditView.js":134,"backbone.marionette":1,"underscore":82}],133:[function(require,module,exports){
+},{"../../../numericals/TimeSeriesCollection.js":146,"../../../numericals/TimeSeriesModel.js":147,"../../../numericals/utils/ChartSettings.js":148,"./GeneralConfigView.js":134,"./SingleEditView.js":135,"backbone.marionette":1,"underscore":82}],134:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -37778,7 +40911,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../numericals/ChartModel.js":142,"../../../numericals/ChartView.js":143,"backbone.marionette":1,"underscore":82}],134:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":143,"../../../numericals/ChartView.js":144,"backbone.marionette":1,"underscore":82}],135:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -37979,7 +41112,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../numericals/ChartModel.js":142,"../../../numericals/ChartView.js":143,"backbone.marionette":1,"underscore":82}],135:[function(require,module,exports){
+},{"../../../numericals/ChartModel.js":143,"../../../numericals/ChartView.js":144,"backbone.marionette":1,"underscore":82}],136:[function(require,module,exports){
 /* global window, $ */
 var _ = require('underscore'),
   ListView = require('./ListView.js'),
@@ -38428,7 +41561,7 @@ _.extend(Controller.prototype, {
   }, 250)
 });
 
-},{"./../numericals/ChartModel.js":142,"./../numericals/ChartView.js":143,"./../numericals/TimeSeriesCollection.js":145,"./../numericals/TimeSeriesModel.js":146,"./../numericals/utils/ChartSettings.js":147,"./ListView.js":137,"underscore":82}],136:[function(require,module,exports){
+},{"./../numericals/ChartModel.js":143,"./../numericals/ChartView.js":144,"./../numericals/TimeSeriesCollection.js":146,"./../numericals/TimeSeriesModel.js":147,"./../numericals/utils/ChartSettings.js":148,"./ListView.js":138,"underscore":82}],137:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.CompositeView.extend({
@@ -38452,7 +41585,7 @@ module.exports = Marionette.CompositeView.extend({
   }
 });
 
-},{"backbone.marionette":1}],137:[function(require,module,exports){
+},{"backbone.marionette":1}],138:[function(require,module,exports){
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js');
 
@@ -38467,7 +41600,7 @@ module.exports = Marionette.CollectionView.extend({
   }
 });
 
-},{"./ItemView.js":136,"backbone.marionette":1}],138:[function(require,module,exports){
+},{"./ItemView.js":137,"backbone.marionette":1}],139:[function(require,module,exports){
 var _ = require('underscore'),
   GenericsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -38496,7 +41629,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":117,"./View.js":139,"underscore":82}],139:[function(require,module,exports){
+},{"../common/Model.js":118,"./View.js":140,"underscore":82}],140:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette');
 var _ = require('underscore');
@@ -38569,7 +41702,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1,"underscore":82}],140:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],141:[function(require,module,exports){
 var _ = require('underscore'),
   NotesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -38678,7 +41811,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":117,"./View.js":141,"underscore":82}],141:[function(require,module,exports){
+},{"../common/Model.js":118,"./View.js":142,"underscore":82}],142:[function(require,module,exports){
 /* global $, window */
 var  Marionette = require('backbone.marionette'),
     _ = require('underscore');
@@ -38788,7 +41921,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1,"underscore":82}],142:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],143:[function(require,module,exports){
 var Backbone = require('backbone');
 
 var ChartModel = {
@@ -38850,7 +41983,7 @@ ChartModel.setHighlighted = function (highlight) {
 
 module.exports = Backbone.Model.extend(ChartModel);
 
-},{"backbone":4}],143:[function(require,module,exports){
+},{"backbone":4}],144:[function(require,module,exports){
 /* global $, Highcharts, moment, pryvBrowser */
 
 var _ = require('underscore'),
@@ -39551,7 +42684,7 @@ module.exports = Marionette.CompositeView.extend(ChartView);
   });
 }(Highcharts));
 
-},{"../../../utility/dateTime":104,"./utils/timeSeriesTransform.js":148,"backbone.marionette":1,"pryv":70,"underscore":82}],144:[function(require,module,exports){
+},{"../../../utility/dateTime":105,"./utils/timeSeriesTransform.js":149,"backbone.marionette":1,"pryv":71,"underscore":82}],145:[function(require,module,exports){
 /* global window, $ */
 
 var _ = require('underscore'),
@@ -39894,7 +43027,7 @@ NumericalsPlugin.prototype.resize = function () {
   this.view.resize();
 };
 
-},{"../detailed/Controller.js":120,"./ChartModel.js":142,"./ChartView.js":143,"./TimeSeriesCollection.js":145,"./TimeSeriesModel.js":146,"./utils/ChartSettings.js":147,"underscore":82}],145:[function(require,module,exports){
+},{"../detailed/Controller.js":121,"./ChartModel.js":143,"./ChartView.js":144,"./TimeSeriesCollection.js":146,"./TimeSeriesModel.js":147,"./utils/ChartSettings.js":148,"underscore":82}],146:[function(require,module,exports){
 var Backbone = require('backbone'),
     Model = require('./TimeSeriesModel.js');
 
@@ -39910,7 +43043,7 @@ TimeSeriesCollection.comparator = function () {};
 
 module.exports = Backbone.Collection.extend(TimeSeriesCollection);
 
-},{"./TimeSeriesModel.js":146,"backbone":4}],146:[function(require,module,exports){
+},{"./TimeSeriesModel.js":147,"backbone":4}],147:[function(require,module,exports){
 var Backbone = require('backbone');
 
 // TODO: see for making this a plain constructor instead of a Backbone model for simplicity
@@ -39946,7 +43079,7 @@ TimeSeriesModel.sortData = function () {
 
 module.exports = Backbone.Model.extend(TimeSeriesModel);
 
-},{"backbone":4}],147:[function(require,module,exports){
+},{"backbone":4}],148:[function(require,module,exports){
 var streamUtils = require('../../../../utility/streamUtils');
 
 var ChartSettings = module.exports = function ChartSettings(stream, type, virtualNode, offset) {
@@ -40016,7 +43149,7 @@ ChartSettings.prototype._pushChanges = function () {
   }
 };
 
-},{"../../../../utility/streamUtils":106}],148:[function(require,module,exports){
+},{"../../../../utility/streamUtils":107}],149:[function(require,module,exports){
 var _ = require('underscore');
 
 var tsTransform = module.exports = {};
@@ -40218,7 +43351,7 @@ function getValue(event) {
   return +event.content;
 }
 
-},{"underscore":82}],149:[function(require,module,exports){
+},{"underscore":82}],150:[function(require,module,exports){
 var _ = require('underscore'),
   PicturesView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -40346,7 +43479,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":117,"./View.js":150,"underscore":82}],150:[function(require,module,exports){
+},{"../common/Model.js":118,"./View.js":151,"underscore":82}],151:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -40450,7 +43583,7 @@ module.exports = Marionette.ItemView.extend({
     this.remove();
   }
 });
-},{"backbone.marionette":1,"underscore":82}],151:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],152:[function(require,module,exports){
 var _ = require('underscore'),
   PositionsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -40496,7 +43629,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":117,"./View.js":152,"underscore":82}],152:[function(require,module,exports){
+},{"../common/Model.js":118,"./View.js":153,"underscore":82}],153:[function(require,module,exports){
 /* global document, $ */
 var  Marionette = require('backbone.marionette'),
     MapLoader = require('google-maps'),
@@ -40688,7 +43821,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/streamUtils":106,"./utility/markerclusterer.js":153,"backbone.marionette":1,"google-maps":6,"underscore":82}],153:[function(require,module,exports){
+},{"../../../utility/streamUtils":107,"./utility/markerclusterer.js":154,"backbone.marionette":1,"google-maps":5,"underscore":82}],154:[function(require,module,exports){
 /* global window, google, document */
 /*jshint -W084 */
 /*jshint -W089 */
@@ -42001,7 +45134,7 @@ Object.keys = Object.keys || function (o) {
   return result;
 };
 
-},{}],154:[function(require,module,exports){
+},{}],155:[function(require,module,exports){
 var _ = require('underscore'),
   TweetsView = require('./View.js'),
   CommonModel = require('../common/Model.js');
@@ -42110,7 +45243,7 @@ module.exports = CommonModel.implement(
     }
   }
 );
-},{"../common/Model.js":117,"./View.js":155,"underscore":82}],155:[function(require,module,exports){
+},{"../common/Model.js":118,"./View.js":156,"underscore":82}],156:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
     dateTime = require('../../../utility/dateTime'),
@@ -42237,14 +45370,14 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../../utility/dateTime":104,"backbone.marionette":1,"underscore":82}],156:[function(require,module,exports){
+},{"../../../utility/dateTime":105,"backbone.marionette":1,"underscore":82}],157:[function(require,module,exports){
 
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
   template: '#actions-template'
 });
-},{"backbone.marionette":1}],157:[function(require,module,exports){
+},{"backbone.marionette":1}],158:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   FilterByStreamView = require('./FilterByStream.js'),
@@ -42333,7 +45466,7 @@ var isConnectionsNumberChange = function (MainModel) {
   return res;
 };
 
-},{"./Actions.js":156,"./FilterByStream.js":158,"backbone.marionette":1,"underscore":82}],158:[function(require,module,exports){
+},{"./Actions.js":157,"./FilterByStream.js":159,"backbone.marionette":1,"underscore":82}],159:[function(require,module,exports){
 /*global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore'),
@@ -42605,7 +45738,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1,"underscore":82}],159:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],160:[function(require,module,exports){
 /* global $ */
 var  Marionette = require('backbone.marionette');
 /* TODO This a the view for each node, with dynamic animation
@@ -42636,7 +45769,7 @@ module.exports = Marionette.ItemView.extend({
     $('body').i18n();
   }
 });
-},{"backbone.marionette":1}],160:[function(require,module,exports){
+},{"backbone.marionette":1}],161:[function(require,module,exports){
 /* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -42746,7 +45879,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 
-},{"backbone":4,"backbone.marionette":1,"underscore":82}],161:[function(require,module,exports){
+},{"backbone":4,"backbone.marionette":1,"underscore":82}],162:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   NavView = require('./NavView.js'),
@@ -42833,7 +45966,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./AppListView.js":160,"./ManageAppsView.js":162,"./NavView.js":163,"./PasswordView.js":164,"backbone.marionette":1,"underscore":82}],162:[function(require,module,exports){
+},{"./AppListView.js":161,"./ManageAppsView.js":163,"./NavView.js":164,"./PasswordView.js":165,"backbone.marionette":1,"underscore":82}],163:[function(require,module,exports){
 /* global window, i18n, $, localStorage, location*/
 var Marionette = require('backbone.marionette');
 var Backbone = require('backbone');
@@ -42960,7 +46093,7 @@ module.exports = Marionette.CompositeView.extend({
 });
 
 
-},{"backbone":4,"backbone.marionette":1,"underscore":82}],163:[function(require,module,exports){
+},{"backbone":4,"backbone.marionette":1,"underscore":82}],164:[function(require,module,exports){
 /*global $ */
 var Marionette = require('backbone.marionette'),
   _ = require('underscore');
@@ -42997,7 +46130,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1,"underscore":82}],164:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],165:[function(require,module,exports){
 /* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -43074,7 +46207,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1}],165:[function(require,module,exports){
+},{"backbone.marionette":1}],166:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./BookmarkModel.js');
 
@@ -43082,7 +46215,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./BookmarkModel.js":168,"backbone":4}],166:[function(require,module,exports){
+},{"./BookmarkModel.js":169,"backbone":4}],167:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -43102,7 +46235,7 @@ module.exports = Marionette.ItemView.extend({
     this.trigger('bookmark:delete', this.model);
   }
 });
-},{"backbone.marionette":1}],167:[function(require,module,exports){
+},{"backbone.marionette":1}],168:[function(require,module,exports){
 /* global $, window, i18n */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./BookmarkItemView.js'),
@@ -43236,7 +46369,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./BookmarkItemView.js":166,"backbone.marionette":1,"pryv":70,"underscore":82}],168:[function(require,module,exports){
+},{"./BookmarkItemView.js":167,"backbone.marionette":1,"pryv":71,"underscore":82}],169:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -43245,7 +46378,7 @@ module.exports = Backbone.Model.extend({
     collection: null
   }
 });
-},{"backbone":4}],169:[function(require,module,exports){
+},{"backbone":4}],170:[function(require,module,exports){
 /* global $, window, i18n */
 var _ = require('underscore'),
   SharingCollection = require('./SharingCollection.js'),
@@ -43420,7 +46553,7 @@ _.extend(Controller.prototype, {
   }
 });
 
-},{"./BookmarkCollection.js":165,"./BookmarkListView.js":167,"./BookmarkModel.js":168,"./SharingCollection.js":170,"./SharingListView.js":172,"./SharingModel.js":173,"pryv":70,"underscore":82}],170:[function(require,module,exports){
+},{"./BookmarkCollection.js":166,"./BookmarkListView.js":168,"./BookmarkModel.js":169,"./SharingCollection.js":171,"./SharingListView.js":173,"./SharingModel.js":174,"pryv":71,"underscore":82}],171:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./SharingModel.js');
 
@@ -43428,7 +46561,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./SharingModel.js":173,"backbone":4}],171:[function(require,module,exports){
+},{"./SharingModel.js":174,"backbone":4}],172:[function(require,module,exports){
 /* global window, i18n */
 var Marionette = require('backbone.marionette');
 
@@ -43495,7 +46628,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"backbone.marionette":1}],172:[function(require,module,exports){
+},{"backbone.marionette":1}],173:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./SharingItemView.js'),
@@ -43533,7 +46666,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./SharingItemView.js":171,"backbone.marionette":1,"underscore":82}],173:[function(require,module,exports){
+},{"./SharingItemView.js":172,"backbone.marionette":1,"underscore":82}],174:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -43542,7 +46675,7 @@ module.exports = Backbone.Model.extend({
     collection: null
   }
 });
-},{"backbone":4}],174:[function(require,module,exports){
+},{"backbone":4}],175:[function(require,module,exports){
 /* global $, i18n, window */
 var Marionette = require('backbone.marionette'),
   CreateFormView = require('./CreateFormView.js'),
@@ -43669,7 +46802,7 @@ _.extend(Controller.prototype, {
     this.view.ui.cancel.text(i18n.t('common.actions.close')).addClass('btn-primary');
   }
 });
-},{"./CreateFormView.js":175,"./SuccessView.js":176,"backbone.marionette":1,"underscore":82}],175:[function(require,module,exports){
+},{"./CreateFormView.js":176,"./SuccessView.js":177,"backbone.marionette":1,"underscore":82}],176:[function(require,module,exports){
 /* global $ */
 
 var Marionette = require('backbone.marionette'),
@@ -43822,7 +46955,7 @@ module.exports = Marionette.ItemView.extend({
 
 
 
-},{"backbone.marionette":1,"underscore":82}],176:[function(require,module,exports){
+},{"backbone.marionette":1,"underscore":82}],177:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -43850,7 +46983,7 @@ module.exports = Marionette.ItemView.extend({
     this.token = this.options.token;
   }
 });
-},{"backbone.marionette":1}],177:[function(require,module,exports){
+},{"backbone.marionette":1}],178:[function(require,module,exports){
 /* global $, i18n */
 var Marionette = require('backbone.marionette'),
   Backbone = require('backbone'),
@@ -43908,7 +47041,7 @@ _.extend(Controller.prototype, {
     }));
   }
 });
-},{"./View.js":178,"backbone":4,"backbone.marionette":1,"underscore":82}],178:[function(require,module,exports){
+},{"./View.js":179,"backbone":4,"backbone.marionette":1,"underscore":82}],179:[function(require,module,exports){
 /* global $, window, i18n*/
 var Marionette = require('backbone.marionette'),
     streamUtils = require('../../utility/streamUtils');
@@ -44097,7 +47230,7 @@ module.exports = Marionette.ItemView.extend({
   }
 });
 
-},{"../../utility/streamUtils":106,"backbone.marionette":1}],179:[function(require,module,exports){
+},{"../../utility/streamUtils":107,"backbone.marionette":1}],180:[function(require,module,exports){
 var Backbone = require('backbone'),
   Model = require('./Model.js');
 
@@ -44105,7 +47238,7 @@ module.exports = Backbone.Collection.extend({
   url: '#',
   model: Model
 });
-},{"./Model.js":183,"backbone":4}],180:[function(require,module,exports){
+},{"./Model.js":184,"backbone":4}],181:[function(require,module,exports){
 /* global $, window, i18n */
 var _ = require('underscore'),
   Collection = require('./Collection.js'),
@@ -44192,7 +47325,7 @@ _.extend(Controller.prototype, {
     }.bind(this));
   }
 });
-},{"./Collection.js":179,"./ListView.js":182,"./Model.js":183,"underscore":82}],181:[function(require,module,exports){
+},{"./Collection.js":180,"./ListView.js":183,"./Model.js":184,"underscore":82}],182:[function(require,module,exports){
 var Marionette = require('backbone.marionette');
 
 module.exports = Marionette.ItemView.extend({
@@ -44218,7 +47351,7 @@ module.exports = Marionette.ItemView.extend({
     }.bind(this));
   }
 });
-},{"backbone.marionette":1}],182:[function(require,module,exports){
+},{"backbone.marionette":1}],183:[function(require,module,exports){
 /* global $ */
 var Marionette = require('backbone.marionette'),
   ItemView = require('./ItemView.js'),
@@ -44288,7 +47421,7 @@ module.exports = Marionette.CompositeView.extend({
   }, 10)
 });
 
-},{"./ItemView.js":181,"backbone.marionette":1,"underscore":82}],183:[function(require,module,exports){
+},{"./ItemView.js":182,"backbone.marionette":1,"underscore":82}],184:[function(require,module,exports){
 var Backbone = require('backbone');
 
 module.exports = Backbone.Model.extend({
@@ -44300,18 +47433,5 @@ module.exports = Backbone.Model.extend({
     created: false
   }
 });
-},{"backbone":4}],"SampleApp":[function(require,module,exports){
-/*global require, window*/
-// ---------- helpers that should be  adapted to BackBone fashion ----------- //
-
-var Model = require('./Model.js');
-
-
-//----- test -------//
-/*jshint -W098 */
-exports.main = function (STAGING) {
-
-  var model = new Model(STAGING);
-  window.pryvBrowser = model;
-};
-},{"./Model.js":83}]},{},["SampleApp"]);
+},{"backbone":4}]},{},[90])(90)
+});

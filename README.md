@@ -1,14 +1,20 @@
-# Pryv Browser
+# Pryv for the web a.k.a. ‘the browser’
 
 The Pryv web app, featuring the dashboard view.
 
+## Usage
 
-## Setting up the development environment
+TODO
+
+
+## Contributing
+
+### Setting up the development environment
 
 `scripts/setup-environment-dev.sh`
 
 
-## Building
+### Building
 
 - `grunt` for dev
 - `grunt staging` for staging
@@ -17,7 +23,7 @@ The Pryv web app, featuring the dashboard view.
 Build output goes to `./dist`
 
 
-## Running the dev build locally
+### Running the dev build locally
 
 Requires a working copy of our [dev tools repo](https://github.com/pryv/dev-tools).
 

@@ -3,5 +3,6 @@ dist
 test/coverage.html
 .idea
 browser.iml
+app-web.iml
 npm-debug.log
 dist-c3

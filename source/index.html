@@ -1033,23 +1033,18 @@
       </div>
       <hr/>
       <div class="form-group">
-        <script>var redirectRegister = function (url) {
+        <script>
+          var redirectRegister = function (url) {
           location.href = url + '?returnUrl=' + location.href;
-        }</script>
-        <!-- @if NODE_ENV == 'PRODUCTION' -->
-        <a id="register" href="javascript:redirectRegister('https://sw.pryv.me/access/register.html')" data-i18n="login.actions.register" target="_self"></a>
-        <!-- @endif -->
-        <!-- @if NODE_ENV != 'PRODUCTION' -->
-        <a id="register" href="javascript:redirectRegister('https://sw.pryv.me/access/register.html')" data-i18n="login.actions.register" target="_self"></a>
-        <!-- @endif -->
+        }
+        var domain = document.location.hostname.substr(document.location.hostname.indexOf('.') + 1);
+        var staticWebSource = 'https://sw.' + domain ;
+
+        </script>
+        <a id="register" href="javascript:redirectRegister(staticWebSource +'/access/register.html')" data-i18n="login.actions.register" target="_self"></a>
       </div>
       <div class="form-group">
-        <!-- @if NODE_ENV == 'PRODUCTION' -->
-        <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
-        <!-- @endif -->
-        <!-- @if NODE_ENV != 'PRODUCTION' -->
-        <a id="resetPassword" href="https://sw.pryv.li/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
-        <!-- @endif -->
+        <a id="resetPassword" href="javascript:redirectRegister(staticWebSource +'/access/reset-password.html')" data-i18n="login.actions.resetPassword" target="_blank"></a>
       </div>
 
     </form>
@@ -1057,7 +1052,6 @@
 </div>
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
     <div id="logo-reload" class="logo">Pryv</div>
-    <div id="logo-beta-mention"><a href="http://pryv.com/beta-roadmap/" target="_blank">Beta</a></div>
     <ul class="nav navbar-nav navbar-left">
       <li id="togglePanel">
       <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>

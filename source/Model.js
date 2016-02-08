@@ -10,7 +10,6 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     TimeLine = require('./timeframe-selector/timeframe-selector.js'),
     UnknownUserView = require('./view/error/unknown-user.js'),
     PUBLIC_TOKEN = 'public',
-    STAGING,
     themes = require('./themes/index'),
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
       'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
@@ -23,8 +22,7 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
 require('backbone').$ = $;
 require('backbone.marionette').$ = $;
 
-var Model = module.exports = function (staging) {  //setup env with grunt
-  STAGING = !!staging;
+var Model = module.exports = function () {  //setup env with grunt
   window.Pryv = Pryv;
 
   Pryv.eventTypes.loadFlat(function (err) {
@@ -40,7 +38,7 @@ var Model = module.exports = function (staging) {  //setup env with grunt
 
   this._applyThemeIfAny(this.queryString.theme);
 
-  testUsername(this.urlUsername);
+  testUsername(this.urlUsername, urlInfo.domain);
 
   if (urlInfo.username && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
     $('#login-username').val(this.urlUsername);
@@ -58,13 +56,13 @@ var Model = module.exports = function (staging) {  //setup env with grunt
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
       this.sharingsConnections.push(new Pryv.Connection(
-        this.urlUsername, token, {staging: STAGING}));
+        this.urlUsername, token, {}));
     }.bind(this));
     this.setTimeframeScale(this.sharingsConnections[0]);
     $('.logo-subscribe').show();
   } else if (this.urlUsername) {
     this.publicConnection =  new Pryv.Connection(
-      this.urlUsername, PUBLIC_TOKEN, {staging: STAGING});
+      this.urlUsername, PUBLIC_TOKEN, {});
   }
 
   // create connection handler and filter
@@ -117,7 +115,6 @@ var Model = module.exports = function (staging) {  //setup env with grunt
   // ----------------------- //
 
   // Sign in
-  //Pryv.Auth.config.registerURL = { host: 'reg.pryv.in', 'ssl': true};
 
   var settings = {
     appId : 'pryv-browser',
@@ -426,18 +423,7 @@ function initTimeAndFilter(timeView, filter) {
   });
 }
 
-function testUsername(username) {
-  var domain;
-  var host  = window.location.host;
-  if (host.indexOf('pryv.li') !== -1) {
-    domain = 'pryv.in';
-  } else if (host.indexOf('pryv.me') !== -1) {
-    domain = 'pryv.io';
-  } else if (host.indexOf('rec.la') !== -1) {
-    domain = 'pryv.in';
-  } else {
-    domain = 'pryv.io';
-  }
+function testUsername(username, domain) {
   $.post('https://reg.' + domain + '/' + username + '/server')
     .fail(function () {
     $('body').html(UnknownUserView);

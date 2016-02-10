@@ -16878,9 +16878,9 @@ var Model = module.exports = function () {  //setup env with grunt
   });
 
   var urlInfo = Pryv.utility.urls.parseClientURL();
-  this.urlUsername = urlInfo.username;
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
+  this.urlUsername = this.queryString.username || urlInfo.username;
 
   // --- domain customisation space ----- //
   this._applyThemeIfAny(this.queryString.theme);
@@ -16890,20 +16890,22 @@ var Model = module.exports = function () {  //setup env with grunt
   if (urlInfo.domain == 'rec.la') {
     urlInfo.domain = 'domocare.io';
   }
-  if (urlInfo.domain == 'pryv.li') {
-    urlInfo.domain = 'pryv.in';
+  if (urlInfo.domain == 'pryv.in') {
+    urlInfo.domain = 'pryv.li';
     localStorage.setItem('skipOnboarding', false);
   }
-  if (urlInfo.domain == 'pryv.me') {
-    urlInfo.domain = 'pryv.io';
+  if (urlInfo.domain == 'pryv.io') {
+    urlInfo.domain = 'pryv.me';
     localStorage.setItem('skipOnboarding', false);
   }
 
-  Pryv.utility.urls.defaultDomain = urlInfo.domain;
+  this.urlDomain = this.queryString.domain || urlInfo.domain;
 
-  testUsername(this.urlUsername, urlInfo.domain);
+  Pryv.utility.urls.defaultDomain = this.urlDomain;
 
-  if (urlInfo.username && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
+  testUsername(this.urlUsername, this.urlDomain);
+
+  if (this.urlUsername && urlInfo.hash.toLowerCase().split('/').indexOf('signin') !== -1) {
     $('#login-username').val(this.urlUsername);
     this.openLogin();
   }

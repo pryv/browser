@@ -16882,16 +16882,21 @@ var Model = module.exports = function () {  //setup env with grunt
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
 
+  // --- domain customisation space ----- //
   this._applyThemeIfAny(this.queryString.theme);
 
+
+  localStorage.setItem('skipOnboarding', true)
   if (urlInfo.domain == 'rec.la') {
     urlInfo.domain = 'domocare.io';
   }
   if (urlInfo.domain == 'pryv.li') {
     urlInfo.domain = 'pryv.in';
+    localStorage.setItem('skipOnboarding', false);
   }
   if (urlInfo.domain == 'pryv.me') {
     urlInfo.domain = 'pryv.io';
+    localStorage.setItem('skipOnboarding', false);
   }
 
   Pryv.utility.urls.defaultDomain = urlInfo.domain;

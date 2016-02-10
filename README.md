@@ -4,12 +4,12 @@ The Pryv web app, featuring the dashboard view.
 
 ## Usage
 
-Normaly exposed on the internet as `https:{username}.{domain}` 
+Normaly exposed on the internet as `https://{username}.{domain}` 
 
 A domain and user agnostic version is published on github gh-pages. It can be accessed with:   
-`https://pryv.github.com/app-web/?username={username}&domain={domain}`   
+`https://pryv.github.io/app-web/?username={username}&domain={domain}`   
 for example:   
-`https://pryv.github.com/app-web/?username=christine&domain=pryv.io`
+`https://pryv.github.io/app-web/?username=christine&domain=pryv.io`
 
 
 ## Contributing

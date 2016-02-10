@@ -4,7 +4,12 @@ The Pryv web app, featuring the dashboard view.
 
 ## Usage
 
-TODO
+Normaly exposed on the internet as `https:{username}.{domain}` 
+
+A domain and user agnostic version is published on github gh-pages. It can be accessed with:   
+`https://pryv.github.com/app-web/?username={username}&domain={domain}`   
+for example:   
+`https://pryv.github.com/app-web/?username=christine&domain=pryv.io`
 
 
 ## Contributing
@@ -19,6 +24,7 @@ TODO
 - `grunt` for dev
 - `grunt staging` for staging
 - `grunt production` for production
+- `grunt ghpages` for production
 
 Build output goes to `./dist`
 

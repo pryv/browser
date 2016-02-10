@@ -168,6 +168,9 @@ module.exports = function (grunt) {
       },
       staging : {
         NODE_ENV : 'STAGING'
+      },
+      ghpages : {
+        NODE_ENV : 'GHPAGES'
       }
     },
     preprocess : {
@@ -231,6 +234,9 @@ module.exports = function (grunt) {
       'cssmin', 'concat', 'copy', 'preprocess:staging']);
   grunt.registerTask('production',
     ['jshint', 'env:prod', 'browserify',
+      'cssmin', 'concat', 'copy', 'preprocess:staging']);
+  grunt.registerTask('ghpages',
+    ['jshint', 'env:ghpages', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:staging']);
 
   // Deprecated

@@ -166,9 +166,6 @@ module.exports = function (grunt) {
       prod: {
         NODE_ENV : 'PRODUCTION'
       },
-      staging : {
-        NODE_ENV : 'STAGING'
-      },
       ghpages : {
         NODE_ENV : 'GHPAGES'
       }
@@ -183,7 +180,7 @@ module.exports = function (grunt) {
           }
         }
       },
-      staging : {
+      prod : {
         src : 'source/index.html',
         dest : 'dist/index.html',
         options : {
@@ -229,15 +226,12 @@ module.exports = function (grunt) {
   grunt.registerTask('default',
     ['jshint', 'env:dev', 'browserify',
       'cssmin', 'concat', 'copy', 'preprocess:dev']);
-  grunt.registerTask('staging',
-    ['jshint', 'env:staging', 'browserify',
-      'cssmin', 'concat', 'copy', 'preprocess:staging']);
   grunt.registerTask('production',
     ['jshint', 'env:prod', 'browserify',
-      'cssmin', 'concat', 'copy', 'preprocess:staging']);
+      'cssmin', 'concat', 'copy', 'preprocess:prod']);
   grunt.registerTask('ghpages',
     ['jshint', 'env:ghpages', 'browserify',
-      'cssmin', 'concat', 'copy', 'preprocess:staging']);
+      'cssmin', 'concat', 'copy', 'preprocess:prod']);
 
   // Deprecated
   grunt.registerTask('local',

@@ -7,20 +7,20 @@
   <title>Pryv [DEVELOPMENT]</title>
   <base href="">
   <!-- @endif -->
-  <!-- @if NODE_ENV != 'DEVELOPMENT' -->
+
   <title>Pryv</title>
-    <!-- @if NODE_ENV == 'GHPAGES' -->
-    <base href="https://pryv.github.io/app-web/">
-    <!-- @else -->
-    <base href="{browser-source}_<!-- @echo version -->/">
-    <!-- @endif -->
+  <!-- @if NODE_ENV == 'GHPAGES' -->
+  <base href="https://pryv.github.io/app-web/">
+  <!-- @endif -->
+  <!-- @if NODE_ENV == 'PRODUCTION' -->
+  <base href="{browser-source}_<!-- @echo version -->/">
   <!-- @endif -->
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
   <!-- @if NODE_ENV != 'GHPAGES' -->
     <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
-    <meta property="og:url" content="https://{host}" />
+  <meta property="og:url" content="https://{host}" />
     <!-- @endif -->
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
   <meta property="og:image" content="{browser-source}_<!-- @echo version -->/images/fb_share.jpg" />
@@ -39,9 +39,6 @@
   <!-- @endif -->
   <!-- @if NODE_ENV == 'GHPAGES' -->
   <script src="script/airbrake-shim.js" data-airbrake-project-id="95886" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="production"></script>
-  <!-- @endif -->
-  <!-- @if NODE_ENV == 'STAGING' -->
-  <script src="script/airbrake-shim.js" data-airbrake-project-id="95886" data-airbrake-project-key="b0de2702276b1e9094a2bfd0d3285a11" data-airbrake-environment-name="staging"></script>
   <!-- @endif -->
   <script type="text/javascript" charset="utf-8" src="script/app_bundle_main.js"></script>
   <script type="text/javascript">
@@ -66,21 +63,9 @@
         $('body').i18n();
         $('#login-button').html(' ' + t('nav.actions.signIn'));
       });
-      <!-- @if NODE_ENV == 'PRODUCTION'  -->
+      <!-- @if NODE_ENV != 'DEVELOPMENT'  -->
       var wrapped = Airbrake.wrap(function() {
         pryvApp.main(false);
-      });
-      wrapped();
-      <!-- @endif -->
-      <!-- @if NODE_ENV == 'GHPAGES'  -->
-      var wrapped = Airbrake.wrap(function() {
-        pryvApp.main(false);
-      });
-      wrapped();
-      <!-- @endif -->
-      <!-- @if NODE_ENV == 'STAGING' -->
-      var wrapped = Airbrake.wrap(function() {
-        pryvApp.main(true);
       });
       wrapped();
       <!-- @endif -->

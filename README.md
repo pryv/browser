@@ -22,9 +22,8 @@ for example:
 ### Building
 
 - `grunt` for dev
-- `grunt staging` for staging
 - `grunt production` for production
-- `grunt ghpages` for production
+- `grunt ghpages` for gh-pages
 
 Build output goes to `./dist`
 

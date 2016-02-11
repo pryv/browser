@@ -16887,15 +16887,10 @@ var Model = module.exports = function () {  //setup env with grunt
 
 
   localStorage.setItem('skipOnboarding', true)
-  if (urlInfo.domain == 'rec.la') {
-    urlInfo.domain = 'domocare.io';
-  }
-  if (urlInfo.domain == 'pryv.in') {
-    urlInfo.domain = 'pryv.li';
+  if (urlInfo.domain == 'pryv.li') {
     localStorage.setItem('skipOnboarding', false);
   }
-  if (urlInfo.domain == 'pryv.io') {
-    urlInfo.domain = 'pryv.me';
+  if (urlInfo.domain == 'pryv.me') {
     localStorage.setItem('skipOnboarding', false);
   }
 

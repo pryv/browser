@@ -2,6 +2,8 @@
 
 The Pryv web app, featuring the dashboard view.
 
+![Pryv Browser screenshot](resources/screenshot.png)
+
 ## Usage
 
 Normaly exposed on the internet as `https://{username}.{domain}` 

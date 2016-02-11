@@ -46,6 +46,7 @@ var Model = module.exports = function () {  //setup env with grunt
   }
   if (urlInfo.domain == 'pryv.me') {
     localStorage.setItem('skipOnboarding', false);
+    urlInfo.domain = 'pryv.io'; // transitional test
   }
 
   this.urlDomain = this.queryString.domain || urlInfo.domain;

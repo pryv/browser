@@ -17927,6 +17927,11 @@ module.exports = _.reduce([
     id: 'domo',
     appName: 'Domo Safety',
     favicon: 'favicon.png'
+  },
+  {
+    id: 'vivates',
+    appName: 'Vivates',
+    favicon: 'favicon.png'
   }
 ], function (map, theme) { map[theme.id] = theme; return map; }, {});
 

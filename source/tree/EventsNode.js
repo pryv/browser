@@ -47,7 +47,7 @@ var EventsNode = module.exports = TreeNode.implement(
         callback(null);
       }
     },
-    eventLeaveScope: function (event, reason, callback) {
+    eventLeaveScope: function (event/**, reason, callback*/) {
       if (this.events[event.id]) {
         this.size--;
         delete this.events[event.id];

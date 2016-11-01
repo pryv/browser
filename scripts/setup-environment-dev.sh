@@ -6,6 +6,8 @@ Installing Node modules from 'package.json' if necessary...
 "
 npm install
 
+npm install -g grunt
+
 echo "
 Runing grunt setup
 "

@@ -40,11 +40,11 @@ var Model = module.exports = function () {  //setup env with grunt
   this._applyThemeIfAny(this.queryString.theme);
 
 
-  localStorage.setItem('skipOnboarding', true)
-  if (urlInfo.domain == 'pryv.li') {
+  localStorage.setItem('skipOnboarding', true);
+  if (urlInfo.domain === 'pryv.li') {
     localStorage.setItem('skipOnboarding', false);
   }
-  if (urlInfo.domain == 'pryv.me') {
+  if (urlInfo.domain === 'pryv.me') {
     localStorage.setItem('skipOnboarding', false);
     urlInfo.domain = 'pryv.io'; // transitional test
   }

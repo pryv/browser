@@ -32,12 +32,13 @@ Build output goes to `./dist`
 
 ### Running the dev build locally
 
-Requires a working copy of our [dev tools repo](https://github.com/pryv/dev-tools).
+We use rec-la server [https://github.com/pryv/rec-la](https://github.com/pryv/rec-la).
 
-1. Start the dev web server, pointing it to your built app (in `./dist`), for example: `node ../dev-tools/web-server/source/server.js --staticRootPath ./dist`
-2. Open `https://{username}.rec.la:4443`, where `{username}` points to an existing staging user
+1. Start the dev web server, pointing it to your built app (in `./dist`), `npm run webserver`
+2. Open `https://{username}.rec.la:4443/?domain={domain.tld}`, where `{username}` points to an existing staging user and `{domain.tld}` to the domain running pryv. 
 
-`scripts/start-server.sh [username]` will do the above automatically if your dev tools copy is in `../dev-tools`.
+example: `https://dummy.rec.la:4443/?domain=pryv.io`
+
 
 
 ## License

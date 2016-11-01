@@ -15,9 +15,15 @@
     "d3": "~3.3.8",
     "google-maps": "~1.0.0",
     "marked": "~0.3.2",
-    "pryv": "git+ssh://git@github.com:pryv/lib-javascript.git#master",
+    "pryv": "git+https://github.com/pryv/lib-javascript.git#master",
     "socket.io-client": "~0.9.16",
     "underscore": "~1.5.2"
+  },
+  "scripts": {
+    "build-dev" : "grunt",
+    "build-production" : "grunt production",
+    "build-ghpages" : "grunt ghpages",
+    "webserver": "node node_modules/rec-la/webserver/main.js ./dist"
   },
   "devDependencies": {
     "blanket": "latest",
@@ -36,7 +42,8 @@
     "grunt-preprocess": "latest",
     "grunt-shell": "latest",
     "nock": "latest",
-    "should": "latest"
+    "should": "latest",
+    "rec-la": "git+https://github.com/pryv/rec-la.git"
   },
   "optionalDependencies": {}
 }

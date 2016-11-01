@@ -140,6 +140,8 @@ MonitorsHandler.prototype.addConnection = function (connectionSerialId, batch) {
     monitor.addEventListener('streamsChanged', this._onMonitorStreamChange.bind(this));
     monitor.addEventListener('filterChanged', this._onMonitorFilterChange.bind(this));
 
+    monitor.ensureFullCache = false;
+
     monitor.start(function (error) {
       console.log('monitor started ' + error);
     });

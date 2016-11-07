@@ -2,16 +2,17 @@
     "http://www.w3.org/TR/html4/loose.dtd">
 <html xmlns:fb="http://ogp.me/ns/fb#">
 <head>
-  <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic|Roboto+Condensed:400,300,700' rel='stylesheet' type='text/css'>
+
   <title>Pryv</title>
-  <base href="{browser-source}_v0.13.3/">
+  <base href="{browser-source}_v0.14.2/">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <meta name="robots" content="noindex">
   <meta property="og:title" content="Slice of life" />
   <meta property="og:url" content="https://{host}" />
   <meta property="og:description" content="I just shared a slice. \r\n Content available on Pryv only." />
-  <meta property="og:image" content="{browser-source}_v0.13.3/images/fb_share.jpg" />
-  <meta property="og:image:secure_url" content="{browser-source}_v0.13.3/images/fb_share.jpg" />
+  <meta property="og:image" content="{browser-source}_v0.14.2/images/fb_share.jpg" />
+  <meta property="og:image:secure_url" content="{browser-source}_v0.14.2/images/fb_share.jpg" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="589869207755296" />
   <link rel="stylesheet" type="text/css" href="styles/vendor.min.css">
@@ -48,6 +49,7 @@
         pryvApp.main(false);
       });
       wrapped();
+
     });
   </script>
 <!-- ONBOARDING V2 -->
@@ -660,7 +662,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.13.3</span>
+    <span class="version">Browser v0.14.2</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -1008,13 +1010,18 @@
       </div>
       <hr/>
       <div class="form-group">
-        <script>var redirectRegister = function (url) {
+        <script>
+          var redirectRegister = function (url) {
           location.href = url + '?returnUrl=' + location.href;
-        }</script>
-        <a id="register" href="javascript:redirectRegister('https://sw.pryv.me/access/register.html')" data-i18n="login.actions.register" target="_self"></a>
+        }
+        var domain = document.location.hostname.substr(document.location.hostname.indexOf('.') + 1);
+        var staticWebSource = 'https://sw.' + domain ;
+
+        </script>
+        <a id="register" href="javascript:redirectRegister(staticWebSource +'/access/register.html')" data-i18n="login.actions.register" target="_self"></a>
       </div>
       <div class="form-group">
-        <a id="resetPassword" href="https://sw.pryv.me/access/reset-password.html" data-i18n="login.actions.resetPassword" target="_blank"></a>
+        <a id="resetPassword" href="javascript:redirectRegister(staticWebSource +'/access/reset-password.html')" data-i18n="login.actions.resetPassword" target="_blank"></a>
       </div>
 
     </form>
@@ -1022,7 +1029,6 @@
 </div>
   <nav class="navbar navbar-inverse navbar-static-top" role="navigation">
     <div id="logo-reload" class="logo">Pryv</div>
-    <div id="logo-beta-mention"><a href="http://pryv.com/beta-roadmap/" target="_blank">Beta</a></div>
     <ul class="nav navbar-nav navbar-left">
       <li id="togglePanel">
       <a href="javascript:void(0)"><span><i class="fa fa-bars fa-lg icon-only"></i></span></a>
@@ -1052,6 +1058,7 @@
       </ul>
       <a id="back-tree" class="btn-back-tree ss-home" href="#" ></a>
   </nav>
+
 
 <div id="tree">
   <div id="empty-tree-notice" class="user-msg-box">

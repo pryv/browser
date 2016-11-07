@@ -166,7 +166,8 @@ ChartView.makeChart = function () {
           color: null,
           borderColor: '#719726'
         }
-      }
+      },
+      turboThreshold: 0
     }
   };
   var tickSettings = dateTime.getTickSettings(timeScale, fromMsTime, toMsTime);

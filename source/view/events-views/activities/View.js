@@ -88,6 +88,9 @@ View.onRender = function () {
             enabled: false
           },
           showInLegend: true
+        },
+        series : {
+          turboThreshold: 0
         }
       },
       legend: {

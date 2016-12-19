@@ -19409,7 +19409,7 @@ var utility = require('./utility/utility.js'),
  * @param {string} settings.username
  * @param {string} settings.auth - the authorization token for this username
  * @param {number} [settings.port = 443]
- * @param {string} [settings.domain = 'pryv.io'] change the domain.
+ * @param {string} [settings.domain = 'pryv.me'] change the domain.
  * @param {boolean} [settings.ssl = true] Use ssl (https) or no
  * @param {string} [settings.extraPath = ''] append to the connections. Must start with a '/'
  */
@@ -21285,7 +21285,7 @@ _.extend(Auth.prototype, {
   connection: null, // actual connection managed by Auth
   config: {
     // TODO: clean up this hard-coded mess and rely on the one and only Pryv URL domains reference
-    registerURL: {ssl: true, host: 'reg.pryv.io'},
+    registerURL: {ssl: true, host: 'reg.pryv.me'},
     sdkFullPath: 'https://api.pryv.com/lib-javascript/latest'
   },
   state: null,  // actual state
@@ -30307,7 +30307,7 @@ var urls = module.exports = {};
  * The one and only reference for Pryv domain names.
  * TODO: client and server will merge
  */
-urls.defaultDomain = 'pryv.io';
+urls.defaultDomain = 'pryv.me';
 
 
 /* jshint -W101 */

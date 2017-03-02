@@ -78,6 +78,19 @@ var TreeMap = module.exports = function (model) {
     this.showConnectAppsView($modal, this.model.loggedConnection, e.currentTarget);
   }.bind(this));
 
+  Pryv.utility.request({
+    method : 'GET',
+    ssl : 'true',
+    host : 'reg.' + Pryv.utility.urls.defaultDomain,
+    path : '/service/infos',
+    success : function (data) {
+      $('nav #requestHelp').click(function (e) {
+        e.preventDefault();
+        location.href = data.support;
+      }.bind(data));
+    }
+  });
+
   $('.logo-sharing').click(function (e) {
     e.preventDefault();
     var $modal =  $('#pryv-modal').on('hidden.bs.modal', function () {

@@ -12,7 +12,7 @@
     "airbrake": "~0.3.8",
     "backbone": "~1.1.2",
     "backbone.marionette": "~1.8.6",
-    "d3": "~3.3.8",
+    "d3": "^4.9.1",
     "google-maps": "~1.0.0",
     "marked": "~0.3.2",
     "pryv": "git+https://github.com/pryv/lib-javascript.git#master",
@@ -20,9 +20,9 @@
     "underscore": "~1.5.2"
   },
   "scripts": {
-    "build-dev" : "grunt",
-    "build-production" : "grunt production",
-    "build-ghpages" : "grunt ghpages",
+    "build-dev": "grunt",
+    "build-production": "grunt production",
+    "build-ghpages": "grunt ghpages",
     "webserver": "node node_modules/rec-la/webserver/main.js ./dist"
   },
   "devDependencies": {
@@ -42,8 +42,8 @@
     "grunt-preprocess": "latest",
     "grunt-shell": "latest",
     "nock": "latest",
-    "should": "latest",
-    "rec-la": "git+https://github.com/pryv/rec-la.git"
+    "rec-la": "git+https://github.com/pryv/rec-la.git",
+    "should": "latest"
   },
   "optionalDependencies": {}
 }

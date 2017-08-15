@@ -84,10 +84,14 @@ var TreeMap = module.exports = function (model) {
     host : 'reg.' + Pryv.utility.urls.defaultDomain,
     path : '/service/infos',
     success : function (data) {
-      $('nav #requestHelp').click(function (e) {
-        e.preventDefault();
-        location.href = data.support;
-      }.bind(data));
+      if(data && data.support) {
+        $('nav #requestHelp').click(function (e) {
+          e.preventDefault();
+          location.href = data.support;
+        }.bind(data));
+      } else {
+        $('nav #requestHelp').hide();
+      }
     }
   });
 

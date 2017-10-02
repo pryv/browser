@@ -6,3 +6,4 @@ browser.iml
 app-web.iml
 npm-debug.log
 dist-c3
+.DS_Store

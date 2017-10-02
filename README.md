@@ -6,7 +6,7 @@ The Pryv web app, featuring the dashboard view.
 
 ## Usage
 
-Normaly exposed on the internet as `https://{username}.{domain}` 
+Normally exposed on the internet as `https://{username}.{domain}` 
 
 A domain and user agnostic version is published on github gh-pages. It can be accessed with:   
 `https://pryv.github.io/app-web/?username={username}&domain={domain}`   
@@ -16,16 +16,20 @@ for example:
 
 ## Contributing
 
+*Prerequisites:* Node 0.10+ with associated Npm
+
 ### Setting up the development environment
 
 `scripts/setup-environment-dev.sh`
 
+Downloads Node dependencies and clones the repository's staging branch in `./dist`
+
 
 ### Building
 
-- `grunt` for dev
-- `grunt production` for production
-- `grunt ghpages` for gh-pages
+- `npm run build-dev` for dev
+- `npm run build-production` for production
+- `npm run build-ghpages` for gh-pages
 
 Build output goes to `./dist`
 

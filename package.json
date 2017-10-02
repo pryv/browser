@@ -20,9 +20,9 @@
     "underscore": "~1.5.2"
   },
   "scripts": {
-    "build-dev": "grunt",
-    "build-production": "grunt production",
-    "build-ghpages": "grunt ghpages",
+    "build-dev": "./node_modules/.bin/grunt",
+    "build-production": "./node_modules/.bin/grunt production",
+    "build-ghpages": "./node_modules/.bin/grunt ghpages",
     "webserver": "node node_modules/rec-la/webserver/main.js ./dist"
   },
   "devDependencies": {

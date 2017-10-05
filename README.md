@@ -39,7 +39,7 @@ Build output goes to `./dist`
 We use rec-la server [https://github.com/pryv/rec-la](https://github.com/pryv/rec-la).
 
 1. Start the dev web server, pointing it to your built app (in `./dist`), `npm run webserver`
-2. Open `https://{username}.rec.la:4443/?domain={domain.tld}`, where `{username}` points to an existing staging user and `{domain.tld}` to the domain running pryv. 
+2. Open `https://{username}.rec.la:4443/?domain={domain.tld}`, where `{username}` points to an existing staging user and `{domain.tld}` to the domain running pryv. Ex.: [https://testuser.rec.la:4443/?domain=pryv.me](https://testuser.rec.la:4443/?domain=pryv.me)
 
 example: `https://dummy.rec.la:4443/?domain=pryv.me`
 

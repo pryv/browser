@@ -71,7 +71,7 @@ var Model = module.exports = function () {  //setup env with grunt
   if (this.urlSharings.length > 0) {
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
-      var sharingToken = formatSharingCallerId(token);
+      var sharingToken = formatSharingURI(token);
       this.sharingsConnections.push(new Pryv.Connection(
         this.urlUsername, sharingToken, {}));
     }.bind(this));
@@ -450,7 +450,8 @@ function testUsername(username, domain) {
 
 // Make sure that the caller id is sent to the API alongside the sharing token
 // by replacing the client separator with the one expected by the API
-function formatSharingCallerId(sharing) {
+function formatSharingURI(sharingURI) {
+  var sharing = decodeURIComponent(sharingURI);
   return sharing.replace(CALLERID_SEPARATOR_CLIENT, CALLERID_SEPARATOR_API);
 }
 

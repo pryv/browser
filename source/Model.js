@@ -451,8 +451,8 @@ function testUsername(username, domain) {
 // Make sure that the caller id is sent to the API alongside the sharing token
 // by replacing the client separator with the one expected by the API
 function formatSharingURI(sharingURI) {
-  var sharing = decodeURIComponent(sharingURI);
-  return sharing.replace(CALLERID_SEPARATOR_CLIENT, CALLERID_SEPARATOR_API);
+  var sharing = sharingURI.replace(CALLERID_SEPARATOR_CLIENT, CALLERID_SEPARATOR_API);
+  return decodeURIComponent(sharing);
 }
 
 Model.prototype.closeLogin = function () {

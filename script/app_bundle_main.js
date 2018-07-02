@@ -36193,6 +36193,8 @@ var MonitorsHandler = require('./model/MonitorsHandler.js'),
     TimeLine = require('./timeframe-selector/timeframe-selector.js'),
     UnknownUserView = require('./view/error/unknown-user.js'),
     PUBLIC_TOKEN = 'public',
+    CALLERID_SEPARATOR_CLIENT = '+',
+    CALLERID_SEPARATOR_API = ' ',
     themes = require('./themes/index'),
     toShowWhenLoggedIn = ['.logo-sharing', 'nav #addEvent', '.logo-create-sharing',
       'nav #togglePanel', 'nav #settings', 'nav #connectApps'],
@@ -36217,6 +36219,7 @@ var Model = module.exports = function () {  //setup env with grunt
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
+  console.log(this.queryString);
   
   // Custom url string (username.domain)
   var customUrl = this.queryString.url;
@@ -36258,8 +36261,9 @@ var Model = module.exports = function () {  //setup env with grunt
   if (this.urlSharings.length > 0) {
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
+      var sharingToken = formatSharingURI(token);
       this.sharingsConnections.push(new Pryv.Connection(
-        this.urlUsername, token, {}));
+        this.urlUsername, sharingToken, {}));
     }.bind(this));
     this.setTimeframeScale(this.sharingsConnections[0]);
     $('.logo-subscribe').show();
@@ -36632,6 +36636,13 @@ function testUsername(username, domain) {
     $('body').html(UnknownUserView);
     $('body').i18n();
   });
+}
+
+// Make sure that the caller id is sent to the API alongside the sharing token
+// by replacing the client separator with the one expected by the API
+function formatSharingURI(sharingURI) {
+  var sharing = sharingURI.replace(CALLERID_SEPARATOR_CLIENT, CALLERID_SEPARATOR_API);
+  return decodeURIComponent(sharing);
 }
 
 Model.prototype.closeLogin = function () {

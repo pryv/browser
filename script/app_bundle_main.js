@@ -36219,7 +36219,6 @@ var Model = module.exports = function () {  //setup env with grunt
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
-  console.log(this.queryString);
   
   // Custom url string (username.domain)
   var customUrl = this.queryString.url;

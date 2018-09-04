@@ -36219,13 +36219,8 @@ var Model = module.exports = function () {  //setup env with grunt
   var urlInfo = Pryv.utility.urls.parseClientURL();
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
-  
-  // Custom url string (username.domain)
-  var customUrl = this.queryString.url;
-  var customUsername = customUrl ? customUrl.substring(0, customUrl.indexOf('.')) : null;
-  var customDomain = customUrl ? customUrl.substring(customUrl.indexOf('.')+1): null;
-  
-  this.urlUsername = customUsername || this.queryString.username || urlInfo.username;
+  this.urlUsername = this.queryString.username || urlInfo.username;
+  this.personalToken = this.queryString.personalToken;
 
   // --- domain customisation space ----- //
   this._applyThemeIfAny(this.queryString.theme);
@@ -36239,7 +36234,7 @@ var Model = module.exports = function () {  //setup env with grunt
     localStorage.setItem('skipOnboarding', false);
   }
 
-  this.urlDomain = customDomain || this.queryString.domain || urlInfo.domain;
+  this.urlDomain = this.queryString.domain || urlInfo.domain;
 
   Pryv.utility.urls.defaultDomain = this.urlDomain;
 
@@ -36373,7 +36368,16 @@ var Model = module.exports = function () {  //setup env with grunt
       this.addConnection(connection);
     }.bind(this));
   }
-  Pryv.Auth.whoAmI(settings);
+  if (this.personalToken) {
+     //skip login and force home connection
+    settings.callbacks.signedIn(new Pryv.Connection(this.urlUsername, this.personalToken, {
+      ssl: true,
+      domain: this.urlDomain
+    }));
+  } else {
+    Pryv.Auth.whoAmI(settings);
+  }
+
   $('nav #togglePanel').click(function () {
     this.togglePanel(function () {
       $(window).trigger('resize');

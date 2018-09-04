@@ -600,3 +600,14 @@ window.PryvBrowser.renderNote = function (content, options) {
   marked.setOptions(options);
   return marked(content);
 };
+
+
+// shortcut command
+
+window.onmessage = function(e) {
+
+  if (e.data === 'devices') {
+    $('nav #settings').click();
+  }
+  console.log('#####>> ' + e.data);
+};

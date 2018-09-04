@@ -37,6 +37,7 @@ var Model = module.exports = function () {  //setup env with grunt
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
   this.urlUsername = this.queryString.username || urlInfo.username;
+  this.personalToken = this.queryString.personalToken;
 
   // --- domain customisation space ----- //
   this._applyThemeIfAny(this.queryString.theme);
@@ -184,7 +185,16 @@ var Model = module.exports = function () {  //setup env with grunt
       this.addConnection(connection);
     }.bind(this));
   }
-  Pryv.Auth.whoAmI(settings);
+  if (this.personalToken) {
+     //skip login and force home connection
+    settings.callbacks.signedIn(new Pryv.Connection(this.urlUsername, this.personalToken, {
+      ssl: true,
+      domain: this.urlDomain
+    }));
+  } else {
+    Pryv.Auth.whoAmI(settings);
+  }
+
   $('nav #togglePanel').click(function () {
     this.togglePanel(function () {
       $(window).trigger('resize');

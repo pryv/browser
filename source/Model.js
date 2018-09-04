@@ -604,10 +604,19 @@ window.PryvBrowser.renderNote = function (content, options) {
 
 // shortcut command
 
-window.onmessage = function(e) {
 
-  if (e.data === 'devices') {
+window.onmessage = function (e) {
+  var b = $('#pryv-modal');
+  if (b) { b.hide(); }
+  window.pryvBrowser.treemap.closeViews();
+
+  if (e.data === 'settings') {
     $('nav #settings').click();
   }
+
+  if (e.data === 'sharings') {
+    $('.logo-sharing').click();
+  }
+
   console.log('#####>> ' + e.data);
 };

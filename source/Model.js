@@ -605,10 +605,27 @@ window.PryvBrowser.renderNote = function (content, options) {
 // shortcut command
 
 
+function showOnlyOwner() {
+  window.pryvBrowser.treemap.focusOnConnections(window.pryvBrowser.loggedConnection);
+}
+
+
+function showOnlyShared() {
+  var followed = [];
+  window.pryvBrowser.activeFilter._eachMonitor(function (monitor) { 
+    if (monitor.connection !== window.pryvBrowser.loggedConnection) {
+      followed.push(monitor.connection);
+    }
+  });
+  window.pryvBrowser.treemap.focusOnConnections(followed);
+}
+
+
 window.onmessage = function (e) {
   var b = $('#pryv-modal');
   if (b) { b.hide(); }
   window.pryvBrowser.treemap.closeViews();
+  $('.modal-backdrop').remove();
 
   if (e.data === 'settings') {
     $('nav #settings').click();
@@ -616,6 +633,14 @@ window.onmessage = function (e) {
 
   if (e.data === 'sharings') {
     $('.logo-sharing').click();
+  }
+
+  if (e.data === 'sharedata') {
+    showOnlyShared();
+  }
+
+  if (e.data === 'owner') {
+    showOnlyOwner();
   }
 
   console.log('#####>> ' + e.data);

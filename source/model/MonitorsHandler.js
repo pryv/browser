@@ -207,6 +207,8 @@ MonitorsHandler.prototype.focusOnConnections = function (connections) {
   this._eachMonitor(function (monitor) {
     if (connectionsIds.indexOf(monitor.connection.id) < 0) {
       monitor.filter.set({'streamsIds': []}, batch); // shush the connection
+    } else {
+      monitor.filter.set({'streamsIds': null}, batch); // show all streams
     }
   });
   batch.done();

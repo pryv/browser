@@ -1,4 +1,4 @@
-/* global $, window, document, location, i18n, moment, localStorage */
+/* global $, window, document, location, i18n, moment, localStorage, Blob*/
 var MonitorsHandler = require('./model/MonitorsHandler.js'),
     _ = require('underscore'),
     ConnectionsHandler = require('./model/ConnectionsHandler.js'),
@@ -605,7 +605,7 @@ window.PryvBrowser.renderNote = function (content, options) {
 
 
 // download selected data as csv
-function selectionToArray() {
+function selectionToCSV() {
   var events = window.pryvBrowser.treemap.events;
 
   var props = ['username', 'connectionInfo', 'streamName', 'streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
@@ -638,12 +638,6 @@ function selectionToArray() {
 
   }
 
- return rows;
-
-}
-
-
-function download_csv(rows) {
   var csv = '';
   rows.forEach(function(row) {
     //var l = JSON.stringify(row);
@@ -652,11 +646,26 @@ function download_csv(rows) {
   });
 
   console.log('Created a CSV file with: ' + rows.length + 'rows');
-  var hiddenElement = document.createElement('a');
-  hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-  hiddenElement.target = '_blank';
-  hiddenElement.download = 'Pryv.csv';
-  hiddenElement.click();
+  return csv;
+
+}
+
+
+
+function download_csv2(csv) {
+  var blob = new Blob([csv]);
+  if (window.navigator.msSaveOrOpenBlob) { // IE hack; see http://msdn.microsoft.com/en-us/library/ie/hh779016.aspx
+    window.navigator.msSaveBlob(blob, 'Pryv_export.csv');
+  }
+  else
+  {
+    var a = window.document.createElement('a');
+    a.href = window.URL.createObjectURL(blob, {type: 'text/csv;charset=utf-8'});
+    a.download = 'Pryv_export.csv';
+    document.body.appendChild(a);
+    a.click();  // IE: "Access is denied"; see: https://connect.microsoft.com/IE/feedback/details/797361/ie-10-treats-blob-url-as-cross-origin-and-denies-access
+    document.body.removeChild(a);
+  }
 }
 
 // shortcut command
@@ -701,7 +710,7 @@ window.onmessage = function (e) {
   }
 
   if (e.data === 'toCSV') {
-    download_csv(selectionToArray());
+    download_csv2(selectionToCSV());
   }
 
   console.log('#####>> ' + e.data);

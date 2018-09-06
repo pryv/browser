@@ -36784,6 +36784,111 @@ window.PryvBrowser.renderNote = function (content, options) {
   return marked(content);
 };
 
+
+
+
+// download selected data as csv
+function selectionToArray() {
+  var events = window.pryvBrowser.treemap.events;
+
+  var props = ['username', 'connectionInfo', 'streamName', 'streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
+    'clientData', 'state', 'trashed', 'tags',
+    'created', 'createdBy', 'modified', 'modifiedBy', 'attachments'];
+
+
+  var rows = [];
+  rows.push(props);
+
+
+  for (var eventId in events ) {
+    if (!events.hasOwnProperty(eventId)) { continue; }
+    var event =   events[eventId];
+
+
+
+    var row = [
+      '"' + event.connection.username + '"',
+      '"' + event.connection._accessInfo.name + '"',
+      '"' + event.connection.datastore.getStreamById(event.streamId).name  + '"'
+    ];
+
+    for (var i = 3; i < props.length; i++) {
+      var l =  JSON.stringify(event[props[i]]) || '';
+      row.push('"' +  l.replace(/"/g, '""') + '"');
+    }
+
+    rows.push(row);
+
+  }
+
+ return rows;
+
+}
+
+
+function download_csv(rows) {
+  var csv = '';
+  rows.forEach(function(row) {
+    //var l = JSON.stringify(row);
+    //csv += l.substring(1,l.length - 1) + '\r\n';
+    csv += row.join(',') +  '\r\n';
+  });
+
+  console.log('Created a CSV file with: ' + rows.length + 'rows');
+  var hiddenElement = document.createElement('a');
+  hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+  hiddenElement.target = '_blank';
+  hiddenElement.download = 'Pryv.csv';
+  hiddenElement.click();
+}
+
+// shortcut command
+
+
+function showOnlyOwner() {
+  window.pryvBrowser.treemap.focusOnConnections(window.pryvBrowser.loggedConnection);
+}
+
+
+function showOnlyShared() {
+  var followed = [];
+  window.pryvBrowser.activeFilter._eachMonitor(function (monitor) { 
+    if (monitor.connection !== window.pryvBrowser.loggedConnection) {
+      followed.push(monitor.connection);
+    }
+  });
+  window.pryvBrowser.treemap.focusOnConnections(followed);
+}
+
+
+window.onmessage = function (e) {
+  var b = $('#pryv-modal');
+  if (b) { b.hide(); }
+  window.pryvBrowser.treemap.closeViews();
+  $('.modal-backdrop').remove();
+
+  if (e.data === 'settings') {
+    $('nav #settings').click();
+  }
+
+  if (e.data === 'sharings') {
+    $('.logo-sharing').click();
+  }
+
+  if (e.data === 'sharedata') {
+    showOnlyShared();
+  }
+
+  if (e.data === 'owner') {
+    showOnlyOwner();
+  }
+
+  if (e.data === 'toCSV') {
+    download_csv(selectionToArray());
+  }
+
+  console.log('#####>> ' + e.data);
+};
 },{"./model/ConnectionsHandler.js":96,"./model/Messages":97,"./model/MonitorsHandler.js":98,"./orchestrator/Controller.js":99,"./themes/index":100,"./timeframe-selector/timeframe-selector.js":101,"./tree/TreeMap.js":106,"./utility/dateTime":116,"./utility/streamUtils":118,"./view/error/unknown-user.js":126,"./view/left-panel/Controller.js":169,"backbone":4,"backbone.marionette":1,"marked":18,"pryv":49,"underscore":87}],96:[function(require,module,exports){
 
 //TODO write all add / remove connection logic
@@ -37084,6 +37189,8 @@ MonitorsHandler.prototype.focusOnConnections = function (connections) {
   this._eachMonitor(function (monitor) {
     if (connectionsIds.indexOf(monitor.connection.id) < 0) {
       monitor.filter.set({'streamsIds': []}, batch); // shush the connection
+    } else {
+      monitor.filter.set({'streamsIds': null}, batch); // show all streams
     }
   });
   batch.done();
@@ -38753,7 +38860,7 @@ StreamNode.registeredEventNodeTypes = {
   'GenericEventsNode' : require('./eventsNode/GenericEventsNode.js')
 };
 },{"./TreeNode":107,"./eventsNode/ActivitiesEventsNode.js":109,"./eventsNode/GenericEventsNode.js":110,"./eventsNode/NotesEventsNode.js":111,"./eventsNode/NumericalsEventsNode.js":112,"./eventsNode/PicturesEventsNode.js":113,"./eventsNode/PositionsEventsNode.js":114,"./eventsNode/TweetsEventsNode.js":115,"underscore":87}],106:[function(require,module,exports){
-/* global $, window, location, localStorage, i18n */
+/* global $, window, location, localStorage, i18n, confirm */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -38849,6 +38956,14 @@ var TreeMap = module.exports = function (model) {
       }
     }
   });
+
+  $('nav #toCSV').click(function (e) {
+    e.preventDefault();
+    if (confirm('Download As CSV?')) {
+      window.onmessage({data: 'toCSV'});
+    }
+  }.bind(this));
+
 
   $('.logo-sharing').click(function (e) {
     e.preventDefault();

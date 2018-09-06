@@ -651,15 +651,13 @@ function download_csv(rows) {
     csv += row.join(',') +  '\r\n';
   });
 
-  console.log(csv);
+  console.log('Created a CSV file with: ' + rows.length + 'rows');
   var hiddenElement = document.createElement('a');
   hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
   hiddenElement.target = '_blank';
   hiddenElement.download = 'Pryv.csv';
   hiddenElement.click();
 }
-
-
 
 // shortcut command
 

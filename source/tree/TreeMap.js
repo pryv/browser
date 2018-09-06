@@ -1,4 +1,4 @@
-/* global $, window, location, localStorage, i18n */
+/* global $, window, location, localStorage, i18n, confirm */
 
 var RootNode = require('./RootNode.js'),
   SIGNAL = require('../model/Messages').MonitorsHandler.SIGNAL,
@@ -94,6 +94,14 @@ var TreeMap = module.exports = function (model) {
       }
     }
   });
+
+  $('nav #toCSV').click(function (e) {
+    e.preventDefault();
+    if (confirm('Download As CSV?')) {
+      window.onmessage({data: 'toCSV'});
+    }
+  }.bind(this));
+
 
   $('.logo-sharing').click(function (e) {
     e.preventDefault();

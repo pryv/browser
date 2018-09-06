@@ -602,6 +602,65 @@ window.PryvBrowser.renderNote = function (content, options) {
 };
 
 
+
+
+// download selected data as csv
+function selectionToArray() {
+  var events = window.pryvBrowser.treemap.events;
+
+  var props = ['username', 'connectionInfo', 'streamName', 'streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
+    'clientData', 'state', 'trashed', 'tags',
+    'created', 'createdBy', 'modified', 'modifiedBy', 'attachments'];
+
+
+  var rows = [];
+  rows.push(props);
+
+
+  for (var eventId in events ) {
+    if (!events.hasOwnProperty(eventId)) { continue; }
+    var event =   events[eventId];
+
+
+
+    var row = [
+      '"' + event.connection.username + '"',
+      '"' + event.connection._accessInfo.name + '"',
+      '"' + event.connection.datastore.getStreamById(event.streamId).name  + '"'
+    ];
+
+    for (var i = 3; i < props.length; i++) {
+      var l =  JSON.stringify(event[props[i]]) || '';
+      row.push('"' +  l.replace(/"/g, '""') + '"');
+    }
+
+    rows.push(row);
+
+  }
+
+ return rows;
+
+}
+
+
+function download_csv(rows) {
+  var csv = '';
+  rows.forEach(function(row) {
+    //var l = JSON.stringify(row);
+    //csv += l.substring(1,l.length - 1) + '\r\n';
+    csv += row.join(',') +  '\r\n';
+  });
+
+  console.log(csv);
+  var hiddenElement = document.createElement('a');
+  hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+  hiddenElement.target = '_blank';
+  hiddenElement.download = 'Pryv.csv';
+  hiddenElement.click();
+}
+
+
+
 // shortcut command
 
 
@@ -641,6 +700,10 @@ window.onmessage = function (e) {
 
   if (e.data === 'owner') {
     showOnlyOwner();
+  }
+
+  if (e.data === 'toCSV') {
+    download_csv(selectionToArray());
   }
 
   console.log('#####>> ' + e.data);

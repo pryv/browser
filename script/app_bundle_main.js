@@ -36554,7 +36554,7 @@ Model.prototype.removeConnections = function (connections) {
 Model.prototype.updateTimeFrameLimits = function () {
   (_.debounce(function () {
     this.activeFilter.stats(false, function () {
-      //this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
+     // this.timeView.setLimit(stats.timeFrameLT[0] - 3600, stats.timeFrameLT[1] + 3600);
     }.bind(this));
   }.bind(this), 100))();
 };
@@ -36789,7 +36789,13 @@ window.PryvBrowser.renderNote = function (content, options) {
 
 // download selected data as csv
 function selectionToCSV() {
-  var events = window.pryvBrowser.treemap.events;
+  //var events = window.pryvBrowser.treemap.events;
+
+  var events = [];
+  window.pryvBrowser.activeFilter.triggerForAllCurrentEvents(function (x, y) { 
+    y.events.forEach(function (e) { events.push(e); });
+  });
+
 
   var props = ['username', 'connectionInfo', 'streamName', 'streamId', 'time', 'duration', 'type', 'content', 'tags', 'description',
     'clientData', 'state', 'trashed', 'tags',

@@ -36375,7 +36375,11 @@ var Model = module.exports = function () {  //setup env with grunt
       domain: this.urlDomain
     }));
   } else {
-    Pryv.Auth.whoAmI(settings);
+    whoAmIReplace(function(connection) {
+      if (connection) {
+        settings.callbacks.signedIn(connection, true);
+      }
+    }.bind(this));
   }
 
   $('nav #togglePanel').click(function () {
@@ -36385,7 +36389,18 @@ var Model = module.exports = function () {  //setup env with grunt
   }.bind(this));
   $('#sign-out').click(function () {
     if (this.loggedConnection) {
-      Pryv.Auth.trustedLogout();
+      this.loggedConnection.request({
+        method: 'POST',
+        path: '/auth/logout',
+        callback: function (error) {
+          if (error && typeof(settings.callbacks.error) === 'function') {
+            return settings.callbacks.error(error);
+          } else if (!error && typeof(settings.callbacks.signedOut) === 'function') {
+            return settings.callbacks.signedOut(this);
+          }
+        }.bind(this)
+      });
+      setPersonalTokenAsDomainCookie(null);
     }
   }.bind(this));
   $('#login-button').click(function (e) {
@@ -36464,11 +36479,13 @@ Model.prototype.setTimeframeScale = function (connection) {
   }
 };
 
-Model.prototype.signedIn = function (connection) {
+Model.prototype.signedIn = function (connection, withCookie) {
   $('#login form button[type=submit]').prop('disabled', false);
   $('#login form button[type=submit] .fa-spinner').hide();
   console.log('Successfully signed in', connection);
   this.loggedConnection = connection;
+
+
   $('#login-button').html(connection.username + ' <i class="ss-navigatedown"></i>');
   this.loggedConnection.account.getInfo(function (error, result) {
     if (!error && result && result.email) {
@@ -36477,6 +36494,14 @@ Model.prototype.signedIn = function (connection) {
         '" />');
     }
   });
+  if (! withCookie) {
+    setPersonalTokenAsDomainCookie(
+      this.loggedConnection.username,
+      this.loggedConnection.auth,
+      this.loggedConnection.settings.domain,
+      'pryv-browser'
+    );
+  }
   if (localStorage) {
     localStorage.setItem('username', this.loggedConnection.username);
     localStorage.setItem('auth', this.loggedConnection.auth);
@@ -36904,6 +36929,80 @@ window.onmessage = function (e) {
 
   console.log('#####>> ' + e.data);
 };
+
+
+// ------------------------------------------------
+// who-am-i replacement with client side cookies
+// ------------------------------------------------
+
+
+function whoAmIReplace(callbackOnSuccessOnly) {
+  var pryvSSO = getPersonalTokenFromDomainCookie();
+
+  if (pryvSSO) { // test if valid
+    window.Pryv.utility.request({
+      method: 'GET',
+      host: pryvSSO.username + '.' + pryvSSO.domain,
+      path: '/access-info',
+      ssl: true,
+      headers: {'Authorization': pryvSSO.auth},
+      success: function (data) {
+        console.log(data);
+        if (data && data.type && data.type === 'personal') {
+          callbackOnSuccessOnly(new window.Pryv.Connection({
+            username: pryvSSO.username,
+            domain: pryvSSO.domain,
+            ssl: true,
+            auth: pryvSSO.auth,
+          }));
+        }
+      }
+    });
+  }
+}
+
+
+function getPersonalTokenFromDomainCookie() {
+  return getDomainCookie('pryvsso');
+}
+
+function setPersonalTokenAsDomainCookie(username, auth, domain, appId) {
+  var value = username ?  {username: username, auth: auth, domain: domain, appId: appId} : null;
+  setDomainCookie('pryvsso',value);
+}
+
+function setDomainCookie(cname, value) {
+  console.log(value);
+  var myDate = new Date();
+  var hostName = window.location.hostname;
+  var domain = hostName.substring(
+    hostName.lastIndexOf('.', hostName.lastIndexOf('.') - 1) + 1);
+  myDate.setMonth(myDate.getMonth() + 12);
+  document.cookie = cname + '=' + encodeURIComponent(JSON.stringify(value)) +
+    ';expires=' + myDate +
+    ';domain=.' + domain + ';path=/';
+}
+
+
+function getDomainCookie(cname) {
+  var name = cname + '=';
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      try {
+        return JSON.parse(c.substring(name.length, c.length));
+      } catch (e) {
+        console.log('Error while parsing cookie: ' + cname);
+      }
+    }
+  }
+  return null;
+}
 },{"./model/ConnectionsHandler.js":96,"./model/Messages":97,"./model/MonitorsHandler.js":98,"./orchestrator/Controller.js":99,"./themes/index":100,"./timeframe-selector/timeframe-selector.js":101,"./tree/TreeMap.js":106,"./utility/dateTime":116,"./utility/streamUtils":118,"./view/error/unknown-user.js":126,"./view/left-panel/Controller.js":169,"backbone":4,"backbone.marionette":1,"marked":18,"pryv":49,"underscore":87}],96:[function(require,module,exports){
 
 //TODO write all add / remove connection logic

@@ -6,7 +6,7 @@ The Pryv web app, featuring the dashboard view.
 
 ## State
 
-The development of this project has been suspended.
+The development of this project has been suspended, we keep it for proof of concepts.
 
 ## Usage
 

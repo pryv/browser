@@ -4,6 +4,10 @@ The Pryv web app, featuring the dashboard view.
 
 ![Pryv Browser screenshot](resources/screenshot.png)
 
+## State
+
+The development of this project has been suspended.
+
 ## Usage
 
 Normaly exposed on the internet as `https://{username}.{domain}` 

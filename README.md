@@ -22,6 +22,8 @@ for example:
 
 ### Setting up the development environment
 
+latest environement tested: **node v8.11.0** 
+
 `scripts/setup-environment-dev.sh`
 
 

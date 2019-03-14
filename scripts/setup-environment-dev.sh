@@ -4,6 +4,8 @@
 echo "
 Installing Node modules from 'package.json' if necessary...
 "
+# for some reasons mocha needs to be installed upfront
+npm install mocha
 npm install
 
 npm install -g grunt

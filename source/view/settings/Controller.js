@@ -1,7 +1,7 @@
 /* global $ */
 var Marionette = require('backbone.marionette'),
   NavView = require('./NavView.js'),
-  PasswordView = require('./PasswordView.js'),
+  ManageAccountView = require('./ManageAccountView.js'),
   ManageAppsView = require('./ManageAppsView.js'),
   AppListView = require('./AppListView.js'),
   _ = require('underscore');
@@ -11,7 +11,7 @@ var Layout = Marionette.Layout.extend({
 
   regions: {
     nav: '#settings-nav',
-    password: '#settings-password',
+    manageAccount: '#settings-manage-account',
     manageApps: '#settings-manage-apps',
     otherApps: '#settings-other-apps'
   },
@@ -25,7 +25,7 @@ var Controller = module.exports  = function ($modal, connection, target) {
   this.target = target;
   this.view  = null;
   this.nav = null;
-  this.password = null;
+  this.manageAccount = null;
   this.manageApps = null;
   this.appList = null;
   this.currentRegion = '';
@@ -42,7 +42,7 @@ _.extend(Controller.prototype, {
     this.view = new Layout();
     this.view.on('close', this.close.bind(this));
     this.nav = new NavView();
-    this.password = new PasswordView({connection: this.connection});
+    this.manageAccount = new ManageAccountView({connection: this.connection});
     this.manageApps = new ManageAppsView({connection: this.connection});
     this.appList = new AppListView({connection: this.connection});
     this.view.render();
@@ -64,12 +64,12 @@ _.extend(Controller.prototype, {
   },
   _showRegion: function (region) {
     if (region && this.view && region !== this.currentRegion) {
-      this.password.close();
+      this.manageAccount.close();
       this.manageApps.close();
       this.appList.close();
       switch (region) {
-        case 'password':
-          this.view.password.show(this.password);
+        case 'manageAccount':
+          this.view.manageAccount.show(this.manageAccount);
           break;
         case 'manageApps':
           this.view.manageApps.show(this.manageApps);

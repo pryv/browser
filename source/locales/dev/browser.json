@@ -199,16 +199,21 @@
         "title": "Connected apps"
       }
     },
-    "security": {
+    "account": {
       "labels": {
-        "currentPassword": "Current",
-        "newPassword": "New",
-        "newPasswordConfirm": "Confirm new",
-        "passwordSubtitle": "Change your password",
-        "passwordTitle": "Password",
-        "title": "Security"
+        "title": "Account",
+        "subtitle": "Update your account",
+        "passwordTitle": "Change your password",
+        "currentPassword": "Current password",
+        "newPassword": "New password",
+        "newPasswordConfirm": "Confirm new password",
+        "emailTitle": "Change your email",
+        "newEmail": "New email"
       },
       "messages": {
+        "passwordChanged": "Your password was successfully changed.",
+        "emailChanged": "Your email was successfully changed.",
+        "errEmail": "Failed to change the email.",
         "errCurrentPasswordInvalid": "The current password is wrong",
         "errPasswordRequirements": "The new password does not match the minimum security requirements; try a longer one",
         "errPasswordsDontMatch": "The password and its confirmation do not match"

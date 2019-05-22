@@ -15,7 +15,7 @@
     "d3": "4.9.1",
     "google-maps": "~1.0.0",
     "marked": "~0.3.2",
-    "mocha": "^6.0.2",
+    "mocha": "^6.1.4",
     "pryv": "git+https://github.com/pryv/lib-javascript.git#b0cd9253370f59029805013191e7bf54f5b3b2c4",
     "socket.io-client": "~0.9.16",
     "underscore": "~1.5.2"

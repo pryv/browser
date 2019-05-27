@@ -29,9 +29,9 @@ latest environement tested: **node v8.11.0**
 
 ### Building
 
-- `grunt` for dev
-- `grunt production` for production
-- `grunt ghpages` for gh-pages
+- `yarn build-dev` for dev
+- `yarn build-production` for production
+- `yarn build-ghpages` for gh-pages
 
 Build output goes to `./dist`
 
@@ -40,7 +40,7 @@ Build output goes to `./dist`
 
 We use rec-la server [https://github.com/pryv/rec-la](https://github.com/pryv/rec-la).
 
-1. Start the dev web server, pointing it to your built app (in `./dist`), `npm run webserver`
+1. Start the dev web server, pointing it to your built app (in `./dist`), `yarn webserver`
 2. Open `https://{username}.rec.la:4443/?domain={domain.tld}`, where `{username}` points to an existing staging user and `{domain.tld}` to the domain running pryv. 
 
 example: `https://dummy.rec.la:4443/?domain=pryv.me`

@@ -73,10 +73,10 @@ To change your Pryv profile picture, you have to set up a [Gravatar](https://en.
 
 Then the uploaded picture will be automatically updated as your Pryv profile picture. 
 
-### How can I change my password?
-To change your password click on your username to access the setting panel.
+### How can I change my password/email?
+To change your password/email click on your username to access the setting panel.
 
-Once opened click on the "security" panel to access password modification 
+Once opened click on the "Account" panel to access password/email modification 
 
 ### How can I disconnect apps from my Pryv?
 To disconnect apps from your Pryv you need to go in you setting panel that is accessible when you click on your username on the top right corner of your screen.

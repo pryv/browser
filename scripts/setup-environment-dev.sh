@@ -5,10 +5,9 @@ echo "
 Installing Node modules from 'package.json' if necessary...
 "
 # for some reasons mocha needs to be installed upfront
-npm install mocha
-npm install
+yarn install
 
-npm install -g grunt
+yarn global add grunt
 
 echo "
 Runing grunt setup

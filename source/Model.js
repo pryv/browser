@@ -576,12 +576,20 @@ window.PryvBrowser.reportError = function (error, context) {
 };
 
 window.PryvBrowser.showAlert = function (containerSelector, html) {
+  alertMsg('alert-danger', containerSelector, html);
+};
+
+window.PryvBrowser.showSuccess = function (containerSelector, html) {
+  alertMsg('alert-success', containerSelector, html);
+};
+
+function alertMsg(severity, containerSelector, html) {
   $('.alert').alert('close');
   var $container = $(containerSelector);
-  $container.append('<div class="alert alert-danger">' +
+  $container.append('<div class="alert '+severity+' ">' +
     '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' +
     html + '</div>');
-};
+}
 
 // HACK: make utilities globally available for access from templates
 

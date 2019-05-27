@@ -9,15 +9,15 @@
     "node": "~8.11.0"
   },
   "dependencies": {
-    "airbrake": "~0.4.0",
+    "airbrake": "~2.1.1",
     "backbone": "~1.1.2",
     "backbone.marionette": "~1.8.6",
     "d3": "4.9.1",
     "google-maps": "~1.0.0",
-    "marked": "~0.3.2",
-    "mocha": "^6.0.2",
+    "marked": "~0.6.2",
+    "mocha": "^6.1.4",
     "pryv": "git+https://github.com/pryv/lib-javascript.git#b0cd9253370f59029805013191e7bf54f5b3b2c4",
-    "socket.io-client": "~0.9.16",
+    "socket.io-client": "~2.2.0",
     "underscore": "~1.5.2"
   },
   "scripts": {

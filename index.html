@@ -658,7 +658,7 @@
     <li id="filter-by-stream"></li>
   </ul>
   <div class="menu-footer">
-    <span class="version">Browser v0.14.3</span>
+    <span class="version">Browser v0.14.4</span>
     <span class="copyright">&copy; 2014 Pryv</span>
   </div>
 </script>
@@ -685,7 +685,7 @@
   <div id="modal-content">
     <div id="settings-nav"></div>
     <div id="settings-content" class="col-md-10" >
-      <div id="settings-password"></div>
+      <div id="settings-manage-account"></div>
       <div id="settings-manage-apps"></div>
       <div id="settings-other-apps"></div>
     </div>
@@ -798,31 +798,32 @@
     <li><a href="javascript:void(0)" data-name="manageApps" data-i18n="settings.connectedApps.labels.title"></a></li>
   </ul>
   <ul class="nav">
-    <li><a href="javascript:void(0)" data-name="password" data-i18n="settings.security.labels.title"></a></li>
+    <li><a href="javascript:void(0)" data-name="manageAccount" data-i18n="settings.account.labels.title"></a></li>
   </ul>
 </script>
-<script type="template" id="password-settings-modal-template">
+<script type="template" id="account-settings-modal-template">
   <div class="panel panel-default settings-panel">
     <div class="panel-heading">
-      <h4 data-i18n="settings.security.labels.passwordTitle"></h4>
-      <p class="panel-subtitle" data-i18n="settings.security.labels.passwordSubtitle"></p>
+      <h4 data-i18n="settings.account.labels.title"></h4>
+      <p class="panel-subtitle" data-i18n="settings.account.labels.subtitle"></p>
     </div>
     <div class="panel-body">
-      <form class="form-horizontal" role="form">
+      <label for="passwordForm"><u data-i18n="settings.account.labels.passwordTitle"></u></label>
+      <form id="passwordForm" class="form-horizontal" role="form">
         <div class="form-group">
-          <label for="currentPassword" class="col-sm-2 control-label" data-i18n="settings.security.labels.currentPassword"></label>
+          <label for="currentPassword" class="col-sm-2 control-label" data-i18n="settings.account.labels.currentPassword"></label>
           <div class="col-sm-5">
             <input type="password" class="form-control" id="currentPassword" required>
           </div>
         </div>
         <div class="form-group">
-          <label for="newPassword" class="col-sm-2 control-label" data-i18n="settings.security.labels.newPassword"></label>
+          <label for="newPassword" class="col-sm-2 control-label" data-i18n="settings.account.labels.newPassword"></label>
           <div class="col-sm-5">
             <input type="password" class="form-control" id="newPassword" required>
           </div>
         </div>
         <div class="form-group">
-          <label for="reNewPassword" class="col-sm-2 control-label" data-i18n="settings.security.labels.newPasswordConfirm"></label>
+          <label for="reNewPassword" class="col-sm-2 control-label" data-i18n="settings.account.labels.newPasswordConfirm"></label>
           <div class="col-sm-5">
             <input type="password" class="form-control" id="reNewPassword" required>
           </div>
@@ -833,6 +834,20 @@
           </div>
         </div>
       </form>
+      <label for="emailForm"><u data-i18n="settings.account.labels.emailTitle"></u></label>
+      <form id="emailForm" class="form-horizontal" role="form">
+          <div class="form-group">
+            <label for="newEmail" class="col-sm-2 control-label" data-i18n="settings.account.labels.newEmail"></label>
+            <div class="col-sm-5">
+              <input type="email" class="form-control" id="newEmail" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-5">
+              <button type="submit" class="btn btn-default"><span data-i18n="common.actions.save"></span> <span class="fa fa-spinner fa-spin"></span></button>
+            </div>
+          </div>
+        </form>
     </div>
   </div>
 </script>

@@ -44,7 +44,7 @@
     "grunt-preprocess": "latest",
     "grunt-shell": "latest",
     "nock": "latest",
-    "rec-la": "git+https://github.com/pryv/rec-la.git#master",
+    "rec-la": "latest",
     "should": "latest"
   },
   "optionalDependencies": {}

@@ -45,7 +45,7 @@ We use rec-la server [https://github.com/pryv/rec-la](https://github.com/pryv/re
 
 example: `https://dummy.rec.la:4443/?domain=pryv.me`
 
-
+example: `https://dummy.rec.la:4443/?domain=pryv.me&sharing={token}` to open a sharing link
 
 ## License
 

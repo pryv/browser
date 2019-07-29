@@ -34,8 +34,12 @@ var Model = module.exports = function () {  //setup env with grunt
   });
 
   var urlInfo = Pryv.utility.urls.parseClientURL();
+
   this.urlSharings = urlInfo.parseSharingTokens();
   this.queryString = urlInfo.parseQuery();
+  if (this.queryString.sharing) {
+    this.urlSharings = [this.queryString.sharing];
+  }
   this.urlUsername = this.queryString.username || urlInfo.username;
   this.personalToken = this.queryString.personalToken;
 

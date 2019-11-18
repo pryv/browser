@@ -3249,9 +3249,9 @@ minizlib@^1.1.1:
     minipass "^2.2.1"
 
 mixin-deep@^1.2.0:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/mixin-deep/-/mixin-deep-1.3.1.tgz#a49e7268dce1a0d9698e45326c5626df3543d0fe"
-  integrity sha512-8ZItLHeEgaqEvd5lYBXfm4EZSFCX29Jb9K+lAHhDKzReKBQKj3R+7NOF6tjqYi9t4oI8VUfaWITJQm86wnXGNQ==
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/mixin-deep/-/mixin-deep-1.3.2.tgz#1120b43dc359a785dce65b55b82e257ccf479566"
+  integrity sha512-WRoDn//mXBiJ1H40rqa3vH0toePwSsGb45iInWlTySa+Uu4k3tYUSxa2v1KqAiLtvlrSzaExqS1gtk96A9zvEA==
   dependencies:
     for-in "^1.0.2"
     is-extendable "^1.0.1"
@@ -4062,9 +4062,10 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-"rec-la@git+https://github.com/pryv/rec-la.git#master":
-  version "0.1.5"
-  resolved "git+https://github.com/pryv/rec-la.git#a51f552f6f9652c18ec40a96cf80262bdb4e500d"
+rec-la@latest:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/rec-la/-/rec-la-0.1.7.tgz#555cc06f77622dc8316c2120cb7cdec8b0a2f5a9"
+  integrity sha512-3A8r7Ex5ZVWKJLaAF91+pUf7y+mhi1fjvRr8bVTW1zbUZZmvbej24xXKhrA+78lUuX8VJ1PO0rUI4ohguC0+Eg==
   dependencies:
     express "^4.14.0"
 

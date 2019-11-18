@@ -777,7 +777,7 @@
       <h4><%= i18n.t('slices.messages.sharingSuccessful') %></h4>
       <h3 class="share-link"><a href="<%= getUrl() %>"><%= getUrl() %></a>
       <br/>
-      <img src="https://api.qrserver.com/v1/create-qr-code/?data=<%= encodeURI(getUrl()) %>&amp;size=100x100" alt="" title="" />
+      <img src="https://api.qrserver.com/v1/create-qr-code/?data=<%= escape(getUrl()) %>&amp;size=100x100" alt="" title="" />
       </h3>
   <p class="text-center share">
       <a target="_blank" href="https://www.facebook.com/sharer.php?u=<%= getUrl().replace(/#/g, '%23') %>&t="

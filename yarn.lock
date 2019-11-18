@@ -3016,9 +3016,9 @@ lodash.memoize@~3.0.3:
   integrity sha1-LcvSwofLwKVcxCMovQxzYVDVPj8=
 
 lodash.merge@^4.6.0:
-  version "4.6.1"
-  resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.1.tgz#adc25d9cb99b9391c59624f379fbba60d7111d54"
-  integrity sha512-AOYza4+Hf5z1/0Hztxpm2/xiPZgi/cjMqdnKTUWTBSKchJlxXXuUSxCCl8rJlf4g6yww/j6mA8nC8Hw/EZWxKQ==
+  version "4.6.2"
+  resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
+  integrity sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==
 
 lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.4, lodash@^4.17.5, lodash@^4.5.0, lodash@~4.17.10, lodash@~4.17.11, lodash@~4.17.5:
   version "4.17.11"
@@ -4062,9 +4062,10 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-"rec-la@git+https://github.com/pryv/rec-la.git#master":
-  version "0.1.5"
-  resolved "git+https://github.com/pryv/rec-la.git#a51f552f6f9652c18ec40a96cf80262bdb4e500d"
+rec-la@latest:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/rec-la/-/rec-la-0.1.7.tgz#555cc06f77622dc8316c2120cb7cdec8b0a2f5a9"
+  integrity sha512-3A8r7Ex5ZVWKJLaAF91+pUf7y+mhi1fjvRr8bVTW1zbUZZmvbej24xXKhrA+78lUuX8VJ1PO0rUI4ohguC0+Eg==
   dependencies:
     express "^4.14.0"
 

@@ -77,13 +77,13 @@ var Model = module.exports = function () {  //setup env with grunt
     this.sharingsConnections = [];
     this.urlSharings.forEach(function (token) {
       var sharingToken = formatSharingURI(token);
-      this.sharingsConnections.push(new Pryv.Connection(
+      this.sharingsConnections.push(new Pryv.Connection( // TODO connection
         this.urlUsername, sharingToken, {}));
     }.bind(this));
     this.setTimeframeScale(this.sharingsConnections[0]);
     $('.logo-subscribe').show();
   } else if (this.urlUsername) {
-    this.publicConnection =  new Pryv.Connection(
+    this.publicConnection =  new Pryv.Connection( // TODO connection
       this.urlUsername, PUBLIC_TOKEN, {});
   }
 
@@ -191,6 +191,7 @@ var Model = module.exports = function () {  //setup env with grunt
   }
   if (this.personalToken) {
      //skip login and force home connection
+     // TODO connection
     settings.callbacks.signedIn(new Pryv.Connection(this.urlUsername, this.personalToken, {
       ssl: true,
       domain: this.urlDomain
@@ -771,19 +772,20 @@ function whoAmIReplace(callbackOnSuccessOnly) {
   if (pryvSSO) { // test if valid
     window.Pryv.utility.request({
       method: 'GET',
-      host: pryvSSO.username + '.' + pryvSSO.domain,
+      host: pryvSSO.username + '.' + pryvSSO.domain, // TODO
       path: '/access-info',
       ssl: true,
       headers: {'Authorization': pryvSSO.auth},
       success: function (data) {
         console.log(data);
         if (data && data.type && data.type === 'personal') {
-          callbackOnSuccessOnly(new window.Pryv.Connection({
+          var conn = new window.Pryv.Connection({ // TODO connection
             username: pryvSSO.username,
             domain: pryvSSO.domain,
             ssl: true,
             auth: pryvSSO.auth,
-          }));
+          });
+          callbackOnSuccessOnly(conn);
         }
       }
     });

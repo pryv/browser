@@ -58,7 +58,7 @@ var Layout = Marionette.Layout.extend({
     }.bind(this));
 
 
-
+    // TODO appel API
     this.connection.accesses.create(access, function (error, result) {
       if ($spin) {
         $spin.hide();

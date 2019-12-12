@@ -115,12 +115,13 @@ _.extend(Controller.prototype, {
   },
   _createBookmark: function (url, auth, name) {
     if (url && auth && name) {
-      var conn = new Pryv.Connection({
+      var conn = new Pryv.Connection({ // TODO connection
         url: url.replace('.li', '.in').replace('.me', '.io'),
         auth: auth
       });
       conn.accessInfo(function (error) {
         if (!error) {
+          // TODO appel API
           this.connection.bookmarks.create({url: url, accessToken: auth, name: name},
           function (error, result) {
             if (!error && result) {

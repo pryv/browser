@@ -151,6 +151,8 @@ module.exports = Marionette.ItemView.extend({
           name = input.val().trim();
           parentId = input.attr('data-parentId') || null;
           this.connectionSelected = this.connection.get(input.attr('data-connection'));
+
+          // TODO appel API
           this.connectionSelected.streams.create({parentId: parentId, name: name},
             function (err, res) {
               if (err) {
@@ -623,7 +625,6 @@ module.exports = Marionette.ItemView.extend({
       map.setCenter(marker.position);
       marker.setMap(map);
     };
-
 
     this.newEvents = new Model({event: {
       time: new Date().getTime() / 1000,

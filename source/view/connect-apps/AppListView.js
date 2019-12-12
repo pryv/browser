@@ -55,7 +55,7 @@ module.exports = Marionette.CompositeView.extend({
       }.bind(this));
       //var baseHref = $('base').attr('href');
       var domain = localStorage.getItem('domain') || 'pryv.me';
-      var url = 'https://reg.' + domain + '/apps';
+      var url = 'https://reg.' + domain + '/apps'; // TODO ?
       $.get(url)
         .done(function (result) {
           result = result.apps || [];

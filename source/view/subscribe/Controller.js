@@ -64,6 +64,7 @@ _.extend(Controller.prototype, {
         connection.name = connection._accessInfo.name;
       }
       if (connection.name && connection.auth && connection.url) {
+        // TODO appel API
         this.loggedConnection.bookmarks.create(
           {url: connection.url, accessToken: connection.auth, name: connection.name},
           function (error) {

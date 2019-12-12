@@ -16,6 +16,11 @@ var RootNode = require('./RootNode.js'),
   VirtualNode = require('./VirtualNode.js'),
   Pryv = require('pryv');
 
+var superagent = require('superagent');
+var url = require('url');
+var serviceInfoUrl = 'https://reg.pryv.me/service/info'; // TODO
+var apiUrl = null;
+
 var MARGIN_TOP = 50;
 var MARGIN_RIGHT = 40;
 var MARGIN_BOTTOM = 80;
@@ -81,7 +86,7 @@ var TreeMap = module.exports = function (model) {
   Pryv.utility.request({
     method : 'GET',
     ssl : 'true',
-    host : 'reg.' + Pryv.utility.urls.defaultDomain,
+    host : 'reg.' + Pryv.utility.urls.defaultDomain, // TODO ?
     path : '/service/infos',
     success : function (data) {
       if(data && data.support) {
@@ -340,24 +345,79 @@ var TreeMap = module.exports = function (model) {
 };
 
 TreeMap.prototype.isOnboarding = function () {
-  if (localStorage && localStorage.getItem('skipOnboarding')) {
-    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
-      if (!error && result.length === 0 &&
-        this.model.urlUsername === this.model.loggedConnection.username) {
-        this.model.loggedConnection.streams.create(
-          {id: 'diary', name: i18n.t('onboarding.defaultStreamName')},
-          function () {});
-      }
-    }.bind(this));
-  } else {
-    this.model.loggedConnection.streams.get({state: 'all'}, function (error, result) {
-      if (!error && result.length === 0 &&
-        this.model.urlUsername === this.model.loggedConnection.username) {
+  console.log('ZZZ loggedConnection : ', this.model.loggedConnection);
+  var conn = this.model.loggedConnection;
+  getStreams(conn.username, conn.auth, function(error, result) {
+    if (!error && result.length === 0 &&
+      this.model.urlUsername === conn.username) {
+      if (localStorage && localStorage.getItem('skipOnboarding')) {
+        var stream = {id: 'diary', name: i18n.t('onboarding.defaultStreamName')};
+        createOnboardingStream(stream);
+      } else {
         this.showOnboarding();
       }
-    }.bind(this));
-  }
+    }
+  }/*.bind(this)*/);
 };
+
+function fetchServiceInfo(callback) {
+  if(apiUrl !== null) {
+    console.log('api url already set to ', apiUrl);
+    return callback(null, apiUrl);
+  }
+
+  console.log('Fetching service info on ', serviceInfoUrl);
+  superagent.get(serviceInfoUrl)
+    .then(function (res) {
+      var apiUrlRes = res.body.api;
+      if(apiUrlRes === null) { // TODO ==
+        return callback(new Error('Unknown error while creating event'), null);
+      }
+      apiUrl = apiUrlRes;
+      return callback(null, apiUrl);
+    })
+    .catch(function (error) {
+      console.log('error : ', error);
+      return callback(error, null);
+    });
+}
+
+function getStreams(username, token, callback) {
+  console.log('ZZZ get streams');
+  if(apiUrl === null) { // TODO ==
+    fetchServiceInfo(function(error) {
+      if(error) {
+        return callback(error);
+      }
+      getStreams(username, token, callback);
+    });
+    
+    return;
+  }
+  var endpoint = url.resolve(apiUrl.replace('{username}', username), 'streams');
+
+  console.log('Getting streams on ' + endpoint);
+  superagent.get(endpoint)
+    .set('Authorization', token)
+    .set('Content-Type', 'application/json')
+    .field('state', 'all')
+    .then(function(res) {
+      if(res.body && res.body.streams) {
+        console.log('Streams : ', res.body.streams);
+        return callback(null, res.body.streams);
+      } else {
+        return callback(new Error('Unknown error while getting streams'));
+      }
+    })
+    .catch(function (error) {
+      console.log('error : ', error);
+      return callback(error);
+    });
+}
+
+function createOnboardingStream(stream) {
+  console.log(stream);
+}
 
 TreeMap.prototype.focusOnConnections = function (connection) {
   this.model.activeFilter.focusOnConnections(connection);

@@ -47,6 +47,14 @@ example: `https://dummy.rec.la:4443/?domain=pryv.me`
 
 example: `https://dummy.rec.la:4443/?domain=pryv.me&sharing={token}` to open a sharing link
 
+### Troubleshoot
+
+1. rm -rf node_modules
+2. rm package-lock.json
+3. npm install
+4. grunt
+5. yarn webserver
+
 ## License
 
 [Revised BSD license](https://github.com/pryv/documents/blob/master/license-bsd-revised.md)

@@ -7,8 +7,6 @@ module.exports = Marionette.ItemView.extend({
     return {
       getUrl: function () {
         var url = this.connection.id.replace(/\?auth.*$/, '');
-        url = url.replace(/\.in/, '.li');
-        url = url.replace(/\.io/, '.me');
         url = url.replace(/:443/, '');
         url += '#/sharings/' + this.token;
         return url;

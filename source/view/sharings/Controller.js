@@ -86,8 +86,6 @@ _.extend(Controller.prototype, {
     sharings.forEach(function (sharing) {
       if (sharing.type === 'shared') {
         var url = connection.id.replace(/\?auth.*$/, '');
-        url = url.replace(/\.in/, '.li');
-        url = url.replace(/\.io/, '.me');
         url += '#/sharings/' + sharing.token;
         sharing.url = url;
         var m = new SharingModel({
@@ -104,8 +102,6 @@ _.extend(Controller.prototype, {
     }
     bookmarks.forEach(function (bookmark) {
       var url = bookmark.settings.url;
-      url = url.replace(/\.in/, '.li');
-      url = url.replace(/\.io/, '.me');
       bookmark.settings.url = url;
       var m = new BookmarkModel({
         bookmark: bookmark
@@ -116,8 +112,8 @@ _.extend(Controller.prototype, {
   _createBookmark: function (url, auth, name) {
     if (url && auth && name) {
       var conn = new Pryv.Connection({
-        url: url.replace('.li', '.in').replace('.me', '.io'),
-        auth: auth
+        url: url,
+        auth: auth,
       });
       conn.accessInfo(function (error) {
         if (!error) {

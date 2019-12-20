@@ -49,6 +49,8 @@ example: `https://dummy.rec.la:4443/?domain=pryv.me&sharing={token}` to open a s
 
 ### Troubleshoot
 
+yarn does not respect targetting a branch (or commit) in a dependency.
+
 1. rm -rf node_modules
 2. rm package-lock.json
 3. npm install

@@ -4062,9 +4062,10 @@ readdirp@^2.2.1:
     micromatch "^3.1.10"
     readable-stream "^2.0.2"
 
-"rec-la@git+https://github.com/pryv/rec-la.git#master":
-  version "0.1.5"
-  resolved "git+https://github.com/pryv/rec-la.git#a51f552f6f9652c18ec40a96cf80262bdb4e500d"
+rec-la@latest:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/rec-la/-/rec-la-0.1.7.tgz#555cc06f77622dc8316c2120cb7cdec8b0a2f5a9"
+  integrity sha512-3A8r7Ex5ZVWKJLaAF91+pUf7y+mhi1fjvRr8bVTW1zbUZZmvbej24xXKhrA+78lUuX8VJ1PO0rUI4ohguC0+Eg==
   dependencies:
     express "^4.14.0"
 

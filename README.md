@@ -49,7 +49,7 @@ example: `https://dummy.rec.la:4443/?domain=pryv.me&sharing={token}` to open a s
 
 ### Troubleshoot
 
-yarn does not respect targetting a branch (or commit) in a dependency.
+yarn does not respect targetting a branch (or commit) in a dependency. **It is currently targetting branch `works/app-web` on lib-js.**
 
 1. rm -rf node_modules
 2. rm package-lock.json

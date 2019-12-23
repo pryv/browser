@@ -3873,9 +3873,9 @@ proxy-addr@~2.0.4:
     forwarded "~0.1.2"
     ipaddr.js "1.8.0"
 
-"pryv@git+https://github.com/pryv/lib-javascript.git#b0cd9253370f59029805013191e7bf54f5b3b2c4":
+"pryv@git+https://github.com/pryv/lib-javascript.git#works/app-web":
   version "1.0.2"
-  resolved "git+https://github.com/pryv/lib-javascript.git#b0cd9253370f59029805013191e7bf54f5b3b2c4"
+  resolved "git+https://github.com/pryv/lib-javascript.git#f053572549aca335fa4e06fde3521b915459e30b"
   dependencies:
     form-data "0.1.x"
     socket.io-client "0.9.x"

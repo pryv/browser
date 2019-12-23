@@ -35,7 +35,6 @@ latest environement tested: **node v8.11.0**
 
 Build output goes to `./dist`
 
-
 ### Running the dev build locally
 
 We use rec-la server [https://github.com/pryv/rec-la](https://github.com/pryv/rec-la).
@@ -46,6 +45,13 @@ We use rec-la server [https://github.com/pryv/rec-la](https://github.com/pryv/re
 example: `https://dummy.rec.la:4443/?domain=pryv.me`
 
 example: `https://dummy.rec.la:4443/?domain=pryv.me&sharing={token}` to open a sharing link
+
+### Publish
+
+1. `yarn build-ghpages`
+2. `cd dist`
+3. `git pull`
+4. commit changes and push them
 
 ### Troubleshoot
 

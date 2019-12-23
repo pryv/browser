@@ -199,7 +199,7 @@ module.exports = function (grunt) {
       initrepo: {
         options: {
           repository: 'git@github.com:pryv/browser.git',
-          branch: 'staging',
+          branch: 'gh-pages',
           directory: 'dist'
         }
       }

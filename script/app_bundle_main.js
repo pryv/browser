@@ -27998,7 +27998,7 @@ var utility = require('./utility/utility'),
  */
 var eventTypes = module.exports = {};
 
-var HOSTNAME = 'api.pryv.com',
+var HOSTNAME = 'pryv.github.io',
     PORT = 443,
     SSL = true,
     PATH = '/event-types/',
